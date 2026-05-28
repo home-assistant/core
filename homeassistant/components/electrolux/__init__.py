@@ -39,6 +39,7 @@ from .coordinator import (
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 

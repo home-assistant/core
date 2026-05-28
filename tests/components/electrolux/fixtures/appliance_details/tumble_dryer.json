@@ -1,0 +1,1406 @@
+{
+  "applianceInfo": {
+    "serialNumber": "74852244",
+    "pnc": "999120000",
+    "brand": "ELECTROLUX",
+    "deviceType": "TUMBLE_DRYER",
+    "model": "EW9H778P9",
+    "variant": "PERFECTCARE900",
+    "colour": "WHITE"
+  },
+  "capabilities": {
+    "alerts": {
+      "access": "read",
+      "type": "alert",
+      "values": {
+        "CHECK_DOOR": {},
+        "CHECK_DRAIN_FILTER": {},
+        "CHECK_INLET_TAP": {},
+        "DETERGENT_OVERDOSING": {},
+        "DOOR": {},
+        "EMPTY_WATER_CONTAINER": {},
+        "MACHINE_RESTART": {},
+        "POWER_FAILURE": {},
+        "STEAM_TANK_EMPTY": {},
+        "STEAM_TANK_FULL": {},
+        "TOP_UP_SALT": {},
+        "UNBALANCED_LAUNDRY": {},
+        "UNSTABLE_SUPPLY_VOLTAGE": {},
+        "WATER_CONTAINER": {},
+        "WATER_LEAK": {}
+      }
+    },
+    "applianceCareAndMaintenance0": {
+      "access": "readwrite",
+      "type": "careMaintenance"
+    },
+    "applianceCareAndMaintenance0/maint1_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint1_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint1_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint1_spare": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint1_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint2_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint2_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint2_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint2_spare": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint2_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint3_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint3_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint3_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint3_spare": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint3_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint4_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint4_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint4_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint4_spare": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint4_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint5_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint5_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint5_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint5_spare": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint5_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceMode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DEMO": {},
+        "DIAGNOSTIC": {},
+        "NORMAL": {},
+        "SERVICE": {}
+      }
+    },
+    "applianceState": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "PAUSE": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "RUNNING",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "RESUME": {},
+                "STOPRESET": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "PAUSED",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "PAUSE": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "DELAYED_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "startTime": {
+              "access": "default"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "READY_TO_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "startTime": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "END_OF_CYCLE",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "startTime": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "DELAYED_START",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "RUNNING",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "startTime": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "PAUSED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "startTime",
+              "operand_2": "INVALID_OR_NOT_SET_TIME",
+              "operator": "eq"
+            },
+            "operator": "and"
+          }
+        },
+        {
+          "action": {
+            "startTime": {
+              "access": "default"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "PAUSED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "startTime",
+              "operand_2": "INVALID_OR_NOT_SET_TIME",
+              "operator": "ne"
+            },
+            "operator": "and"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "OFF": {},
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "END_OF_CYCLE",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "OFF": {},
+                "START": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "READY_TO_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "OFF": {},
+                "START": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "IDLE",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "endOfCycleSound": {
+              "access": "read"
+            },
+            "waterHardness": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "RUNNING",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "DELAYED_START",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "endOfCycleSound": {
+              "access": "default"
+            },
+            "waterHardness": {
+              "access": "default"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "READY_TO_START",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "IDLE",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "endOfCycleSound": {
+              "access": "read"
+            },
+            "waterHardness": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "PAUSED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "END_OF_CYCLE",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "ALARM": {},
+        "DELAYED_START": {},
+        "END_OF_CYCLE": {},
+        "IDLE": {},
+        "OFF": {},
+        "PAUSED": {},
+        "READY_TO_START": {},
+        "RUNNING": {}
+      }
+    },
+    "applianceTotalWorkingTime": {
+      "access": "read",
+      "type": "number"
+    },
+    "cyclePhase": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "ANTICREASE",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "ANTICREASE": {},
+        "COOL": {},
+        "CYCLE_PHASE_HIDDEN": {
+          "disabled": true
+        },
+        "DRY": {},
+        "UNAVAILABLE": {}
+      }
+    },
+    "doorState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "CLOSED": {},
+        "OPEN": {}
+      }
+    },
+    "dryingNominalLoadWeight": {
+      "access": "read",
+      "max": 20000,
+      "min": 0,
+      "type": "number",
+      "values": {
+        "NOT_AVAILABLE": {
+          "disabled": true
+        }
+      }
+    },
+    "dummy_for_empty_cycle": {
+      "access": "constant",
+      "type": "enum",
+      "values": {
+        "0": {
+          "disabled": true
+        }
+      }
+    },
+    "endOfCycleSound": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "NO_SOUND": {},
+        "SHORT_SOUND": {}
+      }
+    },
+    "executeCommand": {
+      "access": "write",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {},
+        "PAUSE": {},
+        "RESUME": {},
+        "START": {},
+        "STOPRESET": {}
+      }
+    },
+    "fCPN_TDAlert": {
+      "access": "constant",
+      "default": 1,
+      "type": "int"
+    },
+    "fCPN_TDEndOfCycle": {
+      "access": "constant",
+      "default": 1,
+      "type": "int"
+    },
+    "fCPN_TDMaintenances": {
+      "access": "constant",
+      "default": 1,
+      "type": "int"
+    },
+    "miscellaneous": {
+      "access": "readwrite",
+      "type": "complex"
+    },
+    "networkInterface": {
+      "command": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "APPLIANCE_AUTHORIZE": {},
+          "START": {},
+          "USER_AUTHORIZE": {},
+          "USER_NOT_AUTHORIZE": {}
+        }
+      },
+      "linkQualityIndicator": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "EXCELLENT": {},
+          "GOOD": {},
+          "POOR": {},
+          "UNDEFINED": {},
+          "VERY_GOOD": {},
+          "VERY_POOR": {}
+        }
+      },
+      "niuSwUpdateCurrentDescription": {
+        "access": "read",
+        "type": "string"
+      },
+      "otaState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DESCRIPTION_AVAILABLE": {},
+          "DESCRIPTION_DOWNLOADING": {},
+          "DESCRIPTION_READY": {},
+          "FW_DOWNLOADING": {},
+          "FW_DOWNLOAD_START": {},
+          "FW_SIGNATURE_CHECK": {},
+          "FW_UPDATE_IN_PROGRESS": {},
+          "IDLE": {},
+          "READY_TO_UPDATE": {},
+          "UPDATE_ABORT": {},
+          "UPDATE_CHECK": {},
+          "UPDATE_ERROR": {},
+          "UPDATE_OK": {},
+          "WAITINGFORAUTHORIZATION": {}
+        }
+      },
+      "startUpCommand": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "UNINSTALL": {}
+        }
+      },
+      "swAncAndRevision": {
+        "access": "read",
+        "type": "string"
+      },
+      "swVersion": {
+        "access": "read",
+        "type": "string"
+      }
+    },
+    "remoteControl": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "ENABLED",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "NOT_SAFETY_RELEVANT_ENABLED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "DISABLED",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "DISABLED": {},
+        "ENABLED": {},
+        "NOT_SAFETY_RELEVANT_ENABLED": {},
+        "TEMPORARY_LOCKED": {}
+      }
+    },
+    "saveAppFavorite": {
+      "access": "write",
+      "type": "string",
+      "values": {
+        "FAVORITE_1": {}
+      }
+    },
+    "startTime": {
+      "access": "readwrite",
+      "max": 72000,
+      "min": 0,
+      "step": 1800,
+      "triggers": [
+        {
+          "action": {
+            "$self": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "INVALID_OR_NOT_SET_TIME",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "applianceState",
+              "operand_2": "PAUSED",
+              "operator": "eq"
+            },
+            "operator": "and"
+          }
+        }
+      ],
+      "type": "number",
+      "values": {
+        "INVALID_OR_NOT_SET_TIME": {
+          "disabled": true
+        }
+      }
+    },
+    "timeToEnd": {
+      "access": "read",
+      "type": "number"
+    },
+    "timeToNotify": {
+      "access": "constant",
+      "default": 600,
+      "type": "int"
+    },
+    "totalCycleCounter": {
+      "access": "read",
+      "type": "number"
+    },
+    "uiLockMode": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "userSelections": {
+      "access": "readwrite",
+      "type": "complex"
+    },
+    "userSelections/antiCreaseValue": {
+      "access": "readwrite",
+      "default": 30,
+      "max": 150,
+      "min": 30,
+      "step": 30,
+      "type": "number"
+    },
+    "userSelections/dryingTime": {
+      "access": "readwrite",
+      "default": 0,
+      "max": 120,
+      "min": 0,
+      "step": 10,
+      "triggers": [
+        {
+          "action": {
+            "userSelections/humidityTarget": {
+              "default": "UNDEFINED"
+            },
+            "userSelections/reversePlus": {
+              "access": "read"
+            },
+            "userSelections/tDEconomy_Eco": {
+              "access": "read",
+              "default": true,
+              "disabled": true
+            },
+            "userSelections/tDEconomy_Night": {
+              "access": "read",
+              "default": false,
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": 0,
+            "operator": "ne"
+          }
+        },
+        {
+          "action": {
+            "userSelections/reversePlus": {
+              "access": "default"
+            },
+            "userSelections/tDEconomy_Eco": {
+              "access": "default",
+              "disabled": true
+            },
+            "userSelections/tDEconomy_Night": {
+              "access": "default",
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": 0,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "number"
+    },
+    "userSelections/drynessValue": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "MAXIMUM": {},
+        "MEDIUM": {},
+        "MINIMUM": {},
+        "UNDEFINED": {
+          "disabled": true
+        }
+      }
+    },
+    "userSelections/humidityTarget": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/dryingTime": {
+              "default": 0
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "UNDEFINED",
+            "operator": "ne"
+          }
+        },
+        {
+          "action": {
+            "userSelections/tDEconomy_Night": {
+              "default": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "IRON",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "CUPBOARD": {},
+        "EXTRA": {},
+        "IRON": {},
+        "UNDEFINED": {
+          "disabled": true
+        }
+      }
+    },
+    "userSelections/programUID": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "BED_LINEN_PLUS_PR_BEDDINGPLUS": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/antiCreaseValue": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 150,
+            "min": 30,
+            "step": 30
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {},
+              "IRON": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/reversePlus": {
+            "access": "read",
+            "default": true,
+            "disabled": false
+          }
+        },
+        "COTTON_PR_COTTONS": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/antiCreaseValue": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 150,
+            "min": 30,
+            "step": 30
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 120,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {},
+              "IRON": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/reversePlus": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/tDEconomy_Night": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          }
+        },
+        "COTTON_PR_ENERGYSAVER": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/antiCreaseValue": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 150,
+            "min": 30,
+            "step": 30
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          },
+          "userSelections/tDEconomy_Eco": {
+            "access": "read",
+            "default": true,
+            "disabled": true
+          }
+        },
+        "DRY_CLEANING_PR_REFRESH": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/antiCreaseValue": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 150,
+            "min": 30,
+            "step": 30
+          }
+        },
+        "DUVET_PR_DUVET": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          }
+        },
+        "EXTRA_DELICATE_PR_DELICATES": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/antiCreaseValue": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 150,
+            "min": 30,
+            "step": 30
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          }
+        },
+        "JEANS_PR_DENIM": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/antiCreaseValue": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 150,
+            "min": 30,
+            "step": 30
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {}
+            }
+          },
+          "userSelections/reversePlus": {
+            "access": "read",
+            "default": true,
+            "disabled": false
+          }
+        },
+        "MACHINE_SETTINGS_HIDDEN_TEST": {
+          "disabled": true,
+          "dummy_for_empty_cycle": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true,
+            "values": {
+              "0": {
+                "disabled": true
+              }
+            }
+          }
+        },
+        "OUTD_PROOF_PR_OUTDOOR": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          }
+        },
+        "SILK_DRY_PR_SILK": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/antiCreaseValue": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 150,
+            "min": 30,
+            "step": 30
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          }
+        },
+        "SPORTS_PR_SPORT": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/antiCreaseValue": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 150,
+            "min": 30,
+            "step": 30
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          }
+        },
+        "SYNTHETIC_PR_SYNTHETICS": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/antiCreaseValue": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 150,
+            "min": 30,
+            "step": 30
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 120,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {},
+              "IRON": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/reversePlus": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/tDEconomy_Night": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          }
+        },
+        "TIMEDRY_PR_DRYINGRACK": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 10,
+            "disabled": false,
+            "max": 120,
+            "min": 10,
+            "step": 10
+          }
+        },
+        "UNIVERSAL_PR_MIXEDPLUSNOTXL": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/antiCreaseValue": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 150,
+            "min": 30,
+            "step": 30
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 120,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/reversePlus": {
+            "access": "read",
+            "default": true,
+            "disabled": false
+          }
+        },
+        "WOOL_GOLD_PR_WOOL": {
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 72000,
+            "min": 0,
+            "step": 1800,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/drynessValue": {
+            "access": "readwrite",
+            "default": "MEDIUM",
+            "disabled": false,
+            "values": {
+              "MAXIMUM": {},
+              "MEDIUM": {},
+              "MINIMUM": {}
+            }
+          }
+        }
+      }
+    },
+    "userSelections/programsOrder": {
+      "items": [
+        "MACHINE_SETTINGS_HIDDEN_TEST",
+        "COTTON_PR_COTTONS",
+        "UNIVERSAL_PR_MIXEDPLUSNOTXL",
+        "BED_LINEN_PLUS_PR_BEDDINGPLUS",
+        "COTTON_PR_ENERGYSAVER",
+        "DRY_CLEANING_PR_REFRESH",
+        "TIMEDRY_PR_DRYINGRACK",
+        "SPORTS_PR_SPORT",
+        "SILK_DRY_PR_SILK",
+        "SYNTHETIC_PR_SYNTHETICS",
+        "WOOL_GOLD_PR_WOOL",
+        "EXTRA_DELICATE_PR_DELICATES",
+        "OUTD_PROOF_PR_OUTDOOR",
+        "JEANS_PR_DENIM",
+        "DUVET_PR_DUVET"
+      ]
+    },
+    "userSelections/reversePlus": {
+      "access": "readwrite",
+      "default": false,
+      "triggers": [
+        {
+          "action": {
+            "userSelections/tDEconomy_Eco": {
+              "default": "$default"
+            },
+            "userSelections/tDEconomy_Night": {
+              "default": "$default"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "userSelections/tDEconomy_Eco": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "userSelections/tDEconomy_Night": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/reversePlus": {
+              "default": false
+            },
+            "userSelections/tDEconomy_Eco": {
+              "default": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "userSelections/tDEconomy_Eco": {
+              "default": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": false,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "waterHardness": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "HARD": {},
+        "MEDIUM": {},
+        "SOFT": {}
+      }
+    }
+  }
+}

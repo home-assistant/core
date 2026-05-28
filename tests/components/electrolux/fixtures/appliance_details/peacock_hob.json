@@ -1,0 +1,672 @@
+{
+  "applianceInfo": {
+    "serialNumber": "99907833",
+    "pnc": "999008120",
+    "brand": "AEG",
+    "deviceType": "BUILT IN HOB",
+    "model": "TU84CF43CB",
+    "variant": "N/A",
+    "colour": "BLACK"
+  },
+  "capabilities": {
+    "alerts": {
+      "access": "read",
+      "type": "alert",
+      "values": {
+        "CKG_ZONE_FAIL_E601": {},
+        "CKG_ZONE_FAIL_E602": {},
+        "CKG_ZONE_FAIL_E603": {},
+        "CKG_ZONE_FAIL_E604": {},
+        "CKG_ZONE_FAIL_E605": {},
+        "CKG_ZONE_FAIL_E606": {},
+        "CKG_ZONE_FAIL_E611": {},
+        "CKG_ZONE_FAIL_E612": {},
+        "CKG_ZONE_FAIL_E613": {},
+        "CKG_ZONE_FAIL_E614": {},
+        "CKG_ZONE_FAIL_E615": {},
+        "CKG_ZONE_FAIL_E616": {},
+        "CKG_ZONE_FAIL_E621": {},
+        "CKG_ZONE_FAIL_E622": {},
+        "CKG_ZONE_FAIL_E623": {},
+        "CKG_ZONE_FAIL_E624": {},
+        "CKG_ZONE_FAIL_E625": {},
+        "CKG_ZONE_FAIL_E626": {},
+        "CKG_ZONE_FAIL_E651": {},
+        "CKG_ZONE_FAIL_E652": {},
+        "CKG_ZONE_FAIL_E653": {},
+        "CKG_ZONE_FAIL_E654": {},
+        "CKG_ZONE_FAIL_E655": {},
+        "CKG_ZONE_FAIL_E656": {},
+        "CKG_ZONE_FAN_FAIL_E701": {},
+        "CKG_ZONE_FAN_FAIL_E702": {},
+        "CKG_ZONE_FAN_FAIL_E703": {},
+        "CKG_ZONE_FAN_FAIL_E704": {},
+        "CKG_ZONE_FAN_FAIL_E705": {},
+        "CKG_ZONE_FAN_FAIL_E706": {},
+        "CKG_ZONE_FAN_FAIL_E711": {},
+        "CKG_ZONE_FAN_FAIL_E712": {},
+        "CKG_ZONE_FAN_FAIL_E713": {},
+        "CKG_ZONE_FAN_FAIL_E714": {},
+        "CKG_ZONE_FAN_FAIL_E715": {},
+        "CKG_ZONE_FAN_FAIL_E716": {},
+        "CKG_ZONE_SW_ERROR_E011": {},
+        "CKG_ZONE_SW_ERROR_E012": {},
+        "CKG_ZONE_SW_ERROR_E013": {},
+        "CKG_ZONE_SW_ERROR_E014": {},
+        "CKG_ZONE_SW_ERROR_E015": {},
+        "CKG_ZONE_SW_ERROR_E016": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E401": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E402": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E403": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E404": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E405": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E406": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E411": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E412": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E413": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E414": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E415": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E416": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E431": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E432": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E433": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E434": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E435": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E436": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E441": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E442": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E443": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E444": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E445": {},
+        "CKG_ZONE_TEMP_SENS_FAIL_E446": {},
+        "CKG_ZONE_TEMP_TOO_HIGH_E421": {},
+        "CKG_ZONE_TEMP_TOO_HIGH_E422": {},
+        "CKG_ZONE_TEMP_TOO_HIGH_E423": {},
+        "CKG_ZONE_TEMP_TOO_HIGH_E424": {},
+        "CKG_ZONE_TEMP_TOO_HIGH_E425": {},
+        "CKG_ZONE_TEMP_TOO_HIGH_E426": {},
+        "DATA_CRC_ERROR_E661": {},
+        "DATA_CRC_ERROR_E662": {},
+        "DATA_CRC_ERROR_E663": {},
+        "DISPLAY_ELECTRONIC_FAIL_E061": {},
+        "DISPLAY_ELECTRONIC_FAIL_E081": {},
+        "DISPLAY_ELECTRONIC_FAIL_E091": {},
+        "DISPLAY_ELECTRONIC_FAIL_E0C1": {},
+        "DISPLAY_NOT_PROPER_WORK_E9F1": {},
+        "DISPLAY_TEMP_TOO_HIGH_E0A1": {},
+        "HOOD_FAIL_E518": {},
+        "HOOD_FAIL_E527": {},
+        "HOOD_FAIL_E528": {},
+        "HOOD_FAIL_E8B1": {},
+        "HOOD_MC_BOARD_ALARM_E537": {},
+        "HOOD_SW_FAIL_E517": {},
+        "HUI_PIXIE_COMM_ALARM_E8B7": {},
+        "INTERNAL_COMM_FAIL_E821": {},
+        "INTERNAL_COMM_FAIL_E822": {},
+        "INTERNAL_COMM_FAIL_E823": {},
+        "INTERNAL_COMM_FAIL_E824": {},
+        "INTERNAL_COMM_FAIL_E825": {},
+        "INTERNAL_COMM_FAIL_E826": {},
+        "INTERNAL_COMM_FAIL_E831": {},
+        "INTERNAL_COMM_FAIL_E841": {},
+        "INTERNAL_COMM_FAIL_E851": {},
+        "INTERNAL_COMM_FAIL_E861": {},
+        "INTERNAL_COMM_FAIL_E871": {},
+        "KEY_ERROR_FMEA_E9D1": {},
+        "KNOB_ERROR_E951": {},
+        "MAINS_CONNECTION_ERROR_E311": {},
+        "MAINS_CONNECTION_ERROR_E312": {},
+        "MAINS_CONNECTION_ERROR_E313": {},
+        "MAINS_CONNECTION_ERROR_E314": {},
+        "MAINS_CONNECTION_ERROR_E315": {},
+        "MAINS_CONNECTION_ERROR_E316": {},
+        "MAINS_RELAY_FAIL_E641": {},
+        "MAINS_RELAY_FAIL_E642": {},
+        "MAINS_RELAY_FAIL_E643": {},
+        "MAINS_RELAY_FAIL_E644": {},
+        "MAINS_RELAY_FAIL_E645": {},
+        "MAINS_RELAY_FAIL_E646": {},
+        "MAINS_VOLTAGE_TOO_LOW_E321": {},
+        "MAINS_VOLTAGE_TOO_LOW_E322": {},
+        "MAINS_VOLTAGE_TOO_LOW_E323": {},
+        "MAINS_VOLTAGE_TOO_LOW_E324": {},
+        "MAINS_VOLTAGE_TOO_LOW_E325": {},
+        "MAINS_VOLTAGE_TOO_LOW_E326": {},
+        "SENSEBOIL_FAIL_E272": {},
+        "SENSEBOIL_FAIL_E282": {},
+        "SENSEBOIL_FAIL_E8A2": {},
+        "SW_ERROR_E021": {},
+        "SW_ERROR_E031": {},
+        "SW_ERROR_E041": {},
+        "SW_ERROR_E051": {},
+        "TOUCH_NOT_PROPER_WORK_E911": {},
+        "TOUCH_NOT_PROPER_WORK_E921": {},
+        "TOUCH_NOT_PROPER_WORK_E931": {},
+        "TOUCH_NOT_PROPER_WORK_E941": {},
+        "TOUCH_NOT_PROPER_WORK_E961": {},
+        "TOUCH_NOT_PROPER_WORK_E971": {},
+        "TOUCH_NOT_PROPER_WORK_E981": {},
+        "TOUCH_NOT_PROPER_WORK_E991": {},
+        "TOUCH_NOT_PROPER_WORK_E9A1": {},
+        "TOUCH_NOT_PROPER_WORK_E9B1": {},
+        "TOUCH_NOT_PROPER_WORK_E9C1": {},
+        "WI-FI_FAIL_E141": {},
+        "WI-FI_FAIL_E181": {},
+        "ZONE_ILLUMINATION_FAIL_E201": {},
+        "ZONE_ILLUMINATION_FAIL_E211": {},
+        "ZONE_ILLUMINATION_FAIL_E221": {},
+        "ZONE_ILLUMINATION_FAIL_E231": {},
+        "ZONE_ILLUMINATION_FAIL_E241": {}
+      }
+    },
+    "applianceMode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DEMO": {},
+        "DIAGNOSTIC": {},
+        "NORMAL": {},
+        "SERVICE": {}
+      }
+    },
+    "applianceState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "ALARM": {},
+        "IDLE": {},
+        "OFF": {},
+        "PAUSED": {},
+        "RUNNING": {}
+      }
+    },
+    "childLock": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "$self": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "ENABLED",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "$self": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "DISABLED",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean",
+      "values": {
+        "DISABLED": {},
+        "ENABLED": {}
+      }
+    },
+    "cpv": {
+      "access": "read",
+      "type": "string"
+    },
+    "hobHood": {
+      "hobToHoodFanSpeed": {
+        "access": "readwrite",
+        "type": "string",
+        "values": {
+          "BOOST": {},
+          "BREEZE": {},
+          "DRYING_CYCLE": {},
+          "OFF": {},
+          "STEP_1": {},
+          "STEP_2": {},
+          "STEP_3": {}
+        }
+      },
+      "hobToHoodMode": {
+        "access": "readwrite",
+        "type": "string",
+        "values": {
+          "H1": {},
+          "H2": {},
+          "H3": {},
+          "H4": {}
+        }
+      },
+      "hobToHoodState": {
+        "access": "readwrite",
+        "type": "string",
+        "values": {
+          "AUTOMATIC": {},
+          "AUTO_SUSPEND": {
+            "disabled": true
+          },
+          "MANUAL": {}
+        }
+      },
+      "hoodDryingCycle": {
+        "access": "readwrite",
+        "type": "string",
+        "values": {
+          "KEY_ERROR": {
+            "disabled": true
+          }
+        }
+      },
+      "hoodFilterCharcIndication": {
+        "access": "readwrite",
+        "type": "boolean",
+        "values": {
+          "FALSE": {},
+          "TRUE": {}
+        }
+      },
+      "hoodFilterGreaseIndication": {
+        "access": "readwrite",
+        "type": "boolean",
+        "values": {
+          "FALSE": {},
+          "TRUE": {}
+        }
+      },
+      "targetDuration": {
+        "access": "readwrite",
+        "default": 0,
+        "max": 5940,
+        "min": 0,
+        "step": 60,
+        "type": "number"
+      },
+      "timeToEnd": {
+        "access": "read",
+        "type": "number"
+      },
+      "windowNotification": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "NONE": {},
+          "OPENING_REQUIRED": {}
+        }
+      }
+    },
+    "hobZone1": {
+      "heatingQualitativeLevel": {
+        "access": "read",
+        "default": 0,
+        "max": 9,
+        "min": 0,
+        "step": 1,
+        "type": "number",
+        "values": {
+          "POWER_LEVEL_P": {}
+        }
+      },
+      "hobCoil": {
+        "access": "read",
+        "type": "number"
+      },
+      "hobMaxPowerLevel": {
+        "access": "read",
+        "type": "number"
+      },
+      "hobPotDetected": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "NO_POT_IDLE": {},
+          "NO_POT_RUNNING": {},
+          "POT_IDLE": {},
+          "POT_RUNNING": {}
+        }
+      },
+      "residualHeatState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "HIGH": {},
+          "LOW": {},
+          "MIDDLE": {},
+          "NO": {}
+        }
+      },
+      "runningTime": {
+        "access": "read",
+        "default": 0,
+        "type": "number"
+      }
+    },
+    "hobZone2": {
+      "heatingQualitativeLevel": {
+        "access": "read",
+        "default": 0,
+        "max": 9,
+        "min": 0,
+        "step": 1,
+        "type": "number",
+        "values": {
+          "POWER_LEVEL_P": {}
+        }
+      },
+      "hobCoil": {
+        "access": "read",
+        "type": "number"
+      },
+      "hobMaxPowerLevel": {
+        "access": "read",
+        "type": "number"
+      },
+      "hobPotDetected": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "NO_POT_IDLE": {},
+          "NO_POT_RUNNING": {},
+          "POT_IDLE": {},
+          "POT_RUNNING": {}
+        }
+      },
+      "residualHeatState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "HIGH": {},
+          "LOW": {},
+          "MIDDLE": {},
+          "NO": {}
+        }
+      },
+      "runningTime": {
+        "access": "read",
+        "default": 0,
+        "type": "number"
+      }
+    },
+    "hobZone3": {
+      "heatingQualitativeLevel": {
+        "access": "read",
+        "default": 0,
+        "max": 9,
+        "min": 0,
+        "step": 1,
+        "type": "number",
+        "values": {
+          "POWER_LEVEL_P": {}
+        }
+      },
+      "hobCoil": {
+        "access": "read",
+        "type": "number"
+      },
+      "hobMaxPowerLevel": {
+        "access": "read",
+        "type": "number"
+      },
+      "hobPotDetected": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "NO_POT_IDLE": {},
+          "NO_POT_RUNNING": {},
+          "POT_IDLE": {},
+          "POT_RUNNING": {}
+        }
+      },
+      "residualHeatState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "HIGH": {},
+          "LOW": {},
+          "MIDDLE": {},
+          "NO": {}
+        }
+      },
+      "runningTime": {
+        "access": "read",
+        "default": 0,
+        "type": "number"
+      }
+    },
+    "hobZone4": {
+      "heatingQualitativeLevel": {
+        "access": "read",
+        "default": 0,
+        "max": 9,
+        "min": 0,
+        "step": 1,
+        "type": "number",
+        "values": {
+          "POWER_LEVEL_P": {}
+        }
+      },
+      "hobCoil": {
+        "access": "read",
+        "type": "number"
+      },
+      "hobMaxPowerLevel": {
+        "access": "read",
+        "type": "number"
+      },
+      "hobPotDetected": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "NO_POT_IDLE": {},
+          "NO_POT_RUNNING": {},
+          "POT_IDLE": {},
+          "POT_RUNNING": {}
+        }
+      },
+      "residualHeatState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "HIGH": {},
+          "LOW": {},
+          "MIDDLE": {},
+          "NO": {}
+        }
+      },
+      "runningTime": {
+        "access": "read",
+        "default": 0,
+        "type": "number"
+      }
+    },
+    "hobZone7": {
+      "heatingQualitativeLevel": {
+        "access": "read",
+        "default": 0,
+        "max": 9,
+        "min": 0,
+        "step": 1,
+        "type": "number",
+        "values": {
+          "POWER_LEVEL_ASSISTED": {},
+          "POWER_LEVEL_MELTING": {},
+          "POWER_LEVEL_P": {}
+        }
+      },
+      "hobCoil": {
+        "access": "read",
+        "type": "number"
+      },
+      "hobMaxPowerLevel": {
+        "access": "read",
+        "type": "number"
+      },
+      "hobPotDetected": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "NO_POT_IDLE": {},
+          "NO_POT_RUNNING": {},
+          "POT_IDLE": {},
+          "POT_RUNNING": {}
+        }
+      },
+      "residualHeatState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "HIGH": {},
+          "LOW": {},
+          "MIDDLE": {},
+          "NO": {}
+        }
+      },
+      "runningTime": {
+        "access": "read",
+        "default": 0,
+        "type": "number"
+      }
+    },
+    "keyModel": {
+      "access": "constant",
+      "default": "285_145_030",
+      "type": "string"
+    },
+    "networkInterface": {
+      "command": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "APPLIANCE_AUTHORIZE": {},
+          "START": {},
+          "USER_AUTHORIZE": {},
+          "USER_NOT_AUTHORIZE": {}
+        }
+      },
+      "linkQualityIndicator": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "EXCELLENT": {},
+          "GOOD": {},
+          "POOR": {},
+          "UNDEFINED": {},
+          "VERY_GOOD": {},
+          "VERY_POOR": {}
+        }
+      },
+      "niuSwUpdateCurrentDescription": {
+        "access": "read",
+        "type": "string"
+      },
+      "oTA3CurrentVersion": {
+        "access": "read",
+        "type": "string"
+      },
+      "oTA3LastResult": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "BKP_BUNDLE_CRC_ERROR": {},
+          "BKP_BUNDLE_INCOMPATIBLE": {},
+          "BKP_BUNDLE_MALFORMED": {},
+          "BKP_BUNDLE_MISSING": {},
+          "BKP_BUNDLE_PROG_ATTEMPS_OVERRUN": {},
+          "ERROR_APPLIANCE_ABORTED": {},
+          "ERROR_BACKUP_RESTORED": {},
+          "ERROR_TIMEOUT_FINALIZATION": {},
+          "ERROR_TIMEOUT_GENERIC": {},
+          "ERROR_TIMEOUT_MACHINE_READY_WAIT": {},
+          "ERROR_TIMEOUT_PROGRAMMING": {},
+          "ERROR_TIMEOUT_SYSTEM_READY_WAIT": {},
+          "NEW_BUNDLE_CRC_ERROR": {},
+          "NEW_BUNDLE_INCOMPATIBLE": {},
+          "NEW_BUNDLE_MALFORMED": {},
+          "NEW_BUNDLE_MISSING": {},
+          "NEW_BUNDLE_PROG_ATTEMPS_OVERRUN": {},
+          "NONE": {},
+          "PROGRAMMING_EB_NOT_IN_BOOT": {},
+          "PROGRAMMING_EXECUTION": {},
+          "SUCCESS": {}
+        }
+      },
+      "oTA3State": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DOWNLOAD": {},
+          "FINALIZATION": {},
+          "IDLE": {},
+          "PROGRAMMING": {},
+          "SYSTEM_READY": {},
+          "UNKNOWN": {},
+          "UNSUPPORTED": {},
+          "UPDATE_CHECK": {},
+          "WAIT_MACHINE_READY": {},
+          "WAIT_USER_AUTH": {}
+        }
+      },
+      "oTA3TargetVersion": {
+        "access": "read",
+        "type": "string"
+      },
+      "otaState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DESCRIPTION_AVAILABLE": {},
+          "DESCRIPTION_DOWNLOADING": {},
+          "DESCRIPTION_READY": {},
+          "FW_DOWNLOADING": {},
+          "FW_DOWNLOAD_START": {},
+          "FW_SIGNATURE_CHECK": {},
+          "FW_UPDATE_IN_PROGRESS": {},
+          "IDLE": {},
+          "READY_TO_UPDATE": {},
+          "UPDATE_ABORT": {},
+          "UPDATE_CHECK": {},
+          "UPDATE_ERROR": {},
+          "UPDATE_OK": {},
+          "WAITINGFORAUTHORIZATION": {}
+        }
+      },
+      "startUpCommand": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "UNINSTALL": {}
+        }
+      },
+      "swAncAndRevision": {
+        "access": "read",
+        "type": "string"
+      },
+      "swVersion": {
+        "access": "read",
+        "type": "string"
+      }
+    },
+    "remoteControl": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DISABLED": {},
+        "ENABLED": {},
+        "NOT_SAFETY_RELEVANT_ENABLED": {},
+        "TEMPORARY_LOCKED": {}
+      }
+    },
+    "uiLockMode": {
+      "access": "read",
+      "type": "boolean",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    }
+  }
+}

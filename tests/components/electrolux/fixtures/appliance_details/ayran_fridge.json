@@ -1,0 +1,331 @@
+{
+  "applianceInfo": {
+    "serialNumber": "20220412",
+    "pnc": "999011403",
+    "brand": "AEG",
+    "deviceType": "FREESTANDING_BOTTOM_FREEZER",
+    "model": "RCB732E9MX",
+    "variant": "UNDEFINED",
+    "colour": "GREY"
+  },
+  "capabilities": {
+    "alerts": {
+      "access": "read",
+      "type": "alert",
+      "values": {
+        "AIR_SENSOR_BROKEN": {},
+        "AIR_SENSOR_OPEN_CIRCUIT": {},
+        "AIR_SENSOR_SHORT_CIRCUIT": {},
+        "COMMUNICATION_ALARM": {},
+        "DRINK_CHILL_EXPIRED": {},
+        "HUMIDITY_SENSOR_BROKEN": {},
+        "HUMIDITY_SENSOR_OPEN_CIRCUIT": {},
+        "HUMIDITY_SENSOR_SHORT_CIRCUIT": {},
+        "POWER_FAILURE_ALARM": {}
+      }
+    },
+    "applianceMainBoardSwVersion": {
+      "access": "read",
+      "type": "string"
+    },
+    "applianceMode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DEMO": {},
+        "DIAGNOSTIC": {},
+        "NORMAL": {},
+        "SERVICE": {}
+      }
+    },
+    "applianceUiSwVersion": {
+      "access": "read",
+      "type": "string"
+    },
+    "compressorState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "coolingValveState": {
+      "access": "read",
+      "type": "string"
+    },
+    "defrostRoutineState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DRIP": {},
+        "HEATER_ON": {},
+        "POST_COOLING": {},
+        "PRE_COOLING": {},
+        "PRE_SOFT": {},
+        "PULL_DOWN": {},
+        "WAIT": {}
+      }
+    },
+    "energySavingMode": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "fSPN_CRConnectionLost": {
+      "access": "constant",
+      "default": 1,
+      "type": "int"
+    },
+    "freezer": {
+      "alerts": {
+        "access": "read",
+        "type": "alert",
+        "values": {
+          "AIR_SENSOR_BROKEN": {},
+          "AIR_SENSOR_OPEN_CIRCUIT": {},
+          "AIR_SENSOR_SHORT_CIRCUIT": {},
+          "DEFROST_SENSOR_BROKEN": {},
+          "DEFROST_SENSOR_OPEN_CIRCUIT": {},
+          "DEFROST_SENSOR_SHORT_CIRCUIT": {},
+          "DOOR_ALARM": {},
+          "TEMPERATURE_ALARM": {}
+        }
+      },
+      "applianceState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "ALARM": {},
+          "DELAYED_START": {},
+          "END_OF_CYCLE": {},
+          "IDLE": {},
+          "OFF": {},
+          "PAUSED": {},
+          "READY_TO_START": {},
+          "RUNNING": {}
+        }
+      },
+      "doorState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "CLOSED": {},
+          "OPEN": {}
+        }
+      },
+      "fanState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "ON": {}
+        }
+      },
+      "fastMode": {
+        "access": "readwrite",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "ON": {}
+        }
+      },
+      "fastModeTimeToEnd": {
+        "access": "readwrite",
+        "type": "number"
+      },
+      "sensorTemperatureC": {
+        "access": "read",
+        "type": "temperature"
+      },
+      "sensorTemperatureF": {
+        "access": "read",
+        "type": "temperature"
+      },
+      "targetTemperatureC": {
+        "access": "readwrite",
+        "default": -18,
+        "max": -16,
+        "min": -24,
+        "step": 2,
+        "type": "temperature"
+      }
+    },
+    "fridge": {
+      "alerts": {
+        "access": "read",
+        "type": "alert",
+        "values": {
+          "AIR_SENSOR_BROKEN": {},
+          "AIR_SENSOR_OPEN_CIRCUIT": {},
+          "AIR_SENSOR_SHORT_CIRCUIT": {},
+          "DEFROST_SENSOR_BROKEN": {},
+          "DEFROST_SENSOR_OPEN_CIRCUIT": {},
+          "DEFROST_SENSOR_SHORT_CIRCUIT": {},
+          "DOOR_ALARM": {},
+          "TEMPERATURE_ALARM": {}
+        }
+      },
+      "applianceState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "ALARM": {},
+          "DELAYED_START": {},
+          "END_OF_CYCLE": {},
+          "IDLE": {},
+          "OFF": {},
+          "PAUSED": {},
+          "READY_TO_START": {},
+          "RUNNING": {}
+        }
+      },
+      "doorState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "CLOSED": {},
+          "OPEN": {}
+        }
+      },
+      "fanState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "ON": {}
+        }
+      },
+      "fastMode": {
+        "access": "readwrite",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "ON": {}
+        }
+      },
+      "fastModeTimeToEnd": {
+        "access": "readwrite",
+        "type": "number"
+      },
+      "sensorTemperatureC": {
+        "access": "read",
+        "type": "temperature"
+      },
+      "sensorTemperatureF": {
+        "access": "read",
+        "type": "temperature"
+      },
+      "targetTemperatureC": {
+        "access": "readwrite",
+        "default": 4,
+        "max": 8,
+        "min": 1,
+        "step": 1,
+        "type": "temperature"
+      }
+    },
+    "networkInterface": {
+      "command": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "APPLIANCE_AUTHORIZE": {},
+          "START": {},
+          "USER_AUTHORIZE": {},
+          "USER_NOT_AUTHORIZE": {}
+        }
+      },
+      "linkQualityIndicator": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "EXCELLENT": {},
+          "GOOD": {},
+          "POOR": {},
+          "UNDEFINED": {},
+          "VERY_GOOD": {},
+          "VERY_POOR": {}
+        }
+      },
+      "niuSwUpdateCurrentDescription": {
+        "access": "read",
+        "type": "string"
+      },
+      "otaState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DESCRIPTION_AVAILABLE": {},
+          "DESCRIPTION_DOWNLOADING": {},
+          "DESCRIPTION_READY": {},
+          "FW_DOWNLOADING": {},
+          "FW_DOWNLOAD_START": {},
+          "FW_SIGNATURE_CHECK": {},
+          "FW_UPDATE_IN_PROGRESS": {},
+          "IDLE": {},
+          "READY_TO_UPDATE": {},
+          "UPDATE_ABORT": {},
+          "UPDATE_CHECK": {},
+          "UPDATE_ERROR": {},
+          "UPDATE_OK": {},
+          "WAITINGFORAUTHORIZATION": {}
+        }
+      },
+      "startUpCommand": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "UNINSTALL": {}
+        }
+      },
+      "swAncAndRevision": {
+        "access": "read",
+        "type": "string"
+      },
+      "swVersion": {
+        "access": "read",
+        "type": "string"
+      }
+    },
+    "reminderTime": {
+      "access": "readwrite",
+      "default": 1800,
+      "max": 1800,
+      "min": 300,
+      "step": 300,
+      "type": "number",
+      "values": {
+        "0": {},
+        "-1": {}
+      }
+    },
+    "sabbathMode": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "uiLockMode": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "vacationHolidayMode": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    }
+  }
+}
