@@ -1,7 +1,7 @@
 {
   "domain": "energieleser",
   "name": "energieleser",
-  "codeowners": ["@AjinkyaGokhale"],
+  "codeowners": ["@AjinkyaGokhale", "@amitkio"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/energieleser",
   "integration_type": "device",
