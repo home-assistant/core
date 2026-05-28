@@ -175,7 +175,10 @@ async def test_service(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_en-us_-_{expected_url_suffix}.mp3"
+            )
         ).is_file()
 
 
@@ -301,7 +304,10 @@ async def test_service_default_special_language(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_en-us_-_{expected_url_suffix}.mp3"
+            )
         ).is_file()
 
 
@@ -361,7 +367,10 @@ async def test_service_language(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_de-de_-_{expected_url_suffix}.mp3"
+            )
         ).is_file()
 
 
@@ -2082,7 +2091,7 @@ async def test_async_internal_get_tts_audio_called(
     mock_tts_entity: MockTTSEntity,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test that non-streaming entity has its async_internal_get_tts_audio method called."""
+    """Test non-streaming entity calls async_internal_get_tts_audio."""
 
     await mock_config_entry_setup(hass, mock_tts_entity)
 
@@ -2115,7 +2124,6 @@ async def test_stream_override(
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
-    stream.async_set_message("beer")
 
     with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:
         with wave.open(wav_file, "wb") as wav_writer:
@@ -2155,7 +2163,6 @@ async def test_stream_override_with_conversion(
             tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
         },
     )
-    stream.async_set_message("beer")
 
     # Use a temp file here since ffmpeg will read it directly
     with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:

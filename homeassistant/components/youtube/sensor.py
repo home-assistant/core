@@ -1,7 +1,5 @@
 """Support for YouTube Sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -11,13 +9,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import YouTubeDataUpdateCoordinator
 from .const import (
     ATTR_LATEST_VIDEO,
     ATTR_PUBLISHED_AT,
@@ -25,10 +21,10 @@ from .const import (
     ATTR_THUMBNAIL,
     ATTR_TITLE,
     ATTR_TOTAL_VIEWS,
+    ATTR_VIDEO_COUNT,
     ATTR_VIDEO_ID,
-    COORDINATOR,
-    DOMAIN,
 )
+from .coordinator import YouTubeConfigEntry
 from .entity import YouTubeChannelEntity
 
 
@@ -74,18 +70,27 @@ SENSOR_TYPES = [
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
         attributes_fn=None,
     ),
+    YouTubeSensorEntityDescription(
+        key="videos",
+        translation_key="videos",
+        native_unit_of_measurement="videos",
+        state_class=SensorStateClass.TOTAL,
+        available_fn=lambda _: True,
+        value_fn=lambda channel: channel[ATTR_VIDEO_COUNT],
+        entity_picture_fn=lambda _: None,
+        attributes_fn=None,
+        icon="mdi:filmstrip-box-multiple",
+    ),
 ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: YouTubeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the YouTube sensor."""
-    coordinator: YouTubeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     async_add_entities(
         YouTubeSensor(coordinator, sensor_type, channel_id)
         for channel_id in coordinator.data

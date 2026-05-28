@@ -1,7 +1,5 @@
 """Support for Jewish calendar sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
@@ -90,6 +88,9 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
                 dict.fromkeys(_holiday.type.name for _holiday in info.holidays)
             ),
         },
+        next_update_fn=lambda zmanim: (
+            zmanim.candle_lighting or zmanim.havdalah or zmanim.shkia.local
+        ),
     ),
     JewishCalendarSensorDescription(
         key="omer_count",

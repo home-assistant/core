@@ -1,7 +1,5 @@
 """Support for the iZone HVAC."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import logging
 from typing import Any, Concatenate
@@ -96,7 +94,7 @@ async def async_setup_entry(
         async_add_entities(device.zones.values())
 
     # create any components not yet created
-    for controller in disco.pi_disco.controllers.values():
+    for controller in (await disco.pi_disco.fetch_controllers()).values():
         init_controller(controller)
 
     # connect to register any further components
@@ -343,7 +341,10 @@ class ControllerDevice(ClimateEntity):
 
     @property
     def control_zone_name(self):
-        """Return the zone that currently controls the AC unit (if target temp not set by controller)."""
+        """Return the zone that currently controls the AC unit.
+
+        Only relevant if target temp not set by controller.
+        """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
         zone_ctrl = self._controller.zone_ctrl
@@ -354,7 +355,10 @@ class ControllerDevice(ClimateEntity):
 
     @property
     def control_zone_setpoint(self) -> float | None:
-        """Return the temperature setpoint of the zone that currently controls the AC unit (if target temp not set by controller)."""
+        """Return the temperature setpoint of the controlling zone.
+
+        Only relevant if target temp not set by controller.
+        """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
         zone_ctrl = self._controller.zone_ctrl
@@ -366,7 +370,10 @@ class ControllerDevice(ClimateEntity):
     @property
     @_return_on_connection_error()
     def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach (either from control zone or master unit)."""
+        """Return the temperature we try to reach.
+
+        Either from control zone or master unit.
+        """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return self._controller.temp_setpoint
         return self.control_zone_setpoint

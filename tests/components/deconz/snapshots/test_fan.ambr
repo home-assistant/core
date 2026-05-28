@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_fans[light_payload0][fan.ceiling_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,

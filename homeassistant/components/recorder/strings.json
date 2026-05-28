@@ -12,11 +12,11 @@
   "services": {
     "disable": {
       "description": "Stops the recording of events and state changes.",
-      "name": "[%key:common::action::disable%]"
+      "name": "Disable Recorder"
     },
     "enable": {
       "description": "Starts the recording of events and state changes.",
-      "name": "[%key:common::action::enable%]"
+      "name": "Enable Recorder"
     },
     "get_statistics": {
       "description": "Retrieves statistics data for entities within a specific time period.",
@@ -46,7 +46,7 @@
           "name": "Units"
         }
       },
-      "name": "Get statistics"
+      "name": "Get Recorder statistics"
     },
     "purge": {
       "description": "Starts purge task - to clean up old data from your database.",
@@ -64,7 +64,7 @@
           "name": "Repack"
         }
       },
-      "name": "Purge"
+      "name": "Purge Recorder database"
     },
     "purge_entities": {
       "description": "Starts a purge task to remove the data related to specific entities from your database.",
@@ -86,7 +86,7 @@
           "name": "[%key:component::recorder::services::purge::fields::keep_days::name%]"
         }
       },
-      "name": "Purge entities"
+      "name": "Purge Recorder entities"
     }
   },
   "system_health": {

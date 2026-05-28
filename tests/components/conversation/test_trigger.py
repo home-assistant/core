@@ -158,7 +158,7 @@ async def test_empty_response(hass: HomeAssistant) -> None:
 async def test_response_same_sentence(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
-    """Test the conversation response action with multiple triggers using the same sentence."""
+    """Test conversation response with same sentence triggers."""
     assert await async_setup_component(
         hass,
         "automation",
@@ -249,7 +249,7 @@ async def test_response_same_sentence_with_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the conversation response action with multiple triggers using the same sentence and an error."""
+    """Test conversation response with same sentence and error."""
     caplog.set_level(logging.ERROR)
     assert await async_setup_component(
         hass,
@@ -300,7 +300,7 @@ async def test_response_same_sentence_with_error(
 async def test_subscribe_trigger_does_not_interfere_with_responses(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that subscribing to a trigger from the websocket API does not interfere with responses."""
+    """Test trigger subscription does not interfere with responses."""
     websocket_client = await hass_ws_client()
     await websocket_client.send_json_auto_id(
         {
@@ -671,7 +671,9 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
                     "command": ["test sentence"],
                 },
                 "action": {
-                    "set_conversation_response": "{{ trigger.device_id }} - {{ trigger.satellite_id }}",
+                    "set_conversation_response": (
+                        "{{ trigger.device_id }} - {{ trigger.satellite_id }}"
+                    ),
                 },
             }
         },

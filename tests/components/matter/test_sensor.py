@@ -6,7 +6,7 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -83,6 +83,25 @@ async def test_humidity_sensor(
     state = hass.states.get("sensor.mock_humidity_sensor_humidity")
     assert state
     assert state.state == "40.0"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_soil_sensor"])
+async def test_soil_moisture_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test soil moisture sensor."""
+    state = hass.states.get("sensor.mock_soil_sensor_moisture")
+    assert state
+    assert state.state == "50"
+
+    set_node_attribute(matter_node, 1, 1072, 1, 75)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_soil_sensor_moisture")
+    assert state
+    assert state.state == "75"
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_light_sensor"])
@@ -359,6 +378,18 @@ async def test_air_quality_sensor(
     assert state
     assert state.state == "50.0"
 
+    # Radon
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon_concentration")
+    assert state
+    assert state.state == "60.0"
+
+    set_node_attribute(matter_node, 1, 1071, 0, 50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon_concentration")
+    assert state
+    assert state.state == "50.0"
+
 
 @pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
 async def test_tvoc_level_sensor(
@@ -465,7 +496,7 @@ async def test_draft_electrical_measurement_sensor(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test Draft Electrical Measurement cluster sensors, using Yandex Smart Socket fixture."""
+    """Test Draft Electrical Measurement sensors with Yandex Smart Socket."""
     state = hass.states.get("sensor.yndx_00540_power")
     assert state
     assert state.state == "70.0"
@@ -839,3 +870,110 @@ async def test_aqara_thermostat_w500_entity_exists_and_unknown(
     state = hass.states.get("sensor.floor_heating_thermostat_active_current")
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["atios_knx_bridge"])
+async def test_bridged_device_reachable_updates_availability(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test bridged endpoint availability follows Reachable updates."""
+    entity_ids = (
+        "sensor.electricity_monitor_ac_energy",
+        "sensor.electricity_monitor_ac_power",
+    )
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+
+    set_node_attribute(matter_node, 29, 57, 17, False)
+    await trigger_subscription_callback(hass, matter_client)
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+
+    set_node_attribute(matter_node, 29, 57, 17, True)
+    await trigger_subscription_callback(hass, matter_client)
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
+async def test_general_diagnostics_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test GeneralDiagnostics cluster sensors."""
+    # RebootCount (cluster 51, attr 1) = 3
+    state = hass.states.get("sensor.m5stamp_lighting_app_reboot_count")
+    assert state
+    assert state.state == "3"
+
+    set_node_attribute(matter_node, 0, 51, 1, 5)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.m5stamp_lighting_app_reboot_count")
+    assert state
+    assert state.state == "5"
+
+    entry = entity_registry.async_get("sensor.m5stamp_lighting_app_reboot_count")
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+    # UpTime (cluster 51, attr 2) = 213 seconds → boot at now - 213s
+    state = hass.states.get("sensor.m5stamp_lighting_app_uptime")
+    assert state
+    assert state.state == "2025-01-01T13:56:27+00:00"
+
+    set_node_attribute(matter_node, 0, 51, 2, 3600)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.m5stamp_lighting_app_uptime")
+    assert state
+    assert state.state == "2025-01-01T13:00:00+00:00"
+
+    # BootReason (cluster 51, attr 4) = 1 (PowerOnReboot)
+    state = hass.states.get("sensor.m5stamp_lighting_app_boot_reason")
+    assert state
+    assert state.state == "power_on_reboot"
+
+    set_node_attribute(matter_node, 0, 51, 4, 6)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.m5stamp_lighting_app_boot_reason")
+    assert state
+    assert state.state == "software_reset"
+
+    entry = entity_registry.async_get("sensor.m5stamp_lighting_app_boot_reason")
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
+async def test_general_diagnostics_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test GeneralDiagnostics sensors are disabled by default."""
+    for entity_id in (
+        "sensor.m5stamp_lighting_app_reboot_count",
+        "sensor.m5stamp_lighting_app_uptime",
+        "sensor.m5stamp_lighting_app_boot_reason",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry, f"Expected {entity_id} to be registered"
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

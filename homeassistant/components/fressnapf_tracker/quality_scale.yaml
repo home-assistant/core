@@ -63,7 +63,7 @@ rules:
     comment: |
       This integration does not have many entities. All of them are fundamental.
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: todo

@@ -584,6 +584,10 @@ ZEROCONF = {
             "name": "bsb-lan*",
         },
         {
+            "domain": "duco",
+            "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",
+        },
+        {
             "domain": "eheimdigital",
             "name": "eheimdigital._http._tcp.local.",
         },
@@ -604,6 +608,10 @@ ZEROCONF = {
             "name": "homevolt*",
         },
         {
+            "domain": "indevolt",
+            "name": "igen_fw*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
@@ -614,6 +622,14 @@ ZEROCONF = {
         {
             "domain": "loqed",
             "name": "loqed*",
+        },
+        {
+            "domain": "lunatone",
+            "properties": {
+                "manufacturer": "lunatone industrielle elektronik gmbh",
+                "type": "dali-2-*",
+                "uid": "*",
+            },
         },
         {
             "domain": "nam",
@@ -695,6 +711,11 @@ ZEROCONF = {
             "domain": "ipp",
         },
     ],
+    "_kiosker._tcp.local.": [
+        {
+            "domain": "kiosker",
+        },
+    ],
     "_kizbox._tcp.local.": [
         {
             "domain": "overkiz",
@@ -710,6 +731,9 @@ ZEROCONF = {
     "_linkplay._tcp.local.": [
         {
             "domain": "linkplay",
+        },
+        {
+            "domain": "wiim",
         },
     ],
     "_lookin._tcp.local.": [
@@ -927,6 +951,11 @@ ZEROCONF = {
     "_smoip._tcp.local.": [
         {
             "domain": "cambridge_audio",
+        },
+    ],
+    "_solarman._tcp.local.": [
+        {
+            "domain": "solarman",
         },
     ],
     "_sonos._tcp.local.": [

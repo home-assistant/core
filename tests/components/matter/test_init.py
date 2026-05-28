@@ -1,7 +1,5 @@
 """Test the Matter integration init."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -17,9 +15,10 @@ from matter_server.client.exceptions import (
 from matter_server.common.errors import MatterError
 import pytest
 
+from homeassistant.components.matter import _derive_ble_proxy_url
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -35,7 +34,7 @@ from .common import (
     setup_integration_with_node_fixture,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_component
 from tests.typing import WebSocketGenerator
 
 
@@ -44,6 +43,38 @@ def connect_timeout_fixture() -> Generator[int]:
     """Mock the connect timeout."""
     with patch("homeassistant.components.matter.CONNECT_TIMEOUT", new=0) as timeout:
         yield timeout
+
+
+@pytest.fixture(name="ble_proxy_connect_timeout")
+def ble_proxy_connect_timeout_fixture() -> Generator[int]:
+    """Shorten the BLE proxy connect timeout."""
+    with patch(
+        "homeassistant.components.matter.BLE_PROXY_CONNECT_TIMEOUT", new=0
+    ) as timeout:
+        yield timeout
+
+
+@pytest.fixture(name="mock_bluetooth_loaded")
+def mock_bluetooth_loaded_fixture(hass: HomeAssistant) -> None:
+    """Mark the bluetooth integration as loaded for the BLE proxy gate."""
+    mock_component(hass, "bluetooth")
+
+
+@pytest.fixture(name="mock_ble_proxy")
+def mock_ble_proxy_fixture() -> Generator[tuple[MagicMock, MagicMock]]:
+    """Stub the BLE proxy created inside async_setup_entry.
+
+    Yields `(proxy, factory)` so tests can assert both the proxy lifecycle
+    (`connect`/`disconnect`) and the arguments passed to `create_matter_ble_proxy`.
+    """
+    proxy = MagicMock()
+    proxy.connect = AsyncMock()
+    proxy.disconnect = AsyncMock()
+    with patch(
+        "homeassistant.components.matter.ble_proxy.create_matter_ble_proxy",
+        return_value=proxy,
+    ) as factory:
+        yield proxy, factory
 
 
 @pytest.fixture(name="listen_ready_timeout")
@@ -557,7 +588,7 @@ async def test_stop_addon(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == entry_state
+    assert entry.state is entry_state
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_matter_server")
 
@@ -733,3 +764,237 @@ async def test_remove_config_entry_device_no_node(
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry.id)
+
+
+@pytest.mark.parametrize(
+    ("matter_ws_url", "expected"),
+    [
+        ("ws://localhost:5580/ws", "ws://localhost:5580/ble"),
+        ("wss://example.com/ws", "wss://example.com/ble"),
+        ("ws://localhost:5580/", "ws://localhost:5580/ble"),
+        ("ws://localhost:5580", "ws://localhost:5580/ble"),
+        ("ws://ws.example.com:5580/ws", "ws://ws.example.com:5580/ble"),
+        ("ws://localhost:5580/custom/ws", "ws://localhost:5580/custom/ble"),
+        ("ws://localhost:5580/api", None),
+        ("ws://localhost:5580/matter", None),
+    ],
+)
+def test_derive_ble_proxy_url(matter_ws_url: str, expected: str | None) -> None:
+    """Derived /ble URL preserves scheme/host/port and only swaps the trailing path.
+
+    Returns None when the path does not match the expected `/ws` shape.
+    """
+    assert _derive_ble_proxy_url(matter_ws_url) == expected
+
+
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_setup_when_enabled(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """BLE proxy is created with the derived `/ble` URL and connected."""
+    proxy, factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    factory.assert_called_once_with(hass, "ws://localhost:5580/ble")
+    proxy.connect.assert_awaited_once()
+    assert entry.runtime_data.ble_proxy is proxy
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    proxy.disconnect.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_disconnects_on_setup_failure(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """BLE proxy + matter_client are disconnected when setup raises after connect."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.matter.MatterAdapter.setup_nodes",
+        AsyncMock(side_effect=RuntimeError("boom")),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    proxy.connect.assert_awaited_once()
+    proxy.disconnect.assert_awaited_once()
+    matter_client.disconnect.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_disconnect_on_hass_stop(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """BLE proxy is disconnected when Home Assistant stops."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    proxy.disconnect.assert_not_awaited()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    proxy.disconnect.assert_awaited_once()
+    matter_client.disconnect.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_disconnect_failure_does_not_break_hass_stop(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """A BLE proxy disconnect failure must not prevent matter_client.disconnect()."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+    proxy.disconnect.side_effect = RuntimeError("boom")
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    proxy.disconnect.assert_awaited_once()
+    matter_client.disconnect.assert_awaited()
+
+
+async def test_ble_proxy_skipped_when_disabled(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """BLE proxy is not constructed when ble_proxy_enabled is False/missing.
+
+    With ble_proxy_enabled False the lazy `from .ble_proxy import ...` is never
+    executed, so we only assert the runtime_data side-effect, not the import.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.ble_proxy is None
+
+
+@pytest.mark.parametrize(
+    "connect_error",
+    [ConnectionError("boom"), OSError("boom"), RuntimeError("boom")],
+)
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_connect_failure_does_not_block_setup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+    connect_error: Exception,
+) -> None:
+    """Setup succeeds with ble_proxy=None when the proxy connect raises."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+    proxy.connect.side_effect = connect_error
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.ble_proxy is None
+    proxy.disconnect.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("ble_proxy_connect_timeout", "mock_bluetooth_loaded")
+async def test_ble_proxy_connect_timeout_does_not_block_setup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """Setup succeeds with ble_proxy=None when proxy connect times out."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    async def hang() -> None:
+        await asyncio.Event().wait()
+
+    proxy.connect.side_effect = hang
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.ble_proxy is None
+
+
+async def test_ble_proxy_skipped_when_bluetooth_not_loaded(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """BLE proxy is skipped (with a warning) when the bluetooth integration is not loaded."""
+    proxy, factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    factory.assert_not_called()
+    proxy.connect.assert_not_awaited()
+    assert entry.runtime_data.ble_proxy is None
+    assert "bluetooth integration is not loaded" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_skipped_when_url_underivable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """BLE proxy is skipped (with a warning) when the WS URL has a non-`/ws` path."""
+    proxy, factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/api"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    factory.assert_not_called()
+    proxy.connect.assert_not_awaited()
+    assert entry.runtime_data.ble_proxy is None
+    assert "BLE proxy will not be used" in caplog.text

@@ -1,7 +1,5 @@
 """Provide common fixtures."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 from datetime import time
 from unittest.mock import AsyncMock, MagicMock, patch

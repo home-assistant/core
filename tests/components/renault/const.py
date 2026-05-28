@@ -1,14 +1,20 @@
 """Constants for the Renault integration tests."""
 
-from homeassistant.components.renault.const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE
+from homeassistant.components.renault.const import (
+    CONF_KAMEREON_ACCOUNT_ID,
+    CONF_LOCALE,
+    CONF_LOGIN_TOKEN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 MOCK_ACCOUNT_ID = "account_id_1"
+MOCK_LOGIN_TOKEN = "sample-login-token"
 
 # Mock config data to be used across multiple tests
 MOCK_CONFIG = {
     CONF_USERNAME: "email@test.com",
     CONF_PASSWORD: "test",
+    CONF_LOGIN_TOKEN: MOCK_LOGIN_TOKEN,
     CONF_KAMEREON_ACCOUNT_ID: MOCK_ACCOUNT_ID,
     CONF_LOCALE: "fr_FR",
 }
@@ -17,6 +23,7 @@ MOCK_VEHICLES = {
     "zoe_40": {
         "endpoints": {
             "battery_status": "battery_status_charging.json",
+            "battery_soc": "battery_soc.json",
             "charge_mode": "charge_mode_always.json",
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.1.json",
@@ -25,6 +32,7 @@ MOCK_VEHICLES = {
     "zoe_50": {
         "endpoints": {
             "battery_status": "battery_status_not_charging.json",
+            "battery_soc": "battery_soc.json",
             "charge_mode": "charge_mode_schedule.json",
             "charging_settings": "charging_settings.json",
             "cockpit": "cockpit_ev.json",

@@ -5,7 +5,6 @@
       'api_key': '**REDACTED**',
       'latitude': '**REDACTED**',
       'longitude': '**REDACTED**',
-      'name': 'Home',
     }),
     'observation_data': dict({
       'ApparentTemperature': dict({

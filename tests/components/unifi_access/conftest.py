@@ -1,12 +1,17 @@
 """Fixtures for UniFi Access integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from unifi_access_api import Door, DoorLockRelayStatus, DoorPositionStatus
+from unifi_access_api import (
+    Door,
+    DoorLockRelayStatus,
+    DoorLockRuleStatus,
+    DoorPositionStatus,
+    EmergencyStatus,
+)
+from unifi_discovery import AIOUnifiScanner
 
 from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
@@ -20,11 +25,28 @@ MOCK_HOST = "192.168.1.1"
 MOCK_API_TOKEN = "test-api-token-12345"
 
 
+MOCK_ENTRY_ID = "mock-unifi-access-entry-id"
+
+
+@pytest.fixture(autouse=True)
+def mock_discovery() -> Generator[None]:
+    """Prevent real network scanning in all unifi_access tests."""
+    mock_aio_discovery = MagicMock(spec=AIOUnifiScanner)
+    mock_aio_discovery.async_scan = AsyncMock(return_value=[])
+    mock_aio_discovery.found_devices = []
+    with patch(
+        "homeassistant.components.unifi_discovery.discovery.AIOUnifiScanner",
+        return_value=mock_aio_discovery,
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        entry_id=MOCK_ENTRY_ID,
         title="UniFi Access",
         data={
             CONF_HOST: MOCK_HOST,
@@ -50,6 +72,8 @@ def _make_door(
     name: str = "Front Door",
     lock_status: DoorLockRelayStatus = DoorLockRelayStatus.LOCK,
     position_status: DoorPositionStatus = DoorPositionStatus.CLOSE,
+    door_thumbnail: str | None = None,
+    door_thumbnail_last_update: int | None = None,
 ) -> Door:
     """Create a mock Door object."""
     return Door(
@@ -57,11 +81,18 @@ def _make_door(
         name=name,
         door_lock_relay_status=lock_status,
         door_position_status=position_status,
+        door_thumbnail=door_thumbnail,
+        door_thumbnail_last_update=door_thumbnail_last_update,
     )
 
 
 MOCK_DOORS = [
-    _make_door("door-001", "Front Door"),
+    _make_door(
+        "door-001",
+        "Front Door",
+        door_thumbnail="/preview/front_door.png",
+        door_thumbnail_last_update=1700000000,
+    ),
     _make_door(
         "door-002",
         "Back Door",
@@ -86,8 +117,16 @@ def mock_client() -> Generator[MagicMock]:
     ):
         client = client_mock.return_value
         client.authenticate = AsyncMock()
+        client.is_protect_api_key = AsyncMock(return_value=False)
         client.get_doors = AsyncMock(return_value=MOCK_DOORS)
+        client.get_emergency_status = AsyncMock(
+            return_value=EmergencyStatus(evacuation=False, lockdown=False)
+        )
+        client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
+        client.set_door_lock_rule = AsyncMock()
+        client.set_emergency_status = AsyncMock()
         client.unlock_door = AsyncMock()
+        client.get_thumbnail = AsyncMock(return_value=b"")
         client.close = AsyncMock()
         client.start_websocket = MagicMock()
         yield client

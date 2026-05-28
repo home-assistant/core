@@ -1,7 +1,5 @@
 """Platform for binarysensor integration."""
 
-from __future__ import annotations
-
 from boschshcpy import SHCBatteryDevice, SHCShutterContact
 from boschshcpy.device import SHCDevice
 

@@ -257,8 +257,9 @@
 # name: test_light_state[Dimmable Light][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'supported_color_modes': list([
@@ -299,6 +300,8 @@
 # name: test_light_state[Dimmable Light][light.dimmable_light]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'brightness': 204,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'Dimmable Light',
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -310,7 +313,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'on',
   })
 # ---
 # name: test_light_state[Dimmer Switch][devices]
@@ -349,8 +352,9 @@
 # name: test_light_state[Dimmer Switch][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'supported_color_modes': list([
@@ -628,8 +632,9 @@
 # name: test_light_state[Temperature Light][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'max_color_temp_kelvin': 6500,

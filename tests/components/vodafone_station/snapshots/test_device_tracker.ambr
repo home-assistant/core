@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[device_tracker.landevice1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -40,6 +41,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'LanDevice1',
       'host_name': 'LanDevice1',
+      'in_zones': list([
+      ]),
       'ip': '192.168.1.11',
       'mac': 'yy:yy:yy:yy:yy:yy',
       'source_type': <SourceType.ROUTER: 'router'>,
@@ -54,8 +57,9 @@
 # ---
 # name: test_all_entities[device_tracker.wifidevice0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -93,6 +97,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'WifiDevice0',
       'host_name': 'WifiDevice0',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '192.168.1.10',
       'mac': 'xx:xx:xx:xx:xx:xx',
       'source_type': <SourceType.ROUTER: 'router'>,

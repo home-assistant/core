@@ -1,7 +1,5 @@
 """Support for Supla devices."""
 
-from __future__ import annotations
-
 import logging
 
 from asyncpysupla import SuplaAPI
