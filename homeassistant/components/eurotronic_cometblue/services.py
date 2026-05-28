@@ -7,6 +7,7 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -35,7 +36,6 @@ ATTR_SUNDAY: Final = "sunday"
 ATTR_DELETE: Final = "delete"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
-ATTR_TEMPERATURE: Final = "temperature"
 
 ATTR_ALL_DAYS: Final = {
     ATTR_MONDAY,
