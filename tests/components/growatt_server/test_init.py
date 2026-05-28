@@ -346,6 +346,7 @@ async def test_migrate_config_without_auth_type(
     mock_config_entry.add_to_hass(hass)
 
     # Execute migration
+    # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
     migration_result = await async_migrate_entry(hass, mock_config_entry)
     assert migration_result is True
 
@@ -377,6 +378,7 @@ async def test_migrate_legacy_config_no_auth_fields(
     mock_config_entry.add_to_hass(hass)
 
     # Migration should succeed (only updates version)
+    # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
     migration_result = await async_migrate_entry(hass, mock_config_entry)
     assert migration_result is True
 
@@ -632,6 +634,7 @@ async def test_migrate_version_bump(
     mock_config_entry.add_to_hass(hass)
 
     # Execute migration
+    # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
     migration_result = await async_migrate_entry(hass, mock_config_entry)
     assert migration_result is True
 
@@ -708,6 +711,7 @@ async def test_setup_reuses_cached_api_from_migration(
     mock_config_entry.add_to_hass(hass)
 
     # Run migration first (resolves plant_id and caches authenticated API)
+    # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
     await async_migrate_entry(hass, mock_config_entry)
 
     # Verify migration successfully resolved plant_id
@@ -772,6 +776,7 @@ async def test_migrate_failure_returns_false(
     mock_config_entry.add_to_hass(hass)
 
     # Execute migration (should fail gracefully)
+    # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
     migration_result = await async_migrate_entry(hass, mock_config_entry)
 
     # Verify migration returned False (will retry on next restart)
@@ -811,6 +816,7 @@ async def test_migrate_already_migrated(
     mock_config_entry.add_to_hass(hass)
 
     # Call migration function
+    # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
     migration_result = await async_migrate_entry(hass, mock_config_entry)
     assert migration_result is True
 

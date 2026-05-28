@@ -168,6 +168,7 @@ async def test_config_flow_entry_migrate(
             return_value=entity_registry,
         ),
     ):
+        # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
         await ps4.async_migrate_entry(hass, mock_entry)
 
     await hass.async_block_till_done()
