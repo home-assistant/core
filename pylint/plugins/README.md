@@ -101,6 +101,7 @@ Every check has a code following the
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
 | `W7418` | [`home-assistant-tests-direct-async-setup-entry`](#w7418-home-assistant-tests-direct-async-setup-entry) | Tests should not call an integration's `async_setup_entry` directly |
 | `W7420` | [`home-assistant-tests-direct-platform-async-setup-entry`](#w7420-home-assistant-tests-direct-platform-async-setup-entry) | Tests should not call a platform's `async_setup_entry` directly |
+| `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
 | `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
 
 
@@ -364,6 +365,21 @@ Tests should drive setup through `hass.config_entries.async_setup` so
 the platform is loaded via the normal Home Assistant flow.
 
 See [epic #77](https://github.com/home-assistant/epics/issues/77).
+
+
+## `home_assistant_tests_direct_async_migrate_entry` checker
+
+Detects tests that call an integration's `async_migrate_entry` directly.
+
+### `W7421`: `home-assistant-tests-direct-async-migrate-entry`
+
+Tests should not invoke an integration's `async_migrate_entry` from
+`__init__.py` directly. Instead, tests should let Home Assistant perform
+the setup via `await hass.config_entries.async_setup(entry.entry_id)` so
+that the real migration pipeline (version bumps, reloads, post-migration
+setup, etc.) is exercised.
+
+See [epic #78](https://github.com/home-assistant/epics/issues/78).
 
 
 ## `home_assistant_tests_direct_async_setup` checker
