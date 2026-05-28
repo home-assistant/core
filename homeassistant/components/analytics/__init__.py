@@ -112,12 +112,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         started = True
         await analytics.async_schedule()
 
-    entry.async_on_unload(
-        labs.async_subscribe_preview_feature(
-            hass, DOMAIN, LABS_SNAPSHOT_FEATURE, _async_handle_labs_update
-        )
+    labs.async_subscribe_preview_feature(
+        hass, DOMAIN, LABS_SNAPSHOT_FEATURE, _async_handle_labs_update
     )
-    entry.async_on_unload(async_at_started(hass, start_schedule))
+    async_at_started(hass, start_schedule)
 
     hass.data[DATA_COMPONENT] = analytics
     return True
