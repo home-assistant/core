@@ -9,7 +9,7 @@ from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -817,10 +817,25 @@ def _build_targets(
                     translation_placeholders={"telegram_bot": config_entry.title},
                 )
 
+            message_thread_id = service.data.get(ATTR_MESSAGE_THREAD_ID)
+            target_config_subentry: ConfigSubentry | None = None
+            for subentry in config_entry.subentries.values():
+                if subentry.data[ATTR_CHAT_ID] != chat_id:
+                    continue
+                target_config_subentry = target_config_subentry or subentry
+                if subentry.data.get(ATTR_MESSAGE_THREAD_ID) == message_thread_id:
+                    target_config_subentry = subentry
+                    break
+
+            if target_config_subentry is None:
+                invalid_chat_ids.add(chat_id)
+                continue
+
             entity_id = entity_registry.async_get_entity_id(
                 "notify",
                 DOMAIN,
-                f"{config_entry.runtime_data.bot.id}_{chat_id}",
+                f"{config_entry.runtime_data.bot.id}_"
+                f"{target_config_subentry.subentry_id}",
             )
 
             if not entity_id:

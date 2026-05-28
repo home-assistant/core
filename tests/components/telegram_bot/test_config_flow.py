@@ -724,7 +724,7 @@ async def test_subentry_flow_reconfigure_updates_notify_entity(
     assert len(notify_entries) == 2
     updated_notify_entry = entity_registry.async_get(notify_entry.entity_id)
     assert updated_notify_entry is not None
-    assert updated_notify_entry.unique_id == f"123456_{subentry_id}_notify"
+    assert updated_notify_entry.unique_id == f"123456_{subentry_id}"
     assert updated_notify_entry.config_subentry_id == subentry_id
 
 
