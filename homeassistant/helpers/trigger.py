@@ -760,7 +760,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
         if lower_limit is None or upper_limit is None:
             # Entity not found or invalid number, don't trigger
             return False
-        between = lower_limit < current_value < upper_limit
+        between = lower_limit <= current_value <= upper_limit
         if self._threshold_type == NumericThresholdType.BETWEEN:
             return between
         return not between
