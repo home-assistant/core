@@ -97,7 +97,8 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
         """Update the Nuki devices.
 
         Returns:
-            A dict with the events to be fired. The event type is the key and the device ids are the value
+            A dict with the events to be fired. The event
+            type is the key and the device ids are the value
 
         """
 

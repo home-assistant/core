@@ -505,13 +505,16 @@ async def test_generate_content_service(
                 "prompt": "Picture of a dog",
                 "filenames": ["/a/b/c.jpg", "d/e/f.png"],
             },
-            "Cannot read `d/e/f.png`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`",
+            "Cannot read `d/e/f.png`, no access to path;"
+            " `allowlist_external_dirs` may need to be adjusted"
+            " in `configuration.yaml`",
             [True, True],
             [True, False],
         ),
         (
             {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.mov"]},
-            "Only images and PDF are supported by the OpenAI API,`/a/b/c.mov` is not an image file or PDF",
+            "Only images and PDF are supported by the OpenAI"
+            " API,`/a/b/c.mov` is not an image file or PDF",
             [True],
             [True],
         ),
@@ -935,7 +938,7 @@ async def test_migration_from_v1_with_same_keys(
     assert not entry.options
     assert (
         len(entry.subentries) == 5
-    )  # Two conversation subentries + one AI task subentry + one STT subentry + one TTS subentry
+    )  # 2 conversation + 1 AI task + 1 STT + 1 TTS subentry
 
     # Check both conversation subentries exist with correct data
     conversation_subentries = [
@@ -1176,6 +1179,7 @@ async def test_migration_from_v1_disabled(
         for subentry in entry.subentries.values()
         if subentry.subentry_type == "tts"
     ]
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if entry.minor_version == 4:
         assert len(stt_subentries) == 0
         assert len(tts_subentries) == 0

@@ -14,6 +14,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     HaBluetoothConnector,
     async_clear_advertisement_history,
+    async_request_active_scan,
     async_scanner_by_source,
     async_scanner_devices_by_address,
 )
@@ -278,3 +279,12 @@ async def test_clear_advertisement_history(hass: HomeAssistant) -> None:
     assert len(callbacks) == 2
 
     cancel()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_request_active_scan(hass: HomeAssistant) -> None:
+    """Test async_request_active_scan completes without error."""
+    await async_request_active_scan(hass, 0.01)
+
+    with pytest.raises(ValueError):
+        await async_request_active_scan(hass, 0)

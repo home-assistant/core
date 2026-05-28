@@ -40,7 +40,8 @@ async def async_setup_platform(
     """Set up the Tube sensor."""
 
     # If configuration.yaml config exists, trigger the import flow.
-    # If the config entry already exists, this will not be triggered as only one config is allowed.
+    # If the config entry already exists, this will not be
+    # triggered as only one config is allowed.
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )

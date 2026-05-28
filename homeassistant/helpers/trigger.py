@@ -327,8 +327,8 @@ class Trigger(abc.ABC):
 
 ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_FIRST: Final = "first"
-BEHAVIOR_LAST: Final = "last"
-BEHAVIOR_ANY: Final = "any"
+BEHAVIOR_ALL: Final = "all"
+BEHAVIOR_EACH: Final = "each"
 
 ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     {
@@ -337,11 +337,11 @@ ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
-ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): vol.In(
+                [BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]
             ),
             vol.Optional(CONF_FOR): cv.positive_time_period,
         },
@@ -353,10 +353,15 @@ class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
     _domain_specs: Mapping[str, DomainSpec]
+    # States filtered from the to_state pre-filter (and `_should_include`).
     _excluded_states: Final[frozenset[str]] = frozenset(
         {STATE_UNAVAILABLE, STATE_UNKNOWN}
     )
-    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
+    # States filtered from the from_state pre-filter. Defaults to
+    # `_excluded_states`. Subclasses can override to relax the origin
+    # check.
+    _excluded_from_states: ClassVar[frozenset[str]] = _excluded_states
+    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
     _primary_entities_only: ClassVar[bool] = True
@@ -389,31 +394,59 @@ class EntityTriggerBase(Trigger):
             return state.state
         return state.attributes.get(domain_spec.value_source)
 
-    @abc.abstractmethod
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
+        """Check if the transition should fire the trigger.
 
-    @abc.abstractmethod
+        Called only after `from_state.state` has been filtered against
+        `_excluded_from_states` and `to_state.state` against
+        `_excluded_states`, so subclasses don't need to repeat those
+        checks. Default: any state change. Override to add semantics
+        (specific from/to states, value changed across a threshold,
+        etc.).
+        """
+        return from_state.state != to_state.state
+
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state matches the expected state(s)."""
+        """Check if the state is a target state for the trigger.
 
-    def check_all_match(self, entity_ids: set[str]) -> bool:
-        """Check if all entity states match."""
-        return all(
-            self.is_valid_state(state)
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-            and state.state not in self._excluded_states
-        )
+        Called only after `state.state` has been filtered against
+        `_excluded_states`, so subclasses don't need to repeat that
+        check. Default: any non-excluded state is a target. Override
+        to restrict (specific to_states, value within a threshold,
+        etc.).
+        """
+        return True
 
-    def count_matches(self, entity_ids: set[str]) -> int:
-        """Count the number of entity states that match."""
-        return sum(
-            self.is_valid_state(state)
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-            and state.state not in self._excluded_states
-        )
+    def _should_include(self, state: State) -> bool:
+        """Check if an entity should participate in all/count checks.
+
+        The default implementation excludes only entities whose state.state
+        is in `_excluded_states` (unavailable / unknown). Subclasses can
+        override to also exclude entities that lack the optional capability
+        the trigger relies on (e.g. a missing volume_level attribute).
+        """
+        return state.state not in self._excluded_states
+
+    def count_matches(self, entity_ids: set[str]) -> tuple[int, int]:
+        """Return (matches, included) for the entity set.
+
+        `matches` is the number of entities that pass `_should_include` AND
+        `is_valid_state`. `included` is the number that pass
+        `_should_include` (i.e. are visible to the all/count check at all).
+        Callers can use the pair to distinguish vacuous truth
+        (`included == 0`) from a genuine all-match
+        (`matches == included > 0`).
+        """
+        matches = 0
+        included = 0
+        for entity_id in entity_ids:
+            state = self._hass.states.get(entity_id)
+            if state is None or not self._should_include(state):
+                continue
+            included += 1
+            if self.is_valid_state(state):
+                matches += 1
+        return matches, included
 
     @override
     async def async_attach_runner(
@@ -421,7 +454,7 @@ class EntityTriggerBase(Trigger):
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
-        behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_ANY)
+        behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_EACH)
         unsub_track_same: dict[str, Callable[[], None]] = {}
 
         @callback
@@ -441,47 +474,61 @@ class EntityTriggerBase(Trigger):
 
                 Called by async_track_same_state on each state change to
                 determine whether to cancel the timer.
-                For behavior any, checks the individual entity's state.
-                For behavior first/last, checks the combined state.
+                For behavior each, checks the individual entity's state.
+                For behavior first/all, checks the combined state.
                 """
-                if behavior == BEHAVIOR_LAST:
-                    return self.check_all_match(
+                if behavior == BEHAVIOR_ALL:
+                    matches, included = self.count_matches(
                         target_state_change_data.targeted_entity_ids
                     )
+                    # Require at least one included entity to avoid keeping
+                    # the timer alive when every targeted entity has been
+                    # filtered out since it started — a vacuous all-match
+                    # (`included == 0`) would otherwise let the action fire
+                    # after `for:` even though no entity still matches.
+                    return included > 0 and matches == included
                 if behavior == BEHAVIOR_FIRST:
-                    return (
-                        self.count_matches(target_state_change_data.targeted_entity_ids)
-                        >= 1
+                    matches, _included = self.count_matches(
+                        target_state_change_data.targeted_entity_ids
                     )
-                # Behavior any: check the individual entity's state
-                if not to_state:
+                    return matches >= 1
+                # Behavior each: check the individual entity's state
+                if not to_state or to_state.state in self._excluded_states:
                     return False
                 return self.is_valid_state(to_state)
 
             if not from_state or not to_state:
                 return
 
-            # The trigger should never fire if the new state is not valid
-            if not self.is_valid_state(to_state):
+            # The trigger should never fire if the new state is excluded
+            # or not a target state.
+            if to_state.state in self._excluded_states or not self.is_valid_state(
+                to_state
+            ):
                 return
 
-            # The trigger should never fire if the transition is not valid
-            if not self.is_valid_transition(from_state, to_state):
+            # The trigger should never fire if the origin state is excluded
+            # or the transition is not valid.
+            if (
+                from_state.state in self._excluded_from_states
+                or not self.is_valid_transition(from_state, to_state)
+            ):
                 return
 
-            if behavior == BEHAVIOR_LAST:
-                if not self.check_all_match(
+            if behavior == BEHAVIOR_ALL:
+                matches, included = self.count_matches(
                     target_state_change_data.targeted_entity_ids
-                ):
+                )
+                if matches != included:
                     return
             elif behavior == BEHAVIOR_FIRST:
                 # Note: It's enough to test for exactly 1 match here because if there
                 # were previously 2 matches the transition would not be valid and we
                 # would have returned already.
-                if (
-                    self.count_matches(target_state_change_data.targeted_entity_ids)
-                    != 1
-                ):
+                matches, _ = self.count_matches(
+                    target_state_change_data.targeted_entity_ids
+                )
+                if matches != 1:
                     return
 
             @callback
@@ -506,7 +553,7 @@ class EntityTriggerBase(Trigger):
                 call_action()
                 return
 
-            subscription_key = entity_id if behavior == BEHAVIOR_ANY else behavior
+            subscription_key = entity_id if behavior == BEHAVIOR_EACH else behavior
             if subscription_key in unsub_track_same:
                 unsub_track_same.pop(subscription_key)()
             unsub_track_same[subscription_key] = async_track_same_state(
@@ -516,7 +563,7 @@ class EntityTriggerBase(Trigger):
                 state_still_valid,
                 entity_ids=(
                     entity_id
-                    if behavior == BEHAVIOR_ANY
+                    if behavior == BEHAVIOR_EACH
                     else target_state_change_data.targeted_entity_ids
                 ),
             )
@@ -550,10 +597,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
     _to_states: set[str]
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
+        """Check the value changed and the origin was not already a target state."""
         from_value = self._get_tracked_value(from_state)
         return (
             from_value != self._get_tracked_value(to_state)
@@ -573,9 +617,6 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
         from_value = self._get_tracked_value(from_state)
         return (
             from_value != self._get_tracked_value(to_state)
@@ -593,17 +634,28 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
     _from_state: str
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state matches the expected one and that the state changed."""
+        """Check if origin state matches expected and that the state changed."""
         return bool(
             self._get_tracked_value(from_state) == self._from_state
             and self._get_tracked_value(to_state) != self._from_state
         )
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state is valid."""
-        return state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN) and bool(
-            self._get_tracked_value(state) != self._from_state
-        )
+        """Check that the new state is different from the origin state."""
+        return bool(self._get_tracked_value(state) != self._from_state)
+
+
+class StatelessEntityTriggerBase(EntityTriggerBase):
+    """Trigger for entities that don't carry meaningful state.
+
+    Used for stateless entities (buttons, scenes, doorbells, events)
+    whose `state.state` is just a timestamp of the last activation.
+    `STATE_UNKNOWN` is a legitimate prior state — the first activation
+    after startup must still fire the trigger.
+    """
+
+    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA
+    _excluded_from_states: ClassVar[frozenset[str]] = frozenset({STATE_UNAVAILABLE})
 
 
 NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
@@ -708,7 +760,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
         if lower_limit is None or upper_limit is None:
             # Entity not found or invalid number, don't trigger
             return False
-        between = lower_limit < current_value < upper_limit
+        between = lower_limit <= current_value <= upper_limit
         if self._threshold_type == NumericThresholdType.BETWEEN:
             return between
         return not between
@@ -782,10 +834,7 @@ class EntityNumericalStateChangedTriggerBase(EntityNumericalStateTriggerBase):
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
+        """Check if the tracked numeric value has changed."""
         return self._get_tracked_value(from_state) != self._get_tracked_value(to_state)
 
 
@@ -822,7 +871,7 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
 
 
 NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
-    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
             vol.Required(CONF_OPTIONS): {
                 vol.Required("threshold"): NumericThresholdSelector(
@@ -837,17 +886,14 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
 class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTriggerBase):
     """Trigger for numerical state and state attribute changes.
 
-    This trigger only fires when the observed attribute changes from not within to within
-    the defined threshold.
+    This trigger only fires when the observed attribute
+    changes from not within to within the defined threshold.
     """
 
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
+        """Check that the tracked value crossed into the threshold range."""
         return not self.is_valid_state(from_state)
 
 
@@ -856,10 +902,10 @@ def _make_numerical_state_crossed_threshold_with_unit_schema(
 ) -> vol.Schema:
     """Trigger for numerical state and state attribute changes.
 
-    This trigger only fires when the observed attribute changes from not within to within
-    the defined threshold.
+    This trigger only fires when the observed attribute
+    changes from not within to within the defined threshold.
     """
-    return ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+    return ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
             vol.Required(CONF_OPTIONS, default={}): {
                 vol.Required("threshold"): NumericThresholdSelector(
@@ -1395,8 +1441,10 @@ async def _async_attach_trigger_cls(
         return payload
 
     # Wrap sync action so that it is always async.
-    # This simplifies the Trigger action runner interface by always returning a coroutine,
-    # removing the need for integrations to check for the return type when awaiting the action.
+    # This simplifies the Trigger action runner interface by
+    # always returning a coroutine, removing the need for
+    # integrations to check for the return type when awaiting
+    # the action.
     match get_hassjob_callable_job_type(action):
         case HassJobType.Executor:
             original_action = action
