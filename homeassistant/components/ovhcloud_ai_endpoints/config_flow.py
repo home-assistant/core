@@ -1,9 +1,10 @@
 """Config flow for the OVHcloud AI Endpoints integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
-from openai import AsyncOpenAI, AuthenticationError, OpenAIError
+from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -30,6 +31,8 @@ from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
+STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+
 
 class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OVHcloud AI Endpoints."""
@@ -55,7 +58,7 @@ class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
             client = _create_client(self.hass, user_input[CONF_API_KEY])
             try:
                 await _validate_api_key(client)
-            except AuthenticationError:
+            except AuthenticationError, PermissionDeniedError:
                 errors["base"] = "invalid_auth"
             except OpenAIError:
                 errors["base"] = "cannot_connect"
@@ -74,6 +77,39 @@ class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_API_KEY): str,
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            client = _create_client(self.hass, user_input[CONF_API_KEY])
+            try:
+                await _validate_api_key(client)
+            except AuthenticationError, PermissionDeniedError:
+                errors["base"] = "invalid_auth"
+            except OpenAIError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates=user_input,
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
 
