@@ -1,2 +1,0 @@
-"""Remote Home Assistant mirrors."""
-

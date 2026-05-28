@@ -70,7 +70,7 @@ A user adding a light integration through the frontend should end up with:
 
 | Decision | Choice |
 |---|---|
-| **v2 vs v1** | Fresh rewrite. v1 kept around for reference. |
+| **v2 vs v1** | Fresh rewrite. v1 removed 2026-05-28 (recover from git history). |
 | **Assignment rules** | Computed at runtime from manifest + platform inspection. No new user config. |
 | **Frontend scope** | Backend-only. Frontend is unchanged; integration setup transparently routes. |
 | **v1 limitations** | All addressed in v2 (auth scope, data isolation, Store routing, graceful shutdown). |

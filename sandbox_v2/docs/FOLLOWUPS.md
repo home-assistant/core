@@ -267,10 +267,9 @@ for the per-failure-category remediation table.
   entity_id alignment constraint, the `share/subscribe_*` protocol,
   the main-side filter, and the open questions. The actual consumer
   is owed in a future phase against that design.
-- **v1 removal.** The numeric gate (Phase 11) is now satisfied —
-  Phase 17 cleared the 99.5 % threshold. Remaining condition is "v2
-  has shipped at least one stable release," a release-process step
-  rather than a code change.
+- **v1 removal. DONE (2026-05-28).** The numeric gate (Phase 11) was
+  cleared by Phase 17; v1 was removed ahead of the "shipped a stable
+  release" condition, relying on git history for rollback.
 - **Diagnostic snapshot drift / clock-pinning.** ~30 integrations
   show `+ 'sandbox': 'built-in'` in their diagnostic snapshots (fix
   is `pytest --snapshot-update` per integration); ~70 show

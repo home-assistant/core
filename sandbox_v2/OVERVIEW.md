@@ -14,8 +14,8 @@
 > above the 99.5 % v1-removal threshold (Phase 17), the docs
 > reconciliation pass (Phase 18), device-registry bridging (Phase 19),
 > and the unwired `share_*` deletion + state-sharing design doc
-> (Phase 20). v1 (`../sandbox/`) is kept around for reference until v2
-> has shipped at least one stable release. See [`plan.md`](plan.md) for
+> (Phase 20). v1 (`../sandbox/`) was removed 2026-05-28 — recover from
+> git history if needed. See [`plan.md`](plan.md) for
 > the phase-by-phase task list, [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md)
 > for the narrative history of Phases 12+, and the per-phase
 > `STATUS-phase-N.md` files for what each phase shipped, what it
@@ -466,13 +466,11 @@ the phase that resolved each one.
   Punted to `ALWAYS_MAIN` for v2; a v3 spec on service-handler-level
   interception or sandbox-aware integration hooks is the long-term
   fix. The Phase 1 spike doc has the full write-up.
-- **v1 removal.** The numeric gate Phase 11 set (match v1's compat
-  numbers) is **now satisfied** by Phases 15–17 (99.67 % full-sweep
-  pass rate clears the 99.5 % threshold; 99.97 % on the v1-baseline
-  37-integration set). The remaining condition — v2 has shipped at
-  least one stable release — is a release-process step. Keep
-  `sandbox/` and `homeassistant/components/sandbox/` around until
-  that ships, then queue v1 removal for the release after.
+- **v1 removal. DONE (2026-05-28).** The numeric gate Phase 11 set was
+  satisfied by Phases 15–17 (99.67 % full-sweep; 99.97 % v1-baseline).
+  v1 (`sandbox/` + `homeassistant/components/sandbox/` +
+  `tests/components/sandbox/`) was removed ahead of the "shipped a stable
+  release" condition, relying on git history for rollback.
 - **`calendar` / `todo` / `weather` query-shaped RPCs.** `async_get_events`
   (calendar), `todo_items` (todo), and `weather.async_forecast_*`
   return server-side query results the action-call channel can't

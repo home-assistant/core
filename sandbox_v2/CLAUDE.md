@@ -4,10 +4,10 @@ This directory is the home for the v2 sandbox rewrite. v2 runs Home
 Assistant integrations in isolated subprocesses while main keeps a
 single unified view of devices, entities, services, and events.
 
-v1 still lives at `../sandbox/` and `../homeassistant/components/sandbox/`
-and is kept for reference until v2 has matched v1's compat numbers
-and shipped at least one stable release. **Do not delete or modify
-v1** while working in this directory.
+v1 has been **removed** (2026-05-28) — it lived at `../sandbox/` and
+`../homeassistant/components/sandbox/`; recover it from git history if ever
+needed. This happened before v2 shipped a stable release (the documented gate's
+second condition), as a deliberate call relying on git history for rollback.
 
 ## Read these first
 
@@ -99,13 +99,11 @@ took the codebase from Phase 11 to Phase 17. What's still open:
   `share/subscribe_*` protocol, the main-side filter, and the
   remaining open questions. The actual consumer + main-side
   handlers are owed in a future phase against that design.
-- **v1 removal.** The numeric gate (Phase 11) is **now satisfied** —
-  Phase 17 cleared the 99.5 % v1-removal threshold (99.67 % full
-  sweep, 99.97 % v1 baseline). The remaining condition is "v2 has
-  shipped at least one stable release," which is a release-process
-  step rather than a code change. Keep `sandbox/` and
-  `homeassistant/components/sandbox/` around until that ships, then
-  queue v1 removal for the release after.
+- **v1 removal. DONE (2026-05-28).** The numeric gate (Phase 11) was cleared
+  by Phase 17 (99.67 % full sweep, 99.97 % v1 baseline). v1 (`../sandbox/` +
+  `../homeassistant/components/sandbox/` + `tests/components/sandbox/`) was
+  removed ahead of the "v2 shipped a stable release" condition, relying on git
+  history for rollback.
 - **Diagnostic snapshot drift / clock-pinning.** Phase 17's
   `BACKLOG.md` documents two test-side residuals: ~30 diagnostic
   snapshots showing `+ 'sandbox': 'built-in'` (fix is `pytest
