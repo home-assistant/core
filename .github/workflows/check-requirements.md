@@ -19,7 +19,30 @@ tools:
 safe-outputs:
   add-comment:
     max: 1
-    target: "${{ env.PR_NUMBER }}"
+    target: "${{ needs.extract_pr_number.outputs.pr_number }}"
+  needs:
+    - extract_pr_number
+jobs:
+  extract_pr_number:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      pr_number: ${{ steps.extract.outputs.pr_number }}
+    steps:
+      - name: Download deterministic-results artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: check-requirements-deterministic
+          path: /tmp/deterministic
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract PR number from artifact
+        id: extract
+        run: |
+          PR=$(jq -r '.pr_number' /tmp/deterministic/results.json)
+          echo "pr_number=${PR}" >> "${GITHUB_OUTPUT}"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: true
@@ -32,11 +55,6 @@ steps:
       path: /tmp/gh-aw/deterministic
       run-id: ${{ github.event.workflow_run.id }}
       github-token: ${{ secrets.GITHUB_TOKEN }}
-  - name: Extract PR number from artifact
-    if: github.event.workflow_run.conclusion == 'success'
-    run: |
-      PR=$(python3 -c 'import json,sys;print(json.load(open("/tmp/gh-aw/deterministic/results.json"))["pr_number"])')
-      echo "PR_NUMBER=${PR}" >> "${GITHUB_ENV}"
 post-steps:
   - name: Verify agent produced an add_comment safe-output
     if: always() && github.event.workflow_run.conclusion == 'success'
@@ -80,10 +98,11 @@ The deterministic stage uploaded its results to the runner at
 The JSON has this shape:
 
 - `pr_number` — the PR being checked. The `add_comment` safe-output is
-  already targeted at this PR (the workflow extracted `pr_number` from
-  the artifact and wired it into the safe-output config), so **you do
-  not need to set `item_number` yourself** — just emit `add_comment`
-  with the rendered body.
+  already targeted at this PR (a pre-job extracts `pr_number` from the
+  artifact and the workflow wires it into the safe-output config via
+  `needs.extract_pr_number.outputs.pr_number`), so **you do not need to
+  set `item_number` yourself** — just emit `add_comment` with the
+  rendered body.
 - `needs_agent` — `true` iff any package's check needs resolution.
 - `packages[]` — one entry per changed package. Each entry has:
   - `name`, `old_version` (`null` for a newly added package; otherwise the
@@ -165,9 +184,10 @@ Verify that the package's source repository is publicly reachable.
    - Any other inconclusive result → ⚠️ with a one-line description.
 
 If `repo_public` resolves to ❌ for a package, **also** mark that
-package's `release_pipeline` cell/detail as `—` (em dash) and explain
-`Skipped because the source repository is not publicly accessible.` —
-because the release pipeline cannot be inspected without a public repo.
+package's `release_pipeline` and `async_blocking` cells/details as `—`
+(em dash) and explain `Skipped because the source repository is not
+publicly accessible.` — neither check can be performed without a public
+repo.
 
 ### Check kind: `pr_link`
 
@@ -242,6 +262,111 @@ host from `package.repo_url`, then apply the corresponding checklist.
    credentials, no manual `twine upload`.
 3. If no CI config can be retrieved: ⚠️ `Release pipeline could not be
    inspected; hosting provider is not GitHub or GitLab.`
+
+### Check kind: `async_blocking`
+
+Verify whether the dependency performs blocking I/O inside async code
+paths. Home Assistant runs on a single asyncio event loop, so a library
+that exposes an `async` surface must not call blocking APIs from inside
+its `async def` functions — that stalls the whole loop. A purely sync
+library is fine: Home Assistant integrations are expected to wrap such
+calls in an executor.
+
+**Two modes — pick by inspecting `package.old_version`:**
+
+- `old_version` is `null` → **new package**: review the *entire current
+  source tree*. Nothing about this dependency has been vetted before.
+- `old_version` is a string → **version bump**: review only the *diff
+  between `old_version` and `new_version`*. The previous version was
+  already accepted, so blocking calls that were present in
+  `old_version` are not regressions; report only what `new_version`
+  introduces.
+
+#### Step 1 — Decide whether the library exposes an async surface
+
+Use the `github` MCP tool (for `github.com` repos) or `web-fetch`
+(other hosts) on `package.repo_url`. Always inspect the tag /
+ref matching `new_version` (e.g. `v{new_version}` or `{new_version}`).
+
+- Locate the top-level package directory (usually named after the
+  import name, often equal or close to `package.name`).
+- Check `pyproject.toml` / `setup.py` / `setup.cfg` / `README*` for
+  async indicators (`Framework :: AsyncIO` trove classifier, `asyncio`
+  / `aiohttp` / `httpx` / `anyio` in dependencies, an async usage
+  example in the README).
+- Grep the package source for `async def`. A handful of `async def`
+  entries in the public modules is enough to treat the library as
+  having an async surface.
+
+If the library is **sync-only** (no `async def` in its public modules
+and no async framework dependency) → ✅
+`Sync-only library; Home Assistant integrations must wrap calls in an
+executor.` *This verdict is the same in both modes.*
+
+#### Step 2a — Mode: new package (`old_version` is `null`)
+
+Inspect **every `async def` in the public modules** for blocking
+patterns. Walk transitively into helpers the async functions call.
+
+#### Step 2b — Mode: version bump (`old_version` is a string)
+
+Fetch the diff between the two tags and review **only changed lines**:
+
+- GitHub: `GET /repos/{owner}/{repo}/compare/{old_tag}...{new_tag}` via
+  the `github` MCP tool, or
+  `https://github.com/{owner}/{repo}/compare/{old_tag}...{new_tag}.diff`
+  via `web-fetch`. Try the common tag formats in order until one
+  resolves: `v{version}`, `{version}`, `release-{version}`.
+- GitLab: `https://gitlab.com/{namespace}/{project}/-/compare/{old_tag}...{new_tag}.diff`.
+- Other hosts: use the project's equivalent compare URL via
+  `web-fetch`.
+
+If neither tag format resolves on the host, fall back to a full review
+(Step 2a) and mention in the detail that the diff was unavailable.
+
+When reviewing the diff, only flag blocking patterns that appear in
+**added lines** *inside or reachable from* an `async def`. A blocking
+call that existed in `old_version` and is unchanged is not a regression
+for this bump.
+
+#### Step 3 — Blocking patterns to look for
+
+In both modes, the patterns to flag inside `async def` bodies are:
+
+- Sync HTTP: `requests.`, `urllib.request`, `urllib3.` direct use,
+  `http.client.`, sync `httpx.Client(` / `httpx.get(` (NOT the
+  `AsyncClient`), `pycurl`.
+- `time.sleep(` (must be `await asyncio.sleep(`).
+- Sync sockets: bare `socket.socket` reads/writes, `ssl.wrap_socket`,
+  blocking `select.select`.
+- File I/O: `open(` / `pathlib.Path.read_*` / `.write_*` for
+  non-trivial sizes (small one-shot reads during import are
+  acceptable; reads/writes on the request path are not — prefer
+  `aiofiles` / executor).
+- Sync DB drivers used directly: `sqlite3`, `psycopg2`, `pymysql`,
+  `pymongo` (sync client), `redis.Redis` (sync client).
+- `subprocess.run` / `subprocess.call` / `os.system` (must be
+  `asyncio.create_subprocess_*`).
+
+A call that is clearly dispatched to an executor
+(`run_in_executor`, `asyncio.to_thread`, `anyio.to_thread.run_sync`)
+does NOT count as blocking.
+
+#### Step 4 — Verdict
+
+- ✅ — no offending blocking pattern in the surface being reviewed
+  (whole tree for a new package, added lines for a bump). For a bump,
+  phrase the detail as `No new blocking calls introduced in
+  {old_version} → {new_version}.`.
+- ⚠️ — blocking calls exist only in sync helpers that the async API
+  does not call, or only on a clearly non-hot path (e.g. one-shot
+  setup before the event loop is running). Cite at least one
+  `<file>:<line>` and explain why it is not on the hot path.
+- ❌ — a blocking call is reachable from an `async def` that is part
+  of the public API on the request / polling path (for a bump: the
+  call was introduced or moved onto the hot path by this version).
+  Cite the offending `<file>:<line>` as a clickable link on the repo
+  host so the contributor can jump to it.
 
 ### Check kind: `security`
 

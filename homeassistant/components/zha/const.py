@@ -75,3 +75,7 @@ MFG_CLUSTER_ID_START = 0xFC00
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
+
+# Dispatcher signal carrying device reconfigure progress events (bind result,
+# attribute reporting result, configure complete) to the websocket subscriber.
+SIGNAL_DEVICE_RECONFIGURE_EVENT = "zha_device_reconfigure_event"

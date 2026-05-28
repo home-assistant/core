@@ -15,6 +15,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 - When entering a new environment or worktree, run `script/setup` to set up the virtual environment with all development dependencies (pylint, pre-commit hooks, etc.). This is required before committing.
 - .vscode/tasks.json contains useful commands used for development.
+- After finishing a code session, run `uv run prek run --all-files` to check for linting and formatting issues.
 
 ## Python Syntax Notes
 
@@ -32,6 +33,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - Avoid using conditions/branching in tests. Instead, either split tests or adjust the test parametrization to cover all cases without branching.
 - If multiple tests share most of their code, use `pytest.mark.parametrize` to merge them into a single parameterized test instead of duplicating the body. Use `pytest.param` with an `id` parameter to name the test cases clearly.
 - We use Syrupy for snapshot testing. Leverage `.ambr` snapshots instead of repetitive and exhaustive generation of test data within Python code itself.
+- Hardcoded `entity_id`s in tests are fine. If the same one is repeated, use a constant.
 
 ## Good practices
 
