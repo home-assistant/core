@@ -10,7 +10,7 @@ from homeassistant.components.update import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WLED_KEY
+from . import async_get_releases_coordinator
 from .coordinator import (
     WLEDConfigEntry,
     WLEDDataUpdateCoordinator,
@@ -28,7 +28,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED update based on a config entry."""
-    async_add_entities([WLEDUpdateEntity(entry.runtime_data, hass.data[WLED_KEY])])
+    releases_coordinator = await async_get_releases_coordinator(
+        hass, entry.runtime_data.data.info.repo
+    )
+    async_add_entities([WLEDUpdateEntity(entry.runtime_data, releases_coordinator)])
 
 
 class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
@@ -38,6 +41,7 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
     )
+    _attr_name = "Firmware"
     _attr_title = "WLED"
 
     def __init__(
@@ -77,20 +81,24 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
+        releases = self.releases_coordinator.data
+        if releases is None:
+            return None
+
         # If we already run a pre-release, we consider being on the beta channel.
         # Offer beta version upgrade, unless stable is newer
         if (
-            (beta := self.releases_coordinator.data.beta) is not None
+            (beta := releases.beta) is not None
             and (current := self.coordinator.data.info.version) is not None
             and (current.alpha or current.beta or current.release_candidate)
             and (
-                (stable := self.releases_coordinator.data.stable) is None
+                (stable := releases.stable) is None
                 or (stable is not None and stable < beta and current > stable)
             )
         ):
             return str(beta)
 
-        if (stable := self.releases_coordinator.data.stable) is not None:
+        if (stable := releases.stable) is not None:
             return str(stable)
 
         return None
@@ -100,7 +108,9 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         """URL to the full release notes of the latest version available."""
         if (version := self.latest_version) is None:
             return None
-        return f"https://github.com/wled/WLED/releases/tag/v{version}"
+        if (releases := self.releases_coordinator.data) is None:
+            return None
+        return f"https://github.com/{releases.repo}/releases/tag/v{version}"
 
     @wled_exception_handler
     async def async_install(

@@ -11,6 +11,7 @@ from wled import (
     WLEDReleases,
     WLEDUnsupportedVersionError,
 )
+from wled.const import DEFAULT_REPO
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
@@ -30,6 +31,15 @@ from .const import (
 )
 
 type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
+
+
+def normalize_repo(repo: str | None) -> str:
+    """Normalize a WLED repository name."""
+    if repo is None:
+        return DEFAULT_REPO
+
+    normalized_repo = repo.strip()
+    return normalized_repo or DEFAULT_REPO
 
 
 def normalize_mac_address(mac: str) -> str:
@@ -186,14 +196,17 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
     """Class to manage fetching WLED releases."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    repo: str
+
+    def __init__(self, hass: HomeAssistant, *, repo: str | None = None) -> None:
         """Initialize global WLED releases updater."""
-        self.wled = WLEDReleases(session=async_get_clientsession(hass))
+        self.repo = normalize_repo(repo)
+        self.wled = WLEDReleases(repo=self.repo, session=async_get_clientsession(hass))
         super().__init__(
             hass,
             LOGGER,
             config_entry=None,
-            name=DOMAIN,
+            name=f"{DOMAIN}:{self.repo}",
             update_interval=RELEASES_SCAN_INTERVAL,
         )
 

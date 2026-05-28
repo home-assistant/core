@@ -17,6 +17,7 @@ from .coordinator import (
     WLEDDataUpdateCoordinator,
     WLEDReleasesDataUpdateCoordinator,
     normalize_mac_address,
+    normalize_repo,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,20 +32,33 @@ PLATFORMS = (
     Platform.UPDATE,
 )
 
-WLED_KEY: HassKey[WLEDReleasesDataUpdateCoordinator] = HassKey(DOMAIN)
+WLED_KEY: HassKey[dict[str, WLEDReleasesDataUpdateCoordinator]] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the WLED integration.
 
-    We set up a single coordinator for fetching WLED releases, which
-    is used across all WLED devices (and config entries) to avoid
-    fetching the same data multiple times for each.
+    Release coordinators are created lazily and cached per repository so we only
+    fetch a given repo once across all WLED devices.
     """
-    hass.data[WLED_KEY] = WLEDReleasesDataUpdateCoordinator(hass)
-    await hass.data[WLED_KEY].async_request_refresh()
+    hass.data[WLED_KEY] = {}
     return True
+
+
+async def async_get_releases_coordinator(
+    hass: HomeAssistant, repo: str | None
+) -> WLEDReleasesDataUpdateCoordinator:
+    """Return the cached release coordinator for a repository."""
+    normalized_repo = normalize_repo(repo)
+    releases_coordinators = hass.data[WLED_KEY]
+    if coordinator := releases_coordinators.get(normalized_repo):
+        return coordinator
+
+    coordinator = WLEDReleasesDataUpdateCoordinator(hass, repo=normalized_repo)
+    releases_coordinators[normalized_repo] = coordinator
+    await coordinator.async_request_refresh()
+    return coordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:
