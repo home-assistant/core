@@ -193,12 +193,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             )
             consumption_unit_class = (
                 EnergyConverter.UNIT_CLASS
-                if account.meter_type == MeterType.ELEC
+                if account.meter_type is MeterType.ELEC
                 else VolumeConverter.UNIT_CLASS
             )
             consumption_unit = (
                 UnitOfEnergy.KILO_WATT_HOUR
-                if account.meter_type == MeterType.ELEC
+                if account.meter_type is MeterType.ELEC
                 else UnitOfVolume.CENTUM_CUBIC_FEET
             )
             consumption_metadata = StatisticMetaData(
@@ -553,7 +553,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting monthly cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s monthly cost reads", len(cost_reads))
-        if account.read_resolution == ReadResolution.BILLING:
+        if account.read_resolution is ReadResolution.BILLING:
             return cost_reads
 
         if start_time is None:
@@ -573,7 +573,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             raise
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
-        if account.read_resolution == ReadResolution.DAY:
+        if account.read_resolution is ReadResolution.DAY:
             return cost_reads
 
         if start_time is None:

@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import UptimeRobotConfigEntry, UptimeRobotDataUpdateCoordinator
 
 
@@ -15,9 +15,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: UptimeRobotConfigEntry) 
     """Set up UptimeRobot from a config entry."""
     key: str = entry.data[CONF_API_KEY]
     if key.startswith(("ur", "m")):
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed(
-            "Wrong API key type detected, use the 'main' API key"
+            translation_domain=DOMAIN,
+            translation_key="api_key_wrong_type",
         )
     uptime_robot_api = UptimeRobot(key, async_get_clientsession(hass))
 
