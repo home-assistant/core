@@ -179,6 +179,19 @@ async def test_outbound_websocket_incorrectly_enabled_issue(
     assert len(issue_registry.issues) == 0
 
 
+async def test_repairs_skipped_when_device_not_initialized(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair checks are skipped when the RPC device is not initialized."""
+    mock_rpc_device.initialized = False
+
+    await init_integration(hass, 2)
+
+    assert len(issue_registry.issues) == 0
+
+
 @pytest.mark.parametrize(
     "exception", [DeviceConnectionError, RpcCallError(999, "Unknown error")]
 )
