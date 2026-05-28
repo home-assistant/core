@@ -25,17 +25,17 @@ from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.module_info import is_test_module
 
-# Map of helper module name -> recommended fixture name.
-# The fixture name happens to match the helper module name in every case.
-_REGISTRY_HELPERS: dict[str, str] = {
-    "area_registry": "area_registry",
-    "category_registry": "category_registry",
-    "device_registry": "device_registry",
-    "entity_registry": "entity_registry",
-    "floor_registry": "floor_registry",
-    "issue_registry": "issue_registry",
-    "label_registry": "label_registry",
-}
+_REGISTRY_HELPERS: frozenset[str] = frozenset(
+    {
+        "area_registry",
+        "category_registry",
+        "device_registry",
+        "entity_registry",
+        "floor_registry",
+        "issue_registry",
+        "label_registry",
+    }
+)
 
 
 def _build_alias_map(module: nodes.Module) -> dict[str, str]:
@@ -151,7 +151,7 @@ class RegistryFixturesChecker(BaseChecker):
             self.add_message(
                 "home-assistant-tests-registry-fixtures",
                 node=node,
-                args=(_REGISTRY_HELPERS[helper], helper),
+                args=(helper, helper),
             )
 
 
