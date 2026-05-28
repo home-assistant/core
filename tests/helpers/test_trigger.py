@@ -14,6 +14,7 @@ from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
@@ -41,7 +42,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, trigger
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    trigger,
+)
 from homeassistant.helpers.automation import (
     DomainSpec,
     move_top_level_schema_fields_to_options,
@@ -78,6 +83,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import (
+    MockConfigEntry,
     MockModule,
     MockPlatform,
     async_fire_time_changed,
@@ -4618,6 +4624,34 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     unsub()
 
 
+@pytest.fixture
+def mock_test_modern_trigger(hass: HomeAssistant) -> None:
+    """Register a mock 'test' integration and trigger platform exposing 'test.modern'."""
+
+    class MockModernTrigger(Trigger):
+        """Mock modern trigger that accepts any options/target."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            return config
+
+        async def async_attach_runner(
+            self, run_action: TriggerActionRunner
+        ) -> CALLBACK_TYPE:
+            return lambda: None
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"modern": MockModernTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+
+@pytest.mark.usefixtures("mock_test_modern_trigger")
 @pytest.mark.parametrize(
     ("trigger_conf", "expected"),
     [
@@ -4627,7 +4661,7 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
             id="state",
         ),
         pytest.param(
-            {"platform": "numeric_state", "entity_id": ["sensor.a"]},
+            {"platform": "numeric_state", "entity_id": ["sensor.a"], "above": 5},
             ["sensor.a"],
             id="numeric_state",
         ),
@@ -4667,28 +4701,33 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
             id="zone-left-modern",
         ),
         pytest.param(
-            {"platform": "geo_location", "zone": "zone.home"},
+            {"platform": "geo_location", "zone": "zone.home", "source": "test"},
             ["zone.home"],
             id="geo_location",
         ),
         pytest.param(
-            {"platform": "sun"},
+            {"platform": "sun", "event": "sunrise"},
             ["sun.sun"],
             id="sun",
         ),
         pytest.param(
-            {"platform": "event", "event_data": {"entity_id": "sensor.x"}},
+            {
+                "platform": "event",
+                "event_type": "test_event",
+                "event_data": {"entity_id": "sensor.x"},
+            },
             ["sensor.x"],
             id="event-with-entity-id",
         ),
         pytest.param(
-            {"platform": "event"},
+            {"platform": "event", "event_type": "test_event"},
             [],
             id="event-without-entity-id",
         ),
         pytest.param(
             {
                 "platform": "event",
+                "event_type": "test_event",
                 "event_data": {"entity_id": "not-a-valid-entity-id"},
             },
             [],
@@ -4697,6 +4736,7 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
         pytest.param(
             {
                 "platform": "event",
+                "event_type": "test_event",
                 "event_data": {"entity_id": ["sensor.x", "sensor.y"]},
             },
             [],
@@ -4727,38 +4767,89 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
         ),
     ],
 )
-def test_async_extract_entities(
-    trigger_conf: dict[str, Any], expected: list[str]
+async def test_async_extract_entities(
+    hass: HomeAssistant,
+    trigger_conf: dict[str, Any],
+    expected: list[str],
 ) -> None:
     """Test extracting entities from various trigger config shapes."""
+    [trigger_conf] = await trigger.async_validate_trigger_config(hass, [trigger_conf])
     assert trigger.async_extract_entities(trigger_conf) == expected
+
+
+_MOCK_DEVICE_ID = "_mock_device_id_"
+
+
+@pytest.fixture
+async def mock_device_automation(hass: HomeAssistant) -> str:
+    """Register a mock 'test' integration, device_trigger platform, and device.
+
+    Returns the device id, which tests substitute for _MOCK_DEVICE_ID in their
+    parametrized configs so the device platform branch can validate properly.
+    """
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass,
+        "test.device_trigger",
+        Mock(
+            TRIGGER_SCHEMA=DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+        ),
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "test")},
+    )
+    return device.id
+
+
+def _substitute(obj: Any, placeholder: str, value: str) -> Any:
+    """Recursively replace `placeholder` with `value` inside lists/dicts."""
+    if isinstance(obj, dict):
+        return {k: _substitute(v, placeholder, value) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_substitute(v, placeholder, value) for v in obj]
+    return value if obj == placeholder else obj
 
 
 @pytest.mark.parametrize(
     ("trigger_conf", "expected"),
     [
         pytest.param(
-            {"platform": "device", "device_id": "abc123"},
-            ["abc123"],
+            {
+                "platform": "device",
+                "device_id": _MOCK_DEVICE_ID,
+                "domain": "test",
+            },
+            [_MOCK_DEVICE_ID],
             id="device",
         ),
         pytest.param(
-            {"platform": "event", "event_data": {"device_id": "abc123"}},
+            {
+                "platform": "event",
+                "event_type": "test_event",
+                "event_data": {"device_id": "abc123"},
+            },
             ["abc123"],
             id="event-with-device-id",
         ),
         pytest.param(
-            {"platform": "event"},
+            {"platform": "event", "event_type": "test_event"},
             [],
             id="event-without-device-id",
         ),
         pytest.param(
-            {"platform": "tag", "device_id": ["abc123", "def456"]},
+            {
+                "platform": "tag",
+                "tag_id": "mytag",
+                "device_id": ["abc123", "def456"],
+            },
             ["abc123", "def456"],
             id="tag-with-device-id",
         ),
         pytest.param(
-            {"platform": "tag"},
+            {"platform": "tag", "tag_id": "mytag"},
             [],
             id="tag-without-device-id",
         ),
@@ -4782,8 +4873,15 @@ def test_async_extract_entities(
         ),
     ],
 )
-def test_async_extract_devices(
-    trigger_conf: dict[str, Any], expected: list[str]
+async def test_async_extract_devices(
+    hass: HomeAssistant,
+    mock_test_modern_trigger: None,
+    mock_device_automation: str,
+    trigger_conf: dict[str, Any],
+    expected: list[str],
 ) -> None:
     """Test extracting devices from various trigger config shapes."""
+    trigger_conf = _substitute(trigger_conf, _MOCK_DEVICE_ID, mock_device_automation)
+    expected = _substitute(expected, _MOCK_DEVICE_ID, mock_device_automation)
+    [trigger_conf] = await trigger.async_validate_trigger_config(hass, [trigger_conf])
     assert trigger.async_extract_devices(trigger_conf) == expected
