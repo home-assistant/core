@@ -1,0 +1,70 @@
+{
+  "components": {
+    "button2": {
+      "button": {
+        "button": {
+          "value": null
+        },
+        "numberOfButtons": {
+          "value": null
+        },
+        "supportedButtonValues": {
+          "value": null
+        }
+      }
+    },
+    "main": {
+      "powerMeter": {
+        "power": {
+          "value": 0.0,
+          "unit": "W",
+          "timestamp": "2026-05-28T12:21:31.639Z"
+        }
+      },
+      "energyMeter": {
+        "energy": {
+          "value": 36.89,
+          "unit": "kWh",
+          "timestamp": "2026-05-28T12:32:57.766Z"
+        }
+      },
+      "switchLevel": {
+        "levelRange": {
+          "value": null
+        },
+        "level": {
+          "value": 0,
+          "unit": "%",
+          "timestamp": "2026-05-28T10:20:37.674Z"
+        }
+      },
+      "legendabsolute60149.forcedOnLevel": {
+        "forcedOnLevel": {
+          "value": 5,
+          "unit": "%",
+          "timestamp": "2026-05-21T15:10:35.371Z"
+        }
+      },
+      "refresh": {},
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2026-05-28T10:20:37.616Z"
+        }
+      }
+    },
+    "button1": {
+      "button": {
+        "button": {
+          "value": null
+        },
+        "numberOfButtons": {
+          "value": null
+        },
+        "supportedButtonValues": {
+          "value": null
+        }
+      }
+    }
+  }
+}
