@@ -29,6 +29,7 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow(
     hass: HomeAssistant,
     mock_iometer_client: MagicMock,
@@ -54,6 +55,7 @@ async def test_user_flow(
     assert result["result"].unique_id == IOMETER_DEVICE_ID
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow(
     hass: HomeAssistant,
     mock_iometer_client: MagicMock,
