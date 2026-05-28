@@ -198,14 +198,6 @@ class IPPPageCountSensor(IPPEntity, SensorEntity):
 
     entity_description: IPPPageCountSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: IPPDataUpdateCoordinator,
-        description: IPPPageCountSensorEntityDescription,
-    ) -> None:
-        """Initialize the page count sensor."""
-        super().__init__(coordinator, description)
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
