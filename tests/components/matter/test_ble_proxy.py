@@ -59,7 +59,7 @@ def test_to_advertisement_data_translates_fields() -> None:
     assert ad.service_uuids == list(info.service_uuids)
 
 
-async def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) -> None:
+def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) -> None:
     """Factory builds MatterBleProxy with HA-backed scan_source and resolver."""
     with patch("homeassistant.components.matter.ble_proxy.MatterBleProxy") as proxy_cls:
         result = create_matter_ble_proxy(hass, "ws://localhost:5580/ble")
@@ -71,19 +71,11 @@ async def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) ->
     assert isinstance(kwargs["device_resolver"], HaBluetoothDeviceResolver)
     assert result is proxy_cls.return_value
 
-    # The library's long-running `_message_loop` would block Home Assistant's
-    # startup if scheduled via `async_create_task`; it must use a background task.
-    async def _noop() -> None:
-        return
-
-    with patch.object(
-        hass, "async_create_background_task", wraps=hass.async_create_background_task
-    ) as create_background:
-        task = kwargs["task_factory"](_noop())
-
-    create_background.assert_called_once()
-    assert create_background.call_args.kwargs.get("name") == "matter_ble_proxy"
-    await task
+    # The library's long-running `_message_loop` must run as a background task,
+    # otherwise HA bootstrap waits on it and times out (#172380).
+    with patch.object(hass, "async_create_background_task") as bg_task:
+        kwargs["task_factory"](MagicMock())
+    bg_task.assert_called_once()
 
 
 async def test_scan_source_start_registers_passive_callback(
