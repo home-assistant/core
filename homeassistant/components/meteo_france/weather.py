@@ -8,12 +8,14 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
     WeatherEntity,
@@ -138,6 +140,11 @@ class MeteoFranceWeather(
         return self.coordinator.data.current_forecast["T"]["value"]
 
     @property
+    def native_apparent_temperature(self) -> float:
+        """Return the apparent temperature."""
+        return self.coordinator.data.current_forecast["T"]["windchill"]
+
+    @property
     def native_pressure(self) -> float:
         """Return the pressure."""
         return self.coordinator.data.current_forecast["sea_level"]
@@ -185,6 +192,7 @@ class MeteoFranceWeather(
                         ),
                         ATTR_FORECAST_HUMIDITY: forecast["humidity"],
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["value"],
+                        ATTR_FORECAST_NATIVE_APPARENT_TEMP: forecast["T"]["windchill"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["rain"].get("1h"),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind"]["speed"],
                         ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast["wind"].get(
@@ -210,6 +218,7 @@ class MeteoFranceWeather(
                             forecast["weather12H"]["desc"], force_day=True
                         ),
                         ATTR_FORECAST_HUMIDITY: forecast["humidity"]["max"],
+                        ATTR_FORECAST_UV_INDEX: forecast["uv"],
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["max"],
                         ATTR_FORECAST_NATIVE_TEMP_LOW: forecast["T"]["min"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["precipitation"][
