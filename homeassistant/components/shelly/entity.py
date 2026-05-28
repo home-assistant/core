@@ -536,7 +536,6 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         key: str,
         attribute: str,
         description: RpcEntityDescription,
-        #        entry: RegistryEntry | None = None,
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator, key)
