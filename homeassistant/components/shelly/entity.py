@@ -244,7 +244,8 @@ def async_restore_rpc_attribute_entities(
     sensor_class: Callable,
 ) -> None:
     """Restore RPC attributes entities."""
-    entities = []
+    entities: list[Entity] = []
+    sleep_period = config_entry.data[CONF_SLEEP_PERIOD]
 
     ent_reg = er.async_get(hass)
     entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
@@ -259,11 +260,13 @@ def async_restore_rpc_attribute_entities(
         attribute = entry.unique_id.split("-")[-1]
 
         if description := sensors.get(attribute):
-            entities.append(
-                get_entity_class(sensor_class, description)(
-                    coordinator, key, attribute, description, entry
+            entity_class = get_entity_class(sensor_class, description)
+            if sleep_period:
+                entities.append(
+                    entity_class(coordinator, key, attribute, description, entry)
                 )
-            )
+            else:
+                entities.append(entity_class(coordinator, key, attribute, description))
 
     if not entities:
         return
@@ -533,6 +536,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         key: str,
         attribute: str,
         description: RpcEntityDescription,
+        #        entry: RegistryEntry | None = None,
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator, key)
