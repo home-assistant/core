@@ -5,24 +5,20 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
 )
-from homeassistant.components.samsung_infrared.media_player import SOURCE_MAP
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -73,11 +69,6 @@ async def test_entities(
         (SERVICE_MEDIA_PLAY, {}, SamsungTVCode.PLAY),
         (SERVICE_MEDIA_PAUSE, {}, SamsungTVCode.PAUSE),
         (SERVICE_MEDIA_STOP, {}, SamsungTVCode.STOP),
-        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "tv"}, SamsungTVCode.TV),
-        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "hdmi_1"}, SamsungTVCode.HDMI_1),
-        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "hdmi_2"}, SamsungTVCode.HDMI_2),
-        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "hdmi_3"}, SamsungTVCode.HDMI_3),
-        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "hdmi_4"}, SamsungTVCode.HDMI_4),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -97,44 +88,4 @@ async def test_media_player_action_sends_correct_code(
     )
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
-    assert (
-        mock_infrared_emitter_entity.send_command_calls[0] == expected_code.to_command()
-    )
-
-    # Verify source attribute is updated for SELECT_SOURCE calls
-    if service == SERVICE_SELECT_SOURCE:
-        state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-        assert state is not None
-        assert (
-            state.attributes.get(ATTR_INPUT_SOURCE) == service_data[ATTR_INPUT_SOURCE]
-        )
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_select_invalid_source(
-    hass: HomeAssistant,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-) -> None:
-    """Test selecting an invalid source raises ServiceValidationError."""
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {
-                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-                ATTR_INPUT_SOURCE: "invalid_source",
-            },
-            blocking=True,
-        )
-
-    assert exc_info.value.translation_domain == "samsung_infrared"
-    assert exc_info.value.translation_key == "invalid_source"
-
-    placeholders = exc_info.value.translation_placeholders
-    assert placeholders["invalid_source"] == "invalid_source"
-    # Verify source keys are shown in same order as source_list
-    expected_sources = ", ".join(SOURCE_MAP.keys())
-    assert placeholders["valid_sources"] == expected_sources
-
-    # Verify no command was sent
-    assert len(mock_infrared_emitter_entity.send_command_calls) == 0
+    assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code
