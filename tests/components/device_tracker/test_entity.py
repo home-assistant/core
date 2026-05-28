@@ -1379,6 +1379,31 @@ def test_base_tracker_entity() -> None:
         entity.state_attributes  # noqa: B018
 
 
+def test_battery_level_override_deprecation_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that overriding battery_level in a subclass logs a warning."""
+    error_message = "is overriding the deprecated battery_level property"
+
+    caplog.clear()
+
+    class _SubclassWithOverride(TrackerEntity):
+        @property
+        def battery_level(self) -> int | None:
+            return 50
+
+    assert error_message in caplog.text
+    assert _SubclassWithOverride.__name__ in caplog.text
+
+    # No warning for a subclass that does not override battery_level
+    caplog.clear()
+
+    class _SubclassWithoutOverride(TrackerEntity):
+        pass
+
+    assert error_message not in caplog.text
+
+
 async def test_attr_location_name_deprecation_warning(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
