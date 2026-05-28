@@ -13,6 +13,9 @@
     "todo": {
       "shop": {
         "default": "mdi:cart"
+      },
+      "todo": {
+        "default": "mdi:checkbox-marked-circle-auto-outline"
       }
     }
   },

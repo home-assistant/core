@@ -82,7 +82,6 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         }
 
         self._todo_list_items: dict[str, dict[str, AmazonListItem]] = {}
-
         self.api.on_todo_event.append(self.todo_event_handler)
         self.api.on_todo_event.freeze()
 

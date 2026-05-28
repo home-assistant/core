@@ -57,7 +57,7 @@ async def async_setup_entry(
 
 
 class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
-    """Representation of an Alexa To-do List."""
+    """Representation of an Alexa to-do list."""
 
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
@@ -68,7 +68,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
     def __init__(
         self, coordinator: AmazonDevicesCoordinator, alexa_list: AmazonListInfo
     ) -> None:
-        """Initialize an AlexaTodoList."""
+        """Initialize an Alexa to-do list entity."""
         self._coordinator = coordinator
         self._list = alexa_list
 
@@ -91,7 +91,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
 
     @property
     def todo_items(self) -> list[TodoItem]:
-        """All Todo items in the list."""
+        """Return all to-do items in the list."""
 
         todo_items = self._coordinator.todo_list_items.get(self._list.id, {}).values()
 
@@ -196,10 +196,11 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 },
             )
 
-        # Check what has changed
-        has_completed_changed = (
-            existing_item.status == AmazonListItemStatus.COMPLETE
-        ) != (item.status == TodoItemStatus.COMPLETED)
+        has_status_update = item.status is not None
+        has_completed_changed = has_status_update and (
+            (existing_item.status == AmazonListItemStatus.COMPLETE)
+            != (item.status == TodoItemStatus.COMPLETED)
+        )
         has_summary_changed = existing_item.name != item.summary
 
         if has_completed_changed:
