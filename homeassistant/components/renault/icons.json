@@ -91,6 +91,9 @@
     },
     "charge_start": {
       "service": "mdi:ev-station"
+    },
+    "vehicle_get_picture": {
+      "service": "mdi:image"
     }
   }
 }
