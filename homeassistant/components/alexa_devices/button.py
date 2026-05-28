@@ -39,8 +39,6 @@ async def async_setup_entry(
 class AmazonRoutineButton(AmazonServiceEntity, ButtonEntity):
     """Button entity for Alexa routine."""
 
-    _attr_has_entity_name = True
-
     def __init__(self, coordinator: AmazonDevicesCoordinator, routine: str) -> None:
         """Initialize the routine button entity."""
         self._routine = routine
