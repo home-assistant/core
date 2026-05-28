@@ -517,6 +517,16 @@ async def test_camera_reconnect_webhook(
         # Check initial state
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+        if camera_type != "NDB":
+            assert (
+                hass.states.get(camera_entity).attributes.get("motion_detection")
+                is True
+            )
+        else:
+            assert (
+                hass.states.get(camera_entity).attributes.get("motion_detection")
+                is False
+            )
 
         # Camera off event (meaning: monitoring off, but still connected)
         response = {
@@ -530,6 +540,9 @@ async def test_camera_reconnect_webhook(
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert (
+            hass.states.get(camera_entity).attributes.get("motion_detection") is False
+        )
 
         # Real camera disconnect
         response = {
@@ -543,6 +556,7 @@ async def test_camera_reconnect_webhook(
 
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
+        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Camera reconnect (making it available physically, but with monitoring off as it's not on yet)
         response = {
@@ -556,6 +570,9 @@ async def test_camera_reconnect_webhook(
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert (
+            hass.states.get(camera_entity).attributes.get("motion_detection") is False
+        )
 
         # Camera on event (meaning: monitoring is also resuming to on)
         response = {
@@ -569,6 +586,16 @@ async def test_camera_reconnect_webhook(
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+        if camera_type != "NDB":
+            assert (
+                hass.states.get(camera_entity).attributes.get("motion_detection")
+                is True
+            )
+        else:
+            assert (
+                hass.states.get(camera_entity).attributes.get("motion_detection")
+                is False
+            )
 
 
 @pytest.mark.parametrize(
@@ -850,10 +877,6 @@ async def test_camera_image_with_attribute_change(
             homes_to_check.extend(body["homes"])
 
         for home_data in homes_to_check:
-            # Safety check: ensure home_data is actually a dictionary
-            if not isinstance(home_data, dict):
-                continue
-
             modules = home_data.get("modules", [])
             for module in modules:
                 if isinstance(module, dict) and module.get("id") == camera_entity_id:
@@ -884,17 +907,12 @@ async def test_camera_image_with_attribute_change(
         patch(
             "homeassistant.components.netatmo.webhook_generate_url",
         ) as mock_webhook,
-        patch(
-            f"pyatmo.modules.{camera_type}.async_get_live_snapshot",
-            new_callable=AsyncMock,
-        ) as mock_get_live_snapshot,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_camera_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_get_image = AsyncMock(return_value=FAKE_IMG)
         mock_webhook.return_value = "https://example.com"
-        mock_get_live_snapshot.return_value = FAKE_IMG
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
