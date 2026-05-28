@@ -21,6 +21,7 @@ from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_PRESENCE_DETECTED,
     ATTR_WATER_LEVEL_DETECTED,
     ATTR_WINDOW_STATE,
+    SIMPLE_BINARY_SENSOR_DESCRIPTIONS,
 )
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_EVENT_DELAY,
@@ -431,7 +432,7 @@ async def test_hmip_smoke_detector_chamber_degraded(
 ) -> None:
     """Test HomematicipSmokeDetectorChamberDegraded."""
     entity_id = "binary_sensor.rauchwarnmelder_chamber_degraded"
-    entity_name = "Rauchwarnmelder Chamber Degraded"
+    entity_name = "Rauchwarnmelder Chamber degraded"
     device_model = "HmIP-SWSD"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Rauchwarnmelder"]
@@ -562,6 +563,11 @@ async def test_hmip_battery_sensor(
     ha_state, hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
+    assert [
+        state.entity_id
+        for state in hass.states.async_all("binary_sensor")
+        if state.entity_id.startswith("binary_sensor.wohnungsture_battery")
+    ] == [entity_id]
 
     assert ha_state.state == STATE_OFF
     await async_manipulate_test_data(hass, hmip_device, "lowBat", True)
@@ -725,3 +731,20 @@ async def test_hmip_multi_contact_interface(
     )
 
     assert ha_state.state == STATE_UNKNOWN
+
+
+def test_simple_binary_sensor_descriptions_no_overlap() -> None:
+    """Every Device subclass must match at most one description group."""
+    groups = list(SIMPLE_BINARY_SENSOR_DESCRIPTIONS)
+    for i, group_a in enumerate(groups):
+        for group_b in groups[i + 1 :]:
+            for cls in group_a:
+                assert not issubclass(cls, group_b), (
+                    f"{cls.__name__} matches both {group_a} and {group_b}; "
+                    "duplicate entities would be created"
+                )
+            for cls in group_b:
+                assert not issubclass(cls, group_a), (
+                    f"{cls.__name__} matches both {group_b} and {group_a}; "
+                    "duplicate entities would be created"
+                )

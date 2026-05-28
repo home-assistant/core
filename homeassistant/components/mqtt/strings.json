@@ -378,6 +378,7 @@
             "support_duration": "Duration support",
             "support_volume_set": "Set volume support",
             "supported_color_modes": "Supported color modes",
+            "timezone": "Time zone",
             "url_template": "URL template",
             "url_topic": "URL topic",
             "value_template": "Value template"
@@ -430,6 +431,7 @@
             "support_duration": "The siren supports setting a duration in second. The `duration` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_duration)",
             "support_volume_set": "The siren supports setting a volume. The `volume_level` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_volume_set)",
             "supported_color_modes": "A list of color modes supported by the light. Possible color modes are On/Off, Brightness, Color temperature, HS, XY, RGB, RGBW, RGBWW, White. Note that if On/Off or Brightness are used, that must be the only value in the list. [Learn more.]({url}#supported_color_modes)",
+            "timezone": "Set to a valid [IANA time zone identifier]({tz_abbr_url}). Do not set this option if the date/time structure is providing time zone information via the status update.",
             "url_template": "[Template]({value_templating_url}) to extract an URL from the received URL topic payload value. [Learn more.]({url}#url_template)",
             "url_topic": "The MQTT topic subscribed to receive messages containing the image URL. [Learn more.]({url}#url_topic)",
             "value_template": "Defines a [template]({value_templating_url}) to extract the {platform} entity value. [Learn more.]({url}#value_template)"
@@ -1138,7 +1140,7 @@
         },
         "step": {
           "confirm": {
-            "description": "Home Assistant is migrating to MQTT protocol version 5. The currently configured protocol version for broker {broker} is {protocol}. This protocol version is deprecated, and support for it will be removed.\n\nSubmitting this form will try to migrate your MQTT broker configuration to use protocol version 5 to fix this issue.",
+            "description": "Home Assistant needs to migrate to MQTT protocol version 5. The currently configured protocol version for broker {broker} is {protocol}. This protocol version is deprecated, and support for it will be removed.\n\nSubmitting this form will attempt to migrate your MQTT broker configuration to use protocol version 5 to fix this issue. If the broker cannot be reached using MQTT protocol version 5, for example because it does not support it, the migration will be aborted.",
             "title": "MQTT protocol change required"
           }
         }
@@ -1468,6 +1470,8 @@
         "button": "[%key:component::button::title%]",
         "climate": "[%key:component::climate::title%]",
         "cover": "[%key:component::cover::title%]",
+        "date": "[%key:component::date::title%]",
+        "datetime": "[%key:component::datetime::title%]",
         "fan": "[%key:component::fan::title%]",
         "image": "[%key:component::image::title%]",
         "light": "[%key:component::light::title%]",
@@ -1479,6 +1483,7 @@
         "siren": "[%key:component::siren::title%]",
         "switch": "[%key:component::switch::title%]",
         "text": "[%key:component::text::title%]",
+        "time": "[%key:component::time::title%]",
         "valve": "[%key:component::valve::title%]",
         "water_heater": "[%key:component::water_heater::title%]"
       }

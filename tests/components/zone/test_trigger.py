@@ -1,14 +1,28 @@
 """The tests for the location automation."""
 
+from typing import Any
+
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import automation, zone
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_component
+from tests.components.common import (
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -343,10 +357,7 @@ async def test_unknown_zone(
         },
     )
 
-    assert (
-        "Automation 'My Automation' is referencing non-existing zone"
-        " 'zone.no_such_zone' in a zone trigger" not in caplog.text
-    )
+    assert "Non-existing zone 'zone.no_such_zone' in a zone trigger" not in caplog.text
 
     hass.states.async_set(
         "test.entity",
@@ -356,7 +367,192 @@ async def test_unknown_zone(
     )
     await hass.async_block_till_done()
 
-    assert (
-        "Automation 'My Automation' is referencing non-existing zone"
-        " 'zone.no_such_zone' in a zone trigger" in caplog.text
+    assert "Non-existing zone 'zone.no_such_zone' in a zone trigger" in caplog.text
+
+
+# --- New-style zone trigger tests ---
+
+ZONE_HOME = "zone.home"
+ZONE_WORK = "zone.work"
+IN_ZONES_HOME = {"in_zones": [ZONE_HOME]}
+IN_ZONES_WORK = {"in_zones": [ZONE_WORK]}
+IN_ZONES_NONE: dict[str, list[str]] = {"in_zones": []}
+TRIGGER_ZONE = ZONE_HOME
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("zone.entered", {"zone": TRIGGER_ZONE}, True, True),
+        ("zone.left", {"zone": TRIGGER_ZONE}, True, True),
+    ],
+)
+async def test_zone_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that zone triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.parametrize("trigger_key", ["zone.entered", "zone.left"])
+async def test_zone_trigger_rejects_non_zone_entity_id(
+    hass: HomeAssistant, trigger_key: str
+) -> None:
+    """Test that the zone option must reference entities in the zone domain."""
+    with pytest.raises(vol.Invalid):
+        await async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": trigger_key,
+                    "target": {"entity_id": "person.alice"},
+                    "options": {"zone": "person.alice"},
+                }
+            ],
+        )
+
+
+@pytest.fixture
+async def target_zone_entities(
+    hass: HomeAssistant, domain: str
+) -> dict[str, list[str]]:
+    """Create multiple zone-trackable entities associated with different targets."""
+    return await target_entities(hass, domain, domain_excluded="sensor")
+
+
+_ZONE_TRIGGER_STATES = [
+    *parametrize_trigger_states(
+        trigger="zone.entered",
+        trigger_options={"zone": TRIGGER_ZONE},
+        target_states=[
+            ("home", IN_ZONES_HOME),
+        ],
+        other_states=[
+            ("not_home", IN_ZONES_NONE),
+            ("Work", IN_ZONES_WORK),
+        ],
+    ),
+    *parametrize_trigger_states(
+        trigger="zone.left",
+        trigger_options={"zone": TRIGGER_ZONE},
+        target_states=[
+            ("not_home", IN_ZONES_NONE),
+            ("Work", IN_ZONES_WORK),
+        ],
+        other_states=[
+            ("home", IN_ZONES_HOME),
+        ],
+    ),
+]
+
+
+def _parametrize_zone_target_entities() -> list[tuple[dict[str, Any], str, int, str]]:
+    """Parametrize target entities for all supported zone trigger domains."""
+    return [
+        (*params, domain)
+        for domain in ("person", "device_tracker")
+        for params in parametrize_target_entities(domain)
+    ]
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target", "domain"),
+    _parametrize_zone_target_entities(),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    _ZONE_TRIGGER_STATES,
+)
+async def test_zone_trigger_behavior_each(
+    hass: HomeAssistant,
+    target_zone_entities: dict[str, list[str]],
+    trigger_target_config: dict[str, Any],
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test zone triggers fire when any targeted entity changes."""
+    await assert_trigger_behavior_each(
+        hass,
+        target_entities=target_zone_entities,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target", "domain"),
+    _parametrize_zone_target_entities(),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    _ZONE_TRIGGER_STATES,
+)
+async def test_zone_trigger_behavior_first(
+    hass: HomeAssistant,
+    target_zone_entities: dict[str, list[str]],
+    trigger_target_config: dict[str, Any],
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test zone triggers fire when first targeted entity changes."""
+    await assert_trigger_behavior_first(
+        hass,
+        target_entities=target_zone_entities,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target", "domain"),
+    _parametrize_zone_target_entities(),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    _ZONE_TRIGGER_STATES,
+)
+async def test_zone_trigger_behavior_all(
+    hass: HomeAssistant,
+    target_zone_entities: dict[str, list[str]],
+    trigger_target_config: dict[str, Any],
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test zone triggers fire when last targeted entity changes."""
+    await assert_trigger_behavior_all(
+        hass,
+        target_entities=target_zone_entities,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
     )
