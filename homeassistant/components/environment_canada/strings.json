@@ -115,11 +115,14 @@
   "exceptions": {
     "not_connected": {
       "message": "Environment Canada is not connected"
+    },
+    "service_entry_ex": {
+      "message": "Environment Canada get_alerts error: config entry not found or not loaded"
     }
   },
   "services": {
     "get_alerts": {
-      "description": "Retrieves the alerts from selected weather service.",
+      "description": "Retrieves the alerts from the selected weather service.",
       "fields": {
         "config_entry_id": {
           "description": "The Environment Canada service to retrieve alerts from.",
