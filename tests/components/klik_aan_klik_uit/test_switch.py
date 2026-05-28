@@ -1,7 +1,5 @@
 """Tests for the Kaku RC switch platform."""
 
-from unittest.mock import patch
-
 from rf_protocols.commands.kaku import _DEFAULT_REPEATS
 
 from homeassistant.components.switch import (
@@ -36,46 +34,38 @@ async def test_turn_on_off_sends_kaku_commands(
     entity_id = _switch_entity_id(hass)
     context = Context()
 
-    with patch(
-        "homeassistant.components.klik_aan_klik_uit.switch.KakuCommand",
-    ) as mock_command:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
-            context=context,
-            blocking=True,
-        )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        context=context,
+        blocking=True,
+    )
 
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_ON
-        assert len(mock_rf_entity.send_command_calls) == 1
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert len(mock_rf_entity.send_command_calls) == 1
 
-        first_call = mock_command.call_args_list[0]
-        assert first_call.kwargs["on"] is True
-        assert first_call.kwargs.get("dimlevel") is None
-        assert (
-            first_call.kwargs.get("frame_repeats", _DEFAULT_REPEATS) == _DEFAULT_REPEATS
-        )
+    first_command = mock_rf_entity.send_command_calls[0].command
+    assert first_command.on is True
+    assert first_command.dimlevel is None
+    assert first_command.repeat_count == _DEFAULT_REPEATS
 
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
-            context=context,
-            blocking=True,
-        )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        context=context,
+        blocking=True,
+    )
 
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_OFF
-        assert len(mock_rf_entity.send_command_calls) == 2
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert len(mock_rf_entity.send_command_calls) == 2
 
-        second_call = mock_command.call_args_list[1]
-        assert second_call.kwargs["on"] is False
-        assert second_call.kwargs.get("dimlevel") is None
-        assert (
-            second_call.kwargs.get("frame_repeats", _DEFAULT_REPEATS)
-            == _DEFAULT_REPEATS
-        )
+    second_command = mock_rf_entity.send_command_calls[1].command
+    assert second_command.on is False
+    assert second_command.dimlevel is None
+    assert second_command.repeat_count == _DEFAULT_REPEATS
