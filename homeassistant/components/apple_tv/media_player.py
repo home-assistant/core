@@ -379,6 +379,8 @@ class AppleTvMediaPlayer(
         except (
             exceptions.BlockedStateError,
             exceptions.ConnectionLostError,
+            exceptions.InvalidStateError,
+            exceptions.OperationTimeoutError,
             exceptions.PlaybackError,
             exceptions.ProtocolError,
         ) as ex:

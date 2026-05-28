@@ -7,7 +7,9 @@ from pyatv.const import FeatureName, FeatureState
 from pyatv.exceptions import (
     BlockedStateError,
     ConnectionLostError,
+    InvalidStateError,
     NotSupportedError,
+    OperationTimeoutError,
     PlaybackError,
     ProtocolError,
 )
@@ -218,7 +220,9 @@ async def test_play_media_raises_when_no_streaming_method(
     [
         (BlockedStateError, "stream_failed"),
         (ConnectionLostError, "stream_failed"),
+        (InvalidStateError, "stream_failed"),
         (NotSupportedError, "streaming_not_supported"),
+        (OperationTimeoutError, "stream_failed"),
         (PlaybackError, "stream_failed"),
         (ProtocolError, "stream_failed"),
     ],
