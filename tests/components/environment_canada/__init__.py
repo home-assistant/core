@@ -43,6 +43,9 @@ async def init_integration(hass: HomeAssistant, ec_data) -> MockConfigEntry:
     radar_mock = mock_ec()
     radar_mock.image = b"GIF..."
     radar_mock.timestamp = datetime(2022, 10, 4, tzinfo=UTC)
+    radar_mock.layer = "precip_type"
+    radar_mock.metadata = {"attribution": "Data provided by Environment Canada"}
+    radar_mock.clear_cache = MagicMock()
 
     with (
         patch(
@@ -54,7 +57,7 @@ async def init_integration(hass: HomeAssistant, ec_data) -> MockConfigEntry:
             return_value=mock_ec(),
         ),
         patch(
-            "homeassistant.components.environment_canada.ECRadar",
+            "homeassistant.components.environment_canada.ECMap",
             return_value=radar_mock,
         ),
         patch(
