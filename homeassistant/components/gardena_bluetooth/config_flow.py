@@ -36,14 +36,19 @@ _SUPPORTED_PRODUCT_TYPES = {
 def _is_supported(discovery_info: BluetoothServiceInfo) -> bool:
     """Check if device is supported.
 
-    Accepts any device carrying Gardena manufacturer data (company id 0x0426).
-    The legacy 01889-20 family also advertised the ScanService UUID
-    98bd0001-..., but newer Smart Water Control devices (G-19033, G-19034,
-    G-19050) advertise only manufacturer data with no service UUIDs, so the
-    UUID is no longer a reliable filter.
+    Validates that the advertisement carries Gardena manufacturer data
+    (company id 0x0426) AND decodes to a supported product type. The
+    legacy 01889-20 family also advertised the ScanService UUID
+    98bd0001-..., but newer Smart Water Control devices (G-19033,
+    G-19034, G-19050) advertise only manufacturer data with no service
+    UUIDs, so we filter on the decoded product type instead.
     """
-    if discovery_info.manufacturer_data.get(ManufacturerData.company) is None:
+    payload = discovery_info.manufacturer_data.get(ManufacturerData.company)
+    if payload is None:
         _LOGGER.debug("Missing Gardena manufacturer data: %s", discovery_info)
+        return False
+    if ManufacturerData.decode(payload).product_type not in _SUPPORTED_PRODUCT_TYPES:
+        _LOGGER.debug("Unsupported product type: %s", discovery_info)
         return False
     return True
 

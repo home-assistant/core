@@ -138,6 +138,8 @@ class GardenaBluetoothValve1Switch(GardenaBluetoothValveXSwitch):
     _attr_translation_key = "state_valve_1"
     characteristics = {
         Valve1.state.unique_id,
+        Valve1.manual_watering_duration.unique_id,
+        Valve1.available.unique_id,
         Valve1.start_watering.unique_id,
         Valve1.stop_watering.unique_id,
     }
@@ -150,6 +152,8 @@ class GardenaBluetoothValve2Switch(GardenaBluetoothValveXSwitch):
     _attr_translation_key = "state_valve_2"
     characteristics = {
         Valve2.state.unique_id,
+        Valve2.manual_watering_duration.unique_id,
+        Valve2.available.unique_id,
         Valve2.start_watering.unique_id,
         Valve2.stop_watering.unique_id,
     }
