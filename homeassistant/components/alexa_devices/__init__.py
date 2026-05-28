@@ -52,7 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     await coordinator.async_config_entry_first_refresh()
 
     await coordinator.sync_history_state()
-    await coordinator.sync_media_state()
 
     async def _on_http2_reauth_required() -> None:
         entry.async_start_reauth(hass)
@@ -90,19 +89,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
             if enabled:
                 await coordinator.sync_media_state()
-                await coordinator.api.start_http2_processing(
-                    alexa_httpx_client,
-                    on_reauth_required=_on_http2_reauth_required,
-                )
 
                 if not media_player_loaded:
                     await hass.config_entries.async_forward_entry_setups(
                         entry, [Platform.MEDIA_PLAYER]
                     )
                     media_player_loaded = True
-            else:
-                await _cancel_http2()
-                if media_player_loaded:
+                elif media_player_loaded:
                     await hass.config_entries.async_unload_platforms(
                         entry, [Platform.MEDIA_PLAYER]
                     )
