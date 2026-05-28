@@ -642,6 +642,15 @@ async def test_startstop_vacuum(
     assert len(unpause_calls) == 1
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(
+            trait.COMMAND_START_STOP,
+            BASIC_DATA,
+            {"start": True, "zone": "Unknown"},
+            {},
+        )
+    assert err.value.code == const.ERR_UNSUPPORTED_INPUT
+
 
 async def test_dock_lawn_mower(hass: HomeAssistant) -> None:
     """Test dock trait support for lawn mower domain."""
