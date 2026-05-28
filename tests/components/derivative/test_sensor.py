@@ -1363,7 +1363,7 @@ async def test_replace_unavailable_recovery(hass: HomeAssistant) -> None:
 
 
 async def test_replace_unavailable_recovery_with_state_list(
-    hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
     """Test derivative recovery when source becomes available after unavailable with established baseline."""
     _config, entity_id = await _setup_sensor(
