@@ -6,7 +6,12 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
+from wled import (
+    Device as WLEDDevice,
+    WLEDConnectionError,
+    WLEDError,
+    WLEDInvalidResponseError,
+)
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
@@ -135,6 +140,26 @@ async def test_switch_state(
     assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNAVAILABLE
 
+    # Test invalid preset response, not becoming unavailable
+    method_mock.side_effect = (
+        WLEDInvalidResponseError(
+            "Received a non-UTF-8 response from request: GET /presets.json"
+        ),
+    )
+    with pytest.raises(
+        HomeAssistantError, match="Check preset configurations in WLED UI."
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert method_mock.call_count == 4
+    assert (state := hass.states.get(entity_id))
+    assert state.state != STATE_UNAVAILABLE
+
     # Test connection error, leading to becoming unavailable
     method_mock.side_effect = WLEDConnectionError
     with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
@@ -145,7 +170,7 @@ async def test_switch_state(
             blocking=True,
         )
 
-    assert method_mock.call_count == 4
+    assert method_mock.call_count == 5
     assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_UNAVAILABLE
 

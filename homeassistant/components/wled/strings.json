@@ -12,6 +12,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_response": "Received an unexpected response from the device. Please check your device and try again.",
+      "invalid_response_presets": "Failed to download presets from the device. Check preset configurations in WLED UI.",
       "unsupported_version": "[%key:component::wled::common::unsupported_version%]"
     },
     "flow_title": "{name}",
@@ -139,8 +141,14 @@
     "connection_error": {
       "message": "Error communicating with WLED API: {error}"
     },
+    "install_update_wled_error": {
+      "message": "Error installing WLED update: {error}"
+    },
     "invalid_response_github_error": {
       "message": "Invalid response from GitHub API: {error}"
+    },
+    "invalid_response_presets_wled_error": {
+      "message": "Failed to download presets from the device. Check preset configurations in WLED UI. Error details: {error}"
     },
     "invalid_response_wled_error": {
       "message": "Invalid response from WLED API: {error}"

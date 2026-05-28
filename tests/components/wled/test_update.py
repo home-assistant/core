@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import Releases, WLEDError
+from wled import Releases, WLEDConnectionError, WLEDUpgradeError
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -14,16 +14,16 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
-from homeassistant.components.wled.const import RELEASES_SCAN_INTERVAL
+from homeassistant.components.wled.const import DOMAIN, RELEASES_SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -92,24 +92,38 @@ async def test_no_update_available(
     assert snapshot == state
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_translation_key"),
+    [
+        (
+            WLEDConnectionError("Some error"),
+            "connection_error",
+        ),
+        (
+            WLEDUpgradeError("Requested firmware file X does not exist"),
+            "install_update_wled_error",
+        ),
+    ],
+)
 async def test_update_error(
     hass: HomeAssistant,
     mock_wled: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    expected_translation_key: str,
 ) -> None:
-    """Test error handling of the WLED update."""
-    mock_wled.update.side_effect = WLEDError
+    """Test error handling of the WLED new firmware installation."""
+    mock_wled.upgrade.side_effect = exception
 
-    await hass.services.async_call(
-        UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.wled_rgb_light_firmware"},
-        blocking=True,
-    )
-
-    assert (state := hass.states.get("update.wled_rgb_light_firmware"))
-    assert state.state == STATE_UNAVAILABLE
-    assert "Invalid response from WLED API" in caplog.text
+    with pytest.raises(HomeAssistantError) as ex:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.wled_rgb_light_firmware"},
+            blocking=True,
+        )
+    assert ex.value.translation_domain == DOMAIN
+    assert ex.value.translation_key == expected_translation_key
 
 
 async def test_update_stay_stable(
