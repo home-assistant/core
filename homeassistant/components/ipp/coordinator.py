@@ -1,6 +1,5 @@
 """Coordinator for The Internet Printing Protocol (IPP) integration."""
 
-import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -107,12 +106,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
                     },
                 },
             )
-        except (
-            IPPError,
-            IPPConnectionError,
-            IPPResponseError,
-            asyncio.TimeoutError,
-        ):
+        except IPPError, IPPConnectionError, IPPResponseError, TimeoutError:
             _LOGGER.debug(
                 "Failed to fetch page count attributes from printer", exc_info=True
             )
