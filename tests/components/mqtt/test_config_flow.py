@@ -130,6 +130,7 @@ MOCK_ENCRYPTED_CLIENT_KEY_DER = b"## mock DER formatted encrypted key file ##\n"
 
 MOCK_ENTRY_DATA = {
     mqtt.CONF_BROKER: "test-broker",
+    CONF_PROTOCOL: "5",
     CONF_PORT: 1234,
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
@@ -1756,6 +1757,7 @@ async def test_step_hassio_reauth(
     mock_try_connection.assert_called_once_with(
         {
             "broker": "core-mosquitto",
+            CONF_PROTOCOL: "5",
             "port": 1883,
             "username": "mock-user",
             "password": "mock-pass",
