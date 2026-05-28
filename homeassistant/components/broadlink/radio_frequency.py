@@ -92,7 +92,7 @@ class BroadlinkRadioFrequency(BroadlinkEntity, RadioFrequencyTransmitterEntity):
     """Representation of a Broadlink RF transmitter."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_translation_key = "rf_transmitter"
 
     def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the entity."""
