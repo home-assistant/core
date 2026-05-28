@@ -349,15 +349,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     sdk_status_str,
                 )
             else:
-                self._device.playing_status = sdk_status
                 if sdk_status == SDKPlayingStatus.STOPPED:
                     LOGGER.debug(
                         "Device %s: TransportState is STOPPED."
                         " Resetting media position and metadata",
                         self.entity_id,
                     )
-                    self._device.current_position = 0
-                    self._device.current_track_duration = 0
                     self._attr_media_position_updated_at = None
                     self._attr_media_duration = None
                     self._attr_media_position = None
