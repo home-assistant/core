@@ -336,7 +336,12 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
     def _handle_invalid_source_state(self, state: State | None) -> bool:
         # Check the source state for unknown/unavailable condition.
         # If unusable, write unknown/unavailable state and return false.
-        if not state or state.state == STATE_UNAVAILABLE:
+        if not state or state.state == STATE_UNKNOWN:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return False
+
+        if state.state == STATE_UNAVAILABLE:
             if self._replace_unavailable:
                 self._attr_available = True
                 # Preserve the last valid timestamp and time-window history so the
@@ -347,10 +352,12 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             self._attr_available = False
             self.async_write_ha_state()
             return False
+
         if not _is_decimal_state(state.state):
             self._attr_available = True
             self._write_native_value(None)
             return False
+
         self._attr_available = True
         return True
 

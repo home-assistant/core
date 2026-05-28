@@ -1354,12 +1354,13 @@ async def test_replace_unavailable_recovery(hass: HomeAssistant) -> None:
 
         state = hass.states.get("sensor.power")
         assert state is not None
-        # Derivative should calculate: (5 - STATE_UNAVAILABLE(treated as 0)) / 1 sec = 5.0
-        # But since we didn't have a valid previous state before the unavailable gap,
-        # the sensor state should reflect this transition properly
+
+        # Recovery should use the last valid sample before the unavailable gap:
+        # (5 - 1) / 2 sec = 2.0
         assert state.state != STATE_UNAVAILABLE, (
             "Sensor should remain available after recovery"
         )
+        assert float(state.state) == 2.0, f"Expected 2.0, got {state.state}"
 
 
 async def test_replace_unavailable_recovery_with_state_list(
