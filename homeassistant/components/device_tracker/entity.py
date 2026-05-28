@@ -284,7 +284,12 @@ class TrackerEntity(
         The property is deprecated and will be removed in Home Assistant 2027.7.
         """
         if (location_name := self._attr_location_name) is not None:
-            if not self.__deprecated_attr_location_name_reported:
+            if (
+                not self.__deprecated_attr_location_name_reported
+                and not self.__class__.__module__.startswith(
+                    "homeassistant.components."
+                )
+            ):
                 report_issue = async_suggest_report_issue(
                     self.hass, module=self.__class__.__module__
                 )
