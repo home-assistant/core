@@ -78,6 +78,10 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
         except IPPError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
 
+        # Page counts are fetched via a separate request for now. Once pyipp PR #715
+        # (https://github.com/ctalkington/python-ipp/pull/715) is merged, page
+        # counters will be included in printer.counters by default and this extra
+        # request can be removed.
         previous_page_counts = self.data.page_counts if self.data else {}
         page_counts = await self._async_fetch_page_counts(previous_page_counts)
 
