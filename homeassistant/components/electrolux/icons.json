@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "drawer_status": {
+        "default": "mdi:file-cabinet"
+      },
+      "hood_auto_switch_off_event": {
+        "default": "mdi:power-sleep"
+      }
+    },
     "sensor": {
       "appliance_state": {
         "default": "mdi:information-outline"
