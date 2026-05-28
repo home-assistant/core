@@ -1357,10 +1357,14 @@ async def test_replace_unavailable_recovery(hass: HomeAssistant) -> None:
         # Derivative should calculate: (5 - STATE_UNAVAILABLE(treated as 0)) / 1 sec = 5.0
         # But since we didn't have a valid previous state before the unavailable gap,
         # the sensor state should reflect this transition properly
-        assert state.state != STATE_UNAVAILABLE, "Sensor should remain available after recovery"
+        assert state.state != STATE_UNAVAILABLE, (
+            "Sensor should remain available after recovery"
+        )
 
 
-async def test_replace_unavailable_recovery_with_state_list(hass: HomeAssistant) -> None:
+async def test_replace_unavailable_recovery_with_state_list(
+    hass: HomeAssistant
+) -> None:
     """Test derivative recovery when source becomes available after unavailable with established baseline."""
     _config, entity_id = await _setup_sensor(
         hass,

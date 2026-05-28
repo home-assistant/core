@@ -108,7 +108,9 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
         vol.Optional(CONF_MAX_SUB_INTERVAL): selector.DurationSelector(
             selector.DurationSelectorConfig(allow_negative=False)
         ),
-        vol.Optional(CONF_REPLACE_UNAVAILABLE, default=False): selector.BooleanSelector(),
+        vol.Optional(
+            CONF_REPLACE_UNAVAILABLE, default=False
+        ): selector.BooleanSelector(),
     }
 
 
