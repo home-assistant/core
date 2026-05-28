@@ -22,6 +22,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import (
     TriggerActionType,
     TriggerInfo,
+    #  protected, but only used for legacy triggers
     _async_attach_trigger_cls,
 )
 from homeassistant.helpers.typing import ConfigType
