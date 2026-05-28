@@ -797,7 +797,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.15
+dbus-fast==5.0.16
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
@@ -1737,7 +1737,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.1.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.1.0
+onvif-zeep-async==4.1.1
 
 # homeassistant.components.onvif
 onvif_parsers==2.3.0
@@ -3403,7 +3403,7 @@ yalexs-ble==3.3.0
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==9.2.0
+yalexs==9.2.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
