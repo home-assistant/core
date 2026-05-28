@@ -5457,7 +5457,6 @@ async def async_get_broker_settings(
         or current_client_certificate
         or current_client_key
         or current_tls_insecure
-        or current_protocol != DEFAULT_PROTOCOL
         or current_config.get(SET_CA_CERT, "off") != "off"
         or current_config.get(SET_CLIENT_CERT)
         or current_transport == TRANSPORT_WEBSOCKETS
@@ -5466,6 +5465,12 @@ async def async_get_broker_settings(
     # Build form
     fields[vol.Required(CONF_BROKER, default=current_broker)] = TEXT_SELECTOR
     fields[vol.Required(CONF_PORT, default=current_port)] = PORT_SELECTOR
+    fields[
+        vol.Optional(
+            CONF_PROTOCOL,
+            description={"suggested_value": current_protocol},
+        )
+    ] = PROTOCOL_SELECTOR
     fields[
         vol.Optional(
             CONF_USERNAME,
@@ -5556,12 +5561,6 @@ async def async_get_broker_settings(
             description={"suggested_value": current_tls_insecure},
         )
     ] = BOOLEAN_SELECTOR
-    fields[
-        vol.Optional(
-            CONF_PROTOCOL,
-            description={"suggested_value": current_protocol},
-        )
-    ] = PROTOCOL_SELECTOR
     fields[
         vol.Optional(
             CONF_TRANSPORT,
