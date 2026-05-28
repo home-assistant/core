@@ -52,6 +52,11 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
         self._attr_unique_id = pyomie_series_name
         self._pyomie_series_name = pyomie_series_name
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update this sensor's state from the coordinator results."""
