@@ -241,12 +241,37 @@ class TrackerEntity(
     _attr_in_zones: list[str] | None = None
     _attr_latitude: float | None = None
     _attr_location_accuracy: float = 0
+    # _attr_location_name is deprecated and will be removed in Home Assistant 2027.7
     _attr_location_name: str | None = None
     _attr_longitude: float | None = None
     _attr_source_type: SourceType = SourceType.GPS
 
     __active_zone: State | None = None
+    # If we reported setting deprecated _attr_location_name
+    __deprecated_attr_location_name_reported = False
     __in_zones: list[str] | None = None
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
+        if "location_name" in cls.__dict__:
+            if cls.__module__.startswith("homeassistant.components."):
+                # Don't ask users to report issue for built in integrations,
+                # they already have issues opened on them.
+                return
+            report_issue = async_suggest_report_issue(
+                async_get_hass_or_none(), module=cls.__module__
+            )
+            _LOGGER.warning(
+                (
+                    "%s::%s is overriding the deprecated location_name property on "
+                    "an instance of TrackerEntity, this will be unsupported from "
+                    "Home Assistant 2027.7, please %s"
+                ),
+                cls.__module__,
+                cls.__name__,
+                report_issue,
+            )
 
     @cached_property
     def should_poll(self) -> bool:
@@ -278,7 +303,32 @@ class TrackerEntity(
 
     @cached_property
     def location_name(self) -> str | None:
-        """Return a location name for the current location of the device."""
+        """Return a location name for the current location of the device.
+
+        The property is deprecated and will be removed in Home Assistant 2027.7.
+        """
+        if (location_name := self._attr_location_name) is not None:
+            if (
+                not self.__deprecated_attr_location_name_reported
+                and not self.__class__.__module__.startswith(
+                    "homeassistant.components."
+                )
+            ):
+                report_issue = async_suggest_report_issue(
+                    self.hass, module=self.__class__.__module__
+                )
+                _LOGGER.warning(
+                    (
+                        "%s::%s is setting the deprecated _attr_location_name attribute "
+                        "on an instance of TrackerEntity, this will be unsupported from "
+                        "Home Assistant 2027.7, please %s"
+                    ),
+                    self.__class__.__module__,
+                    self.__class__.__name__,
+                    report_issue,
+                )
+                self.__deprecated_attr_location_name_reported = True
+            return location_name
         return self._attr_location_name
 
     @cached_property
