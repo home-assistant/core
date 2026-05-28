@@ -39,19 +39,6 @@ ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
 ENERGY_HISTORY_INTERVAL = timedelta(minutes=5)
 
 
-def _retry_after_from_rate_limit(err: RateLimited) -> float | None:
-    """Return retry-after seconds from a rate limit error."""
-    if not isinstance(err.data, dict):
-        return None
-    retry_after = err.data.get("after")
-    if retry_after is None:
-        return None
-    try:
-        return float(retry_after)
-    except TypeError, ValueError:
-        return None
-
-
 def _is_stale_site_info_error(err: TeslaFleetError) -> bool:
     """Return whether a site_info error indicates a stale energy site."""
     if isinstance(err, NotFound):
@@ -426,13 +413,13 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.site_info())["response"]
         except RateLimited as e:
-            if (retry_after := _retry_after_from_rate_limit(e)) is not None:
+            if isinstance(e.data, dict) and "after" in e.data:
                 LOGGER.warning(
                     "%s rate limited, will retry in %s seconds",
                     self.name,
-                    retry_after,
+                    e.data["after"],
                 )
-                self.update_interval = timedelta(seconds=retry_after)
+                self.update_interval = timedelta(seconds=int(e.data["after"]))
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
