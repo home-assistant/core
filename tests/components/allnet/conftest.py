@@ -13,6 +13,7 @@ from homeassistant import config_entries, loader
 from homeassistant.components.allnet.const import (
     CONF_DEVICE_PROFILE,
     CONF_USE_SSL,
+    CONF_VERIFY_SSL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -195,6 +196,7 @@ def config_entry_data() -> dict[str, Any]:
     return {
         CONF_HOST: TEST_HOST,
         CONF_USE_SSL: False,
+        CONF_VERIFY_SSL: True,
         CONF_DEVICE_PROFILE: "auto",
     }
 

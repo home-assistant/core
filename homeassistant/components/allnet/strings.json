@@ -28,14 +28,16 @@
           "host": "Host",
           "password": "Password",
           "use_ssl": "Use SSL",
-          "username": "Username"
+          "username": "Username",
+          "verify_ssl": "Verify SSL certificate"
         },
         "data_description": {
           "device_profile": "Select the device type, or leave on Auto to detect automatically.",
           "host": "The hostname or IP address of the ALLNET device.",
           "password": "The password for the ALLNET web interface, if authentication is enabled.",
           "use_ssl": "Enable this if the ALLNET device is configured for HTTPS.",
-          "username": "The username for the ALLNET web interface, if authentication is enabled."
+          "username": "The username for the ALLNET web interface, if authentication is enabled.",
+          "verify_ssl": "Disable this to allow self-signed or untrusted SSL certificates."
         },
         "title": "Connect to ALLNET"
       },
@@ -43,12 +45,14 @@
         "data": {
           "device_profile": "Device profile",
           "password": "Password",
-          "username": "Username"
+          "username": "Username",
+          "verify_ssl": "Verify SSL certificate"
         },
         "data_description": {
           "device_profile": "Select the device type, or leave on Auto to detect automatically.",
           "password": "Password if authentication is enabled on the device.",
-          "username": "Username if authentication is enabled on the device."
+          "username": "Username if authentication is enabled on the device.",
+          "verify_ssl": "Disable this to allow self-signed or untrusted SSL certificates."
         },
         "description": "Do you want to add the ALLNET device **{name}** at {host}?",
         "title": "Discovered ALLNET device"

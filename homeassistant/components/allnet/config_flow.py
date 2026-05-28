@@ -28,8 +28,10 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import (
     CONF_DEVICE_PROFILE,
     CONF_USE_SSL,
+    CONF_VERIFY_SSL,
     DEFAULT_DEVICE_PROFILE,
     DEFAULT_USE_SSL,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
 
@@ -55,6 +57,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Optional(CONF_USE_SSL, default=DEFAULT_USE_SSL): bool,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
         vol.Optional(
             CONF_DEVICE_PROFILE, default=DEFAULT_DEVICE_PROFILE
         ): _PROFILE_SELECTOR,
@@ -65,6 +68,7 @@ STEP_ZEROCONF_CONFIRM_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
         vol.Optional(
             CONF_DEVICE_PROFILE, default=DEFAULT_DEVICE_PROFILE
         ): _PROFILE_SELECTOR,
@@ -85,9 +89,10 @@ async def _validate_and_get_unique_id(
     username: str | None,
     password: str | None,
     use_ssl: bool,
+    verify_ssl: bool = True,
 ) -> tuple[str, str]:
     """Validate connection and return (unique_id, device_name). Raises on error."""
-    session = async_get_clientsession(hass)
+    session = async_get_clientsession(hass, verify_ssl=verify_ssl)
     client = AllnetClient(
         host=host,
         username=username or None,
@@ -128,9 +133,10 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input.get(CONF_PASSWORD, "") or None
             use_ssl = user_input.get(CONF_USE_SSL, DEFAULT_USE_SSL)
 
+            verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
             try:
                 unique_id, name = await _validate_and_get_unique_id(
-                    self.hass, host, username, password, use_ssl
+                    self.hass, host, username, password, use_ssl, verify_ssl
                 )
             except AllnetAuthenticationError:
                 errors["base"] = "invalid_auth"
@@ -147,6 +153,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data = {
                     CONF_HOST: host,
                     CONF_USE_SSL: use_ssl,
+                    CONF_VERIFY_SSL: verify_ssl,
                 }
                 if username:
                     data[CONF_USERNAME] = username
@@ -228,10 +235,11 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input.get(CONF_USERNAME, "").strip() or None
             password = user_input.get(CONF_PASSWORD, "") or None
+            verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
 
             try:
                 unique_id, name = await _validate_and_get_unique_id(
-                    self.hass, host, username, password, False
+                    self.hass, host, username, password, False, verify_ssl
                 )
             except AllnetAuthenticationError:
                 errors["base"] = "invalid_auth"
@@ -242,7 +250,11 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-                data: dict[str, Any] = {CONF_HOST: host, CONF_USE_SSL: False}
+                data: dict[str, Any] = {
+                    CONF_HOST: host,
+                    CONF_USE_SSL: False,
+                    CONF_VERIFY_SSL: verify_ssl,
+                }
                 if username:
                     data[CONF_USERNAME] = username
                 if password:
@@ -282,10 +294,11 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             username = user_input.get(CONF_USERNAME, "").strip() or None
             password = user_input.get(CONF_PASSWORD, "") or None
             use_ssl = entry.data.get(CONF_USE_SSL, DEFAULT_USE_SSL)
+            verify_ssl = entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
 
             try:
                 await _validate_and_get_unique_id(
-                    self.hass, host, username, password, use_ssl
+                    self.hass, host, username, password, use_ssl, verify_ssl
                 )
             except AllnetAuthenticationError:
                 errors["base"] = "invalid_auth"

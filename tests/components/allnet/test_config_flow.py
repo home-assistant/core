@@ -13,6 +13,7 @@ import pytest
 from homeassistant.components.allnet.const import (
     CONF_DEVICE_PROFILE,
     CONF_USE_SSL,
+    CONF_VERIFY_SSL,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -84,6 +85,7 @@ async def test_user_step_success(hass: HomeAssistant, mock_device_info) -> None:
             user_input={
                 CONF_HOST: TEST_HOST,
                 CONF_USE_SSL: False,
+                CONF_VERIFY_SSL: True,
                 CONF_DEVICE_PROFILE: "auto",
             },
         )
@@ -105,6 +107,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
             user_input={
                 CONF_HOST: TEST_HOST,
                 CONF_USE_SSL: False,
+                CONF_VERIFY_SSL: True,
                 CONF_DEVICE_PROFILE: "auto",
             },
         )
@@ -125,6 +128,7 @@ async def test_user_step_invalid_auth(hass: HomeAssistant) -> None:
             user_input={
                 CONF_HOST: TEST_HOST,
                 CONF_USE_SSL: False,
+                CONF_VERIFY_SSL: True,
                 CONF_DEVICE_PROFILE: "auto",
             },
         )
@@ -145,6 +149,7 @@ async def test_user_step_unsupported_firmware(hass: HomeAssistant) -> None:
             user_input={
                 CONF_HOST: TEST_HOST,
                 CONF_USE_SSL: False,
+                CONF_VERIFY_SSL: True,
                 CONF_DEVICE_PROFILE: "auto",
             },
         )
@@ -167,6 +172,7 @@ async def test_user_step_already_configured(
             user_input={
                 CONF_HOST: TEST_HOST,
                 CONF_USE_SSL: False,
+                CONF_VERIFY_SSL: True,
                 CONF_DEVICE_PROFILE: "auto",
             },
         )
