@@ -123,12 +123,12 @@ async def test_coordinator_update_duco_error_marks_unavailable(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_lan_info_duco_error_marks_unavailable(
+async def test_lan_info_duco_error_keeps_node_entities_available(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test entities become unavailable when async_get_lan_info raises DucoError."""
+    """Test node entities stay available when async_get_lan_info raises DucoError."""
     mock_duco_client.async_get_lan_info = AsyncMock(
         side_effect=DucoError("lan info error")
     )
@@ -137,9 +137,13 @@ async def test_lan_info_duco_error_marks_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    state = hass.states.get("sensor.office_co2_carbon_dioxide")
+    assert state is not None
+    assert state.state == "405"
+
     state = hass.states.get("sensor.living_signal_strength")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == "-60"
 
 
 @pytest.mark.parametrize(

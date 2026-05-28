@@ -98,6 +98,21 @@ async def test_setup_entry_success(
     assert init_integration.state is ConfigEntryState.LOADED
 
 
+async def test_setup_entry_ignores_lan_info_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test setup succeeds when the supplemental LAN info endpoint fails."""
+    mock_duco_client.async_get_lan_info.side_effect = DucoError("lan info error")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
 async def test_setup_entry_unsupported_board_info(
     hass: HomeAssistant,
