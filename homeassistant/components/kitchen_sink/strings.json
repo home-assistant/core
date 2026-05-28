@@ -35,7 +35,7 @@
     },
     "infrared_fan": {
       "abort": {
-        "no_infrared_entities": "No infrared entities found. Please set up an infrared device first."
+        "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
       },
       "entry_type": "Infrared fan",
       "initiate_flow": {
@@ -44,8 +44,8 @@
       "step": {
         "user": {
           "data": {
-            "infrared_entity_id": "Infrared emitter",
-            "infrared_receiver_entity_id": "Infrared receiver",
+            "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+            "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]",
             "name": "[%key:common::config_flow::data::name%]"
           },
           "description": "Select infrared devices for the fan."
@@ -135,6 +135,34 @@
     }
   },
   "services": {
+    "set_scanner_connected": {
+      "description": "Sets the connected state of a demo scanner entity.",
+      "fields": {
+        "connected": {
+          "description": "Whether the device should be reported as connected.",
+          "name": "Connected"
+        }
+      },
+      "name": "Set scanner connected"
+    },
+    "set_tracker_location": {
+      "description": "Sets the location and accuracy of a demo tracker entity.",
+      "fields": {
+        "accuracy": {
+          "description": "Location accuracy in meters.",
+          "name": "Accuracy"
+        },
+        "latitude": {
+          "description": "Latitude of the new location.",
+          "name": "Latitude"
+        },
+        "longitude": {
+          "description": "Longitude of the new location.",
+          "name": "Longitude"
+        }
+      },
+      "name": "Set tracker location"
+    },
     "test_service_1": {
       "description": "Fake action for testing {meep_2}",
       "fields": {
@@ -159,9 +187,9 @@
       },
       "name": "Test action {meep_1}",
       "sections": {
-        "advanced_fields": {
-          "description": "Some very advanced things",
-          "name": "Advanced options"
+        "additional_fields": {
+          "description": "Some additional things",
+          "name": "Additional options"
         }
       }
     }

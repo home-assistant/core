@@ -232,7 +232,8 @@ class RiscoOptionsFlowHandler(OptionsFlow):
                 vol.Required(CONF_MORE_OPTIONS): section(
                     vol.Schema(
                         {
-                            # Polling interval is user-configurable, which is no longer allowed
+                            # Polling interval is user-configurable,
+                            # which is no longer allowed
                             # pylint: disable-next=home-assistant-config-flow-polling-field
                             vol.Required(
                                 CONF_SCAN_INTERVAL,

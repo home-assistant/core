@@ -267,8 +267,9 @@ class HumidifierDehumidifier(HomeAccessory):
 
             if (humidity < min_humidity) or (humidity > max_humidity):
                 humidity = min(max_humidity, max(min_humidity, humidity))
-                # Update the HomeKit value to the clamped humidity, so the user will get a visual feedback that they
-                # cannot not set to a value below/above the min/max.
+                # Update the HomeKit value to the clamped humidity,
+                # so the user will get visual feedback that they
+                # cannot set to a value below/above the min/max.
                 self.char_target_humidity.set_value(humidity)
 
             self.async_call_service(

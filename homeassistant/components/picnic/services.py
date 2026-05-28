@@ -54,7 +54,7 @@ async def get_api_client(hass: HomeAssistant, config_entry_id: str) -> PicnicAPI
     entry: PicnicConfigEntry | None = hass.config_entries.async_get_entry(
         config_entry_id
     )
-    if entry is None or entry.state != ConfigEntryState.LOADED:
+    if entry is None or entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Config entry with id {config_entry_id} not found!")
     return entry.runtime_data.picnic_api_client
 

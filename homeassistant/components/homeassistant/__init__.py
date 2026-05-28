@@ -289,9 +289,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Service handler for reloading core config."""
         try:
             conf = await conf_util.async_hass_config_yaml(hass)
-        except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+        except (HomeAssistantError, FileNotFoundError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="core_config_reload_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # auth only processed during startup
         await core_config.async_process_ha_core_config(hass, conf.get(DOMAIN) or {})
@@ -457,6 +460,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hass,
                 DOMAIN,
                 "unsupported_local_deps",
+                breaks_in_ha_version="2026.11.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,

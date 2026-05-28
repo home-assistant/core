@@ -57,7 +57,6 @@ async def test_setup_entry_success(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_auth_failed(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -87,7 +86,6 @@ async def test_setup_entry_auth_failed(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_not_ready(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -136,7 +134,6 @@ async def test_setup_entry_hub_coordinator_update_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_server_error_5xx(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -243,7 +240,7 @@ async def test_dynamic_device_creation(
     assert new_device_entry is not None
     assert new_device_entry.name == "Kitchen Thermostat"
 
-    state = hass.states.get("climate.kitchen_thermostat")
+    state = hass.states.get("climate.kitchen_kitchen_thermostat")
     assert state is not None
 
 
@@ -302,7 +299,7 @@ async def test_hub_coordinator_update_errors(
     """Test hub coordinator handles errors during regular update."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.living_room_thermostat")
+    state = hass.states.get("climate.living_room_living_room_thermostat")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -312,7 +309,7 @@ async def test_hub_coordinator_update_errors(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("climate.living_room_thermostat")
+    state = hass.states.get("climate.living_room_living_room_thermostat")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -331,7 +328,7 @@ async def test_device_coordinator_refresh_error(
     """Test device coordinator handles refresh error."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.living_room_thermostat")
+    state = hass.states.get("climate.living_room_living_room_thermostat")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -340,7 +337,7 @@ async def test_device_coordinator_refresh_error(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_TEMPERATURE: 23.5,
         },
         blocking=True,
@@ -354,6 +351,6 @@ async def test_device_coordinator_refresh_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("climate.living_room_thermostat")
+    state = hass.states.get("climate.living_room_living_room_thermostat")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

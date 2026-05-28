@@ -95,7 +95,8 @@ class MobileAppNotifyEntity(NotifyEntity):
         if title is not None:
             data[ATTR_TITLE] = title
 
-        # Sends notification via local push if available and fallback to cloud push if fails
+        # Sends notification via local push if available
+        # and fallback to cloud push if fails
         if (webhook_id := self._config_entry.data[ATTR_WEBHOOK_ID]) in self.hass.data[
             DOMAIN
         ][DATA_PUSH_CHANNEL]:
@@ -151,8 +152,8 @@ def log_rate_limits(device_name, resp, level=logging.INFO):
         return
 
     rate_limits = resp[ATTR_PUSH_RATE_LIMITS]
-    resetsAt = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
-    resetsAtTime = dt_util.parse_datetime(resetsAt) - dt_util.utcnow()
+    resets_at = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
+    resets_at_time = dt_util.parse_datetime(resets_at) - dt_util.utcnow()
     rate_limit_msg = (
         "mobile_app push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "
@@ -165,7 +166,7 @@ def log_rate_limits(device_name, resp, level=logging.INFO):
         rate_limits[ATTR_PUSH_RATE_LIMITS_SUCCESSFUL],
         rate_limits[ATTR_PUSH_RATE_LIMITS_MAXIMUM],
         rate_limits[ATTR_PUSH_RATE_LIMITS_ERRORS],
-        str(resetsAtTime).split(".", maxsplit=1)[0],
+        str(resets_at_time).split(".", maxsplit=1)[0],
     )
 
 
@@ -228,7 +229,9 @@ class MobileAppNotificationService(BaseNotificationService):
 
         if failed_targets:
             raise HomeAssistantError(
-                f"Device(s) with webhook id(s) {', '.join(failed_targets)} not connected to local push notifications"
+                "Device(s) with webhook id(s)"
+                f" {', '.join(failed_targets)}"
+                " not connected to local push notifications"
             )
 
     async def _async_send_remote_message_target(

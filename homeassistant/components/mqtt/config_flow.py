@@ -91,6 +91,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_OPTIONS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PAYLOAD_OFF,
@@ -119,6 +120,8 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DurationSelector,
+    DurationSelectorConfig,
     FileSelector,
     FileSelectorConfig,
     NumberSelector,
@@ -226,6 +229,7 @@ from .const import (
     CONF_LAST_RESET_VALUE_TEMPLATE,
     CONF_MAX,
     CONF_MAX_KELVIN,
+    CONF_MESSAGE_EXPIRY_INTERVAL,
     CONF_MIN,
     CONF_MIN_KELVIN,
     CONF_MODE_COMMAND_TEMPLATE,
@@ -235,7 +239,6 @@ from .const import (
     CONF_MODE_STATE_TOPIC,
     CONF_OFF_DELAY,
     CONF_ON_COMMAND_TYPE,
-    CONF_OPTIONS,
     CONF_OSCILLATION_COMMAND_TEMPLATE,
     CONF_OSCILLATION_COMMAND_TOPIC,
     CONF_OSCILLATION_STATE_TOPIC,
@@ -351,6 +354,7 @@ from .const import (
     CONF_TILT_STATE_OPTIMISTIC,
     CONF_TILT_STATUS_TEMPLATE,
     CONF_TILT_STATUS_TOPIC,
+    CONF_TIMEZONE,
     CONF_TLS_INSECURE,
     CONF_TRANSITION,
     CONF_TRANSPORT,
@@ -458,6 +462,8 @@ SUBENTRY_PLATFORMS = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
     Platform.FAN,
     Platform.IMAGE,
     Platform.LIGHT,
@@ -469,6 +475,7 @@ SUBENTRY_PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
     Platform.VALVE,
     Platform.WATER_HEATER,
 ]
@@ -482,6 +489,10 @@ PWD_NOT_CHANGED = "__**password_not_changed**__"
 
 DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
 USER_DOCUMENTATION_URL = "https://www.home-assistant.io/"
+TZ_ZONE_ABBR_URL = (
+    "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
+    "#Time_zone_abbreviations"
+)
 
 INTEGRATION_URL = f"{USER_DOCUMENTATION_URL}integrations/{DOMAIN}/"
 TEMPLATING_URL = f"{USER_DOCUMENTATION_URL}docs/configuration/templating/"
@@ -501,6 +512,7 @@ TRANSLATION_DESCRIPTION_PLACEHOLDERS = {
     "available_state_classes_url": AVAILABLE_STATE_CLASSES_URL,
     "naming_entities_url": NAMING_ENTITIES_URL,
     "registry_properties_url": REGISTRY_PROPERTIES_URL,
+    "tz_abbr_url": TZ_ZONE_ABBR_URL,
 }
 
 # Common selectors
@@ -1234,6 +1246,8 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.BUTTON: None,
     Platform.CLIMATE: validate_climate_platform_config,
     Platform.COVER: validate_cover_platform_config,
+    Platform.DATE: None,
+    Platform.DATETIME: None,
     Platform.FAN: validate_fan_platform_config,
     Platform.IMAGE: None,
     Platform.LIGHT: validate_light_platform_config,
@@ -1245,6 +1259,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.SIREN: None,
     Platform.SWITCH: None,
     Platform.TEXT: validate_text_platform_config,
+    Platform.TIME: None,
     Platform.VALVE: None,
     Platform.WATER_HEATER: validate_water_heater_platform_config,
 }
@@ -1410,6 +1425,8 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
         ),
     },
+    Platform.DATE: {},
+    Platform.DATETIME: {},
     Platform.FAN: {
         "fan_feature_speed": PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -1514,6 +1531,7 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
         ),
     },
     Platform.TEXT: {},
+    Platform.TIME: {},
     Platform.VALVE: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=VALVE_DEVICE_CLASS_SELECTOR, required=False, default=None
@@ -2362,6 +2380,61 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
             section="cover_tilt_settings",
         ),
+    },
+    Platform.DATE: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.DATETIME: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_TIMEZONE: PlatformField(selector=TEXT_SELECTOR, required=False),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
     Platform.FAN: {
         CONF_COMMAND_TOPIC: PlatformField(
@@ -3470,6 +3543,33 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             section="text_advanced_settings",
         ),
     },
+    Platform.TIME: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
     Platform.VALVE: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
@@ -3719,6 +3819,11 @@ MQTT_DEVICE_PLATFORM_FIELDS = {
         required=False,
         validator=int,
         default=DEFAULT_QOS,
+        section="mqtt_settings",
+    ),
+    CONF_MESSAGE_EXPIRY_INTERVAL: PlatformField(
+        selector=DurationSelector(DurationSelectorConfig(enable_day=True)),
+        required=False,
         section="mqtt_settings",
     ),
 }
@@ -4154,11 +4259,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"addon": self._addon_manager.addon_name},
             ) from err
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             # Finish setup using discovery info
             return await self.async_step_setup_entry_from_discovery()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
+        if addon_info.state is AddonState.NOT_RUNNING:
             return await self.async_step_start_addon()
 
         # Install the add-on and start it
@@ -4621,7 +4726,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if reconfig := (self._component_id is not None):
             component_data = self._subentry_data["components"][self._component_id]
             name: str | None = component_data.get(CONF_NAME)
-            platform_label = f"{self._subentry_data['components'][self._component_id][CONF_PLATFORM]} "
+            platform_label = f"{component_data[CONF_PLATFORM]} "
             entity_name_label = f" ({name})" if name is not None else ""
         data_schema = data_schema_from_fields(data_schema_fields, reconfig=reconfig)
         if user_input is not None:
@@ -5352,7 +5457,6 @@ async def async_get_broker_settings(
         or current_client_certificate
         or current_client_key
         or current_tls_insecure
-        or current_protocol != DEFAULT_PROTOCOL
         or current_config.get(SET_CA_CERT, "off") != "off"
         or current_config.get(SET_CLIENT_CERT)
         or current_transport == TRANSPORT_WEBSOCKETS
@@ -5361,6 +5465,12 @@ async def async_get_broker_settings(
     # Build form
     fields[vol.Required(CONF_BROKER, default=current_broker)] = TEXT_SELECTOR
     fields[vol.Required(CONF_PORT, default=current_port)] = PORT_SELECTOR
+    fields[
+        vol.Optional(
+            CONF_PROTOCOL,
+            description={"suggested_value": current_protocol},
+        )
+    ] = PROTOCOL_SELECTOR
     fields[
         vol.Optional(
             CONF_USERNAME,
@@ -5451,12 +5561,6 @@ async def async_get_broker_settings(
             description={"suggested_value": current_tls_insecure},
         )
     ] = BOOLEAN_SELECTOR
-    fields[
-        vol.Optional(
-            CONF_PROTOCOL,
-            description={"suggested_value": current_protocol},
-        )
-    ] = PROTOCOL_SELECTOR
     fields[
         vol.Optional(
             CONF_TRANSPORT,

@@ -337,6 +337,7 @@ homeassistant.components.led_ble.*
 homeassistant.components.lektrico.*
 homeassistant.components.letpot.*
 homeassistant.components.lg_infrared.*
+homeassistant.components.lg_tv_rs232.*
 homeassistant.components.libre_hardware_monitor.*
 homeassistant.components.lidarr.*
 homeassistant.components.liebherr.*
@@ -358,6 +359,7 @@ homeassistant.components.lunatone.*
 homeassistant.components.lutron.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
+homeassistant.components.marantz_infrared.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
@@ -427,6 +429,7 @@ homeassistant.components.otp.*
 homeassistant.components.ouman_eh_800.*
 homeassistant.components.overkiz.*
 homeassistant.components.overseerr.*
+homeassistant.components.ovhcloud_ai_endpoints.*
 homeassistant.components.p1_monitor.*
 homeassistant.components.paj_gps.*
 homeassistant.components.panel_custom.*
@@ -491,6 +494,7 @@ homeassistant.components.rss_feed_template.*
 homeassistant.components.russound_rio.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*
+homeassistant.components.samsung_infrared.*
 homeassistant.components.samsungtv.*
 homeassistant.components.saunum.*
 homeassistant.components.scene.*
@@ -563,6 +567,7 @@ homeassistant.components.technove.*
 homeassistant.components.tedee.*
 homeassistant.components.telegram_bot.*
 homeassistant.components.teleinfo.*
+homeassistant.components.teltonika.*
 homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
@@ -607,6 +612,7 @@ homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.velux.*
 homeassistant.components.victron_gx.*
+homeassistant.components.vistapool.*
 homeassistant.components.vivotek.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*

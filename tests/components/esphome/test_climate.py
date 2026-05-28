@@ -510,7 +510,7 @@ async def test_climate_set_temperature_unsupported_mode(
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test setting temperature in unsupported mode with two-point temperature support."""
+    """Test setting temp in unsupported mode with two-point support."""
     entity_info = [
         ClimateInfo(
             object_id="myclimate",

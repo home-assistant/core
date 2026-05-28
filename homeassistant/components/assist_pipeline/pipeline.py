@@ -935,6 +935,7 @@ class PipelineRun:
                 {
                     "engine": engine,
                     "metadata": asdict(metadata),
+                    "audio_processing": asdict(self.stt_provider.audio_processing),
                 },
             )
         )
@@ -1354,7 +1355,7 @@ class PipelineRun:
     ) -> bool:
         """Return true if all targeted entities were in the same area as the device."""
         if (
-            intent_response.response_type != intent.IntentResponseType.ACTION_DONE
+            intent_response.response_type is not intent.IntentResponseType.ACTION_DONE
             or not intent_response.matched_states
         ):
             return False

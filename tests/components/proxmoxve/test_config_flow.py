@@ -13,13 +13,18 @@ from homeassistant.components.proxmoxve import CONF_AUTH_METHOD, CONF_HOST, CONF
 from homeassistant.components.proxmoxve.const import (
     CONF_NODE,
     CONF_NODES,
-    CONF_TOKEN,
     CONF_TOKEN_ID,
     CONF_TOKEN_SECRET,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -54,6 +59,11 @@ MOCK_USER_STEP_TOKEN = {
 
 MOCK_USER_AUTH_STEP_TOKEN = {
     CONF_TOKEN_ID: "test_token_id",
+    CONF_TOKEN_SECRET: "test_token_secret",
+}
+
+MOCK_USER_AUTH_STEP_TOKEN_FULL_ID = {
+    CONF_TOKEN_ID: "test_user@pam!test_token_id",
     CONF_TOKEN_SECRET: "test_token_secret",
 }
 
@@ -92,6 +102,11 @@ MOCK_USER_FINAL = {
     [
         (MOCK_USER_STEP, MOCK_USER_AUTH_STEP_PASSWORD, MOCK_TEST_CONFIG),
         (MOCK_USER_STEP_TOKEN, MOCK_USER_AUTH_STEP_TOKEN, MOCK_TEST_TOKEN_CONFIG),
+        (
+            MOCK_USER_STEP_TOKEN,
+            MOCK_USER_AUTH_STEP_TOKEN_FULL_ID,
+            MOCK_TEST_TOKEN_CONFIG,
+        ),
         (MOCK_USER_STEP_OTHER, MOCK_USER_AUTH_STEP_OTHER, MOCK_TEST_OTHER_CONFIG),
         (
             MOCK_USER_STEP_OTHER_TOKEN,
@@ -352,10 +367,10 @@ async def test_form_no_nodes_exception(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle duplicate entries."""
@@ -459,7 +474,7 @@ async def test_import_flow_exceptions(
 
 
 def sanitize_config_entry(data: dict[str, Any]) -> dict[str, Any]:
-    """Sanitize config entry data by removing unused or None auth keys for assertions."""
+    """Sanitize config entry data by removing unused auth keys."""
     # Ignore unused keys (i.e. when switching from password to token or vice versa)
     # as we cannot unset them in the config entry, but the flow should still succeed
     unused_auth_keys = [CONF_TOKEN_ID, CONF_TOKEN_SECRET]
@@ -483,10 +498,10 @@ def sanitize_config_entry(data: dict[str, Any]) -> dict[str, Any]:
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_reconfigure(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_user_step: dict[str, Any],
     mock_user_auth_step: dict[str, Any],
@@ -523,7 +538,8 @@ async def test_full_flow_reconfigure_match_entries(
     """Test the full flow of the config flow, this time matching existing entries."""
     mock_config_entry.add_to_hass(hass)
 
-    # Adding a second entry with a different host, since configuring the same host should work
+    # Adding a second entry with a different host, since configuring
+    # the same host should work
     second_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Second ProxmoxVE",
@@ -578,10 +594,10 @@ async def test_full_flow_reconfigure_match_entries(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_reconfigure_exceptions(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     reason: str,
@@ -756,7 +772,7 @@ async def test_form_offline_node_skipped(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
 ) -> None:
-    """Test that offline nodes are skipped during config flow and don't cause setup failure."""
+    """Test that offline nodes are skipped during config flow."""
     mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
 
     result = await hass.config_entries.flow.async_init(
