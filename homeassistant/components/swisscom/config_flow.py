@@ -33,28 +33,21 @@ class SwisscomConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _validate(self, data: dict[str, Any]) -> tuple[str | None, str]:
-        """Validate credentials and return (unique_id, title)."""
-        client = SwisscomClient(
-            async_get_clientsession(self.hass),
-            data[CONF_HOST],
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-        )
-        await client.login()
-        info = await client.get_box_info()
-        unique_id = format_mac(info.base_mac) if info.base_mac else None
-        title = info.model_name or "Internet-Box"
-        return unique_id, title
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            client = SwisscomClient(
+                async_get_clientsession(self.hass),
+                user_input[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+            )
             try:
-                unique_id, title = await self._validate(user_input)
+                await client.login()
+                info = await client.get_box_info()
             except SwisscomAuthError:
                 errors["base"] = "invalid_auth"
             except SwisscomConnectionError:
@@ -63,25 +56,13 @@ class SwisscomConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during Swisscom config flow")
                 errors["base"] = "unknown"
             else:
-                if unique_id:
-                    await self.async_set_unique_id(unique_id)
+                if info.base_mac:
+                    await self.async_set_unique_id(format_mac(info.base_mac))
                     self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=title, data=user_input)
+                return self.async_create_entry(
+                    title=info.model_name or "Internet-Box", data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a configuration from configuration.yaml."""
-        try:
-            unique_id, title = await self._validate(import_data)
-        except SwisscomAuthError:
-            return self.async_abort(reason="invalid_auth")
-        except SwisscomConnectionError:
-            return self.async_abort(reason="cannot_connect")
-
-        if unique_id:
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=title, data=import_data)

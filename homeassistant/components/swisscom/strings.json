@@ -22,5 +22,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_credentials_required": {
+      "description": "Configuring the {integration_title} integration through YAML is deprecated. The integration now requires a username and password to authenticate to your Internet-Box, which cannot be safely carried over from YAML.\n\nSet up the integration through the UI to provide your credentials (your existing host `{host}` will need to be re-entered), then remove the `{domain}` entry from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    }
   }
 }

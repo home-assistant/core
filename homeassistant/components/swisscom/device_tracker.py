@@ -1,7 +1,5 @@
 """Device tracker for the Swisscom Internet-Box."""
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -9,26 +7,18 @@ from homeassistant.components.device_tracker import (
     AsyncSeeCallback,
     ScannerEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
+from .const import DEFAULT_HOST, DOMAIN
 from .coordinator import SwisscomConfigEntry, SwisscomDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }
+    {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
 )
 
 
@@ -38,42 +28,24 @@ async def async_setup_scanner(
     async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
-    """Import YAML configuration into a config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: config[CONF_HOST],
-            CONF_USERNAME: config[CONF_USERNAME],
-            CONF_PASSWORD: config[CONF_PASSWORD],
-        },
-    )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        _LOGGER.warning(
-            "Could not import Swisscom Internet-Box YAML configuration: %s",
-            result.get("reason"),
-        )
-        return False
-
+    """Inform users that the YAML configuration is no longer supported."""
     ir.async_create_issue(
         hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
+        DOMAIN,
+        "deprecated_yaml_import_issue_credentials_required",
         breaks_in_ha_version="2027.5.0",
         is_fixable=False,
         is_persistent=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
+        translation_key="deprecated_yaml_import_issue_credentials_required",
         translation_placeholders={
             "domain": DOMAIN,
             "integration_title": "Swisscom Internet-Box",
+            "host": config[CONF_HOST],
         },
     )
-    return True
+    return False
 
 
 async def async_setup_entry(
