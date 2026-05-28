@@ -1,7 +1,9 @@
 {
   "common": {
     "trigger_behavior_name": "Trigger when",
-    "trigger_for_name": "For at least"
+    "trigger_for_name": "For at least",
+    "trigger_zone_description": "The zone to trigger on.",
+    "trigger_zone_name": "Zone"
   },
   "services": {
     "reload": {
@@ -20,8 +22,8 @@
           "name": "[%key:component::zone::common::trigger_for_name%]"
         },
         "zone": {
-          "description": "The zone to trigger on.",
-          "name": "Zone"
+          "description": "[%key:component::zone::common::trigger_zone_description%]",
+          "name": "[%key:component::zone::common::trigger_zone_name%]"
         }
       },
       "name": "Entered zone"
@@ -36,8 +38,8 @@
           "name": "[%key:component::zone::common::trigger_for_name%]"
         },
         "zone": {
-          "description": "The zone to trigger on.",
-          "name": "Zone"
+          "description": "[%key:component::zone::common::trigger_zone_description%]",
+          "name": "[%key:component::zone::common::trigger_zone_name%]"
         }
       },
       "name": "Left zone"
