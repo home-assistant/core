@@ -583,12 +583,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ]:
-            if self._replace_unavailable:
-                self._attr_available = True
-                self._attr_native_value = round(Decimal(0), self._round_digits)
-            else:
-                self._attr_available = False
-            self.async_write_ha_state()
+            self._handle_invalid_source_state(source_state)
 
         if self._max_sub_interval is not None:
             schedule_max_sub_interval_exceeded(source_state)
