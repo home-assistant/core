@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 
@@ -12,6 +13,7 @@ from homeassistant.components.imou.const import (
     PARAM_STATE,
     PARAM_STATUS,
 )
+from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -19,7 +21,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DEFAULT_MOCK_DEVICES, create_offline_device, create_online_device
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
@@ -123,6 +125,7 @@ async def test_multiple_channels_create_separate_devices(
 @pytest.mark.usefixtures("init_integration")
 async def test_coordinator_adds_entities_for_new_device(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
@@ -141,8 +144,9 @@ async def test_coordinator_adds_entities_for_new_device(
         *DEFAULT_MOCK_DEVICES,
         create_online_device("d2", "Device 2", button_keys=(PARAM_PTZ_UP,)),
     ]
-    await mock_config_entry.runtime_data.async_request_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
@@ -174,6 +178,7 @@ async def test_coordinator_adds_entities_for_new_device(
 @pytest.mark.usefixtures("init_integration")
 async def test_coordinator_removes_device_updates_registries(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
@@ -197,8 +202,9 @@ async def test_coordinator_removes_device_updates_registries(
     }
 
     mock_imou_ha_device_manager.async_get_devices.return_value = DEFAULT_MOCK_DEVICES
-    await mock_config_entry.runtime_data.async_request_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
@@ -230,6 +236,7 @@ async def test_coordinator_removes_device_updates_registries(
 @pytest.mark.usefixtures("init_integration")
 async def test_offline_device_marked_unavailable_after_refresh(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
@@ -250,8 +257,9 @@ async def test_offline_device_marked_unavailable_after_refresh(
     mock_imou_ha_device_manager.async_update_device_status.side_effect = (
         set_device_offline
     )
-    await mock_config_entry.runtime_data.async_request_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
 

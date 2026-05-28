@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
@@ -15,6 +16,7 @@ from homeassistant.components.imou.const import (
     PARAM_STATUS,
     PTZ_MOVE_DURATION_MS,
 )
+from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -22,7 +24,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import UNKNOWN_BUTTON_KEY, create_online_device
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -151,6 +153,7 @@ async def test_press_button_service_propagates_api_error(
 @pytest.mark.usefixtures("init_integration")
 async def test_press_unavailable_offline_device_via_service(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
@@ -171,8 +174,9 @@ async def test_press_unavailable_offline_device_via_service(
     mock_imou_ha_device_manager.async_update_device_status.side_effect = (
         set_device_offline
     )
-    await mock_config_entry.runtime_data.async_request_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
 
