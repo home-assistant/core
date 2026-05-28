@@ -411,7 +411,6 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
                 data_schema=vol.Schema(schema),
                 description_placeholders={
                     "url": "https://example.com",
-                    "show_advanced_options": self.show_advanced_options,
                 },
                 errors={"username": "Should be unique."},
             )
@@ -437,7 +436,6 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
         ],
         "description_placeholders": {
             "url": "https://example.com",
-            "show_advanced_options": True,
         },
         "errors": {"username": "Should be unique."},
         "last_step": None,
