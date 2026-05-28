@@ -1386,14 +1386,17 @@ async def test_attr_location_name_deprecation_warning(
     """Test that setting _attr_location_name logs a deprecation warning."""
     error_message = "is setting the deprecated _attr_location_name attribute"
 
+    class _Subclass(TrackerEntity):
+        pass
+
     # No warning when _attr_location_name is unset (default None)
-    entity_no_attr = TrackerEntity()
+    entity_no_attr = _Subclass()
     entity_no_attr.hass = hass
     assert entity_no_attr.location_name is None
     assert error_message not in caplog.text
 
     # Warning fires when _attr_location_name has a non-None value
-    entity = TrackerEntity()
+    entity = _Subclass()
     entity.hass = hass
     entity._attr_location_name = "the_zone"
     caplog.clear()
@@ -1413,7 +1416,7 @@ async def test_attr_location_name_deprecation_warning(
     assert error_message not in caplog.text
 
     # A fresh instance warns once again
-    entity_new = TrackerEntity()
+    entity_new = _Subclass()
     entity_new.hass = hass
     entity_new._attr_location_name = "the_zone"
     caplog.clear()
