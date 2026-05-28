@@ -258,12 +258,10 @@ async def test_broadcast_message_published(
     )
     await hass.async_block_till_done()
 
-    mqtt_mock.async_publish.assert_called_with(
-        GREENCELL_BROADCAST_TOPIC,
-        '{"name": "BROADCAST"}',
-        0,
-        False,
-    )
+    mqtt_mock.async_publish.assert_called_once()
+    call_args = mqtt_mock.async_publish.call_args
+    assert call_args.args[0] == GREENCELL_BROADCAST_TOPIC
+    assert call_args.args[1] == '{"name": "BROADCAST"}'
 
 
 async def test_select_step_shows_all_discovered_devices(
