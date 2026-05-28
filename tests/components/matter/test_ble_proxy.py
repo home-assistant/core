@@ -73,9 +73,12 @@ def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) -> None:
 
     # The library's long-running `_message_loop` must run as a background task,
     # otherwise HA bootstrap waits on it and times out (#172380).
+    coro = MagicMock()
     with patch.object(hass, "async_create_background_task") as bg_task:
-        kwargs["task_factory"](MagicMock())
-    bg_task.assert_called_once()
+        task = kwargs["task_factory"](coro)
+
+    bg_task.assert_called_once_with(coro, name="matter_ble_proxy")
+    assert task is bg_task.return_value
 
 
 async def test_scan_source_start_registers_passive_callback(
