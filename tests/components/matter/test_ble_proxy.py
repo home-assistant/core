@@ -59,7 +59,7 @@ def test_to_advertisement_data_translates_fields() -> None:
     assert ad.service_uuids == list(info.service_uuids)
 
 
-def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) -> None:
+async def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) -> None:
     """Factory builds MatterBleProxy with HA-backed scan_source and resolver."""
     with patch("homeassistant.components.matter.ble_proxy.MatterBleProxy") as proxy_cls:
         result = create_matter_ble_proxy(hass, "ws://localhost:5580/ble")
@@ -69,8 +69,21 @@ def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) -> None:
     assert kwargs["ws_url"] == "ws://localhost:5580/ble"
     assert isinstance(kwargs["scan_source"], HaBluetoothScanSource)
     assert isinstance(kwargs["device_resolver"], HaBluetoothDeviceResolver)
-    assert kwargs["task_factory"] == hass.async_create_task
     assert result is proxy_cls.return_value
+
+    # The library's long-running `_message_loop` would block Home Assistant's
+    # startup if scheduled via `async_create_task`; it must use a background task.
+    async def _noop() -> None:
+        return
+
+    with patch.object(
+        hass, "async_create_background_task", wraps=hass.async_create_background_task
+    ) as create_background:
+        task = kwargs["task_factory"](_noop())
+
+    create_background.assert_called_once()
+    assert create_background.call_args.kwargs.get("name") == "matter_ble_proxy"
+    await task
 
 
 async def test_scan_source_start_registers_passive_callback(
