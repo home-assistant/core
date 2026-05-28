@@ -1140,7 +1140,7 @@
         },
         "step": {
           "confirm": {
-            "description": "Home Assistant is migrating to MQTT protocol version 5. The currently configured protocol version for broker {broker} is {protocol}. This protocol version is deprecated, and support for it will be removed.\n\nSubmitting this form will try to migrate your MQTT broker configuration to use protocol version 5 to fix this issue.",
+            "description": "Home Assistant is migrating to MQTT protocol version 5. The currently configured protocol version for broker {broker} is {protocol}. This protocol version is deprecated, and support for it will be removed.\n\nSubmitting this form will migrate your MQTT broker configuration to use protocol version 5 to fix this issue.",
             "title": "MQTT protocol change required"
           }
         }
