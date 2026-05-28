@@ -149,6 +149,38 @@ async def test_entities_mapping_presets(
     importlib.reload(select_platform)
 
 
+def test_resolve_select_maps_list_presets(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """List preset structures should map through PRESET_MODE_MAP."""
+    preset_list = ["comfort", "eco", "standby"]
+    preset_map = {"comfort": 1, "eco": 2, "standby": 4}
+    expected_reverse = {1: "comfort", 2: "eco", 4: "standby"}
+
+    with monkeypatch.context() as m:
+        m.setitem(select_platform.PRESET_MODE_MODELS, "EWS_RELAIS", preset_list)
+        m.setattr(select_platform, "PRESET_MODE_MAP", preset_map)
+
+        options, mapped, reverse = select_platform._resolve_select_maps(
+            "EWS_RELAIS", {}, {}
+        )
+
+    assert options == preset_list
+    assert mapped == preset_map
+    assert reverse == expected_reverse
+
+
+def test_resolve_select_maps_empty_fallback() -> None:
+    """Missing preset models with empty fallbacks should return empty mappings."""
+    options, mapped, reverse = select_platform._resolve_select_maps(
+        "UNKNOWN_MODEL", {}, {}
+    )
+
+    assert options == []
+    assert mapped == {}
+    assert reverse == {}
+
+
 async def test_select_option_ufh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
