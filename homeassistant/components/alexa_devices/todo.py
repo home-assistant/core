@@ -196,11 +196,9 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 },
             )
 
-        has_status_update = item.status is not None
-        has_completed_changed = has_status_update and (
-            (existing_item.status == AmazonListItemStatus.COMPLETE)
-            != (item.status == TodoItemStatus.COMPLETED)
-        )
+        has_completed_changed = (
+            existing_item.status == AmazonListItemStatus.COMPLETE
+        ) != (item.status == TodoItemStatus.COMPLETED)
         has_summary_changed = existing_item.name != item.summary
 
         if has_completed_changed:

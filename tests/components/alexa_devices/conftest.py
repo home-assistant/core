@@ -65,11 +65,11 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.on_history_event = MagicMock()
         client.on_volume_state_event = MagicMock()
         client.on_media_state_event = MagicMock()
+        client.on_todo_event = MagicMock()
         http2_task = asyncio.Future()
         http2_task.set_result(None)
         client.start_http2_processing = AsyncMock(return_value=http2_task)
         client.send_sound_notification = AsyncMock()
-        client.on_todo_event = MagicMock()
         yield client
 
 
