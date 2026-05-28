@@ -1713,16 +1713,12 @@ async def test_setup_not_ready_exponential_backoff(
 
     attempts = 0
 
-    async def _mock_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry
-    ) -> bool:
+    async def _mock_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nonlocal attempts
         attempts += 1
         raise ConfigEntryNotReady
 
-    mock_integration(
-        hass, MockModule("test", async_setup_entry=_mock_setup_entry)
-    )
+    mock_integration(hass, MockModule("test", async_setup_entry=_mock_setup_entry))
     mock_platform(hass, "test.config_flow", None)
 
     await manager.async_setup(entry.entry_id)
