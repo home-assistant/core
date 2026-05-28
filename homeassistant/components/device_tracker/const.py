@@ -36,6 +36,8 @@ DEFAULT_CONSIDER_HOME: Final = timedelta(seconds=180)
 
 CONF_NEW_DEVICE_DEFAULTS: Final = "new_device_defaults"
 
+CONF_ASSOCIATED_ZONE: Final = "associated_zone"
+
 ATTR_ATTRIBUTES: Final = "attributes"
 ATTR_BATTERY: Final = "battery"
 ATTR_DEV_ID: Final = "dev_id"
