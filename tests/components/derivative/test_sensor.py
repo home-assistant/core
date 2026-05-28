@@ -1267,56 +1267,55 @@ async def test_unique_id(
     assert entry.unique_id == "my unique id"
 
 
-async def test_replace_unavailable_at_startup_true(hass: HomeAssistant) -> None:
-    """Test replace_unavailable=True at startup when source is initially unavailable."""
-    # Set source to unavailable BEFORE setting up the derivative sensor
-    source_id = "sensor.energy"
-    hass.states.async_set(source_id, STATE_UNAVAILABLE, {})
+async def _setup_derivative_sensor_with_initial_source_state(
+    hass: HomeAssistant,
+    *,
+    source_id: str,
+    source_state: str,
+    replace_unavailable: bool,
+) -> None:
+    """Set an initial source state and set up the derivative sensor."""
+    hass.states.async_set(source_id, source_state, {})
     await hass.async_block_till_done()
 
-    # Now set up the derivative sensor with replace_unavailable=True
     config = {
-        "platform": "derivative",
-        "name": "power",
-        "source": source_id,
-        "round": 2,
-        "unit_time": "s",
-        "replace_unavailable": True,
+        "sensor": {
+            "platform": "derivative",
+            "name": "power",
+            "source": source_id,
+            "round": 2,
+            "unit_time": "s",
+            "replace_unavailable": replace_unavailable,
+        }
     }
-    config = {"sensor": config}
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.power")
-    assert state is not None
-    # With replace_unavailable=True, sensor should be available with value 0.0 at startup
-    assert state.state == "0.00", f"Expected '0.00', got '{state.state}'"
 
-
-async def test_replace_unavailable_at_startup_false(hass: HomeAssistant) -> None:
-    """Test replace_unavailable=False (default) at startup when source is initially unavailable."""
-    # Set source to unavailable BEFORE setting up the derivative sensor
+@pytest.mark.parametrize(
+    ("replace_unavailable", "expected_state"),
+    [
+        (True, "0.00"),
+        (False, STATE_UNAVAILABLE),
+    ],
+)
+async def test_replace_unavailable_at_startup(
+    hass: HomeAssistant,
+    replace_unavailable: bool,
+    expected_state: str,
+) -> None:
+    """Test replace_unavailable handling at startup when source is initially unavailable."""
     source_id = "sensor.energy"
-    hass.states.async_set(source_id, STATE_UNAVAILABLE, {})
-    await hass.async_block_till_done()
-
-    # Now set up the derivative sensor with replace_unavailable=False (default)
-    config = {
-        "platform": "derivative",
-        "name": "power",
-        "source": source_id,
-        "round": 2,
-        "unit_time": "s",
-        "replace_unavailable": False,
-    }
-    config = {"sensor": config}
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
+    await _setup_derivative_sensor_with_initial_source_state(
+        hass,
+        source_id=source_id,
+        source_state=STATE_UNAVAILABLE,
+        replace_unavailable=replace_unavailable,
+    )
 
     state = hass.states.get("sensor.power")
     assert state is not None
-    # With replace_unavailable=False, sensor should remain unavailable at startup
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
 
 async def test_replace_unavailable_recovery(hass: HomeAssistant) -> None:
