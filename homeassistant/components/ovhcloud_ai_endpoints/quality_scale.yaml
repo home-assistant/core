@@ -30,7 +30,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register custom actions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -43,7 +45,9 @@ rules:
   log-when-unavailable:
     status: exempt
     comment: the integration only integrates stateless entities
-  parallel-updates: todo
+  parallel-updates:
+    status: exempt
+    comment: the integration only implements a stateless conversation entity.
   reauthentication-flow: done
   test-coverage: done
 
