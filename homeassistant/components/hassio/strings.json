@@ -57,7 +57,7 @@
       "message": "Not connected with the supervisor / system too busy"
     },
     "supervisor_update_pending": {
-      "message": "Supervisor update in progress, will retry when complete"
+      "message": "Supervisor was out-of-date during onboarding. Update triggered, will retry when complete"
     }
   },
   "issues": {
