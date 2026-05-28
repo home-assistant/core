@@ -270,7 +270,7 @@ async def test_state_via_state_topic_through_position(
 ) -> None:
     """Test the controlling state via topic through position.
 
-    Test is still possible to process a `opening` or `closing`
+    Test it is still possible to process a `opening` or `closing`
     state update. Additional we test json messages can be
     processed containing both position and state. Incoming
     rendered positions are clamped between 0..100.
@@ -308,7 +308,7 @@ async def test_opening_closing_state_is_reset(
 ) -> None:
     """Test the controlling state via topic through position.
 
-    Test a `opening` or `closing` state update is reset
+    Test an `opening` or `closing` state update is reset
     correctly after sequential updates.
     """
     await mqtt_mock_entry()
@@ -440,7 +440,7 @@ async def test_state_via_state_trough_position_with_alt_range(
     asserted_state: str,
     valve_position: int | None,
 ) -> None:
-    """Test controlling state via position with alternative range.
+    """Test controlling state via position with an alternative range.
 
     Test is still possible to process a `opening` or `closing`
     state update. Additional we test json messages can be
