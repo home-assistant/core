@@ -115,9 +115,6 @@
   "exceptions": {
     "not_connected": {
       "message": "Environment Canada is not connected"
-    },
-    "service_entry_ex": {
-      "message": "Environment Canada get_alerts error: config entry not found or not loaded"
     }
   },
   "services": {
