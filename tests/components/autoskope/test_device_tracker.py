@@ -197,7 +197,7 @@ async def test_vehicle_name_update(
     """Test device name updates in device registry when vehicle is renamed."""
     await setup_integration(hass, mock_config_entry)
 
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
     assert device_entry is not None
     assert device_entry.name == "Test Vehicle"

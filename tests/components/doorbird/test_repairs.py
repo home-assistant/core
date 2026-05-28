@@ -28,7 +28,7 @@ async def test_change_schedule_fails(
         favorites_side_effect=mock_not_found_exception()
     )
     assert doorbird_entry.entry.state is ConfigEntryState.SETUP_RETRY
-    issue_reg = ir.async_get(hass)
+    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_reg.issues) == 1
     issue = list(issue_reg.issues.values())[0]
     issue_id = issue.issue_id

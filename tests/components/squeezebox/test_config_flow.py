@@ -501,7 +501,7 @@ async def test_dhcp_known_player(
     """Test DHCP discovery aborts if player is already registered."""
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity_registry.async_get_or_create(
         MP_DOMAIN, DOMAIN, "aa:bb:cc:dd:ee:ff", config_entry=mock_config_entry
     )

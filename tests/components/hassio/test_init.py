@@ -810,7 +810,7 @@ async def test_partial_backup_legacy_homeassistant_folder(
             folders={Folder.SSL},
         )
     )
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue("hassio", "legacy_homeassistant_folder")
         is not None

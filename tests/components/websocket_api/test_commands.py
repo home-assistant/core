@@ -296,7 +296,7 @@ async def target_entities(
     }
     assert set(label_registry.labels) == {"label_1", "label_2", "label_3"}
     assert set(area_registry.areas) == {"kitchen", "living_room", "bathroom", "garage"}
-    assert set(dr.async_get(hass).devices) == {
+    assert set(dr.async_get(hass).devices) == {  # pylint: disable=home-assistant-tests-registry-fixtures
         "device1",
         "device2",
         "area_device",

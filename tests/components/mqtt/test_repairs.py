@@ -152,7 +152,7 @@ async def test_subentry_reconfigure_export_settings(
     # The subentry ID is used as device identifier
     assert len(events) == 1
     issue_id = events[0].data["issue_id"]
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     repair_issue = issue_registry.async_get_issue(mqtt.DOMAIN, issue_id)
     assert repair_issue.translation_key == translation_key
 
@@ -244,7 +244,7 @@ async def test_mqtt_protocol_successful_migration_to_v5(
     assert len(events) == 1
     assert events[0].data["issue_id"] == "protocol_5_migration"
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(mqtt.DOMAIN, "protocol_5_migration")
     assert issue is not None
@@ -332,7 +332,7 @@ async def test_mqtt_protocol_failed_migration_to_v5(
     assert len(events) == 1
     assert events[0].data["issue_id"] == "protocol_5_migration"
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(mqtt.DOMAIN, "protocol_5_migration")
     assert issue is not None

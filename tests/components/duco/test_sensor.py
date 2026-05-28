@@ -202,7 +202,7 @@ async def test_deregistered_node_removes_device(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a node disappearing from the API removes its device from the registry."""
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Verify node 2 (UCCO2 RF sensor) device exists before deregistration.
     device = device_registry.async_get_device(

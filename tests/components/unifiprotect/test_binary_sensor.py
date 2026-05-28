@@ -733,7 +733,7 @@ async def test_aiport_no_binary_sensor_entities(
     # AI Port should not create any camera-specific binary sensors
     # (motion, smart detection, etc.)
     # NVR HDD sensors will still be created, but no AI Port-specific entities
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
 
     for entity in entities:

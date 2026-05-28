@@ -669,7 +669,7 @@ async def test_aiport_rtsp_issue_cleanup(
 
     # Get the issue registry and create the issue directly via internal method
     # to avoid translation validation (as we're simulating a legacy issue)
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue_registry.issues[(DOMAIN, issue_id)] = ir.IssueEntry(
         active=True,
         breaks_in_ha_version=None,
