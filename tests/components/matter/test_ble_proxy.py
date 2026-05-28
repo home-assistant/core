@@ -71,8 +71,6 @@ def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) -> None:
     assert isinstance(kwargs["device_resolver"], HaBluetoothDeviceResolver)
     assert result is proxy_cls.return_value
 
-    # The library's long-running `_message_loop` must run as a background task,
-    # otherwise HA bootstrap waits on it and times out (#172380).
     coro = MagicMock()
     with patch.object(hass, "async_create_background_task") as bg_task:
         task = kwargs["task_factory"](coro)
