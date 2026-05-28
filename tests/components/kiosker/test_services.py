@@ -3,7 +3,15 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from kiosker import Blackout, ScreensaverState
+from kiosker import (
+    AuthenticationError,
+    BadRequestError,
+    Blackout,
+    ConnectionError,
+    IPAuthenticationError,
+    ScreensaverState,
+    TLSVerificationError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -191,6 +199,41 @@ async def test_schema_rejects_invalid_input(
 
     mock_kiosker_api.navigate_url.assert_not_called()
     mock_kiosker_api.blackout_set.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected"),
+    [
+        pytest.param(ConnectionError, HomeAssistantError, id="connection_error"),
+        pytest.param(AuthenticationError, ServiceValidationError, id="auth_error"),
+        pytest.param(IPAuthenticationError, ServiceValidationError, id="ip_auth_error"),
+        pytest.param(TLSVerificationError, ServiceValidationError, id="tls_error"),
+        pytest.param(BadRequestError, ServiceValidationError, id="bad_request"),
+    ],
+)
+async def test_api_errors_are_wrapped(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    exception: type[Exception],
+    expected: type[Exception],
+) -> None:
+    """Test that kiosker API exceptions are translated to HA exceptions."""
+    await _setup(hass, mock_kiosker_api, mock_config_entry)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, KIOSKER_DEVICE_ID)})
+    assert device is not None
+
+    mock_kiosker_api.navigate_url.side_effect = exception
+
+    with pytest.raises(expected):
+        await hass.services.async_call(
+            DOMAIN,
+            "navigate_url",
+            {ATTR_DEVICE_ID: device.id, ATTR_URL: "https://example.com"},
+            blocking=True,
+        )
 
 
 async def test_service_non_kiosker_device(
