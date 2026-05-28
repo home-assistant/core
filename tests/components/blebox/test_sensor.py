@@ -7,6 +7,7 @@ import blebox_uniapi
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -17,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import async_setup_entity, mock_feature
+from .conftest import async_setup_entity, mock_config, mock_feature
 
 
 @pytest.fixture(name="airsensor")
@@ -87,10 +88,7 @@ async def test_update(tempsensor, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = tempsensor
 
-    def initial_update():
-        feature_mock.native_value = 25.18
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.native_value = 25.18
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -101,15 +99,22 @@ async def test_update(tempsensor, hass: HomeAssistant) -> None:
 async def test_update_failure(
     tempsensor, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test that update failures are logged."""
+    """Test that update failures cause config entry setup retry."""
 
     caplog.set_level(logging.ERROR)
 
-    feature_mock, entity_id = tempsensor
-    feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    await async_setup_entity(hass, entity_id)
+    feature_mock, _entity_id = tempsensor
+    feature_mock.product.async_update_data = AsyncMock(
+        side_effect=blebox_uniapi.error.ClientError
+    )
 
-    assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
+    config_entry = mock_config()
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    feature_mock.product.async_update_data.assert_called()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_airsensor_init(
@@ -141,10 +146,7 @@ async def test_airsensor_update(airsensor, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = airsensor
 
-    def initial_update():
-        feature_mock.native_value = 49
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.native_value = 49
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)

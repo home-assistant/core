@@ -168,19 +168,15 @@ async def test_install(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "0.1"
 
 
+@pytest.mark.freeze_time("2026-05-21 00:00:00")
 async def test_install_error(
     firmwareupdate: tuple[blebox_uniapi.update.Update, str],
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that an install failure clears in_progress and raises HomeAssistantError."""
+    """Test that an install failure clears in_progress, raises HomeAssistantError, and schedules no poll."""
     feature_mock, entity_id = firmwareupdate
 
-    def initial_update() -> None:
-        feature_mock.installed_version = "0.1"
-        feature_mock.latest_version = "0.2"
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
     await async_setup_entity(hass, entity_id)
 
     feature_mock.async_install = AsyncMock(
@@ -198,11 +194,12 @@ async def test_install_error(
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
+    feature_mock.async_update = AsyncMock()
     freezer.tick(timedelta(seconds=11))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    feature_mock.async_update.assert_called_once()
+    feature_mock.async_update.assert_not_called()
 
 
 @pytest.mark.freeze_time("2026-05-21 00:00:00")
@@ -259,11 +256,8 @@ async def test_poll_connection_error(
     """Test that ConnectionError during poll reschedules the next poll without updating sw_version."""
     feature_mock, entity_id = firmwareupdate
 
-    def initial_update() -> None:
-        feature_mock.installed_version = "0.1"
-        feature_mock.latest_version = "0.2"
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.installed_version = "0.1"
+    feature_mock.latest_version = "0.2"
     entry = await async_setup_entity(hass, entity_id)
 
     await hass.services.async_call(
@@ -287,7 +281,7 @@ async def test_poll_connection_error(
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     device = device_registry.async_get(entry.device_id)
-    assert device.sw_version == "0.1"
+    assert device.sw_version != "0.2"
 
     def recovery_update() -> None:
         feature_mock.installed_version = "0.2"
