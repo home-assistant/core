@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast
+from typing import Any, cast
 
 from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
 from pyprusalink.types_legacy import LegacyPrinterStatus, LegacyPrinterTelemetry
@@ -300,7 +300,7 @@ class PrusaLinkSensorEntity(PrusaLinkEntity, SensorEntity):
     """Defines a PrusaLink sensor."""
 
     entity_description: PrusaLinkSensorEntityDescription
-    _value_fn: Callable[[object], datetime | StateType]
+    _value_fn: Callable[[Any], datetime | StateType]
 
     def __init__(
         self,
@@ -312,9 +312,12 @@ class PrusaLinkSensorEntity(PrusaLinkEntity, SensorEntity):
         self.entity_description = description
         if description.value_fn_factory is not None:
             self._value_fn = description.value_fn_factory()
-        else:
-            assert description.value_fn is not None
+        elif description.value_fn is not None:
             self._value_fn = description.value_fn
+        else:
+            raise ValueError(
+                f"Sensor description {description.key} must define value_fn or value_fn_factory"
+            )
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
