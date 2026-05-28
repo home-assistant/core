@@ -18,7 +18,9 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -38,6 +40,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_SN
@@ -147,6 +150,9 @@ async def _setup_media_player_platform(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Set up integration with only the media player platform enabled."""
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(hass, DOMAIN, "alexa_media", True)
+
     with patch(
         "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
     ):

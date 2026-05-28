@@ -32,7 +32,6 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-NON_LABS_PLATFORMS = [p for p in PLATFORMS if p != Platform.MEDIA_PLAYER]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -45,6 +44,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Set up Alexa Devices platform."""
+
+    non_labs_platforms = [p for p in PLATFORMS if p != Platform.MEDIA_PLAYER]
 
     session = aiohttp_client.async_create_clientsession(hass)
     coordinator = AmazonDevicesCoordinator(hass, entry, session)
@@ -75,6 +76,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     media_player_loaded = False
     _update_lock = asyncio.Lock()
 
+    def _async_set_media_player_registry(*, enabled: bool) -> None:
+        """Sync media player registry entry disabled state with labs status."""
+        ent_reg = er.async_get(hass)
+        entities = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+
+        for entity in entities:
+            if entity.domain != Platform.MEDIA_PLAYER:
+                continue
+
+            if enabled and entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION:
+                ent_reg.async_update_entity(entity.entity_id, disabled_by=None)
+            elif not enabled and entity.disabled_by is None:
+                ent_reg.async_update_entity(
+                    entity.entity_id,
+                    disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+                )
+
     async def _async_update_alexa_media(
         event_data: EventLabsUpdatedData | None = None,
     ) -> None:
@@ -88,6 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
             )
 
             if enabled:
+                _async_set_media_player_registry(enabled=True)
                 await coordinator.sync_media_state()
 
                 if not media_player_loaded:
@@ -95,20 +114,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
                         entry, [Platform.MEDIA_PLAYER]
                     )
                     media_player_loaded = True
-                elif media_player_loaded:
-                    await hass.config_entries.async_unload_platforms(
-                        entry, [Platform.MEDIA_PLAYER]
-                    )
-                    media_player_loaded = False
-
-                    # Remove entities from the registry so they don't show as unavailable
-                    ent_reg = er.async_get(hass)
-                    entities = er.async_entries_for_config_entry(
-                        ent_reg, entry.entry_id
-                    )
-                    for entity in entities:
-                        if entity.domain == Platform.MEDIA_PLAYER:
-                            ent_reg.async_remove(entity.entity_id)
+            elif media_player_loaded:
+                _async_set_media_player_registry(enabled=False)
+                await hass.config_entries.async_unload_platforms(
+                    entry, [Platform.MEDIA_PLAYER]
+                )
+                media_player_loaded = False
 
     entry.async_on_unload(
         async_subscribe_preview_feature(
@@ -121,7 +132,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
     entry.runtime_data = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, NON_LABS_PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, non_labs_platforms)
+    await _async_update_alexa_media()
 
     return True
 

@@ -10,10 +10,12 @@ from homeassistant.components.alexa_devices.const import (
     CONF_SITE,
     DOMAIN,
 )
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
@@ -160,3 +162,67 @@ async def test_http2_reauth_required(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == "reauth"
+
+
+async def test_labs_disable_unloads_media_player_without_removing_registry_entry(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test media player entities are preserved in the registry when labs is disabled."""
+    assert await async_setup_component(hass, "labs", {})
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("media_player.echo_test") is None
+    assert entity_registry.async_get("media_player.echo_test") is None
+
+    await async_update_preview_feature(hass, DOMAIN, "alexa_media", True)
+    await hass.async_block_till_done()
+
+    media_player_entry = entity_registry.async_get("media_player.echo_test")
+    assert media_player_entry is not None
+    assert hass.states.get("media_player.echo_test") is not None
+    assert media_player_entry.disabled_by is None
+
+    entity_registry.async_update_entity("media_player.echo_test", name="Kitchen Echo")
+    media_player_entry = entity_registry.async_get("media_player.echo_test")
+    assert media_player_entry is not None
+    assert media_player_entry.name == "Kitchen Echo"
+
+    await async_update_preview_feature(hass, DOMAIN, "alexa_media", False)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("media_player.echo_test") is None
+    media_player_entry = entity_registry.async_get("media_player.echo_test")
+    assert media_player_entry is not None
+    assert media_player_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert media_player_entry.name == "Kitchen Echo"
+
+    await async_update_preview_feature(hass, DOMAIN, "alexa_media", True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("media_player.echo_test") is not None
+    media_player_entry = entity_registry.async_get("media_player.echo_test")
+    assert media_player_entry is not None
+    assert media_player_entry.disabled_by is None
+    assert media_player_entry.name == "Kitchen Echo"
+
+
+async def test_labs_enabled_before_setup_loads_media_player_platform(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test media player platform is loaded on setup when labs feature is already enabled."""
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(hass, DOMAIN, "alexa_media", True)
+
+    await setup_integration(hass, mock_config_entry)
+
+    media_player_entry = entity_registry.async_get("media_player.echo_test")
+    assert media_player_entry is not None
+    assert media_player_entry.disabled_by is None
+    assert hass.states.get("media_player.echo_test") is not None
