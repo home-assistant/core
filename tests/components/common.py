@@ -1586,12 +1586,12 @@ async def _validate_trigger_options(
     options: dict[str, Any] | None,
     *,
     valid: bool,
-    supports_target: bool = True,
 ) -> None:
     """Assert that a trigger accepts or rejects the given options during validation."""
-    trigger_config: dict[str, Any] = {CONF_PLATFORM: trigger}
-    if supports_target:
-        trigger_config[CONF_TARGET] = {ATTR_LABEL_ID: "test_label"}
+    trigger_config: dict[str, Any] = {
+        CONF_PLATFORM: trigger,
+        CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
+    }
     if options is not None:
         trigger_config[CONF_OPTIONS] = options
     if valid:
@@ -1608,7 +1608,6 @@ async def assert_trigger_options_supported(
     *,
     supports_behavior: bool,
     supports_duration: bool,
-    supports_target: bool = True,
 ) -> None:
     """Assert which options a trigger supports.
 
@@ -1625,15 +1624,9 @@ async def assert_trigger_options_supported(
 
     # Minimal config should always be valid
     supports_empty = not bool(base_options)
-    await _validate_trigger_options(
-        hass, trigger, None, valid=supports_empty, supports_target=supports_target
-    )
-    await _validate_trigger_options(
-        hass, trigger, {}, valid=supports_empty, supports_target=supports_target
-    )
-    await _validate_trigger_options(
-        hass, trigger, base_options, valid=True, supports_target=supports_target
-    )
+    await _validate_trigger_options(hass, trigger, None, valid=supports_empty)
+    await _validate_trigger_options(hass, trigger, {}, valid=supports_empty)
+    await _validate_trigger_options(hass, trigger, base_options, valid=True)
 
     def _merge(extra: dict[str, Any]) -> dict[str, Any]:
         return {**(base_options or {}), **extra}
@@ -1641,30 +1634,18 @@ async def assert_trigger_options_supported(
     # Behavior
     for behavior in ("each", "first", "all"):
         await _validate_trigger_options(
-            hass,
-            trigger,
-            _merge({"behavior": behavior}),
-            valid=supports_behavior,
-            supports_target=supports_target,
+            hass, trigger, _merge({"behavior": behavior}), valid=supports_behavior
         )
 
     # Duration
     for for_value in ({"seconds": 5}, "00:00:05", 5):
         await _validate_trigger_options(
-            hass,
-            trigger,
-            _merge({"for": for_value}),
-            valid=supports_duration,
-            supports_target=supports_target,
+            hass, trigger, _merge({"for": for_value}), valid=supports_duration
         )
 
     # Unknown option should always be rejected
     await _validate_trigger_options(
-        hass,
-        trigger,
-        _merge({"unknown_option": True}),
-        valid=False,
-        supports_target=supports_target,
+        hass, trigger, _merge({"unknown_option": True}), valid=False
     )
 
 
