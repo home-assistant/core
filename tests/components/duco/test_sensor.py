@@ -98,9 +98,7 @@ async def test_coordinator_update_failure_marks_unavailable(
     exception_message: str,
 ) -> None:
     """Test sensor entities become unavailable when the coordinator update fails."""
-    mock_duco_client.async_get_nodes = AsyncMock(
-        side_effect=exception_type(exception_message)
-    )
+    mock_duco_client.async_get_nodes.side_effect = exception_type(exception_message)
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
