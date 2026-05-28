@@ -63,7 +63,7 @@ class MusicCastDeviceEntity(MusicCastEntity):
             },
             manufacturer=BRAND,
             model=self.coordinator.data.model_name,
-            sw_version=self.coordinator.data.system_version,
+            sw_version=str(self.coordinator.data.system_version),
         )
 
         if self._zone_id == DEFAULT_ZONE:
