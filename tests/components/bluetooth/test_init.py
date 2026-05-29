@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import sys
 import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -28,7 +29,6 @@ from homeassistant.components.bluetooth.const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_MODE,
     CONF_PASSIVE,
-    CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
@@ -47,7 +47,11 @@ from homeassistant.components.bluetooth.match import (
     SERVICE_UUID,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_SOURCE,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -96,6 +100,7 @@ async def test_setup_and_stop(
     assert len(mock_bleak_scanner_start.mock_calls) == 1
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Requires Linux BlueZ scanner")
 @pytest.mark.parametrize(
     "options",
     [{CONF_MODE: "passive"}, {CONF_PASSIVE: True}],
@@ -158,6 +163,7 @@ async def test_setup_and_stop_passive(
     }
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Requires Linux BlueZ scanner")
 async def test_setup_and_stop_old_bluez(
     hass: HomeAssistant,
     mock_bleak_scanner_start: MagicMock,
