@@ -89,7 +89,7 @@
       "message": "No pools were found on this account."
     },
     "set_failed": {
-      "message": "Failed to update {entity}."
+      "message": "Failed to set {entity}."
     },
     "update_failed": {
       "message": "Error fetching data from Vistapool."
