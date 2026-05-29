@@ -41,7 +41,7 @@ DEFAULT_NAME = "MQTT Select"
 
 MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
     {
-        select.ATTR_OPTIONS,
+        select.SelectEntityAttribute.OPTIONS,
     }
 )
 
