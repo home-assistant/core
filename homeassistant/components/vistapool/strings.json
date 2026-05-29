@@ -25,6 +25,35 @@
     }
   },
   "entity": {
+    "number": {
+      "electrolysis_setpoint": {
+        "name": "Electrolysis setpoint"
+      },
+      "heating_maximum_temperature": {
+        "name": "Heating maximum temperature"
+      },
+      "heating_minimum_temperature": {
+        "name": "Heating minimum temperature"
+      },
+      "intel_temperature": {
+        "name": "Intel temperature"
+      },
+      "ph_maximum": {
+        "name": "pH maximum"
+      },
+      "ph_minimum": {
+        "name": "pH minimum"
+      },
+      "redox_setpoint": {
+        "name": "Redox setpoint"
+      },
+      "smart_maximum_temperature": {
+        "name": "Smart maximum temperature"
+      },
+      "smart_minimum_temperature": {
+        "name": "Smart minimum temperature"
+      }
+    },
     "sensor": {
       "chlorine": {
         "name": "Chlorine"
@@ -58,6 +87,9 @@
     },
     "no_pools": {
       "message": "No pools were found on this account."
+    },
+    "set_failed": {
+      "message": "Failed to update {entity}."
     },
     "update_failed": {
       "message": "Error fetching data from Vistapool."
