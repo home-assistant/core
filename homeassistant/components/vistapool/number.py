@@ -107,6 +107,42 @@ NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
         exists_path=PATH_HASHIDRO,
         max_value_fn=_max_electrolysis,
     ),
+    *(
+        VistapoolNumberEntityDescription(
+            key=key,
+            translation_key=key,
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            native_min_value=_TEMP_MIN,
+            native_max_value=_TEMP_MAX,
+            native_step=1,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            value_path=value_path,
+            exists_path=exists_path,
+        )
+        for key, value_path, exists_path in (
+            (
+                "heating_minimum_temperature",
+                "filtration.heating.temp",
+                "filtration.hasHeat",
+            ),
+            (
+                "heating_maximum_temperature",
+                "filtration.heating.tempHi",
+                "filtration.hasHeat",
+            ),
+            (
+                "smart_minimum_temperature",
+                "filtration.smart.tempMin",
+                "filtration.hasSmart",
+            ),
+            (
+                "smart_maximum_temperature",
+                "filtration.smart.tempHigh",
+                "filtration.hasSmart",
+            ),
+        )
+    ),
 )
 
 
@@ -129,64 +165,6 @@ async def async_setup_entry(
                 if not all(coordinator.get_value(path) for path in required):
                     continue
             entities.append(VistapoolNumber(coordinator, description))
-
-        if coordinator.get_value("filtration.hasHeat"):
-            entities.extend(
-                VistapoolNumber(coordinator, description)
-                for description in (
-                    VistapoolNumberEntityDescription(
-                        key="heating_minimum_temperature",
-                        translation_key="heating_minimum_temperature",
-                        device_class=NumberDeviceClass.TEMPERATURE,
-                        entity_category=EntityCategory.CONFIG,
-                        native_min_value=_TEMP_MIN,
-                        native_max_value=_TEMP_MAX,
-                        native_step=1,
-                        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                        value_path="filtration.heating.temp",
-                    ),
-                    VistapoolNumberEntityDescription(
-                        key="heating_maximum_temperature",
-                        translation_key="heating_maximum_temperature",
-                        device_class=NumberDeviceClass.TEMPERATURE,
-                        entity_category=EntityCategory.CONFIG,
-                        native_min_value=_TEMP_MIN,
-                        native_max_value=_TEMP_MAX,
-                        native_step=1,
-                        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                        value_path="filtration.heating.tempHi",
-                    ),
-                )
-            )
-
-        if coordinator.get_value("filtration.hasSmart"):
-            entities.extend(
-                VistapoolNumber(coordinator, description)
-                for description in (
-                    VistapoolNumberEntityDescription(
-                        key="smart_minimum_temperature",
-                        translation_key="smart_minimum_temperature",
-                        device_class=NumberDeviceClass.TEMPERATURE,
-                        entity_category=EntityCategory.CONFIG,
-                        native_min_value=_TEMP_MIN,
-                        native_max_value=_TEMP_MAX,
-                        native_step=1,
-                        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                        value_path="filtration.smart.tempMin",
-                    ),
-                    VistapoolNumberEntityDescription(
-                        key="smart_maximum_temperature",
-                        translation_key="smart_maximum_temperature",
-                        device_class=NumberDeviceClass.TEMPERATURE,
-                        entity_category=EntityCategory.CONFIG,
-                        native_min_value=_TEMP_MIN,
-                        native_max_value=_TEMP_MAX,
-                        native_step=1,
-                        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                        value_path="filtration.smart.tempHigh",
-                    ),
-                )
-            )
 
     async_add_entities(entities)
 
