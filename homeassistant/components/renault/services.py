@@ -1,12 +1,12 @@
 """Support for Renault services."""
 
 from datetime import datetime
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -19,24 +19,30 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-ATTR_SCHEDULES = "schedules"
-ATTR_VEHICLE = "vehicle"
-ATTR_WHEN = "when"
+
+class RenaultServiceArgument(StrEnum):
+    """Service argument names."""
+
+    SCHEDULES = "schedules"
+    TEMPERATURE = "temperature"
+    VEHICLE = "vehicle"
+    WHEN = "when"
+
 
 SERVICE_VEHICLE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_VEHICLE): cv.string,
+        vol.Required(RenaultServiceArgument.VEHICLE.value): cv.string,
     }
 )
 SERVICE_AC_START_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        vol.Required(ATTR_TEMPERATURE): cv.positive_float,
-        vol.Optional(ATTR_WHEN): cv.datetime,
+        vol.Required(RenaultServiceArgument.TEMPERATURE.value): cv.positive_float,
+        vol.Optional(RenaultServiceArgument.WHEN.value): cv.datetime,
     }
 )
 SERVICE_CHARGE_START_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        vol.Optional(ATTR_WHEN): cv.datetime,
+        vol.Optional(RenaultServiceArgument.WHEN.value): cv.datetime,
     }
 )
 SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA = vol.Schema(
@@ -62,7 +68,7 @@ SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = vol.Schema(
 )
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        vol.Required(ATTR_SCHEDULES): vol.All(
+        vol.Required(RenaultServiceArgument.SCHEDULES.value): vol.All(
             cv.ensure_list, [SERVICE_CHARGE_SET_SCHEDULE_SCHEMA]
         ),
     }
@@ -89,7 +95,7 @@ SERVICE_AC_SET_SCHEDULE_SCHEMA = vol.Schema(
 )
 SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        vol.Required(ATTR_SCHEDULES): vol.All(
+        vol.Required(RenaultServiceArgument.SCHEDULES.value): vol.All(
             cv.ensure_list, [SERVICE_AC_SET_SCHEDULE_SCHEMA]
         ),
     }
@@ -107,8 +113,8 @@ async def ac_cancel(service_call: ServiceCall) -> None:
 
 async def ac_start(service_call: ServiceCall) -> None:
     """Start A/C."""
-    temperature: float = service_call.data[ATTR_TEMPERATURE]
-    when: datetime | None = service_call.data.get(ATTR_WHEN)
+    temperature: float = service_call.data[RenaultServiceArgument.TEMPERATURE]
+    when: datetime | None = service_call.data.get(RenaultServiceArgument.WHEN)
     proxy = get_vehicle_proxy(service_call)
 
     LOGGER.debug("A/C start attempt: %s / %s", temperature, when)
@@ -118,7 +124,7 @@ async def ac_start(service_call: ServiceCall) -> None:
 
 async def charge_start(service_call: ServiceCall) -> None:
     """Start Charging with optional delay."""
-    when: datetime | None = service_call.data.get(ATTR_WHEN)
+    when: datetime | None = service_call.data.get(RenaultServiceArgument.WHEN)
     proxy = get_vehicle_proxy(service_call)
 
     LOGGER.debug("Charge start attempt, when: %s", when)
@@ -128,7 +134,9 @@ async def charge_start(service_call: ServiceCall) -> None:
 
 async def charge_set_schedules(service_call: ServiceCall) -> None:
     """Set charge schedules."""
-    schedules: list[dict[str, Any]] = service_call.data[ATTR_SCHEDULES]
+    schedules: list[dict[str, Any]] = service_call.data[
+        RenaultServiceArgument.SCHEDULES
+    ]
     proxy = get_vehicle_proxy(service_call)
     charge_schedules = await proxy.get_charging_settings()
     for schedule in schedules:
@@ -147,7 +155,9 @@ async def charge_set_schedules(service_call: ServiceCall) -> None:
 
 async def ac_set_schedules(service_call: ServiceCall) -> None:
     """Set A/C schedules."""
-    schedules: list[dict[str, Any]] = service_call.data[ATTR_SCHEDULES]
+    schedules: list[dict[str, Any]] = service_call.data[
+        RenaultServiceArgument.SCHEDULES
+    ]
     proxy = get_vehicle_proxy(service_call)
     hvac_schedules = await proxy.get_hvac_settings()
 
@@ -168,7 +178,7 @@ async def ac_set_schedules(service_call: ServiceCall) -> None:
 def get_vehicle_proxy(service_call: ServiceCall) -> RenaultVehicleProxy:
     """Get vehicle from service_call data."""
     device_registry = dr.async_get(service_call.hass)
-    device_id = service_call.data[ATTR_VEHICLE]
+    device_id = service_call.data[RenaultServiceArgument.VEHICLE]
     device_entry = device_registry.async_get(device_id)
     if device_entry is None:
         raise ServiceValidationError(
