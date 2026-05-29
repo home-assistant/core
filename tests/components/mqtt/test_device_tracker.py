@@ -386,12 +386,12 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template2(
     async_fire_mqtt_message(hass, "test-topic", "HOME")
     state = hass.states.get("device_Tracker.test")
     assert state.state == STATE_HOME
-    assert state.attributes.get("location_name") is None
+    assert state.attributes.get("location_name") == "home"
 
     async_fire_mqtt_message(hass, "test-topic", "NOT_HOME")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
-    assert state.attributes.get("location_name") is None
+    assert state.attributes.get("location_name") == "not_home"
 
 
 async def test_setting_device_tracker_location_via_mqtt_message(

@@ -149,6 +149,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self._location_name = payload
             self._attr_latitude = None
             self._attr_longitude = None
+        if self._location_name is not None:
             self._attr_extra_state_attributes = (
                 dict(self.extra_state_attributes)
                 if self.extra_state_attributes is not None
