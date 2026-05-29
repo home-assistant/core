@@ -1,0 +1,278 @@
+# serializer version: 1
+# name: test_setup[binary_sensor.freeze_protection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.freeze_protection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.COLD: 'cold'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'iaqualink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'SN00001_freeze_protection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.freeze_protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'cold',
+      'friendly_name': 'Freeze Protection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.freeze_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup[climate.pool_set_point-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 40.0,
+      'min_temp': 1.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.pool_set_point',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'iaqualink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': 'SN00001_pool_set_point',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[climate.pool_set_point-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 26.7,
+      'friendly_name': 'Pool Set Point',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 40.0,
+      'min_temp': 1.1,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 28.9,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.pool_set_point',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup[light.pool_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.pool_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'iaqualink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'SN00001_aux_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[light.pool_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color_mode': <ColorMode.ONOFF: 'onoff'>,
+      'friendly_name': 'Pool Light',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.pool_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup[sensor.ph-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ph',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'iaqualink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'SN00001_ph',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.ph-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ph',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ph',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.2',
+  })
+# ---
+# name: test_setup[switch.aux_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.aux_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'iaqualink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'SN00001_aux_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[switch.aux_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aux 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.aux_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

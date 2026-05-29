@@ -1,5 +1,5 @@
 """Support for mobile_app push notifications."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from functools import partial
@@ -21,9 +21,13 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -46,6 +50,7 @@ from .const import (
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
     DOMAIN,
+    SIGNAL_RECORD_NOTIFICATION,
 )
 from .helpers import device_info
 from .push_notification import PushChannel
@@ -90,7 +95,8 @@ class MobileAppNotifyEntity(NotifyEntity):
         if title is not None:
             data[ATTR_TITLE] = title
 
-        # Sends notification via local push if available and fallback to cloud push if fails
+        # Sends notification via local push if available
+        # and fallback to cloud push if fails
         if (webhook_id := self._config_entry.data[ATTR_WEBHOOK_ID]) in self.hass.data[
             DOMAIN
         ][DATA_PUSH_CHANNEL]:
@@ -110,6 +116,21 @@ class MobileAppNotifyEntity(NotifyEntity):
                 translation_key="device_not_connected_for_local_push_notifications",
                 translation_placeholders={"device_name": self._config_entry.title},
             )
+
+    @callback
+    def _async_handle_notification(self, webhook_id: str) -> None:
+        """Handle notifications triggered externally."""
+        if webhook_id == self._config_entry.data[ATTR_WEBHOOK_ID]:
+            self._async_record_notification()
+
+    async def async_added_to_hass(self) -> None:
+        """Register callback."""
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RECORD_NOTIFICATION, self._async_handle_notification
+            )
+        )
 
 
 def push_registrations(hass: HomeAssistant) -> dict[str, str]:
@@ -131,8 +152,8 @@ def log_rate_limits(device_name, resp, level=logging.INFO):
         return
 
     rate_limits = resp[ATTR_PUSH_RATE_LIMITS]
-    resetsAt = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
-    resetsAtTime = dt_util.parse_datetime(resetsAt) - dt_util.utcnow()
+    resets_at = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
+    resets_at_time = dt_util.parse_datetime(resets_at) - dt_util.utcnow()
     rate_limit_msg = (
         "mobile_app push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "
@@ -145,7 +166,7 @@ def log_rate_limits(device_name, resp, level=logging.INFO):
         rate_limits[ATTR_PUSH_RATE_LIMITS_SUCCESSFUL],
         rate_limits[ATTR_PUSH_RATE_LIMITS_MAXIMUM],
         rate_limits[ATTR_PUSH_RATE_LIMITS_ERRORS],
-        str(resetsAtTime).split(".", maxsplit=1)[0],
+        str(resets_at_time).split(".", maxsplit=1)[0],
     )
 
 
@@ -195,6 +216,7 @@ class MobileAppNotificationService(BaseNotificationService):
                     data,
                     partial(self._async_send_remote_message_target, entry),
                 )
+                async_dispatcher_send(self.hass, SIGNAL_RECORD_NOTIFICATION, target)
                 continue
 
             # Test if local push only.
@@ -203,10 +225,13 @@ class MobileAppNotificationService(BaseNotificationService):
                 continue
 
             await self._async_send_remote_message_target(entry, data)
+            async_dispatcher_send(self.hass, SIGNAL_RECORD_NOTIFICATION, target)
 
         if failed_targets:
             raise HomeAssistantError(
-                f"Device(s) with webhook id(s) {', '.join(failed_targets)} not connected to local push notifications"
+                "Device(s) with webhook id(s)"
+                f" {', '.join(failed_targets)}"
+                " not connected to local push notifications"
             )
 
     async def _async_send_remote_message_target(

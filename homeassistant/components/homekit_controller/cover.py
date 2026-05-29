@@ -222,7 +222,8 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         else:
             return None
 
-        # Recalculate tilt_position. Convert arc to percent scale based on min/max values.
+        # Recalculate tilt_position. Convert arc to percent scale
+        # based on min/max values.
         tilt_position = char.value
         min_value = char.minValue
         max_value = char.maxValue
@@ -270,7 +271,8 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         elif self.is_horizontal_tilt:
             char = self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET]
 
-        # Calculate tilt_position. Convert from 1-100 scale to arc degree scale respecting possible min/max Values.
+        # Calculate tilt_position. Convert from 1-100 scale to arc
+        # degree scale respecting possible min/max Values.
         min_value = char.minValue
         max_value = char.maxValue
         if min_value is None or max_value is None:

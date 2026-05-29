@@ -121,3 +121,42 @@ async def test_migrate_entry(
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.minor_version == 3
     assert config_entry.data[CONF_LOGIN_DATA][CONF_SITE] == "https://www.amazon.com"
+
+
+async def test_migrate_future_version_returns_false(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration failure for downgraded future config entry version."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        entry_id=mock_config_entry.entry_id,
+        version=2,
+        minor_version=0,
+    )
+
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_http2_reauth_required(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test HTTP/2 re-authentication triggers a reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+
+    on_reauth_required = (
+        mock_amazon_devices_client.start_http2_processing.call_args.kwargs[
+            "on_reauth_required"
+        ]
+    )
+    await on_reauth_required()
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"

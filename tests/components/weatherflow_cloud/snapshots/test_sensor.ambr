@@ -234,6 +234,65 @@
     'state': '10.5',
   })
 # ---
+# name: test_all_entities[sensor.my_home_station_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Illuminance',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'illuminance',
+    'unique_id': '24432_brightness',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'illuminance',
+      'friendly_name': 'My Home Station Illuminance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '757',
+  })
+# ---
 # name: test_all_entities[sensor.my_home_station_lightning_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1170,6 +1229,124 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[sensor.my_home_station_relative_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_relative_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Relative humidity',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Relative humidity',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relative_humidity',
+    'unique_id': '24432_relative_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_relative_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'humidity',
+      'friendly_name': 'My Home Station Relative humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_relative_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_solar_radiation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_solar_radiation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Solar radiation',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
+    'original_name': 'Solar radiation',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'solar_radiation',
+    'unique_id': '24432_solar_radiation',
+    'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_solar_radiation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'irradiance',
+      'friendly_name': 'My Home Station Solar radiation',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_solar_radiation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
 # name: test_all_entities[sensor.my_home_station_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1227,6 +1404,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.5',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_uv_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_uv_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'UV index',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'UV index',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uv_index',
+    'unique_id': '24432_uv',
+    'unit_of_measurement': 'UV index',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_uv_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'friendly_name': 'My Home Station UV index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'UV index',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_uv_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.03',
   })
 # ---
 # name: test_all_entities[sensor.my_home_station_wet_bulb_globe_temperature-entry]

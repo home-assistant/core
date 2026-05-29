@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+import aiohttp
 from roborock import (
     RoborockException,
     RoborockInvalidCredentials,
@@ -96,7 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         )
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
-            "Invalid credentials",
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
@@ -118,9 +118,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     except RoborockException as err:
         _LOGGER.debug("Failed to get Roborock home data: %s", err)
         raise ConfigEntryNotReady(
-            "Failed to get Roborock home data",
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
+        ) from err
+    except (aiohttp.ClientError, TimeoutError) as err:
+        _LOGGER.debug("Network error setting up Roborock: %s", err)
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="network_error",
         ) from err
 
     async def shutdown_roborock(_: Event | None = None) -> None:
@@ -177,7 +182,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         and enabled_devices
     ):
         raise ConfigEntryNotReady(
-            "No devices were able to successfully setup",
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
@@ -305,7 +309,8 @@ def build_setup_functions(
             )
         else:
             _LOGGER.warning(
-                "Not adding device %s because its protocol version %s or category %s is not supported",
+                "Not adding device %s because its protocol version"
+                " %s or category %s is not supported",
                 device.duid,
                 device.device_info.pv,
                 device.product.category.name,

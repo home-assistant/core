@@ -74,8 +74,9 @@ class YoLinkHomeMessageListener(MessageListener):
             return
 
         device_coordinator.dev_online = True
-        if (loraInfo := msg_data.get(ATTR_LORA_INFO)) is not None:
-            device_coordinator.dev_net_type = loraInfo.get("devNetType")
+        
+        if (lora_info := msg_data.get(ATTR_LORA_INFO)) is not None:
+            device_coordinator.dev_net_type = lora_info.get("devNetType")
         if (
             device_coordinator.device.device_type == ATTR_DEVICE_SPRINKLER_V2
             and device_coordinator.data
@@ -90,7 +91,7 @@ class YoLinkHomeMessageListener(MessageListener):
                             **device_coordinator.data[key],
                             **msg_data[key],
                         }
-            device_coordinator._adjust_sprinkler_interval(merged)
+            device_coordinator.adjust_sprinkler_interval(merged)
             device_coordinator.async_set_updated_data(merged)
             if (state := msg_data.get("state")) is not None and state.get(
                 "running"
@@ -100,6 +101,7 @@ class YoLinkHomeMessageListener(MessageListener):
                 )
         else:
             device_coordinator.async_set_updated_data(msg_data)
+            
         # handling events
         if (
             device_coordinator.device.device_type
