@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the IRM KMI integration."""
 
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
 
 from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
 
@@ -81,11 +81,13 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
                 )
             else:
                 _LOGGER.warning("Could not connect to the API yet")
-            raise UpdateFailed(
+                raise UpdateFailed(
                 f"Error communicating with API for general forecast: {err}. "
-                f"Last success time is: {self._last_successful_api_update}"
-                if self._last_successful_api_update is not None
-                else "No successful API update yet."
+                + (
+                    f"Last success time is: {self._last_successful_api_update}"
+                    if self._last_successful_api_update is not None
+                    else "No successful API update yet."
+                )
             ) from err
 
         data = await self.process_api_data()
