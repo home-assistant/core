@@ -223,8 +223,7 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Send the de-scaled value to the controller."""
-        scale = self.entity_description.scale
-        raw: int | float = round(value * scale) if scale != 1 else value
+        raw = round(value * self.entity_description.scale)
         try:
             await self.coordinator.api.set_value(
                 self.coordinator.pool_id,

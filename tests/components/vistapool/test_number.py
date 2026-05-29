@@ -164,6 +164,7 @@ async def test_number_set_value(
     pool_id_arg, _path_arg, value_arg = mock_vistapool_client.set_value.await_args.args
     assert pool_id_arg == "ABCDEF1234567890"
     assert value_arg == expected_raw
+    assert isinstance(value_arg, int)
 
 
 async def test_number_set_value_raises_on_api_error(
