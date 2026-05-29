@@ -46,7 +46,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
         # because _async_update_data can return old data without raising an exception, which still counts as a
         # successful update for the coordinator.
         self._last_successful_api_update: datetime | None = None
-        self._api_reachable = True
+        self._api_reachable: bool | None = None
 
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch data from API endpoint.
@@ -78,7 +78,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
                 return self.data
 
             success_info = (
-                f"Last success time is: {self._last_successful_api_update}"
+                f"Last success time is: {self._last_successful_api_update.isoformat()}"
                 if self._last_successful_api_update is not None
                 else "No successful API update yet."
             )
@@ -89,9 +89,9 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
         data = await self.process_api_data()
         self._last_successful_api_update = utcnow()
 
-        if not self._api_reachable:
+        if self._api_reachable is False:
             _LOGGER.warning("Successfully reconnected to the API")
-            self._api_reachable = True
+        self._api_reachable = True
 
         return data
 
