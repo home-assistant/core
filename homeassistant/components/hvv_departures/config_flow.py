@@ -5,13 +5,12 @@ from typing import Any
 
 from aiohttp import ClientConnectorError
 from pygti.auth import GTI_DEFAULT_HOST
-from pygti.exceptions import GTIError
+from pygti.exceptions import GTIError, GTIUnauthorizedError
 from pygti.models import (
     CNRequest,
     DLRequest,
     GTITime,
     RegionalSDNameType,
-    ReturnCode,
     SDName,
     SDNameType,
 )
@@ -76,13 +75,9 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 response = await self.hub.authenticate()
                 _LOGGER.debug("Init gti: %r", response)
-            except GTIError as err:
-                errors["base"] = (
-                    "cannot_connect"
-                    if err.return_code == ReturnCode.ERROR_COMM
-                    else "invalid_auth"
-                )
-            except ClientConnectorError:
+            except GTIUnauthorizedError:
+                errors["base"] = "invalid_auth"
+            except GTIError, ClientConnectorError:
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -108,6 +103,7 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
                 station.name: station
                 for station in (check_name.results or [])
                 if station.type == RegionalSDNameType.STATION
+                and station.name is not None
             }
 
             if not self.stations:
@@ -185,13 +181,9 @@ class OptionsFlowHandler(OptionsFlow):
                         returnFilters=True,
                     )
                 )
-            except GTIError as err:
-                errors["base"] = (
-                    "cannot_connect"
-                    if err.return_code == ReturnCode.ERROR_COMM
-                    else "invalid_auth"
-                )
-            except ClientConnectorError:
+            except GTIUnauthorizedError:
+                errors["base"] = "invalid_auth"
+            except GTIError, ClientConnectorError:
                 errors["base"] = "cannot_connect"
             else:
                 self.departure_filters = {
@@ -226,8 +218,8 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Optional(CONF_FILTER, default=old_filter): cv.multi_select(
                         {
                             key: (
-                                f"{departure_filter['serviceName']},"
-                                f" {departure_filter['label']}"
+                                f"{departure_filter.get('serviceName', '')},"
+                                f" {departure_filter.get('label', '')}"
                             )
                             for key, departure_filter in self.departure_filters.items()
                         }

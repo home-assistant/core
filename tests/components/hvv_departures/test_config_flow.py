@@ -4,8 +4,8 @@ import json
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectorError
-from pygti.exceptions import GTIError
-from pygti.models import CNResponse, DLResponse, ReturnCode, StationInformationResponse
+from pygti.exceptions import GTIUnauthorizedError
+from pygti.models import CNResponse, DLResponse, StationInformationResponse
 
 from homeassistant.components.hvv_departures.const import (
     CONF_FILTER,
@@ -138,7 +138,7 @@ async def test_user_flow_no_results(hass: HomeAssistant) -> None:
         )
 
         assert result_station["step_id"] == "station"
-        assert result_station["errors"]["base"] == "no_results"
+        assert result_station["errors"] == {"base": "no_results"}
 
 
 async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
@@ -146,11 +146,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.hvv_departures.hub.GTI.init",
-        side_effect=GTIError(
-            ReturnCode.ERROR_TEXT,
-            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",  # codespell:ignore ist
-            "Authentication failed!",
-        ),
+        side_effect=GTIUnauthorizedError(),
     ):
         # step: user
         result_user = await hass.config_entries.flow.async_init(
@@ -350,11 +346,7 @@ async def test_options_flow_invalid_auth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.hvv_departures.hub.GTI.departureList",
-        side_effect=GTIError(
-            ReturnCode.ERROR_TEXT,
-            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",  # codespell:ignore ist
-            "Authentication failed!",
-        ),
+        side_effect=GTIUnauthorizedError(),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
