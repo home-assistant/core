@@ -31,12 +31,7 @@ class BleBoxCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
             update_interval=timedelta(seconds=5),
         )
-        self._box = box
-
-    @property
-    def box(self) -> Box:
-        """Return the BleBox device."""
-        return self._box
+        self.box = box
 
     async def _async_update_data(self) -> None:
         """Fetch data from the BleBox device."""
