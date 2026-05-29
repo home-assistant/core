@@ -185,10 +185,10 @@ def cleanup_stale_missing_infrared_issues(
     hass: HomeAssistant,
     configured_remote_ids: set[str],
     *,
-    issue_cleanup_handler: RestoredInfraredEntityIssueHandler | None,
+    cleanup_stale_issues: bool,
 ) -> None:
     """Clear repair issues for remote ids that are no longer configured."""
-    if issue_cleanup_handler is not _delete_missing_issue:
+    if not cleanup_stale_issues:
         return
 
     async_delete_stale_linked_infrared_entity_missing_issues(
@@ -269,7 +269,7 @@ async def async_setup_virtual_remote_entities(
     cleanup_stale_missing_infrared_issues(
         hass,
         configured_remote_ids,
-        issue_cleanup_handler=restored_infrared_issue_handler,
+        cleanup_stale_issues=(restored_infrared_issue_handler is _delete_missing_issue),
     )
 
     if cleanup_devices:
@@ -539,11 +539,6 @@ class InfraredRemoteEntity(RemoteEntity):
         except HomeAssistantError:
             raise
         except Exception as err:
-            _LOGGER.exception(
-                "Failed to send infrared command for virtual remote %s via %s",
-                self._remote_id,
-                entity_id,
-            )
             raise HomeAssistantError(
                 translation_domain=self._translation_domain,
                 translation_key="remote_send_failed",

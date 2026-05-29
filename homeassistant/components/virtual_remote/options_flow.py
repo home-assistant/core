@@ -385,8 +385,16 @@ class VirtualRemoteOptionsFlow(config_entries.OptionsFlow):
         options = dict(self._config_entry.options)
 
         if CONF_REMOTE_ID in self._config_entry.data:
-            options[CONF_REMOTE_NAME] = remote[CONF_REMOTE_NAME]
-            options[CONF_INFRARED_ENTITY_ID] = remote[CONF_INFRARED_ENTITY_ID]
+            self.hass.config_entries.async_update_entry(
+                self._config_entry,
+                data={
+                    **self._config_entry.data,
+                    CONF_REMOTE_NAME: remote[CONF_REMOTE_NAME],
+                    CONF_INFRARED_ENTITY_ID: remote[CONF_INFRARED_ENTITY_ID],
+                },
+            )
+            options.pop(CONF_REMOTE_NAME, None)
+            options.pop(CONF_INFRARED_ENTITY_ID, None)
             if commands := remote.get(CONF_REMOTE_COMMANDS):
                 options[CONF_REMOTE_COMMANDS] = commands
             else:

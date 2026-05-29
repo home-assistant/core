@@ -867,7 +867,6 @@ def test_virtual_remote_device_info_factory() -> None:
 
 def test_cleanup_stale_missing_infrared_issues_uses_standalone_cleanup(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
 ) -> None:
     """Test stale linked infrared repair issue cleanup for standalone remotes."""
     with patch(
@@ -877,23 +876,12 @@ def test_cleanup_stale_missing_infrared_issues_uses_standalone_cleanup(
         cleanup_stale_missing_infrared_issues(
             hass,
             {"living_room_tv"},
-            issue_cleanup_handler=_delete_missing_issue,
+            cleanup_stale_issues=True,
         )
 
     delete_stale_issues.assert_called_once_with(
         hass, configured_remote_ids={"living_room_tv"}
     )
-
-
-async def test_config_entry_setup_covers_standalone_remote_platform_setup(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test config entry setup reaches the standalone remote platform setup."""
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("remote.living_room_tv") is not None
 
 
 async def test_async_setup_virtual_remote_entities_runs_device_cleanup(
@@ -922,3 +910,14 @@ async def test_async_setup_virtual_remote_entities_runs_device_cleanup(
         identifier_domain=DOMAIN,
     )
     assert len(entities) == 1
+
+
+async def test_config_entry_setup_covers_standalone_remote_platform_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test config entry setup reaches the standalone remote platform setup."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("remote.living_room_tv") is not None

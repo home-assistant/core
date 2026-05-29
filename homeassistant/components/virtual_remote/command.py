@@ -10,6 +10,8 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN
 
 DEFAULT_CARRIER_FREQUENCY = 38_000
+# Pronto learned-code timing unit in microseconds.
+PRONTO_FREQUENCY_REFERENCE_US = 0.241246
 
 
 @dataclass(frozen=True, slots=True)
@@ -229,8 +231,11 @@ def _parse_pronto_command(command: str) -> tuple[int, list[int]]:
     if any(word <= 0 for word in timing_words):
         raise _command_error("Pronto timing words must be greater than zero")
 
-    modulation = round(1_000_000 / (frequency_word * 0.241246))
-    timings = [round(word * frequency_word * 0.241246) for word in timing_words]
+    modulation = round(1_000_000 / (frequency_word * PRONTO_FREQUENCY_REFERENCE_US))
+    timings = [
+        round(word * frequency_word * PRONTO_FREQUENCY_REFERENCE_US)
+        for word in timing_words
+    ]
     return modulation, timings
 
 

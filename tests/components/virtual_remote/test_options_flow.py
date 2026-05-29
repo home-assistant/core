@@ -132,8 +132,10 @@ async def test_edit_remote_success_single_entry(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_REMOTE_NAME] == "Updated TV"
-    assert result["data"][CONF_INFRARED_ENTITY_ID] == infrared_entity
+    assert CONF_REMOTE_NAME not in result["data"]
+    assert CONF_INFRARED_ENTITY_ID not in result["data"]
+    assert entry.data[CONF_REMOTE_NAME] == "Updated TV"
+    assert entry.data[CONF_INFRARED_ENTITY_ID] == infrared_entity
 
 
 @pytest.mark.parametrize(
