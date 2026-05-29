@@ -421,11 +421,14 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.LITERS,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
         should_update_entity=lambda value: value is not None,
+        # Firmware bug: the "running" dict persists after the session ends
+        # with stale progress values. Gate on state.running to only report
+        # progress while the device is actively watering.
         value=lambda device, data: (
-            round(running.get("progress", 0) / attrs.get("meterStepFactor", 10), 2)
+            round(running.get("progress", 0) / data.get("attributes", {}).get("meterStepFactor", 10), 2)
             if (running := data.get("running")) is not None
-            and (attrs := data.get("attributes")) is not None
-            else None
+            and data.get("state", {}).get("running") is True
+            else 0
         ),
     ),
     YoLinkSensorEntityDescription(
@@ -436,10 +439,9 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
         should_update_entity=lambda value: value is not None,
         value=lambda device, data: (
-            round(total.get("value", 0) / attrs.get("meterStepFactor", 10), 2)
+            round(total.get("value", 0) / data.get("attributes", {}).get("meterStepFactor", 10), 2)
             if (running := data.get("running")) is not None
             and (total := running.get("total")) is not None
-            and (attrs := data.get("attributes")) is not None
             else None
         ),
     ),

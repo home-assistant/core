@@ -22,7 +22,7 @@ from .const import ATTR_DEVICE_STATE, ATTR_LORA_INFO, DOMAIN, YOLINK_OFFLINE_TIM
 
 _LOGGER = logging.getLogger(__name__)
 
-SPRINKLER_ACTIVE_INTERVAL = timedelta(seconds=15)
+SPRINKLER_ACTIVE_INTERVAL = timedelta(seconds=30)
 SPRINKLER_IDLE_INTERVAL = timedelta(minutes=30)
 
 
@@ -71,7 +71,10 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         """Fetch device state."""
         try:
             async with asyncio.timeout(10):
-                device_state_resp = await self.device.fetch_state()
+                if self.device.device_type == ATTR_DEVICE_SPRINKLER_V2:
+                    device_state_resp = await self._fetch_sprinkler_v2()
+                else:
+                    device_state_resp = await self.device.fetch_state()
                 device_state = device_state_resp.data.get(ATTR_DEVICE_STATE)
                 device_reporttime = device_state_resp.data.get("reportAt")
                 if device_reporttime is not None:
@@ -95,6 +98,13 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
+            if self.device.device_type == ATTR_DEVICE_SPRINKLER_V2 and self.data:
+                _LOGGER.debug(
+                    "SprinklerV2 %s poll failed (%s), keeping previous data",
+                    self.device.device_id,
+                    yl_client_err,
+                )
+                return self.data
             _LOGGER.error(
                 "Failed to obtain device status, device: %s, error: %s ",
                 self.device.device_id,
@@ -113,16 +123,30 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
                     and "attributes" in self.data
                 ):
                     full_data["attributes"] = self.data["attributes"]
-                self._adjust_sprinkler_interval(full_data)
+                self.adjust_sprinkler_interval(full_data)
                 return full_data
             dev_lora_info = device_state.get(ATTR_LORA_INFO)
             if dev_lora_info is not None:
                 self.dev_net_type = dev_lora_info.get("devNetType")
-            self._adjust_sprinkler_interval(device_state)
+            self.adjust_sprinkler_interval(device_state)
             return device_state
         return {}
 
-    def _adjust_sprinkler_interval(self, device_state: dict) -> None:
+    async def _fetch_sprinkler_v2(self) -> BRDP:
+        """Fetch SprinklerV2 state: getState for live data, fetchState as fallback."""
+        try:
+            return await self.device.call_device(
+                ClientRequest("getState", {})
+            )
+        except YoLinkClientError as err:
+            _LOGGER.debug(
+                "SprinklerV2 %s getState failed (%s), falling back to fetchState",
+                self.device.device_id,
+                err,
+            )
+            return await self.device.fetch_state()
+
+    def adjust_sprinkler_interval(self, device_state: dict) -> None:
         """Speed up polling while SprinklerV2 valve is running."""
         if self.device.device_type != ATTR_DEVICE_SPRINKLER_V2:
             return
