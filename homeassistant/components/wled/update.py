@@ -114,10 +114,7 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         await self.coordinator.async_refresh()
 
     async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
+        """Update the entity."""
         await super().async_update()
         # Ignore manual update requests if the entity is disabled
         if not self.enabled:
