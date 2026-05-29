@@ -17,8 +17,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    UnitOfDensity,
     UnitOfEnergy,
     UnitOfTemperature,
     UnitOfTime,
@@ -36,19 +36,19 @@ AIR_QUALITY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.PM1: SensorEntityDescription(
         key=ThinQProperty.PM1,
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.PM2: SensorEntityDescription(
         key=ThinQProperty.PM2,
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.PM10: SensorEntityDescription(
         key=ThinQProperty.PM10,
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.HUMIDITY: SensorEntityDescription(

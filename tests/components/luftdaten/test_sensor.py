@@ -11,8 +11,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    UnitOfDensity,
     UnitOfPressure,
     UnitOfTemperature,
 )
@@ -101,7 +101,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
     assert ATTR_ICON not in state.attributes
 
@@ -118,7 +118,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
     assert ATTR_ICON not in state.attributes
 

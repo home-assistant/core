@@ -5,6 +5,9 @@ from functools import lru_cache
 from math import floor, log10
 
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -14,7 +17,6 @@ from homeassistant.const import (
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
-    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -246,18 +248,18 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
         CONCENTRATION_PARTS_PER_MILLION: 1e6,
-        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: (
             _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e3
         ),
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
-        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -492,14 +494,14 @@ class MassVolumeConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
-        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
-        UnitOfDensity.GRAMS_PER_CUBIC_METER: 1.0,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
+        CONCENTRATION_GRAMS_PER_CUBIC_METER: 1.0,
     }
     VALID_UNITS = {
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
-        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
-        UnitOfDensity.GRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_GRAMS_PER_CUBIC_METER,
     }
 
 
@@ -510,14 +512,14 @@ class NitrogenDioxideConcentrationConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
         CONCENTRATION_PARTS_PER_MILLION: 1e6,
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -527,13 +529,13 @@ class NitrogenMonoxideConcentrationConverter(BaseUnitConverter):
     UNIT_CLASS = "nitrogen_monoxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -544,14 +546,14 @@ class OzoneConcentrationConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
         CONCENTRATION_PARTS_PER_MILLION: 1e6,
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _OZONE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -749,13 +751,13 @@ class SulphurDioxideConcentrationConverter(BaseUnitConverter):
     UNIT_CLASS = "sulphur_dioxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _SULPHUR_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
-        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 
 

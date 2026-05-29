@@ -10,6 +10,7 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_STATE,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_COUNTRY,
@@ -17,7 +18,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
-    UnitOfDensity,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -95,8 +95,8 @@ POLLUTANT_UNITS = {
     "co": CONCENTRATION_PARTS_PER_MILLION,
     "n2": CONCENTRATION_PARTS_PER_BILLION,
     "o3": CONCENTRATION_PARTS_PER_BILLION,
-    "p1": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
-    "p2": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "p1": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "p2": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     "s2": CONCENTRATION_PARTS_PER_BILLION,
 }
 

@@ -9,12 +9,12 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
-    UnitOfDensity,
 )
 from homeassistant.core import HomeAssistant
 
@@ -34,7 +34,7 @@ from tests.components.common import (
 )
 
 _UGM3_UNIT_ATTRIBUTES = {
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+    ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 }
 _PPB_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION}
 _PPM_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION}
@@ -112,7 +112,7 @@ _UGM3_CROSSED_THRESHOLD = {
         "type": "above",
         "value": {
             "number": 50,
-            "unit_of_measurement": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         },
     }
 }
@@ -425,73 +425,73 @@ async def test_air_quality_trigger_binary_sensor_behavior_all(
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.co_changed",
             device_class=SensorDeviceClass.CO,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.co_crossed_threshold",
             device_class=SensorDeviceClass.CO,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.ozone_changed",
             device_class=SensorDeviceClass.OZONE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.ozone_crossed_threshold",
             device_class=SensorDeviceClass.OZONE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.voc_changed",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.voc_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.no_changed",
             device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.no2_changed",
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no2_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.so2_changed",
             device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.so2_crossed_threshold",
             device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         # With unit conversion (ppb base unit)
@@ -605,37 +605,37 @@ async def test_air_quality_trigger_sensor_behavior_each(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.co_crossed_threshold",
             device_class=SensorDeviceClass.CO,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.ozone_crossed_threshold",
             device_class=SensorDeviceClass.OZONE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.voc_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no2_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.so2_crossed_threshold",
             device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         # With unit conversion (ppb base unit)
@@ -716,37 +716,37 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_first(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.co_crossed_threshold",
             device_class=SensorDeviceClass.CO,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.ozone_crossed_threshold",
             device_class=SensorDeviceClass.OZONE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.voc_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no2_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.so2_crossed_threshold",
             device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         # With unit conversion (ppb base unit)

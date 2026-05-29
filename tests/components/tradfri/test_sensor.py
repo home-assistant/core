@@ -20,10 +20,10 @@ from homeassistant.components.tradfri.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    UnitOfDensity,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -102,7 +102,7 @@ async def test_air_quality_sensor(
     assert state.state == "5"
     assert (
         state.attributes[ATTR_UNIT_OF_MEASUREMENT]
-        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
     assert ATTR_DEVICE_CLASS not in state.attributes

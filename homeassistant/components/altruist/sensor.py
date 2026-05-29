@@ -11,11 +11,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
-    UnitOfDensity,
     UnitOfPressure,
     UnitOfSoundPressure,
     UnitOfTemperature,
@@ -144,14 +144,14 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.PM10,
         translation_key="pm_10",
         key="SDS_P1",
-        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         suggested_display_precision=2,
     ),
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.PM25,
         translation_key="pm_25",
         key="SDS_P2",
-        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         suggested_display_precision=2,
     ),
     AltruistSensorEntityDescription(
@@ -202,7 +202,7 @@ SENSOR_DESCRIPTIONS = [
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         key="CCS_TVOC",
-        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         suggested_display_precision=2,
     ),
     AltruistSensorEntityDescription(
