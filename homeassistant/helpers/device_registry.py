@@ -8,7 +8,7 @@ from enum import StrEnum
 from functools import lru_cache
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack
+from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, Unpack
 
 import attr
 from yarl import URL
@@ -80,21 +80,23 @@ class DeviceEntryDisabler(StrEnum):
     USER = "user"
 
 
-class DeviceInfoAttribute(StrEnum):
+class DeviceInfoAttribute:
     """Device info attributes."""
 
-    CONFIGURATION_URL = "configuration_url"
-    CONNECTIONS = "connections"
-    IDENTIFIERS = "identifiers"
-    HW_VERSION = "hw_version"
-    MANUFACTURER = "manufacturer"
-    MODEL = "model"
-    MODEL_ID = "model_id"
-    NAME = "name"
-    SERIAL_NUMBER = "serial_number"
-    SUGGESTED_AREA = "suggested_area"
-    SW_VERSION = "sw_version"
-    VIA_DEVICE = "via_device"
+    # Note: typed dict does not support StrEnum
+
+    CONFIGURATION_URL: Final = "configuration_url"
+    CONNECTIONS: Final = "connections"
+    IDENTIFIERS: Final = "identifiers"
+    HW_VERSION: Final = "hw_version"
+    MANUFACTURER: Final = "manufacturer"
+    MODEL: Final = "model"
+    MODEL_ID: Final = "model_id"
+    NAME: Final = "name"
+    SERIAL_NUMBER: Final = "serial_number"
+    SUGGESTED_AREA: Final = "suggested_area"
+    SW_VERSION: Final = "sw_version"
+    VIA_DEVICE: Final = "via_device"
 
 
 class DeviceInfo(TypedDict, total=False):
