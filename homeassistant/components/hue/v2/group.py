@@ -85,6 +85,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
     entity_description = LightEntityDescription(
         key="hue_grouped_light",
+        translation_key="hue_grouped_light",
         has_entity_name=True,
         name=None,
     )
