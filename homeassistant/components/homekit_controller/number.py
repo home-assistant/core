@@ -68,6 +68,7 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         key=CharacteristicsTypes.SET_DURATION,
         has_entity_name=True,
         device_class=NumberDeviceClass.DURATION,
+        translation_key="duration",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
