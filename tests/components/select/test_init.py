@@ -5,9 +5,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.select import (
-    ATTR_CYCLE,
-    ATTR_OPTION,
-    ATTR_OPTIONS,
     DOMAIN,
     SERVICE_SELECT_FIRST,
     SERVICE_SELECT_LAST,
@@ -15,6 +12,8 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
     SelectEntity,
+    SelectEntityAttribute,
+    SelectServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -85,7 +84,7 @@ async def test_select(hass: HomeAssistant) -> None:
 
     assert select.select_option.call_count == 5
 
-    assert select.capability_attributes[ATTR_OPTIONS] == [
+    assert select.capability_attributes[SelectEntityAttribute.OPTIONS] == [
         "option_one",
         "option_two",
         "option_three",
@@ -107,7 +106,10 @@ async def test_custom_integration_and_validation(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_OPTION: "option 2", ATTR_ENTITY_ID: "select.select_1"},
+        {
+            SelectServiceArgument.OPTION: "option 2",
+            ATTR_ENTITY_ID: "select.select_1",
+        },
         blocking=True,
     )
 
@@ -120,7 +122,10 @@ async def test_custom_integration_and_validation(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_OPTION: "option invalid", ATTR_ENTITY_ID: "select.select_1"},
+            {
+                SelectServiceArgument.OPTION: "option invalid",
+                ATTR_ENTITY_ID: "select.select_1",
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -135,7 +140,10 @@ async def test_custom_integration_and_validation(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_OPTION: "option invalid", ATTR_ENTITY_ID: "select.select_2"},
+            {
+                SelectServiceArgument.OPTION: "option invalid",
+                ATTR_ENTITY_ID: "select.select_2",
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -144,7 +152,10 @@ async def test_custom_integration_and_validation(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_OPTION: "option 3", ATTR_ENTITY_ID: "select.select_2"},
+        {
+            SelectServiceArgument.OPTION: "option 3",
+            ATTR_ENTITY_ID: "select.select_2",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -171,7 +182,10 @@ async def test_custom_integration_and_validation(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SELECT_NEXT,
-        {ATTR_ENTITY_ID: "select.select_2", ATTR_CYCLE: False},
+        {
+            ATTR_ENTITY_ID: "select.select_2",
+            SelectServiceArgument.CYCLE: False,
+        },
         blocking=True,
     )
     assert hass.states.get("select.select_2").state == "option 3"
@@ -189,7 +203,10 @@ async def test_custom_integration_and_validation(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SELECT_PREVIOUS,
-        {ATTR_ENTITY_ID: "select.select_2", ATTR_CYCLE: False},
+        {
+            ATTR_ENTITY_ID: "select.select_2",
+            SelectServiceArgument.CYCLE: False,
+        },
         blocking=True,
     )
     assert hass.states.get("select.select_2").state == "option 1"

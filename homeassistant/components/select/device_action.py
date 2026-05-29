@@ -25,41 +25,45 @@ from .const import (
     CONF_CYCLE,
     CONF_OPTION,
     DOMAIN,
+    SERVICE_SELECT_FIRST,
+    SERVICE_SELECT_LAST,
+    SERVICE_SELECT_NEXT,
+    SERVICE_SELECT_OPTION,
+    SERVICE_SELECT_PREVIOUS,
     SelectEntityAttribute,
-    SelectService,
     SelectServiceArgument,
 )
 
 _ACTION_SCHEMA = vol.Any(
     cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_TYPE): SelectService.SELECT_FIRST.value,
+            vol.Required(CONF_TYPE): SERVICE_SELECT_FIRST,
             vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         }
     ),
     cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_TYPE): SelectService.SELECT_LAST.value,
+            vol.Required(CONF_TYPE): SERVICE_SELECT_LAST,
             vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         }
     ),
     cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_TYPE): SelectService.SELECT_NEXT.value,
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            vol.Optional(CONF_CYCLE, default=True): cv.boolean,
-        }
-    ),
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): SelectService.SELECT_PREVIOUS.value,
+            vol.Required(CONF_TYPE): SERVICE_SELECT_NEXT,
             vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Optional(CONF_CYCLE, default=True): cv.boolean,
         }
     ),
     cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_TYPE): SelectService.SELECT_OPTION.value,
+            vol.Required(CONF_TYPE): SERVICE_SELECT_PREVIOUS,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            vol.Optional(CONF_CYCLE, default=True): cv.boolean,
+        }
+    ),
+    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+        {
+            vol.Required(CONF_TYPE): SERVICE_SELECT_OPTION,
             vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_OPTION): cv.string,
         }
@@ -87,11 +91,11 @@ async def async_get_actions(
             CONF_TYPE: service_conf_type,
         }
         for service_conf_type in (
-            SelectService.SELECT_FIRST,
-            SelectService.SELECT_LAST,
-            SelectService.SELECT_NEXT,
-            SelectService.SELECT_OPTION,
-            SelectService.SELECT_PREVIOUS,
+            SERVICE_SELECT_FIRST,
+            SERVICE_SELECT_LAST,
+            SERVICE_SELECT_NEXT,
+            SERVICE_SELECT_OPTION,
+            SERVICE_SELECT_PREVIOUS,
         )
         for entry in er.async_entries_for_device(registry, device_id)
         if entry.domain == DOMAIN
@@ -106,9 +110,9 @@ async def async_call_action_from_config(
 ) -> None:
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
-    if config[CONF_TYPE] == SelectService.SELECT_OPTION:
+    if config[CONF_TYPE] == SERVICE_SELECT_OPTION:
         service_data[SelectServiceArgument.OPTION] = config[CONF_OPTION]
-    if config[CONF_TYPE] in {SelectService.SELECT_NEXT, SelectService.SELECT_PREVIOUS}:
+    if config[CONF_TYPE] in {SERVICE_SELECT_NEXT, SERVICE_SELECT_PREVIOUS}:
         service_data[SelectServiceArgument.CYCLE] = config[CONF_CYCLE]
 
     await hass.services.async_call(
@@ -124,14 +128,14 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""
-    if config[CONF_TYPE] in {SelectService.SELECT_NEXT, SelectService.SELECT_PREVIOUS}:
+    if config[CONF_TYPE] in {SERVICE_SELECT_NEXT, SERVICE_SELECT_PREVIOUS}:
         return {
             "extra_fields": vol.Schema(
                 {vol.Optional(CONF_CYCLE, default=True): cv.boolean}
             )
         }
 
-    if config[CONF_TYPE] == SelectService.SELECT_OPTION:
+    if config[CONF_TYPE] == SERVICE_SELECT_OPTION:
         options: list[str] = []
         with suppress(HomeAssistantError):
             entry = async_get_entity_registry_entry_or_raise(

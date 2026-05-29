@@ -26,7 +26,6 @@ from .const import (
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_PREVIOUS,
     SelectEntityAttribute,
-    SelectService,
     SelectServiceArgument,
 )
 
@@ -55,7 +54,6 @@ __all__ = [
     "SelectEntity",
     "SelectEntityAttribute",
     "SelectEntityDescription",
-    "SelectService",
     "SelectServiceArgument",
 ]
 
@@ -70,32 +68,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SelectService.SELECT_FIRST,
+        SERVICE_SELECT_FIRST,
         None,
         SelectEntity.async_first.__name__,
     )
 
     component.async_register_entity_service(
-        SelectService.SELECT_LAST,
+        SERVICE_SELECT_LAST,
         None,
         SelectEntity.async_last.__name__,
     )
 
     component.async_register_entity_service(
-        SelectService.SELECT_NEXT,
-        {vol.Optional(SelectServiceArgument.CYCLE.value, default=True): bool},
+        SERVICE_SELECT_NEXT,
+        {vol.Optional(SelectServiceArgument.CYCLE, default=True): bool},
         SelectEntity.async_next.__name__,
     )
 
     component.async_register_entity_service(
-        SelectService.SELECT_OPTION,
-        {vol.Required(SelectServiceArgument.OPTION.value): cv.string},
+        SERVICE_SELECT_OPTION,
+        {vol.Required(SelectServiceArgument.OPTION): cv.string},
         SelectEntity.async_handle_select_option.__name__,
     )
 
     component.async_register_entity_service(
-        SelectService.SELECT_PREVIOUS,
-        {vol.Optional(SelectServiceArgument.CYCLE.value, default=True): bool},
+        SERVICE_SELECT_PREVIOUS,
+        {vol.Optional(SelectServiceArgument.CYCLE, default=True): bool},
         SelectEntity.async_previous.__name__,
     )
 

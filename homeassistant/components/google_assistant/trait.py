@@ -2071,7 +2071,7 @@ class ModesTrait(_Trait):
             option = settings["option"]
             await self.hass.services.async_call(
                 input_select.DOMAIN,
-                input_select.InputSelectService.SELECT_OPTION,
+                input_select.SERVICE_SELECT_OPTION,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     input_select.InputSelectServiceArgument.OPTION: option,
@@ -2085,7 +2085,7 @@ class ModesTrait(_Trait):
             option = settings["option"]
             await self.hass.services.async_call(
                 select.DOMAIN,
-                select.SelectService.SELECT_OPTION,
+                select.SERVICE_SELECT_OPTION,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     select.SelectServiceArgument.OPTION: option,

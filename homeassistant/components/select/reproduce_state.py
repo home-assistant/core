@@ -8,7 +8,12 @@ from typing import Any
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from .const import DOMAIN, SelectEntityAttribute, SelectService, SelectServiceArgument
+from .const import (
+    DOMAIN,
+    SERVICE_SELECT_OPTION,
+    SelectEntityAttribute,
+    SelectServiceArgument,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +42,7 @@ async def _async_reproduce_state(
 
     await hass.services.async_call(
         DOMAIN,
-        SelectService.SELECT_OPTION,
+        SERVICE_SELECT_OPTION,
         {ATTR_ENTITY_ID: state.entity_id, SelectServiceArgument.OPTION: state.state},
         context=context,
         blocking=True,

@@ -11,17 +11,7 @@ class SelectEntityAttribute(StrEnum):
     OPTIONS = "options"
 
 
-class SelectService(StrEnum):
-    """Select services."""
-
-    SELECT_FIRST = "select_first"
-    SELECT_LAST = "select_last"
-    SELECT_NEXT = "select_next"
-    SELECT_OPTION = "select_option"
-    SELECT_PREVIOUS = "select_previous"
-
-
-class SelectServiceArgument(StrEnum):
+class SelectServiceArgument:
     """Select service arguments."""
 
     CYCLE = "cycle"
@@ -34,13 +24,17 @@ CONF_OPTION = "option"
 #
 # Backwards compatibility / needs to be formally deprecated
 #
-ATTR_CYCLE = SelectServiceArgument.CYCLE.value
-ATTR_OPTION = SelectServiceArgument.OPTION.value
+ATTR_CYCLE = SelectServiceArgument.CYCLE
+ATTR_OPTION = SelectServiceArgument.OPTION
 
 ATTR_OPTIONS = SelectEntityAttribute.OPTIONS.value
 
-SERVICE_SELECT_FIRST = SelectService.SELECT_FIRST.value
-SERVICE_SELECT_LAST = SelectService.SELECT_LAST.value
-SERVICE_SELECT_NEXT = SelectService.SELECT_NEXT.value
-SERVICE_SELECT_OPTION = SelectService.SELECT_OPTION.value
-SERVICE_SELECT_PREVIOUS = SelectService.SELECT_PREVIOUS.value
+#
+# Single-use constants / needs to be formally deprecated
+#
+SERVICE_SELECT_FIRST = "select_first"
+SERVICE_SELECT_LAST = "select_last"
+SERVICE_SELECT_NEXT = "select_next"
+# pylint: disable-next=home-assistant-duplicate-const
+SERVICE_SELECT_OPTION = "select_option"
+SERVICE_SELECT_PREVIOUS = "select_previous"
