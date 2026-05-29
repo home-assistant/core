@@ -324,9 +324,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         self._fetch_device_list = True
 
-    def get_currency(self):
+    def get_currency(self) -> str | None:
         """Get the currency."""
-        return self.data.get("currency")
+        result: str | None = self.data.get("currency")
+        return result
 
     def get_data(
         self, entity_description: GrowattSensorEntityDescription
@@ -428,7 +429,12 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return return_value
 
     async def update_time_segment(
-        self, segment_id: int, batt_mode: int, start_time, end_time, enabled: bool
+        self,
+        segment_id: int,
+        batt_mode: int,
+        start_time: datetime.time,
+        end_time: datetime.time,
+        enabled: bool,
     ) -> None:
         """Update an inverter time segment.
 
@@ -668,7 +674,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
             self.async_set_updated_data(self.data)
 
-    async def read_ac_charge_times(self) -> dict:
+    async def read_ac_charge_times(self) -> dict[str, Any]:
         """Read AC charge time settings from SPH device cache."""
         if self.api_version != "v1":
             raise ServiceValidationError(
@@ -679,11 +685,12 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self.data:
             await self.async_refresh()
 
-        return self.api.sph_read_ac_charge_times(
+        result: dict[str, Any] = self.api.sph_read_ac_charge_times(
             self.device_id, settings_data=self.data
         )
+        return result
 
-    async def read_ac_discharge_times(self) -> dict:
+    async def read_ac_discharge_times(self) -> dict[str, Any]:
         """Read AC discharge time settings from SPH device cache."""
         if self.api_version != "v1":
             raise ServiceValidationError(
@@ -694,6 +701,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self.data:
             await self.async_refresh()
 
-        return self.api.sph_read_ac_discharge_times(
+        result: dict[str, Any] = self.api.sph_read_ac_discharge_times(
             self.device_id, settings_data=self.data
         )
+        return result

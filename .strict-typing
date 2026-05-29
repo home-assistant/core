@@ -249,6 +249,7 @@ homeassistant.components.govee_ble.*
 homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
+homeassistant.components.growatt_server.*
 homeassistant.components.guardian.*
 homeassistant.components.guntamatic.*
 homeassistant.components.habitica.*

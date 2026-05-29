@@ -141,4 +141,4 @@ class GrowattSensor(CoordinatorEntity[GrowattCoordinator], SensorEntity):
         """Return the unit of measurement of the sensor, if any."""
         if self.entity_description.currency:
             return self.coordinator.get_currency()
-        return super().native_unit_of_measurement
+        return self.entity_description.native_unit_of_measurement
