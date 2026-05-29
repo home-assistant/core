@@ -329,6 +329,56 @@ async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
         assert state.state == "arrived"
 
 
+@pytest.mark.parametrize(
+    "tracker_attributes",
+    [
+        pytest.param({"in_zones": ["zone.work_office"]}, id="in_zones_attribute"),
+        pytest.param({}, id="friendly_name_fallback"),
+    ],
+)
+async def test_device_tracker_in_non_home_zone(
+    hass: HomeAssistant,
+    tracker_attributes: dict[str, list[str]],
+) -> None:
+    """Test that a tracker in a non-home zone reports arrived.
+
+    Regression test for zones whose friendly name (which the tracker reports as
+    its state) differs from the zone entity id slug, e.g. names with spaces or
+    mixed case. The tracker is placed far from the zone centre so that only the
+    zone-membership check, not the distance calculation, can yield "arrived".
+    """
+    hass.states.async_set(
+        "zone.work_office",
+        "zoning",
+        {"name": "Work Office", "latitude": 2.3, "longitude": 1.3, "radius": 10},
+    )
+
+    await async_setup_single_entry(
+        hass, "zone.work_office", ["device_tracker.test1"], [], 1
+    )
+
+    hass.states.async_set(
+        "device_tracker.test1",
+        "Work Office",
+        {
+            "friendly_name": "test1",
+            "latitude": 20.1,
+            "longitude": 10.1,
+            **tracker_attributes,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.home_nearest_device")
+    assert state.state == "test1"
+
+    entity_base_name = "sensor.home_test1"
+    state = hass.states.get(f"{entity_base_name}_distance")
+    assert state.state == "0"
+    state = hass.states.get(f"{entity_base_name}_direction_of_travel")
+    assert state.state == "arrived"
+
+
 async def test_device_tracker_test1_awayfurther_than_test2_first_test1(
     hass: HomeAssistant, config_zones
 ) -> None:
