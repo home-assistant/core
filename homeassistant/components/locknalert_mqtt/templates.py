@@ -107,8 +107,7 @@ class MqttCommandTemplate:
         if variables is not None:
             values.update(variables)
         _LOGGER.debug(
-            "Rendering outgoing payload with variables %s and %s",
-            values,
+            "Rendering outgoing payload with template %s",
             self._command_template,
         )
         try:
@@ -204,9 +203,8 @@ class MqttValueTemplate:
 
         if default is PayloadSentinel.NONE:
             _LOGGER.debug(
-                "Rendering incoming payload '%s' with variables %s and %s",
+                "Rendering incoming payload '%s' with template %s",
                 payload,
-                values,
                 self._value_template,
             )
             try:
@@ -226,12 +224,8 @@ class MqttValueTemplate:
             return rendered_payload
 
         _LOGGER.debug(
-            (
-                "Rendering incoming payload '%s' with variables %s with default value"
-                " '%s' and %s"
-            ),
+            "Rendering incoming payload '%s' with default '%s' and template %s",
             payload,
-            values,
             default,
             self._value_template,
         )

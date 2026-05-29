@@ -15,6 +15,8 @@ from uuid import uuid4
 
 from aiohttp import ClientSession, TCPConnector
 from aiolocknalert import (
+    BootstrapResult,
+    LocknAlertAlreadyProvisioned,
     LocknAlertBridgeApi,
     LocknAlertCannotConnect,
     LocknAlertInvalidAuth,
@@ -115,6 +117,7 @@ from .const import (
     CONF_DISCOVERY_PREFIX,
     CONF_ENTITY_PICTURE,
     CONF_KEEPALIVE,
+    CONF_PAIRING_TOKEN,
     CONF_PAYLOAD_ARM_AWAY,
     CONF_PAYLOAD_ARM_CUSTOM_BYPASS,
     CONF_PAYLOAD_ARM_HOME,
@@ -148,7 +151,6 @@ from .const import (
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DEFAULT_PAYLOAD_TRIGGER,
-    DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
     DEFAULT_QOS,
@@ -804,14 +806,6 @@ def update_password_from_user_input(
     return substituted_used_data
 
 
-REAUTH_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): TEXT_SELECTOR,
-        vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
-    }
-)
-
-
 def extract_serial_from_discovery(discovery_info: ZeroconfServiceInfo) -> str | None:
     """Extract bridge serial from zeroconf discovery info.
 
@@ -822,7 +816,7 @@ def extract_serial_from_discovery(discovery_info: ZeroconfServiceInfo) -> str | 
     if discovery_info.name:
         # Remove service type suffix: "_locknalert._tcp.local."
         parts = discovery_info.name.split(".")
-        if parts:
+        if parts and parts[0]:
             return parts[0]  # Return serial/hostname part
 
     # Fallback to TXT property
@@ -930,13 +924,15 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             async with ClientSession(connector=TCPConnector(ssl=False)) as session:
-                mqtt_config = await self._bridge_api.async_bootstrap(
+                result: BootstrapResult = await self._bridge_api.async_bootstrap(
                     session, self._bridge_serial
                 )
         except LocknAlertCannotConnect:
             return self.async_abort(reason="cannot_connect")
         except LocknAlertInvalidAuth:
             return self.async_abort(reason="invalid_auth")
+        except LocknAlertAlreadyProvisioned:
+            return self.async_abort(reason="bridge_already_provisioned")
         except LocknAlertPairingRequired:
             return self.async_abort(reason="bridge_pairing_required")
         except LocknAlertInvalidResponse:
@@ -945,14 +941,15 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         # Build config from bootstrap response.
         # Prefer the bridge's discovered IP over the bootstrap hostname, since
         # .local mDNS names are not reliably resolvable from HA's environment.
-        mqtt_host = self._selected_bridge.host or mqtt_config.get("host", "")
+        mqtt_host = self._selected_bridge.host or result.host
         config_data = {
             CONF_BROKER: mqtt_host,
-            CONF_PORT: mqtt_config.get("port", DEFAULT_PORT),
-            CONF_USERNAME: mqtt_config["username"],
-            CONF_PASSWORD: mqtt_config["password"],
+            CONF_PORT: result.port,
+            CONF_USERNAME: result.username,
+            CONF_PASSWORD: result.password,
             CONF_DISCOVERY: DEFAULT_DISCOVERY,
             CONF_BRIDGE_SERIAL: self._bridge_serial,
+            CONF_PAIRING_TOKEN: result.pairing_token,
         }
 
         # Test MQTT connection before creating entry
@@ -967,41 +964,54 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Handle re-authentication with MQTT broker."""
-
+        """Handle re-authentication with the LocknAlert bridge."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm re-authentication with MQTT broker."""
-        errors: dict[str, str] = {}
-
+        """Re-authenticate by calling the bridge bootstrap endpoint with the stored token."""
         reauth_entry = self._get_reauth_entry()
-        if user_input:
-            substituted_used_data = update_password_from_user_input(
-                reauth_entry.data.get(CONF_PASSWORD), user_input
+        serial = reauth_entry.data.get(CONF_BRIDGE_SERIAL)
+        stored_token = reauth_entry.data.get(CONF_PAIRING_TOKEN)
+        broker = reauth_entry.data.get(CONF_BROKER)
+
+        if not serial or not stored_token or not broker:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                errors={"base": "reauth_missing_data"},
             )
-            new_entry_data = {**reauth_entry.data, **substituted_used_data}
-            if await self.hass.async_add_executor_job(
-                try_connection,
-                new_entry_data,
-            ):
-                return self.async_update_and_abort(reauth_entry, data=new_entry_data)
 
-            errors["base"] = "invalid_auth"
+        try:
+            bridge_api = LocknAlertBridgeApi(broker)
+            async with ClientSession(connector=TCPConnector(ssl=False)) as session:
+                result: BootstrapResult = await bridge_api.async_bootstrap(
+                    session, serial, stored_token
+                )
+        except LocknAlertAlreadyProvisioned:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                errors={"base": "reauth_allow_provisioning"},
+            )
+        except LocknAlertInvalidAuth:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                errors={"base": "invalid_auth"},
+            )
+        except (LocknAlertCannotConnect, LocknAlertInvalidResponse):
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                errors={"base": "cannot_connect"},
+            )
 
-        schema = self.add_suggested_values_to_schema(
-            REAUTH_SCHEMA,
-            {
-                CONF_USERNAME: reauth_entry.data.get(CONF_USERNAME),
-                CONF_PASSWORD: PWD_NOT_CHANGED,
+        return self.async_update_and_abort(
+            reauth_entry,
+            data={
+                **reauth_entry.data,
+                CONF_USERNAME: result.username,
+                CONF_PASSWORD: result.password,
+                CONF_PAIRING_TOKEN: result.pairing_token,
             },
-        )
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=schema,
-            errors=errors,
         )
 
     async def async_step_broker(
@@ -1088,16 +1098,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                             ),
                             errors=errors,
                         )
-                    mqtt_config = await bridge_api.async_bootstrap(
+                    result: BootstrapResult = await bridge_api.async_bootstrap(
                         session, serial_number
                     )
 
                 # Update validated_user_input with fetched credentials
                 validated_user_input.update(
                     {
-                        CONF_PORT: mqtt_config.get("port", DEFAULT_PORT),
-                        CONF_USERNAME: mqtt_config.get("username"),
-                        CONF_PASSWORD: mqtt_config.get("password"),
+                        CONF_PORT: result.port,
+                        CONF_USERNAME: result.username,
+                        CONF_PASSWORD: result.password,
+                        CONF_PAIRING_TOKEN: result.pairing_token,
                     }
                 )
             except LocknAlertInvalidAuth as err:
@@ -1107,6 +1118,23 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     err,
                 )
                 errors[CONF_BRIDGE_SERIAL] = "invalid_auth"
+                return self.async_show_form(
+                    step_id="broker",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_BROKER): TEXT_SELECTOR,
+                            vol.Optional(CONF_BRIDGE_SERIAL): TEXT_SELECTOR,
+                        }
+                    ),
+                    errors=errors,
+                )
+            except LocknAlertAlreadyProvisioned as err:
+                _LOGGER.error(
+                    "LocknAlert bridge at %s is already provisioned: %s",
+                    validated_user_input.get(CONF_BROKER),
+                    err,
+                )
+                errors["base"] = "bridge_already_provisioned"
                 return self.async_show_form(
                     step_id="broker",
                     data_schema=vol.Schema(

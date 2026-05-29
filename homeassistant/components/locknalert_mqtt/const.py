@@ -161,6 +161,7 @@ PAYLOAD_NONE = "None"
 
 # LocknAlert Bridge API Discovery
 CONF_BRIDGE_SERIAL = "bridge_serial"
+CONF_PAIRING_TOKEN = "pairing_token"
 
 # Discovery attribute names from zeroconf TXT properties
 DISCOVERY_ATTR_API_PORT = "api_port"

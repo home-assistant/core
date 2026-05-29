@@ -104,12 +104,14 @@ class EnsureJobAfterCooldown:
         if self._timer:
             self._timer.cancel()
             self._timer = None
+            self._next_execute_time = 0.0
 
     @callback
     def async_schedule(self) -> None:
         """Ensure we execute after a cooldown period."""
         next_when = self._loop.time() + self._timeout
         if not self._timer:
+            self._next_execute_time = next_when
             self._timer = self._loop.call_at(next_when, self._async_timer_reached)
             return
 

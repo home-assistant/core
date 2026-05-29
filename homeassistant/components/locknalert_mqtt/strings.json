@@ -21,12 +21,15 @@
       "bad_discovery_prefix": "Invalid discovery prefix",
       "bad_will": "Invalid will topic",
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
+      "bridge_already_provisioned": "The LocknAlert bridge is already paired to another installation. Go to the LocknAlert Admin Portal and click Allow Provisioning, then try again.",
       "bridge_pairing_required": "The LocknAlert bridge requires pairing before it can be used.",
       "bridge_serial_required": "Bridge serial number is required. Enter it manually or ensure the bridge is reachable for auto-detection.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "client_key_error": "Invalid private key file or invalid password supplied",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_inclusion": "The client certificate and private key must be configured together"
+      "invalid_inclusion": "The client certificate and private key must be configured together",
+      "reauth_allow_provisioning": "The device is already paired. Go to the LocknAlert Admin Portal and click Allow Provisioning, then try again.",
+      "reauth_missing_data": "Re-authentication data is missing. Remove this integration and add it again."
     },
     "step": {
       "broker": {
@@ -75,16 +78,8 @@
         "description": "Please enter the connection information of your MQTT broker."
       },
       "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "password": "[%key:component::mqtt::config::step::broker::data_description::password%]",
-          "username": "[%key:component::mqtt::config::step::broker::data_description::username%]"
-        },
-        "description": "The MQTT broker reported an authentication error. Please confirm the brokers correct username and password.",
-        "title": "Re-authentication required with the MQTT broker"
+        "description": "Re-authenticating with your LocknAlert bridge using the stored pairing token. If this fails, go to the LocknAlert Admin Portal and click Allow Provisioning.",
+        "title": "Re-authentication required"
       },
       "user": {
         "description": "Please enter the connection information of your MQTT broker."
