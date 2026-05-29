@@ -274,7 +274,7 @@ def mock_try_connection_time_out() -> Generator[MagicMock]:
     # Patch prevent waiting 5 sec for a timeout
     with (
         patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client,
-        patch("homeassistant.components.mqtt.config_flow.MQTT_TIMEOUT", 0),
+        patch("homeassistant.components.mqtt.client.MQTT_TIMEOUT", 0),
     ):
         mock_client().loop_start = lambda *args: 1
         yield mock_client()

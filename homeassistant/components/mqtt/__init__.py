@@ -51,9 +51,9 @@ from .client import (
     async_subscribe_internal,
     publish,
     subscribe,
+    try_connection,
 )
 from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA
-from .config_flow import try_connection
 from .config_integration import CONFIG_SCHEMA_BASE
 from .const import (
     ATTR_MESSAGE_EXPIRY_INTERVAL,
