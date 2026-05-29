@@ -1,5 +1,6 @@
 """Support for Template fans."""
 
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -94,6 +95,15 @@ FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).ex
 FAN_CONFIG_ENTRY_SCHEMA = FAN_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
+
+
+class FanScriptVariable(StrEnum):
+    """Variables for scripts."""
+
+    DIRECTION = "direction"
+    OSCILLATING = "oscillating"
+    PERCENTAGE = "percentage"
+    PRESET_MODE = "preset_mode"
 
 
 async def async_setup_platform(
@@ -231,8 +241,8 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         await self.async_run_script(
             self._action_scripts[CONF_ON_ACTION],
             run_variables={
-                "percentage": percentage,
-                "preset_mode": preset_mode,
+                FanScriptVariable.PERCENTAGE: percentage,
+                FanScriptVariable.PRESET_MODE: preset_mode,
             },
             context=self._context,
         )
@@ -263,7 +273,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={"percentage": self._attr_percentage},
+                run_variables={FanScriptVariable.PERCENTAGE: self._attr_percentage},
                 context=self._context,
             )
 
@@ -280,7 +290,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={"preset_mode": self._attr_preset_mode},
+                run_variables={FanScriptVariable.PRESET_MODE: self._attr_preset_mode},
                 context=self._context,
             )
 
@@ -298,7 +308,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         ) is not None:
             await self.async_run_script(
                 script,
-                run_variables={"oscillating": self.oscillating},
+                run_variables={FanScriptVariable.OSCILLATING: self.oscillating},
                 context=self._context,
             )
 
@@ -314,7 +324,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             ) is not None:
                 await self.async_run_script(
                     script,
-                    run_variables={"direction": direction},
+                    run_variables={FanScriptVariable.DIRECTION: direction},
                     context=self._context,
                 )
             if CONF_DIRECTION not in self._templates:
