@@ -123,6 +123,7 @@ async def test_invalid_device_id(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_DEVICE_ID: "invalid_device_id"}
+    hass.config_entries.flow.async_abort(result["flow_id"])
 
 
 async def test_invalid_channel(
@@ -144,6 +145,7 @@ async def test_invalid_channel(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_CHANNEL: "invalid_channel"}
+    hass.config_entries.flow.async_abort(result["flow_id"])
 
 
 async def test_unique_id_already_configured(
