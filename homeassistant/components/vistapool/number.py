@@ -211,7 +211,7 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
         """Return the max value, recomputed from coordinator data when applicable."""
         if (fn := self.entity_description.max_value_fn) is not None:
             return fn(self.coordinator)
-        return self.entity_description.native_max_value
+        return super().native_max_value
 
     @property
     def native_value(self) -> float | None:
