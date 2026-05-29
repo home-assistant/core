@@ -765,8 +765,7 @@ class UnitOfDensity(StrEnum):
     MICROGRAMS_PER_CUBIC_FOOT = "μg/ft³"
 
 
-# Deprecated - should not be used in new code, but still supported
-# until all core components have been updated
+# Concentration units
 CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = UnitOfDensity.GRAMS_PER_CUBIC_METER.value
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = (
     UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER.value
@@ -777,8 +776,6 @@ CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = (
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = (
     UnitOfDensity.MICROGRAMS_PER_CUBIC_FOOT.value
 )
-
-# Concentration units
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
