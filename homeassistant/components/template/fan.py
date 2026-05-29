@@ -6,10 +6,6 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
@@ -235,8 +231,8 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         await self.async_run_script(
             self._action_scripts[CONF_ON_ACTION],
             run_variables={
-                ATTR_PERCENTAGE: percentage,
-                ATTR_PRESET_MODE: preset_mode,
+                "percentage": percentage,
+                "preset_mode": preset_mode,
             },
             context=self._context,
         )
@@ -267,7 +263,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={ATTR_PERCENTAGE: self._attr_percentage},
+                run_variables={"percentage": self._attr_percentage},
                 context=self._context,
             )
 
@@ -284,7 +280,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={ATTR_PRESET_MODE: self._attr_preset_mode},
+                run_variables={"preset_mode": self._attr_preset_mode},
                 context=self._context,
             )
 
@@ -302,7 +298,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         ) is not None:
             await self.async_run_script(
                 script,
-                run_variables={ATTR_OSCILLATING: self.oscillating},
+                run_variables={"oscillating": self.oscillating},
                 context=self._context,
             )
 
@@ -318,7 +314,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             ) is not None:
                 await self.async_run_script(
                     script,
-                    run_variables={ATTR_DIRECTION: direction},
+                    run_variables={"direction": direction},
                     context=self._context,
                 )
             if CONF_DIRECTION not in self._templates:
