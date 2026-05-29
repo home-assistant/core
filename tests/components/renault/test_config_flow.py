@@ -10,13 +10,7 @@ from renault_api.renault_account import RenaultAccount
 from renault_api.renault_session import RenaultSession
 
 from homeassistant import config_entries
-from homeassistant.components.renault.const import (
-    CONF_KAMEREON_ACCOUNT_ID,
-    CONF_LOCALE,
-    CONF_LOGIN_TOKEN,
-    DOMAIN,
-)
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.renault.const import DOMAIN, RenaultConfigurationKeys
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import aiohttp_client
@@ -66,9 +60,9 @@ async def test_config_flow_single_account(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_LOCALE: "fr_FR",
-                CONF_USERNAME: "email@test.com",
-                CONF_PASSWORD: "test",
+                RenaultConfigurationKeys.LOCALE: "fr_FR",
+                RenaultConfigurationKeys.USERNAME: "email@test.com",
+                RenaultConfigurationKeys.PASSWORD: "test",
             },
         )
 
@@ -77,9 +71,18 @@ async def test_config_flow_single_account(
     assert result["errors"] == {"base": error}
 
     data_schema = result["data_schema"].schema
-    assert get_schema_suggested_value(data_schema, CONF_LOCALE) == "fr_FR"
-    assert get_schema_suggested_value(data_schema, CONF_USERNAME) == "email@test.com"
-    assert get_schema_suggested_value(data_schema, CONF_PASSWORD) == "test"
+    assert (
+        get_schema_suggested_value(data_schema, RenaultConfigurationKeys.LOCALE)
+        == "fr_FR"
+    )
+    assert (
+        get_schema_suggested_value(data_schema, RenaultConfigurationKeys.USERNAME)
+        == "email@test.com"
+    )
+    assert (
+        get_schema_suggested_value(data_schema, RenaultConfigurationKeys.PASSWORD)
+        == "test"
+    )
 
     renault_account = AsyncMock()
     type(renault_account).account_id = PropertyMock(return_value="account_id_1")
@@ -104,19 +107,21 @@ async def test_config_flow_single_account(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_LOCALE: "fr_FR",
-                CONF_USERNAME: "email@test.com",
-                CONF_PASSWORD: "test",
+                RenaultConfigurationKeys.LOCALE: "fr_FR",
+                RenaultConfigurationKeys.USERNAME: "email@test.com",
+                RenaultConfigurationKeys.PASSWORD: "test",
             },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "account_id_1"
-    assert result["data"][CONF_USERNAME] == "email@test.com"
-    assert result["data"][CONF_PASSWORD] == "test"
-    assert result["data"][CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
-    assert result["data"][CONF_KAMEREON_ACCOUNT_ID] == "account_id_1"
-    assert result["data"][CONF_LOCALE] == "fr_FR"
+    assert result["data"][RenaultConfigurationKeys.USERNAME] == "email@test.com"
+    assert result["data"][RenaultConfigurationKeys.PASSWORD] == "test"
+    assert result["data"][RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
+    assert (
+        result["data"][RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID] == "account_id_1"
+    )
+    assert result["data"][RenaultConfigurationKeys.LOCALE] == "fr_FR"
     assert result["context"]["unique_id"] == "account_id_1"
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -147,9 +152,9 @@ async def test_config_flow_no_account(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_LOCALE: "fr_FR",
-                CONF_USERNAME: "email@test.com",
-                CONF_PASSWORD: "test",
+                RenaultConfigurationKeys.LOCALE: "fr_FR",
+                RenaultConfigurationKeys.USERNAME: "email@test.com",
+                RenaultConfigurationKeys.PASSWORD: "test",
             },
         )
 
@@ -200,9 +205,9 @@ async def test_config_flow_multiple_accounts(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_LOCALE: "fr_FR",
-                CONF_USERNAME: "email@test.com",
-                CONF_PASSWORD: "test",
+                RenaultConfigurationKeys.LOCALE: "fr_FR",
+                RenaultConfigurationKeys.USERNAME: "email@test.com",
+                RenaultConfigurationKeys.PASSWORD: "test",
             },
         )
 
@@ -212,15 +217,17 @@ async def test_config_flow_multiple_accounts(
     # Account selected
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_KAMEREON_ACCOUNT_ID: "account_id_2"},
+        user_input={RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID: "account_id_2"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "account_id_2"
-    assert result["data"][CONF_USERNAME] == "email@test.com"
-    assert result["data"][CONF_PASSWORD] == "test"
-    assert result["data"][CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
-    assert result["data"][CONF_KAMEREON_ACCOUNT_ID] == "account_id_2"
-    assert result["data"][CONF_LOCALE] == "fr_FR"
+    assert result["data"][RenaultConfigurationKeys.USERNAME] == "email@test.com"
+    assert result["data"][RenaultConfigurationKeys.PASSWORD] == "test"
+    assert result["data"][RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
+    assert (
+        result["data"][RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID] == "account_id_2"
+    )
+    assert result["data"][RenaultConfigurationKeys.LOCALE] == "fr_FR"
     assert result["context"]["unique_id"] == "account_id_2"
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -264,9 +271,9 @@ async def test_config_flow_duplicate(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_LOCALE: "fr_FR",
-                CONF_USERNAME: "email@test.com",
-                CONF_PASSWORD: "test",
+                RenaultConfigurationKeys.LOCALE: "fr_FR",
+                RenaultConfigurationKeys.USERNAME: "email@test.com",
+                RenaultConfigurationKeys.PASSWORD: "test",
             },
         )
 
@@ -285,8 +292,8 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {
-        CONF_NAME: "Mock Title",
-        CONF_USERNAME: "email@test.com",
+        RenaultConfigurationKeys.NAME: "Mock Title",
+        RenaultConfigurationKeys.USERNAME: "email@test.com",
     }
     assert result["errors"] == {}
 
@@ -297,13 +304,13 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_PASSWORD: "any"},
+            user_input={RenaultConfigurationKeys.PASSWORD: "any"},
         )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["description_placeholders"] == {
-        CONF_NAME: "Mock Title",
-        CONF_USERNAME: "email@test.com",
+        RenaultConfigurationKeys.NAME: "Mock Title",
+        RenaultConfigurationKeys.USERNAME: "email@test.com",
     }
     assert result2["errors"] == {"base": "invalid_credentials"}
 
@@ -315,15 +322,15 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_PASSWORD: "any"},
+            user_input={RenaultConfigurationKeys.PASSWORD: "any"},
         )
 
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
 
-    assert config_entry.data[CONF_USERNAME] == "email@test.com"
-    assert config_entry.data[CONF_PASSWORD] == "any"
-    assert config_entry.data[CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
+    assert config_entry.data[RenaultConfigurationKeys.USERNAME] == "email@test.com"
+    assert config_entry.data[RenaultConfigurationKeys.PASSWORD] == "any"
+    assert config_entry.data[RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
 
 
 async def test_reconfigure(
@@ -338,9 +345,18 @@ async def test_reconfigure(
     assert not result["errors"]
 
     data_schema = result["data_schema"].schema
-    assert get_schema_suggested_value(data_schema, CONF_LOCALE) == "fr_FR"
-    assert get_schema_suggested_value(data_schema, CONF_USERNAME) == "email@test.com"
-    assert get_schema_suggested_value(data_schema, CONF_PASSWORD) == "test"
+    assert (
+        get_schema_suggested_value(data_schema, RenaultConfigurationKeys.LOCALE)
+        == "fr_FR"
+    )
+    assert (
+        get_schema_suggested_value(data_schema, RenaultConfigurationKeys.USERNAME)
+        == "email@test.com"
+    )
+    assert (
+        get_schema_suggested_value(data_schema, RenaultConfigurationKeys.PASSWORD)
+        == "test"
+    )
 
     renault_account = AsyncMock()
     type(renault_account).account_id = PropertyMock(return_value="account_id_1")
@@ -365,20 +381,23 @@ async def test_reconfigure(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_LOCALE: "fr_FR",
-                CONF_USERNAME: "email2@test.com",
-                CONF_PASSWORD: "test2",
+                RenaultConfigurationKeys.LOCALE: "fr_FR",
+                RenaultConfigurationKeys.USERNAME: "email2@test.com",
+                RenaultConfigurationKeys.PASSWORD: "test2",
             },
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    assert config_entry.data[CONF_USERNAME] == "email2@test.com"
-    assert config_entry.data[CONF_PASSWORD] == "test2"
-    assert config_entry.data[CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
-    assert config_entry.data[CONF_KAMEREON_ACCOUNT_ID] == "account_id_1"
-    assert config_entry.data[CONF_LOCALE] == "fr_FR"
+    assert config_entry.data[RenaultConfigurationKeys.USERNAME] == "email2@test.com"
+    assert config_entry.data[RenaultConfigurationKeys.PASSWORD] == "test2"
+    assert config_entry.data[RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
+    assert (
+        config_entry.data[RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID]
+        == "account_id_1"
+    )
+    assert config_entry.data[RenaultConfigurationKeys.LOCALE] == "fr_FR"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -395,9 +414,18 @@ async def test_reconfigure_mismatch(
     assert not result["errors"]
 
     data_schema = result["data_schema"].schema
-    assert get_schema_suggested_value(data_schema, CONF_LOCALE) == "fr_FR"
-    assert get_schema_suggested_value(data_schema, CONF_USERNAME) == "email@test.com"
-    assert get_schema_suggested_value(data_schema, CONF_PASSWORD) == "test"
+    assert (
+        get_schema_suggested_value(data_schema, RenaultConfigurationKeys.LOCALE)
+        == "fr_FR"
+    )
+    assert (
+        get_schema_suggested_value(data_schema, RenaultConfigurationKeys.USERNAME)
+        == "email@test.com"
+    )
+    assert (
+        get_schema_suggested_value(data_schema, RenaultConfigurationKeys.PASSWORD)
+        == "test"
+    )
 
     renault_account = AsyncMock()
     type(renault_account).account_id = PropertyMock(return_value="account_id_other")
@@ -422,9 +450,9 @@ async def test_reconfigure_mismatch(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_LOCALE: "fr_FR",
-                CONF_USERNAME: "email2@test.com",
-                CONF_PASSWORD: "test2",
+                RenaultConfigurationKeys.LOCALE: "fr_FR",
+                RenaultConfigurationKeys.USERNAME: "email2@test.com",
+                RenaultConfigurationKeys.PASSWORD: "test2",
             },
         )
 
@@ -432,10 +460,13 @@ async def test_reconfigure_mismatch(
     assert result["reason"] == "unique_id_mismatch"
 
     # Unchanged values
-    assert config_entry.data[CONF_USERNAME] == "email@test.com"
-    assert config_entry.data[CONF_PASSWORD] == "test"
-    assert config_entry.data[CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
-    assert config_entry.data[CONF_KAMEREON_ACCOUNT_ID] == "account_id_1"
-    assert config_entry.data[CONF_LOCALE] == "fr_FR"
+    assert config_entry.data[RenaultConfigurationKeys.USERNAME] == "email@test.com"
+    assert config_entry.data[RenaultConfigurationKeys.PASSWORD] == "test"
+    assert config_entry.data[RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
+    assert (
+        config_entry.data[RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID]
+        == "account_id_1"
+    )
+    assert config_entry.data[RenaultConfigurationKeys.LOCALE] == "fr_FR"
 
     assert len(mock_setup_entry.mock_calls) == 0
