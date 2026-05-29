@@ -849,6 +849,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @media_player_exception_wrap
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join group_members (entity_ids) to the group led by the current player."""
+        target_device = self._get_command_target_device("join")
         follower_udns_to_join: list[str] = []
         for member_entity_id in group_members:
             if member_entity_id == self.entity_id:
@@ -859,6 +860,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             if follower_udn is None:
                 LOGGER.warning(
                     "Unable to resolve group member entity_id %s to a UDN",
+                    member_entity_id,
+                )
+                continue
+
+            if follower_udn == target_device.udn:
+                LOGGER.debug(
+                    "Skipping joining command target to its own group: %s",
                     member_entity_id,
                 )
                 continue
@@ -876,12 +884,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         LOGGER.debug(
             "Player %s (UDN %s) joining follower UDNs: %s from entity_ids: %s",
             self.entity_id,
-            self._device.udn,
+            target_device.udn,
             follower_udns_to_join,
             group_members,
         )
         await self._wiim_data.controller.async_join_group(
-            self._device.udn, follower_udns_to_join
+            target_device.udn, follower_udns_to_join
         )
 
     @media_player_exception_wrap

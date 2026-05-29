@@ -826,6 +826,47 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
     )
     mock_wiim_controller.async_join_group.reset_mock()
 
+    leader_device = AsyncMock(spec=WiimDevice)
+    leader_device.udn = "uuid:leader-1234"
+    leader_device.name = "Leader WiiM Device"
+    leader_device.playing_status = PlayingStatus.STOPPED
+    leader_device.play_mode = "Network"
+    leader_device.loop_state = WiimLoopState(
+        repeat=WiimRepeatMode.OFF,
+        shuffle=False,
+    )
+    leader_device.current_media = None
+    second_follower_entity_id = "media_player.second_follower_wiim_device"
+    entity._wiim_data.entity_id_to_udn_map[second_follower_entity_id] = (
+        "uuid:follower-5678"
+    )
+    mock_wiim_controller.get_group_snapshot.return_value = WiimGroupSnapshot(
+        role=WiimGroupRole.FOLLOWER,
+        leader_udn=leader_device.udn,
+        member_udns=(leader_device.udn, mock_wiim_device.udn),
+    )
+    mock_wiim_controller.get_device.side_effect = lambda udn: (
+        leader_device if udn == leader_device.udn else mock_wiim_device
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            ATTR_GROUP_MEMBERS: [
+                MEDIA_PLAYER_ENTITY_ID,
+                second_follower_entity_id,
+            ],
+        },
+        blocking=True,
+    )
+
+    mock_wiim_controller.async_join_group.assert_awaited_once_with(
+        leader_device.udn, ["uuid:follower-5678"]
+    )
+    mock_wiim_controller.async_join_group.reset_mock()
+
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_JOIN,
