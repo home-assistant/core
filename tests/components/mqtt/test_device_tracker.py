@@ -627,6 +627,7 @@ async def test_setting_device_tracker_location_via_reset_message(
     async_fire_mqtt_message(hass, "test-topic", "None")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) is None
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
