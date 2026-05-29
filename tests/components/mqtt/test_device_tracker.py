@@ -312,32 +312,49 @@ async def test_setting_device_tracker_value_via_mqtt_message(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the setting of the value via MQTT."""
+    """Test the setting of the value and extra state attributes ia MQTT."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
-        '{ "name": "test", "state_topic": "test-topic" }',
+        '{ "name": "test", "state_topic": "test-topic", '
+        '"json_attributes_topic": "attributes-topic" }',
     )
 
     await hass.async_block_till_done()
 
     state = hass.states.get("device_tracker.test")
-
     assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) is None
 
     async_fire_mqtt_message(hass, "test-topic", "home")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_HOME
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) == "home"
 
     async_fire_mqtt_message(hass, "test-topic", "not_home")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) == "not_home"
 
     # Test an empty value is ignored and the state is retained
     async_fire_mqtt_message(hass, "test-topic", "")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) == "not_home"
+
+    async_fire_mqtt_message(hass, "attributes-topic", '{"quality": "good"}')
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) == "not_home"
+    assert state.attributes.get("quality") == "good"
+
+    # Reset the state and location_name attribute
+    async_fire_mqtt_message(hass, "test-topic", "None")
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) is None
+    assert state.attributes.get("quality") == "good"
 
 
 async def test_setting_device_tracker_value_via_mqtt_message_and_template(
@@ -660,12 +677,12 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
     async_fire_mqtt_message(hass, "test-topic", "reset")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_UNKNOWN
+
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
         '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
     )
-
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
     assert state.attributes["longitude"] == -117.22743

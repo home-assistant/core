@@ -163,6 +163,12 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 if self.extra_state_attributes is not None
                 else {}
             ) | {ATTR_LOCATION_NAME: self._location_name}
+            return
+        if (
+            extra_state_attributes := self.extra_state_attributes
+        ) is not None and ATTR_LOCATION_NAME in extra_state_attributes:
+            self._attr_extra_state_attributes = dict(extra_state_attributes)
+            self._attr_extra_state_attributes.pop(ATTR_LOCATION_NAME)
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
