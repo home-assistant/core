@@ -29,9 +29,7 @@ CONF_OPTION = "option"
 #
 ATTR_CYCLE = SelectServiceArgument.CYCLE
 ATTR_OPTION = SelectServiceArgument.OPTION
-
 ATTR_OPTIONS = SelectEntityAttribute.OPTIONS.value
-
 SERVICE_SELECT_FIRST = "select_first"
 SERVICE_SELECT_LAST = "select_last"
 SERVICE_SELECT_NEXT = "select_next"
