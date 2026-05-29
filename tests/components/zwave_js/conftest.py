@@ -357,7 +357,7 @@ def enbrighten_55258_zw4002_state_firmware_5_50_fixture(
     enbrighten_55258_zw4002_state: dict[str, Any],
 ) -> dict[str, Any]:
     """Load Enbrighten/GE 55258/ZW4002 node state fixture data for firmware 5.50."""
-    state = enbrighten_55258_zw4002_state.copy()
+    state = copy.deepcopy(enbrighten_55258_zw4002_state)
     state["firmwareVersion"] = "5.50"
     return state
 
