@@ -63,9 +63,12 @@ def _find_envoy_coordinator(
 
         if device_entry:
             config_entry = next(
-                entry
-                for entry in loaded_entries
-                if entry.entry_id in device_entry.config_entries
+                (
+                    entry
+                    for entry in loaded_entries
+                    if entry.entry_id in device_entry.config_entries
+                ),
+                None,
             )
             if config_entry:
                 return config_entry.runtime_data
