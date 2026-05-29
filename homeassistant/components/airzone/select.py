@@ -44,10 +44,10 @@ class AirzoneSelectDescription(SelectEntityDescription):
 
 
 GRILLE_ANGLE_DICT: Final[dict[str, int]] = {
-    "90deg": GrilleAngle.DEG_90,
-    "50deg": GrilleAngle.DEG_50,
-    "45deg": GrilleAngle.DEG_45,
-    "40deg": GrilleAngle.DEG_40,
+    "90deg": 90,
+    "50deg": 50,
+    "45deg": 45,
+    "40deg": 40,
 }
 
 MODE_DICT: Final[dict[str, int]] = {
