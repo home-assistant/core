@@ -8,16 +8,16 @@ from pyrisco.cloud.event import Event
 
 from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import cloud_event_signal
 from .const import DOMAIN
-from .coordinator import RiscoEventsDataUpdateCoordinator
 from .entity import zone_unique_id
-from .models import RiscoConfigEntry
+from .models import CloudData, RiscoConfigEntry
 
 CATEGORIES = {
     2: "Alarm",
@@ -50,60 +50,61 @@ async def async_setup_entry(
         # no events in local comm
         return
 
-    coordinator = cloud_data.events_coordinator
     sensors = [
-        RiscoSensor(coordinator, category_id, [], name, config_entry.entry_id)
+        RiscoSensor(cloud_data, config_entry.entry_id, category_id, [], name)
         for category_id, name in CATEGORIES.items()
     ]
     sensors.append(
-        RiscoSensor(
-            coordinator, None, CATEGORIES.keys(), "Other", config_entry.entry_id
-        )
+        RiscoSensor(cloud_data, config_entry.entry_id, None, CATEGORIES.keys(), "Other")
     )
     async_add_entities(sensors)
 
 
-class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEntity):
+class RiscoSensor(SensorEntity):
     """Sensor for Risco events."""
 
+    _attr_should_poll = False
     _entity_registry: er.EntityRegistry
 
     def __init__(
         self,
-        coordinator: RiscoEventsDataUpdateCoordinator,
+        cloud_data: CloudData,
+        entry_id: str,
         category_id: int | None,
         excludes: Collection[int],
         name: str,
-        entry_id: str,
     ) -> None:
         """Initialize sensor."""
-        super().__init__(coordinator)
+        self._cloud_data = cloud_data
+        self._entry_id = entry_id
         self._event: Event | None = None
         self._category_id = category_id
         self._excludes = excludes
         self._name = name
-        self._entry_id = entry_id
-        self._attr_unique_id = f"events_{name}_{self.coordinator.risco.site_uuid}"
-        self._attr_name = f"Risco {self.coordinator.risco.site_name} {name} Events"
+        self._attr_unique_id = f"events_{name}_{cloud_data.system.site_uuid}"
+        self._attr_name = f"Risco {cloud_data.system.site_name} {name} Events"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @override
     async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
+        """Subscribe to event updates."""
         self._entity_registry = er.async_get(self.hass)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, cloud_event_signal(self._entry_id), self._handle_events
+            )
+        )
 
-    @override
-    def _handle_coordinator_update(self) -> None:
-        events = self.coordinator.data
-        for event in reversed(events):
+    @callback
+    def _handle_events(self) -> None:
+        for event in self._cloud_data.events:  # newest first
             if event.category_id in self._excludes:
                 continue
             if self._category_id is not None and event.category_id != self._category_id:
                 continue
-
             self._event = event
             self.async_write_ha_state()
+            return
 
     @property
     @override
@@ -125,7 +126,7 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
 
         attrs = {atr: getattr(self._event, atr, None) for atr in EVENT_ATTRIBUTES}
         if self._event.zone_id is not None:
-            uid = zone_unique_id(self.coordinator.risco, self._event.zone_id)
+            uid = zone_unique_id(self._cloud_data.system, self._event.zone_id)
             zone_entity_id = self._entity_registry.async_get_entity_id(
                 BS_DOMAIN, DOMAIN, uid
             )

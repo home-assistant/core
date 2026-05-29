@@ -4,7 +4,6 @@ from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from pyrisco.cloud.event import Event
 import pytest
 
 from homeassistant.components.risco.const import DOMAIN, TYPE_LOCAL
@@ -126,12 +125,6 @@ def options() -> dict[str, Any]:
 
 
 @pytest.fixture
-def events() -> list[Event]:
-    """Fixture for default (empty) events."""
-    return []
-
-
-@pytest.fixture
 def cloud_config_entry(hass: HomeAssistant, options: dict[str, Any]) -> MockConfigEntry:
     """Fixture for a cloud config entry."""
     config_entry = MockConfigEntry(
@@ -156,7 +149,7 @@ def login_with_error(exception):
 
 @pytest.fixture
 async def setup_risco_cloud(
-    hass: HomeAssistant, cloud_config_entry: MockConfigEntry, events: list[Event]
+    hass: HomeAssistant, cloud_config_entry: MockConfigEntry
 ) -> AsyncGenerator[MockConfigEntry]:
     """Set up a Risco integration for testing."""
     with (
@@ -177,10 +170,6 @@ async def setup_risco_cloud(
         ),
         patch(
             "homeassistant.components.risco.RiscoCloud.subscribe_states",
-        ),
-        patch(
-            "homeassistant.components.risco.RiscoCloud.get_events",
-            return_value=events,
         ),
     ):
         await hass.config_entries.async_setup(cloud_config_entry.entry_id)

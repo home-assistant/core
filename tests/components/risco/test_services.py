@@ -100,7 +100,7 @@ async def test_set_time_service_with_cloud_entry(
     cloud_entry.add_to_hass(hass)
     cloud_entry.mock_state(hass, ConfigEntryState.LOADED)
     cloud_entry.runtime_data = RiscoData(
-        cloud_data=CloudData(system=None, alarm=None, events_coordinator=None)  # type: ignore[arg-type]
+        cloud_data=CloudData(system=None, alarm=None)  # type: ignore[arg-type]
     )
 
     data = {

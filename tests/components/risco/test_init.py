@@ -4,7 +4,7 @@ import logging
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyrisco import OperationError
+from pyrisco import MaxRetriesError, OperationError
 import pytest
 
 from homeassistant.components.risco.const import (
@@ -146,14 +146,14 @@ def mock_cloud_error_handler() -> MagicMock:
         yield mock
 
 
-async def test_cloud_sse_error_triggers_reload(
+async def test_cloud_sse_max_retries_triggers_reload(
     hass: HomeAssistant,
     two_zone_cloud: dict[int, Any],
     mock_cloud_error_handler: MagicMock,
     setup_risco_cloud: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that an SSE error from the cloud triggers an integration reload."""
+    """Test that MaxRetriesError triggers an integration reload."""
     assert mock_cloud_error_handler.called
     callback = mock_cloud_error_handler.call_args.args[0]
 
@@ -161,9 +161,32 @@ async def test_cloud_sse_error_triggers_reload(
     login_mock = cast(AsyncMock, cloud_data.system.login)
     assert login_mock.call_count == 1
 
-    caplog.set_level(logging.DEBUG, logger="homeassistant.components.risco")
-    await callback(Exception("SSE connection lost"))
+    caplog.set_level(logging.ERROR, logger="homeassistant.components.risco")
+    await callback(MaxRetriesError(Exception("connection failed")))
     await hass.async_block_till_done()
 
-    assert "SSE error from Risco cloud. Reloading integration" in caplog.text
+    assert "exhausted retries" in caplog.text
     assert login_mock.call_count == 2
+
+
+async def test_cloud_sse_transient_error_does_not_reload(
+    hass: HomeAssistant,
+    two_zone_cloud: dict[int, Any],
+    mock_cloud_error_handler: MagicMock,
+    setup_risco_cloud: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that transient SSE errors only log a warning and don't reload."""
+    assert mock_cloud_error_handler.called
+    callback = mock_cloud_error_handler.call_args.args[0]
+
+    cloud_data = setup_risco_cloud.runtime_data.cloud_data
+    login_mock = cast(AsyncMock, cloud_data.system.login)
+    assert login_mock.call_count == 1
+
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.risco")
+    await callback(Exception("transient network error"))
+    await hass.async_block_till_done()
+
+    assert "reconnecting automatically" in caplog.text
+    assert login_mock.call_count == 1  # no reload

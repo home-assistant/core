@@ -5,12 +5,14 @@ import logging
 
 from pyrisco import (
     CannotConnectError,
+    MaxRetriesError,
     OperationError,
     RiscoCloud,
     RiscoLocal,
     UnauthorizedError,
 )
 from pyrisco.cloud.alarm import Alarm
+from pyrisco.cloud.event import Event
 from pyrisco.common import Partition, System, Zone
 
 from homeassistant.config_entries import ConfigEntry
@@ -38,7 +40,6 @@ from .const import (
     SYSTEM_UPDATE_SIGNAL,
     TYPE_LOCAL,
 )
-from .coordinator import RiscoEventsDataUpdateCoordinator
 from .models import CloudData, LocalData, RiscoConfigEntry, RiscoData
 from .services import async_setup_services
 
@@ -68,6 +69,11 @@ def zone_update_signal(zone_id: int) -> str:
 def cloud_update_signal(entry_id: str) -> str:
     """Return a signal for the dispatch of a cloud state update."""
     return f"risco_cloud_update_{entry_id}"
+
+
+def cloud_event_signal(entry_id: str) -> str:
+    """Return a signal for the dispatch of a cloud event update."""
+    return f"risco_cloud_event_{entry_id}"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> bool:
@@ -174,24 +180,31 @@ async def _async_setup_cloud_entry(
         await risco.close()
         raise ConfigEntryNotReady from error
 
-    events_coordinator = RiscoEventsDataUpdateCoordinator(hass, entry, risco)
-    cloud_data = CloudData(
-        system=risco,
-        alarm=alarm,
-        events_coordinator=events_coordinator,
-    )
+    cloud_data = CloudData(system=risco, alarm=alarm)
 
     async def _state(new_alarm: Alarm) -> None:
         cloud_data.alarm = new_alarm
         async_dispatcher_send(hass, cloud_update_signal(entry.entry_id))
 
+    async def _events(new_events: list[Event]) -> None:
+        cloud_data.events = new_events
+        async_dispatcher_send(hass, cloud_event_signal(entry.entry_id))
+
     async def _error(error: Exception) -> None:
-        _LOGGER.error("Error in Risco cloud", exc_info=error)
-        if not hass.is_stopping:
-            _LOGGER.debug("SSE error from Risco cloud. Reloading integration")
-            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+        if isinstance(error, MaxRetriesError):
+            _LOGGER.error(
+                "Risco cloud SSE exhausted retries, reloading integration",
+                exc_info=error,
+            )
+            if not hass.is_stopping:
+                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+        else:
+            _LOGGER.warning(
+                "Risco cloud SSE error (reconnecting automatically)", exc_info=error
+            )
 
     remove_state_handler = risco.add_state_handler(_state)
+    remove_event_handler = risco.add_event_handler(_events)
     remove_error_handler = risco.add_error_handler(_error)
     try:
         await risco.subscribe_states()
@@ -201,6 +214,7 @@ async def _async_setup_cloud_entry(
 
     entry.async_on_unload(risco.close)
     entry.async_on_unload(remove_state_handler)
+    entry.async_on_unload(remove_event_handler)
     entry.async_on_unload(remove_error_handler)
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
@@ -208,7 +222,6 @@ async def _async_setup_cloud_entry(
     entry.runtime_data = RiscoData(cloud_data=cloud_data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await events_coordinator.async_refresh()
 
     return True
 
