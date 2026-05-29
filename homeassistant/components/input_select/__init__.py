@@ -6,15 +6,17 @@ from typing import Any, Self, cast
 import voluptuous as vol
 
 from homeassistant.components.select import (
-    ATTR_CYCLE,
-    ATTR_OPTION,
-    ATTR_OPTIONS,
-    SERVICE_SELECT_FIRST,
-    SERVICE_SELECT_LAST,
-    SERVICE_SELECT_NEXT,
-    SERVICE_SELECT_OPTION,
-    SERVICE_SELECT_PREVIOUS,
+    ATTR_CYCLE,  # noqa: F401
+    ATTR_OPTION,  # noqa: F401
+    SERVICE_SELECT_FIRST,  # noqa: F401
+    SERVICE_SELECT_LAST,  # noqa: F401
+    SERVICE_SELECT_NEXT,  # noqa: F401
+    SERVICE_SELECT_OPTION,  # noqa: F401
+    SERVICE_SELECT_PREVIOUS,  # noqa: F401
     SelectEntity,
+    SelectEntityAttribute,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -40,6 +42,7 @@ DOMAIN = "input_select"
 CONF_INITIAL = "initial"
 
 SERVICE_SET_OPTIONS = "set_options"
+ATTR_OPTIONS = "options"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 2
@@ -122,8 +125,8 @@ class InputSelectStore(Store):
         if old_major_version == 1:
             if old_minor_version < 2:
                 for item in old_data["items"]:
-                    options = item[ATTR_OPTIONS]
-                    item[ATTR_OPTIONS] = _remove_duplicates(
+                    options = item[SelectEntityAttribute.OPTIONS]
+                    item[SelectEntityAttribute.OPTIONS] = _remove_duplicates(
                         options, item.get(CONF_NAME)
                     )
         return old_data
@@ -177,32 +180,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_FIRST,
+        SelectService.SELECT_FIRST,
         None,
         InputSelect.async_first.__name__,
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_LAST,
+        SelectService.SELECT_LAST,
         None,
         InputSelect.async_last.__name__,
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        SelectService.SELECT_NEXT,
+        {vol.Optional(SelectServiceArgument.CYCLE.value, default=True): bool},
         InputSelect.async_next.__name__,
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_OPTION,
-        {vol.Required(ATTR_OPTION): cv.string},
+        SelectService.SELECT_OPTION,
+        {vol.Required(SelectServiceArgument.OPTION.value): cv.string},
         InputSelect.async_select_option.__name__,
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        SelectService.SELECT_PREVIOUS,
+        {vol.Optional(SelectServiceArgument.CYCLE.value, default=True): bool},
         InputSelect.async_previous.__name__,
     )
 
@@ -246,7 +249,8 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
     _entity_component_unrecorded_attributes = (
-        SelectEntity._entity_component_unrecorded_attributes - {ATTR_OPTIONS}  # noqa: SLF001
+        SelectEntity._entity_component_unrecorded_attributes  # noqa: SLF001
+        - {SelectEntityAttribute.OPTIONS}
     )
     _unrecorded_attributes = frozenset({ATTR_EDITABLE})
 
