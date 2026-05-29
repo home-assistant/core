@@ -22,5 +22,19 @@
         "title": "Set up your BleBox device"
       }
     }
+  },
+  "exceptions": {
+    "bad_value": {
+      "message": "Turning on the light failed: invalid color value."
+    },
+    "effect_not_found": {
+      "message": "The specified light effect is not available on this device."
+    },
+    "install_failed": {
+      "message": "Failed to install firmware update on the BleBox device."
+    },
+    "update_failed": {
+      "message": "Failed to fetch firmware update information from the BleBox device."
+    }
   }
 }

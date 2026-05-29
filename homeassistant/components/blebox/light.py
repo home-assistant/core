@@ -20,10 +20,11 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
-from .const import LIGHT_MAX_KELVINS, LIGHT_MIN_KELVINS
+from .const import DOMAIN, LIGHT_MAX_KELVINS, LIGHT_MIN_KELVINS
 from .entity import BleBoxEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -210,8 +211,9 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         try:
             await self._feature.async_on(value)
         except ValueError as exc:
-            raise ValueError(
-                f"Turning on '{self.name}' failed: Bad value {value}"
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="bad_value",
             ) from exc
 
         if effect is not None:
@@ -219,9 +221,9 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
                 effect_value = self.effect_list.index(effect)
                 await self._feature.async_api_command("effect", effect_value)
             except ValueError as exc:
-                raise ValueError(
-                    f"Turning on with effect '{self.name}' failed: {effect} not in"
-                    " effect list."
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="effect_not_found",
                 ) from exc
 
     async def async_turn_off(self, **kwargs: Any) -> None:

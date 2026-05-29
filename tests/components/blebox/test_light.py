@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
@@ -634,7 +635,7 @@ async def test_turn_on_failure(
     await async_setup_entity(hass, entity_id)
 
     feature_mock.sensible_on_value = 123
-    with pytest.raises(ValueError) as info:
+    with pytest.raises(HomeAssistantError) as info:
         await hass.services.async_call(
             "light",
             SERVICE_TURN_ON,
@@ -642,9 +643,7 @@ async def test_turn_on_failure(
             blocking=True,
         )
 
-    assert f"Turning on '{feature_mock.full_name}' failed: Bad value 123" in str(
-        info.value
-    )
+    assert info.value.translation_key == "bad_value"
 
 
 async def test_wlightbox_on_effect(wlightbox, hass: HomeAssistant) -> None:
@@ -668,7 +667,7 @@ async def test_wlightbox_on_effect(wlightbox, hass: HomeAssistant) -> None:
 
     feature_mock.async_on = AsyncMock(side_effect=turn_on)
 
-    with pytest.raises(ValueError) as info:
+    with pytest.raises(HomeAssistantError) as info:
         await hass.services.async_call(
             "light",
             SERVICE_TURN_ON,
@@ -676,10 +675,7 @@ async def test_wlightbox_on_effect(wlightbox, hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    assert (
-        f"Turning on with effect '{feature_mock.full_name}' failed: "
-        "NOT IN LIST not in effect list."
-    ) in str(info.value)
+    assert info.value.translation_key == "effect_not_found"
 
     await hass.services.async_call(
         "light",
