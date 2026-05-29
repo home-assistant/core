@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
 from random import getrandbits
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -31,6 +31,24 @@ ENTRY_DEFAULT_BIRTH_MESSAGE = {
 @pytest.fixture(autouse=True)
 def patch_hass_config(mock_hass_config: None) -> None:
     """Patch configuration.yaml."""
+
+
+@pytest.fixture
+def mock_v5_protocol_check() -> bool:
+    """Fixture to mock a v5 protocol test result."""
+    return True
+
+
+@pytest.fixture(autouse=True)
+def mock_try_connection_protocol_check(
+    hass: HomeAssistant, mock_v5_protocol_check: bool
+) -> Generator[MagicMock]:
+    """Patch try_connection."""
+    with patch(
+        "homeassistant.components.mqtt.try_connection",
+        return_value=mock_v5_protocol_check,
+    ) as mock_try_connection:
+        yield mock_try_connection
 
 
 @pytest.fixture
