@@ -25,6 +25,11 @@
     }
   },
   "entity": {
+    "light": {
+      "pool_light": {
+        "name": "Pool light"
+      }
+    },
     "sensor": {
       "chlorine": {
         "name": "Chlorine"
@@ -58,6 +63,9 @@
     },
     "no_pools": {
       "message": "No pools were found on this account."
+    },
+    "set_failed": {
+      "message": "Failed to set {entity}."
     },
     "update_failed": {
       "message": "Error fetching data from Vistapool."
