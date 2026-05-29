@@ -31,7 +31,7 @@
           "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
           "workdays": "Select which weekdays to include as possible workdays."
         },
-        "description": "Set additional options for {name} configured for country {country}"
+        "description": "Set additional options for country {country}"
       },
       "user": {
         "data": {

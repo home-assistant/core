@@ -294,12 +294,24 @@ update_profile:
         media:
           accept:
             - "image/*"
+    delete_avatar:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
     header:
       required: false
       selector:
         media:
           accept:
             - "image/*"
+    delete_header:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
     locked:
       selector:
         boolean:
