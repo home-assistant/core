@@ -74,7 +74,6 @@ class YoLinkHomeMessageListener(MessageListener):
             return
 
         device_coordinator.dev_online = True
-        
         if (lora_info := msg_data.get(ATTR_LORA_INFO)) is not None:
             device_coordinator.dev_net_type = lora_info.get("devNetType")
         if (
@@ -93,15 +92,10 @@ class YoLinkHomeMessageListener(MessageListener):
                         }
             device_coordinator.adjust_sprinkler_interval(merged)
             device_coordinator.async_set_updated_data(merged)
-            if (state := msg_data.get("state")) is not None and state.get(
-                "running"
-            ):
-                self._hass.async_create_task(
-                    device_coordinator.async_request_refresh()
-                )
+            if (state := msg_data.get("state")) is not None and state.get("running"):
+                self._hass.async_create_task(device_coordinator.async_request_refresh())
         else:
             device_coordinator.async_set_updated_data(msg_data)
-            
         # handling events
         if (
             device_coordinator.device.device_type

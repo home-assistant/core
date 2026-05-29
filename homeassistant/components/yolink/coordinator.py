@@ -146,9 +146,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         self.call_device wrapper (returns dict).
         """
         try:
-            return await self.device.call_device(
-                ClientRequest("getState", {})
-            )
+            return await self.device.call_device(ClientRequest("getState", {}))
         except YoLinkClientError as err:
             _LOGGER.debug(
                 "SprinklerV2 %s getState failed (%s), falling back to fetchState",
