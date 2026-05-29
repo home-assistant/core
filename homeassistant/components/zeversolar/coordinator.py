@@ -8,7 +8,7 @@ import zeversolar
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -35,4 +35,7 @@ class ZeversolarCoordinator(DataUpdateCoordinator[zeversolar.ZeverSolarData]):
 
     async def _async_update_data(self) -> zeversolar.ZeverSolarData:
         """Fetch the latest data from the source."""
-        return await self.hass.async_add_executor_job(self._client.get_data)
+        try:
+            return await self.hass.async_add_executor_job(self._client.get_data)
+        except zeversolar.ZeverSolarError as err:
+            raise UpdateFailed(err) from err
