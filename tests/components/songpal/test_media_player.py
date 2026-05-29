@@ -357,7 +357,9 @@ async def test_services(hass: HomeAssistant) -> None:
     mocked_device.set_sound_settings.assert_called_with("soundField", "sound_mode1")
 
 
-async def test_zone_entities(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+async def test_zone_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test zone entities are exposed and controllable as media players."""
     mocked_device = _create_mocked_device(with_zones=True)
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -375,9 +377,7 @@ async def test_zone_entities(hass: HomeAssistant, entity_registry: er.EntityRegi
     assert len(device_ids) == 1
 
     zone2_entity = next(
-        zone_entity
-        for zone_entity in zone_entries
-        if "zone_2" in zone_entity.unique_id
+        zone_entity for zone_entity in zone_entries if "zone_2" in zone_entity.unique_id
     )
 
     zone2_state = hass.states.get(zone2_entity.entity_id)

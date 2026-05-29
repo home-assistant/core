@@ -90,10 +90,7 @@ async def async_setup_entry(
 
     if zones:
         async_add_entities(
-            [
-                SongpalZoneEntity(name, device, zone.uri, zone.title)
-                for zone in zones
-            ],
+            [SongpalZoneEntity(name, device, zone.uri, zone.title) for zone in zones],
             True,
         )
         return
