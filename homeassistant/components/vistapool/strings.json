@@ -50,6 +50,35 @@
       "uv": {
         "name": "UV"
       }
+    },
+    "switch": {
+      "electrolysis_boost": {
+        "name": "Electrolysis boost"
+      },
+      "electrolysis_cover": {
+        "name": "Electrolysis cover"
+      },
+      "filtration": {
+        "name": "Filtration"
+      },
+      "heating_climate": {
+        "name": "Heating climate"
+      },
+      "relay_1": {
+        "name": "Relay 1"
+      },
+      "relay_2": {
+        "name": "Relay 2"
+      },
+      "relay_3": {
+        "name": "Relay 3"
+      },
+      "relay_4": {
+        "name": "Relay 4"
+      },
+      "smart_mode_freeze": {
+        "name": "Smart mode freeze"
+      }
     }
   },
   "exceptions": {
@@ -58,6 +87,9 @@
     },
     "no_pools": {
       "message": "No pools were found on this account."
+    },
+    "set_failed": {
+      "message": "Failed to update {entity}."
     },
     "update_failed": {
       "message": "Error fetching data from Vistapool."
