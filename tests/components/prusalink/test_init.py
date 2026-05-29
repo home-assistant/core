@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.util.dt import utcnow
@@ -33,9 +34,7 @@ async def test_device_info(
     """Test device info is populated with serial and firmware."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
-    )
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "serial-1337")})
     assert device is not None
     assert device.serial_number == "serial-1337"
     assert device.sw_version == "6.1.2+11023"
@@ -52,12 +51,14 @@ async def test_backfills_unique_id_for_existing_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup backfills config entry unique_id from printer serial."""
+    """Test migration backfills config entry unique_id from printer serial."""
     assert mock_config_entry.unique_id is None
+    assert mock_config_entry.minor_version == 2
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.unique_id == "serial-1337"
+    assert mock_config_entry.minor_version == 3
 
 
 async def test_preserves_existing_unique_id(
@@ -80,6 +81,136 @@ async def test_preserves_existing_unique_id(
     assert await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.unique_id == "existing-unique-id"
+    assert entry.minor_version == 3
+
+
+async def test_migration_keeps_minor_2_when_serial_missing(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration does not mark unique-id migration done without serial."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://example.com",
+            CONF_USERNAME: "dummy",
+            CONF_PASSWORD: "dummypw",
+        },
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with patch("pyprusalink.PrusaLink.get_info", return_value={}):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.unique_id is None
+    assert entry.minor_version == 2
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [TimeoutError, ConnectError("All connection attempts failed"), PrusaLinkError],
+)
+async def test_migration_keeps_minor_2_on_transient_info_failures(
+    hass: HomeAssistant,
+    exception: Exception | type[Exception],
+) -> None:
+    """Test migration keeps retry state when fetching serial temporarily fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://example.com",
+            CONF_USERNAME: "dummy",
+            CONF_PASSWORD: "dummypw",
+        },
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "pyprusalink.PrusaLink.get_info",
+        side_effect=[
+            exception,
+            {
+                "nozzle_diameter": 0.40,
+                "mmu": False,
+                "serial": "serial-1337",
+                "hostname": "PrusaXL",
+                "min_extrusion_temp": 170,
+                "location": "Workshop",
+                "sd_ready": True,
+                "farm_mode": False,
+            },
+        ],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.unique_id is None
+    assert entry.minor_version == 2
+
+
+async def test_migration_from_1_2_to_1_3_migrates_entity_and_device_ids(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration to serial-based entity and device identifiers."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://example.com",
+            CONF_USERNAME: "dummy",
+            CONF_PASSWORD: "dummypw",
+        },
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    old_binary_unique_id = f"{entry.entry_id}_printer.status_connect"
+    old_camera_unique_id = f"{entry.entry_id}_job_preview"
+
+    old_binary = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        old_binary_unique_id,
+        suggested_object_id="printer_status_connect",
+        config_entry=entry,
+    )
+    old_camera = entity_registry.async_get_or_create(
+        "camera",
+        DOMAIN,
+        old_camera_unique_id,
+        suggested_object_id="job_preview",
+        config_entry=entry,
+    )
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.minor_version == 3
+    assert entry.unique_id == "serial-1337"
+
+    migrated_binary = entity_registry.async_get(old_binary.entity_id)
+    assert migrated_binary is not None
+    assert migrated_binary.unique_id == "serial-1337_printer.status_connect"
+
+    migrated_camera = entity_registry.async_get(old_camera.entity_id)
+    assert migrated_camera is not None
+    assert migrated_camera.unique_id == "serial-1337_job_preview"
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)}) is None
+    )
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "serial-1337")})
+        is not None
+    )
 
 
 async def test_unloading(
@@ -162,6 +293,8 @@ async def test_migration_from_1_1_to_1_2(
         CONF_USERNAME: "maker",
         CONF_PASSWORD: "api-key",
     }
+    assert config_entries[0].minor_version == 3
+    assert config_entries[0].unique_id == "serial-1337"
     # Make sure that we don't have any issues
     assert len(issue_registry.issues) == 0
 
@@ -197,7 +330,8 @@ async def test_migration_from_1_1_to_1_2_outdated_firmware(
 
     # Integration should be running now, the issue should be gone
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
+    assert entry.unique_id == "serial-1337"
     assert (DOMAIN, "firmware_5_1_required") not in issue_registry.issues
 
 

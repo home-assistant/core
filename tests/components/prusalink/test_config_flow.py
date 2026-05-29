@@ -271,3 +271,29 @@ async def test_form_cannot_connect_get_info(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_cannot_connect_missing_serial(
+    hass: HomeAssistant,
+    mock_version_api: dict[str, str],
+) -> None:
+    """Test we handle missing serial from info endpoint as cannot_connect."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.prusalink.config_flow.PrusaLink.get_info",
+        return_value={"hostname": "PrusaXL"},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "abcdefg",
+                "password": "abcdefg",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}

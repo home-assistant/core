@@ -85,8 +85,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
         _LOGGER.debug("Could not connect to PrusaLink: %s", err)
         raise CannotConnect from err
 
+    serial = info.get("serial")
+    if not serial:
+        raise CannotConnect
+
     return {
-        "serial": info["serial"],
+        "serial": serial,
         "title": version["hostname"] or version["text"],
     }
 
@@ -95,7 +99,7 @@ class PrusaLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PrusaLink."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

@@ -9,7 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
-from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
+from .entity import (
+    PrusaLinkEntity,
+    PrusaLinkEntityDescription,
+    get_entry_unique_identifier,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -48,7 +52,9 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         """Initialize a PrusaLink camera entity."""
         super().__init__(coordinator)
         Camera.__init__(self)
-        self._attr_unique_id = f"{self.coordinator.config_entry.entry_id}_job_preview"
+        self._attr_unique_id = (
+            f"{get_entry_unique_identifier(self.coordinator.config_entry)}_job_preview"
+        )
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
