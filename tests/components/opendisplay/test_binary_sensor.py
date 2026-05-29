@@ -53,22 +53,14 @@ async def test_connectivity_created_for_all_device_types(
     assert hass.states.get(ENTITY_ID) is not None
 
 
-async def test_connectivity_off_before_first_advertisement(
+async def test_connectivity_changes_state(
     hass: HomeAssistant,
     setup_entry: Callable[[], Awaitable[None]],
 ) -> None:
-    """Connectivity is off before any advertisement is received."""
+    """Connectivity changes state based on advertisement reception."""
     await setup_entry()
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
-
-
-async def test_connectivity_on_after_advertisement(
-    hass: HomeAssistant,
-    setup_entry: Callable[[], Awaitable[None]],
-) -> None:
-    """Connectivity turns on after the device starts advertising."""
-    await setup_entry()
 
     inject_bluetooth_service_info(hass, VALID_SERVICE_INFO)
     await hass.async_block_till_done()
