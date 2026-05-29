@@ -98,7 +98,7 @@ async def test_number_electrolysis_max_fallback(
     mock_vistapool_client: AsyncMock,
     hidro_data: dict[str, Any],
 ) -> None:
-    """Test electrolysis setpoint max falls back to 50 when the API value is missing or unparseable."""
+    """Test electrolysis setpoint max falls back to 50 when the API value is missing or unparsable."""
     mock_vistapool_client.fetch_pool_data.return_value = {
         "main": {"hasHidro": 1, "version": 1},
         "hidro": hidro_data,
