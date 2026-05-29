@@ -336,9 +336,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
     def _handle_invalid_source_state(self, state: State | None) -> bool:
         # Handle source states that cannot be used directly for derivative
         # calculation.
-        # - Missing source state: mark this entity unavailable and write
+        # - Missing/uknonwn source state: mark this entity unavailable and write
         #   that availability change.
-        # - Unknown or Unavailable source state: when `replace_unavailable` is
+        # - Unavailable source state: when `replace_unavailable` is
         #   enabled, keep this entity available and write a numeric 0 while
         #   preserving timing/history for the next valid sample. If disabled,
         #   write an unknown native value (for unknown) or mark unavailable
