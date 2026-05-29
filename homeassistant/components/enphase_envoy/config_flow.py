@@ -250,7 +250,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 reauth_entry.data[CONF_HOST],
                 user_input.get(CONF_USERNAME, ""),
                 user_input.get(CONF_PASSWORD, ""),
-                token := user_input.get(CONF_TOKEN, ""),
+                token := user_input.get(CONF_TOKEN, "") or None,
                 errors,
                 description_placeholders,
             )
@@ -314,7 +314,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                     host,
                     user_input.get(CONF_USERNAME, ""),
                     user_input.get(CONF_PASSWORD, ""),
-                    token := user_input.get(CONF_TOKEN, ""),
+                    token := user_input.get(CONF_TOKEN, "") or None,
                     errors,
                     description_placeholders,
                 )
@@ -389,7 +389,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 host := user_input[CONF_HOST],
                 username := user_input.get(CONF_USERNAME, ""),
                 password := user_input.get(CONF_PASSWORD, ""),
-                token := user_input.get(CONF_TOKEN, ""),
+                token := user_input.get(CONF_TOKEN, "") or None,
                 errors,
                 description_placeholders,
             )
