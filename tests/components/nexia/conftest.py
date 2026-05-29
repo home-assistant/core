@@ -12,6 +12,7 @@ import pytest
 
 from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -375,7 +376,7 @@ def mock_nexia_home() -> NonCallableMock[NexiaHome]:
 
 
 async def setup_integration(
-    hass,
+    hass: HomeAssistant,
     nexia_home: NexiaHome,
     unique_id: str = "123456",
 ) -> MockConfigEntry:
@@ -392,7 +393,7 @@ async def setup_integration(
     for tid in nexia_home.get_thermostat_ids():
         thermostat = nexia_home.get_thermostat_by_id(tid)
         for zid in thermostat.get_zone_ids():
-            assert thermostat.get_zone_by_id(zid).thermostat is not None
+            assert thermostat.get_zone_by_id(zid).thermostat is thermostat
 
     with patch("homeassistant.components.nexia.NexiaHome", return_value=nexia_home):
         await hass.config_entries.async_setup(entry.entry_id)
