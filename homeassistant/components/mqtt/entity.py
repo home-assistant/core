@@ -10,16 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-    ATTR_SERIAL_NUMBER,
-    ATTR_SUGGESTED_AREA,
-    ATTR_SW_VERSION,
-    ATTR_VIA_DEVICE,
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
@@ -35,6 +25,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceInfo,
+    DeviceInfoAttribute,
     EventDeviceRegistryUpdatedData,
 )
 from homeassistant.helpers.dispatcher import (
@@ -1267,34 +1258,36 @@ def device_info_from_specifications(
     )
 
     if CONF_MANUFACTURER in specifications:
-        info[ATTR_MANUFACTURER] = specifications[CONF_MANUFACTURER]
+        info[DeviceInfoAttribute.MANUFACTURER] = specifications[CONF_MANUFACTURER]
 
     if CONF_MODEL in specifications:
-        info[ATTR_MODEL] = specifications[CONF_MODEL]
+        info[DeviceInfoAttribute.MODEL] = specifications[CONF_MODEL]
 
     if CONF_MODEL_ID in specifications:
-        info[ATTR_MODEL_ID] = specifications[CONF_MODEL_ID]
+        info[DeviceInfoAttribute.MODEL_ID] = specifications[CONF_MODEL_ID]
 
     if CONF_NAME in specifications:
-        info[ATTR_NAME] = specifications[CONF_NAME]
+        info[DeviceInfoAttribute.NAME] = specifications[CONF_NAME]
 
     if CONF_HW_VERSION in specifications:
-        info[ATTR_HW_VERSION] = specifications[CONF_HW_VERSION]
+        info[DeviceInfoAttribute.HW_VERSION] = specifications[CONF_HW_VERSION]
 
     if CONF_SERIAL_NUMBER in specifications:
-        info[ATTR_SERIAL_NUMBER] = specifications[CONF_SERIAL_NUMBER]
+        info[DeviceInfoAttribute.SERIAL_NUMBER] = specifications[CONF_SERIAL_NUMBER]
 
     if CONF_SW_VERSION in specifications:
-        info[ATTR_SW_VERSION] = specifications[CONF_SW_VERSION]
+        info[DeviceInfoAttribute.SW_VERSION] = specifications[CONF_SW_VERSION]
 
     if CONF_VIA_DEVICE in specifications:
-        info[ATTR_VIA_DEVICE] = (DOMAIN, specifications[CONF_VIA_DEVICE])
+        info[DeviceInfoAttribute.VIA_DEVICE] = (DOMAIN, specifications[CONF_VIA_DEVICE])
 
     if CONF_SUGGESTED_AREA in specifications:
-        info[ATTR_SUGGESTED_AREA] = specifications[CONF_SUGGESTED_AREA]
+        info[DeviceInfoAttribute.SUGGESTED_AREA] = specifications[CONF_SUGGESTED_AREA]
 
     if CONF_CONFIGURATION_URL in specifications:
-        info[ATTR_CONFIGURATION_URL] = specifications[CONF_CONFIGURATION_URL]
+        info[DeviceInfoAttribute.CONFIGURATION_URL] = specifications[
+            CONF_CONFIGURATION_URL
+        ]
 
     return info
 
