@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -394,14 +395,15 @@ async def test_async_set_data(
 
     # Test error handling
     mock_bsblan.thermostat.side_effect = BSBLANError("Test error")
-    error_message = "An error occurred while updating the BSBLAN device"
-    with pytest.raises(HomeAssistantError, match=error_message):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "set_data_error"
 
 
 async def test_dual_circuit_climate_entities(

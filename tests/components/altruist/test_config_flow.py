@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.altruist.const import CONF_HOST, DOMAIN
+from homeassistant.components.altruist.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
