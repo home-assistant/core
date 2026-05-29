@@ -18,6 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from . import WirelessTagPlatform
 from .const import DOMAIN, SIGNAL_TAG_UPDATE, WIRELESSTAG_DATA
@@ -114,8 +115,12 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         # I want to see entity_id as:
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
-        # sensor.bedroom_2 for humidity
-        self.entity_id = f"sensor.{DOMAIN}_{self.underscored_name}_{self._sensor_type}"
+        # sensor.bedroom_2 for humidity.
+        # slugify ensures the entity_id stays valid for tag names containing
+        # accented/international or special characters.
+        self.entity_id = (
+            f"sensor.{slugify(f'{DOMAIN}_{self._tag.name}_{self._sensor_type}')}"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -126,11 +131,6 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
                 self._update_tag_info_callback,
             )
         )
-
-    @property
-    def underscored_name(self):
-        """Provide name savvy to be used in entity_id name of self."""
-        return self.name.lower().replace(" ", "_")
 
     @property
     def native_value(self):
