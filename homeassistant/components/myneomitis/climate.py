@@ -5,12 +5,7 @@ import logging
 from typing import Any
 
 import aiohttp
-from pyaxencoapi import PRESET_MODE_MODELS, Preset, PyAxencoAPI
-
-try:
-    from pyaxencoapi import PRESET_MODE_MAP
-except ImportError:  # pragma: no cover - only needed for newer library versions
-    PRESET_MODE_MAP = {}
+from pyaxencoapi import PRESET_MODE_MAP, PRESET_MODE_MODELS, Preset, PyAxencoAPI
 
 from homeassistant.components.climate import (
     ClimateEntity,

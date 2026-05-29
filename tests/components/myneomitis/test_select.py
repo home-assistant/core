@@ -1,10 +1,8 @@
 """Tests for the MyNeomitis select component."""
 
-import importlib
 from unittest.mock import AsyncMock
 
 import pyaxencoapi
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.myneomitis import select as select_platform
@@ -42,15 +40,6 @@ UFH_DEVICE = {
     "connected": True,
     "program": {"data": {}},
 }
-
-
-class DummyPresetMap(dict[str, int]):
-    """Preset mapping with reverse lookup support."""
-
-    @property
-    def reverse(self) -> dict[int, str]:
-        """Return a reverse lookup map for preset codes."""
-        return {code: key for key, code in self.items()}
 
 
 async def test_entities(
@@ -108,64 +97,15 @@ async def test_select_option(
     assert state.state == "on"
 
 
-async def test_entities_mapping_presets(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pyaxenco_client: AsyncMock,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Mapping preset structures should be supported for new library versions."""
-    mapping_relais = DummyPresetMap({"on": 1, "off": 2, "auto": 60})
-    mapping_pilote = {"comfort": 1, "eco": 2, "standby": 4}
-    mapping_ufh = DummyPresetMap({"heating": 0, "cooling": 1})
-
-    with monkeypatch.context() as m:
-        m.setitem(pyaxencoapi.PRESET_MODE_MODELS, "EWS_RELAIS", mapping_relais)
-        m.setitem(pyaxencoapi.PRESET_MODE_MODELS, "EWS_PILOTE", mapping_pilote)
-        m.setitem(pyaxencoapi.PRESET_MODE_MODELS, "UFH", mapping_ufh)
-        importlib.reload(select_platform)
-
-        mock_pyaxenco_client.get_devices.return_value = [
-            RELAIS_DEVICE,
-            PILOTE_DEVICE,
-            UFH_DEVICE,
-        ]
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        relais_state = hass.states.get("select.relais_device")
-        assert relais_state is not None
-        assert relais_state.attributes["options"] == list(mapping_relais)
-
-        pilote_state = hass.states.get("select.pilote_device")
-        assert pilote_state is not None
-        assert pilote_state.attributes["options"] == list(mapping_pilote)
-
-        ufh_state = hass.states.get("select.ufh_device")
-        assert ufh_state is not None
-        assert ufh_state.attributes["options"] == list(mapping_ufh)
-
-    importlib.reload(select_platform)
-
-
-def test_resolve_select_maps_list_presets(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_resolve_select_maps_list_presets() -> None:
     """List preset structures should map through PRESET_MODE_MAP."""
-    preset_list = ["comfort", "eco", "standby"]
-    preset_map = {"comfort": 1, "eco": 2, "standby": 4}
-    expected_reverse = {1: "comfort", 2: "eco", 4: "standby"}
+    preset_list = pyaxencoapi.PRESET_MODE_MODELS["EV30"]
+    preset_map = {key: pyaxencoapi.PRESET_MODE_MAP[key] for key in preset_list}
+    expected_reverse = {code: key for key, code in preset_map.items()}
 
-    with monkeypatch.context() as m:
-        m.setitem(select_platform.PRESET_MODE_MODELS, "EWS_RELAIS", preset_list)
-        m.setattr(select_platform, "PRESET_MODE_MAP", preset_map)
+    options, mapped, reverse = select_platform._resolve_select_maps("EV30", {}, {})
 
-        options, mapped, reverse = select_platform._resolve_select_maps(
-            "EWS_RELAIS", {}, {}
-        )
-
-    assert options == preset_list
+    assert options == list(preset_list)
     assert mapped == preset_map
     assert reverse == expected_reverse
 

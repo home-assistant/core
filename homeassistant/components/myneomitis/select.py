@@ -9,24 +9,16 @@ import logging
 from typing import Any
 
 import aiohttp
-from pyaxencoapi import PRESET_MODE_MODELS, PyAxencoAPI
-
-try:
-    from pyaxencoapi import (
-        PRESET_MODE_MAP,
-        PRESET_MODE_MAP_RELAIS,
-        PRESET_MODE_MAP_UFH,
-        PRESET_MODE_SELECT_EXTRAS,
-        REVERSE_PRESET_MODE_MAP_RELAIS,
-        REVERSE_PRESET_MODE_MAP_UFH,
-    )
-except ImportError:  # pragma: no cover - only needed for newer library versions
-    PRESET_MODE_MAP = {}
-    PRESET_MODE_MAP_RELAIS = {}
-    PRESET_MODE_MAP_UFH = {}
-    PRESET_MODE_SELECT_EXTRAS = {}
-    REVERSE_PRESET_MODE_MAP_RELAIS = {}
-    REVERSE_PRESET_MODE_MAP_UFH = {}
+from pyaxencoapi import (
+    PRESET_MODE_MAP,
+    PRESET_MODE_MAP_RELAIS,
+    PRESET_MODE_MAP_UFH,
+    PRESET_MODE_MODELS,
+    PRESET_MODE_SELECT_EXTRAS,
+    REVERSE_PRESET_MODE_MAP_RELAIS,
+    REVERSE_PRESET_MODE_MAP_UFH,
+    PyAxencoAPI,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant, callback
