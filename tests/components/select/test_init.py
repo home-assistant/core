@@ -6,11 +6,6 @@ import pytest
 
 from homeassistant.components.select import (
     DOMAIN,
-    SERVICE_SELECT_FIRST,
-    SERVICE_SELECT_LAST,
-    SERVICE_SELECT_NEXT,
-    SERVICE_SELECT_OPTION,
-    SERVICE_SELECT_PREVIOUS,
     SelectEntity,
     SelectEntityAttribute,
     SelectServiceArgument,
@@ -19,6 +14,8 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
+
+from .common import SelectService
 
 from tests.common import setup_test_component_platform
 
@@ -105,7 +102,7 @@ async def test_custom_integration_and_validation(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
             SelectServiceArgument.OPTION: "option 2",
             ATTR_ENTITY_ID: "select.select_1",
@@ -121,7 +118,7 @@ async def test_custom_integration_and_validation(
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
                 SelectServiceArgument.OPTION: "option invalid",
                 ATTR_ENTITY_ID: "select.select_1",
@@ -139,7 +136,7 @@ async def test_custom_integration_and_validation(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
                 SelectServiceArgument.OPTION: "option invalid",
                 ATTR_ENTITY_ID: "select.select_2",
@@ -151,7 +148,7 @@ async def test_custom_integration_and_validation(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
             SelectServiceArgument.OPTION: "option 3",
             ATTR_ENTITY_ID: "select.select_2",
@@ -164,7 +161,7 @@ async def test_custom_integration_and_validation(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_FIRST,
+        SelectService.SELECT_FIRST,
         {ATTR_ENTITY_ID: "select.select_2"},
         blocking=True,
     )
@@ -172,7 +169,7 @@ async def test_custom_integration_and_validation(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_LAST,
+        SelectService.SELECT_LAST,
         {ATTR_ENTITY_ID: "select.select_2"},
         blocking=True,
     )
@@ -181,7 +178,7 @@ async def test_custom_integration_and_validation(
     # Do no cycle
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_NEXT,
+        SelectService.SELECT_NEXT,
         {
             ATTR_ENTITY_ID: "select.select_2",
             SelectServiceArgument.CYCLE: False,
@@ -193,7 +190,7 @@ async def test_custom_integration_and_validation(
     # Do cycle (default behavior)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_NEXT,
+        SelectService.SELECT_NEXT,
         {ATTR_ENTITY_ID: "select.select_2"},
         blocking=True,
     )
@@ -202,7 +199,7 @@ async def test_custom_integration_and_validation(
     # Do not cycle
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_PREVIOUS,
+        SelectService.SELECT_PREVIOUS,
         {
             ATTR_ENTITY_ID: "select.select_2",
             SelectServiceArgument.CYCLE: False,
@@ -214,7 +211,7 @@ async def test_custom_integration_and_validation(
     # Do cycle (default behavior)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_PREVIOUS,
+        SelectService.SELECT_PREVIOUS,
         {ATTR_ENTITY_ID: "select.select_2"},
         blocking=True,
     )

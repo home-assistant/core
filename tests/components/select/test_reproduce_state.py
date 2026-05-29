@@ -4,13 +4,14 @@ import pytest
 
 from homeassistant.components.select.const import (
     DOMAIN,
-    SERVICE_SELECT_OPTION,
     SelectEntityAttribute,
     SelectServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
+
+from .common import SelectService
 
 from tests.common import async_mock_service
 
@@ -19,7 +20,7 @@ async def test_reproducing_states(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test reproducing select states."""
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SELECT_OPTION)
+    calls = async_mock_service(hass, DOMAIN, SelectService.SELECT_OPTION)
     hass.states.async_set(
         "select.test",
         "option_one",
