@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientConnectorError, ClientSession
-from pygti.exceptions import GTIError
+from pygti.exceptions import GTIError, GTIUnauthorizedError
 from pygti.models import DLRequest, GTITime, SDName, SDNameType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -127,9 +127,15 @@ class HVVDepartureSensor(SensorEntity):
 
         try:
             data = await self.gti.departureList(request)
+        except GTIUnauthorizedError as error:
+            if self._last_error != GTIUnauthorizedError:
+                _LOGGER.error("Authentication error, check credentials: %r", error)
+                self._last_error = GTIUnauthorizedError
+            self._attr_available = False
+            return
         except GTIError as error:
             if self._last_error != GTIError:
-                _LOGGER.error("GTI API error: %r", error)
+                _LOGGER.warning("GTI API error: %r", error)
                 self._last_error = GTIError
             self._attr_available = False
             return
@@ -157,13 +163,15 @@ class HVVDepartureSensor(SensorEntity):
 
         departure = data.departures[0]
         line = departure.line
-        delay = departure.delay or 0
-        cancelled = departure.cancelled or False
-        extra = departure.extra or False
+        delay = departure.delay if departure.delay is not None else 0
+        cancelled = departure.cancelled if departure.cancelled is not None else False
+        extra = departure.extra if departure.extra is not None else False
         self._attr_available = True
         self._attr_native_value = (
             departure_time
-            + timedelta(minutes=departure.timeOffset or 0)
+            + timedelta(
+                minutes=departure.timeOffset if departure.timeOffset is not None else 0
+            )
             + timedelta(seconds=delay)
         )
 
@@ -183,13 +191,19 @@ class HVVDepartureSensor(SensorEntity):
         departures = []
         for departure in data.departures:
             line = departure.line
-            delay = departure.delay or 0
-            cancelled = departure.cancelled or False
-            extra = departure.extra or False
+            delay = departure.delay if departure.delay is not None else 0
+            cancelled = (
+                departure.cancelled if departure.cancelled is not None else False
+            )
+            extra = departure.extra if departure.extra is not None else False
             departures.append(
                 {
                     ATTR_DEPARTURE: departure_time
-                    + timedelta(minutes=departure.timeOffset or 0)
+                    + timedelta(
+                        minutes=departure.timeOffset
+                        if departure.timeOffset is not None
+                        else 0
+                    )
                     + timedelta(seconds=delay),
                     ATTR_LINE: line.name,
                     ATTR_ORIGIN: line.origin,
