@@ -22,7 +22,7 @@ from .const import ATTR_DEVICE_STATE, ATTR_LORA_INFO, DOMAIN, YOLINK_OFFLINE_TIM
 
 _LOGGER = logging.getLogger(__name__)
 
-SPRINKLER_ACTIVE_INTERVAL = timedelta(seconds=30)
+SPRINKLER_ACTIVE_INTERVAL = timedelta(seconds=15)
 SPRINKLER_IDLE_INTERVAL = timedelta(minutes=30)
 
 
@@ -102,14 +102,27 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
             )
             raise UpdateFailed from yl_client_err
         if device_state is not None:
+            if self.device.device_type == ATTR_DEVICE_SPRINKLER_V2:
+                full_data = device_state_resp.data
+                dev_lora_info = full_data.get(ATTR_LORA_INFO)
+                if dev_lora_info is not None:
+                    self.dev_net_type = dev_lora_info.get("devNetType")
+                if (
+                    self.data
+                    and "attributes" not in full_data
+                    and "attributes" in self.data
+                ):
+                    full_data["attributes"] = self.data["attributes"]
+                self._adjust_sprinkler_interval(full_data)
+                return full_data
             dev_lora_info = device_state.get(ATTR_LORA_INFO)
             if dev_lora_info is not None:
                 self.dev_net_type = dev_lora_info.get("devNetType")
-            self.adjust_sprinkler_interval(device_state)
+            self._adjust_sprinkler_interval(device_state)
             return device_state
         return {}
 
-    def adjust_sprinkler_interval(self, device_state: dict) -> None:
+    def _adjust_sprinkler_interval(self, device_state: dict) -> None:
         """Speed up polling while SprinklerV2 valve is running."""
         if self.device.device_type != ATTR_DEVICE_SPRINKLER_V2:
             return
