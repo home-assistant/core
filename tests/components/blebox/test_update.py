@@ -256,9 +256,10 @@ async def test_poll_connection_error(
     """Test that ConnectionError during poll reschedules the next poll without updating sw_version."""
     feature_mock, entity_id = firmwareupdate
 
-    feature_mock.installed_version = "0.1"
-    feature_mock.latest_version = "0.2"
     entry = await async_setup_entity(hass, entity_id)
+
+    device = device_registry.async_get(entry.device_id)
+    sw_version_before_install = device.sw_version
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -281,7 +282,7 @@ async def test_poll_connection_error(
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     device = device_registry.async_get(entry.device_id)
-    assert device.sw_version != "0.2"
+    assert device.sw_version == sw_version_before_install
 
     def recovery_update() -> None:
         feature_mock.installed_version = "0.2"
