@@ -1,7 +1,5 @@
 """Config flow for Squeezebox integration."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import logging
@@ -289,7 +287,10 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="edit_integration_discovered",
             description_placeholders={
-                "desc": f"LMS Host: {self.chosen_server[CONF_HOST]}, Port: {self.chosen_server[CONF_PORT]}"
+                "desc": (
+                    f"LMS Host: {self.chosen_server[CONF_HOST]},"
+                    f" Port: {self.chosen_server[CONF_PORT]}"
+                )
             },
             data_schema=SHORT_EDIT_SCHEMA,
             errors=errors,
@@ -332,7 +333,10 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if TYPE_CHECKING:
             assert self.unique_id
-        # if we have detected this player, do nothing. if not, there must be a server out there for us to configure, so start the normal user flow (which tries to autodetect server)
+        # if we have detected this player, do nothing. if not,
+        # there must be a server out there for us to configure,
+        # so start the normal user flow (which tries to
+        # autodetect server)
         if registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.unique_id) is not None:
             # this player is already known, so do nothing other than mark as configured
             raise AbortFlow("already_configured")

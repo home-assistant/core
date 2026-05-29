@@ -1,7 +1,5 @@
 """Sensor for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Final, cast
@@ -44,7 +42,7 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
+from .const import CONF_SLEEP_PERIOD, DRIVER_MISSING_ERROR, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -467,7 +465,6 @@ REST_SENSORS: Final = {
     ),
     "uptime": RestSensorDescription(
         key="uptime",
-        translation_key="last_restart",
         value=lambda status, _: utcnow() - timedelta(seconds=status["uptime"]),
         device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
@@ -1228,6 +1225,9 @@ RPC_SENSORS: Final = {
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda _, status, key: (
+            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+        ),
     ),
     "rssi": RpcSensorDescription(
         key="wifi",
@@ -1243,7 +1243,6 @@ RPC_SENSORS: Final = {
     "uptime": RpcSensorDescription(
         key="sys",
         sub_key="uptime",
-        translation_key="last_restart",
         device_class=SensorDeviceClass.UPTIME,
         value=lambda status, _: utcnow() - timedelta(seconds=status),
         entity_registry_enabled_default=False,
@@ -1257,6 +1256,9 @@ RPC_SENSORS: Final = {
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda _, status, key: (
+            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+        ),
     ),
     "battery": RpcSensorDescription(
         key="devicepower",

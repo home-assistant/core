@@ -1,7 +1,5 @@
 """Support for MQTT datetime platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import datetime as datetime_library
 import logging
@@ -29,6 +27,7 @@ from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_STATE_TOPIC,
+    CONF_TIMEZONE,
     PAYLOAD_NONE,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
@@ -41,8 +40,6 @@ from .models import (
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_TIMEZONE = "timezone"
 
 PARALLEL_UPDATES = 0
 
@@ -104,20 +101,7 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._zone_info = None
-
-        async def async_set_zone_info(timezone: str) -> None:
-            self._zone_info = await async_get_time_zone(timezone)
-            if self._zone_info:
-                return
-            _LOGGER.warning(
-                "Ignoring invalid timezone identifier for entity %s, got '%s'",
-                self.entity_id,
-                timezone,
-            )
-
-        if timezone := config.get(CONF_TIMEZONE):
-            self.hass.async_create_task(async_set_zone_info(timezone))
+        self._timezone_config = config.get(CONF_TIMEZONE)
 
         self._command_template = MqttCommandTemplate(
             config.get(CONF_COMMAND_TEMPLATE),
@@ -130,6 +114,18 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
         optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or config.get(CONF_STATE_TOPIC) is None
         self._attr_assumed_state = bool(self._optimistic)
+
+    async def _async_finish_update_config(self) -> None:
+        """Called after added to hass and after discovery update."""
+        self._zone_info = None
+        if timezone := self._config.get(CONF_TIMEZONE):
+            self._zone_info = await async_get_time_zone(timezone)
+            if not self._zone_info:
+                _LOGGER.warning(
+                    "Ignoring invalid timezone identifier for entity %s, got '%s'",
+                    self.entity_id,
+                    timezone,
+                )
 
     @callback
     def _handle_state_message_received(self, msg: ReceiveMessage) -> None:
@@ -149,7 +145,8 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
             value = parse(payload)
         except ParserError:
             _LOGGER.warning(
-                "Invalid received date/time expression on topic %s for entity %s, got %s",
+                "Invalid received date/time expression on topic"
+                " %s for entity %s, got %s",
                 msg.topic,
                 self.entity_id,
                 msg.payload,

@@ -1,14 +1,18 @@
 """PrusaLink sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Generic, TypeVar, cast
+from typing import cast
 
-from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
-from pyprusalink.types_legacy import LegacyPrinterStatus
+from pyprusalink.types import (
+    JobFilePrint,
+    JobInfo,
+    PrinterInfo,
+    PrinterState,
+    PrinterStatus,
+)
+from pyprusalink.types_legacy import LegacyPrinterStatus, LegacyPrinterTelemetry
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,25 +33,19 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
-from .entity import PrusaLinkEntity
-
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
+from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
 
-@dataclass(frozen=True)
-class PrusaLinkSensorEntityDescriptionMixin(Generic[T]):
-    """Mixin for required keys."""
-
-    value_fn: Callable[[T], datetime | StateType]
-
-
-@dataclass(frozen=True)
-class PrusaLinkSensorEntityDescription(
-    SensorEntityDescription, PrusaLinkSensorEntityDescriptionMixin[T], Generic[T]
+@dataclass(frozen=True, kw_only=True)
+class PrusaLinkSensorEntityDescription[
+    T: (PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
+](
+    SensorEntityDescription,
+    PrusaLinkEntityDescription,
 ):
     """Describes PrusaLink sensor entity."""
 
-    available_fn: Callable[[T], bool] = lambda _: True
+    value_fn: Callable[[T], datetime | StateType]
 
 
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
@@ -55,7 +53,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[PrinterStatus](
             key="printer.state",
             name=None,
-            value_fn=lambda data: cast(str, data["printer"]["state"].lower()),
+            value_fn=lambda data: cast(str, data["printer"]["state"]).lower(),
             device_class=SensorDeviceClass.ENUM,
             options=[state.value.lower() for state in PrinterState],
             translation_key="printer_state",
@@ -106,6 +104,26 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
         PrusaLinkSensorEntityDescription[PrinterStatus](
+            key="printer.telemetry.x-position",
+            translation_key="x_position",
+            native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast(float, data["printer"]["axis_x"]),
+            supported_fn=lambda data: data["printer"].get("axis_x") is not None,
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrinterStatus](
+            key="printer.telemetry.y-position",
+            translation_key="y_position",
+            native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast(float, data["printer"]["axis_y"]),
+            supported_fn=lambda data: data["printer"].get("axis_y") is not None,
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrinterStatus](
             key="printer.telemetry.print-speed",
             translation_key="print_speed",
             native_unit_of_measurement=PERCENTAGE,
@@ -137,7 +155,10 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[LegacyPrinterStatus](
             key="printer.telemetry.material",
             translation_key="material",
-            value_fn=lambda data: cast(str, data["telemetry"]["material"]),
+            value_fn=lambda data: cast(
+                str, cast(LegacyPrinterTelemetry, data["telemetry"])["material"]
+            ),
+            available_fn=lambda data: data.get("telemetry") is not None,
         ),
     ),
     "job": (
@@ -154,7 +175,11 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.filename",
             translation_key="filename",
-            value_fn=lambda data: cast(str, data["file"]["display_name"]),
+            # `available_fn` guarantees `file` is not None at this point;
+            # the inner cast narrows the Optional for the index.
+            value_fn=lambda data: cast(
+                str, cast(JobFilePrint, data["file"])["display_name"]
+            ),
             available_fn=lambda data: (
                 data.get("file") is not None
                 and data.get("state") != PrinterState.IDLE.value
@@ -177,8 +202,12 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             key="job.finish",
             translation_key="print_finish",
             device_class=SensorDeviceClass.TIMESTAMP,
+            # `available_fn` guarantees `time_remaining` is not None at this
+            # point; the cast narrows the Optional for `timedelta`.
             value_fn=ignore_variance(
-                lambda data: utcnow() + timedelta(seconds=data["time_remaining"]),
+                lambda data: (
+                    utcnow() + timedelta(seconds=cast(int, data["time_remaining"]))
+                ),
                 timedelta(minutes=2),
             ),
             available_fn=lambda data: (
@@ -194,6 +223,15 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfLength.MILLIMETERS,
             device_class=SensorDeviceClass.DISTANCE,
             value_fn=lambda data: cast(str, data["nozzle_diameter"]),
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="info.min_extrusion_temp",
+            translation_key="min_extrusion_temp",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            value_fn=lambda data: data["min_extrusion_temp"],
+            supported_fn=lambda data: data.get("min_extrusion_temp") is not None,
             entity_registry_enabled_default=False,
         ),
     ),
@@ -215,6 +253,7 @@ async def async_setup_entry(
         entities.extend(
             PrusaLinkSensorEntity(coordinator, sensor_description)
             for sensor_description in sensors
+            if sensor_description.supported_fn(coordinator.data)
         )
 
     async_add_entities(entities)
@@ -239,10 +278,3 @@ class PrusaLinkSensorEntity(PrusaLinkEntity, SensorEntity):
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def available(self) -> bool:
-        """Return if sensor is available."""
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.data
-        )

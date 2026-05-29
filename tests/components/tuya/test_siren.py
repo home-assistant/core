@@ -1,7 +1,5 @@
 """Test Tuya siren platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -31,6 +29,7 @@ def platform_autouse():
         yield
 
 
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -84,7 +83,7 @@ async def test_selective_state_update(
         mock_device,
         notification_helper,
         freezer,
-        entity_id="siren.c9",
+        entity_id="siren.c9_siren",
         dpcode="siren_switch",
         initial_state="off",
         updates=updates,
@@ -119,7 +118,7 @@ async def test_action(
     expected_commands: list[dict[str, Any]],
 ) -> None:
     """Test siren action."""
-    entity_id = "siren.c9"
+    entity_id = "siren.c9_siren"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)

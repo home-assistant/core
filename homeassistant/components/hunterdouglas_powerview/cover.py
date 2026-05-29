@@ -1,7 +1,5 @@
 """Support for hunter douglas shades."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import replace
 from datetime import datetime, timedelta
@@ -134,6 +132,11 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         of days.
         """
         return self._is_hard_wired
+
+    @property
+    def available(self) -> bool:
+        """Return True if shade position data is available."""
+        return super().available and self.positions.primary is not None
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -288,7 +291,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         await self.async_update()
         self.async_write_ha_state()
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(
@@ -537,7 +540,8 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
 class PowerViewShadeTopDown(PowerViewShadeBase):
     """Representation of a shade that lowers from the roof to the floor.
 
-    These shades are inverted where MAX_POSITION equates to closed and MIN_POSITION is open
+    These shades are inverted where MAX_POSITION equates to closed
+    and MIN_POSITION is open
     API Class: ShadeTopDown
 
     Type 6 - Top Down
@@ -913,7 +917,8 @@ class PowerViewShadeDualOverlappedCombinedTilt(
     Sibling Class: PowerViewShadeDualOverlappedFront, PowerViewShadeDualOverlappedRear
     API Class: ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
 
-    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear opaque (non-tilting) shade)
+    Type 9 - Duolite with 90° Tilt (front bottom up shade that also
+    tilts plus a rear opaque (non-tilting) shade)
     Type 10 - Duolite with 180° Tilt
     """
 

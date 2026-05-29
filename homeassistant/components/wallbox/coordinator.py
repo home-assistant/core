@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the wallbox integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -239,7 +237,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @_require_authentication
     async def _async_update_data(self) -> dict[str, Any]:
-        """Get new sensor data for Wallbox component. Set update interval to be UPDATE_INTERVAL * #wallbox chargers configured, this is necessary due to rate limitations."""
+        """Get new sensor data for Wallbox component."""
 
         self.update_interval = timedelta(
             seconds=UPDATE_INTERVAL

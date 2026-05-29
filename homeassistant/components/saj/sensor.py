@@ -1,7 +1,5 @@
 """SAJ solar inverter interface."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from datetime import date, datetime
 import logging
@@ -36,6 +34,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,7 +124,7 @@ async def async_setup_platform(
             # Sensors with live values like "temperature" or "current_power"
             # will also be reset to None.
             if not success and (
-                (sensor.per_day_basis and date.today() > sensor.date_updated)
+                (sensor.per_day_basis and dt_util.now().date() > sensor.date_updated)
                 or (not sensor.per_day_basis and not sensor.per_total_basis)
             ):
                 state_unknown = True

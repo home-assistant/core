@@ -1,7 +1,5 @@
 """Support for SimpliSafe locks."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from simplipy.device.lock import Lock, LockStates
@@ -94,8 +92,8 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     @callback
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
-        self._attr_is_jammed = self._device.state == LockStates.JAMMED
-        self._attr_is_locked = self._device.state == LockStates.LOCKED
+        self._attr_is_jammed = self._device.state is LockStates.JAMMED
+        self._attr_is_locked = self._device.state is LockStates.LOCKED
 
         self._attr_extra_state_attributes.update(
             {

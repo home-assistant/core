@@ -1,7 +1,6 @@
 """Setup the Indevolt test environment."""
 
 from collections.abc import Generator
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -16,22 +15,31 @@ from homeassistant.const import CONF_HOST, CONF_MODEL
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_HOST = "192.168.1.100"
+TEST_HOST_ALT = "192.168.1.101"
 TEST_PORT = 8080
+
 TEST_DEVICE_SN_GEN1 = "BK1600-12345678"
 TEST_DEVICE_SN_GEN2 = "SolidFlex2000-87654321"
-TEST_FW_VERSION = "1.2.3"
+TEST_MODEL_GEN1 = "BK1600"
+TEST_MODEL_GEN2 = "CMS-SF2000"
 
-# Map device fixture names to generation and fixture files
+# Create DeviceInfo per generation
 DEVICE_MAPPING = {
     1: {
-        "device": "BK1600",
+        "device": TEST_MODEL_GEN1,
         "generation": 1,
         "sn": TEST_DEVICE_SN_GEN1,
+        "host": TEST_HOST_ALT,
+        "mac": "aa:bb:cc:11:22:33",
+        "fw": "1.2.3",
     },
     2: {
-        "device": "CMS-SF2000",
+        "device": TEST_MODEL_GEN2,
         "generation": 2,
         "sn": TEST_DEVICE_SN_GEN2,
+        "host": TEST_HOST,
+        "mac": "aa:bb:cc:44:55:66",
+        "fw": "1.2.3",
     },
 }
 
@@ -43,26 +51,43 @@ def generation(request: pytest.FixtureRequest) -> int:
 
 
 @pytest.fixture
-def entry_data(generation: int) -> dict[str, Any]:
-    """Return the config entry data based on generation."""
-    device_info = DEVICE_MAPPING[generation]
-    return {
-        CONF_HOST: TEST_HOST,
-        CONF_SERIAL_NUMBER: device_info["sn"],
-        CONF_MODEL: device_info["device"],
-        CONF_GENERATION: device_info["generation"],
-    }
+def alt_generation(request: pytest.FixtureRequest) -> int:
+    """Return the alternative device generation."""
+    return getattr(request, "param", 1)
 
 
 @pytest.fixture
-def mock_config_entry(generation: int, entry_data: dict[str, Any]) -> MockConfigEntry:
+def mock_config_entry(generation: int) -> MockConfigEntry:
     """Return the default mocked config entry."""
     device_info = DEVICE_MAPPING[generation]
     return MockConfigEntry(
         domain=DOMAIN,
         title=device_info["device"],
         version=1,
-        data=entry_data,
+        data={
+            CONF_HOST: device_info["host"],
+            CONF_SERIAL_NUMBER: device_info["sn"],
+            CONF_MODEL: device_info["device"],
+            CONF_GENERATION: device_info["generation"],
+        },
+        unique_id=device_info["sn"],
+    )
+
+
+@pytest.fixture
+def alt_mock_config_entry(alt_generation: int) -> MockConfigEntry:
+    """Return a second mocked config entry for multi-device tests."""
+    device_info = DEVICE_MAPPING[alt_generation]
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=device_info["device"],
+        version=1,
+        data={
+            CONF_HOST: device_info["host"],
+            CONF_SERIAL_NUMBER: device_info["sn"],
+            CONF_MODEL: device_info["device"],
+            CONF_GENERATION: device_info["generation"],
+        },
         unique_id=device_info["sn"],
     )
 
@@ -84,8 +109,15 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
         ),
     ):
         # Mock coordinator API (get_data)
+        # fetch_data filters by requested keys so that SENSOR_KEYS omissions
+        # cause test failures instead of silently returning extra fixture data.
+        # Tests that mutate fetch_data.return_value[key] to simulate state
+        # changes will still work because side_effect reads from return_value.
         client = mock_client.return_value
-        client.fetch_data.return_value = fixture_data
+        client.fetch_data.return_value = dict(fixture_data)
+        client.fetch_data.side_effect = lambda keys: {
+            k: v for k, v in client.fetch_data.return_value.items() if k in keys
+        }
         client.set_data.return_value = True
         client.stop.return_value = True
         client.charge.return_value = True
@@ -95,7 +127,8 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
                 "sn": device_info["sn"],
                 "type": device_info["device"],
                 "generation": device_info["generation"],
-                "fw": TEST_FW_VERSION,
+                "fw": device_info["fw"],
+                "mac": device_info["mac"],
             }
         }
 

@@ -1,7 +1,5 @@
 """Support for Generic Modbus Thermostats."""
 
-from __future__ import annotations
-
 import struct
 from typing import Any, cast
 
@@ -571,7 +569,10 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
                     break
 
             if self._attr_swing_mode is STATE_UNKNOWN:
-                _err = f"{self.name}: No answer received from Swing mode register. State is Unknown"
+                _err = (
+                    f"{self.name}: No answer received from"
+                    " Swing mode register. State is Unknown"
+                )
                 _LOGGER.error(_err)
 
         # Read the on/off register if defined. If the value in this

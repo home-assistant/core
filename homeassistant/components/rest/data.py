@@ -1,7 +1,5 @@
 """Support for RESTful API."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -111,15 +109,19 @@ class RestData:
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        # Convert boolean values to lowercase strings for compatibility with aiohttp/yarl
+        # Convert boolean values to lowercase strings for
+        # compatibility with aiohttp/yarl
         if rendered_params:
             for key, value in rendered_params.items():
                 if isinstance(value, bool):
                     rendered_params[key] = str(value).lower()
                 elif not isinstance(value, (str, int, float, type(None))):
-                    # For backward compatibility with httpx behavior, convert non-primitive
-                    # types to strings. This maintains compatibility after switching from
-                    # httpx to aiohttp. See https://github.com/home-assistant/core/issues/148153
+                    # For backward compatibility with httpx
+                    # behavior, convert non-primitive types to
+                    # strings. This maintains compatibility
+                    # after switching from httpx to aiohttp.
+                    # See
+                    # https://github.com/home-assistant/core/issues/148153
                     _LOGGER.debug(
                         "REST query parameter '%s' has type %s, converting to string",
                         key,
@@ -160,7 +162,9 @@ class RestData:
                     except UnicodeDecodeError as ex:
                         self._force_use_set_encoding = True
                         _LOGGER.debug(
-                            "Response charset came back as %s but could not be decoded, continue with configured encoding %s. %s",
+                            "Response charset came back as %s but"
+                            " could not be decoded, continue with"
+                            " configured encoding %s. %s",
                             response.charset,
                             self._encoding,
                             ex,

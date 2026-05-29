@@ -1,7 +1,5 @@
 """Validate device conditions."""
 
-from __future__ import annotations
-
 from typing import Any, Protocol
 
 import voluptuous as vol
@@ -87,7 +85,7 @@ class DeviceCondition(Condition):
         assert config.options is not None
         self._config = config.options
 
-    async def async_setup(self) -> None:
+    async def _async_setup(self) -> None:
         """Set up a device condition."""
         platform = await async_get_device_automation_platform(
             self._hass, self._config[CONF_DOMAIN], DeviceAutomationType.CONDITION

@@ -1,7 +1,5 @@
 """Offer state listening automation rules."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import logging
@@ -9,7 +7,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
+from homeassistant.const import (
+    CONF_ATTRIBUTE,
+    CONF_ENTITY_ID,
+    CONF_FOR,
+    CONF_PLATFORM,
+    MATCH_ALL,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -34,7 +38,6 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"
 CONF_NOT_FROM = "not_from"

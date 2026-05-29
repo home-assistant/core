@@ -1,7 +1,5 @@
 """The Snooz component."""
 
-from __future__ import annotations
-
 import logging
 
 from pysnooz.device import SnoozDevice

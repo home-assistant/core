@@ -1,7 +1,5 @@
 """Config Flow for Hive."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -119,9 +117,23 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 _LOGGER.debug("2FA successful")
                 if self.source == SOURCE_REAUTH:
-                    return await self.async_setup_hive_entry()
-                self.device_registration = True
-                return await self.async_step_configuration()
+                    try:
+                        device_registered = await self.hive_auth.is_device_registered()
+                    except HiveApiError as err:
+                        _LOGGER.debug(
+                            "Failed to check whether the Hive device"
+                            " is registered during reauthentication: %s",
+                            err,
+                        )
+                        errors["base"] = "no_internet_available"
+                    else:
+                        if device_registered:
+                            return await self.async_setup_hive_entry()
+                        self.device_registration = True
+                        return await self.async_step_configuration()
+                else:
+                    self.device_registration = True
+                    return await self.async_step_configuration()
 
         schema = vol.Schema({vol.Required(CONF_CODE): str})
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
@@ -145,6 +157,8 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         schema = vol.Schema(
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             {vol.Optional(CONF_DEVICE_NAME, default=self.device_name): str}
         )
         return self.async_show_form(
@@ -173,6 +187,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Re Authenticate a user."""
+        self.data = dict(entry_data)
         data = {
             CONF_USERNAME: entry_data[CONF_USERNAME],
             CONF_PASSWORD: entry_data[CONF_PASSWORD],
@@ -220,7 +235,7 @@ class HiveOptionsFlowHandler(OptionsFlow):
         schema = vol.Schema(
             {
                 # Polling interval is user-configurable, which is no longer allowed
-                # pylint: disable-next=hass-config-flow-polling-field
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(CONF_SCAN_INTERVAL, default=self.interval): vol.All(
                     vol.Coerce(int), vol.Range(min=30)
                 )

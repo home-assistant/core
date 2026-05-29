@@ -1,7 +1,5 @@
 """Offer zone automation rules."""
 
-from __future__ import annotations
-
 from typing import Any, Unpack, cast
 
 import voluptuous as vol

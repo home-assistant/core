@@ -1,7 +1,5 @@
 """The kraken integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send

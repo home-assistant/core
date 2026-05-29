@@ -1,7 +1,5 @@
 """Platform for Schlage select integration."""
 
-from __future__ import annotations
-
 from pyschlage.lock import AUTO_LOCK_TIMES
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription

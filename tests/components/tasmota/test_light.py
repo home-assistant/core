@@ -785,7 +785,7 @@ async def test_sending_mqtt_commands_on_off(
     # Turn the light on and verify MQTT message is sent
     await common.async_turn_on(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Power1", "ON", 0, False
+        "tasmota_49A3BC/cmnd/Power1", "ON", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -796,7 +796,7 @@ async def test_sending_mqtt_commands_on_off(
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Power1", "OFF", 0, False
+        "tasmota_49A3BC/cmnd/Power1", "OFF", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -829,7 +829,11 @@ async def test_sending_mqtt_commands_rgbww_tuya(
     # Turn the light on and verify MQTT message is sent
     await common.async_turn_on(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Power1 ON", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 ON",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -840,14 +844,22 @@ async def test_sending_mqtt_commands_rgbww_tuya(
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Power1 OFF", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 OFF",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn the light on and verify MQTT messages are sent
     await common.async_turn_on(hass, "light.tasmota_test", brightness=192)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Dimmer3 75", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Dimmer3 75",
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
 
@@ -879,7 +891,11 @@ async def test_sending_mqtt_commands_rgbw_legacy(
     # Turn the light on and verify MQTT message is sent
     await common.async_turn_on(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Power1 ON", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 ON",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -890,14 +906,22 @@ async def test_sending_mqtt_commands_rgbw_legacy(
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Power1 OFF", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 OFF",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn the light on and verify MQTT messages are sent
     await common.async_turn_on(hass, "light.tasmota_test", brightness=192)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Dimmer 75", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Dimmer 75",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -908,6 +932,7 @@ async def test_sending_mqtt_commands_rgbw_legacy(
         "NoDelay;Power1 ON;NoDelay;HsbColor1 0;NoDelay;HsbColor2 100",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -918,6 +943,7 @@ async def test_sending_mqtt_commands_rgbw_legacy(
         "NoDelay;Power1 ON;NoDelay;White 50",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -928,6 +954,7 @@ async def test_sending_mqtt_commands_rgbw_legacy(
         "NoDelay;Power1 ON;NoDelay;HsbColor1 20;NoDelay;HsbColor2 75",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -938,6 +965,7 @@ async def test_sending_mqtt_commands_rgbw_legacy(
         "NoDelay;Power1 ON;NoDelay;HsbColor1 141;NoDelay;HsbColor2 25",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -947,6 +975,7 @@ async def test_sending_mqtt_commands_rgbw_legacy(
         "NoDelay;Power1 ON;NoDelay;Scheme 4",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -978,7 +1007,11 @@ async def test_sending_mqtt_commands_rgbw(
     # Turn the light on and verify MQTT message is sent
     await common.async_turn_on(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Power1 ON", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 ON",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -989,14 +1022,22 @@ async def test_sending_mqtt_commands_rgbw(
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Power1 OFF", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 OFF",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn the light on and verify MQTT messages are sent
     await common.async_turn_on(hass, "light.tasmota_test", brightness=192)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Dimmer 75", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Dimmer 75",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1007,6 +1048,7 @@ async def test_sending_mqtt_commands_rgbw(
         "NoDelay;Power1 ON;NoDelay;HsbColor1 180;NoDelay;HsbColor2 50",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1017,6 +1059,7 @@ async def test_sending_mqtt_commands_rgbw(
         "NoDelay;Power1 ON;NoDelay;White 50",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1027,6 +1070,7 @@ async def test_sending_mqtt_commands_rgbw(
         "NoDelay;Power1 ON;NoDelay;HsbColor1 20;NoDelay;HsbColor2 75",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1037,6 +1081,7 @@ async def test_sending_mqtt_commands_rgbw(
         "NoDelay;Power1 ON;NoDelay;HsbColor1 141;NoDelay;HsbColor2 25",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1046,6 +1091,7 @@ async def test_sending_mqtt_commands_rgbw(
         "NoDelay;Power1 ON;NoDelay;Scheme 4",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1077,7 +1123,11 @@ async def test_sending_mqtt_commands_rgbww(
     # Turn the light on and verify MQTT message is sent
     await common.async_turn_on(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Power1 ON", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 ON",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1088,14 +1138,22 @@ async def test_sending_mqtt_commands_rgbww(
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Power1 OFF", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 OFF",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn the light on and verify MQTT messages are sent
     await common.async_turn_on(hass, "light.tasmota_test", brightness=192)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Dimmer 75", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Dimmer 75",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1105,6 +1163,7 @@ async def test_sending_mqtt_commands_rgbww(
         "NoDelay;Power1 ON;NoDelay;HsbColor1 240;NoDelay;HsbColor2 75",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1114,6 +1173,7 @@ async def test_sending_mqtt_commands_rgbww(
         "NoDelay;Power1 ON;NoDelay;CT 200",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1123,6 +1183,7 @@ async def test_sending_mqtt_commands_rgbww(
         "NoDelay;Power1 ON;NoDelay;Scheme 4",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1155,7 +1216,11 @@ async def test_sending_mqtt_commands_power_unlinked(
     # Turn the light on and verify MQTT message is sent
     await common.async_turn_on(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Power1 ON", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 ON",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1166,7 +1231,11 @@ async def test_sending_mqtt_commands_power_unlinked(
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Power1 OFF", 0, False
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 OFF",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1177,6 +1246,7 @@ async def test_sending_mqtt_commands_power_unlinked(
         "NoDelay;Dimmer 75;NoDelay;Power1 ON",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1212,6 +1282,7 @@ async def test_transition(
         "NoDelay;Fade2 1;NoDelay;Speed2 8;NoDelay;Dimmer 100",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1224,6 +1295,7 @@ async def test_transition(
         "NoDelay;Fade2 1;NoDelay;Speed2 40;NoDelay;Dimmer 100",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1234,6 +1306,7 @@ async def test_transition(
         "NoDelay;Fade2 1;NoDelay;Speed2 1;NoDelay;Power1 OFF",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1244,6 +1317,7 @@ async def test_transition(
         "NoDelay;Fade2 1;NoDelay;Speed2 16;NoDelay;Dimmer 50",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1262,6 +1336,7 @@ async def test_transition(
         "NoDelay;Fade2 1;NoDelay;Speed2 24;NoDelay;Power1 OFF",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1280,6 +1355,7 @@ async def test_transition(
         "NoDelay;Fade2 0;NoDelay;Power1 OFF",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1309,6 +1385,7 @@ async def test_transition(
         ),
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1335,6 +1412,7 @@ async def test_transition(
         ),
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1358,6 +1436,7 @@ async def test_transition(
         "NoDelay;Fade2 1;NoDelay;Speed2 24;NoDelay;Power1 ON;NoDelay;CT 500",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1379,6 +1458,7 @@ async def test_transition(
         "NoDelay;Fade2 1;NoDelay;Speed2 40;NoDelay;Power1 ON;NoDelay;CT 326",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1415,6 +1495,7 @@ async def test_transition_fixed(
         "NoDelay;Fade2 1;NoDelay;Speed2 8;NoDelay;Dimmer 100",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1427,6 +1508,7 @@ async def test_transition_fixed(
         "NoDelay;Fade2 1;NoDelay;Speed2 40;NoDelay;Dimmer 100",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1437,6 +1519,7 @@ async def test_transition_fixed(
         "NoDelay;Fade2 1;NoDelay;Speed2 8;NoDelay;Power1 OFF",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1447,6 +1530,7 @@ async def test_transition_fixed(
         "NoDelay;Fade2 1;NoDelay;Speed2 8;NoDelay;Dimmer 50",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1457,6 +1541,7 @@ async def test_transition_fixed(
         "NoDelay;Fade2 0;NoDelay;Dimmer 50",
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1517,6 +1602,7 @@ async def _test_split_light(
             f"NoDelay;Power{idx + num_switches + 1} ON",
             0,
             False,
+            message_expiry_interval=None,
         )
 
         mqtt_mock.async_publish.reset_mock()
@@ -1527,6 +1613,7 @@ async def _test_split_light(
             f"NoDelay;Channel{idx + num_switches + 1} {(idx + 1) * 10}",
             0,
             False,
+            message_expiry_interval=None,
         )
 
 
@@ -1598,6 +1685,7 @@ async def _test_unlinked_light(
             f"NoDelay;Power{idx + num_switches + 1} ON",
             0,
             False,
+            message_expiry_interval=None,
         )
 
         mqtt_mock.async_publish.reset_mock()
@@ -1608,6 +1696,7 @@ async def _test_unlinked_light(
             f"NoDelay;Dimmer{idx + 1} {(idx + 1) * 10}",
             0,
             False,
+            message_expiry_interval=None,
         )
 
 

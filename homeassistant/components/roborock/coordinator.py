@@ -1,11 +1,9 @@
 """Roborock Coordinator."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from propcache.api import cached_property
 from roborock import B01Props
@@ -166,7 +164,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
-                translation_placeholders={"error": str(err)},
             ) from err
         else:
             # Force a map refresh on first setup
@@ -357,10 +354,9 @@ async def _refresh_traits(traits: list[Any]) -> None:
             ) from ex
 
 
-_V = TypeVar("_V", bound=RoborockDyadDataProtocol | RoborockZeoProtocol)
-
-
-class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict[_V, StateType]]):
+class RoborockDataUpdateCoordinatorA01[
+    _V: RoborockDyadDataProtocol | RoborockZeoProtocol
+](DataUpdateCoordinator[dict[_V, StateType]]):
     """Class to manage fetching data from the API for A01 devices."""
 
     config_entry: RoborockConfigEntry

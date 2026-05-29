@@ -1,7 +1,5 @@
 """The Met Office integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from datapoint.Manager import Manager

@@ -1,7 +1,5 @@
 """Tests for the Overkiz sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import patch
@@ -23,12 +21,12 @@ from tests.common import snapshot_platform
 TEMPERATURE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#2",
-    "sensor.garden_radiator_bathroom_temperature_sensor_temperature",
+    "sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature",
 )
 HEATING_BATTERY = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#1",
-    "sensor.garden_radiator_battery_level",
+    "sensor.maple_residence_garden_radiator_battery_level",
 )
 TEMPERATURE_SENSOR_LOCAL = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe_3.json",
@@ -44,7 +42,7 @@ HOMEKIT_STACK = FixtureDevice(
 COZYTOUCH_DHW = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "io://1234-5678-5643/109286#2",
-    "sensor.patio_water_heating_office_energy_meter_electric_energy_consumption",
+    "sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption",
 )
 
 SNAPSHOT_FIXTURES = [

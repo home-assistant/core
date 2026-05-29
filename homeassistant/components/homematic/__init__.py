@@ -26,7 +26,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import run_callback_threadsafe
 
 from .const import (
     ATTR_ADDRESS,
@@ -381,12 +383,15 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         homematic.setInstallMode(interface, t=time, mode=mode, address=address)
 
-    hass.services.register(
+    run_callback_threadsafe(
+        hass.loop,
+        async_register_admin_service,
+        hass,
         DOMAIN,
         SERVICE_SET_INSTALL_MODE,
         _service_handle_install_mode,
-        schema=SCHEMA_SERVICE_SET_INSTALL_MODE,
-    )
+        SCHEMA_SERVICE_SET_INSTALL_MODE,
+    ).result()
 
     def _service_put_paramset(service: ServiceCall) -> None:
         """Service to call the putParamset method on a HomeMatic connection."""
