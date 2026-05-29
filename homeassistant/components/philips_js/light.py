@@ -112,6 +112,31 @@ def _get_cache_keys(device: PhilipsTV):
     )
 
 
+def _build_zero_pixel_layer(
+    ambilight_cached: dict[str, Any] | None,
+) -> dict[str, dict[str, dict[str, int]]] | None:
+    """Build a single-layer cached-pixel dict with all-zero RGB.
+
+    Reads the per-side shape from the TV's last-known cached pixels (always
+    populated after the initial coordinator update), so we match the actual
+    LED layout the TV exposes. Returns ``None`` when no cached data is
+    available or every side is empty.
+
+    Empty sides (for example ``bottom: {}`` on TVs without bottom LEDs) are
+    skipped — including them would cause the TV to silently reject the
+    whole payload.
+    """
+    if not ambilight_cached:
+        return None
+    layer = ambilight_cached.get("layer1") or {}
+    zero_layer: dict[str, dict[str, dict[str, int]]] = {}
+    for side_name, side in layer.items():
+        if not side:
+            continue
+        zero_layer[side_name] = {idx: {"r": 0, "g": 0, "b": 0} for idx in side}
+    return zero_layer or None
+
+
 def _average_pixels(data):
     """Calculate an average color over all ambilight pixels."""
     color_c = 0
@@ -365,16 +390,55 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         self._update_from_coordinator()
         self.async_write_ha_state()
 
+    async def _async_turn_off_via_cached_zeros(self) -> None:
+        """Turn LEDs off via the cached-pixel path the official app uses.
+
+        Required on firmware where ``setAmbilightMode("internal")`` and
+        ``setAmbilightCurrentConfiguration({"styleName": "OFF"})`` are both
+        silently accepted (200 OK) yet leave the LEDs lit. The sequence is:
+
+        1. POST ``currentconfiguration`` with ``FOLLOW_VIDEO/STANDARD`` to
+           unstick any lounge state and let the TV honour a subsequent mode
+           change.
+        2. POST ``mode=expert`` to switch the renderer to manual pixel mode.
+        3. POST ``cached`` with an all-zero ``layer1`` to actually darken
+           the LEDs.
+        """
+        unstick: AmbilightCurrentConfiguration = {
+            "styleName": "FOLLOW_VIDEO",
+            "isExpert": False,
+            "menuSetting": "STANDARD",
+        }
+        if await self._tv.setAmbilightCurrentConfiguration(unstick) is False:
+            raise HomeAssistantError("Failed to set ambilight configuration")
+
+        if await self._tv.setAmbilightMode("expert") is False:
+            raise HomeAssistantError("Failed to set ambilight mode")
+
+        zero_layer = _build_zero_pixel_layer(self._tv.ambilight_cached)
+        if zero_layer is None:
+            raise HomeAssistantError("Ambilight pixel layout not available")
+
+        if await self._tv.setAmbilightCached({"layer1": zero_layer}) is False:
+            raise HomeAssistantError("Failed to write ambilight pixels")
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn of ambilight."""
 
         if not self._tv.on:
             raise HomeAssistantError("TV is not available")
 
-        if await self._tv.setAmbilightMode("internal") is False:
-            raise HomeAssistantError("Failed to set ambilight mode")
+        if self._tv.quirk_ambilight_mode_ignored:
+            # On quirked firmware the legacy path (setAmbilightMode +
+            # currentconfiguration{styleName: OFF}) returns success while
+            # leaving the LEDs lit. Use the cached-pixel path the official
+            # Philips app uses to actually darken them.
+            await self._async_turn_off_via_cached_zeros()
+        else:
+            if await self._tv.setAmbilightMode("internal") is False:
+                raise HomeAssistantError("Failed to set ambilight mode")
 
-        await self._set_ambilight_config(AmbilightEffect(EFFECT_MODE, "OFF", ""))
+            await self._set_ambilight_config(AmbilightEffect(EFFECT_MODE, "OFF", ""))
 
         self._update_from_coordinator()
         self.async_write_ha_state()
