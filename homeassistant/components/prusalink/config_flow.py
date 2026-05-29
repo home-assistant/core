@@ -16,11 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN
+from .const import DOMAIN, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUEST_TIMEOUT = 5
 
 
 STEP_USER_DATA_SCHEMA = vol.Schema(

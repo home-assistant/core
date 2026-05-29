@@ -109,11 +109,11 @@ async def test_migration_keeps_minor_2_when_serial_missing(
 
 @pytest.mark.parametrize(
     "exception",
-    [TimeoutError, ConnectError("All connection attempts failed"), PrusaLinkError],
+    [TimeoutError(), ConnectError("All connection attempts failed"), PrusaLinkError()],
 )
 async def test_migration_keeps_minor_2_on_transient_info_failures(
     hass: HomeAssistant,
-    exception: Exception | type[Exception],
+    exception: Exception,
 ) -> None:
     """Test migration keeps retry state when fetching serial temporarily fails."""
     entry = MockConfigEntry(

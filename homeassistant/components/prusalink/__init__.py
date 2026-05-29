@@ -1,5 +1,6 @@
 """The PrusaLink integration."""
 
+import asyncio
 from collections.abc import Mapping
 from typing import Any
 
@@ -25,7 +26,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .config_flow import PrusaLinkConfigFlow
-from .const import DOMAIN
+from .const import DOMAIN, REQUEST_TIMEOUT
 from .coordinator import (
     InfoUpdateCoordinator,
     JobUpdateCoordinator,
@@ -144,7 +145,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 )
                 info_data: Mapping[str, Any] | None
                 try:
-                    info_data = await api.get_info()
+                    async with asyncio.timeout(REQUEST_TIMEOUT):
+                        info_data = await api.get_info()
                 except (
                     InvalidAuth,
                     PrusaLinkError,
