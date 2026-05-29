@@ -66,7 +66,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     entities = [
         BleBoxCoverEntity(coordinator, feature)
-        for feature in coordinator.data.features.get("covers", [])
+        for feature in coordinator.box.features.get("covers", [])
     ]
     async_add_entities(entities)
 

@@ -33,7 +33,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     entities = [
         BleBoxBinarySensorEntity(coordinator, feature, description)
-        for feature in coordinator.data.features.get("binary_sensors", [])
+        for feature in coordinator.box.features.get("binary_sensors", [])
         for description in BINARY_SENSOR_TYPES
         if description.key == feature.device_class
     ]

@@ -128,7 +128,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     entities = [
         BleBoxSensorEntity(coordinator, feature, description)
-        for feature in coordinator.data.features.get("sensors", [])
+        for feature in coordinator.box.features.get("sensors", [])
         for description in SENSOR_TYPES
         if description.key == feature.device_class
     ]

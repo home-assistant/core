@@ -15,7 +15,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class BleBoxCoordinator(DataUpdateCoordinator[Box]):
+class BleBoxCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a single BleBox device."""
 
     config_entry: ConfigEntry
@@ -33,10 +33,14 @@ class BleBoxCoordinator(DataUpdateCoordinator[Box]):
         )
         self._box = box
 
-    async def _async_update_data(self) -> Box:
+    @property
+    def box(self) -> Box:
+        """Return the BleBox device."""
+        return self._box
+
+    async def _async_update_data(self) -> None:
         """Fetch data from the BleBox device."""
         try:
-            await self._box.async_update_data()
+            await self.box.async_update_data()
         except Error as err:
             raise UpdateFailed(str(err)) from err
-        return self._box
