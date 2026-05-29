@@ -47,6 +47,116 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door_boot": {
+        "name": "Tailgate"
+      },
+      "door_engine_hood": {
+        "name": "Hood"
+      },
+      "door_front_left": {
+        "name": "Door front left"
+      },
+      "door_front_right": {
+        "name": "Door front right"
+      },
+      "door_rear_left": {
+        "name": "Door rear left"
+      },
+      "door_rear_right": {
+        "name": "Door rear right"
+      },
+      "health_istrouble": {
+        "name": "Vehicle health"
+      },
+      "lock_status_boot": {
+        "name": "Lock status tailgate"
+      },
+      "lock_status_front_left": {
+        "name": "Lock status front left"
+      },
+      "lock_status_front_right": {
+        "name": "Lock status front right"
+      },
+      "lock_status_rear_left": {
+        "name": "Lock status rear left"
+      },
+      "lock_status_rear_right": {
+        "name": "Lock status rear right"
+      },
+      "mil_abs": {
+        "name": "ABS warning"
+      },
+      "mil_atf": {
+        "name": "Transmission temperature warning"
+      },
+      "mil_awd": {
+        "name": "AWD warning"
+      },
+      "mil_bsdrct": {
+        "name": "Blind spot and rear cross traffic warning"
+      },
+      "mil_cel": {
+        "name": "Check engine"
+      },
+      "mil_ebd": {
+        "name": "Electronic brakeforce distribution warning"
+      },
+      "mil_eol": {
+        "name": "Engine oil level warning"
+      },
+      "mil_epas": {
+        "name": "Electric power steering warning"
+      },
+      "mil_epb": {
+        "name": "Electric parking brake warning"
+      },
+      "mil_ess": {
+        "name": "EyeSight warning"
+      },
+      "mil_iss": {
+        "name": "Idle stop & start warning"
+      },
+      "mil_opl": {
+        "name": "Oil pressure warning"
+      },
+      "mil_rab": {
+        "name": "Reverse automatic braking warning"
+      },
+      "mil_srh": {
+        "name": "Steering responsive headlights warning"
+      },
+      "mil_srs": {
+        "name": "Airbag warning"
+      },
+      "mil_tel": {
+        "name": "Telematics warning"
+      },
+      "mil_tpms": {
+        "name": "Tire pressure warning"
+      },
+      "mil_vdc": {
+        "name": "Vehicle dynamics control warning"
+      },
+      "mil_wash": {
+        "name": "Washer fluid warning"
+      },
+      "window_front_left": {
+        "name": "Window front left"
+      },
+      "window_front_right": {
+        "name": "Window front right"
+      },
+      "window_rear_left": {
+        "name": "Window rear left"
+      },
+      "window_rear_right": {
+        "name": "Window rear right"
+      },
+      "window_sunroof": {
+        "name": "Sunroof"
+      }
+    },
     "button": {
       "remote_start": {
         "name": "Remote start"
@@ -67,8 +177,17 @@
       "ev_battery_level": {
         "name": "EV battery level"
       },
+      "ev_charger_state": {
+        "name": "EV charger state"
+      },
+      "ev_is_plugged_in": {
+        "name": "EV plug status"
+      },
       "ev_range": {
         "name": "EV range"
+      },
+      "ev_state_of_charge_mode": {
+        "name": "EV charge mode"
       },
       "ev_time_to_full_charge": {
         "name": "EV time to full charge"
@@ -82,6 +201,12 @@
       "range": {
         "name": "Range"
       },
+      "recommended_tire_pressure_front": {
+        "name": "Recommended tire pressure front"
+      },
+      "recommended_tire_pressure_rear": {
+        "name": "Recommended tire pressure rear"
+      },
       "tire_pressure_front_left": {
         "name": "Tire pressure front left"
       },
@@ -93,6 +218,9 @@
       },
       "tire_pressure_rear_right": {
         "name": "Tire pressure rear right"
+      },
+      "vehicle_state": {
+        "name": "Vehicle state"
       }
     }
   },

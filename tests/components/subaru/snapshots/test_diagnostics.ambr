@@ -10,6 +10,27 @@
     }),
     'data': list([
       dict({
+        'vehicle_features': list([
+          'TPMS_MIL',
+          'CEL_MIL',
+        ]),
+        'vehicle_health': dict({
+          'FEATURES': dict({
+            'CEL_MIL': dict({
+              'ISTROUBLE': True,
+              'ONDATE': None,
+            }),
+            'TPMS_MIL': dict({
+              'ISTROUBLE': False,
+              'ONDATE': None,
+            }),
+          }),
+          'ISTROUBLE': False,
+          'RECOMMENDED_TIRE_PRESSURE': dict({
+            'FRONT_TIRES': 35,
+            'REAR_TIRES': 33,
+          }),
+        }),
         'vehicle_status': dict({
           'AVG_FUEL_CONSUMPTION': 51.1,
           'DISTANCE_TO_EMPTY_FUEL': 170,
@@ -28,6 +49,11 @@
           'EV_STATE_OF_CHARGE_PERCENT': 20,
           'EV_TIME_TO_FULLY_CHARGED_UTC': '2020-07-24T03:06:40+00:00',
           'LATITUDE': '**REDACTED**',
+          'LOCK_BOOT_STATUS': 'LOCKED',
+          'LOCK_FRONT_LEFT_STATUS': 'LOCKED',
+          'LOCK_FRONT_RIGHT_STATUS': 'LOCKED',
+          'LOCK_REAR_LEFT_STATUS': 'LOCKED',
+          'LOCK_REAR_RIGHT_STATUS': 'LOCKED',
           'LONGITUDE': '**REDACTED**',
           'ODOMETER': '**REDACTED**',
           'TIMESTAMP': 1595560000.0,
@@ -61,6 +87,27 @@
       'username': '**REDACTED**',
     }),
     'data': dict({
+      'vehicle_features': list([
+        'TPMS_MIL',
+        'CEL_MIL',
+      ]),
+      'vehicle_health': dict({
+        'FEATURES': dict({
+          'CEL_MIL': dict({
+            'ISTROUBLE': True,
+            'ONDATE': None,
+          }),
+          'TPMS_MIL': dict({
+            'ISTROUBLE': False,
+            'ONDATE': None,
+          }),
+        }),
+        'ISTROUBLE': False,
+        'RECOMMENDED_TIRE_PRESSURE': dict({
+          'FRONT_TIRES': 35,
+          'REAR_TIRES': 33,
+        }),
+      }),
       'vehicle_status': dict({
         'AVG_FUEL_CONSUMPTION': 51.1,
         'DISTANCE_TO_EMPTY_FUEL': 170,
@@ -79,6 +126,11 @@
         'EV_STATE_OF_CHARGE_PERCENT': 20,
         'EV_TIME_TO_FULLY_CHARGED_UTC': '2020-07-24T03:06:40+00:00',
         'LATITUDE': '**REDACTED**',
+        'LOCK_BOOT_STATUS': 'LOCKED',
+        'LOCK_FRONT_LEFT_STATUS': 'LOCKED',
+        'LOCK_FRONT_RIGHT_STATUS': 'LOCKED',
+        'LOCK_REAR_LEFT_STATUS': 'LOCKED',
+        'LOCK_REAR_RIGHT_STATUS': 'LOCKED',
         'LONGITUDE': '**REDACTED**',
         'ODOMETER': '**REDACTED**',
         'TIMESTAMP': 1595560000.0,

@@ -1,5 +1,9 @@
 """Support for Subaru sensors."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import date, datetime
+from decimal import Decimal
 import logging
 from typing import Any
 
@@ -16,6 +20,7 @@ from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -24,8 +29,10 @@ from . import get_device_info
 from .const import (
     API_GEN_2,
     API_GEN_3,
+    API_GEN_4,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
+    VEHICLE_HEALTH,
     VEHICLE_STATUS,
     VEHICLE_VIN,
 )
@@ -41,9 +48,43 @@ FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
 L_PER_GAL = VolumeConverter.convert(1, UnitOfVolume.GALLONS, UnitOfVolume.LITERS)
 KM_PER_MI = DistanceConverter.convert(1, UnitOfLength.MILES, UnitOfLength.KILOMETERS)
 
+# Dict keys returned by subarulink controller.get_data(). The integration's own
+# VEHICLE_STATUS / VEHICLE_HEALTH constants match the same string values.
+API_KEY_VEHICLE_STATE_TYPE = "VEHICLE_STATE_TYPE"
+API_KEY_EV_CHARGER_STATE_TYPE = "EV_CHARGER_STATE_TYPE"
+API_KEY_EV_IS_PLUGGED_IN = "EV_IS_PLUGGED_IN"
+API_KEY_EV_STATE_OF_CHARGE_MODE = "EV_STATE_OF_CHARGE_MODE"
+API_KEY_RECOMMENDED_TIRE_PRESSURE = "RECOMMENDED_TIRE_PRESSURE"
+API_KEY_FRONT_TIRES = "FRONT_TIRES"
+API_KEY_REAR_TIRES = "REAR_TIRES"
+
+
+@dataclass(frozen=True, kw_only=True)
+class SubaruSensorEntityDescription(SensorEntityDescription):
+    """Describes a Subaru sensor entity.
+
+    value_fn is used for sensors that read from somewhere other than
+    vehicle_status (e.g. nested values in vehicle_health). When None, the
+    sensor reads vehicle_status[key].
+    """
+
+    value_fn: Callable[[dict[str, Any]], Any] | None = None
+
+
+def _recommended_tire_pressure(side: str) -> Callable[[dict[str, Any]], Any]:
+    """Return a getter for recommended FRONT or REAR tire pressure from vehicle_health."""
+
+    def getter(data: dict[str, Any]) -> Any:
+        health = data.get(VEHICLE_HEALTH) or {}
+        recommended = health.get(API_KEY_RECOMMENDED_TIRE_PRESSURE) or {}
+        return recommended.get(side)
+
+    return getter
+
+
 # Sensor available for Gen1 or Gen2 vehicles
 SAFETY_SENSORS = [
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.ODOMETER,
         translation_key="odometer",
         device_class=SensorDeviceClass.DISTANCE,
@@ -54,52 +95,70 @@ SAFETY_SENSORS = [
 
 # Sensors available to subscribers with Gen2/Gen3 vehicles
 API_GEN_2_SENSORS = [
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.AVG_FUEL_CONSUMPTION,
         translation_key="average_fuel_consumption",
         native_unit_of_measurement=FUEL_CONSUMPTION_MILES_PER_GALLON,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.DIST_TO_EMPTY,
         translation_key="range",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.TIRE_PRESSURE_FL,
         translation_key="tire_pressure_front_left",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.TIRE_PRESSURE_FR,
         translation_key="tire_pressure_front_right",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.TIRE_PRESSURE_RL,
         translation_key="tire_pressure_rear_left",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.TIRE_PRESSURE_RR,
         translation_key="tire_pressure_rear_right",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    SubaruSensorEntityDescription(
+        key=API_KEY_VEHICLE_STATE_TYPE,
+        translation_key="vehicle_state",
+    ),
+    SubaruSensorEntityDescription(
+        key="recommended_tire_pressure_front",
+        translation_key="recommended_tire_pressure_front",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.PSI,
+        value_fn=_recommended_tire_pressure(API_KEY_FRONT_TIRES),
+    ),
+    SubaruSensorEntityDescription(
+        key="recommended_tire_pressure_rear",
+        translation_key="recommended_tire_pressure_rear",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.PSI,
+        value_fn=_recommended_tire_pressure(API_KEY_REAR_TIRES),
+    ),
 ]
 
 # Sensors available for Gen3 vehicles
 API_GEN_3_SENSORS = [
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.REMAINING_FUEL_PERCENT,
         translation_key="fuel_level",
         native_unit_of_measurement=PERCENTAGE,
@@ -109,24 +168,36 @@ API_GEN_3_SENSORS = [
 
 # Sensors available to subscribers with PHEV vehicles
 EV_SENSORS = [
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.EV_DISTANCE_TO_EMPTY,
         translation_key="ev_range",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.EV_STATE_OF_CHARGE_PERCENT,
         translation_key="ev_battery_level",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SubaruSensorEntityDescription(
         key=sc.EV_TIME_TO_FULLY_CHARGED_UTC,
         translation_key="ev_time_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SubaruSensorEntityDescription(
+        key=API_KEY_EV_CHARGER_STATE_TYPE,
+        translation_key="ev_charger_state",
+    ),
+    SubaruSensorEntityDescription(
+        key=API_KEY_EV_IS_PLUGGED_IN,
+        translation_key="ev_is_plugged_in",
+    ),
+    SubaruSensorEntityDescription(
+        key=API_KEY_EV_STATE_OF_CHARGE_MODE,
+        translation_key="ev_state_of_charge_mode",
     ),
 ]
 
@@ -153,10 +224,10 @@ def create_vehicle_sensors(
     sensor_descriptions_to_add = []
     sensor_descriptions_to_add.extend(SAFETY_SENSORS)
 
-    if vehicle_info[VEHICLE_API_GEN] in [API_GEN_2, API_GEN_3]:
+    if vehicle_info[VEHICLE_API_GEN] in [API_GEN_2, API_GEN_3, API_GEN_4]:
         sensor_descriptions_to_add.extend(API_GEN_2_SENSORS)
 
-    if vehicle_info[VEHICLE_API_GEN] == API_GEN_3:
+    if vehicle_info[VEHICLE_API_GEN] in [API_GEN_3, API_GEN_4]:
         sensor_descriptions_to_add.extend(API_GEN_3_SENSORS)
 
     if vehicle_info[VEHICLE_HAS_EV]:
@@ -176,12 +247,13 @@ class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity)
     """Class for Subaru sensors."""
 
     _attr_has_entity_name = True
+    entity_description: SubaruSensorEntityDescription
 
     def __init__(
         self,
         vehicle_info: dict,
         coordinator: SubaruDataUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: SubaruSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -191,14 +263,19 @@ class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity)
         self._attr_unique_id = f"{self.vin}_{description.key}"
 
     @property
-    def native_value(self) -> int | float | None:
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the state of the sensor."""
-        current_value = self.coordinator.data[self.vin][VEHICLE_STATUS].get(
-            self.entity_description.key
-        )
+        vehicle_data = self.coordinator.data[self.vin]
+        if self.entity_description.value_fn is not None:
+            current_value = self.entity_description.value_fn(vehicle_data)
+        else:
+            current_value = vehicle_data[VEHICLE_STATUS].get(
+                self.entity_description.key
+            )
 
         if (
             self.entity_description.key == sc.AVG_FUEL_CONSUMPTION
+            and current_value is not None
             and self.hass.config.units == METRIC_SYSTEM
         ):
             return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)

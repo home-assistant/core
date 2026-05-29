@@ -145,3 +145,6 @@ pytest_buckets.txt
 .claude/worktrees/
 .serena/
 
+# Local development scratch (docker-compose testbed, HA config, etc).
+.dev/
+
