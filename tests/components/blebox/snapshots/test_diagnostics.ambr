@@ -1,0 +1,87 @@
+# serializer version: 1
+# name: test_diagnostics[no_credentials]
+  dict({
+    'device': dict({
+      'api_version': 20200229,
+      'available_firmware_version': '1.0.1',
+      'firmware_version': '1.0.0',
+      'hardware_version': '0.1',
+      'last_data': dict({
+        'relay': list([
+          dict({
+            'state': 0,
+          }),
+        ]),
+      }),
+      'model': 'BleBox switchBox',
+      'name': 'My Device',
+      'type': 'switchBox',
+      'unique_id': 'aabbccddeeff',
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '172.100.123.4',
+        'port': 80,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'blebox',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---
+# name: test_diagnostics[with_credentials]
+  dict({
+    'device': dict({
+      'api_version': 20200229,
+      'available_firmware_version': '1.0.1',
+      'firmware_version': '1.0.0',
+      'hardware_version': '0.1',
+      'last_data': dict({
+        'relay': list([
+          dict({
+            'state': 0,
+          }),
+        ]),
+      }),
+      'model': 'BleBox switchBox',
+      'name': 'My Device',
+      'type': 'switchBox',
+      'unique_id': 'aabbccddeeff',
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '172.100.123.4',
+        'password': '**REDACTED**',
+        'port': 80,
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'blebox',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---
