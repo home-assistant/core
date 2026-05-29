@@ -24,9 +24,38 @@ CONF_DATA = {
 
 
 def _create_mocked_device(
-    throw_exception=False, wired_mac=MAC, wireless_mac=None, no_soundfield=False
+    throw_exception=False,
+    wired_mac=MAC,
+    wireless_mac=None,
+    no_soundfield=False,
+    with_zones=False,
 ):
     mocked_device = MagicMock()
+
+    zones = []
+    if with_zones:
+        zone1 = MagicMock()
+        zone1.title = "Main Zone"
+        zone1.uri = "extOutput:zone?zone=1"
+        zone1.active = True
+        zone1.activate = AsyncMock()
+        mocked_device.zone1 = zone1
+
+        zone2 = MagicMock()
+        zone2.title = "Zone 2"
+        zone2.uri = "extOutput:zone?zone=2"
+        zone2.active = True
+        zone2.activate = AsyncMock()
+        mocked_device.zone2 = zone2
+
+        zone3 = MagicMock()
+        zone3.title = "Zone 3"
+        zone3.uri = "extOutput:zone?zone=3"
+        zone3.active = False
+        zone3.activate = AsyncMock()
+        mocked_device.zone3 = zone3
+
+        zones = [zone1, zone2, zone3]
 
     type(mocked_device).get_supported_methods = AsyncMock(
         side_effect=SongpalException("Unable to do POST request: ")
@@ -59,6 +88,7 @@ def _create_mocked_device(
     volume1.minVolume = 0
     volume1.volume = 50
     volume1.is_muted = False
+    volume1.output = "extOutput:zone?zone=1" if with_zones else ""
     volume1.set_volume = AsyncMock()
     volume1.set_mute = AsyncMock()
     volume2 = MagicMock()
@@ -66,7 +96,9 @@ def _create_mocked_device(
     volume2.minVolume = 0
     volume2.volume = 20
     volume2.is_muted = True
+    volume2.output = "extOutput:zone?zone=2" if with_zones else ""
     mocked_device.volume1 = volume1
+    mocked_device.volume2 = volume2
     type(mocked_device).get_volume_information = AsyncMock(
         return_value=[volume1, volume2]
     )
@@ -79,13 +111,32 @@ def _create_mocked_device(
     input1.title = "title1"
     input1.uri = "uri1"
     input1.active = False
+    input1.outputs = [zone.uri for zone in zones] if with_zones else []
     input1.activate = AsyncMock()
     mocked_device.input1 = input1
     input2 = MagicMock()
     input2.title = "title2"
     input2.uri = "uri2"
     input2.active = True
+    input2.outputs = [zones[0].uri] if with_zones else []
+    input2.activate = AsyncMock()
+    mocked_device.input2 = input2
     type(mocked_device).get_inputs = AsyncMock(return_value=[input1, input2])
+
+    if with_zones:
+        type(mocked_device).get_zones = AsyncMock(return_value=zones)
+    else:
+        type(mocked_device).get_zones = AsyncMock(
+            side_effect=SongpalException("Device has no zones")
+        )
+
+    async def _get_zone(name: str):
+        for zone in zones:
+            if zone.title == name:
+                return zone
+        raise SongpalException(f"Unable to find zone {name}")
+
+    type(mocked_device).get_zone = AsyncMock(side_effect=_get_zone)
 
     sound_mode1 = MagicMock()
     sound_mode1.title = "Sound Mode 1"
