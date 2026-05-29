@@ -4,19 +4,15 @@
     'device': dict({
       'api_version': 20200229,
       'available_firmware_version': '1.0.1',
-      'firmware_version': '1.0.0',
+      'firmware_version': '1.23',
       'hardware_version': '0.1',
       'last_data': dict({
-        'relay': list([
-          dict({
-            'state': 0,
-          }),
-        ]),
+        'state': 1,
       }),
-      'model': 'BleBox switchBox',
-      'name': 'My Device',
-      'type': 'switchBox',
-      'unique_id': 'aabbccddeeff',
+      'model': 'some model',
+      'name': 'Some name',
+      'type': 'some type',
+      'unique_id': 'abcd0123ef5678',
     }),
     'entry': dict({
       'data': dict({
@@ -46,19 +42,15 @@
     'device': dict({
       'api_version': 20200229,
       'available_firmware_version': '1.0.1',
-      'firmware_version': '1.0.0',
+      'firmware_version': '1.23',
       'hardware_version': '0.1',
       'last_data': dict({
-        'relay': list([
-          dict({
-            'state': 0,
-          }),
-        ]),
+        'state': 1,
       }),
-      'model': 'BleBox switchBox',
-      'name': 'My Device',
-      'type': 'switchBox',
-      'unique_id': 'aabbccddeeff',
+      'model': 'some model',
+      'name': 'Some name',
+      'type': 'some type',
+      'unique_id': 'abcd0123ef5678',
     }),
     'entry': dict({
       'data': dict({
