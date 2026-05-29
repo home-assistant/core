@@ -11,9 +11,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     PERCENTAGE,
+    UnitOfDensity,
     UnitOfPressure,
     UnitOfTemperature,
 )
@@ -76,14 +76,14 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_PM1,
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM25,
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         attrs=lambda data: {
@@ -94,7 +94,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_PM10,
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         attrs=lambda data: {
@@ -126,7 +126,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CO,
         device_class=SensorDeviceClass.CO,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         attrs=lambda data: {
@@ -137,7 +137,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_NO2,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         attrs=lambda data: {
@@ -148,7 +148,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_SO2,
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         attrs=lambda data: {
@@ -159,7 +159,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_O3,
         device_class=SensorDeviceClass.OZONE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         attrs=lambda data: {

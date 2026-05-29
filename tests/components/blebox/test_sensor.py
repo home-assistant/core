@@ -10,8 +10,8 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     STATE_UNKNOWN,
+    UnitOfDensity,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -150,7 +150,7 @@ async def test_airsensor_update(airsensor, hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert (
         state.attributes[ATTR_UNIT_OF_MEASUREMENT]
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     )
 
     assert state.state == "49"

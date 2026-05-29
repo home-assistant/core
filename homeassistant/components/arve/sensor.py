@@ -12,9 +12,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfDensity,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -54,14 +54,14 @@ SENSORS: tuple[ArveDeviceEntityDescription, ...] = (
     ),
     ArveDeviceEntityDescription(
         key="PM10",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         value_fn=lambda arve_data: arve_data.pm10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ArveDeviceEntityDescription(
         key="PM25",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         value_fn=lambda arve_data: arve_data.pm25,
         state_class=SensorStateClass.MEASUREMENT,

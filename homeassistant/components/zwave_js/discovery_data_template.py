@@ -102,13 +102,13 @@ from zwave_js_server.util.command_class.multilevel_sensor import (
 )
 
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UV_INDEX,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -217,7 +217,7 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, list[MultilevelSensorScaleType]] = {
     UnitOfSoundPressure.DECIBEL: UNIT_DECIBEL,
     UnitOfSoundPressure.WEIGHTED_DECIBEL_A: UNIT_A_WEIGHTED_DECIBELS,
     DEGREE: UNIT_DEGREES,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: [
+    UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: [
         *UNIT_DENSITY,
         *UNIT_MICROGRAM_PER_CUBIC_METER,
     ],

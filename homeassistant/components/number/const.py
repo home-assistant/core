@@ -6,10 +6,6 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
@@ -22,6 +18,7 @@ from homeassistant.const import (
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -507,8 +504,8 @@ class NumberDeviceClass(StrEnum):
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.ABSOLUTE_HUMIDITY: {
-        CONCENTRATION_GRAMS_PER_CUBIC_METER,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.GRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     NumberDeviceClass.AQI: {None},
@@ -519,8 +516,8 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.CO: {
         CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
@@ -554,23 +551,23 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.NITROGEN_DIOXIDE: {
         CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.NITROGEN_MONOXIDE: {
         CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
-    NumberDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.NITROUS_OXIDE: {UnitOfDensity.MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.OZONE: {
         CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.PH: {None},
-    NumberDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.PM4: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PM1: {UnitOfDensity.MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PM10: {UnitOfDensity.MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PM25: {UnitOfDensity.MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PM4: {UnitOfDensity.MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     NumberDeviceClass.POWER: {
         UnitOfPower.MILLIWATT,
@@ -593,13 +590,13 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
     NumberDeviceClass.SULPHUR_DIOXIDE: {
         CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     NumberDeviceClass.TEMPERATURE_DELTA: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {
         CONCENTRATION_PARTS_PER_BILLION,
@@ -672,8 +669,8 @@ AMBIGUOUS_UNITS: dict[str | None, str] = {
     "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
     "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
     "\u00b5V": UnitOfElectricPotential.MICROVOLT,
-    "\u00b5g/ft³": CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
-    "\u00b5g/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "\u00b5g/ft³": UnitOfDensity.MICROGRAMS_PER_CUBIC_FOOT,
+    "\u00b5g/m³": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     "\u00b5mol/s⋅m²": "μmol/s⋅m²",  # fyta: light
     "\u00b5g": UnitOfMass.MICROGRAMS,
     "\u00b5s": UnitOfTime.MICROSECONDS,

@@ -14,13 +14,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     UV_INDEX,
     EntityCategory,
+    UnitOfDensity,
     UnitOfElectricPotential,
     UnitOfIrradiance,
     UnitOfLength,
@@ -122,13 +122,13 @@ ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.PM25: SensorEntityDescription(
         key="PM25",
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.PM10: SensorEntityDescription(
         key="PM10",
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.BATTERY_PERCENTAGE: SensorEntityDescription(
@@ -286,13 +286,13 @@ ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.PM1: SensorEntityDescription(
         key="PM1",
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.PM4: SensorEntityDescription(
         key="PM4",
         device_class=SensorDeviceClass.PM4,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }

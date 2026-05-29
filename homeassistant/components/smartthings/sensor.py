@@ -15,12 +15,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
     UnitOfArea,
+    UnitOfDensity,
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
@@ -468,7 +468,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.DUST_LEVEL,
                 device_class=SensorDeviceClass.PM10,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ],
@@ -476,7 +476,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.FINE_DUST_LEVEL,
                 device_class=SensorDeviceClass.PM25,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ],
@@ -528,7 +528,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.FINE_DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.FINE_DUST_LEVEL,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
                 device_class=SensorDeviceClass.PM25,
             )
@@ -1124,7 +1124,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.VERY_FINE_DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.VERY_FINE_DUST_LEVEL,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM1,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -1319,7 +1319,7 @@ UNITS = {
     "ccf": UnitOfVolume.CENTUM_CUBIC_FEET,
     "lux": LIGHT_LUX,
     "mG": None,
-    "μg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "μg/m^3": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     "kPa": UnitOfPressure.KPA,
 }
 

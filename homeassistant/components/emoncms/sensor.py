@@ -9,11 +9,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_URL,
     PERCENTAGE,
     UnitOfApparentPower,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -158,7 +158,7 @@ SENSORS: dict[str | None, SensorEntityDescription] = {
     "μg/m³": SensorEntityDescription(
         key="concentration|microgram_per_cubic_meter",
         translation_key="concentration",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "ppm": SensorEntityDescription(

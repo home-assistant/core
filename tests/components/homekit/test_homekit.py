@@ -50,7 +50,6 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STARTED,
@@ -58,6 +57,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_ON,
     EntityCategory,
+    UnitOfDensity,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
@@ -2241,7 +2241,7 @@ async def test_homekit_finds_linked_air_purifier_sensors(
         8,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.PM25,
-            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         },
     )
     hass.states.async_set(

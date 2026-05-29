@@ -12,9 +12,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfPower,
@@ -400,14 +400,14 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CompitParameter.PM4_LEVEL_MEASURED: SensorEntityDescription(
         key=CompitParameter.PM4_LEVEL_MEASURED.value,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.PM4,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CompitParameter.PM10_LEVEL: SensorEntityDescription(
         key=CompitParameter.PM10_LEVEL.value,
@@ -421,7 +421,7 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         key=CompitParameter.PM10_MEASURED.value,
         device_class=SensorDeviceClass.PM10,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CompitParameter.PM25_LEVEL: SensorEntityDescription(
         key=CompitParameter.PM25_LEVEL.value,
@@ -435,7 +435,7 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         key=CompitParameter.PM25_MEASURED.value,
         device_class=SensorDeviceClass.PM25,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CompitParameter.PROTECTION_TEMPERATURE: SensorEntityDescription(
         key=CompitParameter.PROTECTION_TEMPERATURE.value,

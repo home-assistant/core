@@ -8,11 +8,11 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     STATE_OFF,
     STATE_ON,
+    UnitOfDensity,
 )
 from homeassistant.core import HomeAssistant
 
@@ -32,7 +32,7 @@ from tests.components.common import (
 )
 
 _UGM3_UNIT_ATTRIBUTES = {
-    ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
 }
 _PPB_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION}
 _PPM_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION}
@@ -96,7 +96,7 @@ _UGM3_THRESHOLD = {
         "type": "above",
         "value": {
             "number": 50,
-            "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            "unit_of_measurement": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         },
     }
 }
@@ -305,19 +305,19 @@ async def test_air_quality_binary_condition_behavior_all(
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_co_value",
             device_class="carbon_monoxide",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_ozone_value",
             device_class="ozone",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_voc_value",
             device_class="volatile_organic_compounds",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
@@ -329,19 +329,19 @@ async def test_air_quality_binary_condition_behavior_all(
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_no_value",
             device_class="nitrogen_monoxide",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_no2_value",
             device_class="nitrogen_dioxide",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_so2_value",
             device_class="sulphur_dioxide",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
     ],
@@ -380,19 +380,19 @@ async def test_air_quality_numerical_with_unit_condition_behavior_any(
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_co_value",
             device_class="carbon_monoxide",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_ozone_value",
             device_class="ozone",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_voc_value",
             device_class="volatile_organic_compounds",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
@@ -404,19 +404,19 @@ async def test_air_quality_numerical_with_unit_condition_behavior_any(
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_no_value",
             device_class="nitrogen_monoxide",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_no2_value",
             device_class="nitrogen_dioxide",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_so2_value",
             device_class="sulphur_dioxide",
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
     ],
@@ -581,7 +581,7 @@ async def test_air_quality_condition_unit_conversion_co(
     hass: HomeAssistant,
 ) -> None:
     """Test that the CO condition converts units correctly."""
-    _unit_ugm3 = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}
+    _unit_ugm3 = {ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER}
     _unit_ppm = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION}
     _unit_invalid = {ATTR_UNIT_OF_MEASUREMENT: "not_a_valid_unit"}
 
@@ -594,7 +594,7 @@ async def test_air_quality_condition_unit_conversion_co(
                 "state": "500",
                 "attributes": {
                     "device_class": "carbon_monoxide",
-                    ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                    ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 },
             }
         ],
@@ -603,7 +603,7 @@ async def test_air_quality_condition_unit_conversion_co(
                 "state": "100",
                 "attributes": {
                     "device_class": "carbon_monoxide",
-                    ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                    ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 },
             }
         ],
@@ -626,11 +626,11 @@ async def test_air_quality_condition_unit_conversion_co(
                     "type": "between",
                     "value_min": {
                         "number": 200,
-                        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                        "unit_of_measurement": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                     },
                     "value_max": {
                         "number": 800,
-                        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                        "unit_of_measurement": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                     },
                 }
             },

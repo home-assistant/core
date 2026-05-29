@@ -9,11 +9,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_MAC,
     DEGREE,
     PERCENTAGE,
+    UnitOfDensity,
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfPrecipitationDepth,
@@ -187,14 +187,14 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_PM25_24H,
         translation_key="pm25_24h_average",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         suggested_display_precision=1,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,

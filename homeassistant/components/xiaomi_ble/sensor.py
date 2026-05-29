@@ -18,12 +18,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfConductivity,
+    UnitOfDensity,
     UnitOfElectricPotential,
     UnitOfMass,
     UnitOfPressure,
@@ -57,7 +57,7 @@ SENSOR_DESCRIPTIONS = {
         Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     ): SensorEntityDescription(
         key=f"{DeviceClass.FORMALDEHYDE}_{Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER}",
-        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(

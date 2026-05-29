@@ -12,10 +12,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfDensity,
     UnitOfPressure,
     UnitOfTemperature,
 )
@@ -72,7 +72,7 @@ SENSOR_TYPES: tuple[UhooSensorEntityDescription, ...] = (
     UhooSensorEntityDescription(
         key=API_PM25,
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.pm25,
     ),

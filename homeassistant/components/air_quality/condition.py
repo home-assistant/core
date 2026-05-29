@@ -6,11 +6,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     STATE_OFF,
     STATE_ON,
+    UnitOfDensity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
@@ -60,12 +60,12 @@ CONDITIONS: dict[str, type[Condition]] = {
     # Numerical sensor conditions with unit conversion
     "is_co_value": make_entity_numerical_condition_with_unit(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.CO)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         CarbonMonoxideConcentrationConverter,
     ),
     "is_ozone_value": make_entity_numerical_condition_with_unit(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.OZONE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         OzoneConcentrationConverter,
     ),
     "is_voc_value": make_entity_numerical_condition_with_unit(
@@ -74,7 +74,7 @@ CONDITIONS: dict[str, type[Condition]] = {
                 device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
             )
         },
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         MassVolumeConcentrationConverter,
     ),
     "is_voc_ratio_value": make_entity_numerical_condition_with_unit(
@@ -88,17 +88,17 @@ CONDITIONS: dict[str, type[Condition]] = {
     ),
     "is_no_value": make_entity_numerical_condition_with_unit(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.NITROGEN_MONOXIDE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         NitrogenMonoxideConcentrationConverter,
     ),
     "is_no2_value": make_entity_numerical_condition_with_unit(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.NITROGEN_DIOXIDE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         NitrogenDioxideConcentrationConverter,
     ),
     "is_so2_value": make_entity_numerical_condition_with_unit(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.SULPHUR_DIOXIDE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         SulphurDioxideConcentrationConverter,
     ),
     # Numerical sensor conditions without unit conversion (single-unit device classes)
@@ -108,23 +108,23 @@ CONDITIONS: dict[str, type[Condition]] = {
     ),
     "is_pm1_value": make_entity_numerical_condition(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.PM1)},
-        valid_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        valid_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     "is_pm25_value": make_entity_numerical_condition(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.PM25)},
-        valid_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        valid_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     "is_pm4_value": make_entity_numerical_condition(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.PM4)},
-        valid_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        valid_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     "is_pm10_value": make_entity_numerical_condition(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.PM10)},
-        valid_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        valid_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     "is_n2o_value": make_entity_numerical_condition(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.NITROUS_OXIDE)},
-        valid_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        valid_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
 }
 

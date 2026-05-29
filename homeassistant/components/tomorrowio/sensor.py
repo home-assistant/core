@@ -21,10 +21,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     PERCENTAGE,
+    UnitOfDensity,
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfPressure,
@@ -200,7 +200,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key="ozone",
         attribute=TMRW_ATTR_OZONE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         multiplication_factor=convert_ppb_to_ugm3(48),
         device_class=SensorDeviceClass.OZONE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -208,14 +208,14 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key="particulate_matter_2_5_mm",
         attribute=TMRW_ATTR_PARTICULATE_MATTER_25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key="particulate_matter_10_mm",
         attribute=TMRW_ATTR_PARTICULATE_MATTER_10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -224,7 +224,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key="nitrogen_dioxide",
         attribute=TMRW_ATTR_NITROGEN_DIOXIDE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         multiplication_factor=convert_ppb_to_ugm3(46.01),
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -243,7 +243,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key="sulphur_dioxide",
         attribute=TMRW_ATTR_SULPHUR_DIOXIDE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         multiplication_factor=convert_ppb_to_ugm3(64.07),
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         state_class=SensorStateClass.MEASUREMENT,
