@@ -1702,6 +1702,44 @@ async def test_setup_raise_not_ready(
     assert entry.reason is None
 
 
+async def test_setup_not_ready_exponential_backoff(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test setup retry uses exponential backoff capped at 10 minutes."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    attempts = 0
+
+    async def _mock_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        nonlocal attempts
+        attempts += 1
+        raise ConfigEntryNotReady
+
+    mock_integration(hass, MockModule("test", async_setup_entry=_mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    await manager.async_setup(entry.entry_id)
+    assert attempts == 1
+
+    expected_waits = [5, 10, 20, 40, 80, 160, 320, 600, 600]
+    for i, wait in enumerate(expected_waits):
+        # Advance to just before the retry should fire
+        freezer.tick(wait - 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert attempts == i + 1, f"Retry {i + 1} fired too early"
+
+        # Advance past the retry point (+ 1s for jitter)
+        freezer.tick(2)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert attempts == i + 2, f"Retry {i + 1} did not fire"
+        assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
 async def test_setup_raise_not_ready_from_exception(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
