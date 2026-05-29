@@ -34,7 +34,7 @@ def toon_exception_handler[_ToonEntityT: ToonEntity, **_P](
         except ToonError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="unknown_error",
+                translation_key="invalid_response",
             ) from error
 
     return handler
