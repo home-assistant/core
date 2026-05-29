@@ -118,9 +118,12 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         """Initialise a HomeKit number control."""
         self.entity_description = description
         super().__init__(conn, info, char)
+        feature_translation_key = description.translation_key or (
+            str(description.device_class) if description.device_class else None
+        )
         if description.has_entity_name and (
             translation := service_feature_translation(
-                char.service, description.translation_key or description.device_class
+                char.service, feature_translation_key
             )
         ):
             self._attr_translation_key, translation_placeholders = translation

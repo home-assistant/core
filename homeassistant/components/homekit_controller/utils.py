@@ -68,14 +68,14 @@ class ServiceFeatureScope:
     translation_placeholders: Mapping[str, str]
 
 
-def normalized_service_label_index(service: Service) -> str | int | float | None:
+def normalized_service_label_index(service: Service) -> str | None:
     """Return a normalized HomeKit service label index."""
     service_label_index = service.value(CharacteristicsTypes.SERVICE_LABEL_INDEX)
     if service_label_index is None:
         return None
     if isinstance(service_label_index, float) and service_label_index.is_integer():
-        return int(service_label_index)
-    return cast(str | int | float, service_label_index)
+        return str(int(service_label_index))
+    return str(service_label_index)
 
 
 def service_feature_scope(service: Service) -> ServiceFeatureScope | None:
@@ -93,7 +93,6 @@ def service_feature_scope(service: Service) -> ServiceFeatureScope | None:
         )
 
     if (service_label_index := normalized_service_label_index(service)) is not None:
-        service_label_index = str(service_label_index)
         suffix = SERVICE_LABEL_TRANSLATION_SUFFIXES.get(
             service.type, "with_service_label"
         )
