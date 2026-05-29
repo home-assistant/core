@@ -65,7 +65,7 @@ from .common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message
+from tests.components.locknalert_mqtt.common import async_fire_mqtt_message
 from tests.components.alarm_control_panel import common
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 

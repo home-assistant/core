@@ -4,9 +4,12 @@ from collections.abc import Iterable
 from contextlib import suppress
 import copy
 import json
+import time
 from typing import Any
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 
+import paho.mqtt.client as mqtt_client
+from paho.mqtt.client import MQTTMessage
 import pytest
 
 from homeassistant.components import locknalert_mqtt as mqtt
@@ -15,7 +18,10 @@ from homeassistant.components.locknalert_mqtt.const import (
     SUPPORTED_COMPONENTS,
 )
 from homeassistant.components.locknalert_mqtt.entity import MQTT_ATTRIBUTES_BLOCKED
-from homeassistant.components.locknalert_mqtt.models import PublishPayloadType
+from homeassistant.components.locknalert_mqtt.models import (
+    DATA_MQTT,
+    PublishPayloadType,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -23,7 +29,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HassJobType, HomeAssistant
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import (
     area_registry as ar,
@@ -33,8 +39,33 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from tests.common import MockConfigEntry, async_fire_mqtt_message
+from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+
+
+@callback
+def async_fire_mqtt_message(
+    hass: HomeAssistant,
+    topic: str,
+    payload: bytes | str,
+    qos: int = 0,
+    retain: bool = False,
+    properties: mqtt_client.Properties | None = None,
+) -> None:
+    """Fire an MQTT message through the LocknAlert MQTT integration."""
+    if isinstance(payload, str):
+        payload = payload.encode("utf-8")
+
+    msg = MQTTMessage(topic=topic.encode("utf-8"))
+    msg.payload = payload
+    msg.qos = qos
+    msg.retain = retain
+    msg.timestamp = time.monotonic()
+    msg.properties = properties
+
+    mqtt_data = hass.data[DATA_MQTT]
+    assert mqtt_data.client
+    mqtt_data.client._async_mqtt_on_message(Mock(), None, msg)
 
 DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "identifiers": ["helloworld"],
