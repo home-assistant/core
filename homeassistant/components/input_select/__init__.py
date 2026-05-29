@@ -1,5 +1,6 @@
 """Support to select an option from a list."""
 
+from enum import StrEnum
 import logging
 from typing import Any, Self, cast
 
@@ -8,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.select import (
     ATTR_CYCLE,  # noqa: F401
     ATTR_OPTION,  # noqa: F401
+    ATTR_OPTIONS,  # noqa: F401
     SERVICE_SELECT_FIRST,  # noqa: F401
     SERVICE_SELECT_LAST,  # noqa: F401
     SERVICE_SELECT_NEXT,  # noqa: F401
@@ -15,8 +17,6 @@ from homeassistant.components.select import (
     SERVICE_SELECT_PREVIOUS,  # noqa: F401
     SelectEntity,
     SelectEntityAttribute,
-    SelectService,
-    SelectServiceArgument,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -42,10 +42,28 @@ DOMAIN = "input_select"
 CONF_INITIAL = "initial"
 
 SERVICE_SET_OPTIONS = "set_options"
-ATTR_OPTIONS = "options"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 2
+
+
+class InputSelectService(StrEnum):
+    """Input select services."""
+
+    SELECT_FIRST = "select_first"
+    SELECT_LAST = "select_last"
+    SELECT_NEXT = "select_next"
+    SELECT_OPTION = "select_option"
+    SELECT_PREVIOUS = "select_previous"
+    SET_OPTIONS = "set_options"
+
+
+class InputSelectServiceArgument(StrEnum):
+    """Input select service arguments."""
+
+    CYCLE = "cycle"
+    OPTION = "option"
+    OPTIONS = "options"
 
 
 def _unique(options: Any) -> Any:
@@ -180,43 +198,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SelectService.SELECT_FIRST,
+        InputSelectService.SELECT_FIRST,
         None,
         InputSelect.async_first.__name__,
     )
 
     component.async_register_entity_service(
-        SelectService.SELECT_LAST,
+        InputSelectService.SELECT_LAST,
         None,
         InputSelect.async_last.__name__,
     )
 
     component.async_register_entity_service(
-        SelectService.SELECT_NEXT,
-        {vol.Optional(SelectServiceArgument.CYCLE.value, default=True): bool},
+        InputSelectService.SELECT_NEXT,
+        {vol.Optional(InputSelectServiceArgument.CYCLE.value, default=True): bool},
         InputSelect.async_next.__name__,
     )
 
     component.async_register_entity_service(
-        SelectService.SELECT_OPTION,
-        {vol.Required(SelectServiceArgument.OPTION.value): cv.string},
+        InputSelectService.SELECT_OPTION,
+        {vol.Required(InputSelectServiceArgument.OPTION.value): cv.string},
         InputSelect.async_select_option.__name__,
     )
 
     component.async_register_entity_service(
-        SelectService.SELECT_PREVIOUS,
-        {vol.Optional(SelectServiceArgument.CYCLE.value, default=True): bool},
+        InputSelectService.SELECT_PREVIOUS,
+        {vol.Optional(InputSelectServiceArgument.CYCLE.value, default=True): bool},
         InputSelect.async_previous.__name__,
     )
 
     component.async_register_entity_service(
-        SERVICE_SET_OPTIONS,
+        InputSelectService.SET_OPTIONS,
         {
-            vol.Required(ATTR_OPTIONS): vol.All(
+            vol.Required(InputSelectServiceArgument.OPTIONS.value): vol.All(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             )
         },
-        "async_set_options",
+        InputSelect.async_set_options.__name__,
     )
 
     return True
