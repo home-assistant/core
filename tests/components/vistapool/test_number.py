@@ -79,7 +79,38 @@ async def test_number_scales_electrolysis_value(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("number.my_pool_electrolysis_setpoint").state == "5.0"
+    state = hass.states.get("number.my_pool_electrolysis_setpoint")
+    assert state.state == "5.0"
+    assert state.attributes["max"] == 22.0
+
+
+@pytest.mark.parametrize(
+    "hidro_data",
+    [
+        pytest.param({"level": 50}, id="missing_max"),
+        pytest.param({"level": 50, "maxAllowedValue": "garbage"}, id="non_numeric_max"),
+        pytest.param({"level": 50, "maxAllowedValue": {}}, id="non_scalar_max"),
+    ],
+)
+async def test_number_electrolysis_max_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    hidro_data: dict[str, Any],
+) -> None:
+    """Test electrolysis setpoint max falls back to 50 when the API value is missing or unparseable."""
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasHidro": 1, "version": 1},
+        "hidro": hidro_data,
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.my_pool_electrolysis_setpoint")
+    assert state is not None
+    assert state.attributes["max"] == 50.0
 
 
 async def test_number_heating_requires_has_heat(
