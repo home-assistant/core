@@ -8,7 +8,7 @@ from yoto_api import YotoError, get_account_id
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, DOMAIN, YOTO_AUDIENCE, YOTO_SCOPES
 
 
 class YotoOAuth2FlowHandler(
@@ -22,6 +22,16 @@ class YotoOAuth2FlowHandler(
     def logger(self) -> logging.Logger:
         """Return the logger used for the OAuth2 flow."""
         return _LOGGER
+
+    @property
+    def extra_authorize_data(self) -> dict[str, Any]:
+        """Append Yoto's audience and scopes to the authorize URL."""
+        # Set at the flow level (not the implementation) so it applies to
+        # both application credentials and cloud credentials.
+        return {
+            "audience": YOTO_AUDIENCE,
+            "scope": " ".join(YOTO_SCOPES),
+        }
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Identify the Yoto account from the access token."""
