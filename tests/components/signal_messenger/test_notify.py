@@ -12,6 +12,7 @@ import pytest
 from requests_mock.mocker import Mocker
 import voluptuous as vol
 
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -25,13 +26,11 @@ from .conftest import (
     SignalNotificationService,
 )
 
-BASE_COMPONENT = "notify"
-
 
 async def test_signal_messenger_init(hass: HomeAssistant) -> None:
     """Test that service loads successfully."""
     config = {
-        BASE_COMPONENT: {
+        NOTIFY_DOMAIN: {
             "name": "test",
             "platform": "signal_messenger",
             "url": "http://127.0.0.1:8080",
@@ -41,10 +40,10 @@ async def test_signal_messenger_init(hass: HomeAssistant) -> None:
     }
 
     with patch("pysignalclirestapi.SignalCliRestApi.send_message", return_value=None):
-        assert await async_setup_component(hass, BASE_COMPONENT, config)
+        assert await async_setup_component(hass, NOTIFY_DOMAIN, config)
         await hass.async_block_till_done()
 
-        assert hass.services.has_service(BASE_COMPONENT, "test")
+        assert hass.services.has_service(NOTIFY_DOMAIN, "test")
 
 
 def test_send_message(
