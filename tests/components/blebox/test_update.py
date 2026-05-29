@@ -137,6 +137,25 @@ async def test_update_error(
 
 
 @pytest.mark.freeze_time("2026-05-21 00:00:00")
+async def test_scan_interval_triggers_update(
+    firmwareupdate: tuple[blebox_uniapi.update.Update, str],
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that the SCAN_INTERVAL-based poll fires async_update after one hour."""
+    feature_mock, entity_id = firmwareupdate
+
+    await async_setup_entity(hass, entity_id)
+
+    feature_mock.async_update = AsyncMock()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    feature_mock.async_update.assert_awaited_once()
+
+
+@pytest.mark.freeze_time("2026-05-21 00:00:00")
 async def test_install(
     firmwareupdate: tuple[blebox_uniapi.update.Update, str],
     hass: HomeAssistant,
@@ -258,9 +277,6 @@ async def test_poll_connection_error(
 
     entry = await async_setup_entity(hass, entity_id)
 
-    device = device_registry.async_get(entry.device_id)
-    sw_version_before_install = device.sw_version
-
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
@@ -282,7 +298,7 @@ async def test_poll_connection_error(
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     device = device_registry.async_get(entry.device_id)
-    assert device.sw_version == sw_version_before_install
+    assert device.sw_version == "0.1"
 
     def recovery_update() -> None:
         feature_mock.installed_version = "0.2"

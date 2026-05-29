@@ -50,8 +50,11 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
-    # Firmware versions take a different code path in uniapi and cannot be fetched via coordinator.
-    _attr_should_poll = True
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True because firmware versions cannot be fetched via coordinator."""
+        return True
 
     def __init__(
         self, coordinator: BleBoxCoordinator, feature: blebox_uniapi.update.Update
