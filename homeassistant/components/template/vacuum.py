@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
@@ -389,7 +388,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
 
         if script := self._action_scripts.get(SERVICE_SET_FAN_SPEED):
             await self.async_run_script(
-                script, run_variables={ATTR_FAN_SPEED: fan_speed}, context=self._context
+                script, run_variables={"fan_speed": fan_speed}, context=self._context
             )
 
 

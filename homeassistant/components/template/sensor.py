@@ -9,7 +9,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
@@ -50,13 +49,14 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
+CONF_LAST_RESET = "last_reset"
 DEFAULT_NAME = "Template Sensor"
 
 
 def validate_last_reset(val):
     """Run extra validation checks."""
     if (
-        val.get(ATTR_LAST_RESET) is not None
+        val.get(CONF_LAST_RESET) is not None
         and val.get(CONF_STATE_CLASS) != SensorStateClass.TOTAL
     ):
         raise vol.Invalid(
@@ -78,7 +78,7 @@ SENSOR_COMMON_SCHEMA = vol.Schema(
 SENSOR_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(ATTR_LAST_RESET): cv.template,
+            vol.Optional(CONF_LAST_RESET): cv.template,
         }
     )
     .extend(SENSOR_COMMON_SCHEMA.schema)
@@ -204,10 +204,10 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
             self._validate_state,
         )
         self.setup_template(
-            ATTR_LAST_RESET,
+            CONF_LAST_RESET,
             "_attr_last_reset",
             validate_datetime(
-                self, ATTR_LAST_RESET, SensorDeviceClass.TIMESTAMP, require_tzinfo=False
+                self, CONF_LAST_RESET, SensorDeviceClass.TIMESTAMP, require_tzinfo=False
             ),
         )
 
