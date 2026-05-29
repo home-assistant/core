@@ -535,7 +535,7 @@ class MqttAttributesMixin(Entity):
                     ),
                     "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
-                    "encoding": self._attributes_config[CONF_ENCODING],
+                    "encoding": self._attributes_config[CONF_ENCODING] or None,
                     "job_type": HassJobType.Callback,
                 }
             },
@@ -657,7 +657,7 @@ class MqttAvailabilityMixin(Entity):
                 ),
                 "entity_id": self.entity_id,
                 "qos": self._avail_config[CONF_QOS],
-                "encoding": self._avail_config[CONF_ENCODING],
+                "encoding": self._avail_config[CONF_ENCODING] or None,
                 "job_type": HassJobType.Callback,
             }
             for topic in self._avail_topics
@@ -1651,7 +1651,7 @@ class MqttEntity(
         qos: int = self._config[CONF_QOS]
         encoding: str | None = None
         if not disable_encoding:
-            encoding = self._config[CONF_ENCODING]
+            encoding = self._config[CONF_ENCODING] or None
         if (
             state_topic_config_key in self._config
             and self._config[state_topic_config_key] is not None
