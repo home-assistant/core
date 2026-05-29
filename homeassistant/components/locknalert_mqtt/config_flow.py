@@ -998,7 +998,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 errors={"base": "invalid_auth"},
             )
-        except (LocknAlertCannotConnect, LocknAlertInvalidResponse):
+        except LocknAlertCannotConnect, LocknAlertInvalidResponse:
             return self.async_show_form(
                 step_id="reauth_confirm",
                 errors={"base": "cannot_connect"},

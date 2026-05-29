@@ -67,6 +67,7 @@ def async_fire_mqtt_message(
     assert mqtt_data.client
     mqtt_data.client._async_mqtt_on_message(Mock(), None, msg)
 
+
 DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "identifiers": ["helloworld"],
     "manufacturer": "Whatever",

@@ -171,4 +171,6 @@ class MqttSubentryData(TypedDict, total=False):
 
 
 DATA_MQTT: HassKey[MqttData] = HassKey("locknalert_mqtt")
-DATA_MQTT_AVAILABLE: HassKey[asyncio.Future[bool]] = HassKey("locknalert_mqtt_client_available")
+DATA_MQTT_AVAILABLE: HassKey[asyncio.Future[bool]] = HassKey(
+    "locknalert_mqtt_client_available"
+)
