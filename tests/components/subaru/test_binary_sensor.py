@@ -127,6 +127,43 @@ async def test_no_binary_sensors_for_g1(
         )
 
 
+@pytest.mark.usefixtures("ev_entry")
+async def test_ev_plug_binary_sensor_for_ev(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """EV vehicles get an EV plug binary sensor; PLUG device class with UNLOCKED_CONNECTED → on."""
+    entity_id = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_2_EV, "EV_IS_PLUGGED_IN")
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # Fixture has EV_IS_PLUGGED_IN = "UNLOCKED_CONNECTED" → plugged in → on
+    assert state.state == STATE_ON
+
+
+async def test_no_ev_plug_binary_sensor_for_g3(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    subaru_config_entry: MockConfigEntry,
+) -> None:
+    """Non-EV vehicles do not get the EV plug binary sensor."""
+    await setup_subaru_config_entry(
+        hass,
+        subaru_config_entry,
+        vehicle_list=[TEST_VIN_3_G3],
+        vehicle_data=VEHICLE_DATA[TEST_VIN_3_G3],
+        vehicle_status=VEHICLE_STATUS_G3,
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_3_G3, "EV_IS_PLUGGED_IN")
+        )
+        is None
+    )
+
+
 async def test_binary_sensors_for_g3(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

@@ -66,6 +66,9 @@
       "door_rear_right": {
         "name": "Door rear right"
       },
+      "ev_is_plugged_in": {
+        "name": "EV plug"
+      },
       "health_istrouble": {
         "name": "Vehicle health"
       },
@@ -179,9 +182,6 @@
       },
       "ev_charger_state": {
         "name": "EV charger state"
-      },
-      "ev_is_plugged_in": {
-        "name": "EV plug status"
       },
       "ev_range": {
         "name": "EV range"

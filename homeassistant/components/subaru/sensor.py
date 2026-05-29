@@ -52,7 +52,6 @@ KM_PER_MI = DistanceConverter.convert(1, UnitOfLength.MILES, UnitOfLength.KILOME
 # VEHICLE_STATUS / VEHICLE_HEALTH constants match the same string values.
 API_KEY_VEHICLE_STATE_TYPE = "VEHICLE_STATE_TYPE"
 API_KEY_EV_CHARGER_STATE_TYPE = "EV_CHARGER_STATE_TYPE"
-API_KEY_EV_IS_PLUGGED_IN = "EV_IS_PLUGGED_IN"
 API_KEY_EV_STATE_OF_CHARGE_MODE = "EV_STATE_OF_CHARGE_MODE"
 API_KEY_RECOMMENDED_TIRE_PRESSURE = "RECOMMENDED_TIRE_PRESSURE"
 API_KEY_FRONT_TIRES = "FRONT_TIRES"
@@ -68,13 +67,17 @@ class SubaruSensorEntityDescription(SensorEntityDescription):
     sensor reads vehicle_status[key].
     """
 
-    value_fn: Callable[[dict[str, Any]], Any] | None = None
+    value_fn: (
+        Callable[[dict[str, Any]], StateType | date | datetime | Decimal] | None
+    ) = None
 
 
-def _recommended_tire_pressure(side: str) -> Callable[[dict[str, Any]], Any]:
+def _recommended_tire_pressure(
+    side: str,
+) -> Callable[[dict[str, Any]], StateType | date | datetime | Decimal]:
     """Return a getter for recommended FRONT or REAR tire pressure from vehicle_health."""
 
-    def getter(data: dict[str, Any]) -> Any:
+    def getter(data: dict[str, Any]) -> StateType | date | datetime | Decimal:
         health = data.get(VEHICLE_HEALTH) or {}
         recommended = health.get(API_KEY_RECOMMENDED_TIRE_PRESSURE) or {}
         return recommended.get(side)
@@ -136,6 +139,10 @@ API_GEN_2_SENSORS = [
         native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # No SensorDeviceClass.ENUM: subarulink/const.py only documents IGNITION_ON
+    # and IGNITION_OFF for this field, but the live API also returns other
+    # values (engine-running, moving, transport mode). Committing to an
+    # incomplete `options` list would silently mark live values as invalid.
     SubaruSensorEntityDescription(
         key=API_KEY_VEHICLE_STATE_TYPE,
         translation_key="vehicle_state",
@@ -187,13 +194,14 @@ EV_SENSORS = [
         translation_key="ev_time_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
+    # No SensorDeviceClass.ENUM for the next two: subarulink does not document
+    # the option sets for these fields. Live values observed so far include
+    # CHARGING, CHARGING_STOPPED, FINISHED for the charger state and EV_MODE
+    # for the charge mode, but the API likely returns more. See VEHICLE_STATE
+    # comment above for the same rationale.
     SubaruSensorEntityDescription(
         key=API_KEY_EV_CHARGER_STATE_TYPE,
         translation_key="ev_charger_state",
-    ),
-    SubaruSensorEntityDescription(
-        key=API_KEY_EV_IS_PLUGGED_IN,
-        translation_key="ev_is_plugged_in",
     ),
     SubaruSensorEntityDescription(
         key=API_KEY_EV_STATE_OF_CHARGE_MODE,
@@ -275,7 +283,7 @@ class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity)
 
         if (
             self.entity_description.key == sc.AVG_FUEL_CONSUMPTION
-            and current_value is not None
+            and isinstance(current_value, (int, float))
             and self.hass.config.units == METRIC_SYSTEM
         ):
             return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)

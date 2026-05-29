@@ -21,6 +21,7 @@ from .const import (
     API_GEN_4,
     VEHICLE_API_GEN,
     VEHICLE_FEATURES,
+    VEHICLE_HAS_EV,
     VEHICLE_HEALTH,
     VEHICLE_STATUS,
     VEHICLE_VIN,
@@ -50,6 +51,11 @@ LOCK_STATUS_KEYS: dict[str, str] = {
     "LOCK_REAR_RIGHT_STATUS": "lock_status_rear_right",
     "LOCK_BOOT_STATUS": "lock_status_boot",
 }
+
+# EV_IS_PLUGGED_IN values from subarulink/const.py that indicate the plug is in.
+# Any other value (including UNPLUGGED / UNKNOWN / None) counts as not plugged in.
+EV_PLUGGED_IN_STATES = frozenset({"CHARGING", "LOCKED_CONNECTED", "UNLOCKED_CONNECTED"})
+API_KEY_EV_IS_PLUGGED_IN = "EV_IS_PLUGGED_IN"
 
 # vehicle_health response shape (see integration debug diagnostics)
 HEALTH_ISTROUBLE = "ISTROUBLE"
@@ -168,6 +174,14 @@ def _overall_trouble_is_on(vehicle_data: dict[str, Any]) -> bool | None:
     return bool(health[HEALTH_ISTROUBLE])
 
 
+def _ev_plug_is_on(vehicle_data: dict[str, Any]) -> bool | None:
+    """EV charging-cable connected state."""
+    status = (vehicle_data.get(VEHICLE_STATUS) or {}).get(API_KEY_EV_IS_PLUGGED_IN)
+    if status is None or status == UNKNOWN_STATUS:
+        return None
+    return status in EV_PLUGGED_IN_STATES
+
+
 DOOR_BINARY_SENSORS: list[SubaruBinarySensorEntityDescription] = [
     SubaruBinarySensorEntityDescription(
         key=api_key,
@@ -204,6 +218,13 @@ OVERALL_HEALTH_BINARY_SENSOR = SubaruBinarySensorEntityDescription(
     device_class=BinarySensorDeviceClass.PROBLEM,
     entity_category=EntityCategory.DIAGNOSTIC,
     is_on_fn=_overall_trouble_is_on,
+)
+
+EV_PLUG_BINARY_SENSOR = SubaruBinarySensorEntityDescription(
+    key=API_KEY_EV_IS_PLUGGED_IN,
+    translation_key="ev_is_plugged_in",
+    device_class=BinarySensorDeviceClass.PLUG,
+    is_on_fn=_ev_plug_is_on,
 )
 
 
@@ -246,6 +267,8 @@ async def async_setup_entry(
         descriptions.extend(WINDOW_BINARY_SENSORS)
         descriptions.extend(LOCK_BINARY_SENSORS)
         descriptions.append(OVERALL_HEALTH_BINARY_SENSOR)
+        if info[VEHICLE_HAS_EV]:
+            descriptions.append(EV_PLUG_BINARY_SENSOR)
 
         vehicle_data = coordinator.data.get(info[VEHICLE_VIN], {})
         features = vehicle_data.get(VEHICLE_FEATURES) or []
