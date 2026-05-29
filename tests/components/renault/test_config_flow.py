@@ -292,7 +292,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {
-        RenaultConfigurationKeys.NAME: "Mock Title",
+        "name": "Mock Title",
         RenaultConfigurationKeys.USERNAME: "email@test.com",
     }
     assert result["errors"] == {}
@@ -309,7 +309,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["description_placeholders"] == {
-        RenaultConfigurationKeys.NAME: "Mock Title",
+        "name": "Mock Title",
         RenaultConfigurationKeys.USERNAME: "email@test.com",
     }
     assert result2["errors"] == {"base": "invalid_credentials"}
