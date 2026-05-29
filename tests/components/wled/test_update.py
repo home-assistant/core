@@ -30,9 +30,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.components.accuweather.test_sensor import async_setup_component
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -199,7 +199,6 @@ async def test_update_entities(
     mock_wled: MagicMock,
     mock_wled_releases: MagicMock,
     freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update entity async_update method."""
     await async_setup_component(hass, HOME_ASSISTANT_DOMAIN, {})
@@ -223,11 +222,12 @@ async def test_update_entities(
         blocking=True,
     )
 
-    # Ensure we pass the debouncer interval
+    # Ensure we pass the debouncer interval to allow async_request_refresh to execute
     freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # releases() should be called twice: once on setup, once for the manual update
     assert mock_wled_releases.releases.call_count == 2
 
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
