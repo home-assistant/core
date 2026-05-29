@@ -9,9 +9,6 @@ from homeassistant.const import (
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
@@ -27,6 +24,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfProportion,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSpeed,
@@ -129,7 +127,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     ),
     CarbonMonoxideConcentrationConverter: (
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_PARTS_PER_MILLION,
+        UnitOfProportion.PARTS_PER_MILLION,
         1.16441,
     ),
     ConductivityConverter: (
@@ -170,17 +168,17 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     ),
     NitrogenDioxideConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_PARTS_PER_BILLION,
+        UnitOfProportion.PARTS_PER_BILLION,
         1.912503,
     ),
     NitrogenMonoxideConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_PARTS_PER_BILLION,
+        UnitOfProportion.PARTS_PER_BILLION,
         1.247389,
     ),
     OzoneConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_PARTS_PER_BILLION,
+        UnitOfProportion.PARTS_PER_BILLION,
         1.995417,
     ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
@@ -202,7 +200,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     ),
     SulphurDioxideConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_PARTS_PER_BILLION,
+        UnitOfProportion.PARTS_PER_BILLION,
         2.6633,
     ),
     TemperatureConverter: (
@@ -215,7 +213,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         UnitOfTemperature.FAHRENHEIT,
         0.555556,
     ),
-    UnitlessRatioConverter: (PERCENTAGE, None, 100),
+    UnitlessRatioConverter: (UnitOfProportion.PERCENTAGE, None, 100),
     VolumeConverter: (UnitOfVolume.GALLONS, UnitOfVolume.LITERS, 0.264172),
     VolumeFlowRateConverter: (
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
@@ -328,38 +326,38 @@ _CONVERTED_VALUE: dict[
         # PPB to other units
         (
             1,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
             0.001,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
         ),
         (
             1,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
             1.16441,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
         (
             1,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
             0.00116441,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         ),
         # PPM to other units
         (
             1,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
             1000,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
         ),
         (
             1,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
             1.16441,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         ),
         (
             1,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
             1164.41,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
@@ -368,13 +366,13 @@ _CONVERTED_VALUE: dict[
             120000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             103056.5,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
         ),
         (
             120000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             103.0565,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
         ),
         (
             120000,
@@ -387,13 +385,13 @@ _CONVERTED_VALUE: dict[
             120,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
             103056.5,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
         ),
         (
             120,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
             103.0565,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
         ),
         (
             120,
@@ -405,7 +403,7 @@ _CONVERTED_VALUE: dict[
     NitrogenDioxideConcentrationConverter: [
         (
             1,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
             1.912503,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
@@ -413,11 +411,11 @@ _CONVERTED_VALUE: dict[
             120,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             62.744976,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
         ),
         (
             1,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
             1912.503,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
@@ -425,25 +423,25 @@ _CONVERTED_VALUE: dict[
             120,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             0.062744976,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
         ),
         (
             100,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
             0.1,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
         ),
         (
             0.5,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
             500,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
         ),
     ],
     NitrogenMonoxideConcentrationConverter: [
         (
             1,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
             1.247389,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
@@ -451,7 +449,7 @@ _CONVERTED_VALUE: dict[
             120,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             96.200906,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
         ),
     ],
     ConductivityConverter: [
@@ -801,7 +799,7 @@ _CONVERTED_VALUE: dict[
     OzoneConcentrationConverter: [
         (
             1,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
             1.995417,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
@@ -809,11 +807,11 @@ _CONVERTED_VALUE: dict[
             120,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             60.1378,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
         ),
         (
             1,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
             1995.417,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
@@ -821,7 +819,7 @@ _CONVERTED_VALUE: dict[
             120,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             0.0601378,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfProportion.PARTS_PER_MILLION,
         ),
     ],
     PowerConverter: [
@@ -1003,7 +1001,7 @@ _CONVERTED_VALUE: dict[
     SulphurDioxideConcentrationConverter: [
         (
             1,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
             2.6633,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
@@ -1011,7 +1009,7 @@ _CONVERTED_VALUE: dict[
             120,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             45.056879,
-            CONCENTRATION_PARTS_PER_BILLION,
+            UnitOfProportion.PARTS_PER_BILLION,
         ),
     ],
     TemperatureConverter: [
@@ -1051,10 +1049,10 @@ _CONVERTED_VALUE: dict[
         ),
     ],
     UnitlessRatioConverter: [
-        (5, None, 500, PERCENTAGE),
-        (5, None, 5000000000, CONCENTRATION_PARTS_PER_BILLION),
-        (5, None, 5000000, CONCENTRATION_PARTS_PER_MILLION),
-        (5, PERCENTAGE, 0.05, None),
+        (5, None, 500, UnitOfProportion.PERCENTAGE),
+        (5, None, 5000000000, UnitOfProportion.PARTS_PER_BILLION),
+        (5, None, 5000000, UnitOfProportion.PARTS_PER_MILLION),
+        (5, UnitOfProportion.PERCENTAGE, 0.05, None),
     ],
     MassVolumeConcentrationConverter: [
         # 1000 µg/m³ = 1 mg/m³

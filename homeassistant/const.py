@@ -701,9 +701,6 @@ LIGHT_LUX: Final = "lx"
 # UV Index units
 UV_INDEX: Final = "UV index"
 
-# Percentage units
-PERCENTAGE: Final = "%"
-
 # Rotational speed units
 REVOLUTIONS_PER_MINUTE: Final = "rpm"
 
@@ -753,14 +750,23 @@ class UnitOfPrecipitationDepth(StrEnum):
     """Derived from cm³/cm²"""
 
 
+class UnitOfProportion(StrEnum):
+    """Proportion units."""
+
+    PARTS_PER_MILLION = "ppm"
+    PARTS_PER_BILLION = "ppb"
+    PERCENTAGE = "%"
+
+
 # Concentration units
 CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = "g/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
-CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
-CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
+CONCENTRATION_PARTS_PER_MILLION: Final = UnitOfProportion.PARTS_PER_MILLION.value
+CONCENTRATION_PARTS_PER_BILLION: Final = UnitOfProportion.PARTS_PER_BILLION.value
+PERCENTAGE: Final = UnitOfProportion.PERCENTAGE.value
 
 
 class UnitOfBloodGlucoseConcentration(StrEnum):
