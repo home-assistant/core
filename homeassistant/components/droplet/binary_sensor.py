@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pydroplet.droplet import Droplet
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -25,22 +26,17 @@ class DropletBinarySensorEntityDescription(BinarySensorEntityDescription):
     value_fn: Callable[[Droplet], bool]
 
 
-# Why is the name not showing up correctly?
-# Isn't it the same as the enum sensors??
-
 BINARY_SENSORS: list[DropletBinarySensorEntityDescription] = [
     DropletBinarySensorEntityDescription(
         key=KEY_LOW_LEAK,
         translation_key=KEY_LOW_LEAK,
-        # Should we use moisture device class or not?
-        # Must it force the use of the device name, or can that be overridden?
-        # And is it better for it to say wet/dry or on/off?
-        # And will it cause problems if it's not technically a moisture sensor?
+        device_class=BinarySensorDeviceClass.MOISTURE,
         value_fn=lambda device: device.get_low_leak(),
     ),
     DropletBinarySensorEntityDescription(
         key=KEY_HIGH_LEAK,
         translation_key=KEY_HIGH_LEAK,
+        device_class=BinarySensorDeviceClass.MOISTURE,
         value_fn=lambda device: device.get_high_leak(),
     ),
 ]

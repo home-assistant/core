@@ -39,10 +39,10 @@ async def test_binary_sensors_update_data(
     """Test Droplet async update data."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("binary_sensor.mock_title_moisture").state == STATE_ON
+    assert hass.states.get("binary_sensor.mock_title_low_leak").state == STATE_ON
 
     mock_droplet.get_low_leak.return_value = False
 
     mock_droplet.listen_forever.call_args_list[0][0][1]({})
 
-    assert hass.states.get("binary_sensor.mock_title_moisture").state == STATE_OFF
+    assert hass.states.get("binary_sensor.mock_title_low_leak").state == STATE_OFF
