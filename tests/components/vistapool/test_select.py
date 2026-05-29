@@ -89,7 +89,7 @@ async def test_select_current_option_unknown(
     mock_vistapool_client: AsyncMock,
     raw_value: Any,
 ) -> None:
-    """Test current_option reports unknown for missing / unparseable / out-of-range raw values."""
+    """Test current_option reports unknown for missing / unparsable / out-of-range raw values."""
     mock_vistapool_client.fetch_pool_data.return_value = {
         "main": {"version": 1},
         "filtration": {"mode": raw_value},
