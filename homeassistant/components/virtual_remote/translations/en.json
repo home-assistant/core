@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Virtual Remote is already configured.",
+            "already_configured": "A virtual remote with this name is already configured.",
             "no_available_infrared_entities": "No infrared entities are available.",
             "no_virtual_remotes": "No virtual remotes are configured.",
             "reconfigure_successful": "Reconfiguration was successful."
@@ -20,7 +20,7 @@
                     "infrared_entity_id": "Infrared entity",
                     "name": "Remote name"
                 },
-                "description": "Update the first configured virtual remote.",
+                "description": "Update the configured virtual remote.",
                 "title": "Reconfigure Virtual Remote"
             },
             "user": {
@@ -65,8 +65,7 @@
             "command_not_found": "The selected command was not found.",
             "no_available_infrared_entities": "No infrared entities are available.",
             "no_remote_commands": "No commands are configured.",
-            "no_virtual_remotes": "No virtual remotes are configured.",
-            "remote_not_found": "The selected virtual remote was not found."
+            "no_virtual_remotes": "No virtual remotes are configured."
         },
         "error": {
             "command_data_required": "Command data is required.",
@@ -74,7 +73,6 @@
             "command_name_required": "Command name is required.",
             "infrared_entity_unavailable": "Selected infrared entity is unavailable.",
             "invalid_command": "Command data is not a supported infrared command format.",
-            "remote_name_exists": "A virtual remote with this name already exists.",
             "remote_name_required": "Remote name is required."
         },
         "step": {
@@ -88,17 +86,6 @@
                     "command_name": "Command name"
                 },
                 "title": "Add Command"
-            },
-            "add_remote": {
-                "data": {
-                    "infrared_entity_id": "Infrared entity",
-                    "name": "Remote name"
-                },
-                "data_description": {
-                    "infrared_entity_id": "Infrared entity",
-                    "name": "Remote name"
-                },
-                "title": "Add Virtual Remote"
             },
             "edit_command": {
                 "data": {
@@ -124,10 +111,8 @@
             },
             "init": {
                 "menu_options": {
-                    "add_remote": "Add virtual remote",
                     "edit_remote": "Edit virtual remote",
-                    "manage_commands": "Manage commands",
-                    "remove_remote": "Remove virtual remote"
+                    "manage_commands": "Manage commands"
                 },
                 "title": "Virtual Remote Options"
             },
@@ -148,15 +133,6 @@
                 },
                 "title": "Remove Command"
             },
-            "remove_remote": {
-                "data": {
-                    "id": "Virtual remote"
-                },
-                "data_description": {
-                    "id": "Virtual remote"
-                },
-                "title": "Remove Virtual Remote"
-            },
             "select_command_for_edit": {
                 "data": {
                     "command_name": "Command"
@@ -165,42 +141,6 @@
                     "command_name": "Command"
                 },
                 "title": "Select Command"
-            },
-            "select_remote_for_command": {
-                "data": {
-                    "id": "Virtual remote"
-                },
-                "data_description": {
-                    "id": "Virtual remote"
-                },
-                "title": "Select Virtual Remote"
-            },
-            "select_remote_for_command_edit": {
-                "data": {
-                    "id": "Virtual remote"
-                },
-                "data_description": {
-                    "id": "Virtual remote"
-                },
-                "title": "Select Virtual Remote"
-            },
-            "select_remote_for_command_removal": {
-                "data": {
-                    "id": "Virtual remote"
-                },
-                "data_description": {
-                    "id": "Virtual remote"
-                },
-                "title": "Select Virtual Remote"
-            },
-            "select_remote_for_edit": {
-                "data": {
-                    "id": "Virtual remote"
-                },
-                "data_description": {
-                    "id": "Virtual remote"
-                },
-                "title": "Select Virtual Remote"
             }
         }
     }

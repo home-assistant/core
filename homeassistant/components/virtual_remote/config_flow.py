@@ -19,8 +19,8 @@ from .helpers import (
     infrared_entity_field,
     infrared_entity_field_with_current,
     infrared_entity_selector,
-    normalize_virtual_remotes,
-    unique_remote_id,
+    normalize_remote_id,
+    virtual_remotes_from_config_entry,
 )
 from .options_flow import VirtualRemoteOptionsFlow
 
@@ -42,9 +42,6 @@ class VirtualRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle manual setup."""
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
-
         errors: dict[str, str] = {}
         infrared_entities = available_infrared_entities(self.hass)
 
@@ -62,18 +59,18 @@ class VirtualRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_INFRARED_ENTITY_ID] = "infrared_entity_unavailable"
 
             if not errors:
+                remote_id = normalize_remote_id(name)
+                await self.async_set_unique_id(remote_id)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
-                    title="Virtual Remote",
-                    data={},
-                    options={
-                        CONF_VIRTUAL_REMOTES: [
-                            {
-                                CONF_REMOTE_ID: unique_remote_id(name, []),
-                                CONF_REMOTE_NAME: name,
-                                CONF_INFRARED_ENTITY_ID: infrared_entity_id,
-                            }
-                        ],
+                    title=name,
+                    data={
+                        CONF_REMOTE_ID: remote_id,
+                        CONF_REMOTE_NAME: name,
+                        CONF_INFRARED_ENTITY_ID: infrared_entity_id,
                     },
+                    options={},
                 )
 
         remote_name_default = (
@@ -89,6 +86,7 @@ class VirtualRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_REMOTE_NAME,
+                        CONF_VIRTUAL_REMOTES,
                         default=remote_name_default,
                     ): str,
                     infrared_entity_field(
@@ -106,9 +104,7 @@ class VirtualRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the first virtual remote."""
         entry = self._get_reconfigure_entry()
-        virtual_remotes = normalize_virtual_remotes(
-            entry.options.get(CONF_VIRTUAL_REMOTES, [])
-        )
+        virtual_remotes = virtual_remotes_from_config_entry(entry)
         infrared_entities = available_infrared_entities(self.hass)
 
         if not virtual_remotes:
@@ -140,12 +136,20 @@ class VirtualRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 first_remote[CONF_REMOTE_NAME] = name
                 first_remote[CONF_INFRARED_ENTITY_ID] = infrared_entity_id
 
+                data_updates: dict[str, Any] = {}
                 options = dict(entry.options)
-                options[CONF_VIRTUAL_REMOTES] = virtual_remotes
+
+                if CONF_REMOTE_ID in entry.data:
+                    data_updates = {
+                        CONF_REMOTE_NAME: name,
+                        CONF_INFRARED_ENTITY_ID: infrared_entity_id,
+                    }
+                else:
+                    options[CONF_VIRTUAL_REMOTES] = virtual_remotes
 
                 return self.async_update_reload_and_abort(
                     entry,
-                    data_updates={},
+                    data_updates=data_updates,
                     options=options,
                 )
 
@@ -166,6 +170,7 @@ class VirtualRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_REMOTE_NAME,
+                        CONF_VIRTUAL_REMOTES,
                         default=remote_name_default,
                     ): str,
                     infrared_entity_field_with_current(

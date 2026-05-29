@@ -25,7 +25,7 @@ Examples include:
 
 ## Features
 
-- Create one or more virtual remote entities
+- Create one virtual remote entity per config entry
 - Associate each virtual remote with any Home Assistant `infrared` entity
 - Edit a virtual remote's name or linked infrared entity
 - Use standard Home Assistant `remote` services
@@ -50,23 +50,21 @@ Supported formats include:
 
 ## Configuration
 
-### Adding Virtual Remote
+### Adding a Virtual Remote
 
 1. Go to **Settings** → **Devices & services** → **Add integration**.
 2. Search for **Virtual Remote**.
 3. Select the infrared entity to use.
 4. Enter a name for the virtual remote.
 
-The initial setup flow creates the first virtual remote. Additional remotes can be added from the integration options.
+Each setup flow creates one virtual remote config entry. To create another virtual remote, add the Virtual Remote integration again.
 
 ---
 
-## Managing Virtual Remotes
+## Managing a Virtual Remote
 
-Open the Virtual Remote integration options to:
-- Add virtual remote
-- Edit virtual remote
-- Remove virtual remote
+Open a Virtual Remote config entry's options to:
+- Edit the virtual remote name or linked infrared entity
 - Manage commands
 
 If a virtual remote points to an infrared entity that no longer exists, the options flow still allows the remote to be edited and associated with a different infrared entity.
@@ -75,7 +73,7 @@ If a virtual remote points to an infrared entity that no longer exists, the opti
 
 ## Managing Commands
 
-Commands are managed through the integration options flow.
+Commands are managed through the virtual remote config entry options flow.
 
 Available operations:
 - Add command
@@ -110,6 +108,6 @@ A virtual remote is available when its linked infrared entity is available.
 
 ## Notes
 
-- Multiple virtual remotes may share the same infrared entity.
+- Multiple virtual remote config entries may share the same infrared entity.
 - The integration does not directly communicate with physical hardware.
 - Infrared transmission is handled by the linked infrared integration.

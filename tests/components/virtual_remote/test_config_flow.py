@@ -54,16 +54,13 @@ async def test_user_flow_success(hass: HomeAssistant, infrared_entity: str) -> N
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Virtual Remote"
-    assert result["options"] == {
-        CONF_VIRTUAL_REMOTES: [
-            {
-                CONF_REMOTE_ID: "living_room_tv",
-                CONF_REMOTE_NAME: "Living Room TV",
-                CONF_INFRARED_ENTITY_ID: infrared_entity,
-            }
-        ]
+    assert result["title"] == "Living Room TV"
+    assert result["data"] == {
+        CONF_REMOTE_ID: "living_room_tv",
+        CONF_REMOTE_NAME: "Living Room TV",
+        CONF_INFRARED_ENTITY_ID: infrared_entity,
     }
+    assert result["options"] == {}
     assert len(mock_setup.mock_calls) == 1
 
 
@@ -99,14 +96,49 @@ async def test_user_flow_validation_errors(
     assert result["errors"] == errors
 
 
-async def test_user_flow_single_instance(
+async def test_user_flow_allows_multiple_config_entries(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test only one config entry is allowed."""
+    """Test additional virtual remote config entries are allowed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+
+
+async def test_user_flow_aborts_duplicate_remote_id(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test setup aborts when a remote with the same normalized name exists."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Living Room TV",
+        data={
+            CONF_REMOTE_ID: "living_room_tv",
+            CONF_REMOTE_NAME: "Living Room TV",
+            CONF_INFRARED_ENTITY_ID: infrared_entity,
+        },
+        options={},
+        unique_id="living_room_tv",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_REMOTE_NAME: "Living Room TV",
+            CONF_INFRARED_ENTITY_ID: infrared_entity,
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -145,6 +177,53 @@ async def test_reconfigure_success(
     assert (
         config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_NAME] == "Bedroom TV"
     )
+    assert len(mock_reload.mock_calls) == 1
+
+
+async def test_reconfigure_success_single_entry_storage(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test reconfiguring a single-remote config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Living Room TV",
+        data={
+            CONF_REMOTE_ID: "living_room_tv",
+            CONF_REMOTE_NAME: "Living Room TV",
+            CONF_INFRARED_ENTITY_ID: infrared_entity,
+        },
+        options={},
+        unique_id="living_room_tv",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_REMOTE_NAME: "Bedroom TV",
+                CONF_INFRARED_ENTITY_ID: infrared_entity,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_REMOTE_NAME] == "Bedroom TV"
+    assert entry.data[CONF_INFRARED_ENTITY_ID] == infrared_entity
     assert len(mock_reload.mock_calls) == 1
 
 

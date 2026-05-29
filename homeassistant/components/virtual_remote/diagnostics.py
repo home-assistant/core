@@ -15,6 +15,7 @@ from .const import (
     CONF_REMOTE_NAME,
     CONF_VIRTUAL_REMOTES,
 )
+from .helpers import virtual_remotes_from_config_entry
 
 TO_REDACT = {"device_id", "unique_id", "uuid"}
 
@@ -24,9 +25,9 @@ async def async_get_config_entry_diagnostics(
     entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    remotes = _diagnostic_remotes(hass, entry)
+    remote_diagnostics = _diagnostic_remotes(hass, entry)
 
-    return {
+    diagnostics_data: dict[str, Any] = {
         "entry": async_redact_data(
             {
                 "title": entry.title,
@@ -37,20 +38,37 @@ async def async_get_config_entry_diagnostics(
             },
             TO_REDACT,
         ),
-        "virtual_remotes": remotes,
         "summary": {
-            "remote_count": len(remotes),
-            "command_count": sum(remote["command_count"] for remote in remotes),
+            "remote_count": len(remote_diagnostics),
+            "command_count": sum(
+                remote["command_count"] for remote in remote_diagnostics
+            ),
             "missing_infrared_entity_count": sum(
-                1 for remote in remotes if not remote["infrared_entity_exists"]
+                1
+                for remote in remote_diagnostics
+                if not remote["infrared_entity_exists"]
             ),
         },
     }
+
+    if CONF_REMOTE_ID in entry.data:
+        diagnostics_data["virtual_remote"] = (
+            remote_diagnostics[0] if remote_diagnostics else None
+        )
+    else:
+        diagnostics_data["virtual_remotes"] = remote_diagnostics
+
+    return diagnostics_data
 
 
 def _redacted_options(options: Mapping[str, Any]) -> dict[str, Any]:
     """Return options without full infrared command payloads."""
     redacted = dict(options)
+
+    commands = redacted.get(CONF_REMOTE_COMMANDS)
+    if isinstance(commands, dict):
+        redacted[CONF_REMOTE_COMMANDS] = sorted(commands)
+
     remotes = redacted.get(CONF_VIRTUAL_REMOTES)
     if not isinstance(remotes, list):
         return redacted
@@ -61,9 +79,9 @@ def _redacted_options(options: Mapping[str, Any]) -> dict[str, Any]:
             continue
 
         remote = dict(item)
-        commands = remote.get(CONF_REMOTE_COMMANDS, {})
-        if isinstance(commands, dict):
-            remote[CONF_REMOTE_COMMANDS] = sorted(commands)
+        remote_commands = remote.get(CONF_REMOTE_COMMANDS, {})
+        if isinstance(remote_commands, dict):
+            remote[CONF_REMOTE_COMMANDS] = sorted(remote_commands)
         redacted_remotes.append(remote)
 
     redacted[CONF_VIRTUAL_REMOTES] = redacted_remotes
@@ -75,15 +93,8 @@ def _diagnostic_remotes(
     entry: ConfigEntry,
 ) -> list[dict[str, Any]]:
     """Return sanitized virtual remote diagnostics."""
-    remotes = entry.options.get(CONF_VIRTUAL_REMOTES, [])
-    if not isinstance(remotes, list):
-        return []
-
     diagnostics: list[dict[str, Any]] = []
-    for item in remotes:
-        if not isinstance(item, dict):
-            continue
-
+    for item in virtual_remotes_from_config_entry(entry):
         infrared_entity_id = item.get(CONF_INFRARED_ENTITY_ID)
         commands = item.get(CONF_REMOTE_COMMANDS, {})
         diagnostics.append(

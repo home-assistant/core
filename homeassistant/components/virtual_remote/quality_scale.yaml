@@ -31,7 +31,7 @@ rules:
     status: done
     comment: |
       Config flow tests cover successful setup, no available infrared entities,
-      invalid infrared entity selection, duplicate single-instance handling, and
+      invalid infrared entity selection, duplicate remote handling, and
       reconfiguration.
 
   dependency-transparency:
@@ -102,8 +102,8 @@ rules:
   unique-config-entry:
     status: done
     comment: |
-      The config flow assigns a fixed unique ID and aborts if the integration is
-      already configured.
+      Each virtual remote config entry gets a stable unique ID derived from the
+      normalized remote name, and duplicate remote names are rejected.
 
   # Silver
   action-exceptions:

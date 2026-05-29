@@ -10,6 +10,7 @@ from homeassistant.components.virtual_remote.const import (
     CONF_REMOTE_COMMANDS,
     CONF_REMOTE_ID,
     CONF_REMOTE_NAME,
+    CONF_VIRTUAL_REMOTES,
 )
 from homeassistant.components.virtual_remote.helpers import (
     available_infrared_entities,
@@ -24,9 +25,13 @@ from homeassistant.components.virtual_remote.helpers import (
     remote_options,
     remotes_with_commands,
     unique_remote_id,
+    virtual_remote_from_config_entry_data,
+    virtual_remotes_from_config_entry,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, selector
+
+from tests.common import MockConfigEntry
 
 
 def _field_default(field: vol.Required) -> Any:
@@ -267,3 +272,127 @@ def test_infrared_entity_field_with_current_without_default_uses_required_field(
     )
 
     assert field.default is vol.UNDEFINED
+
+
+def test_virtual_remote_from_config_entry_data() -> None:
+    """Test normalizing a single virtual remote from config entry data."""
+    assert virtual_remote_from_config_entry_data(
+        {
+            CONF_REMOTE_ID: "tv",
+            CONF_REMOTE_NAME: "TV",
+            CONF_INFRARED_ENTITY_ID: "infrared.test_ir",
+            CONF_REMOTE_COMMANDS: {"POWER_ON": "38000:1,2", 1: "bad"},
+        }
+    ) == {
+        CONF_REMOTE_ID: "tv",
+        CONF_REMOTE_NAME: "TV",
+        CONF_INFRARED_ENTITY_ID: "infrared.test_ir",
+        CONF_REMOTE_COMMANDS: {"POWER_ON": "38000:1,2"},
+    }
+
+
+def test_virtual_remote_from_config_entry_data_rejects_malformed_data() -> None:
+    """Test malformed single virtual remote config entry data is rejected."""
+    assert (
+        virtual_remote_from_config_entry_data(
+            {
+                CONF_REMOTE_ID: "tv",
+                CONF_REMOTE_NAME: "",
+                CONF_INFRARED_ENTITY_ID: "infrared.test_ir",
+            }
+        )
+        is None
+    )
+
+
+def test_virtual_remotes_from_config_entry_prefers_options_list() -> None:
+    """Test config entry remote normalization prefers the current options list."""
+    entry = MockConfigEntry(
+        domain="virtual_remote",
+        data={
+            CONF_REMOTE_ID: "single",
+            CONF_REMOTE_NAME: "Single",
+            CONF_INFRARED_ENTITY_ID: "infrared.single",
+        },
+        options={
+            CONF_VIRTUAL_REMOTES: [
+                {
+                    CONF_REMOTE_ID: "list",
+                    CONF_REMOTE_NAME: "List",
+                    CONF_INFRARED_ENTITY_ID: "infrared.list",
+                }
+            ]
+        },
+    )
+
+    assert virtual_remotes_from_config_entry(entry) == [
+        {
+            CONF_REMOTE_ID: "list",
+            CONF_REMOTE_NAME: "List",
+            CONF_INFRARED_ENTITY_ID: "infrared.list",
+        }
+    ]
+
+
+def test_virtual_remotes_from_config_entry_supports_single_entry_data() -> None:
+    """Test config entry remote normalization supports one-remote entry data."""
+    entry = MockConfigEntry(
+        domain="virtual_remote",
+        data={
+            CONF_REMOTE_ID: "tv",
+            CONF_REMOTE_NAME: "TV",
+            CONF_INFRARED_ENTITY_ID: "infrared.test_ir",
+        },
+        options={CONF_REMOTE_COMMANDS: {"POWER_ON": "38000:1,2"}},
+    )
+
+    assert virtual_remotes_from_config_entry(entry) == [
+        {
+            CONF_REMOTE_ID: "tv",
+            CONF_REMOTE_NAME: "TV",
+            CONF_INFRARED_ENTITY_ID: "infrared.test_ir",
+            CONF_REMOTE_COMMANDS: {"POWER_ON": "38000:1,2"},
+        }
+    ]
+
+
+def test_virtual_remotes_from_config_entry_rejects_malformed_single_entry_data() -> (
+    None
+):
+    """Test config entry remote normalization rejects malformed one-remote data."""
+    entry = MockConfigEntry(
+        domain="virtual_remote",
+        data={
+            CONF_REMOTE_ID: "tv",
+            CONF_REMOTE_NAME: "",
+            CONF_INFRARED_ENTITY_ID: "infrared.test_ir",
+        },
+        options={},
+    )
+
+    assert virtual_remotes_from_config_entry(entry) == []
+
+
+def test_virtual_remotes_from_config_entry_supports_data_list_storage() -> None:
+    """Test config entry remote normalization supports legacy list in entry data."""
+    entry = MockConfigEntry(
+        domain="virtual_remote",
+        data={
+            CONF_VIRTUAL_REMOTES: [
+                {
+                    CONF_REMOTE_ID: "data_remote",
+                    CONF_REMOTE_NAME: "Data Remote",
+                    CONF_INFRARED_ENTITY_ID: "infrared.data_ir",
+                }
+            ]
+        },
+        options={},
+    )
+
+    assert virtual_remotes_from_config_entry(entry) == [
+        {
+            CONF_REMOTE_ID: "data_remote",
+            CONF_REMOTE_NAME: "Data Remote",
+            CONF_INFRARED_ENTITY_ID: "infrared.data_ir",
+        }
+    ]

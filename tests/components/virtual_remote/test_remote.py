@@ -285,7 +285,9 @@ async def test_async_setup_keeps_remote_with_invalid_command_entries(
 
     assert [entity.unique_id for entity in entities] == [
         f"{entry.entry_id}_remote_valid",
+        f"{entry.entry_id}_remote_bad_commands",
     ]
+    assert entities[1]._commands == {}
     assert entities[0]._commands == {"POWER": RAW_COMMAND}
 
 
@@ -747,3 +749,93 @@ async def test_send_failure_wrapped(
 
     assert err.value.translation_key == "remote_send_failed"
     assert err.value.translation_placeholders == {"error": "boom"}
+
+
+async def test_async_setup_entry_supports_single_entry_remote_data(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test standalone setup supports one virtual remote per config entry storage."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="single_entry",
+        data={
+            CONF_REMOTE_ID: "tv",
+            CONF_REMOTE_NAME: "TV",
+            CONF_INFRARED_ENTITY_ID: infrared_entity,
+        },
+        options={CONF_REMOTE_COMMANDS: {COMMAND_POWER_ON: "38000:1,2"}},
+    )
+    entry.add_to_hass(hass)
+    async_add_entities = Mock()
+
+    await async_setup_entry(hass, entry, async_add_entities)
+
+    entities = async_add_entities.call_args.args[0]
+    assert len(entities) == 1
+    assert entities[0].unique_id == remote_unique_id(entry.entry_id, "tv")
+
+
+async def test_async_setup_entry_ignores_malformed_single_entry_remote_data(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test standalone setup ignores malformed one-remote entry data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="single_entry",
+        data={
+            CONF_REMOTE_ID: "tv",
+            CONF_REMOTE_NAME: "",
+            CONF_INFRARED_ENTITY_ID: infrared_entity,
+        },
+        options={},
+    )
+    entry.add_to_hass(hass)
+    async_add_entities = Mock()
+
+    await async_setup_entry(hass, entry, async_add_entities)
+
+    assert async_add_entities.call_args.args[0] == []
+
+
+async def test_async_setup_virtual_remote_entities_skips_malformed_and_duplicate_remotes(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test setup skips malformed and duplicate virtual remote definitions."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    entities: list[InfraredRemoteEntity] = []
+
+    with patch(
+        "homeassistant.components.virtual_remote.remote.configured_remote_definitions",
+        return_value=[
+            {
+                CONF_REMOTE_ID: "valid",
+                CONF_REMOTE_NAME: "Valid",
+                CONF_INFRARED_ENTITY_ID: infrared_entity,
+                CONF_REMOTE_COMMANDS: {COMMAND_POWER_ON: RAW_COMMAND},
+            },
+            {
+                CONF_REMOTE_ID: "malformed",
+                CONF_REMOTE_NAME: "",
+                CONF_INFRARED_ENTITY_ID: infrared_entity,
+            },
+            {
+                CONF_REMOTE_ID: "valid",
+                CONF_REMOTE_NAME: "Duplicate",
+                CONF_INFRARED_ENTITY_ID: infrared_entity,
+            },
+        ],
+    ):
+        await async_setup_virtual_remote_entities(
+            hass,
+            entry,
+            _add_remote_entities_callback(entities),
+            device_info_factory=_device_info_factory,
+        )
+
+    assert [entity.unique_id for entity in entities] == [
+        f"{entry.entry_id}_remote_valid"
+    ]

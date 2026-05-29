@@ -22,11 +22,11 @@ from .const import (
     CONF_REMOTE_COMMANDS,
     CONF_REMOTE_ID,
     CONF_REMOTE_NAME,
-    CONF_VIRTUAL_REMOTES,
     DEFAULT_DELAY_SECS,
     DEFAULT_NUM_REPEATS,
     DOMAIN,
 )
+from .helpers import virtual_remotes_from_config_entry
 from .repairs import (
     async_create_linked_infrared_entity_missing_issue,
     async_delete_linked_infrared_entity_missing_issue,
@@ -68,23 +68,9 @@ def remote_unique_id(entry_id: str, remote_id: str) -> str:
     return f"{entry_id}_remote_{remote_id}"
 
 
-def configured_remote_definitions(entry: ConfigEntry) -> list[Mapping[str, Any]]:
+def configured_remote_definitions(entry: ConfigEntry) -> list[dict[str, Any]]:
     """Return configured virtual remote definitions."""
-    entry_data = getattr(entry, "data", {})
-    configured_remotes = entry.options.get(
-        CONF_VIRTUAL_REMOTES,
-        entry_data.get(CONF_VIRTUAL_REMOTES, []),
-    )
-
-    if not isinstance(configured_remotes, list):
-        _LOGGER.warning("Ignoring malformed virtual remote configuration")
-        return []
-
-    return [
-        remote_config
-        for remote_config in configured_remotes
-        if isinstance(remote_config, Mapping)
-    ]
+    return virtual_remotes_from_config_entry(entry)
 
 
 def _virtual_remote_device_info(
