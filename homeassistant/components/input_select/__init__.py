@@ -15,7 +15,6 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
     SelectEntity,
-    SelectEntityAttribute,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -123,8 +122,8 @@ class InputSelectStore(Store):
         if old_major_version == 1:
             if old_minor_version < 2:
                 for item in old_data["items"]:
-                    options = item[SelectEntityAttribute.OPTIONS]
-                    item[SelectEntityAttribute.OPTIONS] = _remove_duplicates(
+                    options = item[ATTR_OPTIONS]
+                    item[ATTR_OPTIONS] = _remove_duplicates(
                         options, item.get(CONF_NAME)
                     )
         return old_data
@@ -247,8 +246,7 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
     _entity_component_unrecorded_attributes = (
-        SelectEntity._entity_component_unrecorded_attributes  # noqa: SLF001
-        - {SelectEntityAttribute.OPTIONS}
+        SelectEntity._entity_component_unrecorded_attributes - {ATTR_OPTIONS}  # noqa: SLF001
     )
     _unrecorded_attributes = frozenset({ATTR_EDITABLE})
 

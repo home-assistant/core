@@ -1999,8 +1999,8 @@ class ModesTrait(_Trait):
         for domain, attr, name in (
             (fan.DOMAIN, fan.ATTR_PRESET_MODES, "preset mode"),
             (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
-            (input_select.DOMAIN, input_select.SelectEntityAttribute.OPTIONS, "option"),
-            (select.DOMAIN, select.SelectEntityAttribute.OPTIONS, "option"),
+            (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
+            (select.DOMAIN, select.ATTR_OPTIONS, "option"),
             (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
             (light.DOMAIN, light.ATTR_EFFECT_LIST, "effect"),
             (water_heater.DOMAIN, water_heater.ATTR_OPERATION_LIST, "operation mode"),
@@ -2074,7 +2074,7 @@ class ModesTrait(_Trait):
                 input_select.SERVICE_SELECT_OPTION,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    input_select.InputSelectServiceArgument.OPTION: option,
+                    input_select.ATTR_OPTION: option,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -2088,7 +2088,7 @@ class ModesTrait(_Trait):
                 select.SERVICE_SELECT_OPTION,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    select.SelectServiceArgument.OPTION: option,
+                    select.ATTR_OPTION: option,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
