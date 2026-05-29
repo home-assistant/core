@@ -43,8 +43,7 @@ def mock_v5_protocol_check() -> bool:
 def mock_try_connection_protocol_check(
     hass: HomeAssistant, mock_v5_protocol_check: bool
 ) -> Generator[MagicMock]:
-    """Patch try_connect."""
-    with patch(
+    """Patch try_connection."""
         "homeassistant.components.mqtt.try_connection",
         return_value=mock_v5_protocol_check,
     ) as mock_try_connection:
