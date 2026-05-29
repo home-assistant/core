@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the IRM KMI integration."""
 
-import logging
 from datetime import datetime, timedelta
+import logging
 
 from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
 
@@ -46,6 +46,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
         # because _async_update_data can return old data without raising an exception, which still counts as a
         # successful update for the coordinator.
         self._last_successful_api_update: datetime | None = None
+        self._warned_no_success_yet = False
 
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch data from API endpoint.
@@ -79,19 +80,24 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
                     "Could not connect to the API since %s",
                     self._last_successful_api_update,
                 )
-            else:
-                _LOGGER.warning("Could not connect to the API yet")
-            raise UpdateFailed(
-                f"Error communicating with API for general forecast: {err}. "
-                + (
+                success_info = (
                     f"Last success time is: {self._last_successful_api_update}"
-                    if self._last_successful_api_update is not None
-                    else "No successful API update yet."
                 )
+            else:
+                if not self._warned_no_success_yet:
+                    _LOGGER.warning("Could not connect to the API yet")
+                    self._warned_no_success_yet = True
+                else:
+                    _LOGGER.debug("Could not connect to the API yet")
+                success_info = "No successful API update yet."
+
+            raise UpdateFailed(
+                f"Error communicating with API for general forecast: {err}. {success_info}"
             ) from err
 
         data = await self.process_api_data()
         self._last_successful_api_update = utcnow()
+        self._warned_no_success_yet = False
 
         if not self.last_update_success:
             _LOGGER.warning("Successfully reconnected to the API")
