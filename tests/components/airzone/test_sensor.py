@@ -49,6 +49,18 @@ async def test_airzone_create_sensors(
     assert state is None
 
 
+async def test_airzone_system_sensors(hass: HomeAssistant) -> None:
+    """Test creation of the system sensors (Eco-Adapt and power)."""
+
+    await async_init_integration(hass)
+
+    state = hass.states.get("sensor.system_1_eco_adapt")
+    assert state.state == "manual"
+
+    state = hass.states.get("sensor.system_1_power")
+    assert state.state == "100"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_airzone_sensors_availability(hass: HomeAssistant) -> None:
     """Test sensors availability."""

@@ -5,9 +5,13 @@ from typing import Any, Final
 
 from aioairzone.const import (
     AZD_AIR_DEMAND,
+    AZD_ANTI_FREEZE,
     AZD_BATTERY_LOW,
+    AZD_COLD_DEMAND,
+    AZD_DEMAND,
     AZD_ERRORS,
     AZD_FLOOR_DEMAND,
+    AZD_HEAT_DEMAND,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
     AZD_ZONES,
@@ -52,13 +56,36 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
         translation_key="air_demand",
     ),
     AirzoneBinarySensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key=AZD_ANTI_FREEZE,
+        translation_key="anti_freeze",
+    ),
+    AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.BATTERY,
         key=AZD_BATTERY_LOW,
     ),
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
+        entity_registry_enabled_default=False,
+        key=AZD_COLD_DEMAND,
+        translation_key="cold_demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_registry_enabled_default=False,
+        key=AZD_DEMAND,
+        translation_key="demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
         key=AZD_FLOOR_DEMAND,
         translation_key="floor_demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_registry_enabled_default=False,
+        key=AZD_HEAT_DEMAND,
+        translation_key="heat_demand",
     ),
     AirzoneBinarySensorEntityDescription(
         attributes={
