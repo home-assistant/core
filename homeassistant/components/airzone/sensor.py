@@ -63,6 +63,8 @@ SYSTEM_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         options=["off", "manual", "a", "a_p", "a_pp"],
         translation_key="eco_adapt",
     ),
+    # The aioairzone AZD_ENERGY value is the clamp meter instantaneous power
+    # reading (in watts), hence the power device class despite the name.
     SensorEntityDescription(
         device_class=SensorDeviceClass.POWER,
         key=AZD_ENERGY,

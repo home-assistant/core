@@ -86,13 +86,7 @@ Q_ADAPT_DICT: Final[dict[str, int]] = {
     "maximum": QAdapt.MAXIMUM,
 }
 
-COLD_STAGE_DICT: Final[dict[str, int]] = {
-    "air": AirzoneStages.Air,
-    "radiant": AirzoneStages.Radiant,
-    "combined": AirzoneStages.Combined,
-}
-
-HEAT_STAGE_DICT: Final[dict[str, int]] = {
+STAGE_DICT: Final[dict[str, int]] = {
     "air": AirzoneStages.Air,
     "radiant": AirzoneStages.Radiant,
     "combined": AirzoneStages.Combined,
@@ -108,22 +102,16 @@ def main_zone_options(
     return [k for k, v in options.items() if v in modes]
 
 
-def cold_stage_options(
-    zone_data: dict[str, Any],
-    options: dict[str, int],
-) -> list[str]:
-    """Filter available cold stages."""
-    stages = zone_data.get(AZD_COLD_STAGES, [])
-    return [k for k, v in options.items() if v in stages]
+def stage_options(
+    stages_key: str,
+) -> Callable[[dict[str, Any], dict[str, int]], list[str]]:
+    """Build an options filter for the available stages of the given key."""
 
+    def _options(zone_data: dict[str, Any], options: dict[str, int]) -> list[str]:
+        stages = zone_data.get(stages_key, [])
+        return [k for k, v in options.items() if v in stages]
 
-def heat_stage_options(
-    zone_data: dict[str, Any],
-    options: dict[str, int],
-) -> list[str]:
-    """Filter available heat stages."""
-    stages = zone_data.get(AZD_HEAT_STAGES, [])
-    return [k for k, v in options.items() if v in stages]
+    return _options
 
 
 SYSTEM_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
@@ -178,16 +166,16 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         api_param=API_COLD_STAGE,
         entity_category=EntityCategory.CONFIG,
         key=AZD_COLD_STAGE,
-        options_dict=COLD_STAGE_DICT,
-        options_fn=cold_stage_options,
+        options_dict=STAGE_DICT,
+        options_fn=stage_options(AZD_COLD_STAGES),
         translation_key="cold_stage",
     ),
     AirzoneSelectDescription(
         api_param=API_HEAT_STAGE,
         entity_category=EntityCategory.CONFIG,
         key=AZD_HEAT_STAGE,
-        options_dict=HEAT_STAGE_DICT,
-        options_fn=heat_stage_options,
+        options_dict=STAGE_DICT,
+        options_fn=stage_options(AZD_HEAT_STAGES),
         translation_key="heat_stage",
     ),
 )
