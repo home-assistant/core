@@ -82,7 +82,7 @@ rules:
     comment: >
       This is is only supported for entities that are configured through MQTT discovery.
       Users must manually cleanup stale entities that were set up though YAML.
-  diagnostics: done
+  diagnostics: todo
   exception-translations: done
   icon-translations:
     status: exempt
