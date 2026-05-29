@@ -11,7 +11,7 @@ def test_normalize_repo() -> None:
     """Test repo normalization."""
     assert normalize_repo(None) == "wled/WLED"
     assert normalize_repo("") == "wled/WLED"
-    assert normalize_repo("  LordMike/Wled  ") == "LordMike/Wled"
+    assert normalize_repo("  LordMike/Wled  ") == "lordmike/wled"
 
 
 async def test_release_coordinator_is_cached_per_repo(hass: HomeAssistant) -> None:
@@ -32,14 +32,14 @@ async def test_release_coordinator_is_cached_per_repo(hass: HomeAssistant) -> No
         side_effect=_create_coordinator,
     ) as mock_coordinator:
         first = await async_get_releases_coordinator(hass, "LordMike/Wled")
-        second = await async_get_releases_coordinator(hass, "LordMike/Wled")
+        second = await async_get_releases_coordinator(hass, "lordmike/wled")
         default = await async_get_releases_coordinator(hass, None)
 
     assert first is second
     assert first is not default
     assert created == [first, default]
     assert mock_coordinator.call_args_list == [
-        call(hass, repo="LordMike/Wled"),
+        call(hass, repo="lordmike/wled"),
         call(hass, repo="wled/WLED"),
     ]
     assert first.async_request_refresh.await_count == 1

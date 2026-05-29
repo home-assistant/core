@@ -38,7 +38,7 @@ def normalize_repo(repo: str | None) -> str:
     if repo is None:
         return DEFAULT_REPO
 
-    normalized_repo = repo.strip()
+    normalized_repo = repo.strip().lower()
     return normalized_repo or DEFAULT_REPO
 
 
