@@ -13,6 +13,7 @@ from aioairzone.const import (
     API_SYSTEM_ID,
     API_ZONE_ID,
 )
+from aioairzone.exceptions import AirzoneError
 import pytest
 
 from homeassistant.components.select import ATTR_OPTIONS, DOMAIN as SELECT_DOMAIN
@@ -31,6 +32,10 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
     # Systems
     state = hass.states.get("select.system_1_q_adapt")
     assert state.state == "standard"
+
+    # Global (all zones) sleep, mirrored from the master zone.
+    state = hass.states.get("select.system_1_sleep_all_zones")
+    assert state.state == "off"
 
     # Zones
     state = hass.states.get("select.despacho_cold_angle")
@@ -315,3 +320,55 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
 
     state = hass.states.get("select.dorm_1_heat_angle")
     assert state.state == "45deg"
+
+
+async def test_airzone_select_all_zones_sleep(hass: HomeAssistant) -> None:
+    """Test the global sleep select fans the value out to every zone."""
+
+    await async_init_integration(hass)
+
+    # Invalid option is rejected before reaching the device.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.system_1_sleep_all_zones",
+                ATTR_OPTION: "Invalid",
+            },
+            blocking=True,
+        )
+
+    with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.set_hvac_parameters",
+    ) as mock_set:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.system_1_sleep_all_zones",
+                ATTR_OPTION: "30m",
+            },
+            blocking=True,
+        )
+
+    # System 1 has five zones, each one gets the parameter individually.
+    assert mock_set.call_count == 5
+
+    # A device error is surfaced as a HomeAssistantError.
+    with (
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.set_hvac_parameters",
+            side_effect=AirzoneError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.system_1_sleep_all_zones",
+                ATTR_OPTION: "60m",
+            },
+            blocking=True,
+        )

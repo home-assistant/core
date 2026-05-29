@@ -78,12 +78,10 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_FAN_MODE) is None
     assert state.attributes.get(ATTR_FAN_MODES) is None
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
+    # Slave zone: only off and the system's current mode are selectable.
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
-        HVACMode.FAN_ONLY,
-        HVACMode.COOL,
         HVACMode.HEAT,
-        HVACMode.DRY,
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
@@ -97,12 +95,10 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_FAN_MODE) is None
     assert state.attributes.get(ATTR_FAN_MODES) is None
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.IDLE
+    # Slave zone: only off and the system's current mode are selectable.
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
-        HVACMode.FAN_ONLY,
-        HVACMode.COOL,
         HVACMode.HEAT,
-        HVACMode.DRY,
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
@@ -116,12 +112,10 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_FAN_MODE) is None
     assert state.attributes.get(ATTR_FAN_MODES) is None
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
+    # Slave zone: only off and the system's current mode are selectable.
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
-        HVACMode.FAN_ONLY,
-        HVACMode.COOL,
         HVACMode.HEAT,
-        HVACMode.DRY,
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
@@ -139,12 +133,10 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         FAN_HIGH,
     ]
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.HEATING
+    # Slave zone: only off and the system's current mode are selectable.
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
-        HVACMode.FAN_ONLY,
-        HVACMode.COOL,
         HVACMode.HEAT,
-        HVACMode.DRY,
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
@@ -522,8 +514,10 @@ async def test_airzone_climate_set_hvac_slave_error(hass: HomeAssistant) -> None
             blocking=True,
         )
 
+    # The mode is not selectable on a slave zone, so the request is rejected
+    # before reaching the device and the zone stays off.
     state = hass.states.get("climate.dorm_2")
-    assert state.state == HVACMode.HEAT
+    assert state.state == HVACMode.OFF
 
 
 async def test_airzone_climate_set_fan_mode(hass: HomeAssistant) -> None:
@@ -655,3 +649,83 @@ async def test_airzone_climate_set_temp_range(hass: HomeAssistant) -> None:
     state = hass.states.get("climate.dkn_plus")
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20.0
+
+
+async def test_airzone_create_system_climate(hass: HomeAssistant) -> None:
+    """Test creation of the global (all zones) climate entity."""
+
+    await async_init_integration(hass)
+
+    state = hass.states.get("climate.system_1_all_zones")
+    assert state is not None
+    # At least one zone of the system is on, so the entity mirrors the
+    # master zone mode (heat).
+    assert state.state == HVACMode.HEAT
+    # Humidity (unitless) is the average across the system zones.
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 37
+    # Temperature is averaged across the system zones.
+    assert isinstance(state.attributes.get(ATTR_CURRENT_TEMPERATURE), float)
+    # Limits come from the master zone.
+    assert state.attributes.get(ATTR_MAX_TEMP) == 30
+    assert state.attributes.get(ATTR_MIN_TEMP) == 15
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+
+
+async def test_airzone_system_climate_turn_off(hass: HomeAssistant) -> None:
+    """Test the global climate turns every zone of the system off."""
+
+    await async_init_integration(hass)
+
+    with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.set_hvac_parameters",
+    ) as mock_set:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "climate.system_1_all_zones"},
+            blocking=True,
+        )
+
+    # System 1 has five zones, each turned off individually.
+    assert mock_set.call_count == 5
+
+
+async def test_airzone_system_climate_set_temp(hass: HomeAssistant) -> None:
+    """Test the global climate sets a common target temperature."""
+
+    await async_init_integration(hass)
+
+    with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.set_hvac_parameters",
+    ) as mock_set:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "climate.system_1_all_zones",
+                ATTR_TEMPERATURE: 22.0,
+            },
+            blocking=True,
+        )
+
+    assert mock_set.call_count == 5
+
+
+async def test_airzone_system_climate_error(hass: HomeAssistant) -> None:
+    """Test the global climate surfaces device errors."""
+
+    await async_init_integration(hass)
+
+    with (
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.set_hvac_parameters",
+            side_effect=AirzoneError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "climate.system_1_all_zones"},
+            blocking=True,
+        )

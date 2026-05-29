@@ -11,21 +11,27 @@ from aioairzone.const import (
     API_MODE,
     API_Q_ADAPT,
     API_SLEEP,
+    API_SYSTEM_ID,
+    API_ZONE_ID,
     AZD_COLD_ANGLE,
     AZD_HEAT_ANGLE,
+    AZD_ID,
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
     AZD_Q_ADAPT,
     AZD_SLEEP,
+    AZD_SYSTEM,
     AZD_SYSTEMS,
     AZD_ZONES,
 )
+from aioairzone.exceptions import AirzoneError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
@@ -92,6 +98,20 @@ SYSTEM_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         options=list(Q_ADAPT_DICT),
         options_dict=Q_ADAPT_DICT,
         translation_key="q_adapt",
+    ),
+)
+
+
+# System-level selects that apply a zone parameter to every zone at once
+# (fan-out), reproducing a "global zone" control.
+SYSTEM_ZONES_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
+    AirzoneSelectDescription(
+        api_param=API_SLEEP,
+        entity_category=EntityCategory.CONFIG,
+        key=AZD_SLEEP,
+        options=list(SLEEP_DICT),
+        options_dict=SLEEP_DICT,
+        translation_key="all_zones_sleep",
     ),
 )
 
@@ -166,6 +186,16 @@ async def async_setup_entry(
                 for system_id in new_systems
                 for description in SYSTEM_SELECT_TYPES
                 if description.key in systems_data.get(system_id)
+            )
+            entities.extend(
+                AirzoneSystemZonesSelect(
+                    coordinator,
+                    description,
+                    entry,
+                    system_id,
+                )
+                for system_id in new_systems
+                for description in SYSTEM_ZONES_SELECT_TYPES
             )
             added_systems.update(new_systems)
 
@@ -258,6 +288,64 @@ class AirzoneSystemSelect(AirzoneSystemEntity, AirzoneBaseSelect):
         param = self.entity_description.api_param
         value = self.entity_description.options_dict[option]
         await self._async_update_sys_params({param: value})
+
+
+class AirzoneSystemZonesSelect(AirzoneSystemEntity, AirzoneBaseSelect):
+    """Define a global select that applies a zone parameter to all zones."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        description: AirzoneSelectDescription,
+        entry: ConfigEntry,
+        system_id: str,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, coordinator.data[AZD_SYSTEMS][system_id])
+
+        self._attr_unique_id = (
+            f"{self._attr_unique_id}_{system_id}_all_zones_{description.key}"
+        )
+        self.entity_description = description
+        self._attr_options = list(description.options_dict)
+        self.values_dict = {v: k for k, v in description.options_dict.items()}
+
+        self._async_update_attrs()
+
+    def _system_zones(self) -> list[dict[str, Any]]:
+        """Return the data of every zone belonging to this system."""
+        zones = self.coordinator.data.get(AZD_ZONES, {})
+        return [
+            zone for zone in zones.values() if zone.get(AZD_SYSTEM) == self.system_id
+        ]
+
+    def get_airzone_value(self, key: str) -> Any:
+        """Return a representative value from the master zone of the system."""
+        zones = self._system_zones()
+        for zone in zones:
+            if zone.get(AZD_MASTER):
+                return zone.get(key)
+        return zones[0].get(key) if zones else None
+
+    async def async_select_option(self, option: str) -> None:
+        """Apply the selected option to every zone of the system (fan-out)."""
+        param = self.entity_description.api_param
+        value = self.entity_description.options_dict[option]
+        try:
+            for zone in self._system_zones():
+                await self.coordinator.airzone.set_hvac_parameters(
+                    {
+                        API_SYSTEM_ID: zone[AZD_SYSTEM],
+                        API_ZONE_ID: zone[AZD_ID],
+                        param: value,
+                    }
+                )
+        except AirzoneError as error:
+            raise HomeAssistantError(
+                f"Failed to set system {self.entity_id}: {error}"
+            ) from error
+
+        self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
 
 
 class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):

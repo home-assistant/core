@@ -33,7 +33,21 @@
         "name": "Floor demand"
       }
     },
+    "climate": {
+      "all_zones": {
+        "name": "All zones"
+      }
+    },
     "select": {
+      "all_zones_sleep": {
+        "name": "Sleep (all zones)",
+        "state": {
+          "30m": "[%key:component::airzone::entity::select::sleep_times::state::30m%]",
+          "60m": "[%key:component::airzone::entity::select::sleep_times::state::60m%]",
+          "90m": "[%key:component::airzone::entity::select::sleep_times::state::90m%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "grille_angles": {
         "name": "Cold angle",
         "state": {
