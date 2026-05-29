@@ -1214,7 +1214,7 @@ def enbrighten_55258_zw4002_firmware_5_50_fixture(
     enbrighten_55258_zw4002_state_firmware_5_50: dict[str, Any],
 ) -> Node:
     """Mock an Enbrighten_55258/ZW4002 fan controller node with firmware 5.50."""
-    node = Node(client, copy.deepcopy(enbrighten_55258_zw4002_state_firmware_5_50))
+    node = Node(client, enbrighten_55258_zw4002_state_firmware_5_50)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
