@@ -24,12 +24,16 @@ class IPPEntity(CoordinatorEntity[IPPDataUpdateCoordinator]):
         self.entity_description = description
 
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+        version = self.coordinator.data.info.version
+        if isinstance(version, list):
+            version = ", ".join(str(v) for v in version)
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.device_id)},
             manufacturer=self.coordinator.data.info.manufacturer,
             model=self.coordinator.data.info.model,
             name=self.coordinator.data.info.name,
             serial_number=self.coordinator.data.info.serial,
-            sw_version=self.coordinator.data.info.version,
+            sw_version=version,
             configuration_url=self.coordinator.data.info.more_info,
         )
