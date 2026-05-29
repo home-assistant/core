@@ -70,19 +70,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     try:
         async with asyncio.timeout(REQUEST_TIMEOUT):
             version = await api.get_version()
-
-    except (TimeoutError, HTTPError, InvalidURL) as err:
-        _LOGGER.debug("Could not connect to PrusaLink: %s", err)
-        raise CannotConnect from err
-
-    ensure_printer_is_supported(version)
-
-    try:
-        async with asyncio.timeout(REQUEST_TIMEOUT):
+            ensure_printer_is_supported(version)
             info = await api.get_info()
-
-    except (TimeoutError, HTTPError, InvalidURL) as err:
-        _LOGGER.debug("Could not connect to PrusaLink: %s", err)
+    except TimeoutError as err:
+        _LOGGER.debug("Could not connect to PrusaLink: timeout during validation")
+        raise CannotConnect from err
+    except (HTTPError, InvalidURL) as err:
+        _LOGGER.debug("Could not connect to PrusaLink during validation: %s", err)
         raise CannotConnect from err
 
     serial = info.get("serial")
