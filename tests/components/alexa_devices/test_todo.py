@@ -81,13 +81,13 @@ def mock_todo_items():
             ),
         },
         "custom_list_id": {
-            "item_2": AmazonListItem(
+            "item_4": AmazonListItem(
                 id="item_4",
                 name="TWICE",
                 status=AmazonListItemStatus.ACTIVE,
                 version=1,
             ),
-            "item_3": AmazonListItem(
+            "item_5": AmazonListItem(
                 id="item_5",
                 name="BTS",
                 status=AmazonListItemStatus.COMPLETE,
@@ -491,18 +491,18 @@ async def test_entity_naming(
     entity_registry = er.async_get(hass)
 
     # Shopping list (System)
-    shopping_list_entitiy = entity_registry.async_get(SHOPPING_LIST_ENTITY_ID)
-    assert shopping_list_entitiy is not None
-    assert shopping_list_entitiy.translation_key == "shop"
-    assert shopping_list_entitiy.has_entity_name is True
-    assert shopping_list_entitiy.original_name == "Shopping list"
+    shopping_list_entity = entity_registry.async_get(SHOPPING_LIST_ENTITY_ID)
+    assert shopping_list_entity is not None
+    assert shopping_list_entity.translation_key == "shop"
+    assert shopping_list_entity.has_entity_name is True
+    assert shopping_list_entity.original_name == "Shopping list"
 
     # To-do list (System)
-    todo_list_entitiy = entity_registry.async_get(TODO_LIST_ENTITY_ID)
-    assert todo_list_entitiy is not None
-    assert todo_list_entitiy.translation_key == "todo"
-    assert todo_list_entitiy.has_entity_name is True
-    assert todo_list_entitiy.original_name == "To-do list"
+    todo_list_entity = entity_registry.async_get(TODO_LIST_ENTITY_ID)
+    assert todo_list_entity is not None
+    assert todo_list_entity.translation_key == "todo"
+    assert todo_list_entity.has_entity_name is True
+    assert todo_list_entity.original_name == "To-do list"
 
     # Custom list
     custom_list_entity = entity_registry.async_get(CUSTOM_LIST_ENTITY_ID)
