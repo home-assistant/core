@@ -1,4 +1,7 @@
-"""Home Assistant component for accessing the Wallbox Portal API. The button component creates a button entity."""
+"""Home Assistant component for accessing the Wallbox Portal API button."""
+
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -12,10 +15,19 @@ from .const import (
 from .coordinator import WallboxConfigEntry, WallboxCoordinator
 from .entity import WallboxEntity
 
-BUTTON_TYPES: dict[str, ButtonEntityDescription] = {
-    CHARGER_RESUME_SCHEDULE_KEY: ButtonEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class WallboxButtonEntityDescription(ButtonEntityDescription):
+    """Describes Wallbox button entity."""
+
+    press_fn: Callable[[WallboxCoordinator], Awaitable[None]]
+
+
+BUTTON_TYPES: dict[str, WallboxButtonEntityDescription] = {
+    CHARGER_RESUME_SCHEDULE_KEY: WallboxButtonEntityDescription(
         key=CHARGER_RESUME_SCHEDULE_KEY,
         translation_key=CHARGER_RESUME_SCHEDULE_KEY,
+        press_fn=lambda coordinator: coordinator.async_resume_schedule(),
     ),
 }
 
@@ -39,10 +51,12 @@ PARALLEL_UPDATES = 0
 class WallboxButton(WallboxEntity, ButtonEntity):
     """Representation of the Wallbox portal."""
 
+    entity_description: WallboxButtonEntityDescription
+
     def __init__(
         self,
         coordinator: WallboxCoordinator,
-        description: ButtonEntityDescription,
+        description: WallboxButtonEntityDescription,
     ) -> None:
         """Initialize a Wallbox button."""
         super().__init__(coordinator)
@@ -54,4 +68,4 @@ class WallboxButton(WallboxEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Resume schedule and EcoSmart mode after a manual stop."""
-        await self.coordinator.async_resume_schedule()
+        await self.entity_description.press_fn(self.coordinator)
