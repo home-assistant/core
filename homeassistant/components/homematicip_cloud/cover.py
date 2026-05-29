@@ -367,6 +367,12 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         position = kwargs[ATTR_POSITION]
         # HmIP cover is closed:1 -> open:0
         level = 1 - position / 100.0
+        if level == HMIP_COVER_CLOSED:
+            # Route fully-closed position through the same slats-safe call
+            # as async_close_cover, otherwise slats get reset to 0 on FBL
+            # group members. See issue #114266.
+            await self.async_close_cover()
+            return
         await self._device.set_shutter_level_async(level)
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
