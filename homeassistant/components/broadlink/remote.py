@@ -25,6 +25,7 @@ from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_DEVICE,
     ATTR_NUM_REPEATS,
+    ATTR_TIMEOUT,
     DEFAULT_DELAY_SECS,
     DOMAIN as RM_DOMAIN,
     SERVICE_DELETE_COMMAND,
@@ -36,7 +37,7 @@ from homeassistant.components.remote import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, STATE_OFF
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
@@ -60,6 +61,8 @@ FLAG_STORAGE_VERSION = 1
 CODE_SAVE_DELAY = 15
 FLAG_SAVE_DELAY = 15
 
+ATTR_FREQUENCY = "frequency"
+
 COMMAND_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_COMMAND): vol.All(
@@ -81,6 +84,7 @@ SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
         vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
         vol.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): vol.In(COMMAND_TYPES),
         vol.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
+        vol.Optional(ATTR_FREQUENCY, default=None): vol.Any(None, cv.positive_float),
     }
 )
 
@@ -104,6 +108,21 @@ async def async_setup_entry(
         Store(hass, FLAG_STORAGE_VERSION, f"broadlink_remote_{device.unique_id}_flags"),
     )
     async_add_entities([remote], False)
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_LEARN_COMMAND,
+        {
+            vol.Optional(ATTR_DEVICE): cv.string,
+            vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_COMMAND_TYPE): cv.string,
+            vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
+            vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+            vol.Optional(ATTR_FREQUENCY): cv.positive_float,
+        },
+        "async_learn_command",
+    )
 
 
 class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
@@ -268,6 +287,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         kwargs = SERVICE_LEARN_SCHEMA(kwargs)
         commands = kwargs[ATTR_COMMAND]
         command_type = kwargs[ATTR_COMMAND_TYPE]
+        frequency = kwargs[ATTR_FREQUENCY]
         subdevice = kwargs[ATTR_DEVICE]
         toggle = kwargs[ATTR_ALTERNATIVE]
         service = f"{RM_DOMAIN}.{SERVICE_LEARN_COMMAND}"
@@ -287,7 +307,10 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 learn_command = self._async_learn_ir_command
 
             elif hasattr(device.api, "sweep_frequency"):
-                learn_command = self._async_learn_rf_command
+                if frequency:
+                    learn_command = self._async_find_rf_command
+                else:
+                    learn_command = self._async_learn_rf_command
 
             else:
                 err_msg = f"{self.entity_id} doesn't support learning RF commands"
@@ -298,9 +321,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
             for command in commands:
                 try:
-                    code = await learn_command(command)
+                    code = await learn_command(command, frequency)
                     if toggle:
-                        code = [code, await learn_command(command)]
+                        code = [code, await learn_command(command, frequency)]
 
                 # pylint: disable-next=home-assistant-action-swallowed-exception
                 except (AuthorizationError, NetworkTimeoutError, OSError) as err:
@@ -317,7 +340,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             if should_store:
                 await self._code_storage.async_save(self._codes)
 
-    async def _async_learn_ir_command(self, command):
+    async def _async_learn_ir_command(self, command, frequency: float):
         """Learn an infrared command."""
         device = self._device
 
@@ -355,7 +378,46 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self.hass, notification_id="learn_command"
             )
 
-    async def _async_learn_rf_command(self, command):
+    async def _async_find_rf_command(self, command, frequency: float):
+        """Learn a radiofrequency command."""
+        device = self._device
+
+        try:
+            await device.async_request(device.api.find_rf_packet, frequency)
+
+        except (BroadlinkException, OSError) as err:
+            _LOGGER.debug("Failed to enter learning mode: %s", err)
+            raise
+
+        persistent_notification.async_create(
+            self.hass,
+            f"Press the '{command}' button.",
+            title="Learn command",
+            notification_id="learn_command",
+        )
+
+        try:
+            start_time = dt_util.utcnow()
+            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
+                await asyncio.sleep(1)
+                try:
+                    code = await device.async_request(device.api.check_data)
+                except ReadError, StorageError:
+                    continue
+                await asyncio.sleep(1)
+                return b64encode(code).decode("utf8")
+
+            raise TimeoutError(
+                "No radiofrequency code received within "
+                f"{LEARNING_TIMEOUT.total_seconds()} seconds"
+            )
+
+        finally:
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="learn_command"
+            )
+
+    async def _async_learn_rf_command(self, command, frequency: float):
         """Learn a radiofrequency command."""
         device = self._device
 

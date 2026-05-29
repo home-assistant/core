@@ -1,0 +1,37 @@
+# Describes the format for available remote services
+
+learn_command:
+  target:
+    entity:
+      domain: broadlink
+  fields:
+    device:
+      example: "television"
+      selector:
+        text:
+    command:
+      example: "Turn on"
+      selector:
+        object:
+    command_type:
+      default: "rf"
+      selector:
+        select:
+          options:
+            - "ir"
+            - "rf"
+    frequency:
+      default: 433.92
+      selector:
+        number:
+          unit_of_measurement: MHz
+    alternative:
+      selector:
+        boolean:
+    timeout:
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 5
+          unit_of_measurement: seconds

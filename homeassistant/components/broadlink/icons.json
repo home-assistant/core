@@ -1,0 +1,7 @@
+{
+  "services": {
+    "learn_command": {
+      "service": "mdi:school"
+    }
+  }
+}

@@ -98,5 +98,37 @@
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
     }
+  },
+  "services": {
+    "learn_command": {
+      "description": "Learns a command or a list of commands from a device.",
+      "fields": {
+        "alternative": {
+          "description": "If code must be stored as an alternative. This is useful for discrete codes. Discrete codes are used for toggles that only perform one function. For example, a code to only turn a device on. If it is on already, sending the code won't change the state.",
+          "name": "Alternative"
+        },
+        "command": {
+          "description": "A single command or a list of commands to learn.",
+          "name": "Command"
+        },
+        "command_type": {
+          "description": "The type of command to be learned.",
+          "name": "Command type"
+        },
+        "device": {
+          "description": "Device ID to learn command from.",
+          "name": "Device"
+        },
+        "frequency": {
+          "description": "Only for RF command type. Specify the frequency of the command to learn. When disabled, a frequency sweep will attempt to detect the command frequency.",
+          "name": "Frequency"
+        },
+        "timeout": {
+          "description": "Timeout for the command to be learned.",
+          "name": "Timeout"
+        }
+      },
+      "name": "Learn command"
+    }
   }
 }
