@@ -1,17 +1,22 @@
-"""The binary_sensor tests for the nexia platform."""
+"""Tests for the nexia binary_sensor platform."""
+
+from nexia.home import NexiaHome
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from .util import async_init_integration
+from .conftest import setup_integration
 
 
-async def test_create_binary_sensors(hass: HomeAssistant) -> None:
+async def test_create_binary_sensors(
+    hass: HomeAssistant, mock_nexia_home: NexiaHome
+) -> None:
     """Test creation of binary sensors."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_nexia_home)
 
     state = hass.states.get("binary_sensor.master_suite_blower_active")
+    assert state is not None
     assert state.state == STATE_ON
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
@@ -24,6 +29,7 @@ async def test_create_binary_sensors(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get("binary_sensor.downstairs_east_wing_blower_active")
+    assert state is not None
     assert state.state == STATE_OFF
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
