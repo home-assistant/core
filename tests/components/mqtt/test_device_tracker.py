@@ -687,7 +687,7 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
     assert state.attributes.get("location_name") == "office"
 
     # Reset the manual set location
-    # Resent the GPS attributes
+    # Resend the GPS attributes
     # This should calculate the location from GPS attributes
     async_fire_mqtt_message(hass, "test-topic", "reset")
     state = hass.states.get("device_tracker.test")
