@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "high_leak": {
+        "default": "mdi:pipe-leak"
+      },
+      "low_leak": {
+        "default": "mdi:pipe-leak"
+      }
+    },
     "sensor": {
       "current_flow_rate": {
         "default": "mdi:chart-line"

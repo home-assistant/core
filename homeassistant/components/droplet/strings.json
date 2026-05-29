@@ -32,6 +32,10 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "high_leak": { "name": "High leak" },
+      "low_leak": { "name": "Low leak" }
+    },
     "sensor": {
       "current_flow_rate": { "name": "Flow rate" },
       "server_connectivity": { "name": "Server status" },
