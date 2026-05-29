@@ -54,6 +54,18 @@ type VolvoConfigEntry = ConfigEntry[VolvoRuntimeData]
 type CoordinatorData = dict[str, VolvoCarsApiBaseModel | None]
 
 
+def schedule_location_update(coordinator: VolvoBaseCoordinator) -> None:
+    """Schedule a location-only update."""
+    for c in coordinator.config_entry.runtime_data.interval_coordinators:
+        if isinstance(c, VolvoSlowIntervalCoordinator):
+            coordinator.config_entry.async_create_background_task(
+                coordinator.hass,
+                c.async_update_location(),
+                "Volvo location update",
+            )
+            break
+
+
 def _is_invalid_api_field(field: VolvoCarsApiBaseModel | None) -> bool:
     if not field:
         return True
@@ -178,7 +190,7 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
     def get_api_field(self, api_field: str | None) -> VolvoCarsApiBaseModel | None:
         """Get the API field based on the entity description."""
 
-        return self.data.get(api_field) if api_field else None
+        return self.data.get(api_field) if self.data and api_field else None
 
     @abstractmethod
     async def _async_determine_api_calls(
@@ -251,6 +263,8 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
             "Volvo slow interval coordinator",
         )
 
+        self._location_supported = False
+
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
@@ -277,8 +291,34 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
 
         if location and location.get("location") is not None:
             api_calls.append(api.async_get_location)
+            self._location_supported = True
 
         return api_calls
+
+    async def async_update_location(self) -> None:
+        """Fetch only the location data and update listeners."""
+        if not self._location_supported:
+            return
+
+        try:
+            location = await self.context.api.async_get_location()
+        except (VolvoApiException, VolvoAuthException) as ex:
+            _LOGGER.debug(
+                "%s - Location update failed: %s",
+                self.config_entry.entry_id,
+                ex.message,
+            )
+            return
+
+        valid_location: dict[str, VolvoCarsApiBaseModel | None] = {
+            key: field
+            for key, field in location.items()
+            if not _is_invalid_api_field(field)
+        }
+
+        if valid_location:
+            self.data = dict(self.data) | valid_location
+            self.async_update_listeners()
 
 
 class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
@@ -301,6 +341,23 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
         )
 
         self._supported_capabilities: list[str] = []
+
+    async def _async_update_data(self) -> CoordinatorData:
+        """Fetch data and trigger location update on engine-off."""
+        previous_state = self.get_api_field("engineStatus")
+        data = await super()._async_update_data()
+        new_state = data.get("engineStatus")
+
+        if (
+            isinstance(previous_state, VolvoCarsValue)
+            and previous_state.value == "RUNNING"
+            and isinstance(new_state, VolvoCarsValue)
+            and new_state.value
+            and new_state.value != "RUNNING"
+        ):
+            schedule_location_update(self)
+
+        return data
 
     async def _async_determine_api_calls(
         self,
@@ -381,3 +438,19 @@ class VolvoFastIntervalCoordinator(VolvoBaseCoordinator):
             api.async_get_doors_status,
             api.async_get_window_states,
         ]
+
+    async def _async_update_data(self) -> CoordinatorData:
+        """Fetch data and trigger location update on lock."""
+        previous_state = self.get_api_field("centralLock")
+        data = await super()._async_update_data()
+        new_state = data.get("centralLock")
+
+        if (
+            isinstance(previous_state, VolvoCarsValue)
+            and previous_state.value != "LOCKED"
+            and isinstance(new_state, VolvoCarsValue)
+            and new_state.value == "LOCKED"
+        ):
+            schedule_location_update(self)
+
+        return data
