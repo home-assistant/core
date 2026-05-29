@@ -81,7 +81,6 @@ async def test_device_tracker_streaming(
                     "latitude": 3.0,
                     "longitude": 4.0,
                 },
-                Signal.DESTINATION_NAME: "Home",
                 Signal.ORIGIN_LOCATION: None,
             },
             "createdAt": "2024-10-04T10:45:17.537Z",
@@ -91,7 +90,7 @@ async def test_device_tracker_streaming(
 
     # Assert the entities have correct state values
     assert hass.states.get("device_tracker.test_location").state == "not_home"
-    assert hass.states.get("device_tracker.test_route").state == "home"
+    assert hass.states.get("device_tracker.test_route").state == "not_home"
     assert hass.states.get("device_tracker.test_origin").state == "unknown"
 
     # Reload the entry

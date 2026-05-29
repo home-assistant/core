@@ -511,6 +511,14 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
+        key="drive_state_active_route_destination",
+        polling=True,
+        streaming_listener=lambda vehicle, callback: vehicle.listen_DestinationName(
+            callback
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
         key="drive_state_active_route_traffic_minutes_delay",
         polling=True,
         streaming_listener=lambda vehicle, callback: (
