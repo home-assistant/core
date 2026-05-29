@@ -83,7 +83,6 @@ from .const import (
     DEFAULT_ENCODING,
     DEFAULT_PORT,
     DEFAULT_PREFIX,
-    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
@@ -500,9 +499,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     mqtt_data: MqttData
 
-    if (protocol := entry.data.get(CONF_PROTOCOL, PROTOCOL_311)) != DEFAULT_PROTOCOL:
+    if (protocol := entry.data.get(CONF_PROTOCOL, PROTOCOL_311)) != PROTOCOL_5:
         # Automatically migrate the broker protocol to v5 if possible
-        # Can be removed with with HA Core
+        # Can be removed with HA Core 2027.1
         new_entry_data = entry.data.copy()
         new_entry_data[CONF_PROTOCOL] = PROTOCOL_5
         # Try the connection with protocol version 5
@@ -515,6 +514,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entry,
                 data=new_entry_data,
             )
+            ir.async_delete_issue(hass, DOMAIN, "protocol_5_migration")
             _LOGGER.info(
                 "The MQTT protocol version was successfully updated to version 5"
             )

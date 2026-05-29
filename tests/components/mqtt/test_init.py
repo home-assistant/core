@@ -2508,7 +2508,7 @@ async def test_mqtt_protocol_successful_migration_to_v5(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the MQTT protocol migration repair flow is successful."""
+    """Test the silent MQTT protocol migration is successful."""
     assert await async_setup_component(hass, "repairs", {})
 
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
@@ -2571,7 +2571,7 @@ async def test_mqtt_protocol_failed_migration_to_v5(
     caplog: pytest.LogCaptureFixture,
     current_protocol: str,
 ) -> None:
-    """Test the MQTT protocol migration repair flow fails."""
+    """Test failed silent MQTT protocol migration creates a repair issue."""
     assert await async_setup_component(hass, "repairs", {})
 
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
