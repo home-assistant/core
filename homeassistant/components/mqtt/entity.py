@@ -532,7 +532,7 @@ class MqttAttributesMixin(Entity):
                             "_attr_extra_state_attributes",
                             "_attr_gps_accuracy",
                             "_attr_latitude",
-                            "_attr_location_name",
+                            "_attr_in_zones",
                             "_attr_longitude",
                         },
                     ),

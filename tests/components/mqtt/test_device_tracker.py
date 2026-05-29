@@ -381,14 +381,17 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template2(
 
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("location_name") is None
 
     async_fire_mqtt_message(hass, "test-topic", "HOME")
     state = hass.states.get("device_Tracker.test")
     assert state.state == STATE_HOME
+    assert state.attributes.get("location_name") is None
 
     async_fire_mqtt_message(hass, "test-topic", "NOT_HOME")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
+    assert state.attributes.get("location_name") is None
 
 
 async def test_setting_device_tracker_location_via_mqtt_message(
@@ -410,7 +413,8 @@ async def test_setting_device_tracker_location_via_mqtt_message(
 
     async_fire_mqtt_message(hass, "test-topic", "test-location")
     state = hass.states.get("device_tracker.test")
-    assert state.state == "test-location"
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes.get("location_name") == "test-location"
 
 
 async def test_setting_device_tracker_location_via_lat_lon_message(
@@ -576,12 +580,14 @@ async def test_setting_device_tracker_location_via_reset_message(
     hass.config.longitude = -117.22743
 
     # test reset and gps attributes
+    async_fire_mqtt_message(hass, "test-topic", "None")
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_UNKNOWN
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
         '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
     )
-    async_fire_mqtt_message(hass, "test-topic", "None")
 
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
@@ -594,10 +600,18 @@ async def test_setting_device_tracker_location_via_reset_message(
     async_fire_mqtt_message(hass, "test-topic", "Work")
 
     state = hass.states.get("device_tracker.test")
-    assert state.state == "Work"
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes.get("location_name") == "Work"
 
-    # test reset
+    # test reset and submitting GPS coordinates
     async_fire_mqtt_message(hass, "test-topic", "None")
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_UNKNOWN
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
+    )
 
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_HOME
@@ -639,13 +653,15 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
 
-    # test custom reset payload and gps attributes
+    # test custom reset payload and sent gps attributes
+    async_fire_mqtt_message(hass, "test-topic", "reset")
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_UNKNOWN
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
         '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
     )
-    async_fire_mqtt_message(hass, "test-topic", "reset")
 
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
@@ -657,7 +673,8 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
     # Override the GPS state via a direct state update
     async_fire_mqtt_message(hass, "test-topic", "office")
     state = hass.states.get("device_tracker.test")
-    assert state.state == "office"
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes.get("location_name") == "office"
 
     # Test a GPS attributes update without a reset
     async_fire_mqtt_message(
@@ -666,12 +683,20 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
         '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
     )
 
-    state = hass.states.get("device_tracker.test")
-    assert state.state == "office"
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes.get("location_name") == "office"
 
     # Reset the manual set location
+    # Resent the GPS attributes
     # This should calculate the location from GPS attributes
     async_fire_mqtt_message(hass, "test-topic", "reset")
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_UNKNOWN
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
+    )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
     assert state.attributes["longitude"] == -117.22743

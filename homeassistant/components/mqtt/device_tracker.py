@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
@@ -121,7 +121,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     @callback
     def _tracker_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
-        payload = self._value_template(msg.payload)
+        payload = str(self._value_template(msg.payload))
         if not payload.strip():  # No output from template, ignore
             _LOGGER.debug(
                 "Ignoring empty payload '%s' after rendering for topic %s",
@@ -130,21 +130,38 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             )
             return
         if payload == self._config[CONF_PAYLOAD_HOME]:
-            self._attr_location_name = STATE_HOME
+            self._attr_in_zones = ["zone.home"]
+            self._location_name = payload
+            self._attr_latitude = None
+            self._attr_longitude = None
         elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:
-            self._attr_location_name = STATE_NOT_HOME
+            self._attr_in_zones = []
+            self._location_name = payload
+            self._attr_latitude = None
+            self._attr_longitude = None
         elif payload == self._config[CONF_PAYLOAD_RESET]:
-            self._attr_location_name = None
+            self._attr_in_zones = None
+            self._location_name = None
+            self._attr_latitude = None
+            self._attr_longitude = None
         else:
-            if TYPE_CHECKING:
-                assert isinstance(msg.payload, str)
-            self._attr_location_name = msg.payload
+            self._attr_in_zones = []
+            self._location_name = payload
+            self._attr_latitude = None
+            self._attr_longitude = None
+            self._attr_extra_state_attributes = (
+                dict(self.extra_state_attributes)
+                if self.extra_state_attributes is not None
+                else {}
+            ) | {"location_name": self._location_name}
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
-            CONF_STATE_TOPIC, self._tracker_message_received, {"_attr_location_name"}
+            CONF_STATE_TOPIC,
+            self._tracker_message_received,
+            {"_attr_in_zones", "_attr_latitude", "_attr_longitude", "_location_name"},
         )
 
     async def _subscribe_topics(self) -> None:
@@ -170,6 +187,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             ):
                 self._attr_latitude = latitude
                 self._attr_longitude = longitude
+                self._attr_in_zones = None
+                self._location_name = None
             else:
                 # Invalid or incomplete coordinates, reset location
                 self._attr_latitude = None
@@ -201,6 +220,9 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
             else:
                 self._attr_location_accuracy = 0
+
+        if self._location_name is not None:
+            extra_state_attributes["location_name"] = self._location_name
 
         self._attr_extra_state_attributes = {
             attribute: value
