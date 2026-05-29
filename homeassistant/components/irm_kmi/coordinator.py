@@ -81,7 +81,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
                 )
             else:
                 _LOGGER.warning("Could not connect to the API yet")
-                raise UpdateFailed(
+            raise UpdateFailed(
                 f"Error communicating with API for general forecast: {err}. "
                 + (
                     f"Last success time is: {self._last_successful_api_update}"
