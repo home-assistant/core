@@ -85,7 +85,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
     entity_description = LightEntityDescription(
         key="hue_grouped_light",
-        icon="mdi:lightbulb-group",
         has_entity_name=True,
         name=None,
     )
