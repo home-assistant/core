@@ -36,6 +36,17 @@ class VistapoolNumberEntityDescription(NumberEntityDescription):
     max_value_fn: Callable[[VistapoolDataUpdateCoordinator], float] | None = None
 
 
+def _max_electrolysis(coordinator: VistapoolDataUpdateCoordinator) -> float:
+    """Read the cell's hardware max, falling back to a safe default."""
+    raw = coordinator.get_value("hidro.maxAllowedValue")
+    if raw is None:
+        return 50.0
+    try:
+        return float(raw) / 10
+    except TypeError, ValueError:
+        return 50.0
+
+
 NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
     VistapoolNumberEntityDescription(
         key="redox_setpoint",
@@ -97,17 +108,6 @@ NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
         max_value_fn=_max_electrolysis,
     ),
 )
-
-
-def _max_electrolysis(coordinator: VistapoolDataUpdateCoordinator) -> float:
-    """Read the cell's hardware max, falling back to a safe default."""
-    raw = coordinator.get_value("hidro.maxAllowedValue")
-    if raw is None:
-        return 50.0
-    try:
-        return float(raw) / 10
-    except TypeError, ValueError:
-        return 50.0
 
 
 async def async_setup_entry(
