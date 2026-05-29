@@ -22,16 +22,16 @@ CONF_CYCLE = "cycle"
 CONF_OPTION = "option"
 
 #
-# Backwards compatibility / needs to be formally deprecated
+# Deprecated constants
+# They are single-use constants, or have been replaced by enums.
+# They need to be formally deprecated when all usage is removed
+# from core components
 #
 ATTR_CYCLE = SelectServiceArgument.CYCLE
 ATTR_OPTION = SelectServiceArgument.OPTION
 
 ATTR_OPTIONS = SelectEntityAttribute.OPTIONS.value
 
-#
-# Single-use constants / needs to be formally deprecated
-#
 SERVICE_SELECT_FIRST = "select_first"
 SERVICE_SELECT_LAST = "select_last"
 SERVICE_SELECT_NEXT = "select_next"
