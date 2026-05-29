@@ -83,8 +83,6 @@ class DeviceEntryDisabler(StrEnum):
 class DeviceInfoAttribute:
     """Device info attributes."""
 
-    # Note: typed dict does not support StrEnum
-
     CONFIGURATION_URL: Final = "configuration_url"
     CONNECTIONS: Final = "connections"
     IDENTIFIERS: Final = "identifiers"
