@@ -1,5 +1,6 @@
 """Vistapool Number entities."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from aioaquarite import AquariteError
@@ -32,6 +33,7 @@ class VistapoolNumberEntityDescription(NumberEntityDescription):
     value_path: str
     scale: int = 1
     exists_path: str | tuple[str, ...] | None = None
+    max_value_fn: Callable[[VistapoolDataUpdateCoordinator], float] | None = None
 
 
 NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
@@ -81,6 +83,19 @@ NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_path="filtration.intel.temp",
     ),
+    VistapoolNumberEntityDescription(
+        key="electrolysis_setpoint",
+        translation_key="electrolysis_setpoint",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0,
+        native_max_value=50.0,
+        native_step=0.1,
+        native_unit_of_measurement="g/h",
+        value_path="hidro.level",
+        scale=10,
+        exists_path=PATH_HASHIDRO,
+        max_value_fn=_max_electrolysis,
+    ),
 )
 
 
@@ -114,24 +129,6 @@ async def async_setup_entry(
                 if not all(coordinator.get_value(path) for path in required):
                     continue
             entities.append(VistapoolNumber(coordinator, description))
-
-        if coordinator.get_value(PATH_HASHIDRO):
-            entities.append(
-                VistapoolNumber(
-                    coordinator,
-                    VistapoolNumberEntityDescription(
-                        key="electrolysis_setpoint",
-                        translation_key="electrolysis_setpoint",
-                        entity_category=EntityCategory.CONFIG,
-                        native_min_value=0,
-                        native_max_value=_max_electrolysis(coordinator),
-                        native_step=0.1,
-                        native_unit_of_measurement="g/h",
-                        value_path="hidro.level",
-                        scale=10,
-                    ),
-                )
-            )
 
         if coordinator.get_value("filtration.hasHeat"):
             entities.extend(
@@ -208,6 +205,13 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = self.build_unique_id(description.key)
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the max value, recomputed from coordinator data when applicable."""
+        if (fn := self.entity_description.max_value_fn) is not None:
+            return fn(self.coordinator)
+        return self.entity_description.native_max_value
 
     @property
     def native_value(self) -> float | None:
