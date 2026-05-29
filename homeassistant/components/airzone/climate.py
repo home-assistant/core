@@ -391,7 +391,7 @@ class AirzoneSystemClimate(AirzoneSystemEntity, ClimateEntity):
 
     def _zones_average(self, key: str) -> float | None:
         """Return the average of a numeric key across all zones."""
-        values = [
+        values: list[float] = [
             zone[key] for zone in self._system_zones() if zone.get(key) is not None
         ]
         if not values:
