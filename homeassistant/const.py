@@ -754,7 +754,10 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 
 class UnitOfDensity(StrEnum):
-    """Density units."""
+    """Density units.
+
+    Ratio of a substance's mass to its volume.
+    """
 
     GRAMS_PER_CUBIC_METER = "g/m³"
     MILLIGRAMS_PER_CUBIC_METER = "mg/m³"
