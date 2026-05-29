@@ -29,43 +29,43 @@
       "filtration_timer_speed_1": {
         "name": "Filtration timer speed 1",
         "state": {
-          "slow": "Slow",
+          "high": "High",
           "medium": "Medium",
-          "high": "High"
+          "slow": "Slow"
         }
       },
       "filtration_timer_speed_2": {
         "name": "Filtration timer speed 2",
         "state": {
-          "slow": "Slow",
+          "high": "High",
           "medium": "Medium",
-          "high": "High"
+          "slow": "Slow"
         }
       },
       "filtration_timer_speed_3": {
         "name": "Filtration timer speed 3",
         "state": {
-          "slow": "Slow",
+          "high": "High",
           "medium": "Medium",
-          "high": "High"
+          "slow": "Slow"
         }
       },
       "pump_mode": {
         "name": "Pump mode",
         "state": {
-          "manual": "Manual",
           "auto": "Auto",
           "heat": "Heat",
-          "smart": "Smart",
-          "intel": "Intel"
+          "intel": "Intel",
+          "manual": "Manual",
+          "smart": "Smart"
         }
       },
       "pump_speed": {
         "name": "Pump speed",
         "state": {
-          "slow": "Slow",
+          "high": "High",
           "medium": "Medium",
-          "high": "High"
+          "slow": "Slow"
         }
       }
     },
