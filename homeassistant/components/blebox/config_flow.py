@@ -1,5 +1,6 @@
 """Config flow for BleBox devices integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -31,6 +32,16 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def create_reconfigure_schema(entry_data: Mapping[str, Any]) -> vol.Schema:
+    """Create a schema for reconfiguration with current entry values as defaults."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
+            vol.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
+        }
+    )
 
 
 def create_schema(previous_input=None):
@@ -69,13 +80,13 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         self.device_config: dict[str, Any] = {}
 
     def handle_step_exception(
-        self, step, exception, schema, host, port, message_id, log_fn
+        self, exception, schema, host, port, message_id, log_fn, step_id="user"
     ):
         """Handle step exceptions."""
         log_fn("%s at %s:%d (%s)", LOG_MSG[message_id], host, port, exception)
 
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=schema,
             errors={"base": message_id},
             description_placeholders={"address": f"{host}:{port}"},
@@ -178,7 +189,6 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except UnsupportedBoxVersion as ex:
             return self.handle_step_exception(
-                "user",
                 ex,
                 schema,
                 host,
@@ -188,17 +198,17 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except UnauthorizedRequest as ex:
             return self.handle_step_exception(
-                "user", ex, schema, host, port, CANNOT_CONNECT, _LOGGER.error
+                ex, schema, host, port, CANNOT_CONNECT, _LOGGER.error
             )
 
         except Error as ex:
             return self.handle_step_exception(
-                "user", ex, schema, host, port, CANNOT_CONNECT, _LOGGER.warning
+                ex, schema, host, port, CANNOT_CONNECT, _LOGGER.warning
             )
 
         except RuntimeError as ex:
             return self.handle_step_exception(
-                "user", ex, schema, host, port, UNKNOWN, _LOGGER.error
+                ex, schema, host, port, UNKNOWN, _LOGGER.error
             )
 
         # Check if configured but IP changed since
@@ -206,3 +216,76 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=product.name, data=user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a BleBox device."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=create_reconfigure_schema(reconfigure_entry.data),
+            )
+
+        host = user_input[CONF_HOST]
+        port = user_input[CONF_PORT]
+
+        username = reconfigure_entry.data.get(CONF_USERNAME)
+        password = reconfigure_entry.data.get(CONF_PASSWORD)
+        websession = get_maybe_authenticated_session(self.hass, password, username)
+        api_host = ApiHost(
+            host, port, DEFAULT_SETUP_TIMEOUT, websession, self.hass.loop, _LOGGER
+        )
+
+        try:
+            product = await Box.async_from_host(api_host)
+        except UnsupportedBoxVersion as ex:
+            return self.handle_step_exception(
+                ex,
+                create_reconfigure_schema(user_input),
+                host,
+                port,
+                UNSUPPORTED_VERSION,
+                _LOGGER.debug,
+                step_id="reconfigure",
+            )
+        except UnauthorizedRequest as ex:
+            return self.handle_step_exception(
+                ex,
+                create_reconfigure_schema(user_input),
+                host,
+                port,
+                CANNOT_CONNECT,
+                _LOGGER.error,
+                step_id="reconfigure",
+            )
+        except Error as ex:
+            return self.handle_step_exception(
+                ex,
+                create_reconfigure_schema(user_input),
+                host,
+                port,
+                CANNOT_CONNECT,
+                _LOGGER.warning,
+                step_id="reconfigure",
+            )
+        except RuntimeError as ex:
+            return self.handle_step_exception(
+                ex,
+                create_reconfigure_schema(user_input),
+                host,
+                port,
+                UNKNOWN,
+                _LOGGER.error,
+                step_id="reconfigure",
+            )
+
+        await self.async_set_unique_id(product.unique_id)
+        self._abort_if_unique_id_mismatch()
+
+        return self.async_update_reload_and_abort(
+            reconfigure_entry,
+            data_updates={CONF_HOST: host, CONF_PORT: port},
+        )

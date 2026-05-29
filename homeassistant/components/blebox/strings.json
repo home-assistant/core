@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "address_already_configured": "A BleBox device is already configured at {address}.",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The device identifier does not match the previously configured device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -11,6 +13,14 @@
     },
     "flow_title": "{name} ({host})",
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "description": "Update the connection settings for your BleBox device.",
+        "title": "Reconfigure BleBox device"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
