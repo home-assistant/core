@@ -181,7 +181,7 @@ class ZHAFirmwareUpdateEntity(
         return self.entity_data.entity.release_url
 
     # We explicitly convert ZHA exceptions to HA exceptions here so there is no need to
-    # use the `@convert_zha_error_to_ha_error` decorator.
+    # use the `@convert_zha_error_to_ha_error()` decorator.
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
