@@ -33,7 +33,7 @@ async def async_setup_scanner(
         hass,
         DOMAIN,
         "deprecated_yaml_import_issue_credentials_required",
-        breaks_in_ha_version="2027.5.0",
+        breaks_in_ha_version="2026.12.0",
         is_fixable=False,
         is_persistent=False,
         issue_domain=DOMAIN,
