@@ -191,8 +191,6 @@ async def test_reauth_successful(
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    # mock_appliance_client.test_connection.return_value = None
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=valid_user_input
     )
