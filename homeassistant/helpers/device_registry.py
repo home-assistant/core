@@ -80,6 +80,23 @@ class DeviceEntryDisabler(StrEnum):
     USER = "user"
 
 
+class DeviceInfoAttribute(StrEnum):
+    """Device info attributes."""
+
+    CONFIGURATION_URL = "configuration_url"
+    CONNECTIONS = "connections"
+    IDENTIFIERS = "identifiers"
+    HW_VERSION = "hw_version"
+    MANUFACTURER = "manufacturer"
+    MODEL = "model"
+    MODEL_ID = "model_id"
+    NAME = "name"
+    SERIAL_NUMBER = "serial_number"
+    SUGGESTED_AREA = "suggested_area"
+    SW_VERSION = "sw_version"
+    VIA_DEVICE = "via_device"
+
+
 class DeviceInfo(TypedDict, total=False):
     """Entity device information for device registry."""
 
