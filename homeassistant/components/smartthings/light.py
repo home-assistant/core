@@ -72,8 +72,10 @@ async def async_setup_entry(
         for device in entry_data.devices.values()
         for component in device.status
         if (
-            Capability.SWITCH in device.status[MAIN]
-            and any(capability in device.status[MAIN] for capability in CAPABILITIES)
+            Capability.SWITCH in device.status[component]
+            and any(
+                capability in device.status[component] for capability in CAPABILITIES
+            )
             and Capability.SAMSUNG_CE_LAMP not in device.status[component]
         )
     ]
