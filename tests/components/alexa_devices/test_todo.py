@@ -15,6 +15,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.todo import AlexaToDoList
+from homeassistant.components.alexa_devices.utils import (
+    async_remove_stale_todo_list_entities,
+)
 from homeassistant.components.todo import (
     DATA_COMPONENT,
     DOMAIN as TODO_DOMAIN,
@@ -33,7 +36,10 @@ from .const import TEST_USERNAME
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-ENTITY_ID_PREFIX = f"todo.{slugify(TEST_USERNAME)}"
+LIST_ENTITY_ID_PREFIX = f"{TODO_DOMAIN.lower()}.{slugify(TEST_USERNAME)}_"
+SHOPPING_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}shopping_list"
+TODO_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}to_do_list"
+CUSTOM_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}concerts"
 
 
 @pytest.fixture
@@ -42,6 +48,9 @@ def mock_todo_lists():
     return [
         AmazonListInfo(id="shopping_list_id", name=None, list_type=AmazonListType.SHOP),
         AmazonListInfo(id="todo_list_id", name=None, list_type=AmazonListType.TODO),
+        AmazonListInfo(
+            id="custom_list_id", name="Concerts", list_type=AmazonListType.CUSTOM
+        ),
     ]
 
 
@@ -67,6 +76,20 @@ def mock_todo_items():
             "item_3": AmazonListItem(
                 id="item_3",
                 name="Task 2",
+                status=AmazonListItemStatus.COMPLETE,
+                version=2,
+            ),
+        },
+        "custom_list_id": {
+            "item_2": AmazonListItem(
+                id="item_4",
+                name="TWICE",
+                status=AmazonListItemStatus.ACTIVE,
+                version=1,
+            ),
+            "item_3": AmazonListItem(
+                id="item_5",
+                name="BTS",
                 status=AmazonListItemStatus.COMPLETE,
                 version=2,
             ),
@@ -107,7 +130,7 @@ async def test_add_todo_item(
 
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = f"{ENTITY_ID_PREFIX}_to_do_list"
+    entity_id = TODO_LIST_ENTITY_ID
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -136,7 +159,7 @@ async def test_delete_todo_item(
 
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = f"{ENTITY_ID_PREFIX}_to_do_list"
+    entity_id = TODO_LIST_ENTITY_ID
 
     # Delete item_2
     await hass.services.async_call(
@@ -166,7 +189,7 @@ async def test_update_todo_item(
 
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = f"{ENTITY_ID_PREFIX}_to_do_list"
+    entity_id = TODO_LIST_ENTITY_ID
 
     # Update item_2 (ACTIVE -> COMPLETE)
     await hass.services.async_call(
@@ -238,7 +261,7 @@ async def test_update_todo_item_errors(
 
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = f"{ENTITY_ID_PREFIX}_to_do_list"
+    entity_id = TODO_LIST_ENTITY_ID
 
     # Item not found in HA
     with pytest.raises(ServiceValidationError, match="Unable to find to-do list item"):
@@ -314,8 +337,8 @@ async def test_dynamic_lists(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(f"{ENTITY_ID_PREFIX}_shopping_list") is not None
-    assert hass.states.get(f"{ENTITY_ID_PREFIX}_to_do_list") is None
+    assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
+    assert hass.states.get(TODO_LIST_ENTITY_ID) is None
 
     # Add a new list
     mock_amazon_devices_client.todo_lists.append(
@@ -331,8 +354,8 @@ async def test_dynamic_lists(
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{ENTITY_ID_PREFIX}_shopping_list") is not None
-    assert hass.states.get(f"{ENTITY_ID_PREFIX}_concerts") is not None
+    assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
+    assert hass.states.get(CUSTOM_LIST_ENTITY_ID) is not None
 
 
 async def test_todo_event_handler(
@@ -421,3 +444,69 @@ async def test_todo_event_handler(
     )
     await coordinator.todo_event_handler(unknown_event)
     listener.assert_not_called()
+
+
+async def test_remove_stale_todo_list_entities(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_todo_lists: list[AmazonListInfo],
+) -> None:
+    """Test removing stale todo list entities."""
+    mock_amazon_devices_client.todo_lists = mock_todo_lists
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
+    assert hass.states.get(TODO_LIST_ENTITY_ID) is not None
+
+    # Remove custom list from the API
+    for i, amazon_list in enumerate(mock_amazon_devices_client.todo_lists):
+        if amazon_list.name == "Concerts":
+            mock_amazon_devices_client.todo_lists.pop(i)
+
+    # Call the utility function
+    await async_remove_stale_todo_list_entities(hass, mock_config_entry.runtime_data)
+    await hass.async_block_till_done()
+
+    # Verify custom list was deleted from state machine while others remain
+    assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
+    assert hass.states.get(TODO_LIST_ENTITY_ID) is not None
+    assert hass.states.get(CUSTOM_LIST_ENTITY_ID) is None
+
+
+async def test_entity_naming(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_todo_lists: list[AmazonListInfo],
+) -> None:
+    """Test entity naming."""
+    mock_amazon_devices_client.todo_lists = mock_todo_lists
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_registry = er.async_get(hass)
+
+    # Shopping list (System)
+    shopping_list_entitiy = entity_registry.async_get(SHOPPING_LIST_ENTITY_ID)
+    assert shopping_list_entitiy is not None
+    assert shopping_list_entitiy.translation_key == "shop"
+    assert shopping_list_entitiy.has_entity_name is True
+    assert shopping_list_entitiy.original_name == "Shopping list"
+
+    # To-do list (System)
+    todo_list_entitiy = entity_registry.async_get(TODO_LIST_ENTITY_ID)
+    assert todo_list_entitiy is not None
+    assert todo_list_entitiy.translation_key == "todo"
+    assert todo_list_entitiy.has_entity_name is True
+    assert todo_list_entitiy.original_name == "To-do list"
+
+    # Custom list
+    custom_list_entity = entity_registry.async_get(CUSTOM_LIST_ENTITY_ID)
+    assert custom_list_entity is not None
+    assert custom_list_entity.original_name == "Concerts"
+    assert custom_list_entity.translation_key is None
+    assert custom_list_entity.has_entity_name is True

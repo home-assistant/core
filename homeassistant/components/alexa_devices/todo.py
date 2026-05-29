@@ -20,6 +20,7 @@ from homeassistant.helpers.entity import EntityDescription
 from .const import _LOGGER, DOMAIN
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonServiceEntity
+from .utils import async_remove_stale_todo_list_entities
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -36,6 +37,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Alexa To-do Lists platform."""
     coordinator = entry.runtime_data
+
+    await async_remove_stale_todo_list_entities(hass, coordinator)
 
     known_list_ids: set[str] = set()
 

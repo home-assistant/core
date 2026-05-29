@@ -14,9 +14,11 @@ from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.entity_registry as er
+from homeassistant.util import slugify
 
 from .const import _LOGGER, DOMAIN
 from .coordinator import AmazonDevicesCoordinator
@@ -90,6 +92,31 @@ async def async_remove_dnd_from_virtual_group(
         if entity_id and is_group:
             entity_registry.async_remove(entity_id)
             _LOGGER.debug("Removed DND switch from virtual group %s", entity_id)
+
+
+async def async_remove_stale_todo_list_entities(
+    hass: HomeAssistant, coordinator: AmazonDevicesCoordinator
+) -> None:
+    """Remove todo list entities."""
+    entity_registry = er.async_get(hass)
+
+    existing_entities = er.async_entries_for_config_entry(
+        entity_registry, coordinator.config_entry.entry_id
+    )
+    current_list_ids = {todo_list.id for todo_list in coordinator.api.todo_lists}
+
+    # Unique ID is slugify(config_entry.unique_id)-list_id
+    prefix = f"{slugify(coordinator.config_entry.unique_id)}-"
+
+    for entity in existing_entities:
+        if entity.domain != TODO_DOMAIN or not entity.unique_id.startswith(prefix):
+            continue
+
+        list_id = entity.unique_id.removeprefix(prefix)
+
+        if list_id not in current_list_ids:
+            entity_registry.async_remove(entity.entity_id)
+            _LOGGER.debug("Removed todo list entity %s", entity.entity_id)
 
 
 async def async_remove_unsupported_notification_sensors(
