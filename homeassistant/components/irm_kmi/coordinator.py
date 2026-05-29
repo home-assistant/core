@@ -18,6 +18,8 @@ from homeassistant.util.dt import utcnow
 from .data import ProcessedCoordinatorData
 from .utils import preferred_language
 
+GRACE_FACTOR = 2.5
+
 _LOGGER = logging.getLogger(__name__)
 
 type IrmKmiConfigEntry = ConfigEntry[IrmKmiCoordinator]
@@ -73,7 +75,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
                 and self._last_successful_api_update is not None
                 and self.update_interval is not None
                 and utcnow() - self._last_successful_api_update
-                < 2.5 * self.update_interval
+                < GRACE_FACTOR * self.update_interval
             ):
                 return self.data
 
