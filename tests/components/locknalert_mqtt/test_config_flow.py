@@ -3,11 +3,16 @@
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiolocknalert import LocknAlertCannotConnect, LocknAlertInvalidResponse
+from aiolocknalert import (
+    BootstrapResult,
+    LocknAlertAlreadyProvisioned,
+    LocknAlertCannotConnect,
+    LocknAlertInvalidAuth,
+    LocknAlertInvalidResponse,
+)
 import pytest
 
 from homeassistant.components.locknalert_mqtt.config_flow import (
-    PWD_NOT_CHANGED,
     extract_serial_from_discovery,
 )
 from homeassistant.components.locknalert_mqtt.const import (
@@ -17,6 +22,7 @@ from homeassistant.components.locknalert_mqtt.const import (
     CONF_BROKER,
     CONF_COMMAND_TOPIC,
     CONF_DISCOVERY_PREFIX,
+    CONF_PAIRING_TOKEN,
     CONF_STATE_TOPIC,
     CONFIG_ENTRY_MINOR_VERSION,
     CONFIG_ENTRY_VERSION,
@@ -40,13 +46,17 @@ MOCK_BROKER = "192.168.1.100"
 MOCK_PORT = 1883
 MOCK_USERNAME = "mqtt_user"
 MOCK_PASSWORD = "mqtt_pass"
+MOCK_PAIRING_TOKEN = "token-abc-123"
 
-MOCK_BOOTSTRAP_RESPONSE = {
-    "host": MOCK_BROKER,
-    "port": MOCK_PORT,
-    "username": MOCK_USERNAME,
-    "password": MOCK_PASSWORD,
-}
+MOCK_BOOTSTRAP_RESPONSE = BootstrapResult(
+    host=MOCK_BROKER,
+    port=MOCK_PORT,
+    username=MOCK_USERNAME,
+    password=MOCK_PASSWORD,
+    tls_required=False,
+    topic_prefix="locknalert",
+    pairing_token=MOCK_PAIRING_TOKEN,
+)
 
 
 def _make_zeroconf_info(
@@ -517,32 +527,11 @@ async def test_broker_step_shows_error_on_cannot_connect(
 # ---------------------------------------------------------------------------
 
 
-async def test_reauth_shows_form(hass: HomeAssistant) -> None:
-    """Reauth step shows a form with username/password fields."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_BRIDGE_SERIAL,
-        data={
-            CONF_BROKER: MOCK_BROKER,
-            CONF_USERNAME: MOCK_USERNAME,
-            CONF_PASSWORD: MOCK_PASSWORD,
-        },
-        version=CONFIG_ENTRY_VERSION,
-        minor_version=CONFIG_ENTRY_MINOR_VERSION,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "reauth", "entry_id": entry.entry_id},
-        data=entry.data,
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-
-async def test_reauth_updates_entry_on_valid_credentials(hass: HomeAssistant) -> None:
-    """Reauth with valid credentials updates the config entry."""
+async def test_reauth_auto_bootstraps_with_stored_token(
+    hass: HomeAssistant,
+    mock_client_session: AsyncMock,
+) -> None:
+    """Reauth automatically re-bootstraps using the stored serial and token."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_BRIDGE_SERIAL,
@@ -550,36 +539,48 @@ async def test_reauth_updates_entry_on_valid_credentials(hass: HomeAssistant) ->
             CONF_BROKER: MOCK_BROKER,
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: "old_pass",
+            CONF_BRIDGE_SERIAL: MOCK_BRIDGE_SERIAL,
+            CONF_PAIRING_TOKEN: MOCK_PAIRING_TOKEN,
         },
         version=CONFIG_ENTRY_VERSION,
         minor_version=CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "reauth", "entry_id": entry.entry_id},
-        data=entry.data,
+    new_token = "rotated-token-xyz"
+    new_result = BootstrapResult(
+        host=MOCK_BROKER,
+        port=MOCK_PORT,
+        username=MOCK_USERNAME,
+        password="new_pass",
+        tls_required=False,
+        topic_prefix="locknalert",
+        pairing_token=new_token,
     )
 
     with patch(
-        "homeassistant.components.locknalert_mqtt.config_flow.try_connection",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: "new_pass"},
+        "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
+    ) as mock_cls:
+        instance = MagicMock()
+        instance.async_bootstrap = AsyncMock(return_value=new_result)
+        mock_cls.return_value = instance
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "entry_id": entry.entry_id},
+            data=entry.data,
         )
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_PASSWORD] == "new_pass"
+    assert entry.data[CONF_PAIRING_TOKEN] == new_token
 
 
-async def test_reauth_shows_error_on_invalid_credentials(
+async def test_reauth_shows_missing_data_error_when_no_token(
     hass: HomeAssistant,
 ) -> None:
-    """Reauth with invalid credentials shows an error."""
+    """Reauth shows an error when the stored entry has no pairing token."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_BRIDGE_SERIAL,
@@ -587,6 +588,8 @@ async def test_reauth_shows_error_on_invalid_credentials(
             CONF_BROKER: MOCK_BROKER,
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_BRIDGE_SERIAL: MOCK_BRIDGE_SERIAL,
+            # No CONF_PAIRING_TOKEN
         },
         version=CONFIG_ENTRY_VERSION,
         minor_version=CONFIG_ENTRY_MINOR_VERSION,
@@ -599,54 +602,83 @@ async def test_reauth_shows_error_on_invalid_credentials(
         data=entry.data,
     )
 
-    with patch(
-        "homeassistant.components.locknalert_mqtt.config_flow.try_connection",
-        return_value=False,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: "wrong"},
-        )
-
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == "invalid_auth"
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == "reauth_missing_data"
 
 
-async def test_reauth_pwd_not_changed_sentinel_keeps_existing_password(
+async def test_reauth_shows_allow_provisioning_error(
     hass: HomeAssistant,
+    mock_client_session: AsyncMock,
 ) -> None:
-    """Submitting PWD_NOT_CHANGED sentinel preserves the existing password."""
+    """Reauth shows allow-provisioning error when the token is stale."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_BRIDGE_SERIAL,
         data={
             CONF_BROKER: MOCK_BROKER,
             CONF_USERNAME: MOCK_USERNAME,
-            CONF_PASSWORD: "original_pass",
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_BRIDGE_SERIAL: MOCK_BRIDGE_SERIAL,
+            CONF_PAIRING_TOKEN: "stale-token",
         },
         version=CONFIG_ENTRY_VERSION,
         minor_version=CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "reauth", "entry_id": entry.entry_id},
-        data=entry.data,
-    )
-
     with patch(
-        "homeassistant.components.locknalert_mqtt.config_flow.try_connection",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: PWD_NOT_CHANGED},
+        "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
+    ) as mock_cls:
+        instance = MagicMock()
+        instance.async_bootstrap = AsyncMock(side_effect=LocknAlertAlreadyProvisioned)
+        mock_cls.return_value = instance
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "entry_id": entry.entry_id},
+            data=entry.data,
         )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_PASSWORD] == "original_pass"
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == "reauth_allow_provisioning"
+
+
+async def test_reauth_shows_invalid_auth_error(
+    hass: HomeAssistant,
+    mock_client_session: AsyncMock,
+) -> None:
+    """Reauth shows invalid_auth error when bridge rejects the credentials."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_BRIDGE_SERIAL,
+        data={
+            CONF_BROKER: MOCK_BROKER,
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_BRIDGE_SERIAL: MOCK_BRIDGE_SERIAL,
+            CONF_PAIRING_TOKEN: MOCK_PAIRING_TOKEN,
+        },
+        version=CONFIG_ENTRY_VERSION,
+        minor_version=CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
+    ) as mock_cls:
+        instance = MagicMock()
+        instance.async_bootstrap = AsyncMock(side_effect=LocknAlertInvalidAuth)
+        mock_cls.return_value = instance
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == "invalid_auth"
 
 
 # ---------------------------------------------------------------------------
