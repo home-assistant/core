@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -130,7 +131,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             )
             return
         if payload == self._config[CONF_PAYLOAD_HOME]:
-            self._attr_in_zones = ["zone.home"]
+            self._attr_in_zones = [ENTITY_ID_HOME]
             self._location_name = payload
             self._attr_latitude = None
             self._attr_longitude = None
