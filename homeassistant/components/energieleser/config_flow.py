@@ -69,7 +69,7 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        host = str(discovery_info.host)
+        host = discovery_info.host
         client = EnergieleserClient(
             host=host, session=async_get_clientsession(self.hass)
         )
