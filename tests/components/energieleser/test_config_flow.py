@@ -12,7 +12,7 @@ import pytest
 
 from homeassistant.components.energieleser.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -39,7 +39,7 @@ async def test_user_flow_stromleser(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "stromleser.one"
     assert result["data"][CONF_HOST] == "192.168.1.100"
-    assert result["data"]["device_id"] == STROMLESER_DEVICE_ID
+    assert result["data"][CONF_DEVICE_ID] == STROMLESER_DEVICE_ID
     assert result["result"].unique_id == STROMLESER_DEVICE_ID
 
 
@@ -141,7 +141,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
     assert result["description_placeholders"]["device_type"] == "stromleser.one"
-    assert result["description_placeholders"]["device_id"] == STROMLESER_DEVICE_ID
+    assert result["description_placeholders"][CONF_DEVICE_ID] == STROMLESER_DEVICE_ID
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -149,7 +149,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "stromleser.one"
-    assert result["data"]["device_id"] == STROMLESER_DEVICE_ID
+    assert result["data"][CONF_DEVICE_ID] == STROMLESER_DEVICE_ID
 
 
 @pytest.mark.parametrize(

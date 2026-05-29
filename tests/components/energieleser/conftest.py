@@ -12,7 +12,7 @@ from energieleser import (
 import pytest
 
 from homeassistant.components.energieleser.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
 
 from tests.common import MockConfigEntry
 
@@ -101,7 +101,7 @@ def mock_stromleser_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.100",
-            "device_id": STROMLESER_DEVICE_ID,
+            CONF_DEVICE_ID: STROMLESER_DEVICE_ID,
         },
         unique_id=STROMLESER_DEVICE_ID,
     )
@@ -115,7 +115,7 @@ def mock_gasleser_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.101",
-            "device_id": GASLESER_DEVICE_ID,
+            CONF_DEVICE_ID: GASLESER_DEVICE_ID,
         },
         unique_id=GASLESER_DEVICE_ID,
     )
@@ -129,7 +129,7 @@ def mock_waermeleser_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.102",
-            "device_id": WAERMELESER_DEVICE_ID,
+            CONF_DEVICE_ID: WAERMELESER_DEVICE_ID,
         },
         unique_id=WAERMELESER_DEVICE_ID,
     )
@@ -143,7 +143,7 @@ def mock_wasserleser_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.103",
-            "device_id": WASSERLESER_DEVICE_ID,
+            CONF_DEVICE_ID: WASSERLESER_DEVICE_ID,
         },
         unique_id=WASSERLESER_DEVICE_ID,
     )
