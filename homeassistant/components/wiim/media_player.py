@@ -31,6 +31,10 @@ from homeassistant.components.media_player import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -65,7 +69,13 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.GROUPING
 )
+
+
+def _group_member_state_signal(member_udn: str) -> str:
+    """Return the dispatcher signal for a grouped member state refresh."""
+    return f"wiim_group_member_state_{member_udn}"
 
 
 def media_player_exception_wrap[
@@ -208,6 +218,44 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         return target_device
 
     @callback
+    def _async_handle_group_member_state_refresh(self) -> None:
+        """Trigger local follower cache refresh on leader update push."""
+        group_snapshot = self._get_group_snapshot()
+        if group_snapshot.role != WiimGroupRole.FOLLOWER:
+            LOGGER.debug(
+                "Ignoring group member refresh for %s because role is %s",
+                self.entity_id,
+                group_snapshot.role,
+            )
+            return
+
+        LOGGER.debug(
+            "Follower %s received propagated group update from leader %s",
+            self.entity_id,
+            group_snapshot.leader_udn,
+        )
+        self._update_ha_state_from_sdk_cache()
+
+    @callback
+    def _async_propagate_group_state_update(
+        self, group_snapshot: WiimGroupSnapshot
+    ) -> None:
+        """Notify grouped followers to refresh from the leader's latest cache."""
+        if group_snapshot.role != WiimGroupRole.LEADER:
+            return
+
+        for member_udn in group_snapshot.member_udns:
+            if member_udn == self._device.udn:
+                continue
+
+            LOGGER.debug(
+                "Leader %s propagating grouped state refresh to follower %s",
+                self.entity_id,
+                member_udn,
+            )
+            async_dispatcher_send(self.hass, _group_member_state_signal(member_udn))
+
+    @callback
     def _update_ha_state_from_sdk_cache(
         self,
         *,
@@ -289,6 +337,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         if write_state:
             self.async_write_ha_state()
+            self._async_propagate_group_state_update(group_snapshot)
 
     @callback
     def _handle_sdk_general_device_update(self, device: WiimDevice) -> None:
@@ -472,6 +521,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Run when entity is added to Home Assistant."""
         await super().async_added_to_hass()
         self._wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                _group_member_state_signal(self._device.udn),
+                self._async_handle_group_member_state_refresh,
+            )
+        )
         LOGGER.debug(
             "Added %s (UDN: %s) to entity maps in hass.data",
             self.entity_id,
@@ -789,3 +845,51 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_id,
         )
         raise BrowseError(f"Invalid browse path: {media_content_id}")
+
+    @media_player_exception_wrap
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join group_members (entity_ids) to the group led by the current player."""
+        follower_udns_to_join: list[str] = []
+        for member_entity_id in group_members:
+            if member_entity_id == self.entity_id:
+                LOGGER.debug("Skipping joining self to group: %s", member_entity_id)
+                continue
+
+            follower_udn = self._wiim_data.entity_id_to_udn_map.get(member_entity_id)
+            if follower_udn is None:
+                LOGGER.warning(
+                    "Unable to resolve group member entity_id %s to a UDN",
+                    member_entity_id,
+                )
+                continue
+
+            follower_udns_to_join.append(follower_udn)
+
+        if not follower_udns_to_join:
+            LOGGER.debug(
+                "Skipping join for %s because no follower UDNs were resolved from %s",
+                self.entity_id,
+                group_members,
+            )
+            return
+
+        LOGGER.debug(
+            "Player %s (UDN %s) joining follower UDNs: %s from entity_ids: %s",
+            self.entity_id,
+            self._device.udn,
+            follower_udns_to_join,
+            group_members,
+        )
+        await self._wiim_data.controller.async_join_group(
+            self._device.udn, follower_udns_to_join
+        )
+
+    @media_player_exception_wrap
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group it is currently in."""
+        LOGGER.debug(
+            "Player %s (UDN %s) attempting to unjoin from group",
+            self.entity_id,
+            self._device.udn,
+        )
+        await self._wiim_data.controller.async_ungroup_device(self._device.udn)
