@@ -154,17 +154,35 @@ async def test_number_smart_requires_has_smart(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "user_value", "expected_raw"),
+    ("entity_id", "user_value", "expected_path", "expected_raw"),
     [
-        pytest.param("number.my_pool_redox_setpoint", 720, 720, id="redox_unscaled"),
         pytest.param(
-            "number.my_pool_ph_minimum", 7.2, 720, id="ph_minimum_scaled_x100"
+            "number.my_pool_redox_setpoint",
+            720,
+            "modules.rx.status.value",
+            720,
+            id="redox_unscaled",
         ),
         pytest.param(
-            "number.my_pool_ph_maximum", 7.45, 745, id="ph_maximum_scaled_x100"
+            "number.my_pool_ph_minimum",
+            7.2,
+            "modules.ph.status.low_value",
+            720,
+            id="ph_minimum_scaled_x100",
         ),
         pytest.param(
-            "number.my_pool_intel_temperature", 24, 24, id="intel_temp_unscaled"
+            "number.my_pool_ph_maximum",
+            7.45,
+            "modules.ph.status.high_value",
+            745,
+            id="ph_maximum_scaled_x100",
+        ),
+        pytest.param(
+            "number.my_pool_intel_temperature",
+            24,
+            "filtration.intel.temp",
+            24,
+            id="intel_temp_unscaled",
         ),
     ],
 )
@@ -175,9 +193,10 @@ async def test_number_set_value(
     mock_pool_data: dict[str, Any],
     entity_id: str,
     user_value: float,
+    expected_path: str,
     expected_raw: int,
 ) -> None:
-    """Test set_value writes the scaled raw value to the library."""
+    """Test set_value writes the scaled raw value to the library at the right path."""
     mock_vistapool_client.fetch_pool_data.return_value = mock_pool_data
     mock_config_entry.add_to_hass(hass)
 
@@ -191,10 +210,10 @@ async def test_number_set_value(
         blocking=True,
     )
 
-    assert mock_vistapool_client.set_value.await_count == 1
-    pool_id_arg, _path_arg, value_arg = mock_vistapool_client.set_value.await_args.args
-    assert pool_id_arg == "ABCDEF1234567890"
-    assert value_arg == expected_raw
+    mock_vistapool_client.set_value.assert_awaited_once_with(
+        "ABCDEF1234567890", expected_path, expected_raw
+    )
+    value_arg = mock_vistapool_client.set_value.await_args.args[2]
     assert isinstance(value_arg, int)
 
 
