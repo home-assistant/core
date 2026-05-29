@@ -18,7 +18,7 @@ from homeassistant.util.dt import utcnow
 from .data import ProcessedCoordinatorData
 from .utils import preferred_language
 
-GRACE_FACTOR = 2.5
+API_FAILURE_GRACE_MULTIPLIER = 2.5
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
                 and self._last_successful_api_update is not None
                 and self.update_interval is not None
                 and utcnow() - self._last_successful_api_update
-                < GRACE_FACTOR * self.update_interval
+                < API_FAILURE_GRACE_MULTIPLIER * self.update_interval
             ):
                 return self.data
 
@@ -89,10 +89,16 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             ) from err
 
         data = await self.process_api_data()
+        was_previously_successful = self._last_successful_api_update is not None
         self._last_successful_api_update = utcnow()
 
         if self._api_reachable is False:
-            _LOGGER.warning("Successfully reconnected to the API")
+            message = (
+                "Successfully reconnected to the API"
+                if was_previously_successful
+                else "Successfully connected to the API"
+            )
+            _LOGGER.info(message)
         self._api_reachable = True
 
         return data
