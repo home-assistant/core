@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pygti"],
-  "requirements": ["pygti==0.9.4"]
+  "requirements": ["pygti==1.0.0"]
 }
