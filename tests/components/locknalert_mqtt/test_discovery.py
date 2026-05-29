@@ -48,11 +48,11 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     async_capture_events,
-    async_fire_mqtt_message,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
+from tests.components.locknalert_mqtt.common import async_fire_mqtt_message
 from tests.typing import (
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
