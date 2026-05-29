@@ -610,35 +610,6 @@ async def test_edit_remote_rejects_unavailable_infrared_entity_direct(
     assert result["errors"] == {CONF_INFRARED_ENTITY_ID: "infrared_entity_unavailable"}
 
 
-@pytest.mark.parametrize(
-    ("source", "expected_step"),
-    [
-        (SOURCE_ADD_COMMAND, SOURCE_ADD_COMMAND),
-        (SOURCE_EDIT_COMMAND, "select_command_for_edit"),
-        (SOURCE_REMOVE_COMMAND, SOURCE_REMOVE_COMMAND),
-    ],
-)
-async def test_manage_commands_source_shortcuts(
-    hass: HomeAssistant,
-    infrared_entity: str,
-    monkeypatch: pytest.MonkeyPatch,
-    source: str,
-    expected_step: str,
-) -> None:
-    """Test direct manage command source shortcuts."""
-    entry = _single_entry(hass, infrared_entity)
-    flow = VirtualRemoteOptionsFlow(entry)
-    flow.hass = hass
-    monkeypatch.setattr(
-        type(flow), "context", property(lambda _flow: {"source": source})
-    )
-
-    result = await flow.async_step_manage_commands()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == expected_step
-
-
 async def test_select_command_for_edit_without_remote_aborts(
     hass: HomeAssistant,
 ) -> None:

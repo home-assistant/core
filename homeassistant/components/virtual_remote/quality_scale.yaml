@@ -183,7 +183,8 @@ rules:
   test-coverage:
     status: done
     comment: |
-      Coverage is at 99% - 100%
+      Public flows, diagnostics, command parsing, repair handling, and remote
+      entity behavior are covered by tests.
   # Gold
   devices:
     status: done

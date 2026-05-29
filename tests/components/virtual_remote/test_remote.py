@@ -23,8 +23,9 @@ from homeassistant.components.virtual_remote.remote import (
     _as_str_mapping,
     _create_missing_issue,
     _delete_missing_issue,
-    async_setup_entry,
+    _virtual_remote_device_info,
     async_setup_virtual_remote_entities,
+    cleanup_stale_missing_infrared_issues,
     cleanup_stale_remote_entities,
     cleanup_stale_virtual_remote_devices,
     configured_remote_definitions,
@@ -162,7 +163,12 @@ async def test_async_setup_entry_adds_entities(
     """Test standalone platform setup creates entities."""
     entities: list[InfraredRemoteEntity] = []
 
-    await async_setup_entry(hass, config_entry, _add_remote_entities_callback(entities))
+    await async_setup_virtual_remote_entities(
+        hass,
+        config_entry,
+        _add_remote_entities_callback(entities),
+        device_info_factory=_device_info_factory,
+    )
 
     assert len(entities) == 1
     entity = entities[0]
@@ -769,7 +775,12 @@ async def test_async_setup_entry_supports_single_entry_remote_data(
     entry.add_to_hass(hass)
     async_add_entities = Mock()
 
-    await async_setup_entry(hass, entry, async_add_entities)
+    await async_setup_virtual_remote_entities(
+        hass,
+        entry,
+        async_add_entities,
+        device_info_factory=_device_info_factory,
+    )
 
     entities = async_add_entities.call_args.args[0]
     assert len(entities) == 1
@@ -794,7 +805,12 @@ async def test_async_setup_entry_ignores_malformed_single_entry_remote_data(
     entry.add_to_hass(hass)
     async_add_entities = Mock()
 
-    await async_setup_entry(hass, entry, async_add_entities)
+    await async_setup_virtual_remote_entities(
+        hass,
+        entry,
+        async_add_entities,
+        device_info_factory=_device_info_factory,
+    )
 
     assert async_add_entities.call_args.args[0] == []
 
@@ -839,3 +855,70 @@ async def test_async_setup_virtual_remote_entities_skips_malformed_and_duplicate
     assert [entity.unique_id for entity in entities] == [
         f"{entry.entry_id}_remote_valid"
     ]
+
+
+def test_virtual_remote_device_info_factory() -> None:
+    """Test standalone virtual remote device info factory."""
+    assert _virtual_remote_device_info("tv", "TV", {}) == DeviceInfo(
+        identifiers={(DOMAIN, "tv")},
+        name="TV",
+    )
+
+
+def test_cleanup_stale_missing_infrared_issues_uses_standalone_cleanup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test stale linked infrared repair issue cleanup for standalone remotes."""
+    with patch(
+        "homeassistant.components.virtual_remote.remote."
+        "async_delete_stale_linked_infrared_entity_missing_issues"
+    ) as delete_stale_issues:
+        cleanup_stale_missing_infrared_issues(
+            hass,
+            {"living_room_tv"},
+            issue_cleanup_handler=_delete_missing_issue,
+        )
+
+    delete_stale_issues.assert_called_once_with(
+        hass, configured_remote_ids={"living_room_tv"}
+    )
+
+
+async def test_config_entry_setup_covers_standalone_remote_platform_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test config entry setup reaches the standalone remote platform setup."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("remote.living_room_tv") is not None
+
+
+async def test_async_setup_virtual_remote_entities_runs_device_cleanup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test setup runs device cleanup when requested."""
+    entities: list[InfraredRemoteEntity] = []
+
+    with patch(
+        "homeassistant.components.virtual_remote.remote."
+        "cleanup_stale_virtual_remote_devices"
+    ) as cleanup_devices:
+        await async_setup_virtual_remote_entities(
+            hass,
+            config_entry,
+            _add_remote_entities_callback(entities),
+            device_info_factory=_device_info_factory,
+            cleanup_devices=True,
+        )
+
+    cleanup_devices.assert_called_once_with(
+        hass,
+        config_entry,
+        {"living_room_tv"},
+        identifier_domain=DOMAIN,
+    )
+    assert len(entities) == 1

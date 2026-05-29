@@ -539,6 +539,11 @@ class InfraredRemoteEntity(RemoteEntity):
         except HomeAssistantError:
             raise
         except Exception as err:
+            _LOGGER.exception(
+                "Failed to send infrared command for virtual remote %s via %s",
+                self._remote_id,
+                entity_id,
+            )
             raise HomeAssistantError(
                 translation_domain=self._translation_domain,
                 translation_key="remote_send_failed",

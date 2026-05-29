@@ -86,7 +86,6 @@ class VirtualRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_REMOTE_NAME,
-                        CONF_VIRTUAL_REMOTES,
                         default=remote_name_default,
                     ): str,
                     infrared_entity_field(
@@ -170,7 +169,6 @@ class VirtualRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_REMOTE_NAME,
-                        CONF_VIRTUAL_REMOTES,
                         default=remote_name_default,
                     ): str,
                     infrared_entity_field_with_current(

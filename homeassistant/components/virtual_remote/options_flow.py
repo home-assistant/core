@@ -133,17 +133,6 @@ class VirtualRemoteOptionsFlow(config_entries.OptionsFlow):
         if self._remote is None:
             return self.async_abort(reason="no_virtual_remotes")
 
-        source = self.context.get("source")
-
-        if source == SOURCE_ADD_COMMAND:
-            return await self.async_step_add_command()
-
-        if source == SOURCE_EDIT_COMMAND:
-            return await self.async_step_select_command_for_edit()
-
-        if source == SOURCE_REMOVE_COMMAND:
-            return await self.async_step_remove_command()
-
         menu_options = [SOURCE_ADD_COMMAND]
         if self._commands:
             menu_options.extend([SOURCE_EDIT_COMMAND, SOURCE_REMOVE_COMMAND])
