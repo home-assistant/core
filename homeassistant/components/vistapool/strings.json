@@ -25,6 +25,50 @@
     }
   },
   "entity": {
+    "select": {
+      "filtration_timer_speed_1": {
+        "name": "Filtration timer speed 1",
+        "state": {
+          "slow": "Slow",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "filtration_timer_speed_2": {
+        "name": "Filtration timer speed 2",
+        "state": {
+          "slow": "Slow",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "filtration_timer_speed_3": {
+        "name": "Filtration timer speed 3",
+        "state": {
+          "slow": "Slow",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "pump_mode": {
+        "name": "Pump mode",
+        "state": {
+          "manual": "Manual",
+          "auto": "Auto",
+          "heat": "Heat",
+          "smart": "Smart",
+          "intel": "Intel"
+        }
+      },
+      "pump_speed": {
+        "name": "Pump speed",
+        "state": {
+          "slow": "Slow",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
+    },
     "sensor": {
       "chlorine": {
         "name": "Chlorine"
@@ -58,6 +102,9 @@
     },
     "no_pools": {
       "message": "No pools were found on this account."
+    },
+    "set_failed": {
+      "message": "Failed to set {entity}."
     },
     "update_failed": {
       "message": "Error fetching data from Vistapool."
