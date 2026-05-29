@@ -7,7 +7,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import (
+    ATTR_LOCATION_NAME,
+    SourceType,
+    TrackerEntity,
+)
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -81,6 +85,8 @@ DISCOVERY_SCHEMA = vol.All(
     PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=vol.REMOVE_EXTRA), valid_config
 )
 
+MQTT_DEVICE_TRACKER_ATTRIBUTES_BLOCKED = frozenset({ATTR_LOCATION_NAME})
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -106,6 +112,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
     _location_name: str | None = None
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+    _attributes_extra_blocked = MQTT_DEVICE_TRACKER_ATTRIBUTES_BLOCKED
 
     @staticmethod
     def config_schema() -> VolSchemaType:
@@ -155,7 +162,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 dict(self.extra_state_attributes)
                 if self.extra_state_attributes is not None
                 else {}
-            ) | {"location_name": self._location_name}
+            ) | {ATTR_LOCATION_NAME: self._location_name}
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
@@ -224,7 +231,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 self._attr_location_accuracy = 0
 
         if self._location_name is not None:
-            extra_state_attributes["location_name"] = self._location_name
+            extra_state_attributes[ATTR_LOCATION_NAME] = self._location_name
 
         self._attr_extra_state_attributes = {
             attribute: value

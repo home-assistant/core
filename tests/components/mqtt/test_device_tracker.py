@@ -7,6 +7,9 @@ import pytest
 
 from homeassistant.components import device_tracker, mqtt
 from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.device_tracker import (
+    MQTT_DEVICE_TRACKER_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -381,17 +384,17 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template2(
 
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("location_name") is None
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) is None
 
     async_fire_mqtt_message(hass, "test-topic", "HOME")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_HOME
-    assert state.attributes.get("location_name") == "home"
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) == "home"
 
     async_fire_mqtt_message(hass, "test-topic", "NOT_HOME")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
-    assert state.attributes.get("location_name") == "not_home"
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) == "not_home"
 
 
 async def test_setting_device_tracker_location_via_mqtt_message(
@@ -414,7 +417,7 @@ async def test_setting_device_tracker_location_via_mqtt_message(
     async_fire_mqtt_message(hass, "test-topic", "test-location")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
-    assert state.attributes.get("location_name") == "test-location"
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) == "test-location"
 
 
 async def test_setting_device_tracker_location_via_lat_lon_message(
@@ -601,7 +604,7 @@ async def test_setting_device_tracker_location_via_reset_message(
 
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
-    assert state.attributes.get("location_name") == "Work"
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) == "Work"
 
     # test reset and submitting GPS coordinates
     async_fire_mqtt_message(hass, "test-topic", "None")
@@ -674,7 +677,7 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
     async_fire_mqtt_message(hass, "test-topic", "office")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
-    assert state.attributes.get("location_name") == "office"
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) == "office"
 
     # Test a GPS attributes update without a reset
     async_fire_mqtt_message(
@@ -685,7 +688,7 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
 
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_HOME
-    assert state.attributes.get("location_name") is None
+    assert state.attributes.get(device_tracker.ATTR_LOCATION_NAME) is None
 
     # Reset the manual set location
     # Resend the GPS attributes
@@ -711,7 +714,11 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry, device_tracker.DOMAIN, DEFAULT_CONFIG, None
+        hass,
+        mqtt_mock_entry,
+        device_tracker.DOMAIN,
+        DEFAULT_CONFIG,
+        MQTT_DEVICE_TRACKER_ATTRIBUTES_BLOCKED,
     )
 
 
