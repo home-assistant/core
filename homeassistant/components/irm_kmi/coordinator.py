@@ -42,7 +42,10 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
         )
         self._api = api_client
         self._location = entry.data[CONF_LOCATION]
-        self._last_successful_data_update: datetime | None = None
+        # We have to track the last successful update separately from the coordinator's built-in last_update_success,
+        # because _async_update_data can return old data without raising an exception, which still counts as a
+        # successful update for the coordinator.
+        self._last_successful_api_update: datetime | None = None
 
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch data from API endpoint.
@@ -64,24 +67,29 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
         except IrmKmiApiError as err:
             if (
                 self.data is not None
-                and self._last_successful_data_update is not None
+                and self._last_successful_api_update is not None
                 and self.update_interval is not None
-                and utcnow() - self._last_successful_data_update
+                and utcnow() - self._last_successful_api_update
                 < 2.5 * self.update_interval
             ):
                 return self.data
 
-            _LOGGER.warning(
-                "Could not connect to the API since %s",
-                self._last_successful_data_update,
-            )
+            if self._last_successful_api_update is not None:
+                _LOGGER.warning(
+                    "Could not connect to the API since %s",
+                    self._last_successful_api_update,
+                )
+            else:
+                _LOGGER.warning("Could not connect to the API yet")
             raise UpdateFailed(
                 f"Error communicating with API for general forecast: {err}. "
-                f"Last success time is: {self._last_successful_data_update}"
+                f"Last success time is: {self._last_successful_api_update}"
+                if self._last_successful_api_update is not None
+                else "No successful API update yet."
             ) from err
 
         data = await self.process_api_data()
-        self._last_successful_data_update = utcnow()
+        self._last_successful_api_update = utcnow()
 
         if not self.last_update_success:
             _LOGGER.warning("Successfully reconnected to the API")
