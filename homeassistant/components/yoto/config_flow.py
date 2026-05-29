@@ -26,8 +26,6 @@ class YotoOAuth2FlowHandler(
     @property
     def extra_authorize_data(self) -> dict[str, Any]:
         """Append Yoto's audience and scopes to the authorize URL."""
-        # Set at the flow level (not the implementation) so it applies to
-        # both application credentials and cloud credentials.
         return {
             "audience": YOTO_AUDIENCE,
             "scope": " ".join(YOTO_SCOPES),
