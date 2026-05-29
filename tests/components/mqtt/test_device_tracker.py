@@ -683,8 +683,9 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
         '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
     )
 
-    assert state.state == STATE_NOT_HOME
-    assert state.attributes.get("location_name") == "office"
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_HOME
+    assert state.attributes.get("location_name") is None
 
     # Reset the manual set location
     # Resend the GPS attributes
