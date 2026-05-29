@@ -7,7 +7,6 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import izone as izone_component
 from homeassistant.components.izone import config_flow, discovery as izone_discovery
 from homeassistant.components.izone.const import (
     DATA_CONFIG,
@@ -17,7 +16,6 @@ from homeassistant.components.izone.const import (
 from homeassistant.const import CONF_EXCLUDE, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -1682,17 +1680,6 @@ def test_async_fan_out_skips_uids_already_in_progress() -> None:
     fake_flow._async_schedule_integration_discovery_flow.assert_not_called()
 
 
-async def test_async_migrate_entry_returns_false_for_current_version(
-    hass: HomeAssistant,
-) -> None:
-    """Migration returns False when entry is already on current schema version."""
-    entry = MockConfigEntry(domain=IZONE, version=2, unique_id="000000001", data={})
-
-    migrated = await izone_component.async_migrate_entry(hass, entry)
-
-    assert migrated is False
-
-
 async def test_async_migrate_entry_clears_legacy_data(
     hass: HomeAssistant,
 ) -> None:
@@ -1711,15 +1698,26 @@ async def test_async_migrate_entry_clears_legacy_data(
         data={"host": "192.0.2.1"},
     )
     entry.add_to_hass(hass)
+    controller = _make_controller("000000001")
 
-    migrated = await izone_component.async_migrate_entry(hass, entry)
+    with (
+        patch("homeassistant.components.izone.async_start_discovery_service"),
+        patch(
+            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            return_value={"000000001": controller},
+        ),
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert migrated is True
     assert entry.version == 2
     assert entry.data == {}
-    # UID and title are not resolved until async_setup_entry runs.
-    assert entry.unique_id == IZONE
-    assert entry.title == "iZone Aircon"
+    assert entry.unique_id == "000000001"
+    assert entry.title == "iZone 000000001"
 
 
 async def test_async_migrate_entry_does_not_raise_on_discovery_failure(
@@ -1739,11 +1737,16 @@ async def test_async_migrate_entry_does_not_raise_on_discovery_failure(
     )
     entry.add_to_hass(hass)
 
-    migrated = await izone_component.async_migrate_entry(hass, entry)
+    with patch(
+        "homeassistant.components.izone.async_start_discovery_service",
+        side_effect=OSError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert migrated is True
     assert entry.version == 2
     assert entry.data == {}
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 async def test_async_migrate_entry_does_not_raise_for_multiple_eligible(
@@ -1761,12 +1764,25 @@ async def test_async_migrate_entry_does_not_raise_for_multiple_eligible(
         data={"host": "192.0.2.1"},
     )
     entry.add_to_hass(hass)
+    controller1 = _make_controller("000000001")
+    controller2 = _make_controller("000000002", "192.0.2.2")
 
-    migrated = await izone_component.async_migrate_entry(hass, entry)
+    with (
+        patch("homeassistant.components.izone.async_start_discovery_service"),
+        patch(
+            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            return_value={
+                "000000001": controller1,
+                "000000002": controller2,
+            },
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert migrated is True
     assert entry.version == 2
     assert entry.data == {}
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_raises_not_ready_when_discovery_service_fails(
@@ -1781,14 +1797,14 @@ async def test_setup_entry_raises_not_ready_when_discovery_service_fails(
     )
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.izone.async_start_discovery_service",
-            new=AsyncMock(side_effect=OSError),
-        ),
-        pytest.raises(ConfigEntryNotReady),
+    with patch(
+        "homeassistant.components.izone.async_start_discovery_service",
+        new=AsyncMock(side_effect=OSError),
     ):
-        await izone_component.async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 # ---------------------------------------------------------------------------
@@ -1834,9 +1850,9 @@ async def test_setup_entry_resolves_legacy_uid_and_updates_title(
             new=AsyncMock(return_value=None),
         ),
     ):
-        result = await izone_component.async_setup_entry(hass, entry)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert result is True
     assert entry.unique_id == "000000001"
     assert entry.title == expected_title
 
@@ -1878,9 +1894,11 @@ async def test_setup_entry_raises_not_ready_for_legacy_entry_on_discovery_failur
             return_value=return_value,
             side_effect=side_effect,
         ),
-        pytest.raises(ConfigEntryNotReady),
     ):
-        await izone_component.async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_raises_config_error_for_legacy_entry_with_multiple_eligible(
@@ -1915,9 +1933,11 @@ async def test_setup_entry_raises_config_error_for_legacy_entry_with_multiple_el
             "homeassistant.components.izone.config_flow.async_discover_controllers",
             return_value=controllers,
         ),
-        pytest.raises(ConfigEntryError),
     ):
-        await izone_component.async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
@@ -1970,9 +1990,9 @@ async def test_setup_entry_picks_eligible_controller_after_filtering_for_legacy_
             new=AsyncMock(return_value=None),
         ),
     ):
-        result = await izone_component.async_setup_entry(hass, entry)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert result is True
     assert entry.unique_id == "000000002"
     assert entry.data == {}
 
@@ -2017,9 +2037,11 @@ async def test_setup_entry_raises_not_ready_for_legacy_entry_when_no_eligible_af
             "homeassistant.components.izone.config_flow.async_discover_controllers",
             return_value={"000000001": controller},
         ),
-        pytest.raises(ConfigEntryNotReady),
     ):
-        await izone_component.async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 def test_discovery_listener_methods_dispatch_expected_signals(
