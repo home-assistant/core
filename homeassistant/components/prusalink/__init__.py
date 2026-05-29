@@ -1,5 +1,8 @@
 """The PrusaLink integration."""
 
+from collections.abc import Mapping
+from typing import Any
+
 from httpx import ConnectError, HTTPError, InvalidURL
 from pyprusalink import PrusaLink
 from pyprusalink.types import InvalidAuth, PrusaLinkError
@@ -82,7 +85,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     new_data = dict(config_entry.data)
     if config_entry.version == 1:
         serial: str | None = config_entry.unique_id
-        update_data: dict[str, object] = {}
+        update_data: dict[str, Any] = {}
 
         if config_entry.minor_version < 2:
             # Add username and password
@@ -139,8 +142,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     new_data[CONF_USERNAME],
                     new_data[CONF_PASSWORD],
                 )
+                info_data: Mapping[str, Any] | None
                 try:
-                    info = await api.get_info()
+                    info_data = await api.get_info()
                 except (
                     InvalidAuth,
                     PrusaLinkError,
@@ -149,10 +153,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     InvalidURL,
                     TimeoutError,
                 ):
-                    info = None
+                    info_data = None
 
-                if info is not None:
-                    serial = info.get("serial")
+                if info_data is not None:
+                    serial = info_data.get("serial")
 
             if serial:
                 old_prefix = f"{config_entry.entry_id}_"
