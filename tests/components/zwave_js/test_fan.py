@@ -1,6 +1,7 @@
 """Test the Z-Wave JS fan platform."""
 
 import copy
+from unittest.mock import MagicMock
 
 import pytest
 from voluptuous.error import MultipleInvalid
@@ -34,6 +35,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -790,7 +793,10 @@ async def test_enbrighten_55258_zw4002_fan(
 
 
 async def test_enbrighten_55258_zw4002_fan_firmware_5_50(
-    hass: HomeAssistant, client, enbrighten_55258_zw4002_firmware_5_50, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    enbrighten_55258_zw4002_firmware_5_50: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test a GE/Jasco Enbrighten 55258/ZW4002 fan on firmware 5.50 and lower."""
     node = enbrighten_55258_zw4002_firmware_5_50
@@ -798,7 +804,7 @@ async def test_enbrighten_55258_zw4002_fan_firmware_5_50(
     entity_id = "fan.zwa4002_fan"
 
     async def get_zwave_speed_from_percentage(percentage):
-        """Set the fan to a particular percentage and get the resulting Zwave speed."""
+        """Set the fan to a particular percentage and get the resulting Z-Wave speed."""
         client.async_send_command.reset_mock()
 
         await hass.services.async_call(

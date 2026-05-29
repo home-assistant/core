@@ -354,10 +354,10 @@ def enbrighten_55258_zw4002_state_fixture() -> dict[str, Any]:
 
 @pytest.fixture(name="enbrighten_55258_zw4002_state_firmware_5_50")
 def enbrighten_55258_zw4002_state_firmware_5_50_fixture(
-    enbrighten_55258_zw4002_state,
+    enbrighten_55258_zw4002_state: dict[str, Any],
 ) -> dict[str, Any]:
     """Load Enbrighten/GE 55258/ZW4002 node state fixture data for firmware 5.50."""
-    state = copy.deepcopy(enbrighten_55258_zw4002_state)
+    state = enbrighten_55258_zw4002_state.copy()
     state["firmwareVersion"] = "5.50"
     return state
 
@@ -1210,7 +1210,8 @@ def enbrighten_55258_zw4002_fixture(client, enbrighten_55258_zw4002_state) -> No
 
 @pytest.fixture(name="enbrighten_55258_zw4002_firmware_5_50")
 def enbrighten_55258_zw4002_firmware_5_50_fixture(
-    client, enbrighten_55258_zw4002_state_firmware_5_50
+    client: MagicMock,
+    enbrighten_55258_zw4002_state_firmware_5_50: dict[str, Any],
 ) -> Node:
     """Mock an Enbrighten_55258/ZW4002 fan controller node with firmware 5.50."""
     node = Node(client, copy.deepcopy(enbrighten_55258_zw4002_state_firmware_5_50))
