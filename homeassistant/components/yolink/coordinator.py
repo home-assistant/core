@@ -113,6 +113,13 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
             raise UpdateFailed from yl_client_err
         if device_state is not None:
             if self.device.device_type == ATTR_DEVICE_SPRINKLER_V2:
+                # SprinklerV2 returns the full API response (not just the
+                # "state" sub-dict) because progress, target, and attributes
+                # live at the top level alongside "state". Note the key
+                # collision: data["state"]["running"] is a bool (valve open),
+                # while data["running"] is a dict (progress/target info).
+                # Sensor value lambdas for SprinklerV2 must account for this
+                # different shape vs other device types.
                 full_data = device_state_resp.data
                 dev_lora_info = full_data.get(ATTR_LORA_INFO)
                 if dev_lora_info is not None:
@@ -133,7 +140,11 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         return {}
 
     async def _fetch_sprinkler_v2(self) -> BRDP:
-        """Fetch SprinklerV2 state: getState for live data, fetchState as fallback."""
+        """Fetch SprinklerV2 state: getState for live data, fetchState as fallback.
+
+        Uses self.device.call_device (returns BRDP), not the coordinator's
+        self.call_device wrapper (returns dict).
+        """
         try:
             return await self.device.call_device(
                 ClientRequest("getState", {})
@@ -160,6 +171,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         )
         if self.update_interval != new_interval:
             self.update_interval = new_interval
+            self._schedule_refresh()
             _LOGGER.debug(
                 "SprinklerV2 %s poll interval -> %s",
                 self.device.device_id,

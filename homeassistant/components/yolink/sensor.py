@@ -428,7 +428,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
             round(running.get("progress", 0) / data.get("attributes", {}).get("meterStepFactor", 10), 2)
             if (running := data.get("running")) is not None
             and data.get("state", {}).get("running") is True
-            else 0
+            else None
         ),
     ),
     YoLinkSensorEntityDescription(
@@ -466,7 +466,10 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         options=["manual", "schedule"],
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
         should_update_entity=lambda value: value is not None,
-        value=lambda device, data: data.get("waterMode"),
+        value=lambda device, data: (
+            data.get("waterMode")
+            or data.get("state", {}).get("waterMode")
+        ),
     ),
 )
 
