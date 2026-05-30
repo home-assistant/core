@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[light.my_pool_pool_light-entry]
+# name: test_all_entities[light.my_pool_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17,7 +17,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.my_pool_pool_light',
+    'entity_id': 'light.my_pool_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -25,12 +25,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Pool light',
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Pool light',
+    'original_name': 'Light',
     'platform': 'vistapool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -40,18 +40,18 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[light.my_pool_pool_light-state]
+# name: test_all_entities[light.my_pool_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': None,
-      'friendly_name': 'My Pool Pool light',
+      'friendly_name': 'My Pool Light',
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.my_pool_pool_light',
+    'entity_id': 'light.my_pool_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

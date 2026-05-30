@@ -61,7 +61,7 @@ async def test_light_string_value(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.my_pool_pool_light").state == STATE_ON
+    assert hass.states.get("light.my_pool_light").state == STATE_ON
 
 
 @pytest.mark.parametrize(
@@ -89,7 +89,7 @@ async def test_light_set_value(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "light.my_pool_pool_light"},
+        {ATTR_ENTITY_ID: "light.my_pool_light"},
         blocking=True,
     )
 
@@ -116,7 +116,7 @@ async def test_light_set_value_raises_on_api_error(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.my_pool_pool_light"},
+            {ATTR_ENTITY_ID: "light.my_pool_light"},
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"
@@ -135,4 +135,4 @@ async def test_light_default_fixture_state(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.my_pool_pool_light").state == STATE_OFF
+    assert hass.states.get("light.my_pool_light").state == STATE_OFF

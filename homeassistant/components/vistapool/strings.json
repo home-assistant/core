@@ -27,7 +27,7 @@
   "entity": {
     "light": {
       "pool_light": {
-        "name": "Pool light"
+        "name": "Light"
       }
     },
     "sensor": {
