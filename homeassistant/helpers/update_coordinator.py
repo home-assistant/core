@@ -29,6 +29,7 @@ from homeassistant.exceptions import (
 from homeassistant.util.dt import utcnow
 
 from . import entity, event
+from .aiohttp_client import async_get_clientsession
 from .debounce import Debouncer
 from .typing import UNDEFINED, UndefinedType
 
@@ -474,6 +475,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     self.logger.error("Error requesting %s data: %s", self.name, err)
                     self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
+            # Reset the shared connector state to recover from
+            # transient DNS failures that can poison the connection pool
+            if isinstance(err, aiohttp.ClientConnectorError):
+                session = async_get_clientsession(self.hass)
+                connector = session.connector
+                if connector is not None and hasattr(connector, "clear_dns_cache"):
+                    connector.clear_dns_cache()
 
         except urllib.error.URLError as err:
             self.last_exception = err
