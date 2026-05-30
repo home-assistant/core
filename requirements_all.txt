@@ -1213,7 +1213,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.7.9
+habluetooth==6.8.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1266,7 +1266,7 @@ hole==0.9.0
 holidays==0.97
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260527.0
+home-assistant-frontend==20260527.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.5.5
@@ -2486,7 +2486,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.7.0
+pyrisco==0.8.0
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.7
@@ -2929,7 +2929,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async,encrypted]==2.7.2
+samsungtvws[async,encrypted]==3.0.5
 
 # homeassistant.components.sanix
 sanix==1.0.6
@@ -3403,7 +3403,7 @@ yalexs-ble==3.3.0
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==9.2.1
+yalexs==9.2.7
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
