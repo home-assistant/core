@@ -28,6 +28,12 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# wirelesstagpy exposes the capacitive sensor under the "humidity" arm/disarm
+# endpoints (ArmCapSensor). Water tags report that same sensor as "moisture"
+# and have no dedicated arm_moisture/disarm_moisture method, so map it back to
+# the shared endpoint.
+ARM_KEY_OVERRIDES = {"moisture": "humidity"}
+
 NOTIFICATION_ID = "wirelesstag_notification"
 NOTIFICATION_TITLE = "Wireless Sensor Tag Setup"
 
@@ -63,15 +69,25 @@ class WirelessTagPlatform:
 
     def arm(self, switch: WirelessTagSwitch) -> None:
         """Arm entity sensor monitoring."""
-        func_name = f"arm_{switch.entity_description.key}"
-        if (arm_func := getattr(self.api, func_name)) is not None:
-            arm_func(switch.tag_id, switch.tag_manager_mac)
+        self._set_monitoring(switch, "arm")
 
     def disarm(self, switch: WirelessTagSwitch) -> None:
         """Disarm entity sensor monitoring."""
-        func_name = f"disarm_{switch.entity_description.key}"
-        if (disarm_func := getattr(self.api, func_name)) is not None:
-            disarm_func(switch.tag_id, switch.tag_manager_mac)
+        self._set_monitoring(switch, "disarm")
+
+    def _set_monitoring(self, switch: WirelessTagSwitch, action: str) -> None:
+        """Arm or disarm monitoring for the switch's sensor."""
+        key = switch.entity_description.key
+        func_name = f"{action}_{ARM_KEY_OVERRIDES.get(key, key)}"
+        if (func := getattr(self.api, func_name, None)) is None:
+            _LOGGER.error(
+                "Cannot %s %s monitoring: wirelesstagpy has no %s method",
+                action,
+                key,
+                func_name,
+            )
+            return
+        func(switch.tag_id, switch.tag_manager_mac)
 
     def start_monitoring(self) -> None:
         """Start monitoring push events."""
