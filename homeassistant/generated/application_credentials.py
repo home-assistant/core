@@ -43,6 +43,7 @@ APPLICATION_CREDENTIALS = [
     "teslemetry",
     "tibber",
     "twitch",
+    "vicare",
     "volvo",
     "watts",
     "weheat",
@@ -50,5 +51,6 @@ APPLICATION_CREDENTIALS = [
     "xbox",
     "yale",
     "yolink",
+    "yoto",
     "youtube",
 ]

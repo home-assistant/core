@@ -47,6 +47,15 @@
   },
   "entity": {
     "binary_sensor": {
+      "active_hardware_faults": {
+        "name": "Hardware faults"
+      },
+      "active_network_faults": {
+        "name": "Network faults"
+      },
+      "active_radio_faults": {
+        "name": "Radio faults"
+      },
       "actuator": {
         "name": "Actuator"
       },
@@ -141,6 +150,9 @@
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
+      },
+      "temporary_mute_request": {
+        "name": "Temporary mute"
       }
     },
     "climate": {
@@ -223,6 +235,12 @@
       "cook_time": {
         "name": "Cooking time"
       },
+      "detection_delay": {
+        "name": "Detection delay"
+      },
+      "detection_threshold": {
+        "name": "Detection threshold"
+      },
       "hold_time": {
         "name": "Hold time"
       },
@@ -252,6 +270,9 @@
       },
       "pump_setpoint": {
         "name": "Setpoint"
+      },
+      "sensitivity_level": {
+        "name": "Sensitivity"
       },
       "speaker_setpoint": {
         "name": "Volume"
@@ -395,6 +416,18 @@
       },
       "battery_voltage": {
         "name": "Battery voltage"
+      },
+      "boot_reason": {
+        "name": "Boot reason",
+        "state": {
+          "brown_out_reset": "Brownout reset",
+          "hardware_watchdog_reset": "Hardware watchdog reset",
+          "power_on_reboot": "Power-on reboot",
+          "software_reset": "Software reset",
+          "software_update_completed": "Software update completed",
+          "software_watchdog_reset": "Software watchdog reset",
+          "unspecified": "Unspecified"
+        }
       },
       "contamination_state": {
         "name": "Contamination state",
@@ -564,6 +597,9 @@
       "reactive_current": {
         "name": "Reactive current"
       },
+      "reboot_count": {
+        "name": "Reboot count"
+      },
       "rms_current": {
         "name": "Effective current"
       },
@@ -588,6 +624,9 @@
           "medium": "[%key:common::state::medium%]"
         }
       },
+      "uptime": {
+        "name": "Uptime"
+      },
       "valve_position": {
         "name": "Valve position"
       },
@@ -596,6 +635,11 @@
       },
       "window_covering_target_position": {
         "name": "Target opening position"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
       }
     },
     "switch": {

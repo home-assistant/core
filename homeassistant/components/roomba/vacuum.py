@@ -1,7 +1,5 @@
 """Support for Wi-Fi enabled iRobot Roombas."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any
@@ -12,16 +10,14 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import roomba_reported_state
-from .const import DOMAIN
 from .entity import IRobotEntity
-from .models import RoombaData
+from .models import RoombaConfigEntry
 
 SUPPORT_IROBOT = (
     VacuumEntityFeature.PAUSE
@@ -87,11 +83,11 @@ SUPPORT_BRAAVA = SUPPORT_IROBOT | VacuumEntityFeature.FAN_SPEED
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoombaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
-    domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
+    domain_data = config_entry.runtime_data
     roomba = domain_data.roomba
     blid = domain_data.blid
 
@@ -308,13 +304,13 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
         else:
             _LOGGER.error("No such fan speed available: %s", fan_speed)
             return
+
         # The set_preference method does only accept string values
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "carpetBoost", str(carpet_boost)
-        )
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "vacHigh", str(high_perf)
-        )
+        def _set_fan_speed_preferences() -> None:
+            self.vacuum.set_preference("carpetBoost", str(carpet_boost))
+            self.vacuum.set_preference("vacHigh", str(high_perf))
+
+        await self.hass.async_add_executor_job(_set_fan_speed_preferences)
 
 
 class BraavaJet(IRobotVacuum):
@@ -358,6 +354,7 @@ class BraavaJet(IRobotVacuum):
             spray = int(split[1])
             if behavior.capitalize() in BRAAVA_MOP_BEHAVIORS:
                 behavior = behavior.capitalize()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except IndexError:
             _LOGGER.error(
                 "Fan speed error: expected {behavior}-{spray_amount}, got '%s'",
@@ -389,14 +386,14 @@ class BraavaJet(IRobotVacuum):
             overlap = OVERLAP_DEEP
         else:
             overlap = OVERLAP_EXTENDED
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "rankOverlap", overlap
-        )
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference,
-            "padWetness",
-            {"disposable": spray, "reusable": spray},
-        )
+
+        def _set_mop_preferences() -> None:
+            self.vacuum.set_preference("rankOverlap", overlap)
+            self.vacuum.set_preference(
+                "padWetness", {"disposable": spray, "reusable": spray}
+            )
+
+        await self.hass.async_add_executor_job(_set_mop_preferences)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

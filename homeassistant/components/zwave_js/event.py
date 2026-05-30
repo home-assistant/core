@@ -1,7 +1,5 @@
 """Support for Z-Wave controls using the event platform."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from zwave_js_server.model.driver import Driver

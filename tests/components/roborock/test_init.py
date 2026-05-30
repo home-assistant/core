@@ -5,6 +5,7 @@ import pathlib
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from roborock import (
@@ -256,6 +257,26 @@ async def test_no_user_agreement(
         assert mock_roborock_entry.error_reason_translation_key == "no_user_agreement"
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [aiohttp.ClientError(), TimeoutError()],
+    ids=["client_error", "timeout"],
+)
+async def test_network_error_during_setup(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    side_effect: Exception,
+) -> None:
+    """Test that network errors during setup trigger retry, not terminal failure."""
+    with patch(
+        "homeassistant.components.roborock.create_device_manager",
+        side_effect=side_effect,
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
+        assert mock_roborock_entry.error_reason_translation_key == "network_error"
+
+
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_stale_device(
     hass: HomeAssistant,
@@ -365,7 +386,7 @@ async def test_update_unavailability_threshold(
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that a small number of update failures are suppressed before marking a device unavailable."""
+    """Test update failures are suppressed before marking unavailable."""
     await async_setup_component(hass, HA_DOMAIN, {})
     assert setup_entry.state is ConfigEntryState.LOADED
 
@@ -469,7 +490,7 @@ async def test_cloud_api_repair_cleared_on_update(
     fake_vacuum: FakeDevice,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a repair is created then cleared if the device is reachable locally again."""
+    """Test repair is created then cleared when device is local again."""
 
     # Fake that the device is only reachable via cloud
     fake_vacuum.is_connected = True
@@ -566,8 +587,8 @@ async def test_zeo_device_fails_setup(
         "Roborock S7 2 Dock",
         "Dyad Pro",
         "Roborock Q7",
+        "Roborock Q10 S5+",
         # Zeo device is missing
-        # Q10 has no sensor entities
     }
 
 
@@ -621,7 +642,7 @@ async def test_dyad_device_fails_setup(
         # Dyad device is missing
         "Zeo One",
         "Roborock Q7",
-        # Q10 has no sensor entities
+        "Roborock Q10 S5+",
     }
 
 

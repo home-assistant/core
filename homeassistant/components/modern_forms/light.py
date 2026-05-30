@@ -1,7 +1,5 @@
 """Support for Modern Forms Fan lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiomodernforms.const import LIGHT_POWER_OFF, LIGHT_POWER_ON
@@ -102,11 +100,13 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         """Return the state of the light."""
         return bool(self.coordinator.data.state.light_on)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self.coordinator.modern_forms.light(on=LIGHT_POWER_OFF)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -119,6 +119,7 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
 
         await self.coordinator.modern_forms.light(**data)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_set_light_sleep_timer(
         self,
@@ -127,6 +128,7 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         """Set a Modern Forms light sleep timer."""
         await self.coordinator.modern_forms.light(sleep=sleep_time * 60)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_clear_light_sleep_timer(
         self,

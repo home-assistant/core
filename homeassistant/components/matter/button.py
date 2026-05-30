@@ -1,35 +1,33 @@
 """Matter Button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
+from matter_server.common.custom_clusters import HeimanCluster
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Button platform."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.BUTTON, async_add_entities)
 
 
@@ -168,5 +166,16 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.WaterHeaterManagement.Commands.CancelBoost.command_id,
         allow_multi=True,  # Also used in water_heater
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="HeimanSmokeCoAlarmTemporaryMuteRequest",
+            translation_key="temporary_mute_request",
+            command=HeimanCluster.Commands.MutingSensor,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(HeimanCluster.Attributes.AcceptedCommandList,),
+        value_contains=HeimanCluster.Commands.MutingSensor.command_id,
     ),
 ]

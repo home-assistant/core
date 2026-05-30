@@ -1,8 +1,6 @@
 """Data update coordinator for ReCollect Waste."""
 
-from __future__ import annotations
-
-from datetime import date, timedelta
+from datetime import timedelta
 
 from aiorecollect.client import Client, PickupEvent
 from aiorecollect.errors import RecollectError
@@ -11,8 +9,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, LOGGER
+
+type RecollectWasteConfigEntry = ConfigEntry[ReCollectWasteDataUpdateCoordinator]
 
 DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
 
@@ -20,9 +21,11 @@ DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
 class ReCollectWasteDataUpdateCoordinator(DataUpdateCoordinator[list[PickupEvent]]):
     """Class to manage fetching ReCollect Waste data."""
 
-    config_entry: ConfigEntry
+    config_entry: RecollectWasteConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: RecollectWasteConfigEntry
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -50,7 +53,7 @@ class ReCollectWasteDataUpdateCoordinator(DataUpdateCoordinator[list[PickupEvent
             # This ensures that data about when the next pickup is will be
             # returned when the next pickup is the first day of the next month.
             # Ex: Today is August 31st, tomorrow is a pickup on September 1st.
-            today = date.today()
+            today = dt_util.now().date()
             return await self._client.async_get_pickup_events(
                 start_date=today,
                 end_date=today + timedelta(days=35),

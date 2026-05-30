@@ -1,9 +1,7 @@
 """Support for Tuya select."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.select import (
-    TuyaSelectDefinition,
+    SelectDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -14,13 +12,25 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
 SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
+    DeviceCategory.BH: (
+        SelectEntityDescription(
+            key=DPCode.TEMP_SETTING_QUICK_C,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="quick_heat_temperature",
+        ),
+        SelectEntityDescription(
+            key=DPCode.WORK_TYPE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="kettle_work_mode",
+        ),
+    ),
     DeviceCategory.CL: (
         SelectEntityDescription(
             key=DPCode.CONTROL_BACK_MODE,
@@ -390,7 +400,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SelectEntityDescription,
-        definition: TuyaSelectDefinition,
+        definition: SelectDefinition,
     ) -> None:
         """Initialize a Tuya select entity."""
         super().__init__(device, device_manager, description)

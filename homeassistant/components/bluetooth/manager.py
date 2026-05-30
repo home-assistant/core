@@ -1,7 +1,5 @@
 """The bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from functools import partial
 import itertools
@@ -23,7 +21,11 @@ from habluetooth import (
 )
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
+from homeassistant.const import (
+    CONF_SOURCE,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -35,7 +37,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.package import is_docker_env
 
 from .const import (
-    CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
@@ -204,6 +205,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self,
         callback: BluetoothCallback,
         matcher: BluetoothCallbackMatcher | None,
+        mode: BluetoothScanningMode = BluetoothScanningMode.ACTIVE,
+        scan_interval: float | None = None,
+        scan_duration: float | None = None,
     ) -> Callable[[], None]:
         """Register a callback."""
         callback_matcher = BluetoothCallbackMatcherWithCallback(callback=callback)
@@ -218,15 +222,31 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         connectable = callback_matcher[CONNECTABLE]
         self._callback_index.add_callback_matcher(callback_matcher)
 
+        # If the matcher targets a specific address and the caller
+        # didn't explicitly ask for PASSIVE, wire it into habluetooth's
+        # active-scan scheduler so AUTO-mode scanners flip ACTIVE on
+        # demand for this device. ``scan_interval``/``scan_duration``
+        # default to habluetooth's DEFAULT_ACTIVE_SCAN_* when None.
+        cancel_active_scan: Callable[[], None] | None = None
+        if (
+            mode is not BluetoothScanningMode.PASSIVE
+            and (address := callback_matcher.get(ADDRESS)) is not None
+        ):
+            cancel_active_scan = self.async_register_active_scan(
+                address, scan_interval, scan_duration
+            )
+
         def _async_remove_callback() -> None:
             self._callback_index.remove_callback_matcher(callback_matcher)
+            if cancel_active_scan is not None:
+                cancel_active_scan()
 
         # If we have history for the subscriber, we can trigger the callback
         # immediately with the last packet so the subscriber can see the
         # device.
         history = self._connectable_history if connectable else self._all_history
         service_infos: Iterable[BluetoothServiceInfoBleak] = []
-        if address := callback_matcher.get(ADDRESS):
+        if (address := callback_matcher.get(ADDRESS)) is not None:
             if service_info := history.get(address):
                 service_infos = [service_info]
         else:
@@ -355,7 +375,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
 
     @hass_callback
     def async_check_scanning_mode(self, scanner: HaScanner) -> None:
-        """Check if the scanner is running in passive mode when active mode is requested."""
+        """Check if scanner is in passive mode when active is requested."""
         passive_mode_issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
 
         # Check if scanner is NOT in passive mode when active mode was requested

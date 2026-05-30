@@ -1,7 +1,5 @@
 """Test the Google Nest Device Access config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
@@ -352,8 +350,10 @@ class MockPubSubAPIResponses:
     def register_mock_requests(self) -> None:
         """Configure a server response for an SDM managed Pub/Sub topic.
 
-        We check for a topic created by the SDM Device Access Console (but note we don't have permission to read it)
-        or the user has created one themselves in the Google Cloud Project.
+        We check for a topic created by the SDM Device Access
+        Console (but note we don't have permission to read it)
+        or the user has created one themselves in the Google
+        Cloud Project.
         """
         self.aioclient_mock.get(
             f"https://pubsub.googleapis.com/v1/projects/sdm-prod/topics/enterprise-{self.device_access_project_id}",
@@ -373,8 +373,10 @@ class MockPubSubAPIResponses:
             },
             status=self.list_topics_status,
         )
-        # We check for a topic created by the SDM Device Access Console (but note we don't have permission to read it)
-        # or the user has created one themselves in the Google Cloud Project.
+        # We check for a topic created by the SDM Device Access
+        # Console (but note we don't have permission to read it)
+        # or the user has created one themselves in the Google
+        # Cloud Project.
         setup_mock_list_subscriptions_responses(
             self.aioclient_mock,
             self.cloud_project_id,
@@ -424,8 +426,13 @@ def mock_pubsub_api_responses_fixture(
             [],
             {"selected_topic": "create_new_topic"},
             {
-                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}",
-                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+                "topic_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}"
+                ),
+                "subscription_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/"
+                    f"home-assistant-{RAND_SUFFIX}"
+                ),
             },
         ),
         (
@@ -444,8 +451,13 @@ def mock_pubsub_api_responses_fixture(
                 "selected_subscription": "create_new_subscription",
             },
             {
-                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}",
-                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+                "topic_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}"
+                ),
+                "subscription_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/"
+                    f"home-assistant-{RAND_SUFFIX}"
+                ),
             },
         ),
         (
@@ -465,7 +477,10 @@ def mock_pubsub_api_responses_fixture(
             },
             {
                 "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
-                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/"
+                    f"home-assistant-{RAND_SUFFIX}"
+                ),
             },
         ),
         (
@@ -481,11 +496,15 @@ def mock_pubsub_api_responses_fixture(
             ],
             {
                 "selected_topic": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
-                "selected_subscription": f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                "selected_subscription": (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription"
+                ),
             },
             {
                 "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
-                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                "subscription_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription"
+                ),
                 "subscriber_id_imported": True,
             },
         ),
@@ -559,7 +578,10 @@ async def test_full_flow(
             {"selected_topic": "projects/sdm-prod/topics/enterprise-new-project-id"},
             {
                 "topic_name": "projects/sdm-prod/topics/enterprise-new-project-id",
-                "subscription_name": f"projects/new-cloud-project-id/subscriptions/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": (
+                    "projects/new-cloud-project-id/subscriptions/"
+                    f"home-assistant-{RAND_SUFFIX}"
+                ),
             },
         ),
         (
@@ -568,8 +590,13 @@ async def test_full_flow(
             [],
             {"selected_topic": "create_new_topic"},
             {
-                "topic_name": f"projects/new-cloud-project-id/topics/home-assistant-{RAND_SUFFIX}",
-                "subscription_name": f"projects/new-cloud-project-id/subscriptions/home-assistant-{RAND_SUFFIX}",
+                "topic_name": (
+                    f"projects/new-cloud-project-id/topics/home-assistant-{RAND_SUFFIX}"
+                ),
+                "subscription_name": (
+                    "projects/new-cloud-project-id/subscriptions/"
+                    f"home-assistant-{RAND_SUFFIX}"
+                ),
             },
         ),
         (
@@ -588,8 +615,13 @@ async def test_full_flow(
                 "selected_subscription": "create_new_subscription",
             },
             {
-                "topic_name": f"projects/new-cloud-project-id/topics/home-assistant-{RAND_SUFFIX}",
-                "subscription_name": f"projects/new-cloud-project-id/subscriptions/home-assistant-{RAND_SUFFIX}",
+                "topic_name": (
+                    f"projects/new-cloud-project-id/topics/home-assistant-{RAND_SUFFIX}"
+                ),
+                "subscription_name": (
+                    "projects/new-cloud-project-id/subscriptions/"
+                    f"home-assistant-{RAND_SUFFIX}"
+                ),
             },
         ),
         (
@@ -609,7 +641,10 @@ async def test_full_flow(
             },
             {
                 "topic_name": "projects/new-cloud-project-id/topics/my-topic",
-                "subscription_name": f"projects/new-cloud-project-id/subscriptions/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": (
+                    "projects/new-cloud-project-id/subscriptions/"
+                    f"home-assistant-{RAND_SUFFIX}"
+                ),
             },
         ),
         (
@@ -625,11 +660,15 @@ async def test_full_flow(
             ],
             {
                 "selected_topic": "projects/new-cloud-project-id/topics/my-topic",
-                "selected_subscription": "projects/new-cloud-project-id/subscriptions/my-subscription",
+                "selected_subscription": (
+                    "projects/new-cloud-project-id/subscriptions/my-subscription"
+                ),
             },
             {
                 "topic_name": "projects/new-cloud-project-id/topics/my-topic",
-                "subscription_name": "projects/new-cloud-project-id/subscriptions/my-subscription",
+                "subscription_name": (
+                    "projects/new-cloud-project-id/subscriptions/my-subscription"
+                ),
                 "subscriber_id_imported": True,
             },
         ),
@@ -720,8 +759,9 @@ async def test_config_flow_wrong_project_id(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "device_project"
 
-    # Enter the cloud project id instead of device access project id (really we just check
-    # they are the same value which is never correct)
+    # Enter the cloud project id instead of device access project id
+    # (really we just check they are the same value which is never
+    # correct)
     result = await oauth.async_configure(result, {"project_id": CLOUD_PROJECT_ID})
     assert result["type"] is FlowResultType.FORM
     assert "errors" in result
@@ -751,7 +791,9 @@ async def test_config_flow_wrong_project_id(
         "auth_implementation": "imported-cred",
         "cloud_project_id": CLOUD_PROJECT_ID,
         "project_id": PROJECT_ID,
-        "subscription_name": "projects/cloud-id-9876/subscriptions/home-assistant-ABCDEF",
+        "subscription_name": (
+            "projects/cloud-id-9876/subscriptions/home-assistant-ABCDEF"
+        ),
         "topic_name": "projects/sdm-prod/topics/enterprise-some-project-id",
         "token": {
             "refresh_token": "mock-refresh-token",
@@ -847,7 +889,9 @@ async def test_config_flow_pubsub_create_subscription_failure(
         "auth_implementation": "imported-cred",
         "cloud_project_id": CLOUD_PROJECT_ID,
         "project_id": PROJECT_ID,
-        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+        "subscription_name": (
+            f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
+        ),
         "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
         "token": {
             "refresh_token": "mock-refresh-token",
@@ -1202,7 +1246,7 @@ async def test_structure_missing_trait(
 async def test_dhcp_discovery(
     hass: HomeAssistant, oauth: OAuthFixture, nest_test_config: NestTestConfig
 ) -> None:
-    """Exercise discovery dhcp starts the config flow and kicks user to frontend creds flow."""
+    """Exercise discovery dhcp starts the config flow via frontend."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
@@ -1258,7 +1302,10 @@ async def test_dhcp_discovery_already_setup(
             },
             {
                 "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
-                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/"
+                    f"home-assistant-{RAND_SUFFIX}"
+                ),
             },
         ),
         (
@@ -1278,7 +1325,10 @@ async def test_dhcp_discovery_already_setup(
             },
             {
                 "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
-                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/"
+                    f"home-assistant-{RAND_SUFFIX}"
+                ),
             },
         ),
         (
@@ -1289,8 +1339,13 @@ async def test_dhcp_discovery_already_setup(
                 "selected_topic": "create_new_topic",
             },
             {
-                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-ABCDEF",
-                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+                "topic_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-ABCDEF"
+                ),
+                "subscription_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/"
+                    f"home-assistant-{RAND_SUFFIX}"
+                ),
             },
         ),
         (
@@ -1298,17 +1353,22 @@ async def test_dhcp_discovery_already_setup(
             [f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id"],
             [
                 (
-                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",  # Selected subscription
+                    # Selected subscription
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
                     f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
                 )
             ],
             {
                 "selected_topic": f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
-                "selected_subscription": f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
+                "selected_subscription": (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id"
+                ),
             },
             {
                 "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
-                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
+                "subscription_name": (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id"
+                ),
                 "subscriber_id_imported": True,
             },
         ),
@@ -1447,7 +1507,9 @@ async def test_existing_topic_and_subscription(
         "auth_implementation": "imported-cred",
         "cloud_project_id": CLOUD_PROJECT_ID,
         "project_id": PROJECT_ID,
-        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
+        "subscription_name": (
+            f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id"
+        ),
         "subscriber_id_imported": True,
         "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
         "token": {
@@ -1463,7 +1525,7 @@ async def test_no_eligible_topics(
     hass: HomeAssistant,
     oauth: OAuthFixture,
 ) -> None:
-    """Test the case where there are no eligible pub/sub topics and the topic is created."""
+    """Test no eligible pub/sub topics where the topic is created."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1497,8 +1559,12 @@ async def test_no_eligible_topics(
         "auth_implementation": "imported-cred",
         "cloud_project_id": CLOUD_PROJECT_ID,
         "project_id": PROJECT_ID,
-        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
-        "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}",
+        "subscription_name": (
+            f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
+        ),
+        "topic_name": (
+            f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}"
+        ),
         "token": {
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -1541,7 +1607,7 @@ async def test_create_topic_failed(
     auth: FakeAuth,
     mock_pubsub_api_responses: MockPubSubAPIResponses,
 ) -> None:
-    """Test the case where there are no eligible pub/sub topics and the topic is created."""
+    """Test no eligible pub/sub topics where the topic is created."""
     aioclient_mock.clear_requests()
     auth.register_mock_requests()
     mock_pubsub_api_responses.create_topic_status = HTTPStatus.INTERNAL_SERVER_ERROR
@@ -1608,8 +1674,12 @@ async def test_create_topic_failed(
         "auth_implementation": "imported-cred",
         "cloud_project_id": CLOUD_PROJECT_ID,
         "project_id": PROJECT_ID,
-        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
-        "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}",
+        "subscription_name": (
+            f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
+        ),
+        "topic_name": (
+            f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}"
+        ),
         "token": {
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -1682,7 +1752,9 @@ async def test_list_subscriptions_failure(
         "auth_implementation": "imported-cred",
         "cloud_project_id": CLOUD_PROJECT_ID,
         "project_id": PROJECT_ID,
-        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+        "subscription_name": (
+            f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
+        ),
         "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
         "token": {
             "refresh_token": "mock-refresh-token",

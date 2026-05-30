@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from gardena_bluetooth.const import (
     AquaContour,
@@ -17,9 +17,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gardena_bluetooth import DeviceUnavailable
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
-from homeassistant.components.gardena_bluetooth.util import (
-    async_get_product_type as original_get_product_type,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -43,14 +40,14 @@ from tests.components.bluetooth import inject_bluetooth_service_info
             WATER_TIMER_SERVICE_INFO,
             {
                 Battery.battery_level.uuid: Battery.battery_level.encode(100),
-                DeviceInformation.model_number.uuid: DeviceInformation.model_number.encode(
-                    "Model Number TBD"
+                DeviceInformation.model_number.uuid: (
+                    DeviceInformation.model_number.encode("Model Number TBD")
                 ),
-                DeviceInformation.firmware_version.uuid: DeviceInformation.firmware_version.encode(
-                    "1.2.3"
+                DeviceInformation.firmware_version.uuid: (
+                    DeviceInformation.firmware_version.encode("1.2.3")
                 ),
-                DeviceConfiguration.custom_device_name.uuid: DeviceConfiguration.custom_device_name.encode(
-                    "My timer"
+                DeviceConfiguration.custom_device_name.uuid: (
+                    DeviceConfiguration.custom_device_name.encode("My timer")
                 ),
             },
             id=WATER_TIMER_SERVICE_INFO.name,
@@ -58,17 +55,17 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         pytest.param(
             AQUA_CONTOUR_SERVICE_INFO,
             {
-                AquaContourBattery.battery_level.uuid: AquaContourBattery.battery_level.encode(
-                    100
+                AquaContourBattery.battery_level.uuid: (
+                    AquaContourBattery.battery_level.encode(100)
                 ),
-                DeviceInformation.model_number.uuid: DeviceInformation.model_number.encode(
-                    "Aqua Contour"
+                DeviceInformation.model_number.uuid: (
+                    DeviceInformation.model_number.encode("Aqua Contour")
                 ),
-                DeviceInformation.firmware_version.uuid: DeviceInformation.firmware_version.encode(
-                    "2.0.0"
+                DeviceInformation.firmware_version.uuid: (
+                    DeviceInformation.firmware_version.encode("2.0.0")
                 ),
-                AquaContour.custom_device_name.uuid: AquaContour.custom_device_name.encode(
-                    "My contour"
+                AquaContour.custom_device_name.uuid: (
+                    AquaContour.custom_device_name.encode("My contour")
                 ),
             },
             id=AQUA_CONTOUR_SERVICE_INFO.name,
@@ -102,6 +99,7 @@ async def test_setup_delayed_product(
     device_registry: dr.DeviceRegistry,
     mock_entry: MockConfigEntry,
     mock_read_char_raw: dict[str, bytes],
+    manufacturer_request_event: asyncio.Event,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup creates expected devices."""
@@ -110,27 +108,19 @@ async def test_setup_delayed_product(
 
     mock_entry.add_to_hass(hass)
 
-    event = asyncio.Event()
+    manufacturer_request_event.clear()
 
-    async def _get_product_type(*args, **kwargs):
-        event.set()
-        return await original_get_product_type(*args, **kwargs)
+    async with asyncio.TaskGroup() as tg:
+        setup_task = tg.create_task(
+            hass.config_entries.async_setup(mock_entry.entry_id)
+        )
 
-    with patch(
-        "homeassistant.components.gardena_bluetooth.async_get_product_type",
-        wraps=_get_product_type,
-    ):
-        async with asyncio.TaskGroup() as tg:
-            setup_task = tg.create_task(
-                hass.config_entries.async_setup(mock_entry.entry_id)
-            )
+        await manufacturer_request_event.wait()
+        assert mock_entry.state is ConfigEntryState.SETUP_IN_PROGRESS
+        inject_bluetooth_service_info(hass, MISSING_MANUFACTURER_DATA_SERVICE_INFO)
+        inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
 
-            await event.wait()
-            assert mock_entry.state is ConfigEntryState.SETUP_IN_PROGRESS
-            inject_bluetooth_service_info(hass, MISSING_MANUFACTURER_DATA_SERVICE_INFO)
-            inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
-
-            assert await setup_task is True
+        assert await setup_task is True
 
 
 async def test_setup_retry(

@@ -1,7 +1,5 @@
 """Creates HomeWizard sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -37,7 +35,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
-from homeassistant.util.variance import ignore_variance
 
 from .const import DOMAIN
 from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
@@ -67,13 +64,6 @@ def to_percentage(value: float | None) -> float | None:
     """Convert 0..1 value to percentage when value is not None."""
     return value * 100 if value is not None else None
 
-
-def uptime_to_datetime(value: int) -> datetime:
-    """Convert seconds to datetime timestamp."""
-    return utcnow().replace(microsecond=0) - timedelta(seconds=value)
-
-
-uptime_to_stable_datetime = ignore_variance(uptime_to_datetime, timedelta(minutes=5))
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
@@ -643,9 +633,35 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         value_fn=lambda data: data.measurement.cycles,
     ),
     HomeWizardSensorEntityDescription(
+        key="battery_group_power_w",
+        translation_key="battery_group_power_w",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        has_fn=lambda data: data.batteries is not None,
+        value_fn=lambda data: (
+            data.batteries.power_w if data.batteries is not None else None
+        ),
+    ),
+    HomeWizardSensorEntityDescription(
+        key="battery_group_target_power_w",
+        translation_key="battery_group_target_power_w",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        has_fn=lambda data: data.batteries is not None,
+        value_fn=lambda data: (
+            data.batteries.target_power_w if data.batteries is not None else None
+        ),
+    ),
+    HomeWizardSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         has_fn=(
@@ -653,7 +669,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         ),
         value_fn=(
             lambda data: (
-                uptime_to_stable_datetime(data.system.uptime_s)
+                utcnow() - timedelta(seconds=data.system.uptime_s)
                 if data.system is not None and data.system.uptime_s is not None
                 else None
             )
@@ -675,11 +691,13 @@ EXTERNAL_SENSORS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_name="Heat meter",
     ),
-    ExternalDevice.DeviceType.WARM_WATER_METER: HomeWizardExternalSensorEntityDescription(
-        key="warm_water_meter",
-        suggested_device_class=SensorDeviceClass.WATER,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_name="Warm water meter",
+    ExternalDevice.DeviceType.WARM_WATER_METER: (
+        HomeWizardExternalSensorEntityDescription(
+            key="warm_water_meter",
+            suggested_device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_name="Warm water meter",
+        )
     ),
     ExternalDevice.DeviceType.WATER_METER: HomeWizardExternalSensorEntityDescription(
         key="water_meter",
@@ -687,11 +705,13 @@ EXTERNAL_SENSORS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_name="Water meter",
     ),
-    ExternalDevice.DeviceType.INLET_HEAT_METER: HomeWizardExternalSensorEntityDescription(
-        key="inlet_heat_meter",
-        suggested_device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_name="Inlet heat meter",
+    ExternalDevice.DeviceType.INLET_HEAT_METER: (
+        HomeWizardExternalSensorEntityDescription(
+            key="inlet_heat_meter",
+            suggested_device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_name="Inlet heat meter",
+        )
     ),
 }
 

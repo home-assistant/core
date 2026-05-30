@@ -235,7 +235,9 @@ MOCK_SUBENTRY_CLIMATE_COMPONENT = {
         "swing_horizontal_mode_command_topic": "swing-horizontal-mode-command-topic",
         "swing_horizontal_mode_command_template": "{{ value }}",
         "swing_horizontal_mode_state_topic": "swing-horizontal-mode-state-topic",
-        "swing_horizontal_mode_state_template": "{{ value_json.swing_horizontal_mode }}",
+        "swing_horizontal_mode_state_template": (
+            "{{ value_json.swing_horizontal_mode }}"
+        ),
         "swing_horizontal_modes": ["off", "on"],
     },
 }
@@ -315,6 +317,33 @@ MOCK_SUBENTRY_COVER_COMPONENT = {
         "tilt_status_template": "{{ value_json.position }}",
         "retain": False,
         "entity_picture": "https://example.com/b37acf667fa04c688ad7dfb27de2178b",
+    },
+}
+MOCK_SUBENTRY_DATE_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47411": {
+        "platform": "date",
+        "name": "Delivery day",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47411",
+    },
+}
+MOCK_SUBENTRY_DATETIME_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47412": {
+        "platform": "datetime",
+        "name": "Maintenance service",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "timezone": "GMT",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47412",
     },
 }
 MOCK_SUBENTRY_FAN_COMPONENT = {
@@ -517,6 +546,26 @@ MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT = {
         "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
     },
 }
+MOCK_SUBENTRY_NUMBER_COMPONENT_NONE_UNIT = {
+    "a9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Purifier",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "auto",
+        "device_class": "aqi",
+        "unit_of_measurement": "None",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/a9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
 MOCK_SUBENTRY_SELECT_COMPONENT = {
     "fa261f6feed443e7b7d5f3fbe2a47414": {
         "platform": "select",
@@ -542,6 +591,20 @@ MOCK_SUBENTRY_SENSOR_COMPONENT = {
         "expire_after": 30,
         "value_template": "{{ value_json.value }}",
         "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
+    },
+}
+MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL = {
+    "b0f85790a95d4889924602effff06b6e": {
+        "platform": "sensor",
+        "name": "Air quality",
+        "device_class": "aqi",
+        "entity_category": None,
+        "state_class": "measurement",
+        "state_topic": "test-topic",
+        # `unit_of_measurement` is stored as a string;
+        # it will be filtered from the config when exported or when set up.
+        "unit_of_measurement": "None",
+        "entity_picture": "https://example.com/b0f85790a95d4889924602effff06b6e",
     },
 }
 MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS = {
@@ -615,6 +678,19 @@ MOCK_SUBENTRY_TEXT_COMPONENT = {
         "value_template": "{{ value_json.value }}",
         "retain": False,
         "entity_picture": "https://example.com/09261f6feed443e7b7d5f3fbe2a47413",
+    },
+}
+MOCK_SUBENTRY_TIME_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "time",
+        "name": "Happy hour",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47413",
     },
 }
 MOCK_SUBENTRY_VALVE_COMPONENT_STATE = {
@@ -713,7 +789,18 @@ MOCK_SUBENTRY_DEVICE_DATA = {
 }
 
 MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
-    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "device": MOCK_SUBENTRY_DEVICE_DATA
+    | {
+        "mqtt_settings": {
+            "qos": 2.0,
+            "message_expiry_interval": {
+                "days": 0,
+                "hours": 0,
+                "minutes": 1,
+                "seconds": 30,
+            },
+        }
+    },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 
@@ -752,6 +839,14 @@ MOCK_CLIMATE_NO_TARGET_TEMP_SUBENTRY_DATA = {
 MOCK_COVER_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_COVER_COMPONENT,
+}
+MOCK_DATE_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_DATE_COMPONENT,
+}
+MOCK_DATETIME_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_DATETIME_COMPONENT,
 }
 MOCK_FAN_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
@@ -793,6 +888,10 @@ MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT,
 }
+MOCK_NUMBER_SUBENTRY_DATA_NONE_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NONE_UNIT,
+}
 MOCK_SELECT_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SELECT_COMPONENT,
@@ -804,6 +903,10 @@ MOCK_SENSOR_SUBENTRY_DATA = {
 MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS,
+}
+MOCK_SENSOR_SUBENTRY_DATA_UOM_NONE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL,
 }
 MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
@@ -820,6 +923,10 @@ MOCK_SWITCH_SUBENTRY_DATA = {
 MOCK_TEXT_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_TEXT_COMPONENT,
+}
+MOCK_TIME_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_TIME_COMPONENT,
 }
 MOCK_VALVE_SUBENTRY_DATA_STATE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
@@ -838,11 +945,23 @@ MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
     "components": MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA,
 }
 MOCK_SUBENTRY_DATA_SET_MIX = {
-    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "device": MOCK_SUBENTRY_DEVICE_DATA
+    | {
+        "mqtt_settings": {
+            "qos": 0,
+            "message_expiry_interval": {
+                "days": 0,
+                "hours": 0,
+                "minutes": 1,
+                "seconds": 30,
+            },
+        }
+    },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
     | MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT
-    | MOCK_SUBENTRY_SWITCH_COMPONENT,
+    | MOCK_SUBENTRY_SWITCH_COMPONENT
+    | MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 _SENTINEL = object()
 
@@ -1652,7 +1771,8 @@ async def help_test_encoding_subscribable_topics(
         state = hass.states.get(entity_id)
 
         if init_payload_value:
-            # Sometimes a device needs to have an initialization pay load, e.g. to switch the device on.
+            # Sometimes a device needs to have an initialization
+            # pay load, e.g. to switch the device on.
             async_fire_mqtt_message(hass, init_payload_topic, init_payload_value)
             await hass.async_block_till_done()
 
@@ -1936,7 +2056,7 @@ async def help_test_entity_name(
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    entity_id = f"{domain}.beer_{expected_entity_name}"
+    entity_id = f"{domain}.default_area_beer_{expected_entity_name}"
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == f"Beer {expected_friendly_name}"
@@ -2221,7 +2341,7 @@ async def help_test_entity_debug_info_message(
         if service:
             # Trigger an outgoing MQTT message
             if service:
-                service_data = {ATTR_ENTITY_ID: f"{domain}.beer_test"}
+                service_data = {ATTR_ENTITY_ID: f"{domain}.default_area_beer_test"}
                 if service_parameters:
                     service_data.update(service_parameters)
 
@@ -2289,7 +2409,10 @@ async def help_test_entity_debug_info_remove(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.beer_test"
+    assert (
+        debug_info_data["entities"][0]["entity_id"]
+        == f"{domain}.default_area_beer_test"
+    )
     entity_id = debug_info_data["entities"][0]["entity_id"]
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
@@ -2334,7 +2457,10 @@ async def help_test_entity_debug_info_update_entity_id(
         == f"homeassistant/{domain}/bla/config"
     )
     assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
-    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.beer_test"
+    assert (
+        debug_info_data["entities"][0]["entity_id"]
+        == f"{domain}.default_area_beer_test"
+    )
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
@@ -2342,7 +2468,7 @@ async def help_test_entity_debug_info_update_entity_id(
     assert len(debug_info_data["triggers"]) == 0
 
     entity_registry.async_update_entity(
-        f"{domain}.beer_test", new_entity_id=f"{domain}.milk"
+        f"{domain}.default_area_beer_test", new_entity_id=f"{domain}.milk"
     )
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -2360,7 +2486,9 @@ async def help_test_entity_debug_info_update_entity_id(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert f"{domain}.beer_test" not in hass.data["mqtt"].debug_info_entities
+    assert (
+        f"{domain}.default_area_beer_test" not in hass.data["mqtt"].debug_info_entities
+    )
 
 
 async def help_test_entity_disabled_by_default(
@@ -2543,7 +2671,9 @@ async def help_test_publishing_with_custom_encoding(
             test_config_setup["encoding"] = test_data["encoding"]
         if template and test_data["cmd_tpl"]:
             test_config_setup[template] = (
-                f"{{{{ (('%.1f'|format({tpl_par}))[0] if is_number({tpl_par}) else {tpl_par}[0]) | ord | pack('b') }}}}"
+                f"{{{{ (('%.1f'|format({tpl_par}))[0]"
+                f" if is_number({tpl_par})"
+                f" else {tpl_par}[0]) | ord | pack('b') }}}}"
             )
         setup_config.append(test_config_setup)
 
@@ -2570,7 +2700,9 @@ async def help_test_publishing_with_custom_encoding(
     )
     await hass.async_block_till_done()
 
-    mqtt_mock.async_publish.assert_any_call("cmd/test1", str(payload), 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "cmd/test1", str(payload), 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # 2) test with utf-16 encoding
@@ -2581,7 +2713,11 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_any_call(
-        "cmd/test2", str(payload).encode("utf-16"), 0, False
+        "cmd/test2",
+        str(payload).encode("utf-16"),
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -2593,8 +2729,8 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     assert (
-        f"Can't pass-through payload for publishing {payload} on cmd/test3 with no encoding set, need 'bytes'"
-        in caplog.text
+        f"Can't pass-through payload for publishing {payload} on"
+        " cmd/test3 with no encoding set, need 'bytes'" in caplog.text
     )
 
     # 4) test with invalid encoding set should fail
@@ -2605,8 +2741,8 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     assert (
-        f"Can't encode payload for publishing {payload} on cmd/test4 with encoding invalid"
-        in caplog.text
+        f"Can't encode payload for publishing {payload} on"
+        " cmd/test4 with encoding invalid" in caplog.text
     )
 
     # 5) test with command template and raw encoding if specified
@@ -2620,7 +2756,11 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_any_call(
-        "cmd/test5", tpl_output or str(payload)[0].encode("utf-8"), 0, False
+        "cmd/test5",
+        tpl_output or str(payload)[0].encode("utf-8"),
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -2634,7 +2774,7 @@ async def help_test_reload_with_config(
     """Test reloading with supplied config."""
     new_yaml_config_file = tmp_path / "configuration.yaml"
 
-    def _write_yaml_config() -> None:
+    def _write_yaml_config() -> str:
         new_yaml_config = yaml.dump(config)
         new_yaml_config_file.write_text(new_yaml_config)
         assert new_yaml_config_file.read_text() == new_yaml_config

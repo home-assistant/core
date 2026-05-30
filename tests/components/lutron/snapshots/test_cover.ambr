@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_cover_setup[cover.test_cover-entry]
+# name: test_cover_setup[cover.test_area_test_cover-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_cover',
+    'entity_id': 'cover.test_area_test_cover',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_setup[cover.test_cover-state]
+# name: test_cover_setup[cover.test_area_test_cover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 0,
@@ -46,7 +46,7 @@
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_cover',
+    'entity_id': 'cover.test_area_test_cover',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
