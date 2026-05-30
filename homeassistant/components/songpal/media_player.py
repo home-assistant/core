@@ -3,6 +3,7 @@
 import asyncio
 from collections import OrderedDict
 import logging
+import re
 
 from songpal import (
     ConnectChange,
@@ -22,10 +23,10 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -41,6 +42,60 @@ PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
 INITIAL_RETRY_DELAY = 10
+ZONE_UNIQUE_ID_SEPARATOR = "_zone_"
+
+
+def _zone_unique_id(device_unique_id: str, zone_uri: str) -> str:
+    """Return zone unique ID derived from the device unique ID and zone URI."""
+    zone_id = re.sub(r"[^A-Za-z0-9]", "_", zone_uri)
+    return f"{device_unique_id}{ZONE_UNIQUE_ID_SEPARATOR}{zone_id}"
+
+
+async def _async_migrate_legacy_entity_to_first_zone(
+    hass: HomeAssistant,
+    device: Device,
+    zones: list,
+) -> None:
+    """Migrate old single-entity Songpal unique ID to first discovered zone."""
+    if not zones:
+        return
+
+    try:
+        sysinfo = await device.get_system_info()
+    except SongpalException as ex:
+        _LOGGER.debug("Unable to fetch system info for migration: %s", ex)
+        return
+
+    device_unique_id = sysinfo.macAddr or sysinfo.wirelessMacAddr
+    if device_unique_id is None:
+        return
+
+    entity_registry = er.async_get(hass)
+    old_entity_id = entity_registry.async_get_entity_id(
+        Platform.MEDIA_PLAYER,
+        DOMAIN,
+        device_unique_id,
+    )
+    if old_entity_id is None:
+        return
+
+    first_zone_unique_id = _zone_unique_id(device_unique_id, zones[0].uri)
+    existing_zone_entity_id = entity_registry.async_get_entity_id(
+        Platform.MEDIA_PLAYER,
+        DOMAIN,
+        first_zone_unique_id,
+    )
+    if existing_zone_entity_id and existing_zone_entity_id != old_entity_id:
+        _LOGGER.debug(
+            "Skipping Songpal entity migration due to unique ID conflict: %s",
+            first_zone_unique_id,
+        )
+        return
+
+    entity_registry.async_update_entity(
+        old_entity_id,
+        new_unique_id=first_zone_unique_id
+    )
 
 
 async def async_setup_platform(
@@ -76,8 +131,23 @@ async def async_setup_entry(
         _LOGGER.debug("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady from ex
 
-    songpal_entity = SongpalEntity(name, device)
-    async_add_entities([songpal_entity], True)
+    try:
+        zones = await device.get_zones()
+    except SongpalException as ex:
+        if "Device has no zones" not in str(ex):
+            _LOGGER.debug("Unable to get zones, falling back to root entity: %s", ex)
+        async_add_entities([SongpalEntity(name, device)], True)
+        return
+
+    if zones:
+        await _async_migrate_legacy_entity_to_first_zone(hass, device, zones)
+        async_add_entities(
+            [SongpalZoneEntity(name, device, zone.uri, zone.title) for zone in zones],
+            True,
+        )
+        return
+
+    async_add_entities([SongpalEntity(name, device)], True)
 
 
 class SongpalEntity(MediaPlayerEntity):
@@ -85,7 +155,7 @@ class SongpalEntity(MediaPlayerEntity):
 
     _attr_should_poll = False
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
-    _attr_supported_features = (
+    _attr_supported_features: MediaPlayerEntityFeature | None = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -97,7 +167,7 @@ class SongpalEntity(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, name, device):
+    def __init__(self, name, device) -> None:
         """Init."""
         self._name = name
         self._dev = device
@@ -107,6 +177,7 @@ class SongpalEntity(MediaPlayerEntity):
         self._state = False
         self._attr_available = False
         self._initialized = False
+        self._device_unique_id = None
 
         self._volume_control = None
         self._volume_min = 0
@@ -118,14 +189,19 @@ class SongpalEntity(MediaPlayerEntity):
         self._sources = {}
         self._active_sound_mode = None
         self._sound_modes = {}
+        self._manage_notifications = True
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to hass."""
-        await self.async_activate_websocket()
+        if self._manage_notifications:
+            await self.async_activate_websocket()
+        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        await self._dev.stop_listen_notifications()
+        if self._manage_notifications:
+            await self._dev.stop_listen_notifications()
+        await super().async_will_remove_from_hass()
 
     async def _get_sound_modes_info(self):
         """Get available sound modes and the active one."""
@@ -236,7 +312,7 @@ class SongpalEntity(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
+        return self._device_unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -248,7 +324,7 @@ class SongpalEntity(MediaPlayerEntity):
             connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.wirelessMacAddr))
         return DeviceInfo(
             connections=connections,
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self._device_unique_id)},
             manufacturer="Sony Corporation",
             model=self._model,
             name=self._name,
@@ -265,6 +341,9 @@ class SongpalEntity(MediaPlayerEntity):
         try:
             if self._sysinfo is None:
                 self._sysinfo = await self._dev.get_system_info()
+                self._device_unique_id = (
+                    self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
+                )
 
             if self._model is None:
                 interface_info = await self._dev.get_interface_information()
@@ -410,3 +489,159 @@ class SongpalEntity(MediaPlayerEntity):
         """Mute or unmute the device."""
         _LOGGER.debug("Set mute: %s", mute)
         return await self._volume_control.set_mute(mute)
+
+
+class SongpalZoneEntity(SongpalEntity):
+    """Class representing a Songpal zone as a media player entity."""
+
+    _attr_should_poll = True
+    _attr_name: str | None = None
+    _attr_supported_features: MediaPlayerEntityFeature | None = (
+        MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
+
+    def __init__(self, name, device, zone_uri: str, zone_title: str) -> None:
+        """Initialize zone entity."""
+        super().__init__(name, device)
+        self._zone_uri = zone_uri
+        self._zone_title = zone_title
+        self._zone = None
+        self._attr_name = zone_title
+        self._manage_notifications = False
+
+    @property
+    def unique_id(self):
+        """Return a unique ID for this zone entity."""
+        if self._device_unique_id is None:
+            return None
+        return _zone_unique_id(self._device_unique_id, self._zone_uri)
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return supported features for this zone."""
+        features = self._attr_supported_features
+        if self._volume_control is not None:
+            features |= (
+                MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+                | MediaPlayerEntityFeature.VOLUME_MUTE
+            )
+        return features
+
+    @property
+    def sound_mode_list(self) -> list[str] | None:
+        """Return list of available sound modes."""
+        return None
+
+    @property
+    def sound_mode(self) -> str | None:
+        """Return currently active sound mode."""
+        return None
+
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Ignore sound mode selection for zone entities."""
+        return
+
+    async def async_update(self) -> None:
+        """Fetch updates for the zone from the device."""
+        try:
+            if self._sysinfo is None:
+                self._sysinfo = await self._dev.get_system_info()
+                self._device_unique_id = (
+                    self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
+                )
+
+            if self._model is None:
+                interface_info = await self._dev.get_interface_information()
+                self._model = interface_info.modelName
+
+            zone = next(
+                (
+                    zone
+                    for zone in await self._dev.get_zones()
+                    if zone.uri == self._zone_uri
+                ),
+                None,
+            )
+            if zone is None:
+                self._attr_available = False
+                return
+            self._zone = zone
+            self._state = zone.active
+
+            self._volume_control = next(
+                (
+                    volume
+                    for volume in await self._dev.get_volume_information()
+                    if volume.output == self._zone_uri
+                ),
+                None,
+            )
+            if self._volume_control is not None:
+                self._volume_max = self._volume_control.maxVolume
+                self._volume_min = self._volume_control.minVolume
+                self._volume = self._volume_control.volume
+                self._attr_is_volume_muted = self._volume_control.is_muted
+            else:
+                self._volume = 0
+                self._attr_is_volume_muted = False
+
+            inputs = await self._dev.get_inputs()
+            self._sources = OrderedDict()
+            self._active_source = None
+            for input_ in inputs:
+                if self._zone_uri not in input_.outputs:
+                    continue
+                self._sources[input_.uri] = input_
+                if input_.active:
+                    self._active_source = input_
+
+            self._attr_available = True
+        except SongpalException as ex:
+            if (
+                "Cannot connect to host" in str(ex) or "Request timeout" in str(ex)
+            ) and not self._attr_available:
+                _LOGGER.debug(
+                    "Got expected exception when updating zone %s: %s",
+                    self._zone_title,
+                    ex,
+                )
+            else:
+                _LOGGER.error("Unable to update zone %s: %s", self._zone_title, ex)
+            self._attr_available = False
+
+    async def async_select_source(self, source: str) -> None:
+        """Select source for the zone."""
+        if self._zone is None:
+            _LOGGER.error(
+                "Unable to select source for zone %s: zone unavailable",
+                self._zone_title,
+            )
+            return
+
+        for input_ in self._sources.values():
+            if input_.title == source:
+                await input_.activate(self._zone)
+                return
+
+        _LOGGER.error(
+            "Unable to find source %s for zone %s",
+            source,
+            self._zone_title,
+        )
+
+    async def async_turn_on(self) -> None:
+        """Activate zone."""
+        if self._zone is None:
+            await self.async_update()
+        if self._zone is not None:
+            await self._zone.activate(True)
+
+    async def async_turn_off(self) -> None:
+        """Deactivate zone."""
+        if self._zone is None:
+            await self.async_update()
+        if self._zone is not None:
+            await self._zone.activate(False)

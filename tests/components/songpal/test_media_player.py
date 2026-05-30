@@ -357,6 +357,93 @@ async def test_services(hass: HomeAssistant) -> None:
     mocked_device.set_sound_settings.assert_called_with("soundField", "sound_mode1")
 
 
+async def test_zone_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test zone entities are exposed and controllable as media players."""
+    mocked_device = _create_mocked_device(with_zones=True)
+    entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    with _patch_media_player_device(mocked_device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    zone_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert len(zone_entries) == 3
+    assert hass.states.get(ENTITY_ID) is None
+
+    device_ids = {zone_entity.device_id for zone_entity in zone_entries}
+    assert len(device_ids) == 1
+
+    zone2_entity = next(
+        zone_entity for zone_entity in zone_entries if "zone_2" in zone_entity.unique_id
+    )
+
+    zone2_state = hass.states.get(zone2_entity.entity_id)
+    assert zone2_state
+    assert zone2_state.attributes["source_list"] == ["title1"]
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_TURN_OFF,
+        {"entity_id": zone2_entity.entity_id},
+        blocking=True,
+    )
+    mocked_device.zone2.activate.assert_called_once_with(False)
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_VOLUME_SET,
+        {"entity_id": zone2_entity.entity_id, "volume_level": 0.25},
+        blocking=True,
+    )
+    mocked_device.volume2.set_volume.assert_called_once_with(25)
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_SELECT_SOURCE,
+        {"entity_id": zone2_entity.entity_id, "source": "title1"},
+        blocking=True,
+    )
+    mocked_device.input1.activate.assert_called_once_with(mocked_device.zone2)
+
+
+async def test_migrate_legacy_entity_to_first_zone(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test legacy Songpal entity unique ID migrates to first discovered zone."""
+    mocked_device = _create_mocked_device(with_zones=True)
+    entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    old_entity_entry = entity_registry.async_get_or_create(
+        media_player.DOMAIN,
+        songpal.DOMAIN,
+        MAC,
+        config_entry=entry,
+    )
+    original_entity_id = old_entity_entry.entity_id
+
+    with _patch_media_player_device(mocked_device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    migrated_entry = entity_registry.async_get(original_entity_id)
+    assert migrated_entry is not None
+    assert migrated_entry.unique_id == "mac_zone_extOutput_zone_zone_1"
+    assert migrated_entry.entity_id == "media_player.main_zone"
+
+    assert (
+        entity_registry.async_get_entity_id(
+            media_player.DOMAIN,
+            songpal.DOMAIN,
+            MAC,
+        )
+        is None
+    )
+
+
 async def test_websocket_events(hass: HomeAssistant) -> None:
     """Test websocket events."""
     mocked_device = _create_mocked_device()
