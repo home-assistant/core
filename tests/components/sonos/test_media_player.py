@@ -1347,6 +1347,62 @@ async def test_play_media_announce(
     soco.play_uri.assert_called_with(content_id, force_radio=False)
 
 
+@pytest.mark.parametrize(
+    ("content_id", "expect_warning", "expect_play_clip"),
+    [
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.mp3",
+            False,
+            True,
+            id="mp3_no_warning",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.wav",
+            False,
+            True,
+            id="wav_no_warning",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.flac",
+            True,
+            True,
+            id="flac_warns_and_plays",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123",
+            False,
+            True,
+            id="no_extension_no_warning",
+        ),
+    ],
+)
+async def test_play_media_announce_format_warning(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    sonos_websocket,
+    content_id: str,
+    expect_warning: bool,
+    expect_play_clip: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that announce logs a warning for unsupported file formats."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == (1 if expect_play_clip else 0)
+    warning_logged = "only supports MP3 and WAV" in caplog.text
+    assert warning_logged == expect_warning
+
+
 async def test_media_get_queue(
     hass: HomeAssistant,
     soco: MockSoCo,
