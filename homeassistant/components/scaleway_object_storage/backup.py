@@ -325,7 +325,7 @@ class ScalewayBackupAgent(BackupAgent):
             try:
                 _, upload = queue.get_nowait()
                 upload.close()
-            except asyncio.QueueShutDown:
+            except asyncio.QueueEmpty:
                 # Queue is already empty (likely due to a race condition)
                 return
 
