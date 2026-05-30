@@ -118,7 +118,6 @@ class AbortFlow(FlowError):
 class FlowContext(TypedDict, total=False):
     """Typed context dict."""
 
-    show_advanced_options: bool
     source: str
 
 

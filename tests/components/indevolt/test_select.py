@@ -9,7 +9,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
-from homeassistant.components.select import SERVICE_SELECT_OPTION
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -66,7 +69,7 @@ async def test_select_option(
 
     # Attempt to change option
     await hass.services.async_call(
-        Platform.SELECT,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {"entity_id": "select.cms_sf2000_energy_mode", "option": option},
         blocking=True,
@@ -97,7 +100,7 @@ async def test_select_set_option_error(
     # Attempt to change option
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SELECT,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
                 "entity_id": "select.cms_sf2000_energy_mode",
