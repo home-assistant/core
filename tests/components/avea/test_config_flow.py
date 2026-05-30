@@ -1,5 +1,6 @@
 """Test the Avea config flow."""
 
+from copy import copy
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -35,13 +36,22 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info(hass, AVEA_DISCOVERY_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.avea.config_flow.bluetooth.async_request_active_scan"
+    ) as mock_request_active_scan:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
+    assert result["data_schema"].schema[CONF_ADDRESS].container == {
+        AVEA_DISCOVERY_INFO.address: (
+            f"{AVEA_DISCOVERY_INFO.name} ({AVEA_DISCOVERY_INFO.address})"
+        )
+    }
+    mock_request_active_scan.assert_awaited_once_with(hass)
 
     with (
         patch(
@@ -67,12 +77,41 @@ async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info(hass, NOT_AVEA_DISCOVERY_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.avea.config_flow.bluetooth.async_request_active_scan"
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_user_step_unnamed_device_label(hass: HomeAssistant) -> None:
+    """Test unnamed discovered devices are shown without duplicating the address."""
+    discovery_info = copy(AVEA_DISCOVERY_INFO)
+    discovery_info.name = discovery_info.address
+
+    with (
+        patch(
+            "homeassistant.components.avea.config_flow.async_discovered_service_info",
+            return_value=[discovery_info],
+        ),
+        patch(
+            "homeassistant.components.avea.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"].schema[CONF_ADDRESS].container == {
+        AVEA_DISCOVERY_INFO.address: AVEA_DISCOVERY_INFO.address
+    }
+    mock_request_active_scan.assert_awaited_once_with(hass)
 
 
 async def test_user_step_cannot_connect_recovers(hass: HomeAssistant) -> None:
