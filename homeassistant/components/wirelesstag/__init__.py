@@ -77,16 +77,10 @@ class WirelessTagPlatform:
 
     def _set_monitoring(self, switch: WirelessTagSwitch, action: str) -> None:
         """Arm or disarm monitoring for the switch's sensor."""
-        key = switch.entity_description.key
-        func_name = f"{action}_{ARM_KEY_OVERRIDES.get(key, key)}"
-        if (func := getattr(self.api, func_name, None)) is None:
-            _LOGGER.error(
-                "Cannot %s %s monitoring: wirelesstagpy has no %s method",
-                action,
-                key,
-                func_name,
-            )
-            return
+        key = ARM_KEY_OVERRIDES.get(
+            switch.entity_description.key, switch.entity_description.key
+        )
+        func = getattr(self.api, f"{action}_{key}")
         func(switch.tag_id, switch.tag_manager_mac)
 
     def start_monitoring(self) -> None:
