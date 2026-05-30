@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -170,6 +170,7 @@ async def setup_risco_cloud(
         ),
         patch(
             "homeassistant.components.risco.RiscoCloud.subscribe_states",
+            new_callable=AsyncMock,
         ),
     ):
         await hass.config_entries.async_setup(cloud_config_entry.entry_id)

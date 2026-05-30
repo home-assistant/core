@@ -194,13 +194,14 @@ async def _async_setup_cloud_entry(
         if isinstance(error, MaxRetriesError):
             _LOGGER.error(
                 "Risco cloud SSE exhausted retries, reloading integration",
-                exc_info=error,
+                exc_info=error.last_error,
             )
             if not hass.is_stopping:
                 hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
         else:
             _LOGGER.warning(
-                "Risco cloud SSE error (reconnecting automatically)", exc_info=error
+                "Risco cloud SSE error (reconnecting automatically)",
+                exc_info=(type(error), error, error.__traceback__),
             )
 
     remove_state_handler = risco.add_state_handler(_state)
