@@ -1,5 +1,6 @@
 """Tests for the Wireless Sensor Tags sensor platform."""
 
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -46,11 +47,11 @@ def _mock_tag() -> MagicMock:
     return tag
 
 
-async def test_poll_handles_tag_missing_from_reload(
+async def test_update_handles_tag_missing_from_reload(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a poll where the tag is no longer returned is handled gracefully.
+    """Test an update where the tag is no longer returned is handled gracefully.
 
     If a reload no longer contains the entity's tag, the update must log and
     return instead of raising a KeyError.
@@ -68,9 +69,14 @@ async def test_poll_handles_tag_missing_from_reload(
 
         # The tag is no longer returned by a reload.
         mock_api.load_tags.return_value = {}
+        caplog.clear()
         await async_update_entity(hass, ENTITY_ID)
         await hass.async_block_till_done()
 
     # The entity survives and the graceful error path is taken (no KeyError).
     assert hass.states.get(ENTITY_ID) is not None
-    assert "Unable to update tag" in caplog.text
+    assert any(
+        record.levelno == logging.ERROR
+        and "Unable to update tag" in record.getMessage()
+        for record in caplog.records
+    )
