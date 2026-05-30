@@ -3,11 +3,7 @@
 from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 if TYPE_CHECKING:
@@ -27,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScalewayConfigEntry) -> 
     client = helpers.create_client(session, entry.data)
     try:
         await helpers.check_connection(client)
-    except ConfigEntryNotReady, ConfigEntryError, ConfigEntryAuthFailed:
+    except ConfigEntryNotReady, ConfigEntryError:
         # Re-raise as they are
         raise
     except exceptions.ScalewayException as e:
