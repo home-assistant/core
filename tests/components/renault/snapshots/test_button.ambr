@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_button_access_denied[zoe_40][button.reg_zoe_40_flash_lights-entry]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_flash_lights',
+    'entity_id': 'button.reg_zoe_40',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,112 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Flash lights',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Flash lights',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flash_lights',
-    'unique_id': 'vf1zoe40vin_flash_lights',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_button_access_denied[zoe_40][button.reg_zoe_40_flash_lights-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Flash lights',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_flash_lights',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button_access_denied[zoe_40][button.reg_zoe_40_sound_horn-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_sound_horn',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sound horn',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sound horn',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sound_horn',
-    'unique_id': 'vf1zoe40vin_sound_horn',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_button_access_denied[zoe_40][button.reg_zoe_40_sound_horn-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Sound horn',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_sound_horn',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button_access_denied[zoe_40][button.reg_zoe_40_start_air_conditioner-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Start air conditioner',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Start air conditioner',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -136,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_access_denied[zoe_40][button.reg_zoe_40_start_air_conditioner-state]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Start air conditioner',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_access_denied[zoe_40][button.reg_zoe_40_start_charge-entry]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -163,7 +63,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_start_charge',
+    'entity_id': 'button.reg_zoe_40_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -171,12 +71,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -186,20 +86,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_access_denied[zoe_40][button.reg_zoe_40_start_charge-state]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Start charge',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_start_charge',
+    'entity_id': 'button.reg_zoe_40_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_access_denied[zoe_40][button.reg_zoe_40_stop_charge-entry]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -213,7 +113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_stop_charge',
+    'entity_id': 'button.reg_zoe_40_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -221,12 +121,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Stop charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Stop charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -236,20 +136,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_access_denied[zoe_40][button.reg_zoe_40_stop_charge-state]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Stop charge',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_stop_charge',
+    'entity_id': 'button.reg_zoe_40_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_empty[zoe_40][button.reg_zoe_40_flash_lights-entry]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -263,7 +163,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_flash_lights',
+    'entity_id': 'button.reg_zoe_40_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -271,62 +171,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Flash lights',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Flash lights',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flash_lights',
-    'unique_id': 'vf1zoe40vin_flash_lights',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_button_empty[zoe_40][button.reg_zoe_40_flash_lights-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Flash lights',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_flash_lights',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button_empty[zoe_40][button.reg_zoe_40_sound_horn-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_sound_horn',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sound horn',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sound horn',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -336,20 +186,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_empty[zoe_40][button.reg_zoe_40_sound_horn-state]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Sound horn',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_sound_horn',
+    'entity_id': 'button.reg_zoe_40_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_empty[zoe_40][button.reg_zoe_40_start_air_conditioner-entry]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -363,7 +213,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -371,162 +221,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start air conditioner',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start air conditioner',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'start_air_conditioner',
-    'unique_id': 'vf1zoe40vin_start_air_conditioner',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_button_empty[zoe_40][button.reg_zoe_40_start_air_conditioner-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Start air conditioner',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button_empty[zoe_40][button.reg_zoe_40_start_charge-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_start_charge',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Start charge',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Start charge',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'start_charge',
-    'unique_id': 'vf1zoe40vin_start_charge',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_button_empty[zoe_40][button.reg_zoe_40_start_charge-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Start charge',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_start_charge',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button_empty[zoe_40][button.reg_zoe_40_stop_charge-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_stop_charge',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Stop charge',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Stop charge',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'stop_charge',
-    'unique_id': 'vf1zoe40vin_stop_charge',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_button_empty[zoe_40][button.reg_zoe_40_stop_charge-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Stop charge',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_stop_charge',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button_errors[zoe_40][button.reg_zoe_40_flash_lights-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_flash_lights',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Flash lights',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Flash lights',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -536,20 +236,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_zoe_40_flash_lights-state]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Flash lights',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_flash_lights',
+    'entity_id': 'button.reg_zoe_40_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_zoe_40_sound_horn-entry]
+# name: test_button_empty[zoe_40][button.reg_zoe_40-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -563,7 +263,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_sound_horn',
+    'entity_id': 'button.reg_zoe_40',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -571,62 +271,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sound horn',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sound horn',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sound_horn',
-    'unique_id': 'vf1zoe40vin_sound_horn',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_button_errors[zoe_40][button.reg_zoe_40_sound_horn-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Sound horn',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_sound_horn',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button_errors[zoe_40][button.reg_zoe_40_start_air_conditioner-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Start air conditioner',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Start air conditioner',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -636,20 +286,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_zoe_40_start_air_conditioner-state]
+# name: test_button_empty[zoe_40][button.reg_zoe_40-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Start air conditioner',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_zoe_40_start_charge-entry]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -663,7 +313,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_start_charge',
+    'entity_id': 'button.reg_zoe_40_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -671,12 +321,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -686,20 +336,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_zoe_40_start_charge-state]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Start charge',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_start_charge',
+    'entity_id': 'button.reg_zoe_40_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_zoe_40_stop_charge-entry]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -713,7 +363,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_stop_charge',
+    'entity_id': 'button.reg_zoe_40_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -721,12 +371,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Stop charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Stop charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -736,20 +386,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_zoe_40_stop_charge-state]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Stop charge',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_stop_charge',
+    'entity_id': 'button.reg_zoe_40_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_zoe_40_flash_lights-entry]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -763,7 +413,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_flash_lights',
+    'entity_id': 'button.reg_zoe_40_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -771,12 +421,62 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Flash lights',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Flash lights',
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_horn',
+    'unique_id': 'vf1zoe40vin_sound_horn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_empty[zoe_40][button.reg_zoe_40_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-ZOE-40',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_empty[zoe_40][button.reg_zoe_40_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -786,20 +486,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_zoe_40_flash_lights-state]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Flash lights',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_flash_lights',
+    'entity_id': 'button.reg_zoe_40_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_zoe_40_sound_horn-entry]
+# name: test_button_errors[zoe_40][button.reg_zoe_40-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -813,7 +513,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_sound_horn',
+    'entity_id': 'button.reg_zoe_40',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -821,62 +521,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sound horn',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sound horn',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sound_horn',
-    'unique_id': 'vf1zoe40vin_sound_horn',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_button_not_supported[zoe_40][button.reg_zoe_40_sound_horn-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Sound horn',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_sound_horn',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button_not_supported[zoe_40][button.reg_zoe_40_start_air_conditioner-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Start air conditioner',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Start air conditioner',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -886,20 +536,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_zoe_40_start_air_conditioner-state]
+# name: test_button_errors[zoe_40][button.reg_zoe_40-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Start air conditioner',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_zoe_40_start_charge-entry]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -913,7 +563,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_start_charge',
+    'entity_id': 'button.reg_zoe_40_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -921,12 +571,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -936,20 +586,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_zoe_40_start_charge-state]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Start charge',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_start_charge',
+    'entity_id': 'button.reg_zoe_40_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_zoe_40_stop_charge-entry]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -963,7 +613,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_stop_charge',
+    'entity_id': 'button.reg_zoe_40_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -971,12 +621,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Stop charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Stop charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -986,20 +636,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_zoe_40_stop_charge-state]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Stop charge',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_stop_charge',
+    'entity_id': 'button.reg_zoe_40_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[captur_fuel][button.reg_captur_fuel_start_air_conditioner-entry]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1013,7 +663,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_captur_fuel_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1021,12 +671,362 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start air conditioner',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start air conditioner',
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_horn',
+    'unique_id': 'vf1zoe40vin_sound_horn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_errors[zoe_40][button.reg_zoe_40_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-ZOE-40',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_errors[zoe_40][button.reg_zoe_40_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flash_lights',
+    'unique_id': 'vf1zoe40vin_flash_lights',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_errors[zoe_40][button.reg_zoe_40_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-ZOE-40',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start_air_conditioner',
+    'unique_id': 'vf1zoe40vin_start_air_conditioner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-ZOE-40',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start_charge',
+    'unique_id': 'vf1zoe40vin_start_charge',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-ZOE-40',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop_charge',
+    'unique_id': 'vf1zoe40vin_stop_charge',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-ZOE-40',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_horn',
+    'unique_id': 'vf1zoe40vin_sound_horn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-ZOE-40',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flash_lights',
+    'unique_id': 'vf1zoe40vin_flash_lights',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-ZOE-40',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[captur_fuel][button.reg_captur_fuel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_captur_fuel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1036,20 +1036,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[captur_fuel][button.reg_captur_fuel_start_air_conditioner-state]
+# name: test_buttons[captur_fuel][button.reg_captur_fuel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-CAPTUR-FUEL Start air conditioner',
+      'friendly_name': 'REG-CAPTUR-FUEL',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_captur_fuel_start_air_conditioner',
+    'entity_id': 'button.reg_captur_fuel',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[captur_phev][button.reg_captur_phev_start_air_conditioner-entry]
+# name: test_buttons[captur_phev][button.reg_captur_phev-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1063,7 +1063,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_captur_phev_start_air_conditioner',
+    'entity_id': 'button.reg_captur_phev',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1071,12 +1071,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start air conditioner',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start air conditioner',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1086,20 +1086,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[captur_phev][button.reg_captur_phev_start_air_conditioner-state]
+# name: test_buttons[captur_phev][button.reg_captur_phev-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-CAPTUR_PHEV Start air conditioner',
+      'friendly_name': 'REG-CAPTUR_PHEV',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_captur_phev_start_air_conditioner',
+    'entity_id': 'button.reg_captur_phev',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[megane_e_tech][button.reg_meg_0_flash_lights-entry]
+# name: test_buttons[megane_e_tech][button.reg_meg_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1113,7 +1113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_meg_0_flash_lights',
+    'entity_id': 'button.reg_meg_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1121,112 +1121,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Flash lights',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Flash lights',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flash_lights',
-    'unique_id': 'vf1meganeetechvin_flash_lights',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[megane_e_tech][button.reg_meg_0_flash_lights-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-MEG-0 Flash lights',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_meg_0_flash_lights',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[megane_e_tech][button.reg_meg_0_sound_horn-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_meg_0_sound_horn',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sound horn',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sound horn',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sound_horn',
-    'unique_id': 'vf1meganeetechvin_sound_horn',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[megane_e_tech][button.reg_meg_0_sound_horn-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-MEG-0 Sound horn',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_meg_0_sound_horn',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[megane_e_tech][button.reg_meg_0_start_air_conditioner-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_meg_0_start_air_conditioner',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Start air conditioner',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Start air conditioner',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1236,20 +1136,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[megane_e_tech][button.reg_meg_0_start_air_conditioner-state]
+# name: test_buttons[megane_e_tech][button.reg_meg_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-MEG-0 Start air conditioner',
+      'friendly_name': 'REG-MEG-0',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_meg_0_start_air_conditioner',
+    'entity_id': 'button.reg_meg_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[megane_e_tech][button.reg_meg_0_start_charge-entry]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1263,7 +1163,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_meg_0_start_charge',
+    'entity_id': 'button.reg_meg_0_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1271,12 +1171,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1286,20 +1186,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[megane_e_tech][button.reg_meg_0_start_charge-state]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-MEG-0 Start charge',
+      'friendly_name': 'REG-MEG-0',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_meg_0_start_charge',
+    'entity_id': 'button.reg_meg_0_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_flash_lights-entry]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1313,7 +1213,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_twingo_iii_flash_lights',
+    'entity_id': 'button.reg_meg_0_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1321,85 +1221,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Flash lights',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Flash lights',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flash_lights',
-    'unique_id': 'vf1twingoiiivin_flash_lights',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_flash_lights-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-TWINGO-III Flash lights',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_twingo_iii_flash_lights',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_sound_horn-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_twingo_iii_sound_horn',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sound horn',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sound horn',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_horn',
-    'unique_id': 'vf1twingoiiivin_sound_horn',
+    'unique_id': 'vf1meganeetechvin_sound_horn',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_sound_horn-state]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-TWINGO-III Sound horn',
+      'friendly_name': 'REG-MEG-0',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_twingo_iii_sound_horn',
+    'entity_id': 'button.reg_meg_0_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_start_air_conditioner-entry]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1413,7 +1263,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_twingo_iii_start_air_conditioner',
+    'entity_id': 'button.reg_meg_0_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1421,12 +1271,62 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start air conditioner',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start air conditioner',
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flash_lights',
+    'unique_id': 'vf1meganeetechvin_flash_lights',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[megane_e_tech][button.reg_meg_0_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-MEG-0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_meg_0_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_twingo_iii',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1436,20 +1336,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_start_air_conditioner-state]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-TWINGO-III Start air conditioner',
+      'friendly_name': 'REG-TWINGO-III',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_twingo_iii_start_air_conditioner',
+    'entity_id': 'button.reg_twingo_iii',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_start_charge-entry]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1463,7 +1363,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_twingo_iii_start_charge',
+    'entity_id': 'button.reg_twingo_iii_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1471,12 +1371,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1486,20 +1386,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_start_charge-state]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-TWINGO-III Start charge',
+      'friendly_name': 'REG-TWINGO-III',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_twingo_iii_start_charge',
+    'entity_id': 'button.reg_twingo_iii_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_stop_charge-entry]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1513,7 +1413,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_twingo_iii_stop_charge',
+    'entity_id': 'button.reg_twingo_iii_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1521,12 +1421,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Stop charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Stop charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1536,20 +1436,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_stop_charge-state]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-TWINGO-III Stop charge',
+      'friendly_name': 'REG-TWINGO-III',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_twingo_iii_stop_charge',
+    'entity_id': 'button.reg_twingo_iii_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_zoe_40_flash_lights-entry]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1563,7 +1463,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_flash_lights',
+    'entity_id': 'button.reg_twingo_iii_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1571,85 +1471,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Flash lights',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Flash lights',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flash_lights',
-    'unique_id': 'vf1zoe40vin_flash_lights',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[zoe_40][button.reg_zoe_40_flash_lights-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Flash lights',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_flash_lights',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[zoe_40][button.reg_zoe_40_sound_horn-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_sound_horn',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sound horn',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sound horn',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_horn',
-    'unique_id': 'vf1zoe40vin_sound_horn',
+    'unique_id': 'vf1twingoiiivin_sound_horn',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_zoe_40_sound_horn-state]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Sound horn',
+      'friendly_name': 'REG-TWINGO-III',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_sound_horn',
+    'entity_id': 'button.reg_twingo_iii_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_zoe_40_start_air_conditioner-entry]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1663,7 +1513,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
+    'entity_id': 'button.reg_twingo_iii_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1671,12 +1521,62 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start air conditioner',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start air conditioner',
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flash_lights',
+    'unique_id': 'vf1twingoiiivin_flash_lights',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-TWINGO-III',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_twingo_iii_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[zoe_40][button.reg_zoe_40-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1686,20 +1586,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_zoe_40_start_air_conditioner-state]
+# name: test_buttons[zoe_40][button.reg_zoe_40-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Start air conditioner',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_zoe_40_start_charge-entry]
+# name: test_buttons[zoe_40][button.reg_zoe_40_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1713,7 +1613,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_start_charge',
+    'entity_id': 'button.reg_zoe_40_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1721,12 +1621,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1736,20 +1636,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_zoe_40_start_charge-state]
+# name: test_buttons[zoe_40][button.reg_zoe_40_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Start charge',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_start_charge',
+    'entity_id': 'button.reg_zoe_40_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_zoe_40_stop_charge-entry]
+# name: test_buttons[zoe_40][button.reg_zoe_40_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1763,7 +1663,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_40_stop_charge',
+    'entity_id': 'button.reg_zoe_40_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1771,12 +1671,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Stop charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Stop charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1786,20 +1686,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_zoe_40_stop_charge-state]
+# name: test_buttons[zoe_40][button.reg_zoe_40_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Stop charge',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_40_stop_charge',
+    'entity_id': 'button.reg_zoe_40_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_zoe_50_flash_lights-entry]
+# name: test_buttons[zoe_40][button.reg_zoe_40_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1813,7 +1713,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_50_flash_lights',
+    'entity_id': 'button.reg_zoe_40_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1821,85 +1721,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Flash lights',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Flash lights',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flash_lights',
-    'unique_id': 'vf1zoe50vin_flash_lights',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[zoe_50][button.reg_zoe_50_flash_lights-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-50 Flash lights',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reg_zoe_50_flash_lights',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[zoe_50][button.reg_zoe_50_sound_horn-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.reg_zoe_50_sound_horn',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sound horn',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sound horn',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_horn',
-    'unique_id': 'vf1zoe50vin_sound_horn',
+    'unique_id': 'vf1zoe40vin_sound_horn',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_zoe_50_sound_horn-state]
+# name: test_buttons[zoe_40][button.reg_zoe_40_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-50 Sound horn',
+      'friendly_name': 'REG-ZOE-40',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_50_sound_horn',
+    'entity_id': 'button.reg_zoe_40_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_zoe_50_start_air_conditioner-entry]
+# name: test_buttons[zoe_40][button.reg_zoe_40_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1913,7 +1763,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_50_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1921,12 +1771,62 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start air conditioner',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start air conditioner',
+    'original_name': None,
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flash_lights',
+    'unique_id': 'vf1zoe40vin_flash_lights',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[zoe_40][button.reg_zoe_40_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-ZOE-40',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[zoe_50][button.reg_zoe_50-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_50',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1936,20 +1836,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_zoe_50_start_air_conditioner-state]
+# name: test_buttons[zoe_50][button.reg_zoe_50-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-50 Start air conditioner',
+      'friendly_name': 'REG-ZOE-50',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_50_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_50',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_zoe_50_start_charge-entry]
+# name: test_buttons[zoe_50][button.reg_zoe_50_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1963,7 +1863,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_50_start_charge',
+    'entity_id': 'button.reg_zoe_50_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1971,12 +1871,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Start charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Start charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1986,20 +1886,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_zoe_50_start_charge-state]
+# name: test_buttons[zoe_50][button.reg_zoe_50_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-50 Start charge',
+      'friendly_name': 'REG-ZOE-50',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_50_start_charge',
+    'entity_id': 'button.reg_zoe_50_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_zoe_50_stop_charge-entry]
+# name: test_buttons[zoe_50][button.reg_zoe_50_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2013,7 +1913,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_zoe_50_stop_charge',
+    'entity_id': 'button.reg_zoe_50_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2021,12 +1921,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Stop charge',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Stop charge',
+    'original_name': None,
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2036,13 +1936,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_zoe_50_stop_charge-state]
+# name: test_buttons[zoe_50][button.reg_zoe_50_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-50 Stop charge',
+      'friendly_name': 'REG-ZOE-50',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_zoe_50_stop_charge',
+    'entity_id': 'button.reg_zoe_50_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
