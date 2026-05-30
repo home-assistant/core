@@ -14,7 +14,7 @@ from .const import TEST_DEVICE_1_SN, TEST_VOCAL_RECORD_EVENT
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-ENTITY_ID = "event.echo_test_voice_event"
+ENTITY_ID = "event.echo_test"
 
 
 async def test_all_entities(
