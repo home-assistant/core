@@ -23,31 +23,20 @@ set_schedule:
       required: false
       selector:
         object:
+          label_field: From
+          description_field: To
+          multiple: true
           fields:
-            schedule:
-              label: Schedule
+            from:
+              label: From
               required: false
               selector:
-                object:
-                  label_field: From
-                  description_field: To
-                  multiple: true
-                  fields:
-                    from:
-                      label: From
-                      required: false
-                      selector:
-                        time:
-                    to:
-                      label: To
-                      required: false
-                      selector:
-                        time:
-            delete:
-              label: Delete
+                time:
+            to:
+              label: To
               required: false
               selector:
-                boolean:
+                time:
     tuesday:
       example: |
         - from: 07:00:00
@@ -61,31 +50,20 @@ set_schedule:
       required: false
       selector:
         object:
+          label_field: From
+          description_field: To
+          multiple: true
           fields:
-            schedule:
-              label: Schedule
+            from:
+              label: From
               required: false
               selector:
-                object:
-                  label_field: From
-                  description_field: To
-                  multiple: true
-                  fields:
-                    from:
-                      label: From
-                      required: false
-                      selector:
-                        time:
-                    to:
-                      label: To
-                      required: false
-                      selector:
-                        time:
-            delete:
-              label: Delete
+                time:
+            to:
+              label: To
               required: false
               selector:
-                boolean:
+                time:
     wednesday:
       example: |
         - from: 07:00:00
@@ -99,31 +77,20 @@ set_schedule:
       required: false
       selector:
         object:
+          label_field: From
+          description_field: To
+          multiple: true
           fields:
-            schedule:
-              label: Schedule
+            from:
+              label: From
               required: false
               selector:
-                object:
-                  label_field: From
-                  description_field: To
-                  multiple: true
-                  fields:
-                    from:
-                      label: From
-                      required: false
-                      selector:
-                        time:
-                    to:
-                      label: To
-                      required: false
-                      selector:
-                        time:
-            delete:
-              label: Delete
+                time:
+            to:
+              label: To
               required: false
               selector:
-                boolean:
+                time:
     thursday:
       example: |
         - from: 07:00:00
@@ -137,62 +104,39 @@ set_schedule:
       required: false
       selector:
         object:
+          label_field: From
+          description_field: To
+          multiple: true
           fields:
-            schedule:
-              label: Schedule
+            from:
+              label: From
               required: false
               selector:
-                object:
-                  label_field: From
-                  description_field: To
-                  multiple: true
-                  fields:
-                    from:
-                      label: From
-                      required: false
-                      selector:
-                        time:
-                    to:
-                      label: To
-                      required: false
-                      selector:
-                        time:
-            delete:
-              label: Delete
+                time:
+            to:
+              label: To
               required: false
               selector:
-                boolean:
+                time:
     friday:
-      example: |
-        - delete: true
+      example: []
       required: false
       selector:
         object:
+          label_field: From
+          description_field: To
+          multiple: true
           fields:
-            schedule:
-              label: Schedule
+            from:
+              label: From
               required: false
               selector:
-                object:
-                  label_field: From
-                  description_field: To
-                  multiple: true
-                  fields:
-                    from:
-                      label: From
-                      required: false
-                      selector:
-                        time:
-                    to:
-                      label: To
-                      required: false
-                      selector:
-                        time:
-            delete:
-              label: Delete
+                time:
+            to:
+              label: To
               required: false
               selector:
-                boolean:
+                time:
     saturday:
       example: |
         - from: 09:00:00
@@ -202,31 +146,20 @@ set_schedule:
       required: false
       selector:
         object:
+          label_field: From
+          description_field: To
+          multiple: true
           fields:
-            schedule:
-              label: Schedule
+            from:
+              label: From
               required: false
               selector:
-                object:
-                  label_field: From
-                  description_field: To
-                  multiple: true
-                  fields:
-                    from:
-                      label: From
-                      required: false
-                      selector:
-                        time:
-                    to:
-                      label: To
-                      required: false
-                      selector:
-                        time:
-            delete:
-              label: Delete
+                time:
+            to:
+              label: To
               required: false
               selector:
-                boolean:
+                time:
     sunday:
       example: |
         - from: 07:00:00
@@ -240,31 +173,20 @@ set_schedule:
       required: false
       selector:
         object:
+          label_field: From
+          description_field: To
+          multiple: true
           fields:
-            schedule:
-              label: Schedule
+            from:
+              label: From
               required: false
               selector:
-                object:
-                  label_field: From
-                  description_field: To
-                  multiple: true
-                  fields:
-                    from:
-                      label: From
-                      required: false
-                      selector:
-                        time:
-                    to:
-                      label: To
-                      required: false
-                      selector:
-                        time:
-            delete:
-              label: Delete
+                time:
+            to:
+              label: To
               required: false
               selector:
-                boolean:
+                time:
 
 set_holiday:
   target:
