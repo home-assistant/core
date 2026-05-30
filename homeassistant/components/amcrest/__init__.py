@@ -39,8 +39,8 @@ from homeassistant.helpers.typing import ConfigType
 from .binary_sensor import (
     BINARY_SENSOR_KEYS,
     BINARY_SENSORS,
+    DEFAULT_UI_BINARY_SENSOR_KEYS,
     check_binary_sensors,
-    get_default_binary_sensor_descriptions,
 )
 from .camera import STREAM_SOURCE_LIST
 from .const import (
@@ -51,7 +51,7 @@ from .const import (
     SERVICE_EVENT,
     SERVICE_UPDATE,
 )
-from .entry_options import get_binary_sensor_keys
+from .entry_options import get_platform_keys
 from .helpers import service_signal
 from .sensor import SENSOR_KEYS
 from .services import async_setup_services
@@ -407,14 +407,6 @@ class AmcrestRuntimeData:
 type AmcrestConfigEntry = ConfigEntry[AmcrestRuntimeData]
 
 
-def _get_entry_binary_sensor_keys(entry: AmcrestConfigEntry) -> list[str]:
-    """Return binary sensor keys configured for a config entry."""
-    if (keys := get_binary_sensor_keys(entry)) is not None:
-        return keys
-
-    return [description.key for description in get_default_binary_sensor_descriptions()]
-
-
 def _event_codes_for_binary_sensor_keys(binary_keys: list[str]) -> set[str]:
     """Return event codes monitored for the given binary sensor keys."""
     binary_key_set = set(binary_keys)
@@ -529,7 +521,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> b
     device.name = name
 
     event_codes = _event_codes_for_binary_sensor_keys(
-        _get_entry_binary_sensor_keys(entry)
+        get_platform_keys(
+            entry, CONF_BINARY_SENSORS, list(DEFAULT_UI_BINARY_SENSOR_KEYS)
+        )
     )
 
     runtime_data = AmcrestRuntimeData(device=device)

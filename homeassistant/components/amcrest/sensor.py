@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING
 from amcrest import AmcrestError
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import CONF_SENSORS, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
-from .entry_options import get_sensor_keys
+from .entry_options import get_platform_keys
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
@@ -54,13 +54,10 @@ async def async_setup_entry(
     device = config_entry.runtime_data.device
     name = device.name
 
-    if (keys := get_sensor_keys(config_entry)) is not None:
-        key_set = set(keys)
-        descriptions = [
-            description for description in SENSOR_TYPES if description.key in key_set
-        ]
-    else:
-        descriptions = list(SENSOR_TYPES)
+    key_set = set(get_platform_keys(config_entry, CONF_SENSORS, SENSOR_KEYS))
+    descriptions = [
+        description for description in SENSOR_TYPES if description.key in key_set
+    ]
 
     entities = [
         AmcrestSensor(name, device, description) for description in descriptions

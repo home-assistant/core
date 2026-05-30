@@ -6,10 +6,11 @@ from typing import TYPE_CHECKING, Any
 from amcrest import AmcrestError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import CONF_SWITCHES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entry_options import get_switch_keys
+from .entry_options import get_platform_keys
 from .helpers import log_update_error
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,13 +40,10 @@ async def async_setup_entry(
     device = config_entry.runtime_data.device
     name = device.name
 
-    if (keys := get_switch_keys(config_entry)) is not None:
-        key_set = set(keys)
-        descriptions = [
-            description for description in SWITCH_TYPES if description.key in key_set
-        ]
-    else:
-        descriptions = list(SWITCH_TYPES)
+    key_set = set(get_platform_keys(config_entry, CONF_SWITCHES, SWITCH_KEYS))
+    descriptions = [
+        description for description in SWITCH_TYPES if description.key in key_set
+    ]
 
     entities = [
         AmcrestSwitch(name, device, description) for description in descriptions

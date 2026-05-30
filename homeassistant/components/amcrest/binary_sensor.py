@@ -14,13 +14,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import CONF_BINARY_SENSORS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
 
 from .const import BINARY_SENSOR_SCAN_INTERVAL_SECS, SERVICE_EVENT, SERVICE_UPDATE
-from .entry_options import get_binary_sensor_keys
+from .entry_options import get_platform_keys
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
@@ -56,6 +57,13 @@ _MOTION_DETECTED_NAME = "Motion Detected"
 _MOTION_DETECTED_EVENT_CODE = "VideoMotion"
 
 _ONLINE_KEY = "online"
+
+DEFAULT_UI_BINARY_SENSOR_KEYS: tuple[str, ...] = (
+    _AUDIO_DETECTED_KEY,
+    _CROSSLINE_DETECTED_KEY,
+    _MOTION_DETECTED_KEY,
+    _ONLINE_KEY,
+)
 
 BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
     AmcrestSensorEntityDescription(
@@ -104,7 +112,7 @@ BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
         should_poll=True,
     ),
 )
-BINARY_SENSOR_KEYS = [description.key for description in BINARY_SENSORS]
+BINARY_SENSOR_KEYS: list[str] = [description.key for description in BINARY_SENSORS]
 _EXCLUSIVE_OPTIONS = [
     {_AUDIO_DETECTED_KEY, _AUDIO_DETECTED_POLLED_KEY},
     {_MOTION_DETECTED_KEY, _MOTION_DETECTED_POLLED_KEY},
@@ -124,23 +132,6 @@ def check_binary_sensors(value: list[str]) -> list[str]:
     return value
 
 
-def get_default_binary_sensor_descriptions() -> tuple[
-    AmcrestSensorEntityDescription, ...
-]:
-    """Return binary sensor descriptions for UI-created config entries."""
-    return tuple(
-        desc
-        for desc in BINARY_SENSORS
-        if desc.key
-        in (
-            _AUDIO_DETECTED_KEY,
-            _CROSSLINE_DETECTED_KEY,
-            _MOTION_DETECTED_KEY,
-            _ONLINE_KEY,
-        )
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AmcrestConfigEntry,
@@ -150,13 +141,16 @@ async def async_setup_entry(
     device = config_entry.runtime_data.device
     name = device.name
 
-    if (keys := get_binary_sensor_keys(config_entry)) is not None:
-        key_set = set(keys)
-        entity_descriptions = [
-            description for description in BINARY_SENSORS if description.key in key_set
-        ]
-    else:
-        entity_descriptions = list(get_default_binary_sensor_descriptions())
+    key_set = set(
+        get_platform_keys(
+            config_entry,
+            CONF_BINARY_SENSORS,
+            list(DEFAULT_UI_BINARY_SENSOR_KEYS),
+        )
+    )
+    entity_descriptions = [
+        description for description in BINARY_SENSORS if description.key in key_set
+    ]
 
     entities = [
         AmcrestBinarySensor(name, device, entity_description)

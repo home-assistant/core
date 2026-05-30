@@ -2,26 +2,17 @@
 
 from typing import cast
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_SWITCHES
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 
 
-def get_binary_sensor_keys(entry: ConfigEntry) -> list[str] | None:
-    """Return configured binary sensor keys, or None for UI defaults."""
-    if CONF_BINARY_SENSORS in entry.options:
-        return cast(list[str], entry.options[CONF_BINARY_SENSORS])
-    return None
-
-
-def get_sensor_keys(entry: ConfigEntry) -> list[str] | None:
-    """Return configured sensor keys, or None for UI defaults."""
-    if CONF_SENSORS in entry.options:
-        return cast(list[str], entry.options[CONF_SENSORS])
-    return None
-
-
-def get_switch_keys(entry: ConfigEntry) -> list[str] | None:
-    """Return configured switch keys, or None for UI defaults."""
-    if CONF_SWITCHES in entry.options:
-        return cast(list[str], entry.options[CONF_SWITCHES])
-    return None
+def get_platform_keys(
+    entry: ConfigEntry,
+    option_key: str,
+    ui_defaults: list[str],
+) -> list[str]:
+    """Return platform keys for a config entry."""
+    if entry.source == SOURCE_IMPORT:
+        return cast(list[str], entry.options.get(option_key, []))
+    if option_key in entry.options:
+        return cast(list[str], entry.options[option_key])
+    return ui_defaults
