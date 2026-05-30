@@ -10,8 +10,8 @@ from wirelesstagpy.binaryevent import BinaryEvent
 from wirelesstagpy.exceptions import WirelessTagsException
 
 from homeassistant.components import persistent_notification
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -113,6 +113,10 @@ class WirelessTagPlatform:
 
         self.api.start_monitoring(push_callback)
 
+    def stop_monitoring(self) -> None:
+        """Stop monitoring push events."""
+        self.api.stop_monitoring()
+
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Wireless Sensor Tag component."""
@@ -127,6 +131,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         platform.load_tags()
         platform.start_monitoring()
         hass.data[WIRELESSTAG_DATA] = platform
+
+        def _stop_monitoring(event: Event) -> None:
+            """Stop cloud push monitoring on Home Assistant shutdown."""
+            platform.stop_monitoring()
+
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_monitoring)
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
         persistent_notification.create(
