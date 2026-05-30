@@ -1,0 +1,113 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The device you entered belongs to a different Duco box.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_board": "This Duco system is not supported by this integration. The integration requires a Duco Connectivity Board running public API 2.1 or newer."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_board": "[%key:component::duco::config::abort::unsupported_board%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {name}?"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::duco::config::step::user::data_description::host%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "IP address or hostname of your Duco ventilation box."
+        }
+      }
+    }
+  },
+  "entity": {
+    "fan": {
+      "ventilation": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "iaq_co2": {
+        "name": "CO2 air quality index"
+      },
+      "iaq_rh": {
+        "name": "Humidity air quality index"
+      },
+      "target_flow_level": {
+        "name": "Target flow level"
+      },
+      "time_state_end": {
+        "name": "Mode end time"
+      },
+      "ventilation_state": {
+        "name": "Ventilation state",
+        "state": {
+          "aut1": "AUT1",
+          "aut2": "AUT2",
+          "aut3": "AUT3",
+          "auto": "AUTO",
+          "cnt1": "CNT1",
+          "cnt2": "CNT2",
+          "cnt3": "CNT3",
+          "empt": "EMPT",
+          "man1": "MAN1",
+          "man1x2": "MAN1x2",
+          "man1x3": "MAN1x3",
+          "man2": "MAN2",
+          "man2x2": "MAN2x2",
+          "man2x3": "MAN2x3",
+          "man3": "MAN3",
+          "man3x2": "MAN3x2",
+          "man3x3": "MAN3x3"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Unexpected error from the Duco API: {error}"
+    },
+    "cannot_connect": {
+      "message": "An error occurred while trying to connect to the Duco instance: {error}"
+    },
+    "connection_error": {
+      "message": "Could not connect to the Duco device."
+    },
+    "failed_to_set_state": {
+      "message": "Failed to set ventilation state: {error}"
+    },
+    "rate_limit_exceeded": {
+      "message": "The Duco device has reached its daily write limit. Try again tomorrow."
+    },
+    "unsupported_board": {
+      "message": "[%key:component::duco::config::abort::unsupported_board%]"
+    }
+  },
+  "system_health": {
+    "info": {
+      "write_requests_remaining": "Remaining write requests today"
+    }
+  }
+}

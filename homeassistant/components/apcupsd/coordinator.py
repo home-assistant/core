@@ -1,7 +1,5 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -29,7 +27,7 @@ type APCUPSdConfigEntry = ConfigEntry[APCUPSdCoordinator]
 
 
 class APCUPSdData(dict[str, str]):
-    """Store data about an APCUPSd and provide a few helper methods for easier accesses."""
+    """Store data about an APCUPSd and provide helper methods."""
 
     @property
     def name(self) -> str | None:
@@ -47,8 +45,9 @@ class APCUPSdData(dict[str, str]):
     def serial_no(self) -> str | None:
         """Return the unique serial number of the UPS, if available."""
         sn = self.get("SERIALNO")
-        # We had user reports that some UPS models simply return "Blank" as serial number, in
-        # which case we fall back to `None` to indicate that it is actually not available.
+        # We had user reports that some UPS models simply return
+        # "Blank" as serial number, in which case we fall back to
+        # `None` to indicate that it is actually not available.
         return None if sn == "Blank" else sn
 
 
@@ -87,7 +86,11 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
 
     @property
     def unique_device_id(self) -> str:
-        """Return a unique ID of the device, which is the serial number (if available) or the config entry ID."""
+        """Return a unique ID of the device.
+
+        Uses the serial number if available, otherwise the
+        config entry ID.
+        """
         return self.data.serial_no or self.config_entry.entry_id
 
     @property

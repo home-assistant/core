@@ -1,7 +1,5 @@
 """The Minecraft Server integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -112,12 +110,14 @@ async def async_migrate_entry(
                 await api.async_initialize()
             except MinecraftServerAddressError:
                 _LOGGER.exception(
-                    "Can't migrate configuration entry due to error while parsing server address, try again later"
+                    "Can't migrate configuration entry due to error"
+                    " while parsing server address, try again later"
                 )
                 return False
 
         _LOGGER.debug(
-            "Migrating config entry, replacing host '%s' and port '%s' with address '%s'",
+            "Migrating config entry, replacing host '%s' and"
+            " port '%s' with address '%s'",
             config_data[CONF_HOST],
             config_data[CONF_PORT],
             address,

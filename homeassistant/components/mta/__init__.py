@@ -1,7 +1,5 @@
 """The MTA New York City Transit integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from homeassistant.const import Platform

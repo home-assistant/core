@@ -408,7 +408,8 @@ async def test_coordinator_migration_empty_source_stats(
             },
         )
 
-    # Migration should return False and not create an issue if no individual stats were found
+    # Migration should return False and not create an issue if
+    # no individual stats were found
     assert migrated is False
 
     issue_registry = ir.async_get(hass)
@@ -422,7 +423,7 @@ async def test_coordinator_migration_negative_state(
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test that negative consumption states are correctly migrated to return-to-grid statistics."""
+    """Test negative consumption migrated to return-to-grid stats."""
     statistic_id = "opower:pge_elec_111111_energy_consumption"
     target_id = "opower:pge_elec_111111_energy_return"
     metadata = StatisticMetaData(
@@ -452,7 +453,8 @@ async def test_coordinator_migration_negative_state(
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
-    # Check that the return-to-grid stat was created with the absolute value of the negative consumption
+    # Check that the return-to-grid stat was created with the
+    # absolute value of the negative consumption
     stats = await hass.async_add_executor_job(
         statistics_during_period,
         hass,

@@ -1,7 +1,5 @@
 """Binary sensor platform for Version."""
 
-from __future__ import annotations
-
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.binary_sensor import (
@@ -9,11 +7,16 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME, EntityCategory, __version__ as HA_VERSION
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_SOURCE,
+    EntityCategory,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SOURCE, DEFAULT_NAME
+from .const import DEFAULT_NAME
 from .coordinator import VersionConfigEntry
 from .entity import VersionEntity
 

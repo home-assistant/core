@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "No devices were found on this account",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for your Kumo Cloud account.",
+          "username": "The email address for your Kumo Cloud account."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with {device_name}"
+    },
+    "no_devices": {
+      "message": "No devices were found in your Mitsubishi Comfort account"
+    },
+    "update_failed": {
+      "message": "{device_name} returned no data"
+    }
+  }
+}

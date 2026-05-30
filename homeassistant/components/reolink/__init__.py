@@ -1,7 +1,5 @@
 """Reolink integration for HomeAssistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 import logging
@@ -26,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_FIRMWARE_CHECK_TIME,
@@ -76,6 +75,7 @@ async def async_setup_entry(
         await host.async_init()
     except (UserNotAdmin, CredentialsInvalidError, PasswordIncompatible) as err:
         await host.stop()
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed(err) from err
     except (
         ReolinkException,
@@ -103,6 +103,8 @@ async def async_setup_entry(
         != config_entry.data.get(CONF_SUPPORTS_PRIVACY_MODE)
         or host.api.baichuan.port != config_entry.data.get(CONF_BC_PORT)
         or host.api.baichuan_only != config_entry.data.get(CONF_BC_ONLY)
+        or host.api.baichuan.connection_type.value
+        != config_entry.data.get(CONF_BC_CONNECT)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
@@ -127,6 +129,7 @@ async def async_setup_entry(
             CONF_USE_HTTPS: host.api.use_https,
             CONF_BC_PORT: host.api.baichuan.port,
             CONF_BC_ONLY: host.api.baichuan_only,
+            CONF_BC_CONNECT: host.api.baichuan.connection_type.value,
             CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
@@ -494,7 +497,8 @@ def migrate_entity_ids(
             id_parts = entity.unique_id.split("_", 2)
             if len(id_parts) < 3:
                 _LOGGER.warning(
-                    "Reolink channel %s entity has unexpected unique_id format %s, with device id %s",
+                    "Reolink channel %s entity has unexpected"
+                    " unique_id format %s, with device id %s",
                     ch,
                     entity.unique_id,
                     entity.device_id,

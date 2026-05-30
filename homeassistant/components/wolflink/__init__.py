@@ -12,22 +12,15 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
-from .const import (
-    COORDINATOR,
-    DEVICE_GATEWAY,
-    DEVICE_ID,
-    DEVICE_NAME,
-    DOMAIN,
-    PARAMETERS,
-)
-from .coordinator import WolfLinkCoordinator, fetch_parameters
+from .const import DEVICE_GATEWAY, DEVICE_ID, DEVICE_NAME, DOMAIN
+from .coordinator import WolflinkConfigEntry, WolfLinkCoordinator, fetch_parameters
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> bool:
     """Set up Wolf SmartSet Service from a config entry."""
 
     username = entry.data[CONF_USERNAME]
@@ -56,24 +49,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-    hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
-    hass.data[DOMAIN][entry.entry_id][COORDINATOR] = coordinator
-    hass.data[DOMAIN][entry.entry_id][DEVICE_ID] = device_id
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -103,7 +88,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def fetch_parameters_init(client: WolfClient, gateway_id: int, device_id: int):
-    """Fetch all available parameters with usage of WolfClient but handles all exceptions and results in ConfigEntryNotReady."""
+    """Fetch all parameters via WolfClient, raising ConfigEntryNotReady on error."""
     try:
         return await fetch_parameters(client, gateway_id, device_id)
     except (FetchFailed, RequestError) as exception:

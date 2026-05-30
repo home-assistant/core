@@ -1,7 +1,5 @@
 """Representation of Z-Wave thermostats."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from zwave_js_server.const import CommandClass
@@ -567,7 +565,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
 
 class DynamicCurrentTempClimate(ZWaveClimate):
-    """Representation of a thermostat that can dynamically use a different Zwave Value for current temp."""
+    """Thermostat that dynamically uses a different Zwave Value for current temp."""
 
     def __init__(
         self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo

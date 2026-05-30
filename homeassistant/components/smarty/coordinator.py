@@ -36,8 +36,8 @@ class SmartyCoordinator(DataUpdateCoordinator[None]):
     async def _async_setup(self) -> None:
         if not await self.hass.async_add_executor_job(self.client.update):
             raise UpdateFailed("Failed to update Smarty data")
-        self.software_version = self.client.get_software_version()
-        self.configuration_version = self.client.get_configuration_version()
+        self.software_version = str(self.client.get_software_version())
+        self.configuration_version = str(self.client.get_configuration_version())
 
     async def _async_update_data(self) -> None:
         """Fetch data from Smarty."""

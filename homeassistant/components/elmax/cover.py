@@ -1,7 +1,5 @@
 """Elmax cover platform."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -17,7 +15,7 @@ from .entity import ElmaxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-_COMMAND_BY_MOTION_STATUS = {  # Maps the stop command to use for every cover motion status
+_COMMAND_BY_MOTION_STATUS = {  # Maps the stop command for each cover motion status
     CoverStatus.DOWN: CoverCommand.DOWN,
     CoverStatus.UP: CoverCommand.UP,
     CoverStatus.IDLE: None,
@@ -39,7 +37,9 @@ async def async_setup_entry(
 
     def _discover_new_devices():
         if (panel_status := coordinator.data) is None:
-            return  # In case the panel is offline, its status will be None. In that case, simply do nothing
+            # In case the panel is offline, its status will be
+            # None. In that case, simply do nothing
+            return
 
         # Otherwise, add all the entities we found
         entities = []
@@ -105,8 +105,10 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        # To stop the cover, Elmax requires us to re-issue the same command once again.
-        # To detect the current motion status, we request an immediate refresh to the coordinator
+        # To stop the cover, Elmax requires us to re-issue the
+        # same command once again. To detect the current motion
+        # status, we request an immediate refresh to the
+        # coordinator
         await self.coordinator.async_request_refresh()
         motion_status = self.coordinator.get_cover_state(
             self._device.endpoint_id

@@ -86,6 +86,7 @@ async def async_setup_entry(
             },
         ) from e
     except OpendataTransportError as e:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_data",
@@ -145,7 +146,8 @@ async def async_migrate_entry(
                 new_unique_id=f"{new_unique_id}_departure",
             )
             _LOGGER.debug(
-                "Faulty entity with unique_id 'None_departure' migrated to new unique_id '%s'",
+                "Faulty entity with unique_id 'None_departure'"
+                " migrated to new unique_id '%s'",
                 f"{new_unique_id}_departure",
             )
 
@@ -155,7 +157,9 @@ async def async_migrate_entry(
         )
 
     if config_entry.version < 3:
-        # Via stations and time/offset settings now available, which are not backwards compatible if used, changes unique id
+        # Via stations and time/offset settings now available,
+        # which are not backwards compatible if used,
+        # changes unique id
         hass.config_entries.async_update_entry(config_entry, version=3, minor_version=1)
 
     _LOGGER.debug(

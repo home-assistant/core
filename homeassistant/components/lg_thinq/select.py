@@ -1,7 +1,5 @@
 """Support for select entities."""
 
-from __future__ import annotations
-
 import logging
 
 from thinqconnect import DeviceType

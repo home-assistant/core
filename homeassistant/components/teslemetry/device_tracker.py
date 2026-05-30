@@ -1,7 +1,5 @@
 """Device tracker platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -13,7 +11,6 @@ from homeassistant.components.device_tracker import (
     TrackerEntity,
     TrackerEntityDescription,
 )
-from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -33,12 +30,6 @@ class TeslemetryDeviceTrackerEntityDescription(TrackerEntityDescription):
         [TeslemetryStreamVehicle, Callable[[TeslaLocation | None], None]],
         Callable[[], None],
     ]
-    name_listener: (
-        Callable[
-            [TeslemetryStreamVehicle, Callable[[str | None], None]], Callable[[], None]
-        ]
-        | None
-    ) = None
     streaming_firmware: str
     polling_prefix: str | None = None
 
@@ -54,9 +45,6 @@ DESCRIPTIONS: tuple[TeslemetryDeviceTrackerEntityDescription, ...] = (
         key="route",
         polling_prefix="drive_state_active_route",
         value_listener=lambda vehicle, callback: vehicle.listen_DestinationLocation(
-            callback
-        ),
-        name_listener=lambda vehicle, callback: vehicle.listen_DestinationName(
             callback
         ),
         streaming_firmware="2024.26",
@@ -128,11 +116,6 @@ class TeslemetryVehiclePollingDeviceTrackerEntity(
         self._attr_longitude = self.get(
             f"{self.entity_description.polling_prefix}_longitude"
         )
-        self._attr_location_name = self.get(
-            f"{self.entity_description.polling_prefix}_destination"
-        )
-        if self._attr_location_name == "Home":
-            self._attr_location_name = STATE_HOME
         self._attr_available = (
             self._attr_latitude is not None and self._attr_longitude is not None
         )
@@ -160,28 +143,14 @@ class TeslemetryStreamingDeviceTrackerEntity(
         if (state := await self.async_get_last_state()) is not None:
             self._attr_latitude = state.attributes.get("latitude")
             self._attr_longitude = state.attributes.get("longitude")
-            self._attr_location_name = state.attributes.get("location_name")
         self.async_on_remove(
             self.entity_description.value_listener(
                 self.vehicle.stream_vehicle, self._location_callback
             )
         )
-        if self.entity_description.name_listener:
-            self.async_on_remove(
-                self.entity_description.name_listener(
-                    self.vehicle.stream_vehicle, self._name_callback
-                )
-            )
 
     def _location_callback(self, location: TeslaLocation | None) -> None:
         """Update the value of the entity."""
         self._attr_latitude = None if location is None else location.latitude
         self._attr_longitude = None if location is None else location.longitude
-        self.async_write_ha_state()
-
-    def _name_callback(self, name: str | None) -> None:
-        """Update the value of the entity."""
-        self._attr_location_name = name
-        if self._attr_location_name == "Home":
-            self._attr_location_name = STATE_HOME
         self.async_write_ha_state()

@@ -126,7 +126,7 @@ async def test_device_registry_not_portable(
     async_setup_sonos,
     soco,
 ) -> None:
-    """Test non-portable sonos device registered in the device registry to ensure area suggested."""
+    """Test non-portable sonos device has area suggested."""
     soco.get_battery_info.return_value = {}
     await async_setup_sonos()
 
@@ -165,7 +165,7 @@ async def test_entity_basic(
                 "clear_queue": 1,
                 "position": None,
                 "play": 1,
-                "play_pos": 0,
+                "expected_play_args": [0],
             },
         ),
         (
@@ -178,7 +178,6 @@ async def test_entity_basic(
                 "clear_queue": 0,
                 "position": None,
                 "play": 0,
-                "play_pos": 0,
             },
         ),
         (
@@ -191,7 +190,6 @@ async def test_entity_basic(
                 "clear_queue": 0,
                 "position": 1,
                 "play": 0,
-                "play_pos": 0,
             },
         ),
         (
@@ -204,7 +202,7 @@ async def test_entity_basic(
                 "clear_queue": 0,
                 "position": 1,
                 "play": 1,
-                "play_pos": 9,
+                "expected_play_args": [9],
             },
         ),
         (
@@ -217,7 +215,7 @@ async def test_entity_basic(
                 "clear_queue": 1,
                 "position": None,
                 "play": 1,
-                "play_pos": 0,
+                "expected_play_args": [0],
             },
         ),
         (
@@ -230,7 +228,7 @@ async def test_entity_basic(
                 "clear_queue": 1,
                 "position": None,
                 "play": 1,
-                "play_pos": 0,
+                "expected_play_args": [0],
             },
         ),
     ],
@@ -266,23 +264,20 @@ async def test_play_media_library(
         sock_mock.add_to_queue.call_args_list[0].args[0].item_id
         == test_result["item_id"]
     )
-    if test_result["position"] is not None:
-        assert (
-            sock_mock.add_to_queue.call_args_list[0].kwargs["position"]
-            == test_result["position"]
-        )
-    else:
-        assert "position" not in sock_mock.add_to_queue.call_args_list[0].kwargs
+    assert (
+        sock_mock.add_to_queue.call_args_list[0].kwargs.get("position")
+        == test_result["position"]
+    )
+
     assert (
         sock_mock.add_to_queue.call_args_list[0].kwargs["timeout"]
         == LONG_SERVICE_TIMEOUT
     )
     assert sock_mock.play_from_queue.call_count == test_result["play"]
-    if test_result["play"] != 0:
-        assert (
-            sock_mock.play_from_queue.call_args_list[0].args[0]
-            == test_result["play_pos"]
-        )
+    actual_play_args = [
+        call.args[0] for call in sock_mock.play_from_queue.call_args_list
+    ]
+    assert actual_play_args == test_result.get("expected_play_args", [])
 
 
 @pytest.mark.parametrize(
@@ -758,25 +753,73 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
                 "play_uri_title": "James Taylor Radio",
-                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="100c2068ST%3a1683194971234567890" parentID="10fe2064myStations" restricted="true"><dc:title>James Taylor Radio</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON60423_X_#Svc60423-99999999-Token</desc></item></DIDL-Lite>',
+                "play_uri_meta": (
+                    '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"'
+                    ' xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"'
+                    ' xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"'
+                    ' xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                    '<item id="100c2068ST%3a1683194971234567890"'
+                    ' parentID="10fe2064myStations" restricted="true">'
+                    "<dc:title>James Taylor Radio</dc:title>"
+                    "<upnp:class>object.item.audioItem.audioBroadcast"
+                    ".#station</upnp:class>"
+                    '<desc id="cdudn"'
+                    ' nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">'
+                    "SA_RINCON60423_X_#Svc60423-99999999-Token"
+                    "</desc></item></DIDL-Lite>"
+                ),
             },
         ),
         (
             "66 - Watercolors",
             {
                 "play_uri": 1,
-                "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
+                "play_uri_uri": (
+                    "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc"
+                ),
                 "play_uri_title": "66 - Watercolors",
-                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10090120Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-9999-9999-9999-4bc8e2cdccce" parentID="10086064live%3f93b0b9cb-9999-9999-9999-bcf75971fcfe" restricted="false"><dc:title>66 - Watercolors</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON9479_X_#Svc9479-99999999-Token</desc></item></DIDL-Lite>',
+                "play_uri_meta": (
+                    '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"'
+                    ' xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"'
+                    ' xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"'
+                    ' xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                    '<item id="10090120Api%3atune%3aliveAudio%3ajazzcafe'
+                    '%3ae4b5402c-9999-9999-9999-4bc8e2cdccce"'
+                    ' parentID="10086064live%3f93b0b9cb-9999-9999-9999'
+                    '-bcf75971fcfe" restricted="false">'
+                    "<dc:title>66 - Watercolors</dc:title>"
+                    "<upnp:class>object.item.audioItem.audioBroadcast"
+                    "</upnp:class>"
+                    '<desc id="cdudn"'
+                    ' nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">'
+                    "SA_RINCON9479_X_#Svc9479-99999999-Token"
+                    "</desc></item></DIDL-Lite>"
+                ),
             },
         ),
         (
             "American Tall Tales",
             {
                 "play_uri": 1,
-                "play_uri_uri": "x-rincon-cpcontainer:101340c8reftitle%C9F27_com?sid=239&flags=16584&sn=5",
+                "play_uri_uri": (
+                    "x-rincon-cpcontainer:101340c8reftitle"
+                    "%C9F27_com?sid=239&flags=16584&sn=5"
+                ),
                 "play_uri_title": "American Tall Tales",
-                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="101340c8reftitleC9F27_com" parentID="101340c8reftitleC9F27_com" restricted="true"><dc:title>American Tall Tales</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON61191_X_#Svc6-0-Token</desc></item></DIDL-Lite>',
+                "play_uri_meta": (
+                    '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"'
+                    ' xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"'
+                    ' xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"'
+                    ' xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                    '<item id="101340c8reftitleC9F27_com"'
+                    ' parentID="101340c8reftitleC9F27_com" restricted="true">'
+                    "<dc:title>American Tall Tales</dc:title>"
+                    "<upnp:class>object.item.audioItem.audioBook</upnp:class>"
+                    '<desc id="cdudn"'
+                    ' nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">'
+                    "SA_RINCON61191_X_#Svc6-0-Token"
+                    "</desc></item></DIDL-Lite>"
+                ),
             },
         ),
     ],
