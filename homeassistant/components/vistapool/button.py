@@ -53,7 +53,7 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Send a colour-advance pulse to the pool LED fixture."""
         try:
-            if self.coordinator.get_value(_LIGHT_STATUS_PATH) in (True, "1", 1):
+            if self.coordinator.get_value(_LIGHT_STATUS_PATH) in (True, "1"):
                 await self.coordinator.api.set_value(
                     self.coordinator.pool_id, _LIGHT_STATUS_PATH, 0
                 )
