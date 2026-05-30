@@ -9,6 +9,7 @@ from functools import lru_cache, partial
 from itertools import chain, groupby
 import logging
 from operator import attrgetter
+import queue
 import socket
 import ssl
 import time
@@ -91,6 +92,8 @@ from .models import (
 from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabled
 
 _LOGGER = logging.getLogger(__name__)
+
+MQTT_TIMEOUT = 5
 
 MIN_BUFFER_SIZE = 131072  # Minimum buffer size to use if preferred size fails
 PREFERRED_BUFFER_SIZE = 8 * 1024 * 1024  # Set receive buffer size to 8MiB
@@ -431,6 +434,40 @@ class MqttClientSetup:
     def client(self) -> AsyncMQTTClient:
         """Return the paho MQTT client."""
         return self._client
+
+
+def try_connection(
+    user_input: dict[str, Any],
+) -> bool:
+    """Test if we can connect to an MQTT broker."""
+    mqtt_client_setup = MqttClientSetup(user_input)
+    mqtt_client_setup.setup()
+    client = mqtt_client_setup.client
+
+    result: queue.Queue[bool] = queue.Queue(maxsize=1)
+
+    def on_connect(
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        _connect_flags: mqtt.ConnectFlags,
+        reason_code: mqtt.ReasonCode,
+        _properties: mqtt.Properties | None = None,
+    ) -> None:
+        """Handle connection result."""
+        result.put(not reason_code.is_failure)
+
+    client.on_connect = on_connect
+
+    client.connect_async(user_input[CONF_BROKER], user_input[CONF_PORT])
+    client.loop_start()
+
+    try:
+        return result.get(timeout=MQTT_TIMEOUT)
+    except queue.Empty:
+        return False
+    finally:
+        client.disconnect()
+        client.loop_stop()
 
 
 class MQTT:
