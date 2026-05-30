@@ -63,7 +63,7 @@ async def async_setup_entry(
                         observable,
                         entity_category=EntityCategory.DIAGNOSTIC
                         if entity.entity_type == EntityType.METADATA
-                        else None,
+                        else LIB_ENTITY_CATEGORY_MAP.get(entity.category),
                     )
                 )
         if gateway_eurid is not None:

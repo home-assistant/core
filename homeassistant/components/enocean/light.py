@@ -67,6 +67,10 @@ class EnOceanLight(EnOceanEntity, LightEntity):
                 entity_id=self.entity_key,
             ),
         )
+        # optimistically update state , rather than waiting for the light to report back its new state (as that is delayed)
+        self._attr_brightness = brightness
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
@@ -76,8 +80,11 @@ class EnOceanLight(EnOceanEntity, LightEntity):
             # Use CentralDim(0) rather than Switch so the dimmer's ramp mechanism is used.
             CentralDim(
                 dim_value=0,
-                switch_on=False,
                 ramp_time=round(transition),
                 entity_id=self.entity_key,
             ),
         )
+
+        # optimistically update state , rather than waiting for the light to report back its new state (as that is delayed)
+        self._attr_is_on = False
+        self.async_write_ha_state()

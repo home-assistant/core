@@ -64,6 +64,9 @@
       "day_night": {
         "name": "Day/Night"
       },
+      "dimmer_state": {
+        "name": "Dimmer state"
+      },
       "learning_active": {
         "name": "Learning mode"
       },
@@ -147,6 +150,13 @@
           "300": "5 min"
         }
       },
+      "ramp_mode": {
+        "name": "Ramp mode",
+        "state": {
+          "hardware": "Hardware",
+          "software": "Software"
+        }
+      },
       "repositioning_mode": {
         "name": "Repositioning mode",
         "state": {
@@ -193,6 +203,9 @@
           "opening": "Opening",
           "stopped": "Stopped"
         }
+      },
+      "dimmer_output": {
+        "name": "Dimmer output"
       },
       "energy": {
         "name": "Energy"

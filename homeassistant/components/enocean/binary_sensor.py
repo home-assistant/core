@@ -24,7 +24,9 @@ async def async_setup_entry(
     gateway_eurid = gateway.eurid
 
     entities: list[EnOceanBinarySensor] = [
-        EnOceanBinarySensor(eurid, entity.id, gateway)
+        EnOceanBinarySensor(
+            eurid, entity.id, gateway, LIB_ENTITY_CATEGORY_MAP.get(entity.category)
+        )
         for eurid, spec in gateway.device_specs.items()
         for entity in spec.entities
         if entity.entity_type == EntityType.BINARY
