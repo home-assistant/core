@@ -3759,6 +3759,12 @@
           "iot_class": "cloud_push",
           "name": "LG ThinQ"
         },
+        "lg_tv_rs232": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "LG TV via Serial"
+        },
         "webostv": {
           "integration_type": "device",
           "config_flow": true,
@@ -3766,12 +3772,6 @@
           "name": "LG webOS TV"
         }
       }
-    },
-    "lg_tv_rs232": {
-      "name": "LG TV via Serial",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
     },
     "libre_hardware_monitor": {
       "name": "Libre Hardware Monitor",
@@ -5119,7 +5119,7 @@
     "opnsense": {
       "name": "OPNsense",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "opower": {

@@ -138,6 +138,8 @@ SAVE_DELAY = 1
 
 DISCOVERY_COOLDOWN = 1
 
+SETUP_RETRY_MAX_WAIT = 600  # 10 minutes
+
 ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
 UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
 
@@ -836,7 +838,7 @@ class ConfigEntry[_DataT = Any]:
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
             )
-            wait_time = 2 ** min(self._tries, 4) * 5 + (
+            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
