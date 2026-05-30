@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, Iterable
 import hashlib
-from io import StringIO
+from io import BytesIO
 import json
 from math import ceil
 import random
@@ -673,7 +673,7 @@ async def _upload_backup(
 
         resp = await client.post(
             f"/api/backup/upload?agent_id={agent_id}",
-            data={"file": StringIO("test")},
+            data={"file": BytesIO(b"test")},
         )
     assert resp.status == 201
 
