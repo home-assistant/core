@@ -133,13 +133,21 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         """Initialise the Climate Entity."""
         super().__init__(client)
         self._ability = ability
-        self._attr_unique_id = f"ac_{ability.ac_number}"
+
+        self._attr_unique_id = f"{client.device.system_id}"
+        _LOGGER.debug(
+            "Airtouch5AC __init__: unique_id=%s, ac_number=%s, system_id=%s",
+            self._attr_unique_id,
+            ability.ac_number,
+            client.device.system_id,
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"ac_{ability.ac_number}")},
-            name=f"AC {ability.ac_number}",
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=f"AC {client.device.name}",
             manufacturer="Polyaire",
             model="AirTouch 5",
         )
+
         self._attr_hvac_modes = [HVACMode.OFF]
         if ability.supports_mode_auto:
             self._attr_hvac_modes.append(HVACMode.AUTO)
@@ -204,12 +212,22 @@ class Airtouch5AC(Airtouch5ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Add data updated listener after this object has been initialized."""
+        _LOGGER.debug(
+            "Airtouch5AC async_added_to_hass: entity_id=%s, unique_id=%s",
+            self.entity_id,
+            self._attr_unique_id,
+        )
         await super().async_added_to_hass()
         self._client.ac_status_callbacks.append(self._async_update_attrs)
         self._async_update_attrs(self._client.latest_ac_status)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove data updated listener after this object has been initialized."""
+        _LOGGER.debug(
+            "Airtouch5AC async_will_remove_from_hass: entity_id=%s, unique_id=%s",
+            self.entity_id,
+            self._attr_unique_id,
+        )
         await super().async_will_remove_from_hass()
         self._client.ac_status_callbacks.remove(self._async_update_attrs)
 
@@ -284,10 +302,19 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         super().__init__(client)
         self._name = name
 
-        self._attr_unique_id = f"zone_{name.zone_number}"
+        self._attr_unique_id = f"{client.device.system_id}_{name.zone_number}"
+        _LOGGER.debug(
+            "Airtouch5Zone __init__: unique_id=%s, zone_number=%s, zone_name=%s, system_id=%s",
+            self._attr_unique_id,
+            name.zone_number,
+            name.zone_name,
+            client.device.system_id,
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"zone_{name.zone_number}")},
-            name=name.zone_name,
+            identifiers={
+                (DOMAIN, f"{client.device.system_id}_{name.zone_number}"),
+            },
+            name=f"{name.zone_name}",
             manufacturer="Polyaire",
             model="AirTouch 5",
         )
@@ -320,12 +347,22 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Add data updated listener after this object has been initialized."""
+        _LOGGER.debug(
+            "Airtouch5Zone async_added_to_hass: entity_id=%s, unique_id=%s",
+            self.entity_id,
+            self._attr_unique_id,
+        )
         await super().async_added_to_hass()
         self._client.zone_status_callbacks.append(self._async_update_attrs)
         self._async_update_attrs(self._client.latest_zone_status)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove data updated listener after this object has been initialized."""
+        _LOGGER.debug(
+            "Airtouch5Zone async_will_remove_from_hass: entity_id=%s, unique_id=%s",
+            self.entity_id,
+            self._attr_unique_id,
+        )
         await super().async_will_remove_from_hass()
         self._client.zone_status_callbacks.remove(self._async_update_attrs)
 
