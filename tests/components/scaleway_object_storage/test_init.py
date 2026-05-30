@@ -45,18 +45,21 @@ async def test_load_unload_config_entry(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "expected_state"),
     [
-        exceptions.ScalewayConnectionError,
-        exceptions.ServerUnavailableError,
+        (exceptions.ScalewayConnectionError, ConfigEntryState.SETUP_RETRY),
+        (exceptions.ServerUnavailableError, ConfigEntryState.SETUP_RETRY),
+        (exceptions.InvalidAuthException, ConfigEntryState.SETUP_ERROR),
+        (exceptions.BucketNotFoundException, ConfigEntryState.SETUP_ERROR),
     ],
 )
-async def test_setup_entry_retriable_error(
+async def test_setup_entry_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     exception: exceptions.ScalewayException,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test loading the integration with retriable errors."""
+    """Test integration init behavior if a connection error is raised."""
     with patch(
         "homeassistant.components.scaleway_object_storage.helpers.check_connection",
         side_effect=exception,
@@ -64,34 +67,4 @@ async def test_setup_entry_retriable_error(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_auth_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test loading the integration with invalid auth."""
-    with patch(
-        "homeassistant.components.scaleway_object_storage.helpers.check_connection",
-        side_effect=exceptions.InvalidAuthException,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_entry_bucket_not_found(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test loading the integration with a deleted bucket."""
-    with patch(
-        "homeassistant.components.scaleway_object_storage.helpers.check_connection",
-        side_effect=exceptions.BucketNotFoundException,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is expected_state
