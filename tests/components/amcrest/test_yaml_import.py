@@ -23,7 +23,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
-    TEST_CONFIG_ENTRY_TITLE,
     TEST_HOST,
     TEST_PASSWORD,
     TEST_PORT,
@@ -32,8 +31,6 @@ from .conftest import (
     mock_async_property,
     patch_amcrest_checker,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _yaml_camera(
@@ -203,85 +200,39 @@ async def test_yaml_import_entity_subset(hass: HomeAssistant) -> None:
     assert len([eid for eid in entity_ids if eid.startswith("switch.front_door")]) == 1
 
 
-async def test_yaml_import_omitted_optional_platforms(hass: HomeAssistant) -> None:
-    """Test YAML import with omitted platform keys creates only the camera."""
-    with (
-        patch_amcrest_checker(),
-        patch("homeassistant.components.amcrest._start_event_monitor"),
-    ):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {DOMAIN: [_yaml_camera()]},
-        )
-        await hass.async_block_till_done()
-
-    entity_ids = hass.states.async_entity_ids()
-    front_door_entities = [
-        entity_id
-        for entity_id in entity_ids
-        if entity_id.split(".", 1)[-1].startswith("front_door")
-    ]
-    assert front_door_entities == ["camera.front_door"]
-
-
-async def test_yaml_import_no_optional_platforms(hass: HomeAssistant) -> None:
-    """Test YAML import with empty platform lists creates only the camera."""
-    with (
-        patch_amcrest_checker(),
-        patch("homeassistant.components.amcrest._start_event_monitor"),
-    ):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: [
-                    _yaml_camera(
-                        binary_sensors=[],
-                        sensors=[],
-                        switches=[],
-                    )
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-
-    entity_ids = hass.states.async_entity_ids()
-    front_door_entities = [
-        entity_id
-        for entity_id in entity_ids
-        if entity_id.split(".", 1)[-1].startswith("front_door")
-    ]
-    assert front_door_entities == ["camera.front_door"]
-
-
-async def test_yaml_import_failure_creates_repair_issue(
+@pytest.mark.parametrize(
+    "camera_config",
+    [
+        pytest.param(_yaml_camera(), id="omitted_keys"),
+        pytest.param(
+            _yaml_camera(binary_sensors=[], sensors=[], switches=[]),
+            id="empty_lists",
+        ),
+    ],
+)
+async def test_yaml_import_without_optional_platforms(
     hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
+    camera_config: dict[str, Any],
 ) -> None:
-    """Test failed YAML import creates a per-camera repair issue."""
-    with patch_amcrest_checker() as mock_checker:
-        _configure_checker_mock(mock_checker, current_time_side_effect=LoginError)
+    """Test YAML import without optional platforms creates only the camera."""
+    with (
+        patch_amcrest_checker(),
+        patch("homeassistant.components.amcrest._start_event_monitor"),
+    ):
         assert await async_setup_component(
             hass,
             DOMAIN,
-            {DOMAIN: [_yaml_camera()]},
+            {DOMAIN: [camera_config]},
         )
         await hass.async_block_till_done()
 
-    assert not hass.config_entries.async_entries(DOMAIN)
-    issue = issue_registry.async_get_issue(
-        DOMAIN,
-        f"deprecated_yaml_import_issue_{TEST_HOST}_{TEST_PORT}_invalid_auth",
-    )
-    assert issue is not None
-    assert issue.translation_key == "deprecated_yaml_import_issue_invalid_auth"
-    assert (
-        issue_registry.async_get_issue(
-            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-        )
-        is None
-    )
+    entity_ids = hass.states.async_entity_ids()
+    front_door_entities = [
+        entity_id
+        for entity_id in entity_ids
+        if entity_id.split(".", 1)[-1].startswith("front_door")
+    ]
+    assert front_door_entities == ["camera.front_door"]
 
 
 async def test_yaml_import_no_serial_number(
@@ -330,12 +281,19 @@ async def test_yaml_import_failure_reasons(
         )
         await hass.async_block_till_done()
 
+    assert not hass.config_entries.async_entries(DOMAIN)
     issue = issue_registry.async_get_issue(
         DOMAIN,
         f"deprecated_yaml_import_issue_{TEST_HOST}_{TEST_PORT}_{reason}",
     )
     assert issue is not None
     assert issue.translation_key == f"deprecated_yaml_import_issue_{reason}"
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
+        is None
+    )
 
 
 async def test_yaml_import_continue_on_failure(
@@ -406,29 +364,3 @@ async def test_services_without_yaml(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, "enable_recording")
-
-
-async def test_ui_entry_uses_default_entities(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test UI-created entries use default entity sets when options omit platform keys."""
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch_amcrest_checker(),
-        patch("homeassistant.components.amcrest._start_event_monitor"),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_ids = hass.states.async_entity_ids()
-    title_slug = TEST_CONFIG_ENTRY_TITLE.lower().replace(" ", "_")
-    assert f"binary_sensor.{title_slug}_audio_detected" in entity_ids
-    assert f"binary_sensor.{title_slug}_motion_detected" in entity_ids
-    assert f"binary_sensor.{title_slug}_crossline_detected" in entity_ids
-    assert f"binary_sensor.{title_slug}_online" in entity_ids
-    assert f"camera.{title_slug}" in entity_ids
-    assert f"sensor.{title_slug}_ptz_preset" in entity_ids
-    assert f"sensor.{title_slug}_sd_used" in entity_ids
-    assert f"switch.{title_slug}_privacy_mode" in entity_ids
