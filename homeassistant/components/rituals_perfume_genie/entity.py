@@ -12,6 +12,17 @@ MODEL = "The Perfume Genie"
 MODEL2 = "The Perfume Genie 2.0"
 
 
+def _stringify_firmware_version(version: object) -> str | None:
+    """Return firmware version in the format expected by the device registry."""
+    if version is None:
+        return None
+    if isinstance(version, dict):
+        version = version.get("raw") or version.get("title")
+        if version is None:
+            return None
+    return str(version)
+
+
 class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
     """Representation of a diffuser entity."""
 
@@ -31,7 +42,7 @@ class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
             manufacturer=MANUFACTURER,
             model=MODEL if coordinator.diffuser.has_battery else MODEL2,
             name=coordinator.diffuser.name,
-            sw_version=coordinator.diffuser.version,
+            sw_version=_stringify_firmware_version(coordinator.diffuser.version),
         )
 
     @property

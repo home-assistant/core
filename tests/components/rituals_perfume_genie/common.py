@@ -38,7 +38,7 @@ def mock_diffuser(
     perfume: str = "Ritual of Sakura",
     perfume_amount: int = 2,
     room_size_square_meter: int = 60,
-    version: str = "4.0",
+    version: object = "4.0",
     wifi_percentage: int = 75,
 ) -> MagicMock:
     """Return a mock Diffuser initialized with the given data."""

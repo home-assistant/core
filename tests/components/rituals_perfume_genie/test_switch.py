@@ -4,6 +4,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,12 +14,13 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import (
     init_integration,
     mock_config_entry,
+    mock_diffuser,
     mock_diffuser_v1_battery_cartridge,
 )
 
@@ -38,6 +40,31 @@ async def test_switch_entity(
     entry = entity_registry.async_get("switch.genie")
     assert entry
     assert entry.unique_id == f"{diffuser.hublot}-is_on"
+
+
+async def test_switch_device_uses_string_firmware_version(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test firmware version object is stored as a string."""
+    config_entry = mock_config_entry(unique_id="id_123_switch_version_test")
+    diffuser = mock_diffuser(
+        hublot="lot123v2",
+        has_battery=False,
+        version={
+            "description": "",
+            "discover_url": "",
+            "icon": "",
+            "image": "",
+            "raw": "5.4",
+            "title": "5.4",
+        },
+    )
+    await init_integration(hass, config_entry, [diffuser])
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, diffuser.hublot)})
+
+    assert device
+    assert device.sw_version == "5.4"
 
 
 async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
