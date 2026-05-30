@@ -1,7 +1,5 @@
 """Support for switch platform for Hue resources (V2 only)."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2
@@ -76,7 +74,7 @@ async def async_setup_entry(
 
 
 class HueResourceEnabledEntity(HueBaseEntity, SwitchEntity):
-    """Representation of a Switch entity from a Hue resource that can be toggled enabled."""
+    """Represent a Switch entity from a Hue resource that toggles."""
 
     controller: BehaviorInstanceController | LightLevelController | MotionController
     resource: BehaviorInstance | LightLevel | Motion
@@ -115,7 +113,6 @@ class HueBehaviorInstanceEnabledEntity(HueResourceEnabledEntity):
         key="behavior_instance",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
-        has_entity_name=False,
     )
 
     @property

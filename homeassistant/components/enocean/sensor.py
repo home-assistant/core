@@ -1,7 +1,5 @@
 """Support for EnOcean sensors."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 
 from enocean_async import EURID, EntityType, Gateway, Observable, Observation

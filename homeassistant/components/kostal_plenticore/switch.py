@@ -1,7 +1,5 @@
 """Platform for Kostal Plenticore switches."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -150,7 +148,8 @@ async def async_setup_entry(
             )
         else:
             _LOGGER.debug(
-                "Skipping shadow management for DC string %d, not supported (Feature: %d)",
+                "Skipping shadow management for DC string %d,"
+                " not supported (Feature: %d)",
                 dc_string + 1,
                 dc_string_feature,
             )
@@ -247,11 +246,13 @@ class PlenticoreShadowMgmtSwitch(
 ):
     """Representation of a Plenticore Switch for shadow management.
 
-    The shadow management switch can be controlled for each DC string separately. The DC string is
-    coded as bit in a single settings value, bit 0 for DC string 1, bit 1 for DC string 2, etc.
+    The shadow management switch can be controlled for each
+    DC string separately. The DC string is coded as bit in a
+    single settings value, bit 0 for DC string 1, bit 1 for
+    DC string 2, etc.
 
-    Not all DC strings are available for shadown management, for example if one of them is used
-    for a battery.
+    Not all DC strings are available for shadow management,
+    for example if one of them is used for a battery.
     """
 
     _attr_entity_category = EntityCategory.CONFIG

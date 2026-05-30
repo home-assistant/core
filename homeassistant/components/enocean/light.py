@@ -1,7 +1,5 @@
 """Support for EnOcean light sources."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from enocean_async import CentralDim, EntityType, Gateway, Observable, Observation

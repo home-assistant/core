@@ -121,7 +121,7 @@
     'state': '500',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm_threshold-entry]
+# name: test_all_entities[da_ac_rac_01001][select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -142,7 +142,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm_threshold',
+    'entity_id': 'select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -165,7 +165,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm_threshold-state]
+# name: test_all_entities[da_ac_rac_01001][select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aire Dormitorio Principal Dust filter alarm threshold',
@@ -177,14 +177,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm_threshold',
+    'entity_id': 'select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '500',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][select.microwave_lamp-entry]
+# name: test_all_entities[da_ks_microwave_0101x][select.theater_microwave_lamp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -204,7 +204,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.microwave_lamp',
+    'entity_id': 'select.theater_microwave_lamp',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -227,7 +227,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][select.microwave_lamp-state]
+# name: test_all_entities[da_ks_microwave_0101x][select.theater_microwave_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Microwave Lamp',
@@ -238,7 +238,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.microwave_lamp',
+    'entity_id': 'select.theater_microwave_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -910,7 +910,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher-entry]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -930,7 +930,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.dishwasher',
+    'entity_id': 'select.theater_dishwasher',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -953,7 +953,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher-state]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher',
@@ -964,14 +964,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher',
+    'entity_id': 'select.theater_dishwasher',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher_selected_zone-entry]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_selected_zone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -991,7 +991,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.dishwasher_selected_zone',
+    'entity_id': 'select.theater_dishwasher_selected_zone',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1014,7 +1014,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher_selected_zone-state]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_selected_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Selected zone',
@@ -1025,14 +1025,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher_selected_zone',
+    'entity_id': 'select.theater_dishwasher_selected_zone',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'all',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher_zone_booster-entry]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_zone_booster-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1051,7 +1051,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.dishwasher_zone_booster',
+    'entity_id': 'select.theater_dishwasher_zone_booster',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1074,7 +1074,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher_zone_booster-state]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_zone_booster-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Zone booster',
@@ -1084,7 +1084,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher_zone_booster',
+    'entity_id': 'select.theater_dishwasher_zone_booster',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1272,7 +1272,7 @@
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][select.dryer-entry]
+# name: test_all_entities[da_wm_wd_000001][select.theater_dryer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1292,7 +1292,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.dryer',
+    'entity_id': 'select.theater_dryer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1315,7 +1315,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][select.dryer-state]
+# name: test_all_entities[da_wm_wd_000001][select.theater_dryer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dryer',
@@ -1326,7 +1326,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dryer',
+    'entity_id': 'select.theater_dryer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1455,7 +1455,7 @@
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer-entry]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1475,7 +1475,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.theater_washer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1498,7 +1498,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer-state]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer',
@@ -1509,14 +1509,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.theater_washer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_soil_level-entry]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_soil_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1539,7 +1539,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.washer_soil_level',
+    'entity_id': 'select.theater_washer_soil_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1562,7 +1562,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_soil_level-state]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_soil_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Soil level',
@@ -1576,14 +1576,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer_soil_level',
+    'entity_id': 'select.theater_washer_soil_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'normal',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_spin_level-entry]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_spin_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1606,7 +1606,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.washer_spin_level',
+    'entity_id': 'select.theater_washer_spin_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1629,7 +1629,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_spin_level-state]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_spin_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Spin level',
@@ -1643,14 +1643,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer_spin_level',
+    'entity_id': 'select.theater_washer_spin_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'high',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_water_temperature-entry]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1673,7 +1673,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.washer_water_temperature',
+    'entity_id': 'select.theater_washer_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1696,7 +1696,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_water_temperature-state]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Water temperature',
@@ -1710,7 +1710,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer_water_temperature',
+    'entity_id': 'select.theater_washer_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

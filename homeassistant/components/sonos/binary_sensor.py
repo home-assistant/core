@@ -1,7 +1,5 @@
 """Entity representing a Sonos power sensor."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

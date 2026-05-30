@@ -1,7 +1,5 @@
 """Config flow for Google Maps Travel Time integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -69,6 +67,8 @@ RECONFIGURE_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = RECONFIGURE_SCHEMA.extend(
     {
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )

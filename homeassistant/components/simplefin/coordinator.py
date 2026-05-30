@@ -1,7 +1,5 @@
 """Data update coordinator for the SimpleFIN integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 
@@ -45,6 +43,8 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
 
         except SimpleFinPaymentRequiredError as err:
             LOGGER.warning(
-                "There is a billing issue with your SimpleFin account, contact Simplefin to address this issue"
+                "There is a billing issue with your SimpleFin"
+                " account, contact SimpleFin to address"
+                " this issue"
             )
             raise UpdateFailed from err

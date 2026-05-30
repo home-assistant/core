@@ -1,7 +1,5 @@
 """Support for Aurora ABB PowerOne Solar Photovoltaic (PV) inverter."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -15,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     EntityCategory,
     UnitOfElectricCurrent,
@@ -33,7 +32,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
-    ATTR_MODEL,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
     MANUFACTURER,
