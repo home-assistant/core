@@ -35,12 +35,12 @@ async def async_setup_entry(
 
 
 class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
-    """Power-cycle the pool light to advance the LED fixture's colour.
+    """Power-cycle the pool light to advance the LED fixture's color.
 
     Mirrors the "Next" button under LED Color in the Vistapool app's
     Illumination screen. If the light is on, sends light.status=0, waits a
     moment, then light.status=1; the physical LED fixture advances to the
-    next colour on power-on. If the light is off, just turns it on.
+    next color on power-on. If the light is off, just turns it on.
     """
 
     _attr_translation_key = "led_pulse"
@@ -51,7 +51,7 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
         self._attr_unique_id = self.build_unique_id("led_pulse")
 
     async def async_press(self) -> None:
-        """Send a colour-advance pulse to the pool LED fixture."""
+        """Send a color-advance pulse to the pool LED fixture."""
         try:
             if self.coordinator.get_value(_LIGHT_STATUS_PATH) in (True, "1"):
                 await self.coordinator.api.set_value(

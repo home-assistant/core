@@ -27,7 +27,7 @@
   "entity": {
     "button": {
       "led_pulse": {
-        "name": "LED next colour"
+        "name": "LED next color"
       }
     },
     "sensor": {

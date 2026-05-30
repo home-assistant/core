@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[button.my_pool_led_next_colour-entry]
+# name: test_all_entities[button.my_pool_led_next_color-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.my_pool_led_next_colour',
+    'entity_id': 'button.my_pool_led_next_color',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'LED next colour',
+    'object_id_base': 'LED next color',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'LED next colour',
+    'original_name': 'LED next color',
     'platform': 'vistapool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,13 +36,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[button.my_pool_led_next_colour-state]
+# name: test_all_entities[button.my_pool_led_next_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool LED next colour',
+      'friendly_name': 'My Pool LED next color',
     }),
     'context': <ANY>,
-    'entity_id': 'button.my_pool_led_next_colour',
+    'entity_id': 'button.my_pool_led_next_color',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

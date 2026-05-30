@@ -16,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-_BUTTON = "button.my_pool_led_next_colour"
+_BUTTON = "button.my_pool_led_next_color"
 _LED_DATA = {"main": {"hasLED": 1, "version": 1}, "light": {"status": 0}}
 
 
