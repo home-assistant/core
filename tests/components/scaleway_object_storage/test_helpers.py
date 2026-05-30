@@ -6,6 +6,7 @@ import json
 from typing import Any, cast
 from unittest.mock import MagicMock
 
+import aiohttp
 from aiohttp import ClientConnectionError, ClientResponse, ClientSession, InvalidURL
 from aiohttp_s3_client import AwsObjectMeta
 from aiohttp_s3_client.client import AwsDownloadError
@@ -219,7 +220,6 @@ async def test_read_object_metadata_missing_metadata(
 
 
 async def test_check_connection(
-    mock_aiohttp_clientsession: MagicMock,
     valid_config: Mapping[str, Any],
     mock_s3_client: MagicMock,
     mock_s3_response_factory: MockS3ResponseFactory,
@@ -233,7 +233,6 @@ async def test_check_connection(
 
 
 async def test_check_connection_bucket_not_found(
-    mock_aiohttp_clientsession: MagicMock,
     valid_config: Mapping[str, Any],
     mock_s3_client: MagicMock,
     mock_s3_response_factory: MockS3ResponseFactory,
@@ -257,7 +256,6 @@ async def test_check_connection_bucket_not_found(
     ],
 )
 async def test_check_connection_server_error(
-    mock_aiohttp_clientsession: MagicMock,
     valid_config: Mapping[str, Any],
     mock_s3_client: MagicMock,
     mock_s3_response_factory: MockS3ResponseFactory,
@@ -276,7 +274,6 @@ async def test_check_connection_server_error(
 
 
 async def test_check_connection_invalid_bucket(
-    mock_aiohttp_clientsession: MagicMock,
     valid_config: Mapping[str, Any],
     mock_s3_client: MagicMock,
     mock_s3_response_factory: MockS3ResponseFactory,
@@ -289,7 +286,6 @@ async def test_check_connection_invalid_bucket(
 
 
 async def test_check_connection_network_error(
-    mock_aiohttp_clientsession: MagicMock,
     valid_config: Mapping[str, Any],
     mock_s3_client: MagicMock,
 ) -> None:
@@ -310,7 +306,6 @@ async def test_check_connection_network_error(
 )
 def test_create_client(
     valid_config: Mapping[str, Any],
-    mock_aiohttp_clientsession: MagicMock,
     bucket_name: str,
     region: str,
     expected_endpoint: str,
@@ -320,7 +315,6 @@ def test_create_client(
     config[CONF_BUCKET] = bucket_name
     config[CONF_REGION] = region
 
-    client = helpers.create_client(
-        cast(ClientSession, mock_aiohttp_clientsession), config
-    )
+    session = MagicMock(spec=aiohttp.ClientSession)
+    client = helpers.create_client(cast(ClientSession, session), config)
     assert str(client.url) == expected_endpoint

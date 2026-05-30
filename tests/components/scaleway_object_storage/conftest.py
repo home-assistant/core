@@ -6,7 +6,6 @@ from typing import Any, Protocol
 from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
 
-import aiohttp
 from aiohttp import ClientResponse
 from aiohttp_s3_client import S3Client
 from aiohttp_s3_client.client import RequestContextManager
@@ -130,17 +129,6 @@ def mock_read_object_metadata(
         "homeassistant.components.scaleway_object_storage.helpers.read_object_metadata",
         side_effect=__read_object_metadata,
     ) as mock:
-        yield mock
-
-
-@pytest.fixture(autouse=True)
-def mock_aiohttp_clientsession() -> Generator[MagicMock]:
-    """Mock aiohttp session object returned by hass."""
-    mock = MagicMock(spec=aiohttp.ClientSession)
-    with patch(
-        "homeassistant.helpers.aiohttp_client.async_get_clientsession",
-        return_value=mock,
-    ):
         yield mock
 
 
