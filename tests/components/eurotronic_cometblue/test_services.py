@@ -250,7 +250,7 @@ async def test_set_holiday_errors(
             "set_holiday",
             {
                 "entity_id": ENTITY_ID,
-                "from": "2026-04-01 18:50:00",
+                "from": "2026-04-01 17:50:00",
                 "to": "2026-04-10 12:30:00",
                 "temperature": 21.5,
             },

@@ -1,6 +1,6 @@
 """Comet Blue services."""
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 import logging
 from typing import Final, TypedDict
 
@@ -193,17 +193,14 @@ async def set_holiday(
     entity: CometBlueBluetoothEntity, service_call: ServiceCall
 ) -> None:
     """Service call to update the holiday time on the device."""
-    if (
-        datetime(
-            service_call.data[ATTR_FROM].year,
-            service_call.data[ATTR_FROM].month,
-            service_call.data[ATTR_FROM].day,
-            service_call.data[ATTR_FROM].hour,
-        )
-        < datetime.now()
-    ):
+    # ceil the start time to the next full hour
+    away_start = service_call.data[ATTR_FROM].replace(
+        minute=0, second=0, microsecond=0
+    ) + timedelta(hours=1)
+
+    if away_start < datetime.now():
         raise ServiceValidationError(
-            "Start date (truncated to hour) must be in the future"
+            "Start date (ceiled to next hour) must be in the future"
         )
 
     LOGGER.info(
