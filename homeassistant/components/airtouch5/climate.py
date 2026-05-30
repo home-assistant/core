@@ -313,7 +313,7 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
             identifiers={
                 (DOMAIN, f"{client.device.system_id}_{name.zone_number}"),
             },
-            name=f" s{name.zone_name}",
+            name=f"{name.zone_name}",
             manufacturer="Polyaire",
             model="AirTouch 5",
         )
