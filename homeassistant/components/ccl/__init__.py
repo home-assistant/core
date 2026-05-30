@@ -25,7 +25,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 KEY_DEVICES: HassKey[dict[str, CCLDevice]] = HassKey("ccl_devices")
 
 
-async def register_webhook(hass: HomeAssistant, webhook_id: str) -> None:
+def register_webhook(hass: HomeAssistant, webhook_id: str) -> None:
     """Register webhook for the device."""
 
     async def handle_webhook(
@@ -56,8 +56,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
 
     coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
+    # Ensure any previously-registered webhook is removed
+    with contextlib.suppress(ValueError):
+        webhook.async_unregister(hass, webhook_id)
+
     try:
-        await register_webhook(hass, entry.data[CONF_WEBHOOK_ID])
+        register_webhook(hass, entry.data[CONF_WEBHOOK_ID])
     except ValueError as err:
         _LOGGER.error("Failed to register webhook: %s", err)
         raise ConfigEntryNotReady(
@@ -85,7 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    with contextlib.suppress(KeyError):
-        hass.data[KEY_DEVICES].pop(entry.data[CONF_WEBHOOK_ID], None)
+    hass.data[KEY_DEVICES].pop(entry.data[CONF_WEBHOOK_ID], None)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

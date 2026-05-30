@@ -139,6 +139,7 @@ CCL_SENSOR_DESCRIPTIONS: dict[CCLSensorTypes, SensorEntityDescription] = {
         key="BATTERY",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
         translation_key="battery",
     ),
     CCLSensorTypes.LIGHTNING_DISTANCE: SensorEntityDescription(

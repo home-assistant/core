@@ -71,7 +71,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.device = self.hass.data[KEY_DEVICES][self.webhook_id]
             # Try to register the webhook
             try:
-                await register_webhook(self.hass, self.webhook_id)
+                register_webhook(self.hass, self.webhook_id)
             except ValueError as err:
                 _LOGGER.error("Failed to register webhook: %s", err)
                 self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
