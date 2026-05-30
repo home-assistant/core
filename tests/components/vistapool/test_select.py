@@ -171,10 +171,11 @@ async def test_select_option_raises_on_api_error(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {ATTR_ENTITY_ID: "select.my_pool_pump_mode", ATTR_OPTION: "heat"},
             blocking=True,
         )
+    assert excinfo.value.translation_key == "set_failed"
