@@ -1,4 +1,4 @@
-"""Test the user step of the Scaleway Object Storage config flow."""
+"""Test the config flow of the Scaleway Object Storage integration."""
 
 from collections.abc import Mapping
 from typing import Any
