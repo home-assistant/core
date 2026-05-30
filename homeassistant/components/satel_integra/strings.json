@@ -153,9 +153,13 @@
       }
     },
     "zone": {
+      "abort": {
+        "entry_not_loaded": "Cannot validate zone temperature support while the integration is disabled."
+      },
       "entry_type": "Zone",
       "error": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "zone_does_not_report_temperature": "This zone does not report temperature data."
       },
       "initiate_flow": {
         "user": "Add zone"
@@ -163,10 +167,12 @@
       "step": {
         "reconfigure": {
           "data": {
+            "enable_temperature_sensor": "[%key:component::satel_integra::config_subentries::zone::step::user::data::enable_temperature_sensor%]",
             "name": "[%key:common::config_flow::data::name%]",
             "type": "[%key:component::satel_integra::config_subentries::zone::step::user::data::type%]"
           },
           "data_description": {
+            "enable_temperature_sensor": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::enable_temperature_sensor%]",
             "name": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::name%]",
             "type": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::type%]"
           },
@@ -174,11 +180,13 @@
         },
         "user": {
           "data": {
+            "enable_temperature_sensor": "Enable temperature sensor",
             "name": "[%key:common::config_flow::data::name%]",
             "type": "Zone type",
             "zone_number": "Zone number"
           },
           "data_description": {
+            "enable_temperature_sensor": "Enable this if the zone also reports a temperature reading",
             "name": "The name to give to the sensor",
             "type": "Choose the device class you would like the sensor to show as",
             "zone_number": "Enter zone number to configure"

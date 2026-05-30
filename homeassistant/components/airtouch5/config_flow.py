@@ -44,32 +44,22 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the device selection step."""
         errors: dict[str, str] | None = None
         if user_input is not None:
-            if user_input.get("Select Device") != "manual":
-                selected_device_id = user_input.get("Select Device")
-                # Find the device with the selected ID
-                for device in self.devices:
-                    if str(device.system_id) == selected_device_id:
-                        client = Airtouch5SimpleClient(device)
-                        try:
-                            await client.test_connection()
-                        except Exception:
-                            _LOGGER.exception("Unexpected exception")
-                            errors = {"base": "cannot_connect"}
-                        else:
-                            user_input = {CONF_HOST: device.ip}
-                            await self.async_set_unique_id(device.system_id)
-                            self._abort_if_unique_id_configured()
-                            return self.async_create_entry(
-                                title=f"{device.name} ({device.system_id})",
-                                data={
-                                    "system_id": device.system_id,
-                                    "host": device.ip,
-                                    "model": device.model,
-                                    "console_id": device.console_id,
-                                    "name": device.name,
-                                },
-                            )
-            # Manual entry selected, show manual entry form
+            client = Airtouch5SimpleClient(user_input[CONF_HOST])
+            try:
+                await client.test_connection()
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors = {"base": "cannot_connect"}
+            else:
+                # Uses the host/IP value from CONF_HOST as unique ID,
+                # which is no longer allowed
+                # pylint: disable-next=home-assistant-unique-id-ip-based
+                await self.async_set_unique_id(user_input[CONF_HOST])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
+
         return self.async_show_form(
             step_id="manual", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
