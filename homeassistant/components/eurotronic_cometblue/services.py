@@ -55,7 +55,6 @@ ScheduleEntry = TypedDict(
     {
         "from": time,
         "to": time,
-        "data": object,
     },
     total=False,
 )
@@ -82,10 +81,8 @@ def _validate_cometblue_schedule(
 
     Ensure they have no overlap and the end time is greater than the start time.
     """
-    if isinstance(schedule, list) and len(schedule) == 0:
+    if not schedule:
         return {}
-    if len(schedule) > 4:
-        raise ServiceValidationError("A maximum of 4 schedule entries is supported")
 
     schedule = sorted(
         schedule,
@@ -120,17 +117,16 @@ def _validate_cometblue_schedule(
     return normalized_schedule
 
 
-SCHEDULE_ENTRY_SCHEMA = {
-    vol.Optional(ATTR_FROM): cv.time,
-    vol.Optional(ATTR_TO): cv.time,
-    # allow arbitrary data (will be ignored), e.g. from schedule.get_schedule
-    vol.Optional(ATTR_DATA): object,
-}
+SCHEDULE_ENTRY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_FROM): cv.time,
+        vol.Optional(ATTR_TO): cv.time,
+    },
+    extra=vol.REMOVE_EXTRA,
+)
 SCHEDULE_DAY_SCHEMA = vol.All(
-    vol.Any(
-        [],
-        [SCHEDULE_ENTRY_SCHEMA],
-    ),
+    [SCHEDULE_ENTRY_SCHEMA],
+    vol.Length(max=4),
     _validate_cometblue_schedule,
 )
 SERVICE_SCHEDULE_SCHEMA = {
