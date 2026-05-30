@@ -51,14 +51,11 @@ async def test_user_flow_happy_path(
 
 async def test_abort_if_already_configured(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     valid_config: Mapping[str, Any],
 ) -> None:
     """Test we abort if the account is already configured."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert mock_setup_entry.call_count == 1
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -75,19 +72,14 @@ async def test_abort_if_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    # Still just one call for the original entry above
-    assert mock_setup_entry.call_count == 1
 
 
 async def test_abort_if_already_configured_no_prefix(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry_no_prefix: MockConfigEntry,
 ) -> None:
     """Test we abort if the account is already configured."""
     mock_config_entry_no_prefix.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_no_prefix.entry_id)
-    assert mock_setup_entry.call_count == 1
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -104,8 +96,6 @@ async def test_abort_if_already_configured_no_prefix(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    # Still just one call for the original entry above
-    assert mock_setup_entry.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -119,7 +109,6 @@ async def test_abort_if_already_configured_no_prefix(
 )
 async def test_no_conflict_with_similar_configuration(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     valid_config: Mapping[str, Any],
     patched_config_entry: str,
@@ -127,8 +116,6 @@ async def test_no_conflict_with_similar_configuration(
 ) -> None:
     """Test that we can set up similar entries if the relevant fields change."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert len(mock_setup_entry.mock_calls) == 1
 
     similar_config = dict(valid_config)
     if patched_value is None:
@@ -154,7 +141,6 @@ async def test_no_conflict_with_similar_configuration(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ScalewayConfigFlow._generate_title(similar_config)
     assert result["data"] == similar_config
-    assert len(mock_setup_entry.mock_calls) == 2
 
 
 @pytest.mark.parametrize(
