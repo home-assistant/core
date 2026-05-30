@@ -42,7 +42,6 @@ async def test_user_flow_happy_path(
             result["flow_id"],
             valid_config,
         )
-        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == ScalewayConfigFlow._generate_title(valid_config)
@@ -73,7 +72,6 @@ async def test_abort_if_already_configured(
             result["flow_id"],
             valid_config,
         )
-        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -103,7 +101,6 @@ async def test_abort_if_already_configured_no_prefix(
             result["flow_id"],
             dict(mock_config_entry_no_prefix.data),
         )
-        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -153,7 +150,6 @@ async def test_no_conflict_with_similar_configuration(
             result["flow_id"],
             similar_config,
         )
-        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == ScalewayConfigFlow._generate_title(similar_config)
@@ -208,7 +204,6 @@ async def test_form_failed_connection_check(
             result["flow_id"],
             valid_config,
         )
-        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == ScalewayConfigFlow._generate_title(valid_config)
