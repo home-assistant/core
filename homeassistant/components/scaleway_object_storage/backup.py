@@ -15,6 +15,7 @@ from aiohttp_s3_client.client import AwsUploadError, MultipartUploader, S3Client
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
+    BackupReaderWriterError,
     OnProgressCallback,
     suggested_filename,
 )
@@ -36,11 +37,18 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
+    from collections.abc import (
+        AsyncGenerator,
+        AsyncIterator,
+        Awaitable,
+        Callable,
+        Coroutine,
+    )
 
     from . import ScalewayConfigEntry
 
     type OpenStream = Callable[[], Awaitable[AsyncIterator[bytes]]]
+    type UploadJob = tuple[_Part, Coroutine[None, None, None]]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -280,21 +288,46 @@ class ScalewayBackupAgent(BackupAgent):
                 yield _Part.from_data(view[offset:].tobytes())
 
     @staticmethod
-    async def _perform_upload(
-        limiter: asyncio.Semaphore,
-        upload_coro: Awaitable[None],
-        report_done: Awaitable[None],
+    async def _consume_upload_queue(
+        queue: asyncio.Queue[UploadJob],
+        progress_tracker: _ProgressTracker,
     ) -> None:
-        async with limiter:
-            _LOGGER.debug("Starting upload of a new part")
+        while True:
             try:
-                await upload_coro
-                await report_done
+                part, upload = await queue.get()
+            except asyncio.QueueShutDown:
+                # Queue is empty, exit worker function
+                return
+
+            try:
+                await upload
             except ClientConnectionError as e:
+                _LOGGER.warning(
+                    "Encountered connection error while uploading part",
+                    exc_info=e,
+                )
+                queue.shutdown()
                 raise exceptions.ScalewayConnectionError from e
             except AwsUploadError as e:
-                _LOGGER.warning("Got exception while uploading part", exc_info=e)
+                _LOGGER.warning(
+                    "Encountered exception while uploading part", exc_info=e
+                )
+                queue.shutdown()
                 helpers.raise_for_status(e.status)
+
+            await progress_tracker.report_done(part)
+            queue.task_done()
+
+    @staticmethod
+    async def _clean_up_queue(queue: asyncio.Queue[UploadJob]) -> None:
+        while not queue.empty():
+            # Make sure we leave no dangling coroutines
+            try:
+                _, upload = queue.get_nowait()
+                upload.close()
+            except asyncio.QueueShutDown:
+                # Queue is already empty (likely due to a race condition)
+                return
 
     async def _upload_multipart_object(
         self,
@@ -314,38 +347,65 @@ class ScalewayBackupAgent(BackupAgent):
             ) as uploader:
                 stream = await open_stream()
 
-                # Limits how many parts we upload at once.
-                limiter = asyncio.Semaphore(MAX_PARALLEL_UPLOADS)
+                # Queue size is limited to avoid pre-reading the parts into memory faster than we
+                # can upload them.
+                queue: asyncio.Queue[UploadJob] = asyncio.Queue(maxsize=1)
+                workers: list[asyncio.Task[None]] = []
 
+                # Start our upload workers
+                for _ in range(MAX_PARALLEL_UPLOADS):
+                    worker = asyncio.create_task(
+                        self._consume_upload_queue(queue, progress_tracker)
+                    )
+                    workers.append(worker)
+
+                # Create all parts
+                upload: Coroutine[None, None, None]
                 try:
-                    async with asyncio.TaskGroup() as tg:
-                        async for part in self._read_fixed_sized_parts(
-                            stream, part_size=MULTIPART_PART_SIZE
-                        ):
-                            # Acquiring the semaphore here ensures that we don't read more than one
-                            # part ahead of the upload into memory.
-                            async with limiter:
-                                upload = uploader.put_part(
-                                    data=part.data,
-                                    content_sha256=part.digest,
-                                )
-                                tg.create_task(
-                                    self._perform_upload(
-                                        limiter,
-                                        upload,
-                                        report_done=progress_tracker.report_done(part),
-                                    ),
-                                    # Eagerly start the task to make sure it acquires the semaphore
-                                    eager_start=True,
-                                )
-                except* exceptions.ScalewayException as e:
-                    # Each part upload task could raise a ScalewayException.
-                    task_exceptions = list(helpers.unpack_exception_group(e))
-                    if len(task_exceptions) > 1:
-                        _LOGGER.warning(
-                            "Encountered multiple exceptions while uploading multipart upload parts, only re-reraising the first"
+                    async for part in self._read_fixed_sized_parts(
+                        stream, part_size=MULTIPART_PART_SIZE
+                    ):
+                        # Creating the upload (assigning a number), but not awaiting it yet
+                        upload = uploader.put_part(
+                            data=part.data,
+                            content_sha256=part.digest,
                         )
-                    raise task_exceptions[0] from None
+                        try:
+                            await queue.put((part, upload))
+                        except asyncio.QueueShutDown:
+                            # An upload failed so the queue was shut down by the worker.
+                            upload.close()
+                            for worker in workers:
+                                worker.cancel()
+                            break
+
+                    # All puts done, we can shut down the queue to signal workers
+                    queue.shutdown()
+                except Exception as e:
+                    # We couldn't finish reading the input.
+                    # Cancel the workers, clean up, then re-raise as integration exception.
+                    for worker in workers:
+                        worker.cancel()
+
+                    await self._clean_up_queue(queue)
+                    queue.shutdown()
+                    raise BackupReaderWriterError from e
+
+                done, pending = await asyncio.wait(
+                    workers, return_when=asyncio.FIRST_EXCEPTION
+                )
+
+                for worker in pending:
+                    # If any worker raised an exception, cancel the pending workers
+                    worker.cancel()
+
+                await self._clean_up_queue(queue)
+
+                for worker in done:
+                    # Raise the first exception we see
+                    if task_exception := worker.exception():
+                        raise task_exception
+
         except ClientConnectionError as e:
             raise exceptions.ScalewayConnectionError from e
         except AwsUploadError as e:
