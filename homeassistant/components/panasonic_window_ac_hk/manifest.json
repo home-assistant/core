@@ -1,0 +1,11 @@
+{
+  "domain": "panasonic_window_ac_hk",
+  "name": "Panasonic Window Air Conditioner (Hong Kong/Macau)",
+  "codeowners": ["@sam0737"],
+  "config_flow": true,
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/panasonic_window_ac_hk",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze"
+}
