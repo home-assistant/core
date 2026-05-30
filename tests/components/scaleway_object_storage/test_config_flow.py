@@ -112,16 +112,13 @@ async def test_no_conflict_with_similar_configuration(
     mock_config_entry: MockConfigEntry,
     valid_config: Mapping[str, Any],
     patched_config_entry: str,
-    patched_value: str | None,
+    patched_value: str,
 ) -> None:
     """Test that we can set up similar entries if the relevant fields change."""
     mock_config_entry.add_to_hass(hass)
 
     similar_config = dict(valid_config)
-    if patched_value is None:
-        del similar_config[patched_config_entry]
-    else:
-        similar_config[patched_config_entry] = patched_value
+    similar_config[patched_config_entry] = patched_value
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
