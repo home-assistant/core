@@ -279,7 +279,7 @@ async def test_server_missing_capbilities(
 async def test_oauth_discovery_flow_without_credentials(
     hass: HomeAssistant, mock_mcp_client: Mock
 ) -> None:
-    """Test for an OAuth discoveryflow for an MCP server where the user has not yet entered credentials."""
+    """Test OAuth discoveryflow when user has no credentials yet."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -299,8 +299,8 @@ async def test_oauth_discovery_flow_without_credentials(
         },
     )
 
-    # The config flow will abort and the user will be taken to the application credentials UI
-    # to enter their credentials.
+    # The config flow will abort and the user will be taken to the
+    # application credentials UI to enter their credentials.
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
 
@@ -478,7 +478,9 @@ async def test_authentication_flow(
             SCOPES_SUPPORTED,
         ),
         (
-            'Bearer error="invalid_token", resource_metadata="https://example.com/custom-discovery" scope="read write"',
+            'Bearer error="invalid_token",'
+            ' resource_metadata="https://example.com/custom-discovery"'
+            ' scope="read write"',
             "https://example.com/custom-discovery",
             ["read", "write"],
         ),
@@ -505,8 +507,9 @@ async def test_authentication_discovery_via_header(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    # MCP Server returns 401 when first trying to connect via config flow validate_input. The response
-    # value has a WWW-Authenticate header with a full URL for the resource metadata.
+    # MCP Server returns 401 when first trying to connect via config
+    # flow validate_input. The response value has a WWW-Authenticate
+    # header with a full URL for the resource metadata.
     mock_mcp_client.side_effect = httpx.HTTPStatusError(
         "Authentication required",
         request=None,
@@ -624,8 +627,9 @@ async def test_invalid_protected_resource_metadata(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    # MCP Server returns 401 when first trying to connect via config flow validate_input. The response
-    # value has a WWW-Authenticate header with a full URL for the resource metadata.
+    # MCP Server returns 401 when first trying to connect via config
+    # flow validate_input. The response value has a WWW-Authenticate
+    # header with a full URL for the resource metadata.
     resource_metadata_url = "https://example.com/custom-discovery"
     mock_mcp_client.side_effect = httpx.HTTPStatusError(
         "Authentication required",
@@ -633,7 +637,10 @@ async def test_invalid_protected_resource_metadata(
         response=httpx.Response(
             401,
             headers={
-                "WWW-Authenticate": f'Bearer error="invalid_token", resource_metadata="{resource_metadata_url}"',
+                "WWW-Authenticate": (
+                    'Bearer error="invalid_token",'
+                    f' resource_metadata="{resource_metadata_url}"'
+                ),
             },
         ),
     )

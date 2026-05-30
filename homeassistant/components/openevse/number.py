@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .helpers import openevse_exception_handler
 
 PARALLEL_UPDATES = 0
 
@@ -113,4 +114,5 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.entity_description.set_value_fn(self.coordinator.charger, value)
+        with openevse_exception_handler(value):
+            await self.entity_description.set_value_fn(self.coordinator.charger, value)

@@ -7,9 +7,7 @@ import pytest
 
 from homeassistant.components.fish_audio.const import (
     CONF_BACKEND,
-    CONF_LANGUAGE,
     CONF_LATENCY,
-    CONF_NAME,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
     CONF_TITLE,
@@ -18,7 +16,7 @@ from homeassistant.components.fish_audio.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -269,7 +267,8 @@ async def test_subflow_reconfigure_already_configured(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Try to reconfigure the first subentry to match the second one (which already exists)
+    # Try to reconfigure the first subentry to match the second
+    # one (which already exists)
     first_subentry = [
         s for s in mock_config_entry.subentries.values() if s.title == "Test Voice"
     ][0]

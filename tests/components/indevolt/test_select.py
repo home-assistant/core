@@ -116,7 +116,7 @@ async def test_select_unavailable_outdoor_portable(
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that entity is unavailable when device is in outdoor/portable mode (value 0)."""
+    """Test entity is unavailable in outdoor/portable mode (value 0)."""
 
     # Update mock data to fake outdoor/portable mode
     mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (
