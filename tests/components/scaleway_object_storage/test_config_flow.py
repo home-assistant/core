@@ -31,7 +31,7 @@ async def test_user_flow_happy_path(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -43,7 +43,7 @@ async def test_user_flow_happy_path(
             valid_config,
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ScalewayConfigFlow._generate_title(valid_config)
     assert result["data"] == valid_config
     assert len(mock_setup_entry.mock_calls) == 1
@@ -73,7 +73,7 @@ async def test_abort_if_already_configured(
             valid_config,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     # Still just one call for the original entry above
     assert mock_setup_entry.call_count == 1
@@ -102,7 +102,7 @@ async def test_abort_if_already_configured_no_prefix(
             dict(mock_config_entry_no_prefix.data),
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     # Still just one call for the original entry above
     assert mock_setup_entry.call_count == 1
@@ -139,7 +139,7 @@ async def test_no_conflict_with_similar_configuration(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -151,7 +151,7 @@ async def test_no_conflict_with_similar_configuration(
             similar_config,
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ScalewayConfigFlow._generate_title(similar_config)
     assert result["data"] == similar_config
     assert len(mock_setup_entry.mock_calls) == 2
@@ -190,7 +190,7 @@ async def test_form_failed_connection_check(
             valid_config,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {error_schema_key: error_code}
 
     # Make sure the config flow tests finish with either an
@@ -205,7 +205,7 @@ async def test_form_failed_connection_check(
             valid_config,
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ScalewayConfigFlow._generate_title(valid_config)
     assert result["data"] == valid_config
     assert len(mock_setup_entry.mock_calls) == 1
