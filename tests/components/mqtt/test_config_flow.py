@@ -46,6 +46,8 @@ from .common import (
     MOCK_CLIMATE_NO_TARGET_TEMP_SUBENTRY_DATA,
     MOCK_CLIMATE_SUBENTRY_DATA,
     MOCK_COVER_SUBENTRY_DATA,
+    MOCK_DATE_SUBENTRY_DATA,
+    MOCK_DATETIME_SUBENTRY_DATA,
     MOCK_FAN_SUBENTRY_DATA,
     MOCK_IMAGE_SUBENTRY_DATA_IMAGE_DATA,
     MOCK_IMAGE_SUBENTRY_DATA_IMAGE_URL,
@@ -66,6 +68,7 @@ from .common import (
     MOCK_SIREN_SUBENTRY_DATA,
     MOCK_SWITCH_SUBENTRY_DATA,
     MOCK_TEXT_SUBENTRY_DATA,
+    MOCK_TIME_SUBENTRY_DATA,
     MOCK_VALVE_SUBENTRY_DATA_POSITION,
     MOCK_VALVE_SUBENTRY_DATA_STATE,
     MOCK_WATER_HEATER_SUBENTRY_DATA,
@@ -127,6 +130,7 @@ MOCK_ENCRYPTED_CLIENT_KEY_DER = b"## mock DER formatted encrypted key file ##\n"
 
 MOCK_ENTRY_DATA = {
     mqtt.CONF_BROKER: "test-broker",
+    CONF_PROTOCOL: "5",
     CONF_PORT: 1234,
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
@@ -270,7 +274,7 @@ def mock_try_connection_time_out() -> Generator[MagicMock]:
     # Patch prevent waiting 5 sec for a timeout
     with (
         patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client,
-        patch("homeassistant.components.mqtt.config_flow.MQTT_TIMEOUT", 0),
+        patch("homeassistant.components.mqtt.client.MQTT_TIMEOUT", 0),
     ):
         mock_client().loop_start = lambda *args: 1
         yield mock_client()
@@ -1753,6 +1757,7 @@ async def test_step_hassio_reauth(
     mock_try_connection.assert_called_once_with(
         {
             "broker": "core-mosquitto",
+            CONF_PROTOCOL: "5",
             "port": 1883,
             "username": "mock-user",
             "password": "mock-pass",
@@ -3164,6 +3169,65 @@ async def test_migrate_of_incompatible_config_entry(
             id="cover",
         ),
         pytest.param(
+            MOCK_DATE_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Delivery day"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Delivery day",
+            id="date",
+        ),
+        pytest.param(
+            MOCK_DATETIME_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Maintenance service"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "timezone": "GMT",
+                "retain": False,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Maintenance service",
+            id="datetime",
+        ),
+        pytest.param(
             MOCK_FAN_SUBENTRY_DATA,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Breezer"},
@@ -3849,6 +3913,35 @@ async def test_migrate_of_incompatible_config_entry(
             ),
             "Milk notifier MOTD",
             id="text",
+        ),
+        pytest.param(
+            MOCK_TIME_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Happy hour"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Happy hour",
+            id="time",
         ),
         pytest.param(
             MOCK_VALVE_SUBENTRY_DATA_STATE,
@@ -5196,7 +5289,14 @@ async def test_subentry_reconfigure_update_device_properties(
         .schema["mqtt_settings"]
         .schema.schema.items()
     }
-    assert mqtt_settings_key_descriptions == {"qos": {"suggested_value": 2}}
+    assert mqtt_settings_key_descriptions == {
+        "qos": {
+            "suggested_value": 2,
+        },
+        "message_expiry_interval": {
+            "suggested_value": {"days": 0, "hours": 0, "minutes": 1, "seconds": 30}
+        },
+    }
     assert result["data_schema"].schema["mqtt_settings"].options == {"collapsed": False}
 
     # Update the device details
@@ -5209,7 +5309,15 @@ async def test_subentry_reconfigure_update_device_properties(
             "model_id": "bn003",
             "manufacturer": "Beer Masters",
             "configuration_url": "https://example.com",
-            "mqtt_settings": {"qos": 1},
+            "mqtt_settings": {
+                "qos": 1,
+                "message_expiry_interval": {
+                    "days": 0,
+                    "hours": 0,
+                    "minutes": 0,
+                    "seconds": 30,
+                },
+            },
         },
     )
     assert result["type"] is FlowResultType.MENU
@@ -5232,6 +5340,12 @@ async def test_subentry_reconfigure_update_device_properties(
     assert device["sw_version"] == "1.1"
     assert device["manufacturer"] == "Beer Masters"
     assert device["mqtt_settings"]["qos"] == 1
+    assert device["mqtt_settings"]["message_expiry_interval"] == {
+        "days": 0,
+        "hours": 0,
+        "minutes": 0,
+        "seconds": 30,
+    }
     assert "qos" not in device
 
 

@@ -96,6 +96,13 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
         if self.entity_description.always_available:
             return True
 
+        if self._host.api.is_battery:
+            return (
+                self._host.api.baichuan.login_sucess
+                and not self._host.api.baichuan.privacy_mode()
+                and super().available
+            )
+
         return (
             self._host.api.session_active
             and not self._host.api.baichuan.privacy_mode()

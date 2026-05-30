@@ -198,7 +198,8 @@
       'name_by_user': None,
     }),
     'id': '2pxfek1jjrtctiyglam',
-    'local_strategy': None,
+    'local_strategy': dict({
+    }),
     'mqtt_connected': True,
     'name': 'Multifunction alarm',
     'online': True,
@@ -388,7 +389,8 @@
       'name_by_user': None,
     }),
     'id': 'cwwk68dyfsh2eqi4jbqr',
-    'local_strategy': None,
+    'local_strategy': dict({
+    }),
     'mqtt_connected': True,
     'name': 'Gas sensor',
     'online': True,
@@ -539,7 +541,8 @@
       'name_by_user': None,
     }),
     'id': 'vrhdtr5fawoiyth9qdt',
-    'local_strategy': None,
+    'local_strategy': dict({
+    }),
     'mqtt_connected': True,
     'name': 'Framboisiers',
     'online': True,
@@ -682,7 +685,8 @@
           'name_by_user': None,
         }),
         'id': 'cwwk68dyfsh2eqi4jbqr',
-        'local_strategy': None,
+        'local_strategy': dict({
+        }),
         'name': 'Gas sensor',
         'online': True,
         'product_id': '4iqe2hsfyd86kwwc',
