@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.scaleway_object_storage import exceptions
 from homeassistant.components.scaleway_object_storage.config_flow import (
     ScalewayConfigFlow,
@@ -18,6 +17,7 @@ from homeassistant.components.scaleway_object_storage.const import (
     CONF_SECTION_CREDENTIALS,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -29,7 +29,7 @@ async def test_user_flow_happy_path(
 ) -> None:
     """Test the happy path of the initial setup flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
@@ -61,7 +61,7 @@ async def test_abort_if_already_configured(
     assert mock_setup_entry.call_count == 1
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -90,7 +90,7 @@ async def test_abort_if_already_configured_no_prefix(
     assert mock_setup_entry.call_count == 1
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -137,7 +137,7 @@ async def test_no_conflict_with_similar_configuration(
         similar_config[patched_config_entry] = patched_value
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
@@ -178,7 +178,7 @@ async def test_form_failed_connection_check(
 ) -> None:
     """Test we handle exceptions raised during connection check."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
