@@ -132,7 +132,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         platform.start_monitoring()
         hass.data[WIRELESSTAG_DATA] = platform
 
-        def _stop_monitoring(event: Event) -> None:
+        def _stop_monitoring(_event: Event) -> None:
             """Stop cloud push monitoring on Home Assistant shutdown."""
             platform.stop_monitoring()
 

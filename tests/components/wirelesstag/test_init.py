@@ -22,10 +22,10 @@ async def test_stop_monitoring_on_homeassistant_stop(hass: HomeAssistant) -> Non
         assert await async_setup_component(hass, "wirelesstag", CONFIG)
         await hass.async_block_till_done()
 
-        assert mock_api.start_monitoring.called
-        assert not mock_api.stop_monitoring.called
+        mock_api.start_monitoring.assert_called_once()
+        mock_api.stop_monitoring.assert_not_called()
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
 
-    assert mock_api.stop_monitoring.called
+    mock_api.stop_monitoring.assert_called_once()
