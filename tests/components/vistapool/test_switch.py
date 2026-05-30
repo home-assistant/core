@@ -157,10 +157,11 @@ async def test_switch_set_value_raises_on_api_error(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: "switch.my_pool_filtration"},
             blocking=True,
         )
+    assert excinfo.value.translation_key == "set_failed"
