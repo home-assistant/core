@@ -40,7 +40,7 @@ ATTR_END: Final = "end"
 ATTR_FROM: Final = "from"
 ATTR_TO: Final = "to"
 
-ATTR_ALL_DAYS: Final = {
+ATTR_ALL_DAYS: Final = [
     ATTR_MONDAY,
     ATTR_TUESDAY,
     ATTR_WEDNESDAY,
@@ -48,7 +48,7 @@ ATTR_ALL_DAYS: Final = {
     ATTR_FRIDAY,
     ATTR_SATURDAY,
     ATTR_SUNDAY,
-}
+]
 
 ScheduleEntry = TypedDict(
     "ScheduleEntry",
