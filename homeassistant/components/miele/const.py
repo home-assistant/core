@@ -175,6 +175,8 @@ class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     disinfecting = 285
     flex_load_active = 11047
     automatic_start = 11044
+    paused = 11052
+    cancelled = 11053
 
 
 class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
@@ -512,7 +514,9 @@ class DishWasherProgramId(MieleEnum, missing_to_none=True):
     tall_items = 17, 42
     glasses_warm = 19
     quick_intense = 21
-    normal = 30
+    normal = 23, 30
+    pre_wash = 24
+    pot_rests_and_filters = 25
     power_wash = 44, 204
     comfort_wash = 203
     comfort_wash_plus = 209

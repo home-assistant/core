@@ -1,0 +1,451 @@
+# serializer version: 1
+# name: test_all_entities[button.kiosker_a98be1ce_clear_cache-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.kiosker_a98be1ce_clear_cache',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clear cache',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clear cache',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clear_cache',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_clearCache',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_clear_cache-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kiosker A98BE1CE Clear cache',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kiosker_a98be1ce_clear_cache',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_clear_cookies-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.kiosker_a98be1ce_clear_cookies',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clear cookies',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clear cookies',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clear_cookies',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_clearCookies',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_clear_cookies-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kiosker A98BE1CE Clear cookies',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kiosker_a98be1ce_clear_cookies',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_dismiss_screensaver-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.kiosker_a98be1ce_dismiss_screensaver',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dismiss screensaver',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dismiss screensaver',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'screensaver_interact',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_screensaverInteract',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_dismiss_screensaver-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kiosker A98BE1CE Dismiss screensaver',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kiosker_a98be1ce_dismiss_screensaver',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_go_back-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.kiosker_a98be1ce_go_back',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Go back',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Go back',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'navigate_backward',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_navigateBackward',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_go_back-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kiosker A98BE1CE Go back',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kiosker_a98be1ce_go_back',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_go_forward-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.kiosker_a98be1ce_go_forward',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Go forward',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Go forward',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'navigate_forward',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_navigateForward',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_go_forward-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kiosker A98BE1CE Go forward',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kiosker_a98be1ce_go_forward',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_go_home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.kiosker_a98be1ce_go_home',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Go home',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Go home',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'navigate_home',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_navigateHome',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_go_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kiosker A98BE1CE Go home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kiosker_a98be1ce_go_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_ping-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.kiosker_a98be1ce_ping',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ping',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ping',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ping',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_ping',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_ping-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kiosker A98BE1CE Ping',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kiosker_a98be1ce_ping',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_print_page-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.kiosker_a98be1ce_print_page',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Print page',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Print page',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'print',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_print',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_print_page-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kiosker A98BE1CE Print page',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kiosker_a98be1ce_print_page',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_refresh_page-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.kiosker_a98be1ce_refresh_page',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Refresh page',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Refresh page',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'navigate_refresh',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_navigateRefresh',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_refresh_page-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kiosker A98BE1CE Refresh page',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kiosker_a98be1ce_refresh_page',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

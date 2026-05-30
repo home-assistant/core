@@ -279,7 +279,8 @@ class StateVacuumEntity(
             # Don't report usage until after entity added to hass, after init
             report_usage(
                 f"is setting the battery supported feature which has been deprecated."
-                f" Integration {self.platform.platform_name} should remove this as part of migrating"
+                f" Integration {self.platform.platform_name}"
+                " should remove this as part of migrating"
                 " the battery level and icon to a sensor",
                 core_behavior=ReportBehavior.LOG,
                 core_integration_behavior=ReportBehavior.IGNORE,

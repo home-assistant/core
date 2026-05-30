@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import TEST_DEVICE_1, TEST_DEVICE_1_SN
+from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 

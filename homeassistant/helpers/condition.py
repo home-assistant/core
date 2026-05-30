@@ -813,7 +813,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
         if lower_limit is None or upper_limit is None:
             # Entity not found or invalid number, don't trigger
             return False
-        between = lower_limit < value < upper_limit
+        between = lower_limit <= value <= upper_limit
         if self._threshold_type == NumericThresholdType.BETWEEN:
             return between
         return not between
@@ -1748,9 +1748,14 @@ def state_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType
 
 
 async def async_validate_condition_config(
-    hass: HomeAssistant, config: ConfigType
+    hass: HomeAssistant, config: ConfigType | str
 ) -> ConfigType:
     """Validate config."""
+    if isinstance(config, str):
+        config = {
+            CONF_CONDITION: "template",
+            CONF_VALUE_TEMPLATE: cv.dynamic_template(config),
+        }
     condition_key: str = config[CONF_CONDITION]
 
     if condition_key in ("and", "not", "or"):

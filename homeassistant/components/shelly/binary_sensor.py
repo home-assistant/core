@@ -348,6 +348,11 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         entity_class=RpcPresenceBinarySensor,
     ),
+    "occupancy": RpcBinarySensorDescription(
+        key="occupancy",
+        sub_key="value",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+    ),
     "cury_tilt": RpcBinarySensorDescription(
         key="cury",
         sub_key="errors",

@@ -149,6 +149,17 @@ THREAD_ROUTING_ROLE_MAP = {
     clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnknownEnumValue: "unknown",
 }
 
+BOOT_REASON_MAP = {
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kUnspecified: "unspecified",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kPowerOnReboot: "power_on_reboot",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kBrownOutReset: "brown_out_reset",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kSoftwareWatchdogReset: "software_watchdog_reset",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kHardwareWatchdogReset: "hardware_watchdog_reset",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kSoftwareUpdateCompleted: "software_update_completed",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kSoftwareReset: "software_reset",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kUnknownEnumValue: None,
+}
+
 BOOST_STATE_MAP = {
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive: "active",
@@ -174,7 +185,9 @@ ESA_STATE_MAP = {
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOffline: "offline",
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline: "online",
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kFault: "fault",
-    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: "power_adjust_active",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: (
+        "power_adjust_active"
+    ),
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused: "paused",
 }
 
@@ -437,6 +450,19 @@ DISCOVERY_SCHEMAS = [
             clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
         ),
         allow_multi=True,  # also used for climate entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SoilMoistureSensor",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.MOISTURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.SoilMeasurement.Attributes.SoilMoistureMeasuredValue,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1636,5 +1662,47 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.NetworkName,),
+    ),
+    # GeneralDiagnostics cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="GeneralDiagnosticsRebootCount",
+            translation_key="reboot_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.GeneralDiagnostics.Attributes.RebootCount,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="GeneralDiagnosticsUpTime",
+            translation_key="uptime",
+            device_class=SensorDeviceClass.UPTIME,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            device_to_ha=lambda uptime: dt_util.utcnow() - timedelta(seconds=uptime),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.GeneralDiagnostics.Attributes.UpTime,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="GeneralDiagnosticsBootReason",
+            translation_key="boot_reason",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            options=[
+                reason for reason in BOOT_REASON_MAP.values() if reason is not None
+            ],
+            device_to_ha=BOOT_REASON_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.GeneralDiagnostics.Attributes.BootReason,),
     ),
 ]
