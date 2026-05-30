@@ -132,7 +132,7 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data.update(
             {
                 "station": self.stations[user_input[CONF_STATION]].model_dump(
-                    exclude_none=True
+                    mode="json", exclude_none=True
                 )
             }
         )
@@ -187,7 +187,7 @@ class OptionsFlowHandler(OptionsFlow):
                 errors["base"] = "cannot_connect"
             else:
                 self.departure_filters = {
-                    str(i): f.model_dump(exclude_none=True)
+                    str(i): f.model_dump(mode="json", exclude_none=True)
                     for i, f in enumerate(departure_list.filter or [])
                 }
 
