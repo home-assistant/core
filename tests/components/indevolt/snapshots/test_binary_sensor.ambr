@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'unknown',
   })
 # ---
 # name: test_binary_sensor[1][binary_sensor.bk1600_meter_connected-entry]

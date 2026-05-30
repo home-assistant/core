@@ -4,7 +4,12 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from indevolt_api import IndevoltBattery, IndevoltConfig, IndevoltEnergyMode
+from indevolt_api import (
+    IndevoltBattery,
+    IndevoltConfig,
+    IndevoltEnergyMode,
+    IndevoltSystem,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -127,10 +132,10 @@ async def test_inverter_sensor_temperature_availability(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    # Default fixture reports a valid temperature (35.2), sensor should be available
+    # Default fixture reports a valid temperature (35.2) with heating off, sensor should be available
     assert hass.states.get("sensor.bk1600_inverter_temperature").state == "35.2"
 
-    # Set temperature to 0 - sensor should become unavailable
+    # Set temperature to 0 with heating off - sensor should become unavailable
     mock_indevolt.fetch_data.return_value[
         IndevoltBattery.GEN_1_INVERTER_TEMPERATURE
     ] = 0
@@ -143,15 +148,13 @@ async def test_inverter_sensor_temperature_availability(
         hass.states.get("sensor.bk1600_inverter_temperature").state == STATE_UNAVAILABLE
     )
 
-    # Switch back to a valid temperature, sensor should be available again
-    mock_indevolt.fetch_data.return_value[
-        IndevoltBattery.GEN_1_INVERTER_TEMPERATURE
-    ] = 40
+    # Switch heating on, sensor should be available again with value 0
+    mock_indevolt.fetch_data.return_value[IndevoltSystem.HEATING_STATE] = 1000
     freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.bk1600_inverter_temperature").state == "40"
+    assert hass.states.get("sensor.bk1600_inverter_temperature").state == "0"
 
 
 # In individual tests, you can override the mock behavior
