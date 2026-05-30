@@ -27,6 +27,24 @@
       "message": "Could not determine the camera serial number."
     }
   },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release.\n\nWhile importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the `{domain}:` key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release.\n\nWhile importing your configuration, invalid authentication details were found. Please correct your YAML configuration and restart Home Assistant, or remove the `{domain}:` key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::amcrest::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "deprecated_yaml_import_issue_no_serial_number": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release.\n\nWhile importing your configuration, the camera serial number could not be determined. Please correct your YAML configuration and restart Home Assistant, or remove the `{domain}:` key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::amcrest::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release.\n\nWhile importing your configuration, an unexpected error occurred. Please check your YAML configuration and restart Home Assistant, or remove the `{domain}:` key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::amcrest::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    }
+  },
   "services": {
     "disable_audio": {
       "description": "Disables audio stream.",

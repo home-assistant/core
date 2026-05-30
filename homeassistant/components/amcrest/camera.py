@@ -13,7 +13,7 @@ from haffmpeg.camera import CameraMjpeg
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
@@ -22,19 +22,13 @@ from homeassistant.helpers.aiohttp_client import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_COLOR_BW,
     CAMERA_WEB_SESSION_TIMEOUT,
     CBW,
     COMM_TIMEOUT,
-    DATA_AMCREST,
-    DEVICES,
     MOV,
     RESOLUTION_TO_STREAM,
     SERVICE_UPDATE,
@@ -75,23 +69,6 @@ async def async_setup_entry(
         device_info=device.device_info,
         unique_id=unique_id,
     )
-    async_add_entities([entity], True)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up an Amcrest IP Camera."""
-    if discovery_info is None:
-        return
-
-    name = discovery_info[CONF_NAME]
-    device = hass.data[DATA_AMCREST][DEVICES][name]
-    entity = AmcrestCam(name, device, get_ffmpeg_manager(hass))
-
     async_add_entities([entity], True)
 
 

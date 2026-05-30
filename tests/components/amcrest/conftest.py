@@ -1,6 +1,7 @@
 """Common fixtures for the Amcrest tests."""
 
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
+from contextlib import contextmanager
 import threading
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -85,6 +86,27 @@ def setup_mock_amcrest_checker(mock_class: MagicMock) -> MagicMock:
     )
     mock_class.return_value = api
     return api
+
+
+@contextmanager
+def patch_amcrest_checker(
+    *,
+    side_effect: Callable[..., MagicMock] | None = None,
+) -> Generator[MagicMock]:
+    """Patch AmcrestChecker in both integration and config flow modules."""
+    mock_checker = MagicMock()
+    with (
+        patch("homeassistant.components.amcrest.AmcrestChecker", mock_checker),
+        patch(
+            "homeassistant.components.amcrest.config_flow.AmcrestChecker",
+            mock_checker,
+        ),
+    ):
+        if side_effect is not None:
+            mock_checker.side_effect = side_effect
+        else:
+            setup_mock_amcrest_checker(mock_checker)
+        yield mock_checker
 
 
 @pytest.fixture

@@ -7,16 +7,13 @@ from typing import TYPE_CHECKING
 from amcrest import AmcrestError
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
+from .const import SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
+from .entry_options import get_sensor_keys
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
@@ -58,6 +55,14 @@ async def async_setup_entry(
     name = device.name
     serial = device.serial_number
 
+    if (keys := get_sensor_keys(config_entry)) is not None:
+        key_set = set(keys)
+        descriptions = [
+            description for description in SENSOR_TYPES if description.key in key_set
+        ]
+    else:
+        descriptions = list(SENSOR_TYPES)
+
     entities = [
         AmcrestSensor(
             name,
@@ -65,32 +70,9 @@ async def async_setup_entry(
             description,
             unique_id=f"{serial}-{description.key}-{device.channel}",
         )
-        for description in SENSOR_TYPES
+        for description in descriptions
     ]
     async_add_entities(entities, True)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up a sensor for an Amcrest IP Camera."""
-    if discovery_info is None:
-        return
-
-    name = discovery_info[CONF_NAME]
-    device = hass.data[DATA_AMCREST][DEVICES][name]
-    sensors = discovery_info[CONF_SENSORS]
-    async_add_entities(
-        [
-            AmcrestSensor(name, device, description)
-            for description in SENSOR_TYPES
-            if description.key in sensors
-        ],
-        True,
-    )
 
 
 class AmcrestSensor(SensorEntity):

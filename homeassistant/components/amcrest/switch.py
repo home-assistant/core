@@ -6,15 +6,10 @@ from typing import TYPE_CHECKING, Any
 from amcrest import AmcrestError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import CONF_NAME, CONF_SWITCHES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_AMCREST, DEVICES
+from .entry_options import get_switch_keys
 from .helpers import log_update_error
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +40,14 @@ async def async_setup_entry(
     name = device.name
     serial = device.serial_number
 
+    if (keys := get_switch_keys(config_entry)) is not None:
+        key_set = set(keys)
+        descriptions = [
+            description for description in SWITCH_TYPES if description.key in key_set
+        ]
+    else:
+        descriptions = list(SWITCH_TYPES)
+
     entities = [
         AmcrestSwitch(
             name,
@@ -52,32 +55,9 @@ async def async_setup_entry(
             description,
             unique_id=f"{serial}-{description.key}-{device.channel}",
         )
-        for description in SWITCH_TYPES
+        for description in descriptions
     ]
     async_add_entities(entities, True)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up amcrest platform switches."""
-    if discovery_info is None:
-        return
-
-    name = discovery_info[CONF_NAME]
-    device = hass.data[DATA_AMCREST][DEVICES][name]
-    switches = discovery_info[CONF_SWITCHES]
-    async_add_entities(
-        [
-            AmcrestSwitch(name, device, description)
-            for description in SWITCH_TYPES
-            if description.key in switches
-        ],
-        True,
-    )
 
 
 class AmcrestSwitch(SwitchEntity):
