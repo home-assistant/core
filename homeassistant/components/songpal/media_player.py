@@ -25,10 +25,10 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -45,6 +45,59 @@ PARAM_VALUE = "value"
 
 INITIAL_RETRY_DELAY = 10
 ZONE_UNIQUE_ID_SEPARATOR = "_zone_"
+
+
+def _zone_unique_id(device_unique_id: str, zone_uri: str) -> str:
+    """Return zone unique ID derived from the device unique ID and zone URI."""
+    zone_id = re.sub(r"[^A-Za-z0-9]", "_", zone_uri)
+    return f"{device_unique_id}{ZONE_UNIQUE_ID_SEPARATOR}{zone_id}"
+
+
+async def _async_migrate_legacy_entity_to_first_zone(
+    hass: HomeAssistant,
+    device: Device,
+    zones: list,
+) -> None:
+    """Migrate old single-entity Songpal unique ID to first discovered zone."""
+    if not zones:
+        return
+
+    try:
+        sysinfo = await device.get_system_info()
+    except SongpalException as ex:
+        _LOGGER.debug("Unable to fetch system info for migration: %s", ex)
+        return
+
+    device_unique_id = sysinfo.macAddr or sysinfo.wirelessMacAddr
+    if device_unique_id is None:
+        return
+
+    entity_registry = er.async_get(hass)
+    old_entity_id = entity_registry.async_get_entity_id(
+        Platform.MEDIA_PLAYER,
+        DOMAIN,
+        device_unique_id,
+    )
+    if old_entity_id is None:
+        return
+
+    first_zone_unique_id = _zone_unique_id(device_unique_id, zones[0].uri)
+    existing_zone_entity_id = entity_registry.async_get_entity_id(
+        Platform.MEDIA_PLAYER,
+        DOMAIN,
+        first_zone_unique_id,
+    )
+    if existing_zone_entity_id and existing_zone_entity_id != old_entity_id:
+        _LOGGER.debug(
+            "Skipping Songpal entity migration due to unique ID conflict: %s",
+            first_zone_unique_id,
+        )
+        return
+
+    entity_registry.async_update_entity(
+        old_entity_id,
+        new_unique_id=first_zone_unique_id
+    )
 
 
 async def async_setup_platform(
@@ -89,6 +142,7 @@ async def async_setup_entry(
         return
 
     if zones:
+        await _async_migrate_legacy_entity_to_first_zone(hass, device, zones)
         async_add_entities(
             [SongpalZoneEntity(name, device, zone.uri, zone.title) for zone in zones],
             True,
@@ -103,7 +157,7 @@ class SongpalEntity(MediaPlayerEntity):
 
     _attr_should_poll = False
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
-    _attr_supported_features = (
+    _attr_supported_features: MediaPlayerEntityFeature | None = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -115,7 +169,7 @@ class SongpalEntity(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, name, device):
+    def __init__(self, name, device) -> None:
         """Init."""
         self._name = name
         self._dev = device
@@ -137,14 +191,19 @@ class SongpalEntity(MediaPlayerEntity):
         self._sources = {}
         self._active_sound_mode = None
         self._sound_modes = {}
+        self._manage_notifications = True
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to hass."""
-        await self.async_activate_websocket()
+        if self._manage_notifications:
+            await self.async_activate_websocket()
+        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        await self._dev.stop_listen_notifications()
+        if self._manage_notifications:
+            await self._dev.stop_listen_notifications()
+        await super().async_will_remove_from_hass()
 
     async def _get_sound_modes_info(self):
         """Get available sound modes and the active one."""
@@ -443,33 +502,28 @@ class SongpalZoneEntity(SongpalEntity):
     """Class representing a Songpal zone as a media player entity."""
 
     _attr_should_poll = True
-    _attr_supported_features = (
+    _attr_name: str | None = None
+    _attr_supported_features: MediaPlayerEntityFeature | None = (
         MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
     )
 
-    def __init__(self, name, device, zone_uri: str, zone_title: str):
+    def __init__(self, name, device, zone_uri: str, zone_title: str) -> None:
         """Initialize zone entity."""
         super().__init__(name, device)
         self._zone_uri = zone_uri
         self._zone_title = zone_title
         self._zone = None
         self._attr_name = zone_title
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity is added to hass."""
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
+        self._manage_notifications = False
 
     @property
     def unique_id(self):
         """Return a unique ID for this zone entity."""
         if self._device_unique_id is None:
             return None
-        zone_id = re.sub(r"[^A-Za-z0-9]", "_", self._zone_uri)
-        return f"{self._device_unique_id}{ZONE_UNIQUE_ID_SEPARATOR}{zone_id}"
+        return _zone_unique_id(self._device_unique_id, self._zone_uri)
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
@@ -553,7 +607,16 @@ class SongpalZoneEntity(SongpalEntity):
 
             self._attr_available = True
         except SongpalException as ex:
-            _LOGGER.error("Unable to update zone %s: %s", self._zone_title, ex)
+            if (
+                "Cannot connect to host" in str(ex) or "Request timeout" in str(ex)
+            ) and not self._attr_available:
+                _LOGGER.debug(
+                    "Got expected exception when updating zone %s: %s",
+                    self._zone_title,
+                    ex,
+                )
+            else:
+                _LOGGER.error("Unable to update zone %s: %s", self._zone_title, ex)
             self._attr_available = False
 
     async def async_select_source(self, source: str) -> None:
