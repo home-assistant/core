@@ -121,7 +121,7 @@ async def test_set_schedule_errors(
     """Test sensor entity state and registry data."""
     await setup_with_selected_platforms(hass, mock_config_entry)
 
-    # voloptuous schema should catch invalid time formats and missing start/end pairs
+    # voloptuous schema should catch invalid time formats and incorrect data
     with pytest.raises(vol.Invalid, match="Invalid time specified"):
         await hass.services.async_call(
             DOMAIN,
@@ -133,6 +133,29 @@ async def test_set_schedule_errors(
             blocking=True,
         )
 
+    with pytest.raises(vol.Invalid, match="expected a list for dictionary value"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_schedule",
+            {
+                "entity_id": ENTITY_ID,
+                "monday": {"from": "08:00", "to": "24:01"},
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(vol.Invalid, match="expected a list for dictionary value"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_schedule",
+            {
+                "entity_id": ENTITY_ID,
+                "monday": "08:00-17:00",
+            },
+            blocking=True,
+        )
+
+    # Errors not caught by voluptous schema
     with pytest.raises(ServiceValidationError, match="Missing from/to in entry"):
         await hass.services.async_call(
             DOMAIN,
@@ -140,6 +163,41 @@ async def test_set_schedule_errors(
             {
                 "entity_id": ENTITY_ID,
                 "monday": [{"from": "08:00"}],
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(
+        ServiceValidationError, match="maximum of 4 schedule entries is supported"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_schedule",
+            {
+                "entity_id": ENTITY_ID,
+                "monday": [
+                    {"from": "08:00", "to": "10:00"},
+                    {"from": "10:00", "to": "12:00"},
+                    {"from": "12:00", "to": "14:00"},
+                    {"from": "14:00", "to": "16:00"},
+                    {"from": "16:00", "to": "18:00"},
+                ],
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(
+        ServiceValidationError, match="Overlapping times found in schedule"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_schedule",
+            {
+                "entity_id": ENTITY_ID,
+                "monday": [
+                    {"from": "12:00", "to": "14:00"},
+                    {"from": "10:00", "to": "16:00"},
+                ],
             },
             blocking=True,
         )
