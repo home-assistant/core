@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from httpx import ConnectError, HTTPError, InvalidURL
@@ -43,6 +44,8 @@ PLATFORMS: list[Platform] = [
     Platform.CAMERA,
     Platform.SENSOR,
 ]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) -> bool:
@@ -102,7 +105,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 password,
             )
             try:
-                info = await api.get_info()
+                async with asyncio.timeout(REQUEST_TIMEOUT):
+                    info = await api.get_info()
             except InvalidAuth:
                 # We are unable to reach the new API which usually means
                 # that the user is running an outdated firmware version
@@ -161,6 +165,21 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     serial = info_data.get("serial")
 
             if serial:
+                if any(
+                    existing_entry.entry_id != config_entry.entry_id
+                    and existing_entry.unique_id == serial
+                    for existing_entry in hass.config_entries.async_entries(DOMAIN)
+                ):
+                    _LOGGER.warning(
+                        "Skipping PrusaLink unique ID migration for config entry %s because another PrusaLink config entry already uses the target unique ID",
+                        config_entry.entry_id,
+                    )
+                    if update_data:
+                        hass.config_entries.async_update_entry(
+                            config_entry, **update_data
+                        )
+                    return True
+
                 old_prefix = f"{config_entry.entry_id}_"
                 new_prefix = f"{serial}_"
 

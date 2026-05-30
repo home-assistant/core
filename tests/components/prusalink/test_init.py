@@ -150,6 +150,29 @@ async def test_migration_keeps_minor_2_on_transient_info_failures(
     assert entry.minor_version == 2
 
 
+async def test_migration_from_1_1_to_1_2_times_out(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from version 1 keeps retry state on timeout."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://prusaxl.local",
+            CONF_API_KEY: "api-key",
+        },
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch("pyprusalink.PrusaLink.get_info", side_effect=TimeoutError()):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.minor_version == 1
+    assert entry.unique_id is None
+
+
 async def test_migration_from_1_2_to_1_3_migrates_entity_and_device_ids(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -249,6 +272,63 @@ async def test_migration_ignores_devices_without_old_identifier(
     assert refreshed_device.identifiers == {(DOMAIN, "already-serial")}
     assert entry.unique_id == "serial-1337"
     assert entry.minor_version == 3
+
+
+async def test_migration_skips_when_serial_is_already_used_by_another_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration keeps retry state when another entry already uses the serial."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://existing.example.com",
+            CONF_USERNAME: "dummy",
+            CONF_PASSWORD: "dummypw",
+        },
+        unique_id="serial-1337",
+        version=1,
+        minor_version=3,
+    )
+    existing_entry.add_to_hass(hass)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://example.com",
+            CONF_USERNAME: "dummy",
+            CONF_PASSWORD: "dummypw",
+        },
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    old_unique_id = f"{entry.entry_id}_printer.status_connect"
+    old_entity = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        old_unique_id,
+        suggested_object_id="printer_status_connect",
+        config_entry=entry,
+    )
+    old_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    migrated_entity = entity_registry.async_get(old_entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.unique_id == old_unique_id
+
+    refreshed_device = device_registry.async_get(old_device.id)
+    assert refreshed_device is not None
+    assert refreshed_device.identifiers == {(DOMAIN, entry.entry_id)}
+    assert entry.unique_id is None
+    assert entry.minor_version == 2
 
 
 async def test_unloading(
