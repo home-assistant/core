@@ -3,6 +3,9 @@
 from typing import Any
 from unittest.mock import patch
 
+from httpx import HTTPError, InvalidURL
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.prusalink.config_flow import InvalidAuth
 from homeassistant.components.prusalink.const import DOMAIN
@@ -247,9 +250,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [HTTPError("request failed"), InvalidURL("bad url")],
+)
 async def test_form_cannot_connect_get_info(
     hass: HomeAssistant,
     mock_version_api: dict[str, str],
+    exception: Exception,
 ) -> None:
     """Test we handle cannot connect error from info endpoint."""
     result = await hass.config_entries.flow.async_init(
@@ -258,7 +266,7 @@ async def test_form_cannot_connect_get_info(
 
     with patch(
         "homeassistant.components.prusalink.config_flow.PrusaLink.get_info",
-        side_effect=TimeoutError,
+        side_effect=exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

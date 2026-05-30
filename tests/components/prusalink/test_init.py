@@ -213,6 +213,44 @@ async def test_migration_from_1_2_to_1_3_migrates_entity_and_device_ids(
     )
 
 
+async def test_migration_ignores_devices_without_old_identifier(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test migration skips unrelated devices on the same config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://example.com",
+            CONF_USERNAME: "dummy",
+            CONF_PASSWORD: "dummypw",
+        },
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    migrated_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+    )
+    unrelated_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "already-serial")},
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    refreshed_migrated_device = device_registry.async_get(migrated_device.id)
+    refreshed_device = device_registry.async_get(unrelated_device.id)
+    assert refreshed_migrated_device is not None
+    assert refreshed_migrated_device.identifiers == {(DOMAIN, "serial-1337")}
+    assert refreshed_device is not None
+    assert refreshed_device.identifiers == {(DOMAIN, "already-serial")}
+    assert entry.unique_id == "serial-1337"
+    assert entry.minor_version == 3
+
+
 async def test_unloading(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
