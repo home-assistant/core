@@ -2,7 +2,7 @@
 
 from datetime import datetime, time, timedelta
 import logging
-from typing import Final, TypedDict
+from typing import Final, TypedDict, cast
 
 import voluptuous as vol
 
@@ -17,6 +17,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .climate import MAX_TEMP, MIN_TEMP
 from .const import DOMAIN
@@ -33,7 +34,7 @@ ATTR_THURSDAY: Final = "thursday"
 ATTR_FRIDAY: Final = "friday"
 ATTR_SATURDAY: Final = "saturday"
 ATTR_SUNDAY: Final = "sunday"
-ATTR_DELETE: Final = "delete"
+ATTR_DATA: Final = "data"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_FROM: Final = "from"
@@ -49,12 +50,15 @@ ATTR_ALL_DAYS: Final = {
     ATTR_SUNDAY,
 }
 
-
-class DaySchedule(TypedDict, total=False):
-    """A single day's schedule payload."""
-
-    schedule: list[dict[str, time]]
-    delete: bool
+ScheduleEntry = TypedDict(
+    "ScheduleEntry",
+    {
+        "from": time,
+        "to": time,
+        "data": object,
+    },
+    total=False,
+)
 
 
 def _validate_half_precision(value: float) -> float:
@@ -72,20 +76,14 @@ def _validate_half_precision(value: float) -> float:
 
 
 def _validate_cometblue_schedule(
-    day_schedule: DaySchedule,
+    schedule: list[ScheduleEntry],
 ) -> dict[str, time] | None:
     """Validate day schedule time ranges.
 
     Ensure they have no overlap and the end time is greater than the start time.
     """
-    if day_schedule.get(ATTR_DELETE):
+    if isinstance(schedule, list) and len(schedule) == 0:
         return {}
-
-    schedule = day_schedule.get(ATTR_SCHEDULE, [])
-
-    if not schedule:
-        return None
-
     if len(schedule) > 4:
         raise ServiceValidationError("A maximum of 4 schedule entries is supported")
 
@@ -97,14 +95,11 @@ def _validate_cometblue_schedule(
     normalized_schedule: dict[str, time] = {}
     previous_to: time | None = None
     for i, entry in enumerate(schedule, start=1):
-        if ATTR_FROM not in entry or ATTR_TO not in entry:
-            curr_keys = {ATTR_FROM, ATTR_TO}.intersection(entry)
-            raise ServiceValidationError(
-                f"Missing from/to entry, only received {', '.join(repr(c) for c in curr_keys)}"
-            )
+        start = entry.get(ATTR_FROM)
+        end = entry.get(ATTR_TO)
 
-        start = entry[ATTR_FROM]
-        end = entry[ATTR_TO]
+        if start is None or end is None:
+            raise ServiceValidationError("Missing from/to in entry")
 
         # Check if the start time of the current event is before the end time of the current event
         if start >= end:
@@ -118,8 +113,8 @@ def _validate_cometblue_schedule(
                 f"Overlapping times found in schedule, {start} is earlier than previous entry {previous_to} ends"
             )
 
-        normalized_schedule[f"{ATTR_FROM}{i}"] = start
-        normalized_schedule[f"{ATTR_TO}{i}"] = end
+        normalized_schedule[f"{ATTR_START}{i}"] = start
+        normalized_schedule[f"{ATTR_END}{i}"] = end
         previous_to = end
 
     return normalized_schedule
@@ -128,12 +123,14 @@ def _validate_cometblue_schedule(
 SCHEDULE_ENTRY_SCHEMA = {
     vol.Optional(ATTR_FROM): cv.time,
     vol.Optional(ATTR_TO): cv.time,
+    # allow arbitrary data (will be ignored), e.g. from schedule.get_schedule
+    vol.Optional(ATTR_DATA): object,
 }
 SCHEDULE_DAY_SCHEMA = vol.All(
-    {
-        vol.Optional(ATTR_SCHEDULE): [SCHEDULE_ENTRY_SCHEMA],
-        vol.Optional(ATTR_DELETE): cv.boolean,
-    },
+    vol.Any(
+        [],
+        [SCHEDULE_ENTRY_SCHEMA],
+    ),
     _validate_cometblue_schedule,
 )
 SERVICE_SCHEDULE_SCHEMA = {
@@ -154,10 +151,30 @@ async def get_schedule(
     entity: CometBlueBluetoothEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """Service call to retrieve the schedule from the device."""
-    return await entity.coordinator.send_command(
-        entity.coordinator.device.get_multiple_async,
-        {"values": ["weekdays"]},
+    device_schedule = cast(
+        dict[str, dict[str, str] | None],
+        await entity.coordinator.send_command(
+            entity.coordinator.device.get_multiple_async,
+            {"values": ["weekdays"]},
+        ),
     )
+
+    week_schedule: JsonObjectType = {}
+    for day in ATTR_ALL_DAYS:
+        day_schedule = device_schedule.get(day, {})
+        if day_schedule:
+            curr_day_schedule: JsonArrayType = [
+                {
+                    ATTR_FROM: start,
+                    ATTR_TO: end,
+                }
+                for i in range(1, 5)
+                if (start := day_schedule.get(f"{ATTR_START}{i}")) is not None
+                and (end := day_schedule.get(f"{ATTR_END}{i}")) is not None
+            ]
+            week_schedule[day] = curr_day_schedule
+
+    return week_schedule
 
 
 async def set_schedule(

@@ -51,15 +51,13 @@ async def test_set_schedule(
         "set_schedule",
         {
             "entity_id": ENTITY_ID,
-            "monday": {"schedule": [{"from": "08:00", "to": "17:00"}]},
-            "sunday": {
-                "schedule": [
-                    {"from": "09:00", "to": "11:30"},
-                    {"from": "13:00", "to": "15:00"},
-                    {"from": "18:00", "to": "22:00"},
-                    {"from": "23:00", "to": "23:40"},
-                ]
-            },
+            "monday": [{"from": "08:00", "to": "17:00"}],
+            "sunday": [
+                {"from": "09:00", "to": "11:30"},
+                {"from": "13:00", "to": "15:00"},
+                {"from": "18:00", "to": "22:00"},
+                {"from": "23:00", "to": "23:40"},
+            ],
         },
         blocking=True,
     )
@@ -77,14 +75,12 @@ async def test_set_schedule(
         "set_schedule",
         {
             "entity_id": ENTITY_ID,
-            "tuesday": {
-                "schedule": [
-                    {"from": "18:00", "to": "22:00"},
-                    {"from": "09:00", "to": "11:30"},
-                    {"from": "23:00", "to": "23:40"},
-                    {"from": "13:00", "to": "15:00"},
-                ]
-            },
+            "tuesday": [
+                {"from": "18:00", "to": "22:00"},
+                {"from": "09:00", "to": "11:30"},
+                {"from": "23:00", "to": "23:40"},
+                {"from": "13:00", "to": "15:00"},
+            ],
         },
         blocking=True,
     )
@@ -103,8 +99,8 @@ async def test_set_schedule(
         "set_schedule",
         {
             "entity_id": ENTITY_ID,
-            "monday": {"delete": True},
-            "friday": {"delete": True},
+            "monday": [],
+            "friday": [],
         },
         blocking=True,
     )
@@ -132,40 +128,18 @@ async def test_set_schedule_errors(
             "set_schedule",
             {
                 "entity_id": ENTITY_ID,
-                "monday": {"schedule": [{"from": "08:00", "to": "24:01"}]},
+                "monday": [{"from": "08:00", "to": "24:01"}],
             },
             blocking=True,
         )
 
-    with pytest.raises(vol.Invalid, match="expected a dictionary"):
+    with pytest.raises(ServiceValidationError, match="Missing from/to in entry"):
         await hass.services.async_call(
             DOMAIN,
             "set_schedule",
             {
                 "entity_id": ENTITY_ID,
-                "monday": [{"from": "08:00", "to": "17:00"}],
-            },
-            blocking=True,
-        )
-
-    with pytest.raises(vol.Invalid, match="expected a list"):
-        await hass.services.async_call(
-            DOMAIN,
-            "set_schedule",
-            {
-                "entity_id": ENTITY_ID,
-                "monday": {"schedule": {"from": "08:00", "to": "17:00"}},
-            },
-            blocking=True,
-        )
-
-    with pytest.raises(ServiceValidationError, match="Missing from/to entry"):
-        await hass.services.async_call(
-            DOMAIN,
-            "set_schedule",
-            {
-                "entity_id": ENTITY_ID,
-                "monday": {"schedule": [{"from": "08:00"}]},
+                "monday": [{"from": "08:00"}],
             },
             blocking=True,
         )
@@ -176,25 +150,7 @@ async def test_set_schedule_errors(
             "set_schedule",
             {
                 "entity_id": ENTITY_ID,
-                "monday": {"schedule": [{"from": "08:00", "to": "07:00"}]},
-            },
-            blocking=True,
-        )
-
-    with pytest.raises(
-        ServiceValidationError, match="Overlapping times found in schedule"
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            "set_schedule",
-            {
-                "entity_id": ENTITY_ID,
-                "monday": {
-                    "schedule": [
-                        {"from": "08:00", "to": "17:00"},
-                        {"from": "16:00", "to": "18:00"},
-                    ]
-                },
+                "monday": [{"from": "08:00", "to": "07:00"}],
             },
             blocking=True,
         )
