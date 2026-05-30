@@ -7,12 +7,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import VilfoConfigEntry
 from .const import (
     ATTR_API_DATA_FIELD_BOOT_TIME,
     ATTR_API_DATA_FIELD_LOAD,
@@ -50,11 +50,11 @@ SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VilfoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Vilfo Router entities from a config_entry."""
-    vilfo = hass.data[DOMAIN][config_entry.entry_id]
+    vilfo = config_entry.runtime_data
 
     entities = [VilfoRouterSensor(vilfo, description) for description in SENSOR_TYPES]
 

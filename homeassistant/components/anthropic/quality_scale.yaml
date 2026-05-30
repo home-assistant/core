@@ -35,13 +35,10 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates:
-    status: exempt
-    comment: |
-      The API does not limit parallel updates.
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
   # Gold
@@ -81,7 +78,10 @@ rules:
     status: exempt
     comment: |
       No entities disabled by default.
-  entity-translations: todo
+  entity-translations:
+    status: exempt
+    comment: |
+      Entities explicitly set `_attr_name` to `None`, so entity name translations are not used.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done

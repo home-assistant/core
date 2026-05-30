@@ -1,9 +1,10 @@
 """The tests for the Shell command component."""
 
-from __future__ import annotations
-
 import asyncio
 import os
+import re
+import shlex
+import sys
 import tempfile
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -184,12 +185,16 @@ async def test_non_text_stdout_capture(
     mock_output, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test handling of non-text output."""
+    non_utf8_cmd = (
+        f"{shlex.quote(sys.executable)} -c"
+        ' "import sys; sys.stdout.buffer.write(bytes([0x80, 0x81, 0x82]))"'
+    )
     assert await async_setup_component(
         hass,
         shell_command.DOMAIN,
         {
             shell_command.DOMAIN: {
-                "output_image": "curl -o - https://raw.githubusercontent.com/home-assistant/assets/master/misc/loading-screen.gif"
+                "output_image": non_utf8_cmd,
             }
         },
     )
@@ -205,7 +210,9 @@ async def test_non_text_stdout_capture(
     # Non-text output throws with 'return_response'
     with pytest.raises(
         HomeAssistantError,
-        match="Unable to handle non-utf8 output of command: `curl -o - https://raw.githubusercontent.com/home-assistant/assets/master/misc/loading-screen.gif`",
+        match=re.escape(
+            f"Unable to handle non-utf8 output of command: `{non_utf8_cmd}`"
+        ),
     ):
         response = await hass.services.async_call(
             "shell_command", "output_image", blocking=True, return_response=True
@@ -339,7 +346,7 @@ async def test_repair_issue_on_reserved_reload_name(
 async def test_repair_issue_on_reload_service_reload(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry, hass_admin_user: MockUser
 ) -> None:
-    """Test repair issue is created if 'reload' is used in YAML and reload service is called."""
+    """Test repair issue when 'reload' is used in YAML config."""
     config = {shell_command.DOMAIN: {"test": "echo ok"}}
     await async_setup_component(hass, shell_command.DOMAIN, config)
     await hass.async_block_till_done()

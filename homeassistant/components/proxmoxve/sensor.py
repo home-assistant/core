@@ -1,7 +1,5 @@
 """Sensor platform for Proxmox VE integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -426,7 +424,11 @@ STORAGE_SENSORS: tuple[ProxmoxStorageSensorEntityDescription, ...] = (
     ProxmoxStorageSensorEntityDescription(
         key="storage_used_percentage",
         translation_key="storage_used_percentage",
-        value_fn=lambda data: round(data["used_fraction"] * 100, 1),
+        value_fn=lambda data: (
+            round(value * 100, 1)
+            if (value := data.get("used_fraction")) is not None
+            else None
+        ),
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,

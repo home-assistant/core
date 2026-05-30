@@ -1,7 +1,5 @@
 """The repairs integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -15,7 +13,7 @@ from homeassistant.helpers.integration_platform import (
 )
 
 from .const import DOMAIN
-from .models import RepairsFlow, RepairsProtocol
+from .models import RepairsFlow, RepairsFlowResult, RepairsProtocol
 
 
 class ConfirmRepairFlow(RepairsFlow):
@@ -23,13 +21,13 @@ class ConfirmRepairFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             return self.async_create_entry(data={})
@@ -46,7 +44,9 @@ class ConfirmRepairFlow(RepairsFlow):
         )
 
 
-class RepairsFlowManager(data_entry_flow.FlowManager):
+class RepairsFlowManager(
+    data_entry_flow.FlowManager[data_entry_flow.FlowContext, RepairsFlowResult, str]
+):
     """Manage repairs flows."""
 
     async def async_create_flow(
@@ -80,14 +80,18 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         return flow
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
-    ) -> data_entry_flow.FlowResult:
+        self,
+        flow: data_entry_flow.FlowHandler[
+            data_entry_flow.FlowContext, RepairsFlowResult, str
+        ],
+        result: RepairsFlowResult,
+    ) -> RepairsFlowResult:
         """Complete a fix flow.
 
         This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
         """
-        if result.get("type") != data_entry_flow.FlowResultType.ABORT:
+        if result.get("type") is not data_entry_flow.FlowResultType.ABORT:
             ir.async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
         return result
 

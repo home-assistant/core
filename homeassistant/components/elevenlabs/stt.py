@@ -1,7 +1,5 @@
 """Support for the ElevenLabs speech-to-text service."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable
 from io import BytesIO
 import logging
@@ -129,7 +127,9 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
     ) -> stt.SpeechResult:
         """Process an audio stream to STT service."""
         _LOGGER.debug(
-            "Processing audio stream for STT: model=%s, language=%s, format=%s, codec=%s, sample_rate=%s, channels=%s, bit_rate=%s",
+            "Processing audio stream for STT: model=%s,"
+            " language=%s, format=%s, codec=%s,"
+            " sample_rate=%s, channels=%s, bit_rate=%s",
             self._stt_model,
             metadata.language,
             metadata.format,
@@ -150,9 +150,9 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
 
         raw_pcm_compatible = (
             metadata.codec == AudioCodecs.PCM
-            and metadata.sample_rate == AudioSampleRates.SAMPLERATE_16000
-            and metadata.channel == AudioChannels.CHANNEL_MONO
-            and metadata.bit_rate == AudioBitRates.BITRATE_16
+            and metadata.sample_rate is AudioSampleRates.SAMPLERATE_16000
+            and metadata.channel is AudioChannels.CHANNEL_MONO
+            and metadata.bit_rate is AudioBitRates.BITRATE_16
         )
         if raw_pcm_compatible:
             file_format = "pcm_s16le_16"

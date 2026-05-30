@@ -369,7 +369,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.source == SOURCE_RECONFIGURE:
             user_input.update(self._step_user_data)
-            return self.async_update_reload_and_abort(
+            return self.async_update_and_abort(
                 self._get_reconfigure_entry(),
                 title=self._bot_name,
                 data_updates=user_input,
@@ -408,7 +408,9 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_url_available"
                 description_placeholders[ERROR_FIELD] = "URL"
                 description_placeholders[ERROR_MESSAGE] = (
-                    "URL is required since you have not configured an external URL in Home Assistant"
+                    "URL is required since you have not"
+                    " configured an external URL"
+                    " in Home Assistant"
                 )
                 return
         elif (
@@ -489,13 +491,15 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_API_ENDPOINT
         ]
         if (
-            self._get_reconfigure_entry().state == ConfigEntryState.LOADED
+            self._get_reconfigure_entry().state is ConfigEntryState.LOADED
             and user_input[CONF_API_ENDPOINT] != DEFAULT_API_ENDPOINT
             and existing_api_endpoint == DEFAULT_API_ENDPOINT
         ):
             # logout existing bot from the official Telegram bot API
-            # logout is only used when changing the API endpoint from official to a custom one
-            # there is a 10-minute lockout period after logout so we only logout if necessary
+            # logout is only used when changing the API
+            # endpoint from official to a custom one
+            # there is a 10-minute lockout period after
+            # logout so we only logout if necessary
             service: TelegramNotificationService = (
                 self._get_reconfigure_entry().runtime_data
             )
@@ -534,7 +538,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input[CONF_PLATFORM] != PLATFORM_WEBHOOKS:
             await self._shutdown_bot()
 
-            return self.async_update_reload_and_abort(
+            return self.async_update_and_abort(
                 self._get_reconfigure_entry(), title=bot_name, data_updates=user_input
             )
 
@@ -579,7 +583,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders=description_placeholders,
             )
 
-        return self.async_update_reload_and_abort(
+        return self.async_update_and_abort(
             self._get_reauth_entry(), title=bot_name, data_updates=updated_data
         )
 
@@ -592,7 +596,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Create allowed chat ID."""
 
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(
                 reason="entry_not_loaded",
                 description_placeholders={"telegram_bot": self._get_entry().title},
@@ -659,8 +663,11 @@ async def _get_most_recent_chat(
 ) -> tuple[int, str | None] | None:
     """Get the most recent chat ID and name.
 
-    For broadcast bot, this is retrieved using get_updates() to find the most recent message received.
-    For polling or webhook bot, this is retrieved from the runtime data which is updated whenever a message is received.
+    For broadcast bot, this is retrieved using
+    get_updates() to find the most recent message received.
+    For polling or webhook bot, this is retrieved from
+    the runtime data which is updated whenever a
+    message is received.
     """
 
     if service.app is not None:

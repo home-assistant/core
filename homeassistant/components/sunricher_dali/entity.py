@@ -1,7 +1,5 @@
 """Base entity for Sunricher DALI integration."""
 
-from __future__ import annotations
-
 import logging
 
 from PySrDaliGateway import CallbackEventType, DaliObjectBase, Device

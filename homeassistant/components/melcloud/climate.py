@@ -1,7 +1,5 @@
 """Platform for climate integration."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice
@@ -162,7 +160,9 @@ class AtaDeviceClimate(MelCloudClimate):
             attr.update(
                 {
                     ATTR_VANE_HORIZONTAL: vane_horizontal,
-                    ATTR_VANE_HORIZONTAL_POSITIONS: self._device.vane_horizontal_positions,
+                    ATTR_VANE_HORIZONTAL_POSITIONS: (
+                        self._device.vane_horizontal_positions
+                    ),
                 }
             )
 
