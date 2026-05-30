@@ -15,7 +15,8 @@ async def test_keypad_native_value(
     assert hass.states.get(KEYPAD_ENTITY).state == "Ready"
 
     mock_controller.alarm_state["partition"][1]["status"]["alpha"] = "Armed Away"
-    mock_controller.callback_keypad_update(1)
+    # A matching partition delivered as a string is coerced and applies.
+    mock_controller.callback_keypad_update("1")
     await hass.async_block_till_done()
 
     assert hass.states.get(KEYPAD_ENTITY).state == "Armed Away"

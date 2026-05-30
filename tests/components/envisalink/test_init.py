@@ -1,6 +1,6 @@
 """Tests for the Envisalink setup."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock
 
 import pytest
@@ -16,8 +16,22 @@ from homeassistant.components.envisalink.sensor import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .conftest import ALARM_ENTITY, DOMAIN, KEYPAD_ENTITY, ZONE_ENTITY, setup_envisalink
+from .conftest import (
+    ALARM_ENTITY,
+    DOMAIN,
+    KEYPAD_ENTITY,
+    MOCK_CODE,
+    ZONE_ENTITY,
+    setup_envisalink,
+)
+
+SetupPlatform = Callable[
+    [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
+    Awaitable[None],
+]
 
 
 async def test_setup_creates_entities(
@@ -76,7 +90,7 @@ async def test_controller_stopped_on_shutdown(
     ],
 )
 async def test_platform_setup_without_discovery_is_noop(
-    hass: HomeAssistant, setup_platform: Callable
+    hass: HomeAssistant, setup_platform: SetupPlatform
 ) -> None:
     """Test a platform set up directly (no discovery info) adds no entities."""
     add_entities = MagicMock()
@@ -90,11 +104,13 @@ async def test_invoke_custom_function_service(
     """Test the PGM service forwards the code, partition and function."""
     assert await setup_envisalink(hass)
 
+    # Distinct pgm/partition values so the assertion pins each positional arg
+    # of command_output(code, partition, custom_function).
     await hass.services.async_call(
         DOMAIN,
         "invoke_custom_function",
-        {"pgm": "1", "partition": "1"},
+        {"pgm": "7", "partition": "2"},
         blocking=True,
     )
 
-    mock_controller.command_output.assert_called_once_with("1234", "1", "1")
+    mock_controller.command_output.assert_called_once_with(MOCK_CODE, "2", "7")

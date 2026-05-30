@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .conftest import ALARM_ENTITY, DOMAIN, MOCK_CONFIG, setup_envisalink
+from .conftest import ALARM_ENTITY, DOMAIN, MOCK_CODE, MOCK_CONFIG, setup_envisalink
 
 
 @pytest.mark.parametrize(
@@ -39,7 +39,7 @@ from .conftest import ALARM_ENTITY, DOMAIN, MOCK_CONFIG, setup_envisalink
 async def test_alarm_states(
     hass: HomeAssistant,
     mock_controller: MagicMock,
-    status_overrides: dict[str, object],
+    status_overrides: dict[str, bool | str],
     expected_state: str,
 ) -> None:
     """Test the partition status maps to the correct alarm state."""
@@ -68,17 +68,22 @@ async def test_arm_disarm_commands(
     service: str,
     method: str,
 ) -> None:
-    """Test arm/disarm services call the controller with code and partition."""
+    """Test arm/disarm services call the controller with code and partition.
+
+    No code is supplied in the call: the keypad is hidden when a code is
+    configured, so HA injects the configured default code. This proves the
+    default-code path, not just an echo of a code we passed in.
+    """
     assert await setup_envisalink(hass)
 
     await hass.services.async_call(
         Platform.ALARM_CONTROL_PANEL,
         service,
-        {"entity_id": ALARM_ENTITY, "code": "1234"},
+        {"entity_id": ALARM_ENTITY},
         blocking=True,
     )
 
-    getattr(mock_controller, method).assert_called_once_with("1234", 1)
+    getattr(mock_controller, method).assert_called_once_with(MOCK_CODE, 1)
 
 
 async def test_trigger_calls_panic(
@@ -94,6 +99,7 @@ async def test_trigger_calls_panic(
         blocking=True,
     )
 
+    # "Police" is the default panic type when none is configured.
     mock_controller.panic_alarm.assert_called_once_with("Police")
 
 
@@ -120,19 +126,26 @@ async def test_code_format_without_configured_code(
 async def test_partition_update_filtering(
     hass: HomeAssistant, mock_controller: MagicMock
 ) -> None:
-    """Test updates for other partitions are ignored, None applies to all."""
+    """Test partition updates are filtered by number; None applies to all."""
     assert await setup_envisalink(hass)
-    mock_controller.alarm_state["partition"][1]["status"]["alarm"] = True
+    status = mock_controller.alarm_state["partition"][1]["status"]
+    status["alarm"] = True
 
-    # Update targeting a different partition is ignored.
+    # Update targeting a different partition is ignored (stays disarmed).
     mock_controller.callback_partition_state_change(2)
     await hass.async_block_till_done()
-    assert hass.states.get(ALARM_ENTITY).state != AlarmControlPanelState.TRIGGERED
+    assert hass.states.get(ALARM_ENTITY).state == AlarmControlPanelState.DISARMED
 
-    # A None partition applies to every entity.
-    mock_controller.callback_partition_state_change(None)
+    # A matching partition delivered as a string is coerced and applies.
+    mock_controller.callback_partition_state_change("1")
     await hass.async_block_till_done()
     assert hass.states.get(ALARM_ENTITY).state == AlarmControlPanelState.TRIGGERED
+
+    # A None partition applies to every entity.
+    status["alarm"] = False
+    mock_controller.callback_partition_state_change(None)
+    await hass.async_block_till_done()
+    assert hass.states.get(ALARM_ENTITY).state == AlarmControlPanelState.DISARMED
 
 
 async def test_alarm_keypress_service(

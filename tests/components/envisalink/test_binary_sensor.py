@@ -1,6 +1,9 @@
 """Tests for the Envisalink zone binary sensors."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
+
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
@@ -10,6 +13,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .conftest import ZONE_ENTITY, setup_envisalink
 
@@ -30,15 +34,21 @@ async def test_zone_is_on(hass: HomeAssistant, mock_controller: MagicMock) -> No
     assert hass.states.get(ZONE_ENTITY).state == STATE_ON
 
 
-async def test_zone_attributes(hass: HomeAssistant, mock_controller: MagicMock) -> None:
+async def test_zone_attributes(
+    hass: HomeAssistant, mock_controller: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
     """Test the zone exposes device class, zone number, and last trip time."""
+    freezer.move_to("2026-01-01 12:00:00+00:00")
+    # last_fault is the number of seconds since the fault; it is subtracted
+    # from the current (second-accurate) time to get the last trip time.
+    mock_controller.alarm_state["zone"][1]["last_fault"] = 300
     assert await setup_envisalink(hass)
 
     attrs = hass.states.get(ZONE_ENTITY).attributes
     assert attrs[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR
     assert attrs["zone"] == 1
-    # last_fault defaults to 0 → a concrete (recent) timestamp.
-    assert attrs[ATTR_LAST_TRIP_TIME] is not None
+    expected = dt_util.now().replace(microsecond=0) - timedelta(seconds=300)
+    assert attrs[ATTR_LAST_TRIP_TIME] == expected.isoformat()
 
 
 async def test_zone_last_trip_time_unknown_at_max(
@@ -54,14 +64,23 @@ async def test_zone_last_trip_time_unknown_at_max(
 async def test_zone_update_filtering(
     hass: HomeAssistant, mock_controller: MagicMock
 ) -> None:
-    """Test updates for other zones are ignored, None applies to all."""
+    """Test zone updates are filtered by number; None applies to all."""
     assert await setup_envisalink(hass)
-    mock_controller.alarm_state["zone"][1]["status"]["open"] = True
+    zone_status = mock_controller.alarm_state["zone"][1]["status"]
+    zone_status["open"] = True
 
+    # Update for a different zone (int) is ignored.
     mock_controller.callback_zone_state_change(2)
     await hass.async_block_till_done()
     assert hass.states.get(ZONE_ENTITY).state == STATE_OFF
 
-    mock_controller.callback_zone_state_change(None)
+    # A matching zone delivered as a string is coerced and applies.
+    mock_controller.callback_zone_state_change("1")
     await hass.async_block_till_done()
     assert hass.states.get(ZONE_ENTITY).state == STATE_ON
+
+    # A None zone applies to every entity.
+    zone_status["open"] = False
+    mock_controller.callback_zone_state_change(None)
+    await hass.async_block_till_done()
+    assert hass.states.get(ZONE_ENTITY).state == STATE_OFF
