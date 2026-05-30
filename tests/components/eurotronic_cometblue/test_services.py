@@ -76,7 +76,7 @@ async def test_set_schedule(
         {
             "entity_id": ENTITY_ID,
             "tuesday": [
-                {"from": "18:00", "to": "22:00"},
+                {"from": "18:00", "to": "22:00", "data": "ignored"},
                 {"from": "09:00", "to": "11:30"},
                 {"from": "23:00", "to": "23:40"},
                 {"from": "13:00", "to": "15:00"},
@@ -155,21 +155,7 @@ async def test_set_schedule_errors(
             blocking=True,
         )
 
-    # Errors not caught by voluptous schema
-    with pytest.raises(ServiceValidationError, match="Missing from/to in entry"):
-        await hass.services.async_call(
-            DOMAIN,
-            "set_schedule",
-            {
-                "entity_id": ENTITY_ID,
-                "monday": [{"from": "08:00"}],
-            },
-            blocking=True,
-        )
-
-    with pytest.raises(
-        ServiceValidationError, match="maximum of 4 schedule entries is supported"
-    ):
+    with pytest.raises(vol.Invalid, match="length of value must be at most 4"):
         await hass.services.async_call(
             DOMAIN,
             "set_schedule",
@@ -182,6 +168,18 @@ async def test_set_schedule_errors(
                     {"from": "14:00", "to": "16:00"},
                     {"from": "16:00", "to": "18:00"},
                 ],
+            },
+            blocking=True,
+        )
+
+    # Errors not caught by voluptous schema
+    with pytest.raises(ServiceValidationError, match="Missing from/to in entry"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_schedule",
+            {
+                "entity_id": ENTITY_ID,
+                "monday": [{"from": "08:00"}],
             },
             blocking=True,
         )
