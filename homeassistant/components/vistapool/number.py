@@ -10,7 +10,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -55,7 +55,7 @@ NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
         native_min_value=500,
         native_max_value=800,
         native_step=1,
-        native_unit_of_measurement="mV",
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         value_path="modules.rx.status.value",
         exists_path=PATH_HASRX,
     ),
