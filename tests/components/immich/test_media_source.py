@@ -287,7 +287,7 @@ async def test_browse_media_collections_error(
         }
     )
     with pytest.raises(BrowseError, match="Missing API permission"):
-        result = await source.async_browse_media(item)
+        await source.async_browse_media(item)
 
 
 @pytest.mark.parametrize(
@@ -350,7 +350,7 @@ async def test_browse_media_collection_items_error(
         }
     )
     with pytest.raises(BrowseError, match="Missing API permission"):
-        result = await source.async_browse_media(item)
+        await source.async_browse_media(item)
 
 
 @pytest.mark.parametrize(
