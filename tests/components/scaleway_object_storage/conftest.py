@@ -9,6 +9,7 @@ import uuid
 from aiohttp import ClientResponse
 from aiohttp_s3_client import S3Client
 from aiohttp_s3_client.client import RequestContextManager
+from multidict import MultiDict
 import pytest
 
 from homeassistant.components.backup import AgentBackup
@@ -172,6 +173,7 @@ def mock_s3_response_factory() -> MockS3ResponseFactory:
     def _factory(*, status_code: int) -> tuple[MagicMock, RequestContextManager]:
         response = MagicMock(spec=ClientResponse)
         response.status = status_code
+        response.headers = MultiDict({})
         response.__aenter__.return_value = response
         response.__aexit__.side_effect = response.release
 

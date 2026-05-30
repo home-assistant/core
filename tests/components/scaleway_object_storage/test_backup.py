@@ -1,15 +1,21 @@
 """Tests for the Scaleway Object Storage BackupAgent implementation."""
 
 from collections.abc import AsyncGenerator, Iterable
+from datetime import UTC, datetime
 import hashlib
+from http import HTTPStatus
 from io import BytesIO
 import json
 from math import ceil
 import random
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
+import uuid
 
 from aiohttp import ClientConnectionError
+from aiohttp_s3_client import AwsObjectMeta
+from aiohttp_s3_client.client import AwsDownloadError
+from multidict import MultiDict
 import pytest
 import pytest_asyncio
 
@@ -21,7 +27,6 @@ from homeassistant.components.backup import (
 from homeassistant.components.scaleway_object_storage import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
-    exceptions,
 )
 from homeassistant.components.scaleway_object_storage.backup import (
     ScalewayBackupAgent,
@@ -49,19 +54,17 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 async def set_up_backup_agent(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_s3_client: AsyncMock,
+    mock_s3_client: MagicMock,
+    mock_s3_response_factory: MockS3ResponseFactory,
 ) -> AsyncGenerator[None]:
     """Sets up the Scaleway Object Storage integration."""
     assert await async_setup_component(hass, BACKUP_DOMAIN, {})
     mock_config_entry.add_to_hass(hass)
-    with (
-        patch(
-            "homeassistant.components.scaleway_object_storage.helpers.check_connection",
-            return_value=None,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+
+    _, mock_response_context = mock_s3_response_factory(status_code=200)
+    mock_s3_client.head.return_value = mock_response_context
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
     yield
 
 
@@ -108,6 +111,16 @@ async def _wrap_as_generator[T](items: Iterable[T]) -> AsyncGenerator[T]:
         yield item
 
 
+def _create_aws_metadata(key: str) -> AwsObjectMeta:
+    return AwsObjectMeta(
+        etag=str(uuid.uuid4()),
+        key=key,
+        last_modified=datetime.now(UTC),
+        size=42,
+        storage_class="STANDARD",
+    )
+
+
 async def test_agents_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -138,22 +151,27 @@ async def test_agents_list_backups(
     mock_agent_backup: AgentBackup,
     mock_agent_backup_object_key: str,
     mock_read_object_metadata: AsyncMock,
+    mock_s3_client: MagicMock,
 ) -> None:
     """Test agent list backups."""
 
-    with (
-        patch(
-            "homeassistant.components.scaleway_object_storage.helpers.list_objects",
-            # Including a fake object key in the list to simulate an object that exists during
-            # listing but is gone when reading metadata.
-            return_value=_wrap_as_generator(
-                [mock_agent_backup_object_key, "nonexistent-object"]
+    mock_s3_client.list_objects_v2.return_value = _wrap_as_generator(
+        [
+            # These two don't actually exist when reading their metadata.
+            # Simulates a race condition, i.e. they're deleted between listing and reading metadata.
+            (
+                [
+                    _create_aws_metadata("nonexistent-object"),
+                    _create_aws_metadata("another-nonexistent-object"),
+                ],
+                None,
             ),
-        ),
-    ):
-        client = await hass_ws_client(hass)
-        await client.send_json_auto_id({"type": "backup/info"})
-        response = await client.receive_json()
+            ([_create_aws_metadata(mock_agent_backup_object_key)], None),
+        ]
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
@@ -188,24 +206,27 @@ async def test_agents_list_backups_missing_metadata(
     mock_config_entry: MockConfigEntry,
     mock_agent_backup: AgentBackup,
     mock_agent_backup_object_key: str,
+    mock_s3_client: AsyncMock,
+    mock_s3_response_factory: MockS3ResponseFactory,
 ) -> None:
     """Test agent list backups with missing metadata."""
+    mock_s3_client.list_objects_v2.return_value = _wrap_as_generator(
+        [
+            ([_create_aws_metadata(mock_agent_backup_object_key)], None),
+        ]
+    )
 
-    with (
-        patch(
-            "homeassistant.components.scaleway_object_storage.helpers.list_objects",
-            return_value=_wrap_as_generator([mock_agent_backup_object_key]),
-        ),
-        patch(
-            "homeassistant.components.scaleway_object_storage.helpers.read_object_metadata",
-            side_effect=exceptions.MissingMetadataException(
-                object_key=mock_agent_backup_object_key
-            ),
-        ),
-    ):
-        client = await hass_ws_client(hass)
-        await client.send_json_auto_id({"type": "backup/info"})
-        response = await client.receive_json()
+    mock_response, mock_response_context = mock_s3_response_factory(status_code=200)
+    mock_response.headers = MultiDict(
+        {
+            HEADER_CONTENT_TYPE: CONTENT_TYPE_TAR,
+        }
+    )
+    mock_s3_client.head.return_value = mock_response_context
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
@@ -218,17 +239,15 @@ async def test_agents_list_backups_network_error(
     mock_config_entry: MockConfigEntry,
     mock_agent_backup: AgentBackup,
     mock_agent_backup_object_key: str,
-    mock_read_object_metadata: AsyncMock,
+    mock_s3_client: AsyncMock,
 ) -> None:
     """Test agent list backups when Scaleway is unreachable."""
 
-    with patch(
-        "homeassistant.components.scaleway_object_storage.helpers.list_objects",
-        side_effect=exceptions.ScalewayConnectionError(),
-    ):
-        client = await hass_ws_client(hass)
-        await client.send_json_auto_id({"type": "backup/info"})
-        response = await client.receive_json()
+    mock_s3_client.list_objects_v2.side_effect = ClientConnectionError()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
@@ -242,24 +261,32 @@ async def test_agents_list_backups_server_error(
     mock_config_entry: MockConfigEntry,
     mock_agent_backup: AgentBackup,
     mock_agent_backup_object_key: str,
-    mock_read_object_metadata: AsyncMock,
+    mock_s3_client: AsyncMock,
+    mock_s3_response_factory: MockS3ResponseFactory,
 ) -> None:
     """Test agent list backups when Scaleway service is degraded."""
+    mock_response, _ = mock_s3_response_factory(status_code=503)
+    mock_s3_client.list_objects_v2.side_effect = AwsDownloadError(
+        mock_response, message="Server error"
+    )
 
-    with patch(
-        "homeassistant.components.scaleway_object_storage.helpers.list_objects",
-        side_effect=exceptions.ServerUnavailableError(),
-    ):
-        client = await hass_ws_client(hass)
-        await client.send_json_auto_id({"type": "backup/info"})
-        response = await client.receive_json()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    mock_response = await client.receive_json()
 
-    assert response["success"]
-    assert response["result"]["agent_errors"] == {
+    assert mock_response["success"]
+    assert mock_response["result"]["agent_errors"] == {
         f"{DOMAIN}.{mock_config_entry.entry_id}": "Scaleway service is temporarily unavailable",
     }
 
 
+@pytest.mark.parametrize(
+    "status_code",
+    [
+        HTTPStatus.FORBIDDEN,
+        HTTPStatus.UNAUTHORIZED,
+    ],
+)
 async def test_agents_list_backups_object_permission_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -267,22 +294,23 @@ async def test_agents_list_backups_object_permission_error(
     mock_agent_backup: AgentBackup,
     mock_agent_backup_object_key: str,
     agent_id: str,
+    mock_s3_client: MagicMock,
+    mock_s3_response_factory: MockS3ResponseFactory,
+    status_code: int,
 ) -> None:
     """Test agent list backups when Scaleway service is degraded."""
+    mock_s3_client.list_objects_v2.return_value = _wrap_as_generator(
+        [
+            ([_create_aws_metadata(mock_agent_backup_object_key)], None),
+        ]
+    )
 
-    with (
-        patch(
-            "homeassistant.components.scaleway_object_storage.helpers.list_objects",
-            return_value=_wrap_as_generator([mock_agent_backup_object_key]),
-        ),
-        patch(
-            "homeassistant.components.scaleway_object_storage.helpers.read_object_metadata",
-            side_effect=exceptions.InvalidAuthException(),
-        ),
-    ):
-        client = await hass_ws_client(hass)
-        await client.send_json_auto_id({"type": "backup/info"})
-        response = await client.receive_json()
+    _, mock_response_context = mock_s3_response_factory(status_code=status_code)
+    mock_s3_client.head.return_value = mock_response_context
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
@@ -335,18 +363,17 @@ async def test_agents_get_backup_network_error(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
     mock_agent_backup: AgentBackup,
+    mock_s3_client: MagicMock,
 ) -> None:
     """Test agent get backup when Scaleway is unreachable."""
 
-    with patch(
-        "homeassistant.components.scaleway_object_storage.helpers.read_object_metadata",
-        side_effect=exceptions.ScalewayConnectionError(),
-    ):
-        client = await hass_ws_client(hass)
-        await client.send_json_auto_id(
-            {"type": "backup/details", "backup_id": mock_agent_backup.backup_id}
-        )
-        response = await client.receive_json()
+    mock_s3_client.head.side_effect = ClientConnectionError()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "backup/details", "backup_id": mock_agent_backup.backup_id}
+    )
+    response = await client.receive_json()
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
@@ -359,21 +386,21 @@ async def test_agents_get_backup_server_error(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
     mock_agent_backup: AgentBackup,
+    mock_s3_client: MagicMock,
+    mock_s3_response_factory: MockS3ResponseFactory,
 ) -> None:
     """Test agent get backup when Scaleway service is degraded."""
+    _, mock_response_context = mock_s3_response_factory(status_code=503)
+    mock_s3_client.head.return_value = mock_response_context
 
-    with patch(
-        "homeassistant.components.scaleway_object_storage.helpers.read_object_metadata",
-        side_effect=exceptions.ServerUnavailableError(),
-    ):
-        client = await hass_ws_client(hass)
-        await client.send_json_auto_id(
-            {"type": "backup/details", "backup_id": mock_agent_backup.backup_id}
-        )
-        response = await client.receive_json()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "backup/details", "backup_id": mock_agent_backup.backup_id}
+    )
+    mock_response_context = await client.receive_json()
 
-    assert response["success"]
-    assert response["result"]["agent_errors"] == {
+    assert mock_response_context["success"]
+    assert mock_response_context["result"]["agent_errors"] == {
         f"{DOMAIN}.{mock_config_entry.entry_id}": "Scaleway service is temporarily unavailable",
     }
 
