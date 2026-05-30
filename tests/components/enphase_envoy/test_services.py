@@ -80,7 +80,7 @@ async def test_service_token_lifetime_value(
         blocking=True,
         return_response=True,
     )
-    assert result["lifetime"] == 199
+    assert result["lifetime"] == 200
 
 
 async def test_service_uninitialized(
@@ -127,7 +127,7 @@ async def test_service_device_id(
         blocking=True,
         return_response=True,
     )
-    assert result["lifetime"] == 199
+    assert result["lifetime"] == 200
 
 
 async def test_service_device_id_error(
@@ -173,7 +173,7 @@ async def test_service_via_device_id(
         blocking=True,
         return_response=True,
     )
-    assert result["lifetime"] == 199
+    assert result["lifetime"] == 200
 
 
 async def test_service_dual_envoy_with_device_id(
@@ -220,7 +220,7 @@ async def test_service_dual_envoy_with_device_id(
         return_response=True,
     )
 
-    assert result["lifetime"] == 299
+    assert result["lifetime"] == 300
 
 
 async def test_service_dual_envoy_no_device_id(

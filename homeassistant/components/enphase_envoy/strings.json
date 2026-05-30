@@ -751,6 +751,12 @@
       "message": "Unexpected Envoy serial number found at {host}; expected {expected_serial}, found {actual_serial}"
     }
   },
+  "issues": {
+    "token_expiry": {
+      "description": "The {name} access token expires in {token_lifetime} days and is configured for manual token entry. Make sure to enter a new token before the final expiry day. To update the token, go to the Home Assistant Enphase Envoy integration page and use the reconfigure menu option.",
+      "title": "{name} access token expires in {token_lifetime} days."
+    }
+  },
   "options": {
     "step": {
       "init": {
