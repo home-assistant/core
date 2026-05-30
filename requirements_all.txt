@@ -2486,7 +2486,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.7.0
+pyrisco==0.8.0
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.7
