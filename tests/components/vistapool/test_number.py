@@ -231,10 +231,11 @@ async def test_number_set_value_raises_on_api_error(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: "number.my_pool_redox_setpoint", ATTR_VALUE: 700},
             blocking=True,
         )
+    assert excinfo.value.translation_key == "set_failed"
