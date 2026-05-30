@@ -31,6 +31,7 @@ from homeassistant.components.scaleway_object_storage.backup import (
 )
 from homeassistant.components.scaleway_object_storage.const import (
     CONF_BUCKET,
+    CONTENT_TYPE_TAR,
     HEADER_CONTENT_DISPOSITION,
     HEADER_CONTENT_TYPE,
     HEADER_METADATA,
@@ -705,7 +706,7 @@ async def test_simple_upload(
                 data_length=mock_agent_backup.size,
                 headers={
                     HEADER_METADATA: json.dumps(mock_agent_backup.as_dict()),
-                    HEADER_CONTENT_TYPE: "application/x-tar",
+                    HEADER_CONTENT_TYPE: CONTENT_TYPE_TAR,
                     HEADER_CONTENT_DISPOSITION: f'attachment; filename="{expected_filename}"',
                 },
             ),
@@ -827,7 +828,7 @@ async def test_multipart_upload(
                 content_sha256=hashlib.sha256(b"").hexdigest(),
                 headers={
                     HEADER_METADATA: json.dumps(mock_agent_backup.as_dict()),
-                    HEADER_CONTENT_TYPE: "application/x-tar",
+                    HEADER_CONTENT_TYPE: CONTENT_TYPE_TAR,
                     HEADER_CONTENT_DISPOSITION: f'attachment; filename="{expected_filename}"',
                 },
             ),
