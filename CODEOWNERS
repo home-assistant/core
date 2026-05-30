@@ -445,6 +445,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/earn_e_p1/ @Miggets7
 /homeassistant/components/easyenergy/ @klaasnicolaas
 /tests/components/easyenergy/ @klaasnicolaas
+/homeassistant/components/ecobulles/ @jul-fls
+/tests/components/ecobulles/ @jul-fls
 /homeassistant/components/ecoforest/ @pjanuario
 /tests/components/ecoforest/ @pjanuario
 /homeassistant/components/econet/ @w1ll1am23

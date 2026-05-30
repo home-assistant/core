@@ -1630,6 +1630,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "ecobulles": {
+      "name": "Ecobulles",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ecoforest": {
       "name": "Ecoforest",
       "integration_type": "device",

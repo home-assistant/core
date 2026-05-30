@@ -182,6 +182,7 @@ FLOWS = {
         "earn_e_p1",
         "easyenergy",
         "ecobee",
+        "ecobulles",
         "ecoforest",
         "econet",
         "ecovacs",

@@ -2116,6 +2116,9 @@ pydroplet==2.3.4
 # homeassistant.components.ebox
 pyebox==1.1.4
 
+# homeassistant.components.ecobulles
+pyecobulles==0.1.1
+
 # homeassistant.components.ecoforest
 pyecoforest==0.4.0
 
