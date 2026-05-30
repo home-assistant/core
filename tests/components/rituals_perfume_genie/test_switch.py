@@ -1,10 +1,15 @@
 """Tests for the Rituals Perfume Genie switch platform."""
 
+import pytest
+
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
+from homeassistant.components.rituals_perfume_genie.entity import (
+    _stringify_firmware_version,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,6 +28,21 @@ from .common import (
     mock_diffuser,
     mock_diffuser_v1_battery_cartridge,
 )
+
+
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [
+        ("4.0", "4.0"),
+        (None, None),
+        ({"raw": "5.4", "title": "Version 5.4"}, "5.4"),
+        ({"title": "5.4"}, "5.4"),
+        ({"raw": None, "title": None}, None),
+    ],
+)
+def test_stringify_firmware_version(version: object, expected: str | None) -> None:
+    """Test stringifying firmware version values."""
+    assert _stringify_firmware_version(version) == expected
 
 
 async def test_switch_entity(
