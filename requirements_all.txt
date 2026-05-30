@@ -2492,7 +2492,7 @@ pyrisco==0.8.0
 pyrituals==0.0.7
 
 # homeassistant.components.thread
-pyroute2==0.7.5
+pyroute2==0.9.6
 
 # homeassistant.components.rympro
 pyrympro==0.0.9
