@@ -12,14 +12,14 @@ set_schedule:
   fields:
     monday:
       example: |
-        - start: 07:00:00
-          end: 09:00:00
-        - start: 10:00:00
-          end: 12:00:00
-        - start: 13:00:00
-          end: 17:00:00
-        - start: 20:00:00
-          end: 23:00:00
+        - from: 07:00:00
+          to: 09:00:00
+        - from: 10:00:00
+          to: 12:00:00
+        - from: 13:00:00
+          to: 17:00:00
+        - from: 20:00:00
+          to: 23:00:00
       required: false
       selector:
         object:
@@ -29,17 +29,17 @@ set_schedule:
               required: false
               selector:
                 object:
-                  label_field: start
-                  description_field: end
+                  label_field: From
+                  description_field: To
                   multiple: true
                   fields:
-                    start:
-                      label: Start
+                    from:
+                      label: From
                       required: false
                       selector:
                         time:
-                    end:
-                      label: End
+                    to:
+                      label: To
                       required: false
                       selector:
                         time:
@@ -50,14 +50,14 @@ set_schedule:
                 boolean:
     tuesday:
       example: |
-        - start: 07:00:00
-          end: 09:00:00
-        - start: 10:00:00
-          end: 12:00:00
-        - start: 13:00:00
-          end: 17:00:00
-        - start: 20:00:00
-          end: 23:00:00
+        - from: 07:00:00
+          to: 09:00:00
+        - from: 10:00:00
+          to: 12:00:00
+        - from: 13:00:00
+          to: 17:00:00
+        - from: 20:00:00
+          to: 23:00:00
       required: false
       selector:
         object:
@@ -67,17 +67,17 @@ set_schedule:
               required: false
               selector:
                 object:
-                  label_field: start
-                  description_field: end
+                  label_field: From
+                  description_field: To
                   multiple: true
                   fields:
-                    start:
-                      label: Start
+                    from:
+                      label: From
                       required: false
                       selector:
                         time:
-                    end:
-                      label: End
+                    to:
+                      label: To
                       required: false
                       selector:
                         time:
@@ -88,14 +88,14 @@ set_schedule:
                 boolean:
     wednesday:
       example: |
-        - start: 07:00:00
-          end: 09:00:00
-        - start: 10:00:00
-          end: 12:00:00
-        - start: 13:00:00
-          end: 17:00:00
-        - start: 20:00:00
-          end: 23:00:00
+        - from: 07:00:00
+          to: 09:00:00
+        - from: 10:00:00
+          to: 12:00:00
+        - from: 13:00:00
+          to: 17:00:00
+        - from: 20:00:00
+          to: 23:00:00
       required: false
       selector:
         object:
@@ -105,17 +105,17 @@ set_schedule:
               required: false
               selector:
                 object:
-                  label_field: start
-                  description_field: end
+                  label_field: From
+                  description_field: To
                   multiple: true
                   fields:
-                    start:
-                      label: Start
+                    from:
+                      label: From
                       required: false
                       selector:
                         time:
-                    end:
-                      label: End
+                    to:
+                      label: To
                       required: false
                       selector:
                         time:
@@ -126,14 +126,14 @@ set_schedule:
                 boolean:
     thursday:
       example: |
-        - start: 07:00:00
-          end: 09:00:00
-        - start: 10:00:00
-          end: 12:00:00
-        - start: 13:00:00
-          end: 17:00:00
-        - start: 20:00:00
-          end: 23:00:00
+        - from: 07:00:00
+          to: 09:00:00
+        - from: 10:00:00
+          to: 12:00:00
+        - from: 13:00:00
+          to: 17:00:00
+        - from: 20:00:00
+          to: 23:00:00
       required: false
       selector:
         object:
@@ -143,17 +143,17 @@ set_schedule:
               required: false
               selector:
                 object:
-                  label_field: start
-                  description_field: end
+                  label_field: From
+                  description_field: To
                   multiple: true
                   fields:
-                    start:
-                      label: Start
+                    from:
+                      label: From
                       required: false
                       selector:
                         time:
-                    end:
-                      label: End
+                    to:
+                      label: To
                       required: false
                       selector:
                         time:
@@ -174,17 +174,17 @@ set_schedule:
               required: false
               selector:
                 object:
-                  label_field: start
-                  description_field: end
+                  label_field: From
+                  description_field: To
                   multiple: true
                   fields:
-                    start:
-                      label: Start
+                    from:
+                      label: From
                       required: false
                       selector:
                         time:
-                    end:
-                      label: End
+                    to:
+                      label: To
                       required: false
                       selector:
                         time:
@@ -195,10 +195,10 @@ set_schedule:
                 boolean:
     saturday:
       example: |
-        - start: 09:00:00
-          end: 12:00:00
-        - start: 17:00:00
-          end: 19:00:00
+        - from: 09:00:00
+          to: 12:00:00
+        - from: 17:00:00
+          to: 19:00:00
       required: false
       selector:
         object:
@@ -208,17 +208,17 @@ set_schedule:
               required: false
               selector:
                 object:
-                  label_field: start
-                  description_field: end
+                  label_field: From
+                  description_field: To
                   multiple: true
                   fields:
-                    start:
-                      label: Start
+                    from:
+                      label: From
                       required: false
                       selector:
                         time:
-                    end:
-                      label: End
+                    to:
+                      label: To
                       required: false
                       selector:
                         time:
@@ -229,14 +229,14 @@ set_schedule:
                 boolean:
     sunday:
       example: |
-        - start: 07:00:00
-          end: 09:00:00
-        - start: 10:00:00
-          end: 12:00:00
-        - start: 13:00:00
-          end: 17:00:00
-        - start: 20:00:00
-          end: 23:00:00
+        - from: 07:00:00
+          to: 09:00:00
+        - from: 10:00:00
+          to: 12:00:00
+        - from: 13:00:00
+          to: 17:00:00
+        - from: 20:00:00
+          to: 23:00:00
       required: false
       selector:
         object:
@@ -246,17 +246,17 @@ set_schedule:
               required: false
               selector:
                 object:
-                  label_field: start
-                  description_field: end
+                  label_field: From
+                  description_field: To
                   multiple: true
                   fields:
-                    start:
-                      label: Start
+                    from:
+                      label: From
                       required: false
                       selector:
                         time:
-                    end:
-                      label: End
+                    to:
+                      label: To
                       required: false
                       selector:
                         time:
@@ -272,12 +272,12 @@ set_holiday:
       domain: climate
       integration: eurotronic_cometblue
   fields:
-    start:
+    from:
       example: 2023-12-24 17:00:00
       required: true
       selector:
         datetime:
-    end:
+    to:
       example: 2023-12-31 23:30:00
       required: true
       selector:

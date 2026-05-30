@@ -36,6 +36,8 @@ ATTR_SUNDAY: Final = "sunday"
 ATTR_DELETE: Final = "delete"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
+ATTR_FROM: Final = "from"
+ATTR_TO: Final = "to"
 
 ATTR_ALL_DAYS: Final = {
     ATTR_MONDAY,
@@ -48,17 +50,10 @@ ATTR_ALL_DAYS: Final = {
 }
 
 
-class ScheduleEntry(TypedDict, total=False):
-    """A single schedule entry passed to the service."""
-
-    start: time
-    end: time
-
-
 class DaySchedule(TypedDict, total=False):
     """A single day's schedule payload."""
 
-    schedule: list[ScheduleEntry]
+    schedule: list[dict[str, time]]
     delete: bool
 
 
@@ -96,20 +91,20 @@ def _validate_cometblue_schedule(
 
     schedule = sorted(
         schedule,
-        key=lambda entry: entry.get(ATTR_START, time.min),
+        key=lambda entry: entry.get(ATTR_FROM, time.min),
     )
 
     normalized_schedule: dict[str, time] = {}
     previous_to: time | None = None
     for i, entry in enumerate(schedule, start=1):
-        if ATTR_START not in entry or ATTR_END not in entry:
-            curr_keys = {ATTR_START, ATTR_END}.intersection(entry)
+        if ATTR_FROM not in entry or ATTR_TO not in entry:
+            curr_keys = {ATTR_FROM, ATTR_TO}.intersection(entry)
             raise ServiceValidationError(
-                f"Missing start/end entry, only received {', '.join(repr(c) for c in curr_keys)}"
+                f"Missing from/to entry, only received {', '.join(repr(c) for c in curr_keys)}"
             )
 
-        start = entry[ATTR_START]
-        end = entry[ATTR_END]
+        start = entry[ATTR_FROM]
+        end = entry[ATTR_TO]
 
         # Check if the start time of the current event is before the end time of the current event
         if start >= end:
@@ -123,16 +118,16 @@ def _validate_cometblue_schedule(
                 f"Overlapping times found in schedule, {start} is earlier than previous entry {previous_to} ends"
             )
 
-        normalized_schedule[f"{ATTR_START}{i}"] = start
-        normalized_schedule[f"{ATTR_END}{i}"] = end
+        normalized_schedule[f"{ATTR_FROM}{i}"] = start
+        normalized_schedule[f"{ATTR_TO}{i}"] = end
         previous_to = end
 
     return normalized_schedule
 
 
 SCHEDULE_ENTRY_SCHEMA = {
-    vol.Optional(ATTR_START): cv.time,
-    vol.Optional(ATTR_END): cv.time,
+    vol.Optional(ATTR_FROM): cv.time,
+    vol.Optional(ATTR_TO): cv.time,
 }
 SCHEDULE_DAY_SCHEMA = vol.All(
     {
@@ -145,8 +140,8 @@ SERVICE_SCHEDULE_SCHEMA = {
     vol.Optional(day): SCHEDULE_DAY_SCHEMA for day in ATTR_ALL_DAYS
 }
 SERVICE_HOLIDAY_SCHEMA = {
-    vol.Required(ATTR_START): cv.datetime,
-    vol.Required(ATTR_END): cv.datetime,
+    vol.Required(ATTR_FROM): cv.datetime,
+    vol.Required(ATTR_TO): cv.datetime,
     vol.Required(ATTR_TEMPERATURE): vol.All(
         vol.Coerce(float),
         vol.Range(min=MIN_TEMP, max=MAX_TEMP),
@@ -200,10 +195,10 @@ async def set_holiday(
     """Service call to update the holiday time on the device."""
     if (
         datetime(
-            service_call.data["start"].year,
-            service_call.data["start"].month,
-            service_call.data["start"].day,
-            service_call.data["start"].hour,
+            service_call.data[ATTR_FROM].year,
+            service_call.data[ATTR_FROM].month,
+            service_call.data[ATTR_FROM].day,
+            service_call.data[ATTR_FROM].hour,
         )
         < datetime.now()
     ):
@@ -215,17 +210,17 @@ async def set_holiday(
         "Setting holiday for %s (%s) until %s with temperature %s",
         entity.entity_id,
         entity.coordinator.device.device.address,
-        service_call.data["end"],
-        service_call.data["temperature"],
+        service_call.data[ATTR_TO],
+        service_call.data[ATTR_TEMPERATURE],
     )
     await entity.coordinator.send_command(
         entity.coordinator.device.set_holiday_async,
         {
             "number": 1,
             "values": {
-                "start": service_call.data["start"],
-                "end": service_call.data["end"],
-                "temperature": service_call.data["temperature"],
+                ATTR_START: service_call.data[ATTR_FROM],
+                ATTR_END: service_call.data[ATTR_TO],
+                ATTR_TEMPERATURE: service_call.data[ATTR_TEMPERATURE],
             },
         },
     )
