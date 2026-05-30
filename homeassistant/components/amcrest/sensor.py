@@ -53,7 +53,6 @@ async def async_setup_entry(
     """Set up sensors for an Amcrest config entry."""
     device = config_entry.runtime_data.device
     name = device.name
-    serial = device.serial_number
 
     if (keys := get_sensor_keys(config_entry)) is not None:
         key_set = set(keys)
@@ -64,13 +63,7 @@ async def async_setup_entry(
         descriptions = list(SENSOR_TYPES)
 
     entities = [
-        AmcrestSensor(
-            name,
-            device,
-            description,
-            unique_id=f"{serial}-{description.key}-{device.channel}",
-        )
-        for description in descriptions
+        AmcrestSensor(name, device, description) for description in descriptions
     ]
     async_add_entities(entities, True)
 
@@ -83,22 +76,13 @@ class AmcrestSensor(SensorEntity):
         name: str,
         device: AmcrestDevice,
         description: SensorEntityDescription,
-        unique_id: str | None = None,
     ) -> None:
         """Initialize a sensor for Amcrest camera."""
         self.entity_description = description
         self._signal_name = name
         self._api = device.api
-        self._channel = device.channel
-
-        if device.device_info is not None:
-            self._attr_device_info = device.device_info
-            self._attr_has_entity_name = True
-        else:
-            self._attr_name = f"{name} {description.name}"
+        self._attr_name = f"{name} {description.name}"
         self._attr_extra_state_attributes = {}
-        if unique_id:
-            self._attr_unique_id = unique_id
 
     @property
     def available(self) -> bool:
@@ -114,13 +98,6 @@ class AmcrestSensor(SensorEntity):
         sensor_type = self.entity_description.key
 
         try:
-            if self._attr_unique_id is None:
-                serial_number = await self._api.async_serial_number
-                if serial_number:
-                    self._attr_unique_id = (
-                        f"{serial_number}-{sensor_type}-{self._channel}"
-                    )
-
             if sensor_type == SENSOR_PTZ_PRESET:
                 self._attr_native_value = await self._api.async_ptz_presets_count
 

@@ -38,7 +38,6 @@ async def async_setup_entry(
     """Set up switches for an Amcrest config entry."""
     device = config_entry.runtime_data.device
     name = device.name
-    serial = device.serial_number
 
     if (keys := get_switch_keys(config_entry)) is not None:
         key_set = set(keys)
@@ -49,13 +48,7 @@ async def async_setup_entry(
         descriptions = list(SWITCH_TYPES)
 
     entities = [
-        AmcrestSwitch(
-            name,
-            device,
-            description,
-            unique_id=f"{serial}-{description.key}-{device.channel}",
-        )
-        for description in descriptions
+        AmcrestSwitch(name, device, description) for description in descriptions
     ]
     async_add_entities(entities, True)
 
@@ -68,18 +61,11 @@ class AmcrestSwitch(SwitchEntity):
         name: str,
         device: AmcrestDevice,
         entity_description: SwitchEntityDescription,
-        unique_id: str | None = None,
     ) -> None:
         """Initialize switch."""
         self._api = device.api
         self.entity_description = entity_description
-        if device.device_info is not None:
-            self._attr_device_info = device.device_info
-            self._attr_has_entity_name = True
-        else:
-            self._attr_name = f"{name} {entity_description.name}"
-        if unique_id:
-            self._attr_unique_id = unique_id
+        self._attr_name = f"{name} {entity_description.name}"
 
     @property
     def available(self) -> bool:

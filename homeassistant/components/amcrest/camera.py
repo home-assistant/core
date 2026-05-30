@@ -20,7 +20,6 @@ from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -60,15 +59,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up an Amcrest camera from a config entry."""
     device = config_entry.runtime_data.device
-    serial = device.serial_number
-    unique_id = f"{serial}-{device.resolution}-{device.channel}"
-    entity = AmcrestCam(
-        device.name,
-        device,
-        get_ffmpeg_manager(hass),
-        device_info=device.device_info,
-        unique_id=unique_id,
-    )
+    entity = AmcrestCam(device.name, device, get_ffmpeg_manager(hass))
     async_add_entities([entity], True)
 
 
@@ -91,21 +82,12 @@ class AmcrestCam(Camera):
         name: str,
         device: AmcrestDevice,
         ffmpeg: FFmpegManager,
-        device_info: DeviceInfo | None = None,
-        unique_id: str | None = None,
     ) -> None:
         """Initialize an Amcrest camera."""
         super().__init__()
         self._signal_name = name
         self._api = device.api
-        if device_info is not None:
-            self._attr_device_info = device_info
-            self._attr_has_entity_name = True
-            self._attr_name = None
-        else:
-            self._attr_name = name
-        if unique_id is not None:
-            self._attr_unique_id = unique_id
+        self._attr_name = name
         self._ffmpeg = ffmpeg
         self._ffmpeg_arguments = device.ffmpeg_arguments
         self._stream_source = device.stream_source
@@ -312,13 +294,6 @@ class AmcrestCam(Camera):
                     self._model = resp
                 else:
                     self._model = "unknown"
-            if self._attr_unique_id is None:
-                serial_number = (await self._api.async_serial_number or "").strip()
-                if serial_number:
-                    self._attr_unique_id = (
-                        f"{serial_number}-{self._resolution}-{self._channel}"
-                    )
-                    _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
             if self._rtsp_url is None:
                 self._rtsp_url = await self._api.async_rtsp_url(typeno=self._resolution)
 

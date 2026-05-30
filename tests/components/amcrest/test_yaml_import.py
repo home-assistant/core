@@ -17,13 +17,13 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_USERNAME,
-    Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    TEST_CONFIG_ENTRY_TITLE,
     TEST_HOST,
     TEST_PASSWORD,
     TEST_PORT,
@@ -62,6 +62,11 @@ def _yaml_camera(
     if switches is not None:
         config[CONF_SWITCHES] = switches
     return config
+
+
+def _entity_slug(name: str) -> str:
+    """Return the entity_id object slug for a camera name."""
+    return name.lower().replace(" ", "_")
 
 
 def _configure_checker_mock(
@@ -112,10 +117,59 @@ async def test_yaml_import_success(
     assert issue.severity == ir.IssueSeverity.WARNING
 
 
-async def test_yaml_import_entity_subset(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
+async def test_yaml_import_full_config(hass: HomeAssistant) -> None:
+    """Test YAML import with all platform keys creates the configured entities."""
+    binary_sensors = [
+        "audio_detected",
+        "crossline_detected",
+        "motion_detected",
+        "online",
+    ]
+    sensors = ["ptz_preset", "sdcard"]
+    switches = ["privacy_mode"]
+
+    with (
+        patch_amcrest_checker(),
+        patch("homeassistant.components.amcrest._start_event_monitor"),
+    ):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: [
+                    _yaml_camera(
+                        binary_sensors=binary_sensors,
+                        sensors=sensors,
+                        switches=switches,
+                    )
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.options[CONF_BINARY_SENSORS] == binary_sensors
+    assert entry.options[CONF_SENSORS] == sensors
+    assert entry.options[CONF_SWITCHES] == switches
+
+    slug = _entity_slug("Front Door")
+    entity_ids = hass.states.async_entity_ids()
+    assert f"binary_sensor.{slug}_audio_detected" in entity_ids
+    assert f"binary_sensor.{slug}_crossline_detected" in entity_ids
+    assert f"binary_sensor.{slug}_motion_detected" in entity_ids
+    assert f"binary_sensor.{slug}_online" in entity_ids
+    assert f"sensor.{slug}_ptz_preset" in entity_ids
+    assert f"sensor.{slug}_sd_used" in entity_ids
+    assert f"switch.{slug}_privacy_mode" in entity_ids
+    assert f"camera.{slug}" in entity_ids
+    assert (
+        len([eid for eid in entity_ids if eid.startswith(f"binary_sensor.{slug}")]) == 4
+    )
+    assert len([eid for eid in entity_ids if eid.startswith(f"sensor.{slug}")]) == 2
+    assert len([eid for eid in entity_ids if eid.startswith(f"switch.{slug}")]) == 1
+
+
+async def test_yaml_import_entity_subset(hass: HomeAssistant) -> None:
     """Test YAML import honors configured entity subsets."""
     with (
         patch_amcrest_checker(),
@@ -136,23 +190,20 @@ async def test_yaml_import_entity_subset(
         )
         await hass.async_block_till_done()
 
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    entity_ids = {entity.entity_id for entity in entities}
-
+    entity_ids = hass.states.async_entity_ids()
     assert "binary_sensor.front_door_motion_detected" in entity_ids
     assert "sensor.front_door_sd_used" in entity_ids
     assert "switch.front_door_privacy_mode" in entity_ids
     assert "camera.front_door" in entity_ids
-    assert len([eid for eid in entity_ids if eid.startswith("binary_sensor.")]) == 1
-    assert len([eid for eid in entity_ids if eid.startswith("sensor.")]) == 1
-    assert len([eid for eid in entity_ids if eid.startswith("switch.")]) == 1
+    assert (
+        len([eid for eid in entity_ids if eid.startswith("binary_sensor.front_door")])
+        == 1
+    )
+    assert len([eid for eid in entity_ids if eid.startswith("sensor.front_door")]) == 1
+    assert len([eid for eid in entity_ids if eid.startswith("switch.front_door")]) == 1
 
 
-async def test_yaml_import_omitted_optional_platforms(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
+async def test_yaml_import_omitted_optional_platforms(hass: HomeAssistant) -> None:
     """Test YAML import with omitted platform keys creates only the camera."""
     with (
         patch_amcrest_checker(),
@@ -165,16 +216,16 @@ async def test_yaml_import_omitted_optional_platforms(
         )
         await hass.async_block_till_done()
 
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    platforms = {entity.entity_id.split(".")[0] for entity in entities}
-    assert platforms == {Platform.CAMERA}
+    entity_ids = hass.states.async_entity_ids()
+    front_door_entities = [
+        entity_id
+        for entity_id in entity_ids
+        if entity_id.split(".", 1)[-1].startswith("front_door")
+    ]
+    assert front_door_entities == ["camera.front_door"]
 
 
-async def test_yaml_import_no_optional_platforms(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
+async def test_yaml_import_no_optional_platforms(hass: HomeAssistant) -> None:
     """Test YAML import with empty platform lists creates only the camera."""
     with (
         patch_amcrest_checker(),
@@ -195,10 +246,13 @@ async def test_yaml_import_no_optional_platforms(
         )
         await hass.async_block_till_done()
 
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    platforms = {entity.entity_id.split(".")[0] for entity in entities}
-    assert platforms == {Platform.CAMERA}
+    entity_ids = hass.states.async_entity_ids()
+    front_door_entities = [
+        entity_id
+        for entity_id in entity_ids
+        if entity_id.split(".", 1)[-1].startswith("front_door")
+    ]
+    assert front_door_entities == ["camera.front_door"]
 
 
 async def test_yaml_import_failure_creates_repair_issue(
@@ -357,7 +411,6 @@ async def test_services_without_yaml(hass: HomeAssistant) -> None:
 async def test_ui_entry_uses_default_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test UI-created entries use default entity sets when options omit platform keys."""
     mock_config_entry.add_to_hass(hass)
@@ -369,19 +422,13 @@ async def test_ui_entry_uses_default_entities(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    platforms = {entity.entity_id.split(".")[0] for entity in entities}
-    assert platforms == {
-        Platform.BINARY_SENSOR,
-        Platform.CAMERA,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    }
-
-    unique_ids = {entity.unique_id for entity in entities}
-    assert f"{TEST_SERIAL}-audio_detected-0" in unique_ids
-    assert f"{TEST_SERIAL}-motion_detected-0" in unique_ids
-    assert f"{TEST_SERIAL}-crossline_detected-0" in unique_ids
-    assert f"{TEST_SERIAL}-online-0" in unique_ids
+    entity_ids = hass.states.async_entity_ids()
+    title_slug = TEST_CONFIG_ENTRY_TITLE.lower().replace(" ", "_")
+    assert f"binary_sensor.{title_slug}_audio_detected" in entity_ids
+    assert f"binary_sensor.{title_slug}_motion_detected" in entity_ids
+    assert f"binary_sensor.{title_slug}_crossline_detected" in entity_ids
+    assert f"binary_sensor.{title_slug}_online" in entity_ids
+    assert f"camera.{title_slug}" in entity_ids
+    assert f"sensor.{title_slug}_ptz_preset" in entity_ids
+    assert f"sensor.{title_slug}_sd_used" in entity_ids
+    assert f"switch.{title_slug}_privacy_mode" in entity_ids

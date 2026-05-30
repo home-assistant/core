@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import threading
-from typing import Any, cast
+from typing import Any
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
@@ -31,12 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    issue_registry as ir,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -399,8 +394,6 @@ class AmcrestDevice:
     control_light: bool
     channel: int = 0
     name: str = ""
-    serial_number: str = ""
-    device_info: DeviceInfo | None = None
 
 
 @dataclass
@@ -496,9 +489,6 @@ async def _async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> bool:
     """Set up Amcrest from a config entry."""
-    # unique id is set by the config flow using the serial number
-    serial = cast(str, entry.unique_id)
-
     config_data = dict(entry.data)
     config_data.update(entry.options)
 
@@ -537,37 +527,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> b
         control_light,
     )
     device.name = name
-    device.serial_number = serial
-    device.device_info = None
-
-    try:
-        fetched_serial = (await api.async_serial_number or "").strip()
-    except AmcrestError:
-        fetched_serial = ""
-
-    if fetched_serial and fetched_serial != serial:
-        _LOGGER.debug(
-            "Config entry unique_id (%s) does not match device serial (%s)",
-            serial,
-            fetched_serial,
-        )
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, serial)},
-        name=name,
-        serial_number=serial,
-        manufacturer="Amcrest",
-        configuration_url=api.get_base_url(),
-    )
-    device.device_info = DeviceInfo(
-        identifiers={(DOMAIN, serial)},
-        name=name,
-        serial_number=serial,
-        manufacturer="Amcrest",
-        configuration_url=api.get_base_url(),
-    )
 
     event_codes = _event_codes_for_binary_sensor_keys(
         _get_entry_binary_sensor_keys(entry)
