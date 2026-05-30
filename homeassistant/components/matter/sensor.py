@@ -16,6 +16,7 @@ from matter_server.common.custom_clusters import (
 )
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -332,17 +333,34 @@ class MatterConcentrationSensor(MatterSensor):
 
     Reads the MeasurementUnit attribute once at init to set the unit of
     measurement. Falls back to the statically defined unit when the device does
-    not report MeasurementUnit. MeasurementUnit is Fixed per the Matter spec,
-    so reading it once is sufficient.
+    not report MeasurementUnit, or reports a unit that is not valid for the
+    sensor's device class. MeasurementUnit is Fixed per the Matter spec, so
+    reading it once is sufficient.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the entity."""
         super().__init__(*args, **kwargs)
-        if (unit_value := self.matter_measurement_unit) is not None and (
-            mapped_unit := _MEASUREMENT_UNIT_MAP.get(unit_value)
-        ) is not None:
-            self._attr_native_unit_of_measurement = mapped_unit
+        if (unit_value := self.matter_measurement_unit) is not None:
+            self._apply_measurement_unit(unit_value)
+
+    def _apply_measurement_unit(self, unit_value: int) -> None:
+        """Set the unit of measurement from the reported MeasurementUnit.
+
+        Only override the statically defined unit when the mapped unit is valid
+        for the sensor's device class, to avoid invalid unit/device class
+        combinations (e.g. the CO2 device class only allows ppm). Converting
+        unsupported units to an accepted one is left to a future change.
+        """
+        if (mapped_unit := _MEASUREMENT_UNIT_MAP.get(unit_value)) is None:
+            return
+        device_class = self.device_class
+        allowed_units = (
+            DEVICE_CLASS_UNITS.get(device_class) if device_class is not None else None
+        )
+        if allowed_units is not None and mapped_unit not in allowed_units:
+            return
+        self._attr_native_unit_of_measurement = mapped_unit
 
     @property
     def matter_measurement_unit(self) -> int | None:
@@ -350,7 +368,9 @@ class MatterConcentrationSensor(MatterSensor):
         cluster: ConcentrationMeasurementCluster = self._endpoint.get_cluster(
             self._entity_info.primary_attribute.cluster_id
         )
-        value: int | None = cluster.measurementUnit
+        value: int | Nullable | None = cluster.measurementUnit
+        if value in (None, NullValue):
+            return None
         return value
 
 
@@ -373,13 +393,15 @@ class MatterTVOCConcentrationSensor(MatterConcentrationSensor):
     per the Matter spec, so the device class is set once at init.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the entity."""
-        super().__init__(*args, **kwargs)
-        if (unit_value := self.matter_measurement_unit) is not None and (
-            dc := _TVOC_DEVICE_CLASS_MAP.get(unit_value)
-        ) is not None:
+    def _apply_measurement_unit(self, unit_value: int) -> None:
+        """Resolve the device class from the unit, then set the unit.
+
+        The device class is resolved first so the unit is validated against the
+        matching (mass- or parts-based) device class.
+        """
+        if (dc := _TVOC_DEVICE_CLASS_MAP.get(unit_value)) is not None:
             self._attr_device_class = dc
+        super()._apply_measurement_unit(unit_value)
 
 
 class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
