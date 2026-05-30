@@ -24,10 +24,10 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(
+async def test_user_flow_happy_path(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, valid_config: Mapping[str, Any]
 ) -> None:
-    """Test we get the form."""
+    """Test the happy path of the initial setup flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
