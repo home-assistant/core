@@ -5,6 +5,7 @@ import pathlib
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from roborock import (
@@ -254,6 +255,26 @@ async def test_no_user_agreement(
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
         assert mock_roborock_entry.error_reason_translation_key == "no_user_agreement"
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [aiohttp.ClientError(), TimeoutError()],
+    ids=["client_error", "timeout"],
+)
+async def test_network_error_during_setup(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    side_effect: Exception,
+) -> None:
+    """Test that network errors during setup trigger retry, not terminal failure."""
+    with patch(
+        "homeassistant.components.roborock.create_device_manager",
+        side_effect=side_effect,
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
+        assert mock_roborock_entry.error_reason_translation_key == "network_error"
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])

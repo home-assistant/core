@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, cast
 from bleak import BleakScanner
 from habluetooth import (
     BaseHaScanner,
+    BluetoothReachabilityIntent,
     BluetoothScannerDevice,
     BluetoothScanningMode,
     HaBleakScannerWrapper,
@@ -106,6 +107,14 @@ def async_ble_device_from_address(
 ) -> BLEDevice | None:
     """Return BLEDevice for an address if its present."""
     return _get_manager(hass).async_ble_device_from_address(address, connectable)
+
+
+@hass_callback
+def async_address_reachability_diagnostics(
+    hass: HomeAssistant, address: str, intent: BluetoothReachabilityIntent
+) -> str:
+    """Return a human readable explanation of why an address may be unreachable."""
+    return _get_manager(hass).async_address_reachability_diagnostics(address, intent)
 
 
 @hass_callback
@@ -284,3 +293,19 @@ def async_set_fallback_availability_interval(
 ) -> None:
     """Override the fallback availability timeout for a MAC address."""
     _get_manager(hass).async_set_fallback_availability_interval(address, interval)
+
+
+async def async_request_active_scan(
+    hass: HomeAssistant, duration: float | None = None
+) -> None:
+    """Run an on-demand active sweep across every AUTO scanner.
+
+    Intended for config-flow discovery and other one-shot probes that
+    need fresh advertisements without waiting for the periodic
+    rediscovery cadence. Awaits ``duration`` seconds so the caller can
+    then read newly discovered advertisements. Defaults to habluetooth's
+    on-demand sweep duration when ``duration`` is not provided; the
+    scheduler clamps the value to its allowed range. Concurrent callers
+    dedupe to a single bus-wide window.
+    """
+    await _get_manager(hass).async_request_active_scan(duration)
