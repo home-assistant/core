@@ -13,7 +13,11 @@ from aiohttp import ClientConnectionError
 import pytest
 import pytest_asyncio
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
+    AgentBackup,
+    suggested_filename,
+)
 from homeassistant.components.scaleway_object_storage import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
@@ -692,6 +696,7 @@ async def test_simple_upload(
         agent_backup=mock_agent_backup,
     )
 
+    expected_filename = suggested_filename(mock_agent_backup)
     mock_s3_client.put.assert_has_calls(
         [
             call(
@@ -701,7 +706,7 @@ async def test_simple_upload(
                 headers={
                     HEADER_METADATA: json.dumps(mock_agent_backup.as_dict()),
                     HEADER_CONTENT_TYPE: "application/x-tar",
-                    HEADER_CONTENT_DISPOSITION: 'attachment; filename="Core_2024.12.0.dev0_2024-11-22_11.48_48727189.tar"',
+                    HEADER_CONTENT_DISPOSITION: f'attachment; filename="{expected_filename}"',
                 },
             ),
         ]
@@ -810,6 +815,7 @@ async def test_multipart_upload(
             agent_backup=mock_agent_backup,
         )
 
+    expected_filename = suggested_filename(mock_agent_backup)
     mock_s3_client.post.assert_has_calls(
         [
             # First call creates the multipart upload
@@ -822,7 +828,7 @@ async def test_multipart_upload(
                 headers={
                     HEADER_METADATA: json.dumps(mock_agent_backup.as_dict()),
                     HEADER_CONTENT_TYPE: "application/x-tar",
-                    HEADER_CONTENT_DISPOSITION: 'attachment; filename="Core_2024.12.0.dev0_2024-11-22_11.48_48727189.tar"',
+                    HEADER_CONTENT_DISPOSITION: f'attachment; filename="{expected_filename}"',
                 },
             ),
             # Second call completes the multipart upload after all parts have been uploaded
