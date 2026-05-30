@@ -9,9 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-# from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.COVER]
@@ -220,7 +219,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
                 )
 
         # Migrate device registry identifiers
-        # migrate_device_registry(hass, device_id_to_new_identifier)
+        migrate_device_registry(hass, device_id_to_new_identifier)
         _LOGGER.debug("Updating config entry to minor_version=2 with data=%s", new_data)
         hass.config_entries.async_update_entry(
             entry,
@@ -234,26 +233,27 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
     return True
 
 
-# def migrate_device_registry(hass, device_id_to_new_identifier):
-#     device_registry = dr.async_get(hass)
-#     for device_id, new_identifier in device_id_to_new_identifier.items():
-#         device = device_registry.async_get(device_id)
-#         if not device:
-#             _LOGGER.warning("Device %s not found in registry, skipping", device_id)
-#             continue
-#         old_domain_ids = {i for i in device.identifiers if i[0] == DOMAIN}
-#         new_identifiers = (device.identifiers - old_domain_ids) | {
-#                 (DOMAIN, new_identifier)
-#             }
-#         _LOGGER.debug(
-#                 "Updating device %s: identifiers %s → %s",
-#                 device_id,
-#                 old_domain_ids,
-#                 new_identifiers,
-#             )
-#         device_registry.async_update_device(
-#                 device_id, new_identifiers=new_identifiers
-#             )
+def migrate_device_registry(
+    hass: HomeAssistant, device_id_to_new_identifier: dict[str, str]
+) -> None:
+    """Update device registry entries based on the mapping from HA device_id to new DOMAIN identifier."""
+    device_registry = dr.async_get(hass)
+    for device_id, new_identifier in device_id_to_new_identifier.items():
+        device = device_registry.async_get(device_id)
+        if not device:
+            _LOGGER.warning("Device %s not found in registry, skipping", device_id)
+            continue
+        old_domain_ids = {i for i in device.identifiers if i[0] == DOMAIN}
+        new_identifiers = (device.identifiers - old_domain_ids) | {
+            (DOMAIN, new_identifier)
+        }
+        _LOGGER.debug(
+            "Updating device %s: identifiers %s → %s",
+            device_id,
+            old_domain_ids,
+            new_identifiers,
+        )
+        device_registry.async_update_device(device_id, new_identifiers=new_identifiers)
 
 
 def build_new_unique_id(old_uid: str, system_id: str) -> str | None:
