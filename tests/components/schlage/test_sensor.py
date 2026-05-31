@@ -9,7 +9,9 @@ from homeassistant.helpers import entity_registry as er
 
 from . import MockSchlageConfigEntry
 
-from tests.common import SnapshotAssertion, snapshot_platform
+from syrupy.assertion import SnapshotAssertion
+
+from tests.common import snapshot_platform
 
 
 async def test_sensor_attributes(
