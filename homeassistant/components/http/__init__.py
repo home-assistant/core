@@ -453,7 +453,7 @@ class _SSLReloadHandler(FileSystemEventHandler):
             else event.src_path
         )
         paths = {os.path.normpath(src)}
-        if hasattr(event, "dest_path"):
+        if hasattr(event, "dest_path") and event.dest_path:
             dest = (
                 event.dest_path.decode()
                 if isinstance(event.dest_path, bytes)
@@ -556,7 +556,11 @@ class HomeAssistantHTTP:
         if self.ssl_certificate:
             # Resolve paths once so the watcher and reload use the same absolute paths
             self._ssl_certificate_path = self._resolve_ssl_path(self.ssl_certificate)
-            self._ssl_key_path = self._resolve_ssl_path(self.ssl_key)  # type: ignore[arg-type]
+            if self.ssl_key is None:
+                raise HomeAssistantError(
+                    "ssl_key must be set when ssl_certificate is configured"
+                )
+            self._ssl_key_path = self._resolve_ssl_path(self.ssl_key)
             if self.ssl_peer_certificate:
                 self._ssl_peer_certificate_path = self._resolve_ssl_path(
                     self.ssl_peer_certificate
@@ -927,6 +931,8 @@ class HomeAssistantHTTP:
     def _schedule_reload(self) -> None:
         """Schedule the SSL certificate reload on the executor."""
         self._ssl_reload_debounce_handle = None
+        if self._ssl_reload_task is not None:
+            self._ssl_reload_task.cancel()
         self._ssl_reload_task = self.hass.async_create_background_task(
             self._async_reload_ssl_certificate(),
             name="SSL certificate reload",
