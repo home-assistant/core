@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import device_tracker, mqtt
+from homeassistant.components import device_tracker, mqtt, zone
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -30,7 +30,7 @@ DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
         device_tracker.DOMAIN: {
             "name": "test",
-            "state_topic": "test-topic",
+            "json_attributes_topic": "json-attributes-topic",
         }
     }
 }
@@ -539,6 +539,158 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     assert state.state == STATE_UNKNOWN
 
 
+async def test_setting_device_tracker_location_via_in_zones_message(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the in_zones setting in combination with GPS coordinates."""
+    hass.config.latitude = 32.87336
+    hass.config.longitude = -117.22743
+
+    assert async_setup_component(hass, zone.DOMAIN, {})
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_tracker/bla/config",
+        '{ "name": "test", "json_attributes_topic": "attributes-topic"}',
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["source_type"] == "gps"
+
+    assert state.state == STATE_UNKNOWN
+
+    # Test in_zones with known `home` object name
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"in_zones": "home","source_type": "router"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["in_zones"] == ["zone.home"]
+    assert state.attributes.get("latitude") is None
+    assert state.attributes.get("longitude") is None
+    assert state.attributes.get("gps_accuracy") is None
+    # assert source_type is overridden by discovery
+    assert state.attributes["source_type"] == "router"
+    assert state.state == STATE_HOME
+
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"in_zones": null,"source_type": "router"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["in_zones"] == []
+    # assert source_type is overridden by discovery
+    assert state.attributes["source_type"] == "router"
+    assert state.attributes.get("latitude") is None
+    assert state.attributes.get("longitude") is None
+    assert state.attributes.get("gps_accuracy") is None
+    assert state.state == STATE_NOT_HOME
+
+    # Fire GPS coordinates for an unknown GPS based location
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"latitude":50.1,"longitude": -2.1}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["in_zones"] == []
+    assert state.attributes["latitude"] == 50.1
+    assert state.attributes["longitude"] == -2.1
+    assert state.attributes["gps_accuracy"] == 0
+    assert state.attributes["source_type"] == "gps"
+    assert state.state == STATE_NOT_HOME
+
+    # Fire GPS coordinates for the home location
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"latitude":32.87336,"longitude": -117.22743,'
+        ' "gps_accuracy":1.5, "source_type": "gps"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["in_zones"] == ["zone.home"]
+    assert state.attributes["latitude"] == 32.87336
+    assert state.attributes["longitude"] == -117.22743
+    assert state.attributes["gps_accuracy"] == 1.5
+    assert state.attributes["source_type"] == "gps"
+    assert state.state == STATE_HOME
+
+    # Test in_zones with an unknown zone name
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"in_zones": "unknown","source_type": "router"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["in_zones"] == []
+    # assert source_type is overridden by discovery
+    assert state.attributes["source_type"] == "router"
+    assert state.attributes.get("latitude") is None
+    assert state.attributes.get("longitude") is None
+    assert state.attributes.get("gps_accuracy") is None
+    assert state.state == STATE_NOT_HOME
+
+    # Test in_zones with an known zone display name as a list
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"in_zones": ["test home"],"source_type": "router"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["in_zones"] == ["zone.home"]
+    # assert source_type is overridden by discovery
+    assert state.attributes["source_type"] == "router"
+    assert state.attributes.get("latitude") is None
+    assert state.attributes.get("longitude") is None
+    assert state.attributes.get("gps_accuracy") is None
+    assert state.state == STATE_HOME
+
+    # Test in_zones with an known zone entity_id as a list
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"in_zones": ["zone.home"],"source_type": "router"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["in_zones"] == ["zone.home"]
+    # assert source_type is overridden by discovery
+    assert state.attributes["source_type"] == "router"
+    assert state.attributes.get("latitude") is None
+    assert state.attributes.get("longitude") is None
+    assert state.attributes.get("gps_accuracy") is None
+    assert state.state == STATE_HOME
+
+    # Test with a custom zone
+    hass.states.async_set(
+        "zone.school",
+        "zoning",
+        {
+            "latitude": 30.0,
+            "longitude": -100.0,
+            "radius": 100,
+            "friendly_name": "School",
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"in_zones": ["School"],"source_type": "router"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["in_zones"] == ["zone.school"]
+    # assert source_type is overridden by discovery
+    assert state.attributes["source_type"] == "router"
+    assert state.attributes.get("latitude") is None
+    assert state.attributes.get("longitude") is None
+    assert state.attributes.get("gps_accuracy") is None
+    assert state.state == "School"
+
+
 async def test_setting_device_tracker_location_via_reset_message(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -726,8 +878,8 @@ async def test_reloadable(
             DEFAULT_CONFIG,
             (
                 {
+                    "state_topic": "test-topic",
                     "availability_topic": "availability-topic",
-                    "json_attributes_topic": "json-attributes-topic",
                 },
             ),
         )
@@ -761,6 +913,7 @@ async def test_skipped_async_ha_write_state(
             DEFAULT_CONFIG,
             (
                 {
+                    "state_topic": "test-topic",
                     "value_template": "{{ value_json.some_var * 1 }}",
                 },
             ),

@@ -530,6 +530,7 @@ class MqttAttributesMixin(Entity):
                         self._attributes_message_received,
                         {
                             "_attr_extra_state_attributes",
+                            "_attr_in_zones",
                             "_attr_location_accuracy",
                             "_attr_latitude",
                             "_attr_location_name",

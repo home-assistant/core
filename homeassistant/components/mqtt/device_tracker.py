@@ -7,7 +7,12 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import (
+    ATTR_IN_ZONES,
+    SourceType,
+    TrackerEntity,
+)
+from homeassistant.components.zone import DATA_ZONE_ENTITY_IDS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -73,11 +78,29 @@ PLATFORM_SCHEMA_MODERN_BASE = MQTT_BASE_SCHEMA.extend(
         ),
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-PLATFORM_SCHEMA_MODERN = vol.All(PLATFORM_SCHEMA_MODERN_BASE, valid_config)
 
+PLATFORM_SCHEMA_MODERN = vol.All(
+    PLATFORM_SCHEMA_MODERN_BASE,
+    valid_config,
+    # The use of state_topic and value_template is deprecated
+    # and support is planned for removal with HA Core 2027.1.0
+    cv.deprecated(CONF_STATE_TOPIC),
+    cv.deprecated(CONF_VALUE_TEMPLATE),
+    cv.deprecated(CONF_PAYLOAD_HOME),
+    cv.deprecated(CONF_PAYLOAD_NOT_HOME),
+    cv.deprecated(CONF_PAYLOAD_RESET),
+)
 
 DISCOVERY_SCHEMA = vol.All(
-    PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=vol.REMOVE_EXTRA), valid_config
+    PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+    valid_config,
+    # The use of state_topic and value_template is deprecated
+    # and support is planned for removal with HA Core 2027.1.0
+    cv.deprecated(CONF_STATE_TOPIC),
+    cv.deprecated(CONF_VALUE_TEMPLATE),
+    cv.deprecated(CONF_PAYLOAD_HOME),
+    cv.deprecated(CONF_PAYLOAD_NOT_HOME),
+    cv.deprecated(CONF_PAYLOAD_RESET),
 )
 
 
@@ -155,7 +178,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     def _process_update_extra_state_attributes(
         self, extra_state_attributes: dict[str, Any]
     ) -> None:
-        """Extract the location from the extra state attributes."""
+        """Extract the location or zone from the extra state attributes."""
         if (
             ATTR_LATITUDE in extra_state_attributes
             or ATTR_LONGITUDE in extra_state_attributes
@@ -170,6 +193,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             ):
                 self._attr_latitude = latitude
                 self._attr_longitude = longitude
+                self._attr_in_zones = None
             else:
                 # Invalid or incomplete coordinates, reset location
                 self._attr_latitude = None
@@ -201,9 +225,40 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
             else:
                 self._attr_location_accuracy = 0
+        elif ATTR_IN_ZONES in extra_state_attributes:
+            # Determine zones
+            self._attr_latitude = None
+            self._attr_longitude = None
+            in_zones_list: set[str] = {
+                vol.Coerce(str)(zone)
+                for zone in cv.ensure_list(extra_state_attributes[ATTR_IN_ZONES])
+            }
+            zone_entity_ids = self.hass.data.get(DATA_ZONE_ENTITY_IDS, ())
+            zone_names: dict[str, str] = {
+                zone_name: entity_id
+                for entity_id in zone_entity_ids
+                if (zone_state := self.hass.states.get(entity_id)) is not None
+                and (zone_name := zone_state.attributes.get("friendly_name"))
+                is not None
+            }
+            # Match zone with entity, object_name or zone name
+            self._attr_in_zones = list(
+                {
+                    entity_id
+                    for entity_id in zone_entity_ids
+                    if entity_id in in_zones_list
+                    or entity_id.partition(".")[2] in in_zones_list
+                }
+                | {
+                    entity_id
+                    for name, entity_id in zone_names.items()
+                    if name in in_zones_list
+                }
+            )
 
         self._attr_extra_state_attributes = {
             attribute: value
             for attribute, value in extra_state_attributes.items()
-            if attribute not in {ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE}
+            if attribute
+            not in {ATTR_GPS_ACCURACY, ATTR_IN_ZONES, ATTR_LATITUDE, ATTR_LONGITUDE}
         }
