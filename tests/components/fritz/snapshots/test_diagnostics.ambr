@@ -25,7 +25,7 @@
         'NAS': 'none',
         'Phone': 'readwrite',
       }),
-      'device_updtime_hours': 699,
+      'device_uptime_hours': 699,
       'discovered_services': list([
         'DeviceInfo1',
         'Hosts1',
