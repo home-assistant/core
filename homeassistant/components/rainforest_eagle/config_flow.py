@@ -1,5 +1,6 @@
 """Config flow for Rainforest Eagle integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -21,7 +22,7 @@ from .data import CannotConnect, InvalidAuth, async_get_type
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_schema(user_input: dict[str, Any] | None) -> vol.Schema:
+def create_schema(user_input: Mapping[str, Any] | None) -> vol.Schema:
     """Create user schema with passed in defaults if available."""
     if user_input is None:
         user_input = {}
