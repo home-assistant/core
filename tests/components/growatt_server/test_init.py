@@ -782,9 +782,9 @@ async def test_migrate_failure_returns_false(
     assert "Migration will retry on next restart" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_growatt_classic_api")
 async def test_migrate_already_migrated(
     hass: HomeAssistant,
-    mock_growatt_classic_api,
 ) -> None:
     """Test migration is skipped for already migrated entries."""
     # Create a config entry already at version 1.1
