@@ -185,10 +185,10 @@ def cleanup_stale_missing_infrared_issues(
     hass: HomeAssistant,
     configured_remote_ids: set[str],
     *,
-    cleanup_stale_issues: bool,
+    issue_cleanup_handler: RestoredInfraredEntityIssueHandler | None,
 ) -> None:
     """Clear repair issues for remote ids that are no longer configured."""
-    if not cleanup_stale_issues:
+    if issue_cleanup_handler is not _delete_missing_issue:
         return
 
     async_delete_stale_linked_infrared_entity_missing_issues(
@@ -269,7 +269,7 @@ async def async_setup_virtual_remote_entities(
     cleanup_stale_missing_infrared_issues(
         hass,
         configured_remote_ids,
-        cleanup_stale_issues=(restored_infrared_issue_handler is _delete_missing_issue),
+        issue_cleanup_handler=restored_infrared_issue_handler,
     )
 
     if cleanup_devices:
@@ -510,16 +510,10 @@ class InfraredRemoteEntity(RemoteEntity):
                 translation_domain=self._translation_domain,
             )
         except HomeAssistantError as err:
-            looks_like_named_command = (
-                not command_is_configured
-                and bool(command)
-                and " " not in command
-                and all(char.isalnum() or char in {"_", "-"} for char in command)
-            )
-            if looks_like_named_command:
+            if not command_is_configured:
                 raise HomeAssistantError(
                     translation_domain=self._translation_domain,
-                    translation_key="remote_command_missing",
+                    translation_key="remote_unknown_or_invalid_command",
                     translation_placeholders={"command": command},
                 ) from err
             raise
@@ -536,7 +530,7 @@ class InfraredRemoteEntity(RemoteEntity):
 
         try:
             await infrared.async_send_command(hass, entity_id, ir_command)
-        except HomeAssistantError:
+        except asyncio.CancelledError, HomeAssistantError:
             raise
         except Exception as err:
             raise HomeAssistantError(

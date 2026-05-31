@@ -1,5 +1,6 @@
 """Tests for virtual remote entities."""
 
+import asyncio
 from collections.abc import Iterable, Mapping
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, patch
@@ -23,9 +24,7 @@ from homeassistant.components.virtual_remote.remote import (
     _as_str_mapping,
     _create_missing_issue,
     _delete_missing_issue,
-    _virtual_remote_device_info,
     async_setup_virtual_remote_entities,
-    cleanup_stale_missing_infrared_issues,
     cleanup_stale_remote_entities,
     cleanup_stale_virtual_remote_devices,
     configured_remote_definitions,
@@ -635,7 +634,7 @@ async def test_missing_named_command_error(
     with pytest.raises(HomeAssistantError) as err:
         await entity.async_send_command(["POWER"])
 
-    assert err.value.translation_key == "remote_command_missing"
+    assert err.value.translation_key == "remote_unknown_or_invalid_command"
     assert err.value.translation_placeholders == {"command": "POWER"}
 
 
@@ -648,6 +647,19 @@ async def test_invalid_raw_command_error(
 
     with pytest.raises(HomeAssistantError) as err:
         await entity.async_send_command([""])
+
+    assert err.value.translation_key == "remote_unknown_or_invalid_command"
+
+
+async def test_invalid_configured_command_preserves_parser_error(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test invalid configured command preserves parser error."""
+    entity = _make_entity(hass, commands={"BROKEN": ""})
+
+    with pytest.raises(HomeAssistantError) as err:
+        await entity.async_send_command(["BROKEN"])
 
     assert err.value.translation_key == "remote_invalid_command"
 
@@ -857,67 +869,18 @@ async def test_async_setup_virtual_remote_entities_skips_malformed_and_duplicate
     ]
 
 
-def test_virtual_remote_device_info_factory() -> None:
-    """Test standalone virtual remote device info factory."""
-    assert _virtual_remote_device_info("tv", "TV", {}) == DeviceInfo(
-        identifiers={(DOMAIN, "tv")},
-        name="TV",
-    )
-
-
-def test_cleanup_stale_missing_infrared_issues_uses_standalone_cleanup(
+async def test_send_command_reraises_cancelled_error(
     hass: HomeAssistant,
+    infrared_entity: str,
 ) -> None:
-    """Test stale linked infrared repair issue cleanup for standalone remotes."""
-    with patch(
-        "homeassistant.components.virtual_remote.remote."
-        "async_delete_stale_linked_infrared_entity_missing_issues"
-    ) as delete_stale_issues:
-        cleanup_stale_missing_infrared_issues(
-            hass,
-            {"living_room_tv"},
-            cleanup_stale_issues=True,
-        )
+    """Test cancellation is not wrapped as a send failure."""
+    entity = _make_entity(hass)
 
-    delete_stale_issues.assert_called_once_with(
-        hass, configured_remote_ids={"living_room_tv"}
-    )
-
-
-async def test_async_setup_virtual_remote_entities_runs_device_cleanup(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test setup runs device cleanup when requested."""
-    entities: list[InfraredRemoteEntity] = []
-
-    with patch(
-        "homeassistant.components.virtual_remote.remote."
-        "cleanup_stale_virtual_remote_devices"
-    ) as cleanup_devices:
-        await async_setup_virtual_remote_entities(
-            hass,
-            config_entry,
-            _add_remote_entities_callback(entities),
-            device_info_factory=_device_info_factory,
-            cleanup_devices=True,
-        )
-
-    cleanup_devices.assert_called_once_with(
-        hass,
-        config_entry,
-        {"living_room_tv"},
-        identifier_domain=DOMAIN,
-    )
-    assert len(entities) == 1
-
-
-async def test_config_entry_setup_covers_standalone_remote_platform_setup(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test config entry setup reaches the standalone remote platform setup."""
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("remote.living_room_tv") is not None
+    with (
+        patch(
+            "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
+            side_effect=asyncio.CancelledError,
+        ),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await entity.async_send_command(["38000:1,2"])

@@ -17,8 +17,8 @@
           "name": "Remote name"
         },
         "data_description": {
-          "infrared_entity_id": "Infrared entity",
-          "name": "Remote name"
+          "infrared_entity_id": "Infrared entity that will transmit commands for this virtual remote.",
+          "name": "Name of the virtual remote."
         },
         "description": "Update the configured virtual remote.",
         "title": "Reconfigure Virtual Remote"
@@ -29,8 +29,8 @@
           "name": "Remote name"
         },
         "data_description": {
-          "infrared_entity_id": "Infrared entity",
-          "name": "Remote name"
+          "infrared_entity_id": "Infrared entity that will transmit commands for this virtual remote.",
+          "name": "Name of the virtual remote to create."
         },
         "description": "Create a virtual remote linked to an infrared entity.",
         "title": "Create Virtual Remote"
@@ -52,6 +52,9 @@
     },
     "remote_send_failed": {
       "message": "Failed to send infrared command: {error}"
+    },
+    "remote_unknown_or_invalid_command": {
+      "message": "Unknown or invalid infrared command: {command}"
     }
   },
   "issues": {
@@ -82,8 +85,8 @@
           "command_name": "Command name"
         },
         "data_description": {
-          "command_data": "Command data",
-          "command_name": "Command name"
+          "command_data": "Infrared command payload in a supported format.",
+          "command_name": "Name used with remote.send_command."
         },
         "title": "Add Command"
       },
@@ -93,8 +96,8 @@
           "command_name": "Command name"
         },
         "data_description": {
-          "command_data": "Command data",
-          "command_name": "Command name"
+          "command_data": "Infrared command payload in a supported format.",
+          "command_name": "Name used with remote.send_command."
         },
         "title": "Edit Command"
       },
@@ -104,8 +107,8 @@
           "name": "Remote name"
         },
         "data_description": {
-          "infrared_entity_id": "Infrared entity",
-          "name": "Remote name"
+          "infrared_entity_id": "Infrared entity that will transmit commands for this virtual remote.",
+          "name": "Name of the virtual remote."
         },
         "title": "Edit Virtual Remote"
       },
@@ -129,7 +132,7 @@
           "command_name": "Command"
         },
         "data_description": {
-          "command_name": "Command"
+          "command_name": "Command to remove."
         },
         "title": "Remove Command"
       },
@@ -138,7 +141,7 @@
           "command_name": "Command"
         },
         "data_description": {
-          "command_name": "Command"
+          "command_name": "Command to edit."
         },
         "title": "Select Command"
       }

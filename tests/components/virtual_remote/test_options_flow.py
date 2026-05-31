@@ -413,7 +413,16 @@ async def test_edit_command_duplicate_name(
 ) -> None:
     """Test editing command rejects another existing command name."""
     entry = _single_entry(hass, infrared_entity)
-    entry.options[CONF_REMOTE_COMMANDS]["POWER_OFF"] = RAW_COMMAND
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            **entry.options,
+            CONF_REMOTE_COMMANDS: {
+                **entry.options[CONF_REMOTE_COMMANDS],
+                "POWER_OFF": RAW_COMMAND,
+            },
+        },
+    )
 
     flow = VirtualRemoteOptionsFlow(entry)
     flow.hass = hass
@@ -633,7 +642,16 @@ async def test_remove_command_keeps_remaining_commands(
 ) -> None:
     """Test removing one command keeps the remaining commands."""
     entry = _single_entry(hass, infrared_entity)
-    entry.options[CONF_REMOTE_COMMANDS]["POWER_OFF"] = RAW_COMMAND
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            **entry.options,
+            CONF_REMOTE_COMMANDS: {
+                **entry.options[CONF_REMOTE_COMMANDS],
+                "POWER_OFF": RAW_COMMAND,
+            },
+        },
+    )
 
     flow = VirtualRemoteOptionsFlow(entry)
     flow.hass = hass

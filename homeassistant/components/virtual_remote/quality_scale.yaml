@@ -183,8 +183,9 @@ rules:
   test-coverage:
     status: done
     comment: >
-      All runtime paths, config flows, options flows, diagnostics,
-      repairs, and entity behavior are covered by unit tests.
+      comment: >
+        Unit tests cover runtime paths, config flows, options flows,
+        diagnostics, repairs, and remote entity behavior.
 
   # Gold
   devices:
@@ -210,16 +211,17 @@ rules:
       linked infrared entity.
 
   docs-examples:
-    status: todo
+    status: done
     comment: |
-      Add more complete automation and script examples before marking this rule
-      done.
+      Documentation includes automation examples, command sequences,
+      repeat and delay examples, and raw command usage.
 
   docs-known-limitations:
-    status: todo
+    status: done
     comment: |
-      Confirm the known limitations section is complete enough for Gold before
-      marking this rule done.
+      Documentation describes integration limitations including hardware
+      dependencies, lack of infrared learning, and infrared backend
+      requirements.
 
   docs-supported-devices:
     status: exempt
@@ -228,20 +230,22 @@ rules:
       Home Assistant infrared entities.
 
   docs-supported-functions:
-    status: todo
+    status: done
     comment: |
-      Confirm the supported functionality documentation is complete enough for
-      Gold before marking this rule done.
+      Documentation covers supported remote services, command formats,
+      repeat handling, delays, and named command behavior.
 
   docs-troubleshooting:
-    status: todo
+    status: done
     comment: |
-      Expand troubleshooting scenarios before marking this rule done.
+      Documentation includes troubleshooting guidance for unavailable
+      infrared entities, invalid commands, and configuration issues.
 
   docs-use-cases:
-    status: todo
+    status: done
     comment: |
-      Expand user-facing use cases before marking this rule done.
+      Documentation includes automation, scripting, reusable command,
+      and raw infrared transmission use cases.
 
   dynamic-devices:
     status: done
@@ -266,10 +270,10 @@ rules:
       integration and should be enabled by default.
 
   entity-translations:
-    status: todo
+    status: exempt
     comment: |
-      Add entity translations if the integration defines translated entity names
-      beyond the current device-name based entity names.
+      The remote entity uses the configured device name and does not define
+      translated entity names.
 
   exception-translations:
     status: done
