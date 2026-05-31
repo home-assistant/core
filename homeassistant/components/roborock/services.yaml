@@ -55,8 +55,10 @@ set_vacuum_zoned_cleaning:
       example: 0
       required: true
       selector:
-        text:
-          type: number
+        number:
+          min: 0
+          max: 2
+          step: 1
 get_vacuum_current_position:
   target:
     entity:

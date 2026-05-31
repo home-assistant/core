@@ -258,7 +258,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     async def async_set_vacuum_zoned_cleaning(
         self, x1: int, y1: int, x2: int, y2: int, repeats: int
     ) -> None:
-        """Clean the specified zones."""
+        """Clean the specified zone."""
         await self.send(RoborockCommand.APP_ZONED_CLEAN, [[x1, y1, x2, y2, repeats]])
 
     async def async_get_segments(self) -> list[Segment]:
@@ -519,7 +519,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     async def async_set_vacuum_zoned_cleaning(
         self, x1: int, y1: int, x2: int, y2: int, repeats: int
     ) -> None:
-        """Clean the specified zones."""
+        """Clean the specified zone."""
         raise ServiceNotSupported(DOMAIN, "set_vacuum_zoned_cleaning", self.entity_id)
 
 
@@ -708,5 +708,5 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     async def async_set_vacuum_zoned_cleaning(
         self, x1: int, y1: int, x2: int, y2: int, repeats: int
     ) -> None:
-        """Clean the specified zones."""
+        """Clean the specified zone."""
         raise ServiceNotSupported(DOMAIN, "set_vacuum_zoned_cleaning", self.entity_id)
