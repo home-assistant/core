@@ -199,16 +199,16 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate old entry."""
     if entry.version == 1 and entry.minor_version < 2:
-        await _async_migrate_entries(hass, entry)
+        await _async_migrate_unique_ids(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     return True
 
 
-async def _async_migrate_entries(
+async def _async_migrate_unique_ids(
     hass: HomeAssistant, config_entry: OverkizDataConfigEntry
 ) -> None:
-    """Migrate old entries to new unique IDs."""
+    """Migrate entities to new unique IDs."""
     entity_registry = er.async_get(hass)
 
     @callback
