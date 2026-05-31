@@ -5,7 +5,7 @@ import tempfile
 from unittest.mock import Mock, patch
 
 from aiohttp import web
-from aioimmich.exceptions import ImmichError
+from aioimmich.exceptions import ImmichError, ImmichForbiddenError
 import pytest
 
 from homeassistant.components.immich.const import DOMAIN
@@ -252,6 +252,12 @@ async def test_browse_media_collections_error(
     with patch("homeassistant.components.immich.PLATFORMS", []):
         await setup_integration(hass, mock_config_entry)
 
+    item = MediaSourceItem(
+        hass, DOMAIN, f"{mock_config_entry.unique_id}|{collection}", None
+    )
+    source = await async_get_media_source(hass)
+
+    # test generic ImmichError
     getattr(
         getattr(mock_immich, mocked_get_fn[0]), mocked_get_fn[1]
     ).side_effect = ImmichError(
@@ -263,16 +269,25 @@ async def test_browse_media_collections_error(
         }
     )
 
-    source = await async_get_media_source(hass)
-
-    item = MediaSourceItem(
-        hass, DOMAIN, f"{mock_config_entry.unique_id}|{collection}", None
-    )
     result = await source.async_browse_media(item)
 
     assert result
     assert result.identifier is None
     assert len(result.children) == 0
+
+    # test specific ImmichForbiddenError
+    getattr(
+        getattr(mock_immich, mocked_get_fn[0]), mocked_get_fn[1]
+    ).side_effect = ImmichForbiddenError(
+        {
+            "message": "Missing required permission: asset.read",
+            "error": "Forbidden",
+            "statusCode": 403,
+            "correlationId": "e0hlizyl",
+        }
+    )
+    with pytest.raises(BrowseError, match="Missing API permission"):
+        await source.async_browse_media(item)
 
 
 @pytest.mark.parametrize(
@@ -297,8 +312,15 @@ async def test_browse_media_collection_items_error(
     with patch("homeassistant.components.immich.PLATFORMS", []):
         await setup_integration(hass, mock_config_entry)
 
+    item = MediaSourceItem(
+        hass,
+        DOMAIN,
+        f"{mock_config_entry.unique_id}|{collection}|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
+        None,
+    )
     source = await async_get_media_source(hass)
 
+    # test generic ImmichError
     getattr(
         getattr(mock_immich, mocked_get_fn[0]), mocked_get_fn[1]
     ).side_effect = ImmichError(
@@ -309,17 +331,26 @@ async def test_browse_media_collection_items_error(
             "correlationId": "e0hlizyl",
         }
     )
-    item = MediaSourceItem(
-        hass,
-        DOMAIN,
-        f"{mock_config_entry.unique_id}|{collection}|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
-        None,
-    )
+
     result = await source.async_browse_media(item)
 
     assert result
     assert result.identifier is None
     assert len(result.children) == 0
+
+    # test specific ImmichForbiddenError
+    getattr(
+        getattr(mock_immich, mocked_get_fn[0]), mocked_get_fn[1]
+    ).side_effect = ImmichForbiddenError(
+        {
+            "message": "Missing required permission: asset.read",
+            "error": "Forbidden",
+            "statusCode": 403,
+            "correlationId": "e0hlizyl",
+        }
+    )
+    with pytest.raises(BrowseError, match="Missing API permission"):
+        await source.async_browse_media(item)
 
 
 @pytest.mark.parametrize(
