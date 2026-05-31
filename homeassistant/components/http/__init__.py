@@ -870,7 +870,6 @@ class HomeAssistantHTTP:
             self._ssl_reload_debounce_handle = None
         if self._ssl_reload_task is not None:
             self._ssl_reload_task.cancel()
-            self._ssl_reload_task = None
 
     async def _start_ssl_watcher(self) -> None:
         """Start watching the SSL certificate and key files for changes."""
@@ -895,7 +894,9 @@ class HomeAssistantHTTP:
         loop = self.hass.loop
 
         def _on_change() -> None:
-            loop.call_soon_threadsafe(self._debounce_ssl_reload)
+            # Suppress RuntimeError if the loop is closed during shutdown
+            with contextlib.suppress(RuntimeError):
+                loop.call_soon_threadsafe(self._debounce_ssl_reload)
 
         on_change: Callable[[], None] = _on_change
         handler = _SSLReloadHandler(frozenset(watched_paths), on_change)
@@ -933,7 +934,10 @@ class HomeAssistantHTTP:
         try:
             await self.hass.async_add_executor_job(self.reload_ssl_certificate)
         finally:
-            self._ssl_reload_task = None
+            # Only clear the task reference if no newer reload has been
+            # scheduled since this one started.
+            if self._ssl_reload_task is asyncio.current_task():
+                self._ssl_reload_task = None
 
     async def stop(self) -> None:
         """Stop the aiohttp server."""

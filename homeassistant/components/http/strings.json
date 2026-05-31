@@ -14,5 +14,14 @@
       "description": "Reload the SSL certificate from the configured certificate and key files without restarting the server.",
       "name": "Reload SSL certificate"
     }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "ssl_auto_reload": "Automatically reload SSL certificate when certificate files change on disk"
+        }
+      }
+    }
   }
 }
