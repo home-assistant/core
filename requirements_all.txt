@@ -3324,7 +3324,6 @@ wakeonlan==3.3.0
 wallbox==0.9.0
 
 # homeassistant.components.folder_watcher
-watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.7.1
