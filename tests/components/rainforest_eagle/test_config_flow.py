@@ -442,14 +442,21 @@ async def test_reconfigure_eagle_100(hass: HomeAssistant) -> None:
     }
 
 
-async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
-    """Test reconfigure aborts when Cloud ID changes."""
+async def test_reconfigure_updates_unique_id(hass: HomeAssistant) -> None:
+    """Test reconfigure updates the unique ID when Cloud ID changes."""
     entry = _mock_reconfigure_entry(hass)
     result = await entry.start_reconfigure_flow(hass)
 
-    with patch(
-        "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
-    ) as mock_get_type:
+    with (
+        patch(
+            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+            return_value=(TYPE_EAGLE_200, "meter-2"),
+        ),
+        patch(
+            "homeassistant.components.rainforest_eagle.async_setup_entry",
+            return_value=True,
+        ),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -458,11 +465,20 @@ async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
                 CONF_HOST: "192.168.1.56",
             },
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unique_id_mismatch"
-    assert len(mock_get_type.mock_calls) == 0
-    assert entry.data[CONF_CLOUD_ID] == "abcdef"
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.unique_id == "different"
+    assert entry.title == "different"
+    assert entry.data == {
+        CONF_TYPE: TYPE_EAGLE_200,
+        CONF_HOST: "192.168.1.56",
+        CONF_CLOUD_ID: "different",
+        CONF_INSTALL_CODE: "654321",
+        CONF_HARDWARE_ADDRESS: "meter-2",
+        "extra_data": "preserved",
+    }
 
 
 @pytest.mark.parametrize(
