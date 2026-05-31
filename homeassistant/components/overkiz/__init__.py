@@ -93,8 +93,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
             server=SUPPORTED_SERVERS[entry.data[CONF_HUB]],
         )
 
-    await _async_migrate_entries(hass, entry)
-
     try:
         await client.login()
         setup = await client.get_setup()
@@ -196,9 +194,20 @@ async def async_unload_entry(
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        await _async_migrate_entries(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    return True
+
+
 async def _async_migrate_entries(
     hass: HomeAssistant, config_entry: OverkizDataConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entries to new unique IDs."""
     entity_registry = er.async_get(hass)
 
@@ -255,8 +264,6 @@ async def _async_migrate_entries(
         return None
 
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
-
-    return True
 
 
 def create_local_client(
