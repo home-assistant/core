@@ -104,3 +104,56 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=create_schema(user_input), errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_CLOUD_ID])
+            self._abort_if_unique_id_mismatch()
+
+            try:
+                eagle_type, hardware_address = await async_get_type(
+                    self.hass,
+                    user_input[CONF_CLOUD_ID],
+                    user_input[CONF_INSTALL_CODE],
+                    user_input[CONF_HOST],
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if not eagle_type:
+                    errors["base"] = "unknown_device_type"
+                elif eagle_type == TYPE_EAGLE_100:
+                    user_input[CONF_TYPE] = eagle_type
+                    user_input[CONF_HARDWARE_ADDRESS] = None
+                elif eagle_type == TYPE_EAGLE_200:
+                    user_input[CONF_TYPE] = eagle_type
+                    if not hardware_address:
+                        errors["base"] = "no_meters_connected"
+                    else:
+                        user_input[CONF_HARDWARE_ADDRESS] = hardware_address
+                else:
+                    errors["base"] = "unsupported_device_type"
+
+                if not errors:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        title=user_input[CONF_CLOUD_ID],
+                        data=user_input,
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=create_schema(user_input or entry.data),
+            errors=errors,
+        )
