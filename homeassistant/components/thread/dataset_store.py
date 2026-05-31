@@ -27,6 +27,11 @@ STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 
+# Bit 0x08 of the first security policy flags byte is the legacy "Beacons"
+# flag. Newer OpenThread Border Router versions clear it by default without
+# incrementing the active timestamp, so it is ignored when comparing datasets.
+SECURITY_POLICY_BEACONS_FLAG = 0x08
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -46,6 +51,36 @@ def _format_dataset(
         else:
             result[name] = str(value)
     return result
+
+
+def _normalize_dataset(
+    dataset: dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem],
+) -> dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem]:
+    """Normalize a dataset for equivalence comparison.
+
+    Newer OpenThread Border Router versions report functionally equivalent
+    datasets without incrementing the active timestamp. To recognize these as
+    equivalent, ignore the fields that don't affect how Home Assistant uses the
+    dataset:
+    - WAKEUP_CHANNEL: added in OpenThread but the wake-up protocol isn't defined
+      yet, so we treat it as if it were always present.
+    - The Beacons bit in the security policy flags: newer OpenThread versions
+      clear this legacy flag by default.
+    """
+    normalized = {
+        key: value
+        for key, value in dataset.items()
+        if key != MeshcopTLVType.WAKEUP_CHANNEL
+    }
+    if (security_policy := normalized.get(MeshcopTLVType.SECURITYPOLICY)) and len(
+        security_policy.data
+    ) > 2:
+        flags = bytearray(security_policy.data)
+        flags[2] &= ~SECURITY_POLICY_BEACONS_FLAG
+        normalized[MeshcopTLVType.SECURITYPOLICY] = tlv_parser.MeshcopTLVItem(
+            security_policy.tag, bytes(flags)
+        )
+    return normalized
 
 
 class DatasetPreferredError(HomeAssistantError):
@@ -280,15 +315,12 @@ class DatasetStore:
             old_ts = (old_timestamp.seconds, old_timestamp.ticks)
             new_ts = (new_timestamp.seconds, new_timestamp.ticks)
             if old_ts >= new_ts:
-                # Silently accept if the only addition is WAKEUP_CHANNEL:
-                # it was added in OpenThread but the wake-up protocol isn't
-                # defined yet, so we treat it as if it were always present.
-                dataset_without_wakeup = {
-                    k: v
-                    for k, v in dataset.items()
-                    if k != MeshcopTLVType.WAKEUP_CHANNEL
-                }
-                if old_ts > new_ts or dataset_without_wakeup != entry.dataset:
+                # Silently accept datasets that are functionally equivalent but
+                # reported without a newer active timestamp by some OpenThread
+                # Border Router versions (see _normalize_dataset).
+                if old_ts > new_ts or _normalize_dataset(dataset) != _normalize_dataset(
+                    entry.dataset
+                ):
                     _LOGGER.warning(
                         "Got dataset with same extended PAN ID and same or older"
                         " active timestamp\nold:\n%s\nnew:\n%s",
