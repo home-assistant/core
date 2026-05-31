@@ -943,7 +943,7 @@ class AvmWrapper(FritzBoxTools):
         """Return extra infos for firmware."""
         return await self._async_service_call("UserInterface", "1", "X_AVM-DE_GetInfo")
 
-    async def async_get_device_uptime(self) -> int:
+    async def async_get_device_uptime_hours(self) -> int:
         """Get device uptime in hours."""
 
         def _get_uptime_hours() -> int:
