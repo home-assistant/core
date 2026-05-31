@@ -922,20 +922,16 @@ async def test_get_services(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_services command."""
-    # The http integration is always loaded and now provides
-    # the reload_ssl_certificate service.
-    expected_base = {"http": {"reload_ssl_certificate": {"fields": {}}}}
-
     assert ALL_SERVICE_DESCRIPTIONS_JSON_CACHE not in hass.data
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
-    assert msg == {"id": 1, "result": expected_base, "success": True, "type": "result"}
+    assert msg == {"id": 1, "result": {}, "success": True, "type": "result"}
 
     # Check cache is reused
     old_cache = hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE]
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
-    assert msg == {"id": 2, "result": expected_base, "success": True, "type": "result"}
+    assert msg == {"id": 2, "result": {}, "success": True, "type": "result"}
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
     # Set up an integration that has services and check cache is updated
@@ -944,7 +940,7 @@ async def test_get_services(
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 3,
-        "result": {**expected_base, GROUP_DOMAIN: ANY},
+        "result": {GROUP_DOMAIN: ANY},
         "success": True,
         "type": "result",
     }
@@ -958,7 +954,7 @@ async def test_get_services(
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 4,
-        "result": {**expected_base, GROUP_DOMAIN: group_services},
+        "result": {GROUP_DOMAIN: group_services},
         "success": True,
         "type": "result",
     }
@@ -966,10 +962,6 @@ async def test_get_services(
 
     # Set up an integration with legacy translations in services.yaml
     def _load_services_file(integration: Integration) -> JSON_TYPE:
-        # The http integration always has a services.yaml — return the real
-        # one for it so its service descriptions are preserved.
-        if integration.domain == "http":
-            return {"reload_ssl_certificate": {}}
         return {
             "set_default_level": {
                 "description": "Translated description",
@@ -1013,7 +1005,6 @@ async def test_get_services(
     assert msg == {
         "id": 5,
         "result": {
-            "http": {"reload_ssl_certificate": {"fields": {}}},
             LOGGER_DOMAIN: ANY,
             GROUP_DOMAIN: group_services,
         },
@@ -4611,9 +4602,6 @@ async def test_get_services_for_target_caching(
         assert mock_get_components.call_count == 1
         first_flat_descriptions = mock_get_components.call_args_list[0][0][4]
         assert first_flat_descriptions == {
-            "http.reload_ssl_certificate": {
-                "fields": {},
-            },
             "light.turn_on": {
                 "fields": {},
                 "target": {"entity": [{"domain": ["light"]}]},
