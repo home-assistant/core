@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.6.0.dev0"
+version = "2026.7.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -31,7 +31,7 @@ dependencies = [
   "aiohttp==3.13.5",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
-  "aiohttp-asyncmdnsresolver==0.1.1",
+  "aiohttp-asyncmdnsresolver==0.2.0",
   "aiozoneinfo==0.2.3",
   "annotatedyaml==1.0.2",
   "astral==2.2",
@@ -72,9 +72,9 @@ dependencies = [
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.15.0,<5.0",
-  "ulid-transform==2.2.1",
+  "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.11.14",
+  "uv==0.11.16",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.3.0",
@@ -648,7 +648,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.15.13"
+required-version = ">=0.15.14"
 
 [tool.ruff.lint]
 select = [
@@ -710,6 +710,7 @@ select = [
   "LOG",    # flake8-logging
   "N804",   # First argument of a class method should be named cls
   "N805",   # First argument of a method should be named self
+  "N806",   # Variable {name} in function should be snake_case
   "N815",   # Variable {name} in class scope should not be mixedCase
   "PERF",   # Perflint
   "PGH",    # pygrep-hooks
@@ -927,6 +928,9 @@ split-on-trailing-comma = false
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
+
+# Some utils have constants that benefit from being uppercase
+"homeassistant/util/*" = ["N806"]
 
 # Allow relative imports within auth and within components
 "homeassistant/auth/*/*" = ["TID252"]

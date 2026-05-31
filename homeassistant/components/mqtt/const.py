@@ -56,6 +56,7 @@ CONF_RETAIN = ATTR_RETAIN
 CONF_SCHEMA = "schema"
 CONF_STATE_TOPIC = "state_topic"
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
+CONF_TIMEZONE = "timezone"
 CONF_TOPIC = "topic"
 CONF_TRANSPORT = "transport"
 CONF_WS_PATH = "ws_path"
