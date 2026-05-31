@@ -211,7 +211,8 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         **kwargs: Any,
     ) -> None:
         """Play a piece of media."""
-        await self.async_call_alexa_music(media_id, media_type)
+        provider = media_type.value if isinstance(media_type, MediaType) else media_type
+        await self.async_call_alexa_music(media_id, provider)
 
     @alexa_api_call
     async def async_call_alexa_music(
