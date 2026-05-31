@@ -893,7 +893,11 @@ class HomeAssistantHTTP:
 
         # Create a thread-safe callback that schedules debounce on the event loop
         loop = self.hass.loop
-        on_change = partial(loop.call_soon_threadsafe, self._debounce_ssl_reload)
+
+        def _on_change() -> None:
+            loop.call_soon_threadsafe(self._debounce_ssl_reload)
+
+        on_change: Callable[[], None] = _on_change
         handler = _SSLReloadHandler(frozenset(watched_paths), on_change)
 
         self._ssl_watcher = Observer()
