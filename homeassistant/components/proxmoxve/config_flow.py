@@ -41,6 +41,7 @@ from .const import (
     CONF_VMS,
     DEFAULT_PORT,
     DEFAULT_REALM,
+    DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     NODE_ONLINE,
@@ -94,6 +95,7 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
             port=data[CONF_PORT],
             user=data[CONF_USERNAME],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            timeout=DEFAULT_TIMEOUT,
             **auth_kwargs,
         )
     except AuthenticationError as err:
