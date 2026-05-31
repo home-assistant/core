@@ -7,13 +7,13 @@ from homewizard_energy.models import CombinedModels, Measurement, State, System
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homewizard.const import UPDATE_INTERVAL
+from homeassistant.components.homewizard.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = [
     pytest.mark.usefixtures("init_integration"),
@@ -601,6 +601,42 @@ async def test_external_sensors_unreachable(
 
     assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_external_device_registry_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test orphaned external devices are removed during setup."""
+    await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    old_unique_id = "G001"
+    new_unique_id = f"gas_meter_{old_unique_id}"
+
+    old_device = device_registry.async_get_or_create(
+        config_entry_id=init_integration.entry_id,
+        identifiers={(DOMAIN, old_unique_id)},
+        manufacturer="HomeWizard",
+        model="HWE-P1",
+        name="Gas meter",
+        serial_number=old_unique_id,
+    )
+    new_device = device_registry.async_get_or_create(
+        config_entry_id=init_integration.entry_id,
+        identifiers={(DOMAIN, new_unique_id)},
+        manufacturer="HomeWizard",
+        model="HWE-P1",
+        name="Gas meter",
+        serial_number=new_unique_id,
+    )
+
+    await hass.config_entries.async_setup(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(old_device.id) is None
+    assert device_registry.async_get(new_device.id) is not None
 
 
 @pytest.mark.parametrize(
