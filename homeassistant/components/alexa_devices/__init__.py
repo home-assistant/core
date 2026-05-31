@@ -1,8 +1,5 @@
 """Alexa Devices integration."""
 
-import asyncio
-import contextlib
-
 from homeassistant.const import CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
@@ -43,24 +40,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     await coordinator.sync_history_state()
     await coordinator.sync_media_state()
 
-    async def _on_http2_reauth_required() -> None:
-        entry.async_start_reauth(hass)
-
-    async def _cancel_http2() -> None:
-        http2_task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await http2_task
-
     alexa_httpx_client = httpx_client.get_async_client(
         hass,
         alpn_protocols=SSL_ALPN_HTTP11_HTTP2,
     )
 
-    http2_task = await coordinator.api.start_http2_processing(
-        alexa_httpx_client, on_reauth_required=_on_http2_reauth_required
+    async def _on_http2_reauth_required() -> None:
+        entry.async_start_reauth(hass)
+
+    await coordinator.api.start_http2_processing(
+        alexa_httpx_client,
+        on_reauth_required=_on_http2_reauth_required,
     )
 
-    entry.async_on_unload(_cancel_http2)
+    async def _stop_http2() -> None:
+        try:
+            await coordinator.api.stop_http2_processing()
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("Error while stopping HTTP/2 processing")
+
+    entry.async_on_unload(_stop_http2)
 
     entry.runtime_data = coordinator
 
