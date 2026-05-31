@@ -12,6 +12,7 @@ from pathlib import Path
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
+import threading
 from typing import Any, Final, TypedDict, cast
 
 from aiohttp import web
@@ -440,9 +441,12 @@ class _SSLReloadHandler(FileSystemEventHandler):
         # deploy certificates by writing to a temporary file and then
         # atomically renaming it into place, which produces a FileMovedEvent
         # where src_path is the temp file and dest_path is the target.
-        paths = {os.path.normpath(event.src_path)}
+        # The event paths may be bytes on some platforms.
+        src = event.src_path.decode() if isinstance(event.src_path, bytes) else event.src_path
+        paths = {os.path.normpath(src)}
         if hasattr(event, "dest_path"):
-            paths.add(os.path.normpath(event.dest_path))
+            dest = event.dest_path.decode() if isinstance(event.dest_path, bytes) else event.dest_path
+            paths.add(os.path.normpath(dest))
         if not paths & self._watched_paths:
             return
         # Running in the watchdog observer thread — use call_soon_threadsafe
@@ -496,6 +500,9 @@ class HomeAssistantHTTP:
         self._ssl_certificate_path: Path | None = None
         self._ssl_key_path: Path | None = None
         self._ssl_peer_certificate_path: Path | None = None
+        # Lock to prevent concurrent reloads from the service call and
+        # the automatic file watcher.
+        self._ssl_reload_lock = threading.Lock()
 
     def _resolve_ssl_path(self, filepath_str: str) -> Path:
         """Resolve an SSL file path, making relative paths absolute."""
@@ -805,32 +812,36 @@ class HomeAssistantHTTP:
             _LOGGER.warning("SSL is not configured, skipping certificate reload")
             return False
 
-        try:
-            self.context.load_cert_chain(
-                str(self._ssl_certificate_path), str(self._ssl_key_path)
-            )
-        except (OSError, ValueError) as err:
-            _LOGGER.error(
-                "Failed to reload SSL certificate from %s: %s",
-                self._ssl_certificate_path,
-                err,
-            )
-            return False
-
-        if self._ssl_peer_certificate_path is not None:
+        with self._ssl_reload_lock:
             try:
-                self.context.load_verify_locations(str(self._ssl_peer_certificate_path))
+                self.context.load_cert_chain(
+                    str(self._ssl_certificate_path), str(self._ssl_key_path)
+                )
             except (OSError, ValueError) as err:
                 _LOGGER.error(
-                    "Failed to reload SSL peer certificate from %s: %s",
-                    self._ssl_peer_certificate_path,
+                    "Failed to reload SSL certificate from %s: %s",
+                    self._ssl_certificate_path,
                     err,
                 )
                 return False
 
-        _LOGGER.info(
-            "Successfully reloaded SSL certificate from %s", self._ssl_certificate_path
-        )
+            if self._ssl_peer_certificate_path is not None:
+                try:
+                    self.context.load_verify_locations(
+                        str(self._ssl_peer_certificate_path)
+                    )
+                except (OSError, ValueError) as err:
+                    _LOGGER.error(
+                        "Failed to reload SSL peer certificate from %s: %s",
+                        self._ssl_peer_certificate_path,
+                        err,
+                    )
+                    return False
+
+            _LOGGER.info(
+                "Successfully reloaded SSL certificate from %s",
+                self._ssl_certificate_path,
+            )
         return True
 
     def _stop_ssl_watcher(self) -> None:
