@@ -7,7 +7,7 @@ fetching prayer times, and finding mosques in the neighborhood.
 import logging
 
 from mawaqit import AsyncMawaqitClient
-from mawaqit.consts import BadCredentialsException
+from mawaqit.exceptions import BadCredentialsException, MawaqitException
 
 from .types import MawaqitMosqueData
 
@@ -26,8 +26,10 @@ async def validate_credentials(
             client = AsyncMawaqitClient(username=username, password=password)
         await client.login()
     except BadCredentialsException:
-        _LOGGER.debug("Error: Bad Credentials")
         return False
+    except MawaqitException as e:
+        _LOGGER.debug("Mawaqit error validating credentials: %s", e)
+        raise
     finally:
         if client is not None:
             await client.close()
@@ -49,6 +51,8 @@ async def get_mawaqit_api_token(
         token = await client.get_api_token()
     except BadCredentialsException as e:
         _LOGGER.debug("Error on retrieving API Token: %s", e)
+    except MawaqitException as e:
+        _LOGGER.debug("Mawaqit error on retrieving API Token: %s", e)
     except (ConnectionError, TimeoutError) as e:
         _LOGGER.debug("Network-related error: %s", e)
     finally:

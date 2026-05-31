@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFound
+from mawaqit.exceptions import BadCredentialsException, MawaqitException
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -37,12 +37,7 @@ async def test_mosque_coordinator_success(
 
 @pytest.mark.parametrize(
     "mosque_side_effect",
-    [
-        NoMosqueAround,
-        NoMosqueFound,
-        ConnectionError,
-        TimeoutError,
-    ],
+    [ConnectionError, TimeoutError, MawaqitException],
 )
 async def test_mosque_coordinator_errors_cause_setup_retry(
     hass: HomeAssistant,
@@ -165,7 +160,7 @@ async def test_prayer_time_coordinator_refresh_after_day(
 
 @pytest.mark.parametrize(
     "prayer_side_effect",
-    [NoMosqueAround, ConnectionError, TimeoutError],
+    [ConnectionError, TimeoutError, MawaqitException],
 )
 async def test_prayer_time_coordinator_errors_cause_setup_retry(
     hass: HomeAssistant,

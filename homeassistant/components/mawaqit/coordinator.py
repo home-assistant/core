@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import logging
 
-from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFound
+from mawaqit.exceptions import BadCredentialsException, MawaqitException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_UUID
@@ -42,8 +42,8 @@ class MosqueCoordinator(DataUpdateCoordinator[dict]):
             )
         except BadCredentialsException as err:
             raise ConfigEntryAuthFailed from err
-        except (NoMosqueAround, NoMosqueFound) as err:
-            raise UpdateFailed(f"No mosque found: {err}") from err
+        except MawaqitException as err:
+            raise UpdateFailed(f"Mawaqit error: {err}") from err
         except (ConnectionError, TimeoutError) as err:
             raise UpdateFailed(f"Network error: {err}") from err
 
@@ -97,8 +97,8 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
                 self.last_fetch = now
             except BadCredentialsException as err:
                 raise ConfigEntryAuthFailed from err
-            except (NoMosqueAround, NoMosqueFound) as err:
-                raise UpdateFailed(f"No mosque found: {err}") from err
+            except MawaqitException as err:
+                raise UpdateFailed(f"Mawaqit error: {err}") from err
             except (ConnectionError, TimeoutError) as err:
                 raise UpdateFailed(f"Network error: {err}") from err
 

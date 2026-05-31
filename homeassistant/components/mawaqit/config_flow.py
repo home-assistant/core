@@ -5,7 +5,12 @@ import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFound
+from mawaqit.exceptions import (
+    BadCredentialsException,
+    MawaqitException,
+    NoMosqueAround,
+    NoMosqueFound,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -87,6 +92,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ClientConnectorError,
                 ConnectionError,
                 TimeoutError,
+                MawaqitException,
             ):
                 errors["base"] = CANNOT_CONNECT_TO_SERVER
             else:
@@ -102,6 +108,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         ClientConnectorError,
                         ConnectionError,
                         TimeoutError,
+                        MawaqitException,
                     ):
                         errors["base"] = CANNOT_CONNECT_TO_SERVER
                     else:
@@ -143,7 +150,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 valid = await mawaqit_wrapper.validate_credentials(username, password)
-            except ClientConnectorError, ConnectionError, TimeoutError:
+            except (
+                ClientConnectorError,
+                ConnectionError,
+                TimeoutError,
+                MawaqitException,
+            ):
                 errors["base"] = CANNOT_CONNECT_TO_SERVER
             else:
                 if valid:
@@ -151,7 +163,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         mawaqit_token = await mawaqit_wrapper.get_mawaqit_api_token(
                             username, password
                         )
-                    except ClientConnectorError, ConnectionError, TimeoutError:
+                    except (
+                        ClientConnectorError,
+                        ConnectionError,
+                        TimeoutError,
+                        MawaqitException,
+                    ):
                         errors["base"] = CANNOT_CONNECT_TO_SERVER
                     else:
                         if not mawaqit_token:
@@ -340,6 +357,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ClientConnectorError,
                 ConnectionError,
                 TimeoutError,
+                MawaqitException,
             ):
                 errors["base"] = CANNOT_CONNECT_TO_SERVER
                 return self.async_show_form(

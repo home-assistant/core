@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from mawaqit.consts import BadCredentialsException
+from mawaqit.exceptions import BadCredentialsException, MawaqitException
 import pytest
 
 from homeassistant.components.mawaqit import mawaqit_wrapper
@@ -55,6 +55,16 @@ async def test_validate_credentials_bad_credentials(mock_client: MagicMock) -> N
     mock_client.close.assert_called_once()
 
 
+async def test_validate_credentials_mawaqit_exception_propagates(
+    mock_client: MagicMock,
+) -> None:
+    """Test MawaqitException propagates from validate_credentials."""
+    mock_client.login.side_effect = MawaqitException
+    with pytest.raises(MawaqitException):
+        await mawaqit_wrapper.validate_credentials(client_instance=mock_client)
+    mock_client.close.assert_called_once()
+
+
 async def test_validate_credentials_creates_client() -> None:
     """Test that validate_credentials creates a client when none is provided."""
     with patch(
@@ -86,7 +96,7 @@ async def test_get_mawaqit_api_token_success(mock_client: MagicMock) -> None:
 
 @pytest.mark.parametrize(
     "side_effect",
-    [BadCredentialsException, ConnectionError, TimeoutError],
+    [BadCredentialsException, MawaqitException, ConnectionError, TimeoutError],
 )
 async def test_get_mawaqit_api_token_errors_return_none(
     mock_client: MagicMock,

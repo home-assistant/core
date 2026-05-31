@@ -3,7 +3,12 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp.client_exceptions import ClientConnectorError
-from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFound
+from mawaqit.exceptions import (
+    BadCredentialsException,
+    MawaqitException,
+    NoMosqueAround,
+    NoMosqueFound,
+)
 import pytest
 
 from homeassistant import data_entry_flow
@@ -47,6 +52,22 @@ async def test_show_form_user_no_input_reopens_form(hass: HomeAssistant) -> None
     # Validate that the form is returned to the user
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "user"
+
+
+async def test_async_step_user_mawaqit_exception(hass: HomeAssistant) -> None:
+    """Test the user step handles MawaqitException as a connection error."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    with patch(
+        "homeassistant.components.mawaqit.mawaqit_wrapper.validate_credentials",
+        side_effect=MawaqitException,
+    ):
+        result = await flow.async_step_user(
+            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"]["base"] == CANNOT_CONNECT_TO_SERVER
 
 
 @pytest.mark.asyncio
@@ -906,20 +927,22 @@ async def test_async_step_reauth_confirm_success(
     [
         # invalid credentials (no exception)
         (None, False, None, WRONG_CREDENTIAL),
-        # validate_credentials connection error (NEW — important branch)
+        # validate_credentials connection errors
         (
             ClientConnectorError(MagicMock(), MagicMock()),
             None,
             None,
             CANNOT_CONNECT_TO_SERVER,
         ),
-        # token retrieval connection error
+        (MawaqitException, None, None, CANNOT_CONNECT_TO_SERVER),
+        # token retrieval connection errors
         (
             None,
             True,
             ClientConnectorError(MagicMock(), MagicMock()),
             CANNOT_CONNECT_TO_SERVER,
         ),
+        (None, True, MawaqitException, CANNOT_CONNECT_TO_SERVER),
     ],
 )
 async def test_async_step_reauth_confirm_errors(
