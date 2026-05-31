@@ -871,18 +871,18 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     ) as proxy_load_services_files:
         descriptions = await service.async_get_all_descriptions(hass)
 
-    # Test we only load services.yaml for integrations with services.yaml
-    # And system_health has no services
-    assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
-        [
-            await async_get_integration(hass, GROUP_DOMAIN),
-        ]
-    )
+    # Test we only load services.yaml for integrations with services.yaml.
+    # The http integration also has a services.yaml now (reload_ssl_certificate).
+    loaded_integrations = proxy_load_services_files.mock_calls[0][1][0]
+    loaded_domains = {integration.domain for integration in loaded_integrations}
+    assert GROUP_DOMAIN in loaded_domains
+    assert "http" in loaded_domains
 
-    assert len(descriptions) == 1
     assert GROUP_DOMAIN in descriptions
     assert "description" not in descriptions[GROUP_DOMAIN]["reload"]
     assert "fields" in descriptions[GROUP_DOMAIN]["reload"]
+    assert "http" in descriptions
+    assert "reload_ssl_certificate" in descriptions["http"]
 
     # Does not have services
     assert SYSTEM_HEALTH_DOMAIN not in descriptions
@@ -926,7 +926,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         await async_setup_component(hass, LOGGER_DOMAIN, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
+    assert len(descriptions) == 3
     assert LOGGER_DOMAIN in descriptions
     assert descriptions[LOGGER_DOMAIN]["set_default_level"]["name"] == "Translated name"
     assert (
