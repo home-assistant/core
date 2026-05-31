@@ -1,7 +1,7 @@
 """Support to serve the Home Assistant API as WSGI application."""
 
 import asyncio
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from dataclasses import dataclass
 import datetime
 from functools import partial
@@ -88,6 +88,7 @@ CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
+CONF_SSL_AUTO_RELOAD: Final = "ssl_auto_reload"
 
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
@@ -146,6 +147,7 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
+            vol.Optional(CONF_SSL_AUTO_RELOAD, default=True): cv.boolean,
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
         }
     ),
@@ -185,6 +187,7 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
+    ssl_auto_reload: bool
 
 
 async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
@@ -245,6 +248,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
+    ssl_auto_reload = conf[CONF_SSL_AUTO_RELOAD]
 
     source_ip_task = create_eager_task(async_get_source_ip(hass))
 
@@ -268,6 +272,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_key=ssl_key,
         trusted_proxies=trusted_proxies,
         ssl_profile=ssl_profile,
+        ssl_auto_reload=ssl_auto_reload,
         supervisor_unix_socket_path=supervisor_unix_socket_path,
     )
     await server.async_initialize(
@@ -409,29 +414,26 @@ async def _serve_file(path: str, request: web.Request) -> web.FileResponse:
 
 
 class _SSLReloadHandler(FileSystemEventHandler):
-    """Watchdog handler that triggers SSL reload on certificate or key file changes."""
+    """Watchdog handler that triggers SSL reload on certificate or key file changes.
 
-    def __init__(self, http_server: HomeAssistantHTTP) -> None:
-        """Initialize the handler with a reference to the HTTP server."""
+    Receives only the data it needs (watched paths and a thread-safe
+    callback) rather than the full HomeAssistantHTTP instance, so it
+    can be unit-tested in isolation.
+    """
+
+    def __init__(
+        self,
+        watched_paths: frozenset[str],
+        on_change: Callable[[], None],
+    ) -> None:
+        """Initialize the handler.
+
+        on_change must be safe to call from any thread — it should
+        schedule work on the event loop (e.g. via call_soon_threadsafe).
+        """
         super().__init__()
-        self._http = http_server
-        # Build a set of absolute paths to watch for changes
-        # The handler lives in the same module as HomeAssistantHTTP,
-        # so accessing private attributes is intentional.
-        watched_paths: set[str] = set()
-        if http_server._ssl_certificate_path is not None:  # noqa: SLF001
-            watched_paths.add(
-                os.path.normpath(str(http_server._ssl_certificate_path))  # noqa: SLF001
-            )
-        if http_server._ssl_key_path is not None:  # noqa: SLF001
-            watched_paths.add(
-                os.path.normpath(str(http_server._ssl_key_path))  # noqa: SLF001
-            )
-        if http_server._ssl_peer_certificate_path is not None:  # noqa: SLF001
-            watched_paths.add(
-                os.path.normpath(str(http_server._ssl_peer_certificate_path))  # noqa: SLF001
-            )
-        self._watched_paths = frozenset(watched_paths)
+        self._watched_paths = watched_paths
+        self._on_change = on_change
 
     def on_any_event(self, event: FileSystemEvent) -> None:
         """Schedule a debounced SSL reload when a watched file changes."""
@@ -459,11 +461,7 @@ class _SSLReloadHandler(FileSystemEventHandler):
             paths.add(os.path.normpath(dest))
         if not paths & self._watched_paths:
             return
-        # Running in the watchdog observer thread — use call_soon_threadsafe
-        # to schedule the debounce on the Home Assistant event loop.
-        self._http.hass.loop.call_soon_threadsafe(
-            self._http._debounce_ssl_reload  # noqa: SLF001
-        )
+        self._on_change()
 
 
 class HomeAssistantHTTP:
@@ -479,6 +477,7 @@ class HomeAssistantHTTP:
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
+        ssl_auto_reload: bool = True,
         supervisor_unix_socket_path: Path | None = None,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
@@ -498,6 +497,7 @@ class HomeAssistantHTTP:
         self.server_port = server_port
         self.trusted_proxies = trusted_proxies
         self.ssl_profile = ssl_profile
+        self.ssl_auto_reload = ssl_auto_reload
         self.supervisor_unix_socket_path = supervisor_unix_socket_path
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
@@ -562,7 +562,8 @@ class HomeAssistantHTTP:
             self.context = await self.hass.async_add_executor_job(
                 self._create_ssl_context
             )
-            await self._start_ssl_watcher()
+            if self.ssl_auto_reload:
+                await self._start_ssl_watcher()
 
     def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
         """Register a view with the WSGI server.
@@ -873,6 +874,13 @@ class HomeAssistantHTTP:
         assert self._ssl_certificate_path is not None
         assert self._ssl_key_path is not None
 
+        # Build the set of absolute paths to watch for changes
+        watched_paths: set[str] = set()
+        watched_paths.add(os.path.normpath(str(self._ssl_certificate_path)))
+        watched_paths.add(os.path.normpath(str(self._ssl_key_path)))
+        if self._ssl_peer_certificate_path is not None:
+            watched_paths.add(os.path.normpath(str(self._ssl_peer_certificate_path)))
+
         watch_dirs: set[Path] = {
             self._ssl_certificate_path.parent,
             self._ssl_key_path.parent,
@@ -880,8 +888,12 @@ class HomeAssistantHTTP:
         if self._ssl_peer_certificate_path is not None:
             watch_dirs.add(self._ssl_peer_certificate_path.parent)
 
+        # Create a thread-safe callback that schedules debounce on the event loop
+        loop = self.hass.loop
+        on_change = partial(loop.call_soon_threadsafe, self._debounce_ssl_reload)
+        handler = _SSLReloadHandler(frozenset(watched_paths), on_change)
+
         self._ssl_watcher = Observer()
-        handler = _SSLReloadHandler(self)
         for watch_dir in watch_dirs:
             self._ssl_watcher.schedule(handler, str(watch_dir), recursive=False)
             _LOGGER.debug("Watching %s for SSL certificate changes", watch_dir)
