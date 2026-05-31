@@ -221,7 +221,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         except Exception as e:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="unknown",
+                translation_key="unknown_exception",
                 translation_placeholders={"error": repr(e)},
             ) from e
 

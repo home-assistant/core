@@ -126,7 +126,7 @@
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
     },
-    "unknown": {
+    "unknown_exception": {
       "message": "Unknown error occurred: {error}"
     }
   },
