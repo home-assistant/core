@@ -857,17 +857,15 @@ class HomeAssistantHTTP:
         return True
 
     def _stop_ssl_watcher(self) -> None:
-        """Stop the SSL certificate file watcher.
+        """Cancel any pending debounced reload and mark the watcher as stopping.
 
-        Does not block — the blocking `stop()`/`join()` calls are offloaded
-        to the executor by the caller (see `stop()`).
+        The blocking `Observer.stop()`/`join()` calls are offloaded to
+        the executor by `stop()`.
         """
         self._ssl_watcher_stopping = True
         if self._ssl_reload_debounce_handle is not None:
             self._ssl_reload_debounce_handle.cancel()
             self._ssl_reload_debounce_handle = None
-        if self._ssl_watcher is not None:
-            self._ssl_watcher.stop()
 
     async def _start_ssl_watcher(self) -> None:
         """Start watching the SSL certificate and key files for changes."""
@@ -928,13 +926,21 @@ class HomeAssistantHTTP:
     async def stop(self) -> None:
         """Stop the aiohttp server."""
         self._stop_ssl_watcher()
-        # Offload blocking `join()` to executor to avoid blocking the event loop
+        # Offload the potentially-blocking stop() and join() calls to the
+        # executor to avoid blocking the event loop during shutdown.
         if self._ssl_watcher is not None:
             watcher = self._ssl_watcher
             self._ssl_watcher = None
-            await self.hass.async_add_executor_job(
-                watcher.join, SSL_WATCHER_JOIN_TIMEOUT
-            )
+
+            def _stop_and_join() -> None:
+                watcher.stop()
+                watcher.join(SSL_WATCHER_JOIN_TIMEOUT)
+                if watcher.is_alive():
+                    _LOGGER.warning(
+                        "SSL certificate watcher did not stop in time"
+                    )
+
+            await self.hass.async_add_executor_job(_stop_and_join)
             if watcher.is_alive():
                 _LOGGER.warning("SSL certificate watcher did not stop in time")
         if self.supervisor_site is not None:
