@@ -209,3 +209,21 @@ async def test_wind_direction_state_class(
     assert state is not None
     assert state.state == "270"
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT_ANGLE
+
+
+async def test_malformed_json_ignored(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
+    """Test that a malformed JSON payload does not raise and is silently ignored."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {"sensor": {"platform": "arwn"}},
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "arwn/temperature/BackYard", "not valid json{{")
+    await hass.async_block_till_done()
+
+    assert hass.data.get("arwn") is None

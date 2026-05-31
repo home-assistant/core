@@ -38,9 +38,8 @@ async def async_setup_platform(
     @callback
     def async_sensor_event_received(msg: mqtt.ReceiveMessage) -> None:
         """Process MQTT events as sensors."""
-        event = json_loads_object(msg.payload)
-
         try:
+            event = json_loads_object(msg.payload)
             device = parse_message(msg.topic, event)
         except Exception:  # noqa: BLE001
             _LOGGER.debug(
@@ -59,6 +58,7 @@ async def async_setup_platform(
         if "timestamp" in event:
             del event["timestamp"]
 
+        new_sensors: list[ArwnSensor] = []
         for reading in device.readings:
             if not reading.expose:
                 continue
@@ -113,13 +113,16 @@ async def async_setup_platform(
                     "Registering sensor %(name)s => %(event)s",
                     {"name": reading.sensor_name, "event": event},
                 )
-                async_add_entities((sensor,), True)
+                new_sensors.append(sensor)
             else:
                 _LOGGER.debug(
                     "Recording sensor %(name)s => %(event)s",
                     {"name": reading.sensor_name, "event": event},
                 )
                 store[unique_id].set_event(event)
+
+        if new_sensors:
+            async_add_entities(new_sensors, True)
 
     await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
 
