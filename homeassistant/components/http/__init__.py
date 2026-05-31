@@ -345,18 +345,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_check_ssl_issue)
 
-    async def handle_reload_ssl(call: ServiceCall) -> None:
-        """Handle reload_ssl_certificate service call."""
-        success = await hass.async_add_executor_job(server.reload_ssl_certificate)
-        if not success:
-            raise HomeAssistantError(
-                "SSL certificate reload failed, check the logs for details"
-            )
+    if ssl_certificate is not None:
 
-    # Register as admin service — reloading SSL material is a privileged operation
-    async_register_admin_service(
-        hass, DOMAIN, "reload_ssl_certificate", handle_reload_ssl
-    )
+        async def handle_reload_ssl(call: ServiceCall) -> None:
+            """Handle reload_ssl_certificate service call."""
+            success = await hass.async_add_executor_job(server.reload_ssl_certificate)
+            if not success:
+                raise HomeAssistantError(
+                    "SSL certificate reload failed, check the logs for details"
+                )
+
+        # Register as admin service — reloading SSL material is a
+        # privileged operation. Only registered when SSL is configured
+        # since the service always fails without it.
+        async_register_admin_service(
+            hass, DOMAIN, "reload_ssl_certificate", handle_reload_ssl
+        )
 
     return True
 
@@ -513,11 +517,17 @@ class HomeAssistantHTTP:
         self._ssl_reload_lock = threading.Lock()
 
     def _resolve_ssl_path(self, filepath_str: str) -> Path:
-        """Resolve an SSL file path, making relative paths absolute."""
+        """Resolve an SSL file path, making relative paths absolute.
+
+        Also resolves symlinks so that the file watcher monitors the
+        real file location. This handles certbot's live/ → archive/
+        symlink structure where the actual file changes happen in a
+        directory different from the configured path.
+        """
         filepath = Path(filepath_str)
         if not filepath.is_absolute():
             filepath = Path(self.hass.config.config_dir) / filepath
-        return filepath
+        return filepath.resolve()
 
     async def async_initialize(
         self,
