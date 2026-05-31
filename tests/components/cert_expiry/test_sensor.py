@@ -289,10 +289,7 @@ async def test_error_attribute_is_none_when_cert_valid(hass: HomeAssistant) -> N
 
 
 async def test_non_default_port(hass: HomeAssistant) -> None:
-    """Test sensor naming and unique_id when a non-default port is used.
-
-    When port != 443 the port should appear in the sensor name and unique_id.
-    """
+    """Test sensor naming and unique_id when a non-default port is used."""
     assert hass.state is CoreState.running
 
     non_default_port = 8443
@@ -312,7 +309,6 @@ async def test_non_default_port(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Entity id reflects the host:port name
     state = hass.states.get("sensor.example_com_8443_cert_expiry")
     assert state is not None
     assert state.state == timestamp.isoformat()

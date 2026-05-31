@@ -174,7 +174,6 @@ async def test_coordinator_refresh_fails_then_recovers_after_startup(
     assert await async_setup_component(hass, DOMAIN, {}) is True
     await hass.async_block_till_done()
 
-    # Startup fires, first refresh fails
     with patch(
         "homeassistant.components.cert_expiry.helper.async_get_cert",
         side_effect=socket.gaierror,
@@ -185,7 +184,6 @@ async def test_coordinator_refresh_fails_then_recovers_after_startup(
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == STATE_UNAVAILABLE
 
-    # Next scheduled poll succeeds — sensor should recover
     timestamp = future_timestamp(100)
     with patch(
         "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
