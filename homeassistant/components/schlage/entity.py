@@ -45,5 +45,5 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
         return (
             super().available
             and self.device_id in self.coordinator.data.locks
-            and getattr(self._lock, "connected", True)
+            and self._lock.connected
         )
