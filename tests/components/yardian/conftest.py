@@ -29,10 +29,10 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="yid123",
         data={
             CONF_HOST: "1.2.3.4",
-            CONF_ACCESS_TOKEN: "abc",
+            CONF_ACCESS_TOKEN: "",
             CONF_NAME: "Yardian",
             "yid": "yid123",
-            "model": "PRO1902",
+            "model": "PRO1902C1",
             "serialNumber": "SN1",
         },
         title="Yardian Smart Sprinkler",
@@ -53,6 +53,10 @@ def mock_yardian_client() -> Generator[AsyncMock]:
     ):
         client = client_cls.return_value
         flow_client_cls.return_value = client
+
+        # FIX: Teach the mock about the new .create() factory method
+        client_cls.create = AsyncMock(return_value=client)
+        flow_client_cls.create = AsyncMock(return_value=client)
 
         client.fetch_device_state.return_value = YardianDeviceState(
             zones=[["Zone 1", 1], ["Zone 2", 0]],
