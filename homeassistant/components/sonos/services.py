@@ -19,6 +19,7 @@ SERVICE_UPDATE_ALARM = "update_alarm"
 SERVICE_PLAY_QUEUE = "play_queue"
 SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
 SERVICE_GET_QUEUE = "get_queue"
+SERVICE_CANCEL_ANNOUNCEMENT = "cancel_announcement"
 
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_ALARM_ID = "alarm_id"
@@ -129,4 +130,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=None,
         func="get_queue",
         supports_response=SupportsResponse.ONLY,
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_CANCEL_ANNOUNCEMENT,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema=None,
+        func="async_cancel_announcement",
     )

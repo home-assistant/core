@@ -109,6 +109,15 @@
     "announce_media_error": {
       "message": "Announcing clip {media_id} failed {response}"
     },
+    "announcement_connection_error": {
+      "message": "Failed to reach Sonos speaker for announcement: {error}"
+    },
+    "cancel_announcement_error": {
+      "message": "Cancelling announcement failed: {response}"
+    },
+    "cancel_announcement_no_id": {
+      "message": "No active announcement to cancel."
+    },
     "entity_not_found": {
       "message": "Entity {entity_id} not found."
     },
@@ -154,6 +163,10 @@
     }
   },
   "services": {
+    "cancel_announcement": {
+      "description": "Cancels the currently playing announcement audio clip.",
+      "name": "Cancel announcement"
+    },
     "clear_sleep_timer": {
       "description": "Clears a Sonos timer.",
       "name": "Clear timer"

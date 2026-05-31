@@ -71,6 +71,12 @@ get_queue:
       integration: sonos
       domain: media_player
 
+cancel_announcement:
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
+
 update_alarm:
   target:
     entity:

@@ -44,6 +44,9 @@
     }
   },
   "services": {
+    "cancel_announcement": {
+      "service": "mdi:cancel"
+    },
     "clear_sleep_timer": {
       "service": "mdi:alarm-off"
     },

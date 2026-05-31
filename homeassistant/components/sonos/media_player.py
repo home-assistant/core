@@ -15,6 +15,7 @@ from soco.core import (
 from soco.data_structures import DidlFavorite, DidlMusicTrack
 from soco.exceptions import SoCoException
 from soco.ms_data_structures import MusicServiceItem
+from sonos_websocket import CLIP_ID_KEY
 from sonos_websocket.exception import SonosWebsocketError
 
 from homeassistant.components import media_source, spotify
@@ -141,6 +142,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Initialize the media player entity."""
         super().__init__(speaker, config_entry)
         self._attr_unique_id = self.soco.uid
+        self.last_announce_id: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
@@ -469,9 +471,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 )
             except SonosWebsocketError as exc:
                 raise HomeAssistantError(
-                    f"Error when calling Sonos websocket: {exc}"
+                    translation_domain=DOMAIN,
+                    translation_key="announcement_connection_error",
+                    translation_placeholders={"error": str(exc)},
                 ) from exc
             if response.get("success"):
+                self.last_announce_id = response.get(CLIP_ID_KEY)
                 return
             if response.get("type") in ANNOUNCE_NOT_SUPPORTED_ERRORS:
                 # If the speaker does not support announce do not raise and
@@ -755,6 +760,32 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             }
             for track in queue
         ]
+
+    async def async_cancel_announcement(self) -> None:
+        """Cancel the current announcement audio clip."""
+        if self.last_announce_id is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="cancel_announcement_no_id",
+            )
+        assert self.speaker.websocket
+        try:
+            response, _ = await self.speaker.websocket.cancel_clip(
+                self.last_announce_id
+            )
+        except SonosWebsocketError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="announcement_connection_error",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        if not response.get("success"):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cancel_announcement_error",
+                translation_placeholders={"response": str(response)},
+            )
+        self.last_announce_id = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

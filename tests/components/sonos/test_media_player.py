@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -58,6 +58,7 @@ from homeassistant.components.sonos.services import (
     ATTR_INCLUDE_LINKED_ZONES,
     ATTR_QUEUE_POSITION,
     ATTR_VOLUME,
+    SERVICE_CANCEL_ANNOUNCEMENT,
     SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
@@ -1288,7 +1289,8 @@ async def test_play_media_announce(
     sonos_websocket.play_clip.reset_mock()
     sonos_websocket.play_clip.side_effect = SonosWebsocketError("Error Message")
     with pytest.raises(
-        HomeAssistantError, match="Error when calling Sonos websocket: Error Message"
+        HomeAssistantError,
+        match="Failed to reach Sonos speaker for announcement: Error Message",
     ):
         await hass.services.async_call(
             MP_DOMAIN,
@@ -1367,6 +1369,88 @@ async def test_media_get_queue(
     )
     soco_mock.get_queue.assert_called_with(max_items=0)
     assert result == snapshot
+
+
+async def test_cancel_announcement(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    sonos_websocket,
+) -> None:
+    """Test cancelling an announcement audio clip."""
+    content_id: str = "http://10.0.0.1:8123/local/sounds/doorbell.mp3"
+
+    # Test with no prior announcement (last_announce_id is None)
+    with pytest.raises(
+        ServiceValidationError, match="No active announcement to cancel"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CANCEL_ANNOUNCEMENT,
+            {ATTR_ENTITY_ID: "media_player.zone_a"},
+            blocking=True,
+        )
+
+    # Play an announcement to set last_announce_id
+    sonos_websocket.play_clip.return_value = [{"success": 1, "id": "clip-123"}, {}]
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+
+    # Test success path
+    sonos_websocket.cancel_clip = AsyncMock(return_value=[{"success": 1}, {}])
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CANCEL_ANNOUNCEMENT,
+        {ATTR_ENTITY_ID: "media_player.zone_a"},
+        blocking=True,
+    )
+    sonos_websocket.cancel_clip.assert_called_once_with("clip-123")
+
+    # Re-play announcement so last_announce_id is set again
+    sonos_websocket.play_clip.return_value = [{"success": 1, "id": "clip-456"}, {}]
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+
+    # Test websocket exception
+    sonos_websocket.cancel_clip.side_effect = SonosWebsocketError("Connection lost")
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to reach Sonos speaker for announcement: Connection lost",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CANCEL_ANNOUNCEMENT,
+            {ATTR_ENTITY_ID: "media_player.zone_a"},
+            blocking=True,
+        )
+
+    # Test non-success response
+    sonos_websocket.cancel_clip.side_effect = None
+    sonos_websocket.cancel_clip.return_value = [{"success": 0}, {}]
+    with pytest.raises(HomeAssistantError, match="Cancelling announcement failed"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CANCEL_ANNOUNCEMENT,
+            {ATTR_ENTITY_ID: "media_player.zone_a"},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
