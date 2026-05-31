@@ -22,7 +22,7 @@
         "data_description": {
           "host": "The hostname or IP address of your Rainforest gateway."
         },
-        "description": "Changing only the hostname or installation code keeps your existing entities. Changing the Cloud ID may create new devices and entities because Home Assistant uses the Cloud ID to identify this device. If you are replacing the Rainforest Eagle device, we recommend removing this integration and adding it again."
+        "description": "Changing only the hostname or installation code keeps your existing entities.\n\nChanging the Cloud ID may create new devices and entities because Home Assistant uses the Cloud ID to identify this device.\n\nIf you are replacing the Rainforest Eagle device, we recommend removing this integration and adding it again."
       },
       "user": {
         "data": {
