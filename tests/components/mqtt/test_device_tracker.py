@@ -443,7 +443,7 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     assert state.attributes["latitude"] == 32.87336
     assert state.attributes["longitude"] == -117.22743
     assert state.attributes["gps_accuracy"] == 1.5
-    # assert source_type is overridden by discovery
+    # assert source_type is overridden with the update
     assert state.attributes["source_type"] == "router"
     assert state.state == STATE_HOME
 
@@ -495,7 +495,7 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     assert "latitude" not in state.attributes
     assert "longitude" not in state.attributes
     assert "gps_accuracy" not in state.attributes
-    # assert source_type is overridden by discovery
+    # assert source_type is overridden with the update
     assert state.attributes["source_type"] == "router"
     assert state.state == STATE_UNKNOWN
 
@@ -570,7 +570,7 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     assert state.attributes.get("latitude") is None
     assert state.attributes.get("longitude") is None
     assert state.attributes.get("gps_accuracy") is None
-    # assert source_type is overridden by discovery
+    # assert source_type is overridden with the update
     assert state.attributes["source_type"] == "router"
     assert state.state == STATE_HOME
 
@@ -581,7 +581,7 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["in_zones"] == []
-    # assert source_type is overridden by discovery
+    # assert source_type is overridden with the update
     assert state.attributes["source_type"] == "router"
     assert state.attributes.get("latitude") is None
     assert state.attributes.get("longitude") is None
@@ -625,7 +625,7 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["in_zones"] == []
-    # assert source_type is overridden by discovery
+    # assert source_type is overridden with the update
     assert state.attributes["source_type"] == "router"
     assert state.attributes.get("latitude") is None
     assert state.attributes.get("longitude") is None
@@ -640,7 +640,7 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["in_zones"] == ["zone.home"]
-    # assert source_type is overridden by discovery
+    # assert source_type is overridden with the update
     assert state.attributes["source_type"] == "router"
     assert state.attributes.get("latitude") is None
     assert state.attributes.get("longitude") is None
@@ -655,7 +655,7 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["in_zones"] == ["zone.home"]
-    # assert source_type is overridden by discovery
+    # assert source_type is overridden with the update
     assert state.attributes["source_type"] == "router"
     assert state.attributes.get("latitude") is None
     assert state.attributes.get("longitude") is None
@@ -682,7 +682,7 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["in_zones"] == ["zone.school"]
-    # assert source_type is overridden by discovery
+    # assert source_type is overridden with the update
     assert state.attributes["source_type"] == "router"
     assert state.attributes.get("latitude") is None
     assert state.attributes.get("longitude") is None
