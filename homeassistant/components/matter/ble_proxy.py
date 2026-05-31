@@ -108,5 +108,7 @@ def create_matter_ble_proxy(hass: HomeAssistant, ws_url: str) -> MatterBleProxy:
         ws_url=ws_url,
         scan_source=HaBluetoothScanSource(hass),
         device_resolver=HaBluetoothDeviceResolver(hass),
-        task_factory=hass.async_create_task,
+        task_factory=lambda coro: hass.async_create_background_task(
+            coro, name="matter_ble_proxy"
+        ),
     )

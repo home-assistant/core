@@ -98,8 +98,8 @@ async def test_counter_condition_options_validation(
                     "value_max": {"number": 30},
                 },
             },
-            target_states=["11", "20", "29"],
-            other_states=["0", "10", "30", "100"],
+            target_states=["10", "11", "20", "29", "30"],
+            other_states=["0", "9", "31", "100"],
         ),
         *parametrize_condition_states_any(
             condition="counter.is_value",
@@ -110,8 +110,8 @@ async def test_counter_condition_options_validation(
                     "value_max": {"number": 30},
                 },
             },
-            target_states=["0", "10", "30", "100"],
-            other_states=["11", "20", "29"],
+            target_states=["0", "9", "31", "100"],
+            other_states=["10", "11", "20", "29", "30"],
         ),
     ],
 )
@@ -171,8 +171,8 @@ async def test_counter_is_value_condition_behavior_any(
                     "value_max": {"number": 30},
                 },
             },
-            target_states=["11", "20", "29"],
-            other_states=["0", "10", "30", "100"],
+            target_states=["10", "11", "20", "29", "30"],
+            other_states=["0", "9", "31", "100"],
         ),
         *parametrize_condition_states_all(
             condition="counter.is_value",
@@ -183,8 +183,8 @@ async def test_counter_is_value_condition_behavior_any(
                     "value_max": {"number": 30},
                 },
             },
-            target_states=["0", "10", "30", "100"],
-            other_states=["11", "20", "29"],
+            target_states=["0", "9", "31", "100"],
+            other_states=["10", "11", "20", "29", "30"],
         ),
     ],
 )
