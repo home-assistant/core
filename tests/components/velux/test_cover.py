@@ -479,20 +479,35 @@ async def test_non_blind_has_no_tilt_position(
 # Unknown position tests
 
 
-async def test_window_unknown_position(
+async def test_window_unknown_position_falls_back_to_last_known(
     hass: HomeAssistant, mock_window: AsyncMock
 ) -> None:
-    """When the device position is not known, state and position must be unknown."""
+    """When pyvlx loses position mid-session, fall back to the last known value.
+
+    The cover seeds a restore-position cache from every known live update.
+    A subsequent transient UNKNOWN frame (e.g. fresh KLF200 reconnect)
+    therefore must not flip the entity to `unknown` — it stays at the most
+    recent known position. See test_cover_restore_state.py for the seed
+    paths exercised at startup.
+    """
 
     entity_id = "cover.test_window"
+
+    # Initial state established by the setup fixture: known=True at position_percent=30
+    # (HA percent = 70).
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OPEN
+    assert state.attributes.get("current_position") == 70
 
     mock_window.position.known = False
     await update_callback_entity(hass, mock_window)
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("current_position") is None
+    # Falls back to cached last known instead of going `unknown`.
+    assert state.state == STATE_OPEN
+    assert state.attributes.get("current_position") == 70
 
 
 @pytest.mark.parametrize(
@@ -503,13 +518,17 @@ async def test_window_unknown_position(
         ("position_lower_curtain", "cover.test_dual_roller_shutter_lower_shutter"),
     ],
 )
-async def test_dual_roller_shutter_unknown_position(
+async def test_dual_roller_shutter_unknown_position_falls_back_to_last_known(
     hass: HomeAssistant,
     mock_dual_roller_shutter: AsyncMock,
     unknown_attr: str,
     unknown_entity_id: str,
 ) -> None:
-    """Each part falls back to unknown when only its position is unknown."""
+    """Each part falls back to its last known position when only its part is unknown.
+
+    Same fallback semantics as ``test_window_unknown_position_falls_back_to_last_known``
+    but per dual-roller-shutter part (upper/lower/dual).
+    """
 
     all_entity_ids = {
         "cover.test_dual_roller_shutter",
@@ -522,8 +541,9 @@ async def test_dual_roller_shutter_unknown_position(
 
     state = hass.states.get(unknown_entity_id)
     assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("current_position") is None
+    # Falls back to cached last known instead of going `unknown`.
+    assert state.state == STATE_OPEN
+    assert state.attributes.get("current_position") == 70
 
     for entity_id in all_entity_ids - {unknown_entity_id}:
         state = hass.states.get(entity_id)

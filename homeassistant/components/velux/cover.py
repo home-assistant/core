@@ -1,8 +1,10 @@
 """Support for Velux covers."""
 
 from enum import StrEnum
+import logging
 from typing import Any
 
+from pyvlx import Node
 from pyvlx.opening_device import (
     Awning,
     Blind,
@@ -16,6 +18,7 @@ from pyvlx.opening_device import (
 )
 
 from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
@@ -24,9 +27,12 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import VeluxConfigEntry
 from .entity import VeluxEntity, wrap_pyvlx_call_exceptions
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -66,7 +72,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class VeluxCover(VeluxEntity, CoverEntity):
+class VeluxCover(VeluxEntity, RestoreEntity, CoverEntity):
     """Representation of a Velux cover."""
 
     node: OpeningDevice
@@ -78,6 +84,14 @@ class VeluxCover(VeluxEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.STOP
     )
+
+    # Last position (HA percent: 0 = closed, 100 = open) carried across an
+    # HA restart. The KLF200 reboot triggered by async_unload_entry leaves
+    # the gateway reporting current_position = UNKNOWN for tens of seconds
+    # up to several minutes after a restart, during which HA would otherwise
+    # show every Velux cover as `unknown`. The cache is preferred over the
+    # live pyvlx position only while node.position is not known.
+    _restored_position_percent: int | None = None
 
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxCover."""
@@ -94,19 +108,67 @@ class VeluxCover(VeluxEntity, CoverEntity):
             case RollerShutter():
                 self._attr_device_class = CoverDeviceClass.SHUTTER
 
+    async def async_added_to_hass(self) -> None:
+        """Register pyvlx callbacks and seed the restore-position cache.
+
+        is_opening / is_closing are transient and not restored — pyvlx
+        initialises them to False on every (re-)connect, which is the correct
+        starting point after an HA restart. Only the position is brought back
+        so the entity does not stay `unknown` until the first House
+        Monitoring frame arrives.
+        """
+        await super().async_added_to_hass()
+        live = self._live_position_percent()
+        if live is not None:
+            self._restored_position_percent = live
+            return
+        last_state = await self.async_get_last_state()
+        if last_state is None:
+            return
+        restored = last_state.attributes.get(ATTR_CURRENT_POSITION)
+        # Accept the persisted attribute regardless of the persisted entity
+        # state string: HA may have written state="unknown" during a previous
+        # post-restart UNKNOWN window, but the current_position attribute is
+        # often still a usable number.
+        if isinstance(restored, (int, float)) and 0 <= restored <= 100:
+            self._restored_position_percent = int(restored)
+
     @property
     def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
-        if not self.node.position.known:
-            return None
-        return 100 - self.node.position.position_percent
+        if self.node.position.known:
+            return 100 - self.node.position.position_percent
+        return self._restored_position_percent
 
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
+        if self.node.position.known:
+            return self.node.position.closed
+        if self._restored_position_percent is None:
+            return None
+        return self._restored_position_percent == 0
+
+    def _live_position_percent(self) -> int | None:
+        """Return the HA-percent position if pyvlx currently knows it.
+
+        Overridden by VeluxDualRollerShutter so each part refreshes from its
+        own pyvlx Position. Used by ``after_update_callback`` to keep the
+        restore cache fresh — if pyvlx ever transitions a known node back to
+        UNKNOWN (e.g. a fresh KLF200 reconnect mid-session), the fallback
+        should reflect the most recent known live value, not the startup
+        snapshot from ``async_get_last_state``.
+        """
         if not self.node.position.known:
             return None
-        return self.node.position.closed
+        return 100 - self.node.position.position_percent
+
+    async def after_update_callback(self, node: Node) -> None:
+        """Capture the latest known live position into the restore cache."""
+        live = self._live_position_percent()
+        if live is not None:
+            self._restored_position_percent = live
+        await super().after_update_callback(node)
 
     @property
     def is_opening(self) -> bool:
@@ -182,17 +244,31 @@ class VeluxDualRollerShutter(VeluxCover):
     def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
         position = self._part_position
-        if not position.known:
-            return None
-        return 100 - position.position_percent
+        if position.known:
+            return 100 - position.position_percent
+        return self._restored_position_percent
 
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         position = self._part_position
+        if position.known:
+            return position.closed
+        if self._restored_position_percent is None:
+            return None
+        return self._restored_position_percent == 0
+
+    def _live_position_percent(self) -> int | None:
+        """Return the HA-percent position of this part if pyvlx knows it.
+
+        Used by the inherited ``after_update_callback`` so the restore cache
+        is refreshed from the part-specific position rather than the
+        device-level ``node.position``.
+        """
+        position = self._part_position
         if not position.known:
             return None
-        return position.closed
+        return 100 - position.position_percent
 
     @wrap_pyvlx_call_exceptions
     async def async_close_cover(self, **kwargs: Any) -> None:
