@@ -77,118 +77,70 @@ async def test_select_entities_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-async def test_select_open_closed_pedestrian(
+@pytest.mark.parametrize(
+    ("device", "option", "command_name", "parameters"),
+    [
+        pytest.param(
+            OPEN_CLOSED_PEDESTRIAN,
+            "pedestrian",
+            "setPedestrianPosition",
+            None,
+            id="pedestrian",
+        ),
+        pytest.param(
+            OPEN_CLOSED_PARTIAL,
+            "partial",
+            "partialPosition",
+            None,
+            id="partial",
+        ),
+        pytest.param(
+            MEMORIZED_SIMPLE_VOLUME,
+            "highest",
+            "setMemorizedSimpleVolume",
+            ["highest"],
+            id="memorized_simple_volume",
+        ),
+        pytest.param(
+            ACTIVE_ZONES,
+            "A,B",
+            "alarmZoneOn",
+            ["A,B"],
+            id="active_zones",
+        ),
+        pytest.param(
+            ACTIVE_ZONES,
+            "",
+            "alarmOff",
+            None,
+            id="active_zones_off",
+        ),
+    ],
+)
+async def test_select_option(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
+    device: FixtureDevice,
+    option: str,
+    command_name: str,
+    parameters: list[str] | None,
 ) -> None:
-    """Test selecting pedestrian position sends setPedestrianPosition command."""
-    await setup_overkiz_integration(fixture=OPEN_CLOSED_PEDESTRIAN.fixture)
+    """Test selecting an option sends the expected command."""
+    await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: OPEN_CLOSED_PEDESTRIAN.entity_id, ATTR_OPTION: "pedestrian"},
+        {ATTR_ENTITY_ID: device.entity_id, ATTR_OPTION: option},
         blocking=True,
     )
 
     assert_command_call(
         mock_client,
-        device_url=OPEN_CLOSED_PEDESTRIAN.device_url,
-        command_name="setPedestrianPosition",
-    )
-
-
-async def test_select_open_closed_partial(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test selecting partial position sends partialPosition command."""
-    await setup_overkiz_integration(fixture=OPEN_CLOSED_PARTIAL.fixture)
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: OPEN_CLOSED_PARTIAL.entity_id, ATTR_OPTION: "partial"},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=OPEN_CLOSED_PARTIAL.device_url,
-        command_name="partialPosition",
-    )
-
-
-async def test_select_memorized_simple_volume(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test selecting volume sends setMemorizedSimpleVolume command."""
-    await setup_overkiz_integration(fixture=MEMORIZED_SIMPLE_VOLUME.fixture)
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: MEMORIZED_SIMPLE_VOLUME.entity_id,
-            ATTR_OPTION: "highest",
-        },
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=MEMORIZED_SIMPLE_VOLUME.device_url,
-        command_name="setMemorizedSimpleVolume",
-        parameters=["highest"],
-    )
-
-
-async def test_select_active_zones(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test selecting active zone sends alarmZoneOn command."""
-    await setup_overkiz_integration(fixture=ACTIVE_ZONES.fixture)
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ACTIVE_ZONES.entity_id, ATTR_OPTION: "A,B"},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=ACTIVE_ZONES.device_url,
-        command_name="alarmZoneOn",
-        parameters=["A,B"],
-    )
-
-
-async def test_select_active_zones_off(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test selecting empty zone sends alarmOff command."""
-    await setup_overkiz_integration(fixture=ACTIVE_ZONES.fixture)
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ACTIVE_ZONES.entity_id, ATTR_OPTION: ""},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=ACTIVE_ZONES.device_url,
-        command_name="alarmOff",
+        device_url=device.device_url,
+        command_name=command_name,
+        parameters=parameters,
     )
 
 
