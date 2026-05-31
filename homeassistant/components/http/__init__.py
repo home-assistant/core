@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Collection
+import contextlib
 from dataclasses import dataclass
 import datetime
 from functools import partial
@@ -110,8 +111,8 @@ SAVE_DELAY: Final = 180
 
 # Seconds to wait after the last file change before reloading the SSL
 # certificate. Allows atomic file writes (e.g. certbot writes cert then key)
-# to complete before triggering a reload. 5 seconds accounts for typical
-# acme.sh and certbot deploy hooks that write files in quick succession.
+# to complete before triggering a reload. Accounts for typical acme.sh
+# and certbot deploy hooks that write multiple files in quick succession.
 SSL_RELOAD_DEBOUNCE_SECONDS: Final = 5
 
 # Maximum seconds to wait for the watchdog observer thread to exit during
@@ -943,13 +944,16 @@ class HomeAssistantHTTP:
                 watcher.stop()
                 watcher.join(SSL_WATCHER_JOIN_TIMEOUT)
                 if watcher.is_alive():
-                    _LOGGER.warning(
-                        "SSL certificate watcher did not stop in time"
-                    )
+                    _LOGGER.warning("SSL certificate watcher did not stop in time")
 
             await self.hass.async_add_executor_job(_stop_and_join)
-            if watcher.is_alive():
-                _LOGGER.warning("SSL certificate watcher did not stop in time")
+        # Wait for any in-flight reload to finish before tearing down
+        if self._ssl_reload_task is not None:
+            with contextlib.suppress(TimeoutError, asyncio.CancelledError):
+                await asyncio.wait_for(
+                    self._ssl_reload_task, timeout=SSL_WATCHER_JOIN_TIMEOUT
+                )
+            self._ssl_reload_task = None
         if self.supervisor_site is not None:
             await self.supervisor_site.stop()
             if self.supervisor_unix_socket_path is not None:
