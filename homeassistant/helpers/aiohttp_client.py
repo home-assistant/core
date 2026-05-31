@@ -442,15 +442,25 @@ class HomeAssistantTCPConnector(aiohttp.TCPConnector):
         """Resolve a host to a list of addresses."""
         return await self._resolve_host(host, 0)
 
-    async def async_reset_after_failure(self) -> None:
-        """Reset connector state after a connection failure.
-
-        Clears the DNS cache so subsequent requests get a fresh
-        DNS lookup. Call this after transient failures like DNS
-        timeouts to prevent stale state from poisoning the
-        connection pool.
-        """
-        self.clear_dns_cache()
+    async def _create_direct_connection(
+        self,
+        req: aiohttp.ClientRequest,
+        traces: list[Any],
+        timeout: aiohttp.ClientTimeout,
+        *,
+        client_error: type[Exception] | None = None,
+    ) -> Any:
+        """Wrap _create_direct_connection to clear DNS cache on failure."""
+        try:
+            return await super()._create_direct_connection(
+                req, traces, timeout, client_error=client_error
+            )
+        except aiohttp.ClientConnectorDNSError:
+            host = req.url.raw_host
+            port = req.port
+            if host and port:
+                self.clear_dns_cache(host, port)
+            raise
 
 
 @callback
