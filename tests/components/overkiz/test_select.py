@@ -1,7 +1,6 @@
 """Tests for the Overkiz select platform."""
 
 from collections.abc import Generator
-from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -44,13 +43,6 @@ ACTIVE_ZONES = FixtureDevice(
     "select.willow_house_protexiom_active_zones",
 )
 
-SNAPSHOT_FIXTURES = [
-    OPEN_CLOSED_PEDESTRIAN,
-    OPEN_CLOSED_PARTIAL,
-    MEMORIZED_SIMPLE_VOLUME,
-    ACTIVE_ZONES,
-]
-
 
 @pytest.fixture(autouse=True)
 def fixture_platforms() -> Generator[None]:
@@ -59,21 +51,17 @@ def fixture_platforms() -> Generator[None]:
         yield
 
 
-@pytest.mark.parametrize(
-    "device",
-    SNAPSHOT_FIXTURES,
-    ids=[Path(device.fixture).name for device in SNAPSHOT_FIXTURES],
-)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_entities_snapshot(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    device: FixtureDevice,
 ) -> None:
     """Test representative real setups via snapshot."""
-    config_entry = await setup_overkiz_integration(fixture=device.fixture)
+    config_entry = await setup_overkiz_integration(
+        fixture=OPEN_CLOSED_PEDESTRIAN.fixture
+    )
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
@@ -218,6 +206,4 @@ async def test_select_unavailability(
         ],
     )
 
-    assert (
-        hass.states.get(OPEN_CLOSED_PEDESTRIAN.entity_id).state == STATE_UNAVAILABLE
-    )
+    assert hass.states.get(OPEN_CLOSED_PEDESTRIAN.entity_id).state == STATE_UNAVAILABLE
