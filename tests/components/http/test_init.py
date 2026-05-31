@@ -10,6 +10,10 @@ import os
 from pathlib import Path
 from unittest.mock import ANY, Mock, patch
 
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 import pytest
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
@@ -810,3 +814,142 @@ async def test_unix_socket_rejected_relative_path(
 
     assert hass.http.supervisor_site is None
     assert "path must be absolute" in caplog.text
+
+
+def _create_self_signed_cert(cert_path: Path, key_path: Path) -> None:
+    """Generate a valid self-signed certificate and write it to disk."""
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Test Certificate"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "localhost"),
+        ]
+    )
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(dt_util.utcnow())
+        .not_valid_after(dt_util.utcnow() + timedelta(days=1))
+        .sign(key, hashes.SHA256())
+    )
+    cert_path.write_bytes(cert.public_bytes(serialization.Encoding.PEM))
+    key_path.write_bytes(
+        key.private_bytes(
+            serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+    )
+
+
+async def test_reload_ssl_certificate(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test reloading SSL certificate succeeds with valid cert files."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    # Generate a real self-signed certificate and key that the SSL context
+    # can actually load, so we can test the success path without mocking.
+    context = server_context_modern()
+    await hass.async_add_executor_job(_create_self_signed_cert, cert_path, key_path)
+
+    with patch(
+        "homeassistant.util.ssl.server_context_modern",
+        return_value=context,
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # Now reload — this should succeed because the files contain a real cert
+    result = await hass.async_add_executor_job(hass.http.reload_ssl_certificate)
+    assert result is True
+
+
+async def test_reload_ssl_certificate_no_ssl(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reloading SSL certificate when SSL is not configured."""
+    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
+        assert await async_setup_component(hass, "http", {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    result = await hass.async_add_executor_job(hass.http.reload_ssl_certificate)
+    assert result is False
+    assert "SSL is not configured" in caplog.text
+
+
+async def test_reload_ssl_certificate_broken_files(
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reloading SSL certificate with broken files fails gracefully."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    context = server_context_modern()
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            return_value=context,
+        ),
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # Write broken cert data to the files and reload
+    cert_path.write_text("not a valid certificate")
+    key_path.write_text("not a valid key")
+
+    result = await hass.async_add_executor_job(hass.http.reload_ssl_certificate)
+    assert result is False
+    assert "Failed to reload SSL certificate" in caplog.text
+
+
+async def test_reload_ssl_certificate_service_exists(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test that the reload_ssl_certificate service is registered."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.services.has_service("http", "reload_ssl_certificate")

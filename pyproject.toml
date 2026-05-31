@@ -78,6 +78,7 @@ dependencies = [
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.3.0",
+  "watchdog==6.0.0",
   "yarl==1.24.2",
   "webrtc-models==0.3.0",
   "zeroconf==0.149.16",
