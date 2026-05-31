@@ -37,7 +37,7 @@ async def _async_attempt_connect(port: str, set_id: int) -> str | None:
     the serial port could not be opened, RESULT_NO_TV when the port works but
     no LG TV responded to it, or "unknown" for an unexpected error.
     """
-    tv = LGTV(port, set_id=set_id)
+    tv = LGTV(port, set_id=int(set_id))
 
     try:
         await tv.connect()
@@ -70,7 +70,8 @@ class LGTVRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             port = user_input[CONF_DEVICE]
-            set_id = user_input[CONF_SET_ID]
+            set_id = int(user_input[CONF_SET_ID])
+            user_input = {**user_input, CONF_SET_ID: set_id}
 
             self._async_abort_entries_match({CONF_DEVICE: port, CONF_SET_ID: set_id})
             error = await _async_attempt_connect(port, set_id)
