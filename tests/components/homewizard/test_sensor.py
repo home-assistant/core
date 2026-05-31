@@ -19,6 +19,21 @@ pytestmark = [
     pytest.mark.usefixtures("init_integration"),
 ]
 
+EXTERNAL_DEVICE_OLD_UNIQUE_ID = "G001"
+EXTERNAL_DEVICE_NEW_UNIQUE_ID = f"gas_meter_{EXTERNAL_DEVICE_OLD_UNIQUE_ID}"
+
+
+def _cleanup_external_migration_devices(device_registry: dr.DeviceRegistry) -> None:
+    """Remove external devices used by migration tests."""
+    if existing_old := device_registry.async_get_device(
+        identifiers={(DOMAIN, EXTERNAL_DEVICE_OLD_UNIQUE_ID)}
+    ):
+        device_registry.async_remove_device(existing_old.id)
+    if existing_new := device_registry.async_get_device(
+        identifiers={(DOMAIN, EXTERNAL_DEVICE_NEW_UNIQUE_ID)}
+    ):
+        device_registry.async_remove_device(existing_new.id)
+
 
 @pytest.mark.freeze_time("2025-01-28 21:45:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -612,33 +627,23 @@ async def test_external_device_registry_migration(
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    old_unique_id = "G001"
-    new_unique_id = f"gas_meter_{old_unique_id}"
-
-    if existing_old := device_registry.async_get_device(
-        identifiers={(DOMAIN, old_unique_id)}
-    ):
-        device_registry.async_remove_device(existing_old.id)
-    if existing_new := device_registry.async_get_device(
-        identifiers={(DOMAIN, new_unique_id)}
-    ):
-        device_registry.async_remove_device(existing_new.id)
+    _cleanup_external_migration_devices(device_registry)
 
     old_device = device_registry.async_get_or_create(
         config_entry_id=init_integration.entry_id,
-        identifiers={(DOMAIN, old_unique_id)},
+        identifiers={(DOMAIN, EXTERNAL_DEVICE_OLD_UNIQUE_ID)},
         manufacturer="HomeWizard",
         model="HWE-P1",
         name="Gas meter",
-        serial_number=old_unique_id,
+        serial_number=EXTERNAL_DEVICE_OLD_UNIQUE_ID,
     )
     new_device = device_registry.async_get_or_create(
         config_entry_id=init_integration.entry_id,
-        identifiers={(DOMAIN, new_unique_id)},
+        identifiers={(DOMAIN, EXTERNAL_DEVICE_NEW_UNIQUE_ID)},
         manufacturer="HomeWizard",
         model="HWE-P1",
         name="Gas meter",
-        serial_number=new_unique_id,
+        serial_number=EXTERNAL_DEVICE_NEW_UNIQUE_ID,
     )
 
     await hass.config_entries.async_setup(init_integration.entry_id)
@@ -657,25 +662,15 @@ async def test_external_device_registry_migration_old_only(
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    old_unique_id = "G001"
-    new_unique_id = f"gas_meter_{old_unique_id}"
-
-    if existing_old := device_registry.async_get_device(
-        identifiers={(DOMAIN, old_unique_id)}
-    ):
-        device_registry.async_remove_device(existing_old.id)
-    if existing_new := device_registry.async_get_device(
-        identifiers={(DOMAIN, new_unique_id)}
-    ):
-        device_registry.async_remove_device(existing_new.id)
+    _cleanup_external_migration_devices(device_registry)
 
     old_device = device_registry.async_get_or_create(
         config_entry_id=init_integration.entry_id,
-        identifiers={(DOMAIN, old_unique_id)},
+        identifiers={(DOMAIN, EXTERNAL_DEVICE_OLD_UNIQUE_ID)},
         manufacturer="HomeWizard",
         model="HWE-P1",
         name="Gas meter",
-        serial_number=old_unique_id,
+        serial_number=EXTERNAL_DEVICE_OLD_UNIQUE_ID,
     )
 
     await hass.config_entries.async_setup(init_integration.entry_id)
@@ -683,8 +678,37 @@ async def test_external_device_registry_migration_old_only(
 
     migrated_device = device_registry.async_get(old_device.id)
     assert migrated_device is not None
-    assert (DOMAIN, old_unique_id) not in migrated_device.identifiers
-    assert (DOMAIN, new_unique_id) in migrated_device.identifiers
+    assert (DOMAIN, EXTERNAL_DEVICE_OLD_UNIQUE_ID) not in migrated_device.identifiers
+    assert (DOMAIN, EXTERNAL_DEVICE_NEW_UNIQUE_ID) in migrated_device.identifiers
+
+
+async def test_external_device_registry_migration_new_only_noop(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test already-migrated external device identifiers remain untouched."""
+    await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    _cleanup_external_migration_devices(device_registry)
+
+    new_device = device_registry.async_get_or_create(
+        config_entry_id=init_integration.entry_id,
+        identifiers={(DOMAIN, EXTERNAL_DEVICE_NEW_UNIQUE_ID)},
+        manufacturer="HomeWizard",
+        model="HWE-P1",
+        name="Gas meter",
+        serial_number=EXTERNAL_DEVICE_NEW_UNIQUE_ID,
+    )
+
+    await hass.config_entries.async_setup(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    post_setup_device = device_registry.async_get(new_device.id)
+    assert post_setup_device is not None
+    assert (DOMAIN, EXTERNAL_DEVICE_OLD_UNIQUE_ID) not in post_setup_device.identifiers
+    assert (DOMAIN, EXTERNAL_DEVICE_NEW_UNIQUE_ID) in post_setup_device.identifiers
 
 
 @pytest.mark.parametrize(
