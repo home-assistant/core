@@ -51,6 +51,7 @@ from homeassistant.helpers.http import (
 )
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     SetupPhases,
@@ -351,7 +352,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "SSL certificate reload failed, check the logs for details"
             )
 
-    hass.services.async_register(DOMAIN, "reload_ssl_certificate", handle_reload_ssl)
+    # Register as admin service — reloading SSL material is a privileged operation
+    async_register_admin_service(
+        hass, DOMAIN, "reload_ssl_certificate", handle_reload_ssl
+    )
 
     return True
 
@@ -431,7 +435,15 @@ class _SSLReloadHandler(FileSystemEventHandler):
         # Only react to changes on the actual cert/key files, not all files
         # in the watched directory. Normalize paths for comparison since
         # the OS-level watcher may report paths differently.
-        if os.path.normpath(event.src_path) not in self._watched_paths:
+        #
+        # Check both src_path and dest_path: tools like certbot/acme.sh
+        # deploy certificates by writing to a temporary file and then
+        # atomically renaming it into place, which produces a FileMovedEvent
+        # where src_path is the temp file and dest_path is the target.
+        paths = {os.path.normpath(event.src_path)}
+        if hasattr(event, "dest_path"):
+            paths.add(os.path.normpath(event.dest_path))
+        if not paths & self._watched_paths:
             return
         # Running in the watchdog observer thread — use call_soon_threadsafe
         # to schedule the debounce on the Home Assistant event loop.
