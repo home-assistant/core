@@ -479,6 +479,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 self.last_announce_id = response.get(CLIP_ID_KEY)
                 return
             if response.get("type") in ANNOUNCE_NOT_SUPPORTED_ERRORS:
+                self.last_announce_id = None
                 # If the speaker does not support announce do not raise and
                 # fall through to_play_media to play the clip directly.
                 _LOGGER.debug(
@@ -768,7 +769,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 translation_domain=DOMAIN,
                 translation_key="cancel_announcement_no_id",
             )
-        assert self.speaker.websocket
+        if not self.speaker.websocket:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="announcement_connection_error",
+                translation_placeholders={"error": "websocket not available"},
+            )
         try:
             response, _ = await self.speaker.websocket.cancel_clip(
                 self.last_announce_id

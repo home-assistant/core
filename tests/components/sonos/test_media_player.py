@@ -13,6 +13,7 @@ from soco.data_structures import (
     DidlPlaylistContainer,
     SearchResult,
 )
+from sonos_websocket import CLIP_ID_KEY
 from sonos_websocket.exception import SonosWebsocketError
 from syrupy.assertion import SnapshotAssertion
 
@@ -1371,15 +1372,11 @@ async def test_media_get_queue(
     assert result == snapshot
 
 
-async def test_cancel_announcement(
+async def test_cancel_announcement_no_prior(
     hass: HomeAssistant,
     async_autosetup_sonos,
-    sonos_websocket,
 ) -> None:
-    """Test cancelling an announcement audio clip."""
-    content_id: str = "http://10.0.0.1:8123/local/sounds/doorbell.mp3"
-
-    # Test with no prior announcement (last_announce_id is None)
+    """Test cancelling when no announcement has been played."""
     with pytest.raises(
         ServiceValidationError, match="No active announcement to cancel"
     ):
@@ -1390,8 +1387,18 @@ async def test_cancel_announcement(
             blocking=True,
         )
 
-    # Play an announcement to set last_announce_id
-    sonos_websocket.play_clip.return_value = [{"success": 1, "id": "clip-123"}, {}]
+
+async def test_cancel_announcement(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    sonos_websocket,
+) -> None:
+    """Test cancelling a currently playing announcement."""
+    content_id = "http://10.0.0.1:8123/local/sounds/doorbell.mp3"
+    sonos_websocket.play_clip.return_value = [
+        {CLIP_ID_KEY: "clip-123", "success": 1},
+        {},
+    ]
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -1404,7 +1411,6 @@ async def test_cancel_announcement(
         blocking=True,
     )
 
-    # Test success path
     sonos_websocket.cancel_clip = AsyncMock(return_value=[{"success": 1}, {}])
     await hass.services.async_call(
         DOMAIN,
@@ -1414,8 +1420,38 @@ async def test_cancel_announcement(
     )
     sonos_websocket.cancel_clip.assert_called_once_with("clip-123")
 
-    # Re-play announcement so last_announce_id is set again
-    sonos_websocket.play_clip.return_value = [{"success": 1, "id": "clip-456"}, {}]
+
+@pytest.mark.parametrize(
+    ("cancel_clip_side_effect", "cancel_clip_return", "error_match"),
+    [
+        pytest.param(
+            SonosWebsocketError("Connection lost"),
+            None,
+            "Failed to reach Sonos speaker for announcement: Connection lost",
+            id="websocket_error",
+        ),
+        pytest.param(
+            None,
+            [{"success": 0}, {}],
+            "Cancelling announcement failed",
+            id="non_success_response",
+        ),
+    ],
+)
+async def test_cancel_announcement_errors(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    sonos_websocket,
+    cancel_clip_side_effect: SonosWebsocketError | None,
+    cancel_clip_return: list[dict[str, Any]] | None,
+    error_match: str,
+) -> None:
+    """Test error handling when cancelling an announcement."""
+    content_id = "http://10.0.0.1:8123/local/sounds/doorbell.mp3"
+    sonos_websocket.play_clip.return_value = [
+        {CLIP_ID_KEY: "clip-123", "success": 1},
+        {},
+    ]
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -1428,23 +1464,11 @@ async def test_cancel_announcement(
         blocking=True,
     )
 
-    # Test websocket exception
-    sonos_websocket.cancel_clip.side_effect = SonosWebsocketError("Connection lost")
-    with pytest.raises(
-        HomeAssistantError,
-        match="Failed to reach Sonos speaker for announcement: Connection lost",
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_CANCEL_ANNOUNCEMENT,
-            {ATTR_ENTITY_ID: "media_player.zone_a"},
-            blocking=True,
-        )
-
-    # Test non-success response
-    sonos_websocket.cancel_clip.side_effect = None
-    sonos_websocket.cancel_clip.return_value = [{"success": 0}, {}]
-    with pytest.raises(HomeAssistantError, match="Cancelling announcement failed"):
+    sonos_websocket.cancel_clip = AsyncMock(
+        side_effect=cancel_clip_side_effect,
+        return_value=cancel_clip_return,
+    )
+    with pytest.raises(HomeAssistantError, match=error_match):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CANCEL_ANNOUNCEMENT,

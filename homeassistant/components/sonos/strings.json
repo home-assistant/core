@@ -116,7 +116,7 @@
       "message": "Cancelling announcement failed: {response}"
     },
     "cancel_announcement_no_id": {
-      "message": "No active announcement to cancel."
+      "message": "No active announcement to cancel"
     },
     "entity_not_found": {
       "message": "Entity {entity_id} not found."
