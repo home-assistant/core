@@ -794,9 +794,7 @@ class HomeAssistantHTTP:
 
         if self._ssl_peer_certificate_path is not None:
             try:
-                self.context.load_verify_locations(
-                    str(self._ssl_peer_certificate_path)
-                )
+                self.context.load_verify_locations(str(self._ssl_peer_certificate_path))
             except (OSError, ValueError) as err:
                 _LOGGER.error(
                     "Failed to reload SSL peer certificate from %s: %s",
