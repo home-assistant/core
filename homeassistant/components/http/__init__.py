@@ -842,6 +842,8 @@ class HomeAssistantHTTP:
             self._ssl_certificate_path.parent,
             self._ssl_key_path.parent,
         }
+        if self._ssl_peer_certificate_path is not None:
+            watch_dirs.add(self._ssl_peer_certificate_path.parent)
 
         self._ssl_watcher = Observer()
         handler = _SSLReloadHandler(self)
