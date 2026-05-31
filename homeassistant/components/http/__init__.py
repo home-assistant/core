@@ -568,9 +568,7 @@ class HomeAssistantHTTP:
                 try:
                     await self._start_ssl_watcher()
                 except Exception:
-                    _LOGGER.exception(
-                        "Failed to start SSL certificate file watcher"
-                    )
+                    _LOGGER.exception("Failed to start SSL certificate file watcher")
 
     def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
         """Register a view with the WSGI server.
