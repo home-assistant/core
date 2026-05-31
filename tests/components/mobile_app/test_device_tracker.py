@@ -172,16 +172,16 @@ async def setup_zone(hass: HomeAssistant) -> None:
             {"in_zones": []},
             "not_home",
         ),
-        # in_zones + gps: gps wins, in_zones recomputed from coordinates
+        # in_zones + gps: in_zones wins, gps coordinates still reported as attributes
         (
             {"gps": [10, 20], "in_zones": ["zone.school"]},
             {
                 "latitude": 10,
                 "longitude": 20,
                 "gps_accuracy": 30,
-                "in_zones": ["zone.home"],
+                "in_zones": ["zone.school"],
             },
-            "home",
+            "School",
         ),
     ],
 )
