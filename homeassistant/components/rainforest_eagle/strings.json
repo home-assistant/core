@@ -14,7 +14,7 @@
       "unsupported_device_type": "This type of Rainforest Eagle device is not supported."
     },
     "step": {
-      "user": {
+      "reconfigure": {
         "data": {
           "cloud_id": "Cloud ID",
           "host": "[%key:common::config_flow::data::host%]",
@@ -24,14 +24,14 @@
           "host": "The hostname or IP address of your Rainforest gateway."
         }
       },
-      "reconfigure": {
+      "user": {
         "data": {
-          "cloud_id": "[%key:component::rainforest_eagle::config::step::user::data::cloud_id%]",
-          "host": "[%key:component::rainforest_eagle::config::step::user::data::host%]",
-          "install_code": "[%key:component::rainforest_eagle::config::step::user::data::install_code%]"
+          "cloud_id": "Cloud ID",
+          "host": "[%key:common::config_flow::data::host%]",
+          "install_code": "Installation code"
         },
         "data_description": {
-          "host": "[%key:component::rainforest_eagle::config::step::user::data_description::host%]"
+          "host": "The hostname or IP address of your Rainforest gateway."
         }
       }
     }
