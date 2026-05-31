@@ -169,7 +169,7 @@ async def test_channel_state(
     mock_roku: MagicMock,
 ) -> None:
     """Test the creation and values of the Roku selects."""
-    state = hass.states.get("select.58_onn_roku_tv_channel")
+    state = hass.states.get("select.living_room_58_onn_roku_tv_channel")
     assert state
     assert state.attributes.get(ATTR_OPTIONS) == [
         "99.1",
@@ -179,7 +179,7 @@ async def test_channel_state(
     ]
     assert state.state == "getTV (14.3)"
 
-    entry = entity_registry.async_get("select.58_onn_roku_tv_channel")
+    entry = entity_registry.async_get("select.living_room_58_onn_roku_tv_channel")
     assert entry
     assert entry.unique_id == "YN00H5555555_channel"
 
@@ -188,7 +188,7 @@ async def test_channel_state(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.58_onn_roku_tv_channel",
+            ATTR_ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
             ATTR_OPTION: "WhatsOn (1.1)",
         },
         blocking=True,
@@ -201,7 +201,7 @@ async def test_channel_state(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.58_onn_roku_tv_channel")
+    state = hass.states.get("select.living_room_58_onn_roku_tv_channel")
     assert state
     assert state.state == "WhatsOn (1.1)"
 
@@ -210,7 +210,7 @@ async def test_channel_state(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.58_onn_roku_tv_channel",
+            ATTR_ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
             ATTR_OPTION: "99.1",
         },
         blocking=True,
@@ -223,7 +223,7 @@ async def test_channel_state(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.58_onn_roku_tv_channel")
+    state = hass.states.get("select.living_room_58_onn_roku_tv_channel")
     assert state
     assert state.state == "99.1"
 
@@ -242,13 +242,13 @@ async def test_channel_select_error(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.58_onn_roku_tv_channel",
+                ATTR_ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
                 ATTR_OPTION: "99.1",
             },
             blocking=True,
         )
 
-    state = hass.states.get("select.58_onn_roku_tv_channel")
+    state = hass.states.get("select.living_room_58_onn_roku_tv_channel")
     assert state
     assert state.state == "getTV (14.3)"
     assert mock_roku.tune.call_count == 1

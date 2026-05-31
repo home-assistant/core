@@ -17,9 +17,9 @@ from tests.components.common import (
     BasicTriggerStateDescription,
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_target_entities,
@@ -191,7 +191,7 @@ async def test_counter_state_trigger(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"), BEHAVIOR_AWARE_TRIGGERS
 )
-async def test_counter_state_trigger_behavior_any(
+async def test_counter_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_counters: dict[str, list[str]],
     trigger_target_config: dict,
@@ -201,8 +201,8 @@ async def test_counter_state_trigger_behavior_any(
     trigger_options: dict[str, Any] | None,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the counter state trigger fires when any counter state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test counter trigger fires on any state change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_counters,
         trigger_target_config=trigger_target_config,
@@ -232,7 +232,7 @@ async def test_counter_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the counter state trigger fires when the first counter changes to a specific state."""
+    """Test counter trigger fires on first state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_counters,
@@ -253,7 +253,7 @@ async def test_counter_state_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"), BEHAVIOR_AWARE_TRIGGERS
 )
-async def test_counter_state_trigger_behavior_last(
+async def test_counter_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_counters: dict[str, list[str]],
     trigger_target_config: dict,
@@ -263,8 +263,8 @@ async def test_counter_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the counter state trigger fires when the last counter changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test counter trigger fires when all counters have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_counters,
         trigger_target_config=trigger_target_config,

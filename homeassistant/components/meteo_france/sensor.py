@@ -1,7 +1,5 @@
 """Support for Meteo-France raining forecast sensor."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -239,7 +237,8 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
         if hasattr(coordinator.data, "position"):
             city_name = coordinator.data.position["name"]
             self._attr_name = f"{city_name} {description.name}"
-            self._attr_unique_id = f"{coordinator.data.position['lat']},{coordinator.data.position['lon']}_{description.key}"
+            pos = coordinator.data.position
+            self._attr_unique_id = f"{pos['lat']},{pos['lon']}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -262,7 +261,9 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
         # Specific case for probability forecast
         if path[0] == "probability_forecast":
             if len(path) == 3:
-                # This is a fix compared to other entitty as first index is always null in API result for unknown reason
+                # This is a fix compared to other entity as
+                # first index is always null in API result
+                # for unknown reason
                 value = _find_first_probability_forecast_not_null(data, path)
             else:
                 value = data[0][path[1]]

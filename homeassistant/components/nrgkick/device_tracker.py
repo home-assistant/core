@@ -1,11 +1,8 @@
 """Device tracker platform for NRGkick."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -44,7 +41,6 @@ class NRGkickDeviceTracker(NRGkickEntity, TrackerEntity):
     """Representation of a NRGkick GPS device tracker."""
 
     _attr_translation_key = TRACKER_KEY
-    _attr_source_type = SourceType.GPS
 
     def __init__(
         self,

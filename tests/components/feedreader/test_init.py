@@ -85,6 +85,7 @@ async def test_storage_data_writing(
         assert await async_setup_config_entry(
             hass, VALID_CONFIG_DEFAULT, return_value=feed_one_event
         )
+        await hass.async_block_till_done()
 
     # one new event
     assert len(events) == 1
@@ -344,8 +345,9 @@ async def test_feed_errors(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
-            "Error fetching feed data from http://some.rss.local/rss_feed.xml : <urlopen error Test>"
-            in caplog.text
+            "Error fetching feed data from"
+            " http://some.rss.local/rss_feed.xml"
+            " : <urlopen error Test>" in caplog.text
         )
 
         # success

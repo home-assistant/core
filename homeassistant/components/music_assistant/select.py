@@ -1,7 +1,5 @@
 """Music Assistant select platform."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from music_assistant_client.client import MusicAssistantClient
@@ -50,10 +48,16 @@ async def async_setup_entry(
                 != PlayerOptionType.BOOLEAN  # these always go to switch
                 and player_option.options
             ):
-                # We ignore entities with unknown translation key for the base name.
-                # However, we accept a non-available translation_key in strings.json for the entity's state,
-                # as these are oftentimes dynamically created, dependent on a specific player and might not be known to the provider
-                # developer. In that case, the frontend falls back to showing the state's bare translation key.
+                # We ignore entities with unknown
+                # translation key for the base name.
+                # However, we accept a non-available
+                # translation_key in strings.json for the
+                # entity's state, as these are oftentimes
+                # dynamically created, dependent on a
+                # specific player and might not be known to
+                # the provider developer. In that case, the
+                # frontend falls back to showing the state's
+                # bare translation key.
                 if player_option.translation_key not in PLAYER_OPTIONS_SELECT:
                     continue
 
@@ -78,7 +82,7 @@ async def async_setup_entry(
 
 
 class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectEntity):
-    """Representation of a select entity to control player provider dependent settings."""
+    """Representation of a select entity to control player settings."""
 
     def __init__(
         self,

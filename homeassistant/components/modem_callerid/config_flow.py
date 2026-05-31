@@ -1,7 +1,5 @@
 """Config flow for Modem Caller ID integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from phone_modem import PhoneModem
@@ -34,7 +32,12 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         dev_path = discovery_info.device
-        unique_id = f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
+        unique_id = (
+            f"{discovery_info.vid}:{discovery_info.pid}"
+            f"_{discovery_info.serial_number}"
+            f"_{discovery_info.manufacturer}"
+            f"_{discovery_info.description}"
+        )
         if (
             await self.validate_device_errors(dev_path=dev_path, unique_id=unique_id)
             is None

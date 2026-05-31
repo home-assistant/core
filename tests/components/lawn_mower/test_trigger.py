@@ -9,9 +9,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     other_states,
@@ -107,7 +107,7 @@ async def test_lawn_mower_trigger_options_validation(
         ),
     ],
 )
-async def test_lawn_mower_state_trigger_behavior_any(
+async def test_lawn_mower_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_lawn_mowers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -117,8 +117,8 @@ async def test_lawn_mower_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the lawn mower state trigger fires when any lawn mower state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test lawn mower trigger fires when any mower changes state."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_lawn_mowers,
         trigger_target_config=trigger_target_config,
@@ -175,7 +175,7 @@ async def test_lawn_mower_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the lawn mower state trigger fires when the first lawn mower changes to a specific state."""
+    """Test lawn mower trigger fires when first mower changes state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_lawn_mowers,
@@ -223,7 +223,7 @@ async def test_lawn_mower_state_trigger_behavior_first(
         ),
     ],
 )
-async def test_lawn_mower_state_trigger_behavior_last(
+async def test_lawn_mower_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_lawn_mowers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -233,8 +233,8 @@ async def test_lawn_mower_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the lawn_mower state trigger fires when the last lawn_mower changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test lawn mower trigger fires when last mower changes state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_lawn_mowers,
         trigger_target_config=trigger_target_config,

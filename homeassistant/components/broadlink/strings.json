@@ -50,8 +50,13 @@
   },
   "entity": {
     "infrared": {
-      "infrared": {
-        "name": "IR transmitter"
+      "infrared_emitter": {
+        "name": "IR emitter"
+      }
+    },
+    "radio_frequency": {
+      "rf_transmitter": {
+        "name": "RF transmitter"
       }
     },
     "select": {
@@ -84,8 +89,14 @@
     }
   },
   "exceptions": {
+    "frequency_not_supported": {
+      "message": "Broadlink devices cannot transmit on {frequency} MHz"
+    },
     "send_command_failed": {
       "message": "Failed to send IR command: {error}"
+    },
+    "transmit_failed": {
+      "message": "Failed to transmit RF command: {error}"
     }
   }
 }

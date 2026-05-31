@@ -93,6 +93,12 @@
       "reset_air_filter_consumable": {
         "name": "Reset air filter consumable"
       },
+      "reset_dock_cleaning_brush_consumable": {
+        "name": "Reset cleaning brush consumable"
+      },
+      "reset_dock_strainer_consumable": {
+        "name": "Reset strainer consumable"
+      },
       "reset_main_brush_consumable": {
         "name": "Reset main brush consumable"
       },
@@ -121,6 +127,13 @@
           "mop": "Mop only",
           "vac_and_mop": "Vacuum and mop",
           "vacuum": "Vacuum only"
+        }
+      },
+      "cleaning_route": {
+        "name": "Cleaning route",
+        "state": {
+          "balanced": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::balanced%]",
+          "deep": "[%key:component::roborock::entity::select::mop_mode::state::deep%]"
         }
       },
       "detergent_type": {
@@ -663,6 +676,9 @@
     },
     "mqtt_unauthorized": {
       "message": "Roborock MQTT servers rejected the connection due to rate limiting or invalid credentials. You may either attempt to reauthenticate or wait and reload the integration."
+    },
+    "network_error": {
+      "message": "Network error connecting to Roborock servers. Check your internet connection and the Roborock service status."
     },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"

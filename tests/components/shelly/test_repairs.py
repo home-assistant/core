@@ -4,7 +4,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from aioshelly.const import MODEL_PLUG, MODEL_WALL_DISPLAY
-from aioshelly.exceptions import DeviceConnectionError, RpcCallError
+from aioshelly.exceptions import DeviceConnectionError, NotInitialized, RpcCallError
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -176,6 +176,22 @@ async def test_outbound_websocket_incorrectly_enabled_issue(
 
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
+
+
+async def test_repairs_skipped_when_device_not_initialized(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair checks are skipped when the RPC device is not initialized."""
+    mock_rpc_device.initialized = False
+    type(mock_rpc_device).config = property(
+        lambda self: (_ for _ in ()).throw(NotInitialized)
+    )
+
+    await init_integration(hass, 2)
+
     assert len(issue_registry.issues) == 0
 
 

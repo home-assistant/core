@@ -15,6 +15,7 @@ from homeassistant.components.stt import (
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
+    SpeechAudioProcessing,
     async_default_engine,
     async_get_provider,
     async_get_speech_to_text_engine,
@@ -267,11 +268,11 @@ async def test_stream_audio_uses_enum_values(
     assert isinstance(metadata.codec, AudioCodecs)
     assert metadata.codec == AudioCodecs.PCM
     assert isinstance(metadata.bit_rate, AudioBitRates)
-    assert metadata.bit_rate == AudioBitRates.BITRATE_16
+    assert metadata.bit_rate is AudioBitRates.BITRATE_16
     assert isinstance(metadata.sample_rate, AudioSampleRates)
-    assert metadata.sample_rate == AudioSampleRates.SAMPLERATE_16000
+    assert metadata.sample_rate is AudioSampleRates.SAMPLERATE_16000
     assert isinstance(metadata.channel, AudioChannels)
-    assert metadata.channel == AudioChannels.CHANNEL_MONO
+    assert metadata.channel is AudioChannels.CHANNEL_MONO
 
 
 @pytest.mark.parametrize(
@@ -299,11 +300,13 @@ async def test_stream_audio_uses_enum_values(
         ),
         (
             (
-                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=bad channel;"
+                "format=wav; codec=pcm; sample_rate=16000;"
+                " bit_rate=16; channel=bad channel;"
                 " language=en"
             ),
             400,
-            "Wrong format of X-Speech-Content: invalid literal for int() with base 10: 'bad channel'",
+            "Wrong format of X-Speech-Content: invalid literal"
+            " for int() with base 10: 'bad channel'",
         ),
         (
             "format=wav; codec=pcm; sample_rate=16000",
@@ -595,3 +598,49 @@ async def test_get_engine_entity(
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
 
     assert async_get_speech_to_text_engine(hass, "stt.test") is mock_provider_entity
+
+
+async def test_audio_processing_default(
+    hass: HomeAssistant, tmp_path: Path, mock_provider: MockSTTProvider
+) -> None:
+    """Test that the default audio_processing property returns correct values."""
+    await mock_setup(hass, tmp_path, mock_provider)
+
+    engine = async_get_speech_to_text_engine(hass, TEST_DOMAIN)
+    assert engine is not None
+
+    assert engine.audio_processing.requires_external_vad is True
+    assert engine.audio_processing.prefers_auto_gain_enabled is True
+    assert engine.audio_processing.prefers_noise_reduction_enabled is True
+
+
+async def test_audio_processing_entity_default(
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockSTTProviderEntity
+) -> None:
+    """Test default audio_processing property returns correct values."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+
+    engine = async_get_speech_to_text_engine(hass, f"{DOMAIN}.{TEST_DOMAIN}")
+    assert engine is not None
+
+    assert engine.audio_processing.requires_external_vad is True
+    assert engine.audio_processing.prefers_auto_gain_enabled is True
+    assert engine.audio_processing.prefers_noise_reduction_enabled is True
+
+
+async def test_audio_processing_custom(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test that custom audio_processing values are returned correctly."""
+    custom_processing = SpeechAudioProcessing(
+        requires_external_vad=False,
+        prefers_auto_gain_enabled=False,
+        prefers_noise_reduction_enabled=False,
+    )
+    provider = MockSTTProvider(audio_processing=custom_processing)
+    await mock_setup(hass, tmp_path, provider)
+
+    engine = async_get_speech_to_text_engine(hass, TEST_DOMAIN)
+    assert engine is not None
+
+    assert engine.audio_processing.requires_external_vad is False
+    assert engine.audio_processing.prefers_auto_gain_enabled is False
+    assert engine.audio_processing.prefers_noise_reduction_enabled is False

@@ -1,7 +1,5 @@
 """Combination of multiple media players for a universal controller."""
 
-from __future__ import annotations
-
 from copy import copy
 from typing import Any
 
@@ -155,6 +153,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
     _attr_should_poll = False
+    _attr_media_image_remotely_accessible = True
 
     def __init__(
         self,

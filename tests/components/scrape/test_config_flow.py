@@ -1,14 +1,14 @@
 """Test the Scrape config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant import config_entries
-from homeassistant.components.rest.data import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
     DEFAULT_TIMEOUT,
 )
-from homeassistant.components.rest.schema import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
     DEFAULT_METHOD,
 )
 from homeassistant.components.scrape import DOMAIN
@@ -155,9 +155,8 @@ async def test_form_with_post(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_flow_fails(
-    hass: HomeAssistant, get_data: MockRestData, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
     """Test config flow error."""
 
     result = await hass.config_entries.flow.async_init(

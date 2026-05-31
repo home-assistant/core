@@ -1,7 +1,5 @@
 """Service calling related helpers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
 import dataclasses
@@ -1186,7 +1184,8 @@ def _validate_entity_service_schema(
         return cv.make_entity_service_schema(schema)
     if not cv.is_entity_service_schema(schema):
         raise HomeAssistantError(
-            f"The {service} service registers an entity service with a non entity service schema"
+            f"The {service} service registers an entity service"
+            " with a non entity service schema"
         )
     return schema
 

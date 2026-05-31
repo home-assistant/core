@@ -1,7 +1,5 @@
 """Tests for rainbird initialization."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from typing import Any
 
@@ -522,7 +520,8 @@ async def test_reload_migration_with_leading_zero_mac(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify the device and entity still have the correct identifiers and were not duplicated
+    # Verify the device and entity still have the correct identifiers
+    # and were not duplicated
     reloaded_device_entry = device_registry.async_get(migrated_device_entry.id)
     assert reloaded_device_entry is not None
     assert reloaded_device_entry.identifiers == {(DOMAIN, f"{mac_address_unique_id}-1")}

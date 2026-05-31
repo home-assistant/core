@@ -142,10 +142,20 @@ async def test_timeout_manufacturer_data(
     scan_step: Callable[[], Awaitable[None]],
     manufacturer_request_event: asyncio.Event,
 ) -> None:
-    """Test the flow aborts with no_devices_found when manufacturer data times out and only partial info is available."""
+    """Test the flow aborts with no_devices_found.
+
+    Specifically when manufacturer data times out and only partial info
+    is available.
+    """
 
     inject_bluetooth_service_info(hass, MISSING_PRODUCT_SERVICE_INFO)
 
+    # The injected advertisement starts a bluetooth discovery flow which also
+    # calls async_get_manufacturer_data. Drain it first so it doesn't race
+    # with the user flow's own request.
+    await manufacturer_request_event.wait()
+    await scan_step()
+    await hass.async_block_till_done(wait_background_tasks=True)
     manufacturer_request_event.clear()
 
     async with asyncio.TaskGroup() as tg:

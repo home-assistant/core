@@ -1,7 +1,5 @@
 """Helper methods for language selection in Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 import math
@@ -185,7 +183,10 @@ class Dialect:
 def matches(
     target: str, supported: Iterable[str], country: str | None = None
 ) -> list[str]:
-    """Return a sorted list of matching language tags based on a target tag and country hint."""
+    """Return a sorted list of matching language tags.
+
+    Based on a target tag and country hint.
+    """
     if target == MATCH_ALL:
         return list(supported)
 
