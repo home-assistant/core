@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import device_tracker, mqtt, zone
+from homeassistant.components import device_tracker, mqtt
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -546,7 +546,6 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
 
-    assert async_setup_component(hass, zone.DOMAIN, {})
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
