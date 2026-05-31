@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure the same device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -20,6 +22,16 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your Rainforest gateway."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "cloud_id": "[%key:component::rainforest_eagle::config::step::user::data::cloud_id%]",
+          "host": "[%key:component::rainforest_eagle::config::step::user::data::host%]",
+          "install_code": "[%key:component::rainforest_eagle::config::step::user::data::install_code%]"
+        },
+        "data_description": {
+          "host": "[%key:component::rainforest_eagle::config::step::user::data_description::host%]"
         }
       }
     }
