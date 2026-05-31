@@ -1,7 +1,6 @@
 """Support for Velux covers."""
 
 from enum import StrEnum
-import logging
 from typing import Any
 
 from pyvlx import Node
@@ -31,8 +30,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import VeluxConfigEntry
 from .entity import VeluxEntity, wrap_pyvlx_call_exceptions
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
