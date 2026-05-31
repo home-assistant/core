@@ -35,7 +35,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -43,8 +43,12 @@ rules:
     status: exempt
     comment: This integration does not use devices
   diagnostics: done
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info:
+    status: exempt
+    comment: This integration does not use devices
+  discovery:
+    status: exempt
+    comment: This integration does not use devices
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -56,7 +60,7 @@ rules:
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: done
