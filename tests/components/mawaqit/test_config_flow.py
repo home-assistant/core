@@ -21,7 +21,7 @@ from homeassistant.components.mawaqit.const import (
     WRONG_CREDENTIAL,
 )
 from homeassistant.components.mawaqit.types import MawaqitMosqueData
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_UUID
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_UUID
 from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_TOKEN
@@ -840,3 +840,117 @@ async def test_async_step_reconfigure_keyword_updates_entry(
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry_mawaqit.data[CONF_UUID] == mosque.uuid
+
+
+# ---------------------------------------------------------------------------
+# RE-AUTH FLOW
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_async_step_reauth_shows_confirm_form(
+    hass: HomeAssistant,
+    mock_config_entry_mawaqit: MockConfigEntry,
+) -> None:
+    """Test reauth starts and shows the confirmation form."""
+    mock_config_entry_mawaqit.add_to_hass(hass)
+
+    result = await mock_config_entry_mawaqit.start_reauth_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_async_step_reauth_confirm_success(
+    hass: HomeAssistant,
+    mock_config_entry_mawaqit: MockConfigEntry,
+) -> None:
+    """Test successful reauthentication."""
+    mock_config_entry_mawaqit.add_to_hass(hass)
+
+    result = await mock_config_entry_mawaqit.start_reauth_flow(hass)
+
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.validate_credentials",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_api_token",
+            return_value="NEW_TOKEN",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+            },
+        )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert mock_config_entry_mawaqit.data[CONF_API_KEY] == "NEW_TOKEN"
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("validate_side_effect", "validate_return", "token_side_effect", "expected_error"),
+    [
+        # invalid credentials (no exception)
+        (None, False, None, WRONG_CREDENTIAL),
+        # validate_credentials connection error (NEW — important branch)
+        (
+            ClientConnectorError(MagicMock(), MagicMock()),
+            None,
+            None,
+            CANNOT_CONNECT_TO_SERVER,
+        ),
+        # token retrieval connection error
+        (
+            None,
+            True,
+            ClientConnectorError(MagicMock(), MagicMock()),
+            CANNOT_CONNECT_TO_SERVER,
+        ),
+    ],
+)
+async def test_async_step_reauth_confirm_errors(
+    hass: HomeAssistant,
+    mock_config_entry_mawaqit: MockConfigEntry,
+    validate_side_effect,
+    validate_return,
+    token_side_effect,
+    expected_error,
+) -> None:
+    """Test reauth failure paths."""
+    mock_config_entry_mawaqit.add_to_hass(hass)
+
+    result = await mock_config_entry_mawaqit.start_reauth_flow(hass)
+    with (
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.validate_credentials",
+            side_effect=validate_side_effect,
+            return_value=validate_return,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_api_token",
+            side_effect=token_side_effect,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        )
+
+    # Re-open the Auth flow and show the error
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == expected_error

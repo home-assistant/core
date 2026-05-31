@@ -8,6 +8,7 @@ from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFoun
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_UUID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -40,7 +41,7 @@ class MosqueCoordinator(DataUpdateCoordinator[dict]):
                 self.mosque_uuid, token=self.token
             )
         except BadCredentialsException as err:
-            raise UpdateFailed(f"Bad credentials: {err}") from err
+            raise ConfigEntryAuthFailed from err
         except (NoMosqueAround, NoMosqueFound) as err:
             raise UpdateFailed(f"No mosque found: {err}") from err
         except (ConnectionError, TimeoutError) as err:
@@ -95,7 +96,7 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
                 )
                 self.last_fetch = now
             except BadCredentialsException as err:
-                raise UpdateFailed(f"Bad credentials: {err}") from err
+                raise ConfigEntryAuthFailed from err
             except (NoMosqueAround, NoMosqueFound) as err:
                 raise UpdateFailed(f"No mosque found: {err}") from err
             except (ConnectionError, TimeoutError) as err:
