@@ -15,6 +15,7 @@ from homeassistant.components.schlage.const import (
     SERVICE_ADD_CODE,
     SERVICE_DELETE_CODE,
     SERVICE_GET_CODES,
+    UPDATE_INTERVAL,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -57,7 +58,7 @@ async def test_lock_disconnected(
 ) -> None:
     """Test lock unavailable when disconnected."""
     mock_lock.connected = False
-    freezer.tick(timedelta(seconds=30))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     lock = hass.states.get("lock.vault_door")
