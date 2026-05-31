@@ -345,22 +345,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_check_ssl_issue)
 
-    if ssl_certificate is not None:
+    async def handle_reload_ssl(call: ServiceCall) -> None:
+        """Handle reload_ssl_certificate service call."""
+        success = await hass.async_add_executor_job(server.reload_ssl_certificate)
+        if not success:
+            raise HomeAssistantError(
+                "SSL certificate reload failed, check the logs for details"
+            )
 
-        async def handle_reload_ssl(call: ServiceCall) -> None:
-            """Handle reload_ssl_certificate service call."""
-            success = await hass.async_add_executor_job(server.reload_ssl_certificate)
-            if not success:
-                raise HomeAssistantError(
-                    "SSL certificate reload failed, check the logs for details"
-                )
-
-        # Register as admin service — reloading SSL material is a
-        # privileged operation. Only registered when SSL is configured
-        # since the service always fails without it.
-        async_register_admin_service(
-            hass, DOMAIN, "reload_ssl_certificate", handle_reload_ssl
-        )
+    # Register as admin service — reloading SSL material is a
+    # privileged operation. Always registered so automations and
+    # blueprints can reference it unconditionally.
+    async_register_admin_service(
+        hass, DOMAIN, "reload_ssl_certificate", handle_reload_ssl
+    )
 
     return True
 
@@ -506,6 +504,7 @@ class HomeAssistantHTTP:
         self.supervisor_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
         self._ssl_watcher: BaseObserver | None = None
+        self._ssl_watcher_stopping: bool = False
         self._ssl_reload_debounce_handle: asyncio.TimerHandle | None = None
         # Absolute paths of the cert and key files, resolved once during
         # initialization so the watcher and reload use the same paths.
@@ -517,17 +516,11 @@ class HomeAssistantHTTP:
         self._ssl_reload_lock = threading.Lock()
 
     def _resolve_ssl_path(self, filepath_str: str) -> Path:
-        """Resolve an SSL file path, making relative paths absolute.
-
-        Also resolves symlinks so that the file watcher monitors the
-        real file location. This handles certbot's live/ → archive/
-        symlink structure where the actual file changes happen in a
-        directory different from the configured path.
-        """
+        """Resolve an SSL file path, making relative paths absolute."""
         filepath = Path(filepath_str)
         if not filepath.is_absolute():
             filepath = Path(self.hass.config.config_dir) / filepath
-        return filepath.resolve()
+        return filepath
 
     async def async_initialize(
         self,
@@ -868,6 +861,7 @@ class HomeAssistantHTTP:
         Does not block — the blocking `stop()`/`join()` calls are offloaded
         to the executor by the caller (see `stop()`).
         """
+        self._ssl_watcher_stopping = True
         if self._ssl_reload_debounce_handle is not None:
             self._ssl_reload_debounce_handle.cancel()
             self._ssl_reload_debounce_handle = None
@@ -898,6 +892,8 @@ class HomeAssistantHTTP:
     @callback
     def _debounce_ssl_reload(self) -> None:
         """Debounce SSL reload events with a short delay."""
+        if self._ssl_watcher_stopping:
+            return
         if self._ssl_reload_debounce_handle is not None:
             self._ssl_reload_debounce_handle.cancel()
         self._ssl_reload_debounce_handle = self.hass.loop.call_later(
