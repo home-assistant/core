@@ -397,7 +397,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_meter_connected-entry]
