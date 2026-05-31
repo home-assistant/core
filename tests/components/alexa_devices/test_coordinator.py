@@ -15,6 +15,7 @@ from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
@@ -126,3 +127,69 @@ async def test_sync_history_state_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+
+
+async def test_sync_media_state_auth_failed(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sync_media_state raises ConfigEntryAuthFailed on auth error."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+
+    mock_amazon_devices_client.sync_media_state.side_effect = CannotAuthenticate(
+        "Invalid credentials"
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed) as exc_info:
+        await coordinator.sync_media_state()
+
+    err = exc_info.value
+    assert err.translation_domain == DOMAIN
+    assert err.translation_key == "invalid_auth"
+
+
+async def test_sync_media_state_cannot_connect(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sync_media_state raises ConfigEntryNotReady on connection error."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+
+    mock_amazon_devices_client.sync_media_state.side_effect = CannotConnect(
+        "Connection failed"
+    )
+
+    with pytest.raises(ConfigEntryNotReady) as exc_info:
+        await coordinator.sync_media_state()
+
+    err = exc_info.value
+    assert err.translation_domain == DOMAIN
+    assert err.translation_key == "cannot_connect_with_error"
+
+
+async def test_sync_media_state_unexpected_exception(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sync_media_state raises ConfigEntryNotReady on unexpected error."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+
+    mock_amazon_devices_client.sync_media_state.side_effect = Exception(
+        "Unexpected failure"
+    )
+
+    with pytest.raises(ConfigEntryNotReady) as exc_info:
+        await coordinator.sync_media_state()
+
+    err = exc_info.value
+    assert err.translation_domain == DOMAIN
+    assert err.translation_key == "unknown"
