@@ -183,9 +183,8 @@ rules:
   test-coverage:
     status: done
     comment: >
-      comment: >
-        Unit tests cover runtime paths, config flows, options flows,
-        diagnostics, repairs, and remote entity behavior.
+      Unit tests cover runtime paths, config flows, options flows,
+      diagnostics, repairs, and remote entity behavior.
 
   # Gold
   devices:

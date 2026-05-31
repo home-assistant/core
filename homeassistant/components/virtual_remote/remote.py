@@ -185,10 +185,10 @@ def cleanup_stale_missing_infrared_issues(
     hass: HomeAssistant,
     configured_remote_ids: set[str],
     *,
-    issue_cleanup_handler: RestoredInfraredEntityIssueHandler | None,
+    cleanup_stale_issues: bool,
 ) -> None:
     """Clear repair issues for remote ids that are no longer configured."""
-    if issue_cleanup_handler is not _delete_missing_issue:
+    if not cleanup_stale_issues:
         return
 
     async_delete_stale_linked_infrared_entity_missing_issues(
@@ -209,6 +209,7 @@ async def async_setup_virtual_remote_entities(
     translation_domain: str = DOMAIN,
     missing_infrared_issue_handler: MissingInfraredEntityIssueHandler | None = None,
     restored_infrared_issue_handler: RestoredInfraredEntityIssueHandler | None = None,
+    cleanup_stale_issues: bool = False,
 ) -> None:
     """Set up configured virtual remote entities.
 
@@ -269,7 +270,7 @@ async def async_setup_virtual_remote_entities(
     cleanup_stale_missing_infrared_issues(
         hass,
         configured_remote_ids,
-        issue_cleanup_handler=restored_infrared_issue_handler,
+        cleanup_stale_issues=cleanup_stale_issues,
     )
 
     if cleanup_devices:
@@ -297,6 +298,7 @@ async def async_setup_entry(
         entity_name_factory=_standalone_virtual_remote_entity_name,
         has_entity_name=True,
         cleanup_devices=True,
+        cleanup_stale_issues=True,
         missing_infrared_issue_handler=_create_missing_issue,
         restored_infrared_issue_handler=_delete_missing_issue,
     )
