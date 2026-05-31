@@ -442,10 +442,18 @@ class _SSLReloadHandler(FileSystemEventHandler):
         # atomically renaming it into place, which produces a FileMovedEvent
         # where src_path is the temp file and dest_path is the target.
         # The event paths may be bytes on some platforms.
-        src = event.src_path.decode() if isinstance(event.src_path, bytes) else event.src_path
+        src = (
+            event.src_path.decode()
+            if isinstance(event.src_path, bytes)
+            else event.src_path
+        )
         paths = {os.path.normpath(src)}
         if hasattr(event, "dest_path"):
-            dest = event.dest_path.decode() if isinstance(event.dest_path, bytes) else event.dest_path
+            dest = (
+                event.dest_path.decode()
+                if isinstance(event.dest_path, bytes)
+                else event.dest_path
+            )
             paths.add(os.path.normpath(dest))
         if not paths & self._watched_paths:
             return
