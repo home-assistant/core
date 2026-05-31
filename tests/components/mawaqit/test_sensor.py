@@ -1,6 +1,6 @@
 """Tests for the Mawaqit sensor platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from freezegun import freeze_time
 import pytest
@@ -16,102 +16,39 @@ from homeassistant.components.mawaqit.sensor import (
     MyMosqueSensor,
 )
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+
+from .conftest import build_prayer_data
 
 from tests.common import MockConfigEntry
 
-MOCK_MOSQUE_DATA = {"name": "Test Mosque", "uuid": "aaaaa-bbbbb-cccccc-0000"}
-
-
-def _build_prayer_data(
-    *,
-    iqama_enabled: bool = True,
-    with_iqama_calendar: bool = True,
-    jumua: str | None = "13:00",
-    jumua2: str | None = "14:00",
-    jumua3: str | None = None,
-) -> dict:
-    """Build mock prayer data with calendar for April 10."""
-    month_data = {}
-    for day in range(1, 32):
-        month_data[str(day)] = ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]
-
-    calendar = [{} for _ in range(12)]
-    calendar[3] = month_data  # April
-
-    iqama_month_data = {}
-    for day in range(1, 32):
-        iqama_month_data[str(day)] = ["+10", "+15", "+10", "+5", "+10"]
-
-    iqama_calendar = [{} for _ in range(12)]
-    iqama_calendar[3] = iqama_month_data
-
-    return {
-        "calendar": calendar,
-        "iqamaCalendar": iqama_calendar if with_iqama_calendar else [],
-        "iqamaEnabled": iqama_enabled,
-        "timezone": "Europe/Paris",
-        "shuruq": "06:45",
-        "jumua": jumua,
-        "jumua2": jumua2,
-        "jumua3": jumua3,
-    }
-
-
-async def _setup_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mosque_data: dict | None = None,
-    prayer_data: dict | None = None,
-) -> None:
-    """Set up the Mawaqit integration with mocked data."""
-    if mosque_data is None:
-        mosque_data = MOCK_MOSQUE_DATA
-    if prayer_data is None:
-        prayer_data = _build_prayer_data()
-
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_mosque_by_id",
-            new_callable=AsyncMock,
-            return_value=mosque_data,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
-            new_callable=AsyncMock,
-            return_value=prayer_data,
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+# ---------------------------------------------------------------------------
+# Sensor setup tests
+# ---------------------------------------------------------------------------
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
 @pytest.mark.parametrize(
     ("prayer_data_kwargs", "expected_count"),
     [
-        ({}, 16),  # 1 + 6 + 2 jumua + 5 iqama + 2 = 16
-        ({"iqama_enabled": False}, 11),  # no iqama
-        ({"with_iqama_calendar": False}, 11),  # no iqama
-        ({"jumua2": None}, 15),  # 1 jumua only
-        ({"jumua3": "15:00"}, 17),  # 3 jumua
-        ({"jumua2": None, "iqama_enabled": False}, 10),  # 1 jumua, no iqama
+        ({}, 16),  # 1 mosque + 6 prayers + 2 jumua + 5 iqama + 2 next = 16
+        ({"iqama_enabled": False}, 11),  # no iqama sensors
+        ({"with_iqama_calendar": False}, 11),  # no iqama sensors
+        ({"jumua2": None}, 15),  # only 1 Jumua
+        ({"jumua3": "15:00"}, 17),  # 3 Jumua prayers
+        ({"jumua2": None, "iqama_enabled": False}, 10),  # 1 Jumua, no iqama
     ],
 )
 async def test_sensor_setup_creates_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
     prayer_data_kwargs: dict,
     expected_count: int,
 ) -> None:
     """Test that the correct number of entities is created based on mosque capabilities."""
-    await _setup_integration(
-        hass, mock_config_entry, prayer_data=_build_prayer_data(**prayer_data_kwargs)
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(fill_all_months=False, **prayer_data_kwargs)
     )
     assert len(hass.states.async_all("sensor")) == expected_count
 
@@ -134,23 +71,28 @@ async def test_sensor_setup_creates_entities(
 async def test_conditional_sensor_creation(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
     prayer_data_kwargs: dict,
     entity_id: str,
     should_exist: bool,
 ) -> None:
-    """Test that jumua and iqama sensors are created only when the API reports them."""
-    await _setup_integration(
-        hass, mock_config_entry, prayer_data=_build_prayer_data(**prayer_data_kwargs)
+    """Test that Jumua and iqama sensors are created only when the API reports them."""
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(fill_all_months=False, **prayer_data_kwargs)
     )
     assert (hass.states.get(entity_id) is not None) == should_exist
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
 async def test_mosque_sensor_native_value(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
 ) -> None:
     """Test mosque sensor returns the mosque name."""
-    await _setup_integration(hass, mock_config_entry)
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(fill_all_months=False)
+    )
 
     state = hass.states.get("sensor.mosque_information")
     assert state is not None
@@ -169,11 +111,14 @@ async def test_mosque_sensor_native_value(
 async def test_sensor_unavailable_when_no_coordinator_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
     coordinator_attr: str,
     entity_id: str,
 ) -> None:
     """Test sensors become unavailable when coordinator data is None."""
-    await _setup_integration(hass, mock_config_entry)
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(fill_all_months=False)
+    )
     coordinator = getattr(mock_config_entry.runtime_data, coordinator_attr)
     coordinator.async_set_updated_data(None)
     await hass.async_block_till_done()
@@ -184,12 +129,15 @@ async def test_sensor_unavailable_when_no_coordinator_data(
 
 @freeze_time("2025-04-10 12:00:00+02:00")
 async def test_prayer_time_sensor_get_value_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
 ) -> None:
     """Test prayer time sensor when get_value raises an exception."""
-    await _setup_integration(hass, mock_config_entry)
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(fill_all_months=False)
+    )
 
-    # Set prayer data to something that causes errors in utility functions
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
     coordinator.async_set_updated_data({"invalid": "data"})
     await hass.async_block_till_done()
@@ -201,10 +149,14 @@ async def test_prayer_time_sensor_get_value_error(
 
 @freeze_time("2025-04-10 12:00:00+02:00")
 async def test_next_prayer_sensors(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
 ) -> None:
     """Test next salat sensors: at 12:00 Paris the next prayer is Dhuhr at 12:30."""
-    await _setup_integration(hass, mock_config_entry)
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(fill_all_months=False)
+    )
 
     name_state = hass.states.get("sensor.next_salat_name")
     assert name_state is not None
@@ -217,10 +169,14 @@ async def test_next_prayer_sensors(
 
 @freeze_time("2025-04-10 12:00:00+02:00")
 async def test_next_prayer_sensor_no_calendar(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
 ) -> None:
     """Test next prayer sensor when calendar is missing from data."""
-    await _setup_integration(hass, mock_config_entry)
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(fill_all_months=False)
+    )
 
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
     coordinator.async_set_updated_data({"timezone": "Europe/Paris"})
@@ -237,16 +193,23 @@ async def test_next_prayer_sensor_no_calendar(
     ["sensor.fajr_prayer", "sensor.shuruq", "sensor.jumua_prayer"],
 )
 async def test_prayer_sensors_return_valid_state(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, entity_id: str
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    entity_id: str,
 ) -> None:
     """Test prayer, shuruq and jumua sensors return a valid datetime state."""
-    await _setup_integration(hass, mock_config_entry)
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(fill_all_months=False)
+    )
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state not in ("unavailable", "unknown")
 
 
-# --- Direct unit tests for sensor classes to cover property branches ---
+# ---------------------------------------------------------------------------
+# Direct unit tests for sensor class property branches
+# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(

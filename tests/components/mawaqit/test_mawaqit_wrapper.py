@@ -8,6 +8,17 @@ import pytest
 from homeassistant.components.mawaqit import mawaqit_wrapper
 from homeassistant.components.mawaqit.types import MawaqitMosqueData
 
+from .conftest import MOCK_TOKEN
+
+# ---------------------------------------------------------------------------
+# Local fixture
+# ---------------------------------------------------------------------------
+# ``mock_client`` is an injected AsyncMawaqitClient *instance* used via the
+# ``client_instance=`` parameter of each wrapper function.  It is deliberately
+# kept local to this module because it is not the same as conftest's
+# ``mock_mawaqit_client``, which patches the class constructor globally.
+# ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_client() -> MagicMock:
@@ -15,7 +26,7 @@ def mock_client() -> MagicMock:
     client = MagicMock()
     client.login = AsyncMock()
     client.close = AsyncMock()
-    client.get_api_token = AsyncMock(return_value="test-token")
+    client.get_api_token = AsyncMock(return_value=MOCK_TOKEN)
     client.all_mosques_neighborhood = AsyncMock(return_value=[{"uuid": "abc"}])
     client.fetch_mosques_by_keyword = AsyncMock(return_value=[{"uuid": "abc"}])
     client.fetch_prayer_times = AsyncMock(return_value={"calendar": []})
@@ -23,11 +34,14 @@ def mock_client() -> MagicMock:
     return client
 
 
+# ---------------------------------------------------------------------------
+# validate_credentials
+# ---------------------------------------------------------------------------
+
+
 async def test_validate_credentials_success(mock_client: MagicMock) -> None:
     """Test successful credential validation."""
-    result = await mawaqit_wrapper.validate_credentials(
-        client_instance=mock_client,
-    )
+    result = await mawaqit_wrapper.validate_credentials(client_instance=mock_client)
     assert result is True
     mock_client.login.assert_called_once()
     mock_client.close.assert_called_once()
@@ -36,15 +50,13 @@ async def test_validate_credentials_success(mock_client: MagicMock) -> None:
 async def test_validate_credentials_bad_credentials(mock_client: MagicMock) -> None:
     """Test credential validation with bad credentials."""
     mock_client.login.side_effect = BadCredentialsException
-    result = await mawaqit_wrapper.validate_credentials(
-        client_instance=mock_client,
-    )
+    result = await mawaqit_wrapper.validate_credentials(client_instance=mock_client)
     assert result is False
     mock_client.close.assert_called_once()
 
 
 async def test_validate_credentials_creates_client() -> None:
-    """Test that validate_credentials creates a client when none provided."""
+    """Test that validate_credentials creates a client when none is provided."""
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
     ) as mock_cls:
@@ -60,12 +72,15 @@ async def test_validate_credentials_creates_client() -> None:
         client.close.assert_called_once()
 
 
+# ---------------------------------------------------------------------------
+# get_mawaqit_api_token
+# ---------------------------------------------------------------------------
+
+
 async def test_get_mawaqit_api_token_success(mock_client: MagicMock) -> None:
     """Test successful API token retrieval."""
-    result = await mawaqit_wrapper.get_mawaqit_api_token(
-        client_instance=mock_client,
-    )
-    assert result == "test-token"
+    result = await mawaqit_wrapper.get_mawaqit_api_token(client_instance=mock_client)
+    assert result == MOCK_TOKEN
     mock_client.close.assert_called_once()
 
 
@@ -85,7 +100,7 @@ async def test_get_mawaqit_api_token_errors_return_none(
 
 
 async def test_get_mawaqit_api_token_creates_client() -> None:
-    """Test that get_mawaqit_api_token creates a client when none provided."""
+    """Test that get_mawaqit_api_token creates a client when none is provided."""
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
     ) as mock_cls:
@@ -100,25 +115,24 @@ async def test_get_mawaqit_api_token_creates_client() -> None:
         mock_cls.assert_called_once_with(username="user", password="pass")
 
 
+# ---------------------------------------------------------------------------
+# all_mosques_neighborhood
+# ---------------------------------------------------------------------------
+
+
 async def test_all_mosques_neighborhood_success(
     mock_client: MagicMock,
     mock_mosques_search_api_raw: list[dict],
     mock_mosques_search_api_wrapper: list[MawaqitMosqueData],
 ) -> None:
-    """Test successful neighborhood mosque retrieval."""
-
+    """Test successful neighbourhood mosque retrieval."""
     mock_client.all_mosques_neighborhood = AsyncMock(
         return_value=mock_mosques_search_api_raw
     )
-
     result = await mawaqit_wrapper.all_mosques_neighborhood(
-        latitude=48.0,
-        longitude=2.0,
-        client_instance=mock_client,
+        latitude=48.0, longitude=2.0, client_instance=mock_client
     )
-
     assert result == mock_mosques_search_api_wrapper
-
     mock_client.get_api_token.assert_called_once()
     mock_client.close.assert_called_once()
 
@@ -127,8 +141,7 @@ async def test_all_mosques_neighborhood_creates_client(
     mock_mosques_search_api_raw: list[dict],
     mock_mosques_search_api_wrapper: list[MawaqitMosqueData],
 ) -> None:
-    """Test client creation when none provided."""
-
+    """Test client creation when none is provided."""
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
         autospec=True,
@@ -141,15 +154,16 @@ async def test_all_mosques_neighborhood_creates_client(
         client.close = AsyncMock()
 
         result = await mawaqit_wrapper.all_mosques_neighborhood(
-            latitude=48.0,
-            longitude=2.0,
-            token="tok",
+            latitude=48.0, longitude=2.0, token=MOCK_TOKEN
         )
-
         assert len(result) == len(mock_mosques_search_api_raw)
         assert result == mock_mosques_search_api_wrapper
-
         mock_cls.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# all_mosques_by_keyword
+# ---------------------------------------------------------------------------
 
 
 async def test_all_mosques_by_keyword_success(
@@ -158,32 +172,22 @@ async def test_all_mosques_by_keyword_success(
     mock_mosques_search_api_wrapper: list[MawaqitMosqueData],
 ) -> None:
     """Test successful keyword search."""
-
     mock_client.fetch_mosques_by_keyword = AsyncMock(
         return_value=mock_mosques_search_api_raw
     )
-
     result = await mawaqit_wrapper.all_mosques_by_keyword(
-        search_keyword="test",
-        client_instance=mock_client,
+        search_keyword="test", client_instance=mock_client
     )
-
     assert result == mock_mosques_search_api_wrapper
-
     mock_client.get_api_token.assert_called_once()
     mock_client.close.assert_called_once()
 
 
-async def test_all_mosques_by_keyword_none_keyword(
-    mock_client: MagicMock,
-) -> None:
-    """Test keyword search with None."""
-
+async def test_all_mosques_by_keyword_none_keyword(mock_client: MagicMock) -> None:
+    """Test keyword search with None returns empty list."""
     result = await mawaqit_wrapper.all_mosques_by_keyword(
-        search_keyword=None,
-        client_instance=mock_client,
+        search_keyword=None, client_instance=mock_client
     )
-
     assert result == []
     mock_client.close.assert_called_once()
 
@@ -193,7 +197,6 @@ async def test_all_mosques_by_keyword_creates_client(
     mock_mosques_search_api_wrapper: list[MawaqitMosqueData],
 ) -> None:
     """Test client creation for keyword search."""
-
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
         autospec=True,
@@ -206,27 +209,27 @@ async def test_all_mosques_by_keyword_creates_client(
         client.close = AsyncMock()
 
         result = await mawaqit_wrapper.all_mosques_by_keyword(
-            search_keyword="test",
-            token="tok",
+            search_keyword="test", token=MOCK_TOKEN
         )
-
         assert result == mock_mosques_search_api_wrapper
-
         mock_cls.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# fetch_prayer_times
+# ---------------------------------------------------------------------------
 
 
 async def test_fetch_prayer_times_success(mock_client: MagicMock) -> None:
     """Test successful prayer times fetch."""
-    result = await mawaqit_wrapper.fetch_prayer_times(
-        client_instance=mock_client,
-    )
+    result = await mawaqit_wrapper.fetch_prayer_times(client_instance=mock_client)
     assert result == {"calendar": []}
     mock_client.get_api_token.assert_called_once()
     mock_client.close.assert_called_once()
 
 
 async def test_fetch_prayer_times_creates_client() -> None:
-    """Test that fetch_prayer_times creates a client when none provided."""
+    """Test that fetch_prayer_times creates a client when none is provided."""
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
     ) as mock_cls:
@@ -235,11 +238,18 @@ async def test_fetch_prayer_times_creates_client() -> None:
         client.fetch_prayer_times = AsyncMock(return_value={"cal": []})
         client.close = AsyncMock()
 
-        result = await mawaqit_wrapper.fetch_prayer_times(mosque="uuid1", token="tok")
+        result = await mawaqit_wrapper.fetch_prayer_times(
+            mosque="uuid1", token=MOCK_TOKEN
+        )
         assert result == {"cal": []}
         mock_cls.assert_called_once_with(
-            None, None, "uuid1", None, None, "tok", session=None
+            None, None, "uuid1", None, None, MOCK_TOKEN, session=None
         )
+
+
+# ---------------------------------------------------------------------------
+# fetch_mosque_by_id
+# ---------------------------------------------------------------------------
 
 
 async def test_fetch_mosque_by_id_success(mock_client: MagicMock) -> None:
@@ -253,7 +263,7 @@ async def test_fetch_mosque_by_id_success(mock_client: MagicMock) -> None:
 
 
 async def test_fetch_mosque_by_id_creates_client() -> None:
-    """Test that fetch_mosque_by_id creates a client when none provided."""
+    """Test that fetch_mosque_by_id creates a client when none is provided."""
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
     ) as mock_cls:
@@ -262,6 +272,8 @@ async def test_fetch_mosque_by_id_creates_client() -> None:
         client.fetch_mosque_by_id = AsyncMock(return_value={"name": "M"})
         client.close = AsyncMock()
 
-        result = await mawaqit_wrapper.fetch_mosque_by_id(mosque="uuid1", token="tok")
+        result = await mawaqit_wrapper.fetch_mosque_by_id(
+            mosque="uuid1", token=MOCK_TOKEN
+        )
         assert result == {"name": "M"}
-        mock_cls.assert_called_once_with(token="tok")
+        mock_cls.assert_called_once_with(token=MOCK_TOKEN)

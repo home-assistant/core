@@ -12,51 +12,27 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry
 
-
-async def _setup_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mosque_data: dict | None = None,
-    prayer_data: dict | None = None,
-    mosque_side_effect: Exception | None = None,
-    prayer_side_effect: Exception | None = None,
-) -> None:
-    """Set up a config entry with optional mocked data or side effects."""
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_mosque_by_id",
-            new_callable=AsyncMock,
-            return_value=mosque_data,
-            side_effect=mosque_side_effect,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
-            new_callable=AsyncMock,
-            return_value=prayer_data,
-            side_effect=prayer_side_effect,
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+# All shared data and setup are provided by conftest:
+#   - mock_mosque_data, mock_prayer_data  ->  standard data dicts
+#   - setup_mawaqit_integration           ->  async callable, see conftest docstring
 
 
 # --- MosqueCoordinator ---
 
 
 async def test_mosque_coordinator_success(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    mock_mosque_data: dict,
+    mock_prayer_data: dict,
 ) -> None:
     """Test successful mosque data fetch."""
-    mosque_data = {"name": "Test Mosque", "uuid": "abc"}
-    prayer_data = {"calendar": [{}], "timezone": "Europe/Paris"}
-
-    await _setup_entry(
-        hass, mock_config_entry, mosque_data=mosque_data, prayer_data=prayer_data
+    await setup_mawaqit_integration(
+        mosque_data=mock_mosque_data, prayer_data=mock_prayer_data
     )
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.mosque_coordinator.data == mosque_data
+    assert mock_config_entry.runtime_data.mosque_coordinator.data == mock_mosque_data
 
 
 @pytest.mark.parametrize(
@@ -72,18 +48,23 @@ async def test_mosque_coordinator_success(
 async def test_mosque_coordinator_errors_cause_setup_retry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
     mosque_side_effect: type[Exception],
 ) -> None:
     """Test mosque coordinator errors all cause setup retry."""
-    await _setup_entry(hass, mock_config_entry, mosque_side_effect=mosque_side_effect)
+    await setup_mawaqit_integration(mosque_side_effect=mosque_side_effect)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_mosque_coordinator_empty_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
 ) -> None:
-    """Test mosque coordinator with empty data causes setup retry."""
-    await _setup_entry(hass, mock_config_entry, mosque_data=None)
+    """Test mosque coordinator with None mosque data causes setup retry."""
+    # Explicitly passing mosque_data=None tells the helper to inject None
+    # as the mock return value (coordinator receives no data -> UpdateFailed).
+    await setup_mawaqit_integration(mosque_data=None)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
@@ -91,37 +72,37 @@ async def test_mosque_coordinator_empty_data(
 
 
 async def test_prayer_time_coordinator_success(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    mock_mosque_data: dict,
+    mock_prayer_data: dict,
 ) -> None:
     """Test successful prayer time fetch."""
-    mosque_data = {"name": "Test Mosque", "uuid": "abc"}
-    prayer_data = {"calendar": [{}], "timezone": "Europe/Paris"}
-
-    await _setup_entry(
-        hass, mock_config_entry, mosque_data=mosque_data, prayer_data=prayer_data
+    await setup_mawaqit_integration(
+        mosque_data=mock_mosque_data, prayer_data=mock_prayer_data
     )
     assert mock_config_entry.state is ConfigEntryState.LOADED
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
-    assert coordinator.data == prayer_data
+    assert coordinator.data == mock_prayer_data
     assert coordinator.last_fetch is not None
 
 
 async def test_prayer_time_coordinator_cached(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mosque_data: dict,
+    mock_prayer_data: dict,
 ) -> None:
-    """Test prayer time coordinator uses cached data within 1 day."""
-    mosque_data = {"name": "Test Mosque", "uuid": "abc"}
-    prayer_data = {"calendar": [{}], "timezone": "Europe/Paris"}
-
-    mock_fetch = AsyncMock(return_value=prayer_data)
-
+    """Test prayer time coordinator uses cached data within 12 hours."""
+    mock_fetch = AsyncMock(return_value=mock_prayer_data)
     mock_config_entry.add_to_hass(hass)
 
     with (
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_mosque_by_id",
             new_callable=AsyncMock,
-            return_value=mosque_data,
+            return_value=mock_mosque_data,
         ),
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
@@ -130,7 +111,6 @@ async def test_prayer_time_coordinator_cached(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-
         # Call refresh again - should use cache
         coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
         await coordinator.async_refresh()
@@ -139,21 +119,20 @@ async def test_prayer_time_coordinator_cached(
 
 
 async def test_prayer_time_coordinator_refresh_after_day(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mosque_data: dict,
+    mock_prayer_data: dict,
 ) -> None:
-    """Test prayer time coordinator re-fetches after more than 1 day."""
-    mosque_data = {"name": "Test Mosque", "uuid": "abc"}
-    prayer_data = {"calendar": [{}], "timezone": "Europe/Paris"}
-
-    mock_fetch = AsyncMock(return_value=prayer_data)
-
+    """Test prayer time coordinator re-fetches after more than 12 hours."""
+    mock_fetch = AsyncMock(return_value=mock_prayer_data)
     mock_config_entry.add_to_hass(hass)
 
     with (
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_mosque_by_id",
             new_callable=AsyncMock,
-            return_value=mosque_data,
+            return_value=mock_mosque_data,
         ),
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
@@ -163,7 +142,6 @@ async def test_prayer_time_coordinator_refresh_after_day(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # Simulate time passing beyond 1 day
         coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
         coordinator.last_fetch = dt_util.utcnow() - timedelta(days=2)
         await coordinator.async_refresh()
@@ -178,25 +156,23 @@ async def test_prayer_time_coordinator_refresh_after_day(
 async def test_prayer_time_coordinator_errors_cause_setup_retry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    mock_mosque_data: dict,
     prayer_side_effect: type[Exception],
 ) -> None:
     """Test prayer time coordinator errors all cause setup retry."""
-    mosque_data = {"name": "Test Mosque", "uuid": "abc"}
-    await _setup_entry(
-        hass,
-        mock_config_entry,
-        mosque_data=mosque_data,
-        prayer_side_effect=prayer_side_effect,
+    await setup_mawaqit_integration(
+        mosque_data=mock_mosque_data, prayer_side_effect=prayer_side_effect
     )
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_prayer_time_coordinator_empty_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    mock_mosque_data: dict,
 ) -> None:
-    """Test prayer time coordinator with empty data causes setup retry."""
-    mosque_data = {"name": "Test Mosque", "uuid": "abc"}
-    await _setup_entry(
-        hass, mock_config_entry, mosque_data=mosque_data, prayer_data=None
-    )
+    """Test prayer time coordinator with None prayer data causes setup retry."""
+    await setup_mawaqit_integration(mosque_data=mock_mosque_data, prayer_data=None)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
