@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 # A stateful setup so the coordinator polls on the regular update interval
 # (a fully stateless setup falls back to a 60 minute interval).
-STATEFUL_FIXTURE = "setup/cloud_nexity_rail_din_europe.json"
+STATEFUL_FIXTURE = "setup/cloud_somfy_tahoma_switch_europe.json"
 
 
 async def _trigger_refresh(
