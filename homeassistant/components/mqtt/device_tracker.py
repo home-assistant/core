@@ -53,6 +53,10 @@ CONF_SOURCE_TYPE = "source_type"
 DEFAULT_PAYLOAD_RESET = "None"
 DEFAULT_SOURCE_TYPE = SourceType.GPS
 
+DOCS_URL_IN_ZONES = (
+    "https://www.home-assistant.io/integrations/device_tracker.mqtt/#in_zones"
+)
+
 
 def valid_config(config: ConfigType) -> ConfigType:
     """Check if there is a state topic or json_attributes_topic."""
@@ -61,6 +65,15 @@ def valid_config(config: ConfigType) -> ConfigType:
             f"Invalid device tracker config, missing"
             f" {CONF_STATE_TOPIC} or"
             f" {CONF_JSON_ATTRS_TOPIC}, got: {config}"
+        )
+    if CONF_STATE_TOPIC in config:
+        _LOGGER.warning(
+            "Using `state_topic` and `value_template` is deprecated "
+            "for MQTT device tracker. This will stop working with HA Core 2027.1.0. "
+            "Please use the `in_zones` attribute via `json_attributes_topic`. Got %s, "
+            "See %s for more information",
+            config,
+            DOCS_URL_IN_ZONES,
         )
     return config
 

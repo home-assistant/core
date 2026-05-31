@@ -336,6 +336,8 @@ async def test_setting_device_tracker_value_via_mqtt_message(
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
 
+    assert "Using `state_topic` and `value_template` is deprecated" in caplog.text
+
 
 async def test_setting_device_tracker_value_via_mqtt_message_and_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
