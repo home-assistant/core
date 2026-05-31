@@ -33,6 +33,7 @@ def _mock_reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_CLOUD_ID: "abcdef",
             CONF_INSTALL_CODE: "123456",
             CONF_HARDWARE_ADDRESS: "meter-1",
+            "extra_data": "preserved",
         },
     )
     entry.add_to_hass(hass)
@@ -400,6 +401,7 @@ async def test_reconfigure_eagle_200(hass: HomeAssistant) -> None:
         CONF_CLOUD_ID: "abcdef",
         CONF_INSTALL_CODE: "654321",
         CONF_HARDWARE_ADDRESS: "meter-2",
+        "extra_data": "preserved",
     }
 
 
@@ -436,6 +438,7 @@ async def test_reconfigure_eagle_100(hass: HomeAssistant) -> None:
         CONF_CLOUD_ID: "abcdef",
         CONF_INSTALL_CODE: "654321",
         CONF_HARDWARE_ADDRESS: None,
+        "extra_data": "preserved",
     }
 
 
