@@ -138,6 +138,37 @@ async def test_edit_remote_success_single_entry(
     assert entry.data[CONF_INFRARED_ENTITY_ID] == infrared_entity
 
 
+async def test_edit_remote_single_entry_removes_stale_identity_options(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test editing single-entry remote removes stale identity values from options."""
+    entry = _single_entry(hass, infrared_entity)
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            **entry.options,
+            CONF_REMOTE_NAME: "Stale TV",
+            CONF_INFRARED_ENTITY_ID: "infrared.stale",
+        },
+    )
+
+    result = await _init_options_flow(hass, entry, SOURCE_EDIT_REMOTE)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_REMOTE_NAME: "Updated TV",
+            CONF_INFRARED_ENTITY_ID: infrared_entity,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert CONF_REMOTE_NAME not in result["data"]
+    assert CONF_INFRARED_ENTITY_ID not in result["data"]
+    assert entry.data[CONF_REMOTE_NAME] == "Updated TV"
+    assert entry.data[CONF_INFRARED_ENTITY_ID] == infrared_entity
+
+
 @pytest.mark.parametrize(
     ("user_input", "errors"),
     [
@@ -181,6 +212,32 @@ async def test_edit_remote_no_infrared_entities(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_available_infrared_entities"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected_step"),
+    [
+        (SOURCE_ADD_COMMAND, SOURCE_ADD_COMMAND),
+        (SOURCE_EDIT_COMMAND, "select_command_for_edit"),
+        (SOURCE_REMOVE_COMMAND, SOURCE_REMOVE_COMMAND),
+    ],
+)
+async def test_manage_commands_routes_from_context_source(
+    hass: HomeAssistant,
+    infrared_entity: str,
+    source: str,
+    expected_step: str,
+) -> None:
+    """Test manage commands routes directly from the stored context source."""
+    entry = _single_entry(hass, infrared_entity)
+    flow = VirtualRemoteOptionsFlow(entry)
+    flow.hass = hass
+    flow.context = {"source": source}
+
+    result = await flow.async_step_manage_commands()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == expected_step
 
 
 async def test_manage_commands_menu_with_commands(

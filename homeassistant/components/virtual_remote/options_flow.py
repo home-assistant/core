@@ -133,6 +133,17 @@ class VirtualRemoteOptionsFlow(config_entries.OptionsFlow):
         if self._remote is None:
             return self.async_abort(reason="no_virtual_remotes")
 
+        source = self.context.get("source")
+
+        if source == SOURCE_ADD_COMMAND:
+            return await self.async_step_add_command()
+
+        if source == SOURCE_EDIT_COMMAND:
+            return await self.async_step_select_command_for_edit()
+
+        if source == SOURCE_REMOVE_COMMAND:
+            return await self.async_step_remove_command()
+
         menu_options = [SOURCE_ADD_COMMAND]
         if self._commands:
             menu_options.extend([SOURCE_EDIT_COMMAND, SOURCE_REMOVE_COMMAND])
@@ -385,20 +396,21 @@ class VirtualRemoteOptionsFlow(config_entries.OptionsFlow):
         options = dict(self._config_entry.options)
 
         if CONF_REMOTE_ID in self._config_entry.data:
-            self.hass.config_entries.async_update_entry(
-                self._config_entry,
-                data={
-                    **self._config_entry.data,
-                    CONF_REMOTE_NAME: remote[CONF_REMOTE_NAME],
-                    CONF_INFRARED_ENTITY_ID: remote[CONF_INFRARED_ENTITY_ID],
-                },
-            )
+            data = dict(self._config_entry.data)
+            data[CONF_REMOTE_NAME] = remote[CONF_REMOTE_NAME]
+            data[CONF_INFRARED_ENTITY_ID] = remote[CONF_INFRARED_ENTITY_ID]
+
             options.pop(CONF_REMOTE_NAME, None)
             options.pop(CONF_INFRARED_ENTITY_ID, None)
             if commands := remote.get(CONF_REMOTE_COMMANDS):
                 options[CONF_REMOTE_COMMANDS] = commands
             else:
                 options.pop(CONF_REMOTE_COMMANDS, None)
+
+            self.hass.config_entries.async_update_entry(
+                self._config_entry,
+                data=data,
+            )
         else:
             options[CONF_VIRTUAL_REMOTES] = [remote]
 

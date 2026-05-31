@@ -926,6 +926,23 @@ def test_cleanup_stale_missing_infrared_issues_uses_standalone_cleanup(
     )
 
 
+def test_cleanup_stale_missing_infrared_issues_skips_when_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test stale linked infrared repair issue cleanup can be skipped."""
+    with patch(
+        "homeassistant.components.virtual_remote.remote."
+        "async_delete_stale_linked_infrared_entity_missing_issues"
+    ) as delete_stale_issues:
+        cleanup_stale_missing_infrared_issues(
+            hass,
+            {"living_room_tv"},
+            cleanup_stale_issues=False,
+        )
+
+    delete_stale_issues.assert_not_called()
+
+
 async def test_async_setup_virtual_remote_entities_runs_device_cleanup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
