@@ -160,6 +160,9 @@
     },
     "set_vacuum_goto_position": {
       "service": "mdi:map-marker"
+    },
+    "set_vacuum_zoned_cleaning": {
+      "service": "mdi:select-marker"
     }
   }
 }

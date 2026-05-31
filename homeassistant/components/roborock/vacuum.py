@@ -255,6 +255,12 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         """Send vacuum to a specific target point."""
         await self.send(RoborockCommand.APP_GOTO_TARGET, [x, y])
 
+    async def async_set_vacuum_zoned_cleaning(
+        self, x1: int, y1: int, x2: int, y2: int, repeats: int
+    ) -> None:
+        """Clean the specified zones."""
+        await self.send(RoborockCommand.APP_ZONED_CLEAN, [[x1, y1, x2, y2, repeats]])
+
     async def async_get_segments(self) -> list[Segment]:
         """Get the segments that can be cleaned."""
         home_map_info = self._home_trait.home_map_info
@@ -510,6 +516,12 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         """Set the vacuum to go to a specific position."""
         raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
 
+    async def async_set_vacuum_zoned_cleaning(
+        self, x1: int, y1: int, x2: int, y2: int, repeats: int
+    ) -> None:
+        """Clean the specified zones."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_zoned_cleaning", self.entity_id)
+
 
 class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     """Representation of a Roborock Q10 vacuum."""
@@ -692,3 +704,9 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Set the vacuum to go to a specific position."""
         raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
+
+    async def async_set_vacuum_zoned_cleaning(
+        self, x1: int, y1: int, x2: int, y2: int, repeats: int
+    ) -> None:
+        """Clean the specified zones."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_zoned_cleaning", self.entity_id)

@@ -795,6 +795,32 @@
         }
       },
       "name": "Go to position"
+    },
+    "set_vacuum_zoned_cleaning": {
+      "description": "Starts cleaning the specified zone.",
+      "fields": {
+        "repeats": {
+          "description": "The number of times to clean the zone.",
+          "name": "Repeats"
+        },
+        "x1": {
+          "description": "The first x-coordinate of the zone.",
+          "name": "X1-coordinate"
+        },
+        "x2": {
+          "description": "The second x-coordinate of the zone.",
+          "name": "X2-coordinate"
+        },
+        "y1": {
+          "description": "The first y-coordinate of the zone.",
+          "name": "Y1-coordinate"
+        },
+        "y2": {
+          "description": "The second y-coordinate of the zone.",
+          "name": "Y2-coordinate"
+        }
+      },
+      "name": "Clean zone"
     }
   }
 }

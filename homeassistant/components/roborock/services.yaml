@@ -21,6 +21,42 @@ set_vacuum_goto_position:
       selector:
         text:
           type: number
+set_vacuum_zoned_cleaning:
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    x1:
+      example: 28582
+      required: true
+      selector:
+        text:
+          type: number
+    y1:
+      example: 21363
+      required: true
+      selector:
+        text:
+          type: number
+    x2:
+      example: 27425
+      required: true
+      selector:
+        text:
+          type: number
+    y2:
+      example: 22816
+      required: true
+      selector:
+        text:
+          type: number
+    repeats:
+      example: 0
+      required: true
+      selector:
+        text:
+          type: number
 get_vacuum_current_position:
   target:
     entity:
