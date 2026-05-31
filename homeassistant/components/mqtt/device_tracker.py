@@ -230,8 +230,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self._attr_latitude = None
             self._attr_longitude = None
             in_zones_list: set[str] = {
-                vol.Coerce(str)(zone)
-                for zone in cv.ensure_list(extra_state_attributes[ATTR_IN_ZONES])
+                str(name)
+                for name in cv.ensure_list(extra_state_attributes[ATTR_IN_ZONES])
             }
             zone_entity_ids = self.hass.data.get(DATA_ZONE_ENTITY_IDS, ())
             zone_names: dict[str, str] = {
