@@ -150,7 +150,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_update_reload_and_abort(
                         entry,
                         title=user_input[CONF_CLOUD_ID],
-                        data=user_input,
+                        data={**entry.data, **user_input},
                     )
 
         return self.async_show_form(
