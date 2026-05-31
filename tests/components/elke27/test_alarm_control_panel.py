@@ -15,10 +15,8 @@ from elke27_lib.errors import Elke27PinRequiredError
 import pytest
 
 from homeassistant.components.elke27 import alarm_control_panel as alarm_module
-from homeassistant.components.elke27.alarm_control_panel import async_setup_entry
 from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
-from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -57,7 +55,7 @@ def _snapshot(
     )
 
 
-async def _setup_area_entities(
+def _setup_area_entities(
     hass: HomeAssistant,
     snapshot: PanelSnapshot,
 ) -> tuple[_Hub, list[alarm_module.Elke27AreaAlarmControlPanel]]:
@@ -69,20 +67,16 @@ async def _setup_area_entities(
     hub = _Hub()
     coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
     coordinator.async_set_updated_data(snapshot)
-    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
-
-    entities: list[alarm_module.Elke27AreaAlarmControlPanel] = []
-
-    def _add_entities(new_entities):
-        entities.extend(new_entities)
-
-    await async_setup_entry(hass, entry, _add_entities)
+    entities = [
+        alarm_module.Elke27AreaAlarmControlPanel(coordinator, hub, entry, area)
+        for area in snapshot.areas.values()
+    ]
     return hub, entities
 
 
 async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
     """Test area entities are created and update from snapshots."""
-    hub, entities = await _setup_area_entities(
+    hub, entities = _setup_area_entities(
         hass,
         _snapshot(
             areas={
@@ -116,7 +110,7 @@ async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
 
 async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
     """Test area action methods and PIN-required handling."""
-    hub, entities = await _setup_area_entities(
+    hub, entities = _setup_area_entities(
         hass,
         _snapshot(
             areas={1: AreaState(area_id=1, name="Area 1")},
@@ -235,7 +229,7 @@ def test_area_state_helpers() -> None:
 
 async def test_area_properties_when_missing(hass: HomeAssistant) -> None:
     """Verify properties handle missing area data."""
-    hub, entities = await _setup_area_entities(
+    hub, entities = _setup_area_entities(
         hass,
         _snapshot(areas={1: AreaState(area_id=1, name="Area 1")}),
     )
