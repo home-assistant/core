@@ -6,6 +6,7 @@ import asyncio
 from collections import OrderedDict
 import logging
 import re
+from typing import Any
 
 from songpal import (
     ConnectChange,
@@ -16,7 +17,7 @@ from songpal import (
     SongpalException,
     VolumeChange,
 )
-from songpal.containers import Setting
+from songpal.containers import Setting, Sysinfo
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -95,8 +96,7 @@ async def _async_migrate_legacy_entity_to_first_zone(
         return
 
     entity_registry.async_update_entity(
-        old_entity_id,
-        new_unique_id=first_zone_unique_id
+        old_entity_id, new_unique_id=first_zone_unique_id
     )
 
 
@@ -157,7 +157,7 @@ class SongpalEntity(MediaPlayerEntity):
 
     _attr_should_poll = False
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
-    _attr_supported_features: MediaPlayerEntityFeature | None = (
+    _attr_supported_features: MediaPlayerEntityFeature = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -167,30 +167,30 @@ class SongpalEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
     )
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_name: str | None = None
 
     def __init__(self, name, device) -> None:
         """Init."""
         self._name = name
         self._dev = device
-        self._sysinfo = None
-        self._model = None
+        self._sysinfo: Sysinfo | None = None
+        self._model: str | None = None
 
         self._state = False
         self._attr_available = False
         self._initialized = False
-        self._device_unique_id = None
+        self._device_unique_id: str | None = None
 
-        self._volume_control = None
+        self._volume_control: Any = None
         self._volume_min = 0
         self._volume_max = 1
         self._volume = 0
         self._attr_is_volume_muted = False
 
-        self._active_source = None
-        self._sources = {}
-        self._active_sound_mode = None
-        self._sound_modes = {}
+        self._active_source: Any = None
+        self._sources: OrderedDict[str, Any] = OrderedDict()
+        self._active_sound_mode: str | None = None
+        self._sound_modes: dict[str, Any] = {}
         self._manage_notifications = True
 
     async def async_added_to_hass(self) -> None:
@@ -312,13 +312,16 @@ class SongpalEntity(MediaPlayerEntity):
         self.hass.loop.create_task(self._dev.listen_notifications())
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._device_unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        assert self._sysinfo is not None
+        assert self._device_unique_id is not None
+
         connections = set()
         if self._sysinfo.macAddr:
             connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr))
@@ -405,7 +408,7 @@ class SongpalEntity(MediaPlayerEntity):
         _LOGGER.error("Unable to find output: %s", source)
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str] | None:
         """Return list of available sources."""
         return [src.title for src in self._sources.values()]
 
@@ -438,7 +441,7 @@ class SongpalEntity(MediaPlayerEntity):
         return MediaPlayerState.OFF
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return currently active source."""
         # Avoid a KeyError when _active_source is not (yet) populated
         return getattr(self._active_source, "title", None)
@@ -446,26 +449,33 @@ class SongpalEntity(MediaPlayerEntity):
     @property
     def sound_mode(self) -> str | None:
         """Return currently active sound_mode."""
+        if self._active_sound_mode is None:
+            return None
         active_sound_mode = self._sound_modes.get(self._active_sound_mode)
         return active_sound_mode.title if active_sound_mode else None
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Return volume level."""
+        if self._volume_max == 0:
+            return None
         return self._volume / self._volume_max
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
+        assert self._volume_control is not None
         volume = int(volume * self._volume_max)
         _LOGGER.debug("Setting volume to %s", volume)
         return await self._volume_control.set_volume(volume)
 
     async def async_volume_up(self) -> None:
         """Set volume up."""
+        assert self._volume_control is not None
         return await self._volume_control.set_volume(self._volume + 1)
 
     async def async_volume_down(self) -> None:
         """Set volume down."""
+        assert self._volume_control is not None
         return await self._volume_control.set_volume(self._volume - 1)
 
     async def async_turn_on(self) -> None:
@@ -494,6 +504,7 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the device."""
+        assert self._volume_control is not None
         _LOGGER.debug("Set mute: %s", mute)
         return await self._volume_control.set_mute(mute)
 
@@ -503,7 +514,7 @@ class SongpalZoneEntity(SongpalEntity):
 
     _attr_should_poll = True
     _attr_name: str | None = None
-    _attr_supported_features: MediaPlayerEntityFeature | None = (
+    _attr_supported_features: MediaPlayerEntityFeature = (
         MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
@@ -514,12 +525,12 @@ class SongpalZoneEntity(SongpalEntity):
         super().__init__(name, device)
         self._zone_uri = zone_uri
         self._zone_title = zone_title
-        self._zone = None
+        self._zone: Any = None
         self._attr_name = zone_title
         self._manage_notifications = False
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return a unique ID for this zone entity."""
         if self._device_unique_id is None:
             return None
