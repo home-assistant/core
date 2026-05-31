@@ -775,17 +775,27 @@ async def async_setup_entry(
         dev_reg = dr.async_get(hass)
 
         # This migration can be removed after 2025.10.0.
+        # This cleanup must run at setup because the external device mapping
+        # needed for old->new identifier conversion is only available in runtime
+        # measurement data.
         for unique_id, device in measurement.external_devices.items():
             old_unique_id = str(device.unique_id)
+            old_device = dev_reg.async_get_device(identifiers={(DOMAIN, old_unique_id)})
+            new_device = dev_reg.async_get_device(identifiers={(DOMAIN, unique_id)})
 
-            if (
-                old_device := dev_reg.async_get_device(
-                    identifiers={(DOMAIN, old_unique_id)}
-                )
-            ) and (
-                dev_reg.async_get_device(identifiers={(DOMAIN, unique_id)}) is not None
-            ):
+            if old_device is None:
+                continue
+
+            if new_device is not None and old_device.id != new_device.id:
                 dev_reg.async_remove_device(old_device.id)
+                continue
+
+            if new_device is None:
+                dev_reg.async_update_device(
+                    old_device.id,
+                    new_identifiers={(DOMAIN, unique_id)},
+                    serial_number=unique_id,
+                )
 
         for unique_id, device in measurement.external_devices.items():
             if device.type is not None and (

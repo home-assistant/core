@@ -615,6 +615,15 @@ async def test_external_device_registry_migration(
     old_unique_id = "G001"
     new_unique_id = f"gas_meter_{old_unique_id}"
 
+    if existing_old := device_registry.async_get_device(
+        identifiers={(DOMAIN, old_unique_id)}
+    ):
+        device_registry.async_remove_device(existing_old.id)
+    if existing_new := device_registry.async_get_device(
+        identifiers={(DOMAIN, new_unique_id)}
+    ):
+        device_registry.async_remove_device(existing_new.id)
+
     old_device = device_registry.async_get_or_create(
         config_entry_id=init_integration.entry_id,
         identifiers={(DOMAIN, old_unique_id)},
@@ -637,6 +646,45 @@ async def test_external_device_registry_migration(
 
     assert device_registry.async_get(old_device.id) is None
     assert device_registry.async_get(new_device.id) is not None
+
+
+async def test_external_device_registry_migration_old_only(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test old-format external device identifiers are migrated during setup."""
+    await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    old_unique_id = "G001"
+    new_unique_id = f"gas_meter_{old_unique_id}"
+
+    if existing_old := device_registry.async_get_device(
+        identifiers={(DOMAIN, old_unique_id)}
+    ):
+        device_registry.async_remove_device(existing_old.id)
+    if existing_new := device_registry.async_get_device(
+        identifiers={(DOMAIN, new_unique_id)}
+    ):
+        device_registry.async_remove_device(existing_new.id)
+
+    old_device = device_registry.async_get_or_create(
+        config_entry_id=init_integration.entry_id,
+        identifiers={(DOMAIN, old_unique_id)},
+        manufacturer="HomeWizard",
+        model="HWE-P1",
+        name="Gas meter",
+        serial_number=old_unique_id,
+    )
+
+    await hass.config_entries.async_setup(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_device = device_registry.async_get(old_device.id)
+    assert migrated_device is not None
+    assert (DOMAIN, old_unique_id) not in migrated_device.identifiers
+    assert (DOMAIN, new_unique_id) in migrated_device.identifiers
 
 
 @pytest.mark.parametrize(
