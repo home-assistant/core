@@ -37,7 +37,7 @@ async def _async_attempt_connect(port: str, set_id: int) -> str | None:
     the serial port could not be opened, RESULT_NO_TV when the port works but
     no LG TV responded to it, or "unknown" for an unexpected error.
     """
-    tv = LGTV(port, set_id=int(set_id))
+    tv = LGTV(port, set_id=set_id)
 
     try:
         await tv.connect()

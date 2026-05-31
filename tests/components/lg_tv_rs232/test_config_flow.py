@@ -41,37 +41,14 @@ async def test_user_form_creates_entry(
     with patch(
         "homeassistant.components.lg_tv_rs232.config_flow.LGTV",
         return_value=mock_lgtv,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_DEVICE: MOCK_DEVICE, CONF_SET_ID: MOCK_SET_ID},
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "LG TV"
-    assert result["data"] == {CONF_DEVICE: MOCK_DEVICE, CONF_SET_ID: MOCK_SET_ID}
-    mock_async_setup_entry.assert_awaited_once()
-    mock_lgtv.connect.assert_awaited_once()
-    mock_lgtv.disconnect.assert_awaited_once()
-
-
-async def test_user_form_coerces_float_set_id_to_int(
-    hass: HomeAssistant,
-    mock_lgtv: MagicMock,
-    mock_async_setup_entry: AsyncMock,
-) -> None:
-    """Test float selector output is coerced to an integer set ID."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.lg_tv_rs232.config_flow.LGTV",
-        return_value=mock_lgtv,
     ) as mock_lgtv_class:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_DEVICE: MOCK_DEVICE, CONF_SET_ID: float(MOCK_SET_ID)},
+            {
+                CONF_DEVICE: MOCK_DEVICE,
+                # NumberSelector produces a float.
+                CONF_SET_ID: float(MOCK_SET_ID),
+            },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
