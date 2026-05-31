@@ -58,11 +58,7 @@ def schedule_location_update(coordinator: VolvoBaseCoordinator) -> None:
     """Schedule a location-only update."""
     for c in coordinator.config_entry.runtime_data.interval_coordinators:
         if isinstance(c, VolvoSlowIntervalCoordinator):
-            coordinator.config_entry.async_create_background_task(
-                coordinator.hass,
-                c.async_update_location(),
-                "Volvo location update",
-            )
+            c.async_schedule_location_update()
             break
 
 
@@ -264,6 +260,21 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
         )
 
         self._location_supported = False
+        self._location_update_task: asyncio.Task[None] | None = None
+
+    def async_schedule_location_update(self) -> None:
+        """Schedule a single location update if none is in-flight."""
+        if not self._location_supported:
+            return
+
+        if self._location_update_task and not self._location_update_task.done():
+            return
+
+        self._location_update_task = self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_update_location(),
+            "Volvo location update",
+        )
 
     async def _async_determine_api_calls(
         self,
@@ -295,7 +306,7 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
 
         return api_calls
 
-    async def async_update_location(self) -> None:
+    async def _async_update_location(self) -> None:
         """Fetch only the location data and update listeners."""
         if not self._location_supported:
             return
@@ -317,7 +328,7 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
         }
 
         if valid_location:
-            self.data = dict(self.data) | valid_location
+            self.data = dict(self.data or {}) | valid_location
             self.async_update_listeners()
 
 

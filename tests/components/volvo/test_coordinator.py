@@ -1,5 +1,6 @@
 """Test Volvo coordinator."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
@@ -21,6 +22,7 @@ from homeassistant.components.volvo.coordinator import (
     VERY_SLOW_INTERVAL,
     VolvoConfigEntry,
     VolvoSlowIntervalCoordinator,
+    schedule_location_update,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -227,14 +229,14 @@ async def test_physical_lock_triggers_location_update(
 ) -> None:
     """Test that physical lock (key fob) triggers a location update."""
     # Start with car unlocked
-    doors_unlocked = await _async_get_doors_data(mock_api, "UNLOCKED")
+    doors_unlocked = _get_doors_data(mock_api, "UNLOCKED")
     configure_mock(mock_api.async_get_doors_status, return_value=doors_unlocked)
     assert await setup_integration()
 
     location_call_count_before: int = mock_api.async_get_location.call_count
 
     # Car gets locked physically on next poll
-    doors_locked = await _async_get_doors_data(mock_api, "LOCKED")
+    doors_locked = _get_doors_data(mock_api, "LOCKED")
     configure_mock(mock_api.async_get_doors_status, return_value=doors_locked)
     freezer.tick(timedelta(minutes=FAST_INTERVAL))
     async_fire_time_changed(hass)
@@ -256,7 +258,7 @@ async def test_physical_unlock_does_not_trigger_location_update(
     location_call_count_before: int = mock_api.async_get_location.call_count
 
     # Car gets unlocked on next poll
-    doors_unlocked = await _async_get_doors_data(mock_api, "UNLOCKED")
+    doors_unlocked = _get_doors_data(mock_api, "UNLOCKED")
     configure_mock(mock_api.async_get_doors_status, return_value=doors_unlocked)
     freezer.tick(timedelta(minutes=FAST_INTERVAL))
     async_fire_time_changed(hass)
@@ -286,7 +288,7 @@ async def test_location_update_not_supported(
     entry: VolvoConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     for c in entry.runtime_data.interval_coordinators:
         if isinstance(c, VolvoSlowIntervalCoordinator):
-            await c.async_update_location()
+            await c._async_update_location()
             break
 
     mock_api.async_get_location.assert_not_called()
@@ -352,9 +354,50 @@ async def test_update_location_exception_logs_debug(
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.volvo.coordinator"
     ):
-        await slow_coordinator.async_update_location()
+        await slow_coordinator._async_update_location()
 
     assert "Location update failed" in caplog.text
+
+
+async def test_schedule_location_update_is_coalesced(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_api: VolvoCarsApi,
+) -> None:
+    """Test location update scheduling coalesces in-flight updates."""
+    assert await setup_integration()
+
+    entry: VolvoConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data.interval_coordinators[0]
+
+    location_data = mock_api.async_get_location.return_value
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _delayed_location_update() -> dict[str, VolvoCarsValueField]:
+        started.set()
+        await release.wait()
+        return location_data
+
+    configure_mock(mock_api.async_get_location, side_effect=_delayed_location_update)
+
+    schedule_location_update(coordinator)
+    schedule_location_update(coordinator)
+    schedule_location_update(coordinator)
+
+    await started.wait()
+
+    # Only one in-flight background task should be allowed.
+    assert mock_api.async_get_location.call_count == 1
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    schedule_location_update(coordinator)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # A new schedule should run after the previous task has finished.
+    assert mock_api.async_get_location.call_count == 2
 
 
 def _mock_api_failure(mock_api: VolvoCarsApi) -> AsyncMock:
@@ -381,7 +424,7 @@ def _mock_api_failure(mock_api: VolvoCarsApi) -> AsyncMock:
     return mock_api
 
 
-async def _async_get_doors_data(
+def _get_doors_data(
     mock_api: VolvoCarsApi, lock_value: str
 ) -> dict[str, VolvoCarsValueField]:
     """Build doors data with a specific centralLock value."""
