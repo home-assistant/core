@@ -70,6 +70,12 @@ SENSORS: tuple[GhostSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.members.get("comped", 0),
     ),
+    GhostSensorEntityDescription(
+        key="gift_members",
+        translation_key="gift_members",
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.members.get("gift", 0),
+    ),
     # Post metrics
     GhostSensorEntityDescription(
         key="published_posts",

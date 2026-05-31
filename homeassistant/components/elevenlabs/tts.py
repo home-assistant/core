@@ -20,7 +20,7 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import ATTR_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -28,7 +28,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElevenLabsConfigEntry
 from .const import (
-    ATTR_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STYLE,
@@ -294,7 +293,9 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                                 previous_request_ids.append(rid)
                             else:
                                 _LOGGER.debug(
-                                    "No request-id returned from server; clearing previous requests"
+                                    "No request-id returned from"
+                                    " server; clearing previous"
+                                    " requests"
                                 )
                                 previous_request_ids.clear()
                 except ApiError as exc:
@@ -306,7 +307,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                         await _add_sentences_task
                     raise HomeAssistantError(exc) from exc
 
-                # Capture and store server request-id for next calls (only when supported)
+                # Capture and store server request-id for
+                # next calls (only when supported)
                 _LOGGER.debug("Completed TTS stream for text: %s", text)
 
         _LOGGER.debug("Completed TTS stream")

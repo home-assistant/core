@@ -9,7 +9,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
-from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -84,7 +88,7 @@ async def test_switch_turn_on(
 
     # Call the service to turn on
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
@@ -143,7 +147,7 @@ async def test_switch_turn_off(
 
     # Call the service to turn off
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {"entity_id": entity_id},
         blocking=True,
@@ -167,15 +171,12 @@ async def test_switch_set_value_error(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, mock_config_entry)
 
-    # Mock set_data to raise an error
-    mock_indevolt.set_data.side_effect = HomeAssistantError(
-        "Device communication failed"
-    )
+    mock_indevolt.set_data.return_value = False
 
     # Attempt to switch on
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {"entity_id": "switch.cms_sf2000_allow_grid_charging"},
             blocking=True,

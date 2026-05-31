@@ -4,8 +4,7 @@ from dataclasses import replace
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 
-from duco.exceptions import DucoConnectionError
-from duco.models import ApiInfo
+from duco_connectivity import ApiInfo, DucoConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -40,7 +39,7 @@ async def test_diagnostics(
         "async_get_api_info",
         "async_get_lan_info",
         "async_get_diagnostics",
-        "async_get_write_req_remaining",
+        "async_get_write_requests_remaining",
     ],
 )
 async def test_diagnostics_connection_error(
@@ -63,18 +62,17 @@ async def test_diagnostics_connection_error(
     assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-async def test_diagnostics_without_optional_board_metadata(
+async def test_diagnostics_without_optional_software_version(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test that None board fields are omitted from the diagnostics payload."""
+    """Test that an optional software version is omitted from diagnostics."""
     # BoardInfo is a frozen dataclass, so the mock must be updated before
     # integration setup — the coordinator stores board_info during async_setup.
     mock_duco_client.async_get_board_info.return_value = replace(
         mock_duco_client.async_get_board_info.return_value,
-        public_api_version=None,
         software_version=None,
     )
     mock_config_entry.add_to_hass(hass)
@@ -85,7 +83,9 @@ async def test_diagnostics_without_optional_board_metadata(
         hass, hass_client, mock_config_entry
     )
 
-    assert "public_api_version" not in diagnostics["board_info"]
+    assert diagnostics["board_info"]["public_api_version"] == str(
+        mock_duco_client.async_get_board_info.return_value.public_api_version
+    )
     assert "software_version" not in diagnostics["board_info"]
 
 
@@ -97,10 +97,16 @@ async def test_diagnostics_without_optional_api_metadata(
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test diagnostics when optional API metadata is absent."""
-    mock_duco_client.async_get_api_info.return_value = ApiInfo(api_version="2.5")
+    mock_duco_client.async_get_api_info.return_value = ApiInfo(
+        api_version=mock_duco_client.async_get_api_info.return_value.api_version
+    )
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
 
-    assert diagnostics["api_info"] == {"public_api_version": "2.5"}
+    assert diagnostics["api_info"] == {
+        "public_api_version": str(
+            mock_duco_client.async_get_api_info.return_value.api_version
+        )
+    }

@@ -23,7 +23,6 @@ _ATTRIBUTION = "Data provided by OMIE.es"
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     key: SensorEntityDescription(
         key=key,
-        has_entity_name=True,
         translation_key=key,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
@@ -36,6 +35,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
     """OMIE price sensor."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_attribution = _ATTRIBUTION
 
@@ -51,6 +51,11 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
         self._attr_device_info = device_info
         self._attr_unique_id = pyomie_series_name
         self._pyomie_series_name = pyomie_series_name
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
 
     @callback
     def _handle_coordinator_update(self) -> None:
