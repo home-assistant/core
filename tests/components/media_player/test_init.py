@@ -146,20 +146,30 @@ async def test_get_image_http_remote(
 async def test_get_image_http_missing_image(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
-    """Test missing image bytes return not found."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("media_player.bedroom")
-    client = await hass_client_no_auth()
-
-    with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity.async_get_media_image",
-        return_value=(None, "image/jpeg"),
+    """Test advertised local image with missing bytes returns not found."""
+    with (
+        patch(
+            "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+            None,
+        ),
+        patch(
+            "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_hash",
+            "missing-image",
+        ),
     ):
-        resp = await client.get(state.attributes["entity_picture"])
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        client = await hass_client_no_auth()
+
+        with patch(
+            "homeassistant.components.media_player.MediaPlayerEntity.async_get_media_image",
+            return_value=(None, None),
+        ):
+            resp = await client.get(state.attributes["entity_picture"])
 
     assert resp.status == HTTPStatus.NOT_FOUND
 
