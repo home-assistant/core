@@ -506,6 +506,7 @@ class HomeAssistantHTTP:
         self._ssl_watcher: BaseObserver | None = None
         self._ssl_watcher_stopping: bool = False
         self._ssl_reload_debounce_handle: asyncio.TimerHandle | None = None
+        self._ssl_reload_task: asyncio.Task[None] | None = None
         # Absolute paths of the cert and key files, resolved once during
         # initialization so the watcher and reload use the same paths.
         self._ssl_certificate_path: Path | None = None
@@ -866,6 +867,9 @@ class HomeAssistantHTTP:
         if self._ssl_reload_debounce_handle is not None:
             self._ssl_reload_debounce_handle.cancel()
             self._ssl_reload_debounce_handle = None
+        if self._ssl_reload_task is not None:
+            self._ssl_reload_task.cancel()
+            self._ssl_reload_task = None
 
     async def _start_ssl_watcher(self) -> None:
         """Start watching the SSL certificate and key files for changes."""
@@ -914,14 +918,17 @@ class HomeAssistantHTTP:
     def _schedule_reload(self) -> None:
         """Schedule the SSL certificate reload on the executor."""
         self._ssl_reload_debounce_handle = None
-        self.hass.async_create_background_task(
+        self._ssl_reload_task = self.hass.async_create_background_task(
             self._async_reload_ssl_certificate(),
             name="SSL certificate reload",
         )
 
     async def _async_reload_ssl_certificate(self) -> None:
         """Reload the SSL certificate in the executor and log the result."""
-        await self.hass.async_add_executor_job(self.reload_ssl_certificate)
+        try:
+            await self.hass.async_add_executor_job(self.reload_ssl_certificate)
+        finally:
+            self._ssl_reload_task = None
 
     async def stop(self) -> None:
         """Stop the aiohttp server."""
