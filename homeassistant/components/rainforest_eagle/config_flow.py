@@ -114,9 +114,6 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_CLOUD_ID])
-            self._abort_if_unique_id_mismatch()
-
             try:
                 eagle_type, hardware_address = await async_get_type(
                     self.hass,
@@ -149,6 +146,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not errors:
                     return self.async_update_reload_and_abort(
                         entry,
+                        unique_id=user_input[CONF_CLOUD_ID],
                         title=user_input[CONF_CLOUD_ID],
                         data={**entry.data, **user_input},
                     )
