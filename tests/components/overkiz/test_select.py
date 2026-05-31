@@ -1,6 +1,7 @@
 """Tests for the Overkiz select platform."""
 
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -33,8 +34,8 @@ OPEN_CLOSED_PARTIAL = FixtureDevice(
     "select.living_room_partial_garage_door_position",
 )
 MEMORIZED_SIMPLE_VOLUME = FixtureDevice(
-    "setup/cloud_somfy_tahoma_v2_europe.json",
-    "io://1234-1234-6233/2733989",
+    "setup/local_somfy_tahoma_v2_europe.json",
+    "io://1234-5678-3293/2733989",
     "select.siren_memorized_simple_volume",
 )
 ACTIVE_ZONES = FixtureDevice(
@@ -42,6 +43,12 @@ ACTIVE_ZONES = FixtureDevice(
     "io://1234-1234-6233/2155276",
     "select.willow_house_protexiom_active_zones",
 )
+
+# One representative setup per fixture file; both expose select entities.
+SNAPSHOT_FIXTURES = [
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "setup/local_somfy_tahoma_v2_europe.json",
+]
 
 
 @pytest.fixture(autouse=True)
@@ -51,17 +58,21 @@ def fixture_platforms() -> Generator[None]:
         yield
 
 
+@pytest.mark.parametrize(
+    "fixture",
+    SNAPSHOT_FIXTURES,
+    ids=[Path(fixture).name for fixture in SNAPSHOT_FIXTURES],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_entities_snapshot(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    fixture: str,
 ) -> None:
     """Test representative real setups via snapshot."""
-    config_entry = await setup_overkiz_integration(
-        fixture=OPEN_CLOSED_PEDESTRIAN.fixture
-    )
+    config_entry = await setup_overkiz_integration(fixture=fixture)
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
