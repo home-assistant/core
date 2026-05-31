@@ -105,9 +105,15 @@ STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
 SAVE_DELAY: Final = 180
 
-# Seconds to wait after the last file change before reloading the SSL certificate.
-# Allows atomic file writes (multiple files written in sequence) to complete.
+# Seconds to wait after the last file change before reloading the SSL
+# certificate. Allows atomic file writes (e.g. certbot writes cert then key)
+# to complete before triggering a reload. 5 seconds accounts for typical
+# acme.sh and certbot deploy hooks that write files in quick succession.
 SSL_RELOAD_DEBOUNCE_SECONDS: Final = 5
+
+# Maximum seconds to wait for the watchdog observer thread to exit during
+# shutdown. Prevents a hung observer from blocking shutdown indefinitely.
+SSL_WATCHER_JOIN_TIMEOUT: Final = 10
 
 _HAS_IPV6 = hasattr(socket, "AF_INET6")
 _DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
@@ -407,18 +413,25 @@ class _SSLReloadHandler(FileSystemEventHandler):
         # so accessing private attributes is intentional.
         watched_paths: set[str] = set()
         if http_server._ssl_certificate_path is not None:  # noqa: SLF001
-            watched_paths.add(str(http_server._ssl_certificate_path))  # noqa: SLF001
+            watched_paths.add(
+                os.path.normpath(str(http_server._ssl_certificate_path))  # noqa: SLF001
+            )
         if http_server._ssl_key_path is not None:  # noqa: SLF001
-            watched_paths.add(str(http_server._ssl_key_path))  # noqa: SLF001
+            watched_paths.add(
+                os.path.normpath(str(http_server._ssl_key_path))  # noqa: SLF001
+            )
         if http_server._ssl_peer_certificate_path is not None:  # noqa: SLF001
-            watched_paths.add(str(http_server._ssl_peer_certificate_path))  # noqa: SLF001
+            watched_paths.add(
+                os.path.normpath(str(http_server._ssl_peer_certificate_path))  # noqa: SLF001
+            )
         self._watched_paths = frozenset(watched_paths)
 
     def on_any_event(self, event: FileSystemEvent) -> None:
         """Schedule a debounced SSL reload when a watched file changes."""
         # Only react to changes on the actual cert/key files, not all files
-        # in the watched directory.
-        if event.src_path not in self._watched_paths:
+        # in the watched directory. Normalize paths for comparison since
+        # the OS-level watcher may report paths differently.
+        if os.path.normpath(event.src_path) not in self._watched_paths:
             return
         # Running in the watchdog observer thread — use call_soon_threadsafe
         # to schedule the debounce on the Home Assistant event loop.
@@ -866,8 +879,13 @@ class HomeAssistantHTTP:
         self._stop_ssl_watcher()
         # Offload blocking `join()` to executor to avoid blocking the event loop
         if self._ssl_watcher is not None:
-            await self.hass.async_add_executor_job(self._ssl_watcher.join)
+            watcher = self._ssl_watcher
             self._ssl_watcher = None
+            await self.hass.async_add_executor_job(
+                watcher.join, SSL_WATCHER_JOIN_TIMEOUT
+            )
+            if watcher.is_alive():
+                _LOGGER.warning("SSL certificate watcher did not stop in time")
         if self.supervisor_site is not None:
             await self.supervisor_site.stop()
             if self.supervisor_unix_socket_path is not None:
