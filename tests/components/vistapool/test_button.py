@@ -128,6 +128,54 @@ async def test_button_press_when_light_on(
     )
 
 
+async def test_button_press_rapid_repeat_after_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a second press lands the off/on pulse instead of repeating turn-on.
+
+    Without the optimistic update, the second press would read the stale
+    off-state (the Firestore push hasn't round-tripped yet) and send another
+    bare light.status=1 — a no-op on the wire that doesn't advance the color.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = _LED_DATA
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: _BUTTON},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: _BUTTON},
+        blocking=True,
+    )
+
+    assert mock_vistapool_client.set_value.await_count == 3
+    assert mock_vistapool_client.set_value.await_args_list[0].args == (
+        "ABCDEF1234567890",
+        "light.status",
+        1,
+    )
+    assert mock_vistapool_client.set_value.await_args_list[1].args == (
+        "ABCDEF1234567890",
+        "light.status",
+        0,
+    )
+    assert mock_vistapool_client.set_value.await_args_list[2].args == (
+        "ABCDEF1234567890",
+        "light.status",
+        1,
+    )
+
+
 async def test_button_press_raises_on_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

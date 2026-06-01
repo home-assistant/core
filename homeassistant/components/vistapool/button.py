@@ -67,3 +67,7 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
+        # Optimistically reflect the just-written value so a rapid second press
+        # doesn't read the stale off-state before the Firestore push round-trips.
+        self.coordinator.data.setdefault("light", {})["status"] = 1
+        self.coordinator.async_set_updated_data(self.coordinator.data)
