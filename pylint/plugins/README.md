@@ -349,17 +349,17 @@ This rule only applies to `test_*` functions, not to fixture functions.
 
 ## `home_assistant_domain_constant` checker
 
-Encourages the use of `DOMAIN` constants (or variables) instead of hardcoded
-string literals when passing a domain to common test helpers. Only runs on
-test modules.
+Encourages using `DOMAIN` constants (or variables) when passing a domain to common test helpers.
+String literals are allowed for cases where the constant is not imported.
+Only runs on test modules.
 
 ### `C7415`: `home-assistant-domain-argument`
 
 The domain (or handler) argument to test helpers such as
 `async_setup_component`, `async_mock_service`, `MockConfigEntry`,
 `hass.services.async_call`, `hass.services.call`, and
-`hass.config_entries.flow.async_init` should be a domain constant or
-variable rather than a hardcoded value. The following are accepted:
+`hass.config_entries.flow.async_init` should use a domain constant or variable when available.
+The following are accepted:
 
 * a `DOMAIN`/`domain` attribute or one ending in `_DOMAIN`/`_domain`
   (e.g. `sensor.DOMAIN`),

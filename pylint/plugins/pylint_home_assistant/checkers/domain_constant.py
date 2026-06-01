@@ -78,11 +78,10 @@ class DomainConstantChecker(BaseChecker):
         """Ensure the argument node is a domain constant or variable.
 
         We allow:
-         - x.DOMAIN attribute (or x.ABC_DOMAIN)
-         - x.domain attribute (or x.abc_domain)
-         - DOMAIN constant (or ABC_DOMAIN)
-         - domain variable (or abc_domain)
+         - x.DOMAIN/x.domain attribute (including *_DOMAIN/*_domain)
+         - DOMAIN/domain name (including *_DOMAIN/*_domain)
          - string literals (for cases where the constant is not imported)
+         - subscript expressions (e.g. data["key"])
         """
         match arg_node:
             case nodes.Attribute():
