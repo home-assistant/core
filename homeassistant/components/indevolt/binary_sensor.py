@@ -44,8 +44,6 @@ BINARY_SENSORS: Final = (
         key=IndevoltSystem.HEATING_STATE,
         generation=(1,),
         translation_key="electric_heating_state",
-        on_value=1000,
-        off_value=1001,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
