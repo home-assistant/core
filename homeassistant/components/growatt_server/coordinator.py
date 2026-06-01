@@ -115,7 +115,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
-                        f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
+                        translation_placeholders={"error": err.error_msg or str(err)},
                     ) from err
                 _LOGGER.debug("Failed to fetch V1 device list during scan: %s", err)
                 self.device_list = None
