@@ -210,20 +210,22 @@ class LocalTodoListEntity(TodoListEntity):
 
     async def async_update_todo_list(self, info: dict[str, Any]) -> None:
         """Update all items in the To-do list."""
-        item = _prepare_edit(info)
+        todo = _prepare_edit(info)
+        todo_store = self._new_todo_store()
         async with self._calendar_lock:
-            todo_store = self._new_todo_store()
-            for todo in todo_store.todo_list():
-                await self.hass.async_add_executor_job(todo_store.edit, todo.uid, item)
+            uids = [t.uid for t in todo_store.todo_list()]
+            await self.hass.async_add_executor_job(
+                _todo_store_edit_multiple, todo_store, uids, todo
+            )
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
-        store = self._new_todo_store()
+        todo_store = self._new_todo_store()
         async with self._calendar_lock:
             for uid in uids:
-                store.delete(uid)
+                todo_store.delete(uid)
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -257,3 +259,10 @@ class LocalTodoListEntity(TodoListEntity):
         """Persist the todo list to disk."""
         content = IcsCalendarStream.calendar_to_ics(self._calendar)
         await self._store.async_store(content)
+
+
+def _todo_store_edit_multiple(
+    todo_store: TodoStore, uids: list[str], item: Todo
+) -> None:
+    for uid in uids:
+        todo_store.edit(uid, item)
