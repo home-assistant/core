@@ -56,12 +56,15 @@ rules:
   docs-known-limitations: todo
   docs-supported-devices: todo
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Configured on a per-device basis.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: todo
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations: done
@@ -70,6 +73,6 @@ rules:
   stale-devices: todo
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: done
   strict-typing: done

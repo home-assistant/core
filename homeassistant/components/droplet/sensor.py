@@ -68,6 +68,7 @@ SENSORS: list[DropletSensorEntityDescription] = [
         options=["connected", "connecting", "disconnected"],
         value_fn=lambda device: device.get_server_status(),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     DropletSensorEntityDescription(
         key=KEY_SIGNAL_QUALITY,
@@ -76,6 +77,7 @@ SENSORS: list[DropletSensorEntityDescription] = [
         options=["no_signal", "weak_signal", "strong_signal"],
         value_fn=lambda device: device.get_signal_quality(),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 ]
 
