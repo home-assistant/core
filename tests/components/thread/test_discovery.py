@@ -268,10 +268,10 @@ async def test_discover_routers_known_vendor_names(
     await hass.async_block_till_done()
 
     router_discovered_removed = Mock()
-    thread_disovery = discovery.ThreadRouterDiscovery(
+    thread_discovery = discovery.ThreadRouterDiscovery(
         hass, router_discovered_removed, router_discovered_removed
     )
-    await thread_disovery.async_start()
+    await thread_discovery.async_start()
     listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
         mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
     )
