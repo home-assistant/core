@@ -79,7 +79,7 @@ async def test_setup_failed_connect(
 ) -> None:
     """Test setup retries with a diagnostic reason when the device cannot connect."""
 
-    mock_automower_client.connect.side_effect = TimeoutError("timed out")
+    mock_automower_client.connect.side_effect = TimeoutError
 
     mock_config_entry.add_to_hass(hass)
     with patch(
@@ -91,9 +91,11 @@ async def test_setup_failed_connect(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # A bare TimeoutError has an empty str(), so the error falls back to the
+    # exception class name; both the error and the reachability reason appear.
     assert (
         f"Unable to connect to device {mock_config_entry.data[CONF_ADDRESS]} "
-        "due to timed out: mock reachability reason" in caplog.text
+        "due to TimeoutError: mock reachability reason" in caplog.text
     )
 
 

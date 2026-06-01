@@ -58,10 +58,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
     except (TimeoutError, BleakError) as exception:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="device_not_found",
+            translation_key="connection_failed",
             translation_placeholders={
                 "address": address,
-                "error": str(exception),
+                "error": str(exception) or type(exception).__name__,
                 "reason": bluetooth.async_address_reachability_diagnostics(
                     hass,
                     address.upper(),

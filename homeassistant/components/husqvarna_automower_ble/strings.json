@@ -45,7 +45,7 @@
     }
   },
   "exceptions": {
-    "device_not_found": {
+    "connection_failed": {
       "message": "Unable to connect to device {address} due to {error}: {reason}"
     },
     "pin_required": {
