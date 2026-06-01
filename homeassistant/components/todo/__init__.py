@@ -502,22 +502,25 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
 
     _validate_supported_features(entity.supported_features, call.data)
 
-    # Perform a partial update on the existing entity based on the fields
-    # present in the update. This allows explicitly clearing any of the
-    # extended fields present and set to None.
-    updated_data = dataclasses.asdict(found)
-    if summary := call.data.get("rename"):
-        updated_data["summary"] = summary
-    if status := call.data.get("status"):
-        updated_data["status"] = status
-    updated_data.update(
+    # Prepare patch for todo item based on the fields present in the
+    # update. This allows explicitly clearing any of the extended fields
+    # present and set to None.
+    info = {}
+    if summary := call.data.get(ATTR_RENAME):
+        info["summary"] = summary
+    if status := call.data.get(ATTR_STATUS):
+        info["status"] = TodoItemStatus(status)
+    info.update(
         {
             desc.todo_item_field: call.data[desc.service_field]
             for desc in TODO_ITEM_FIELDS
             if desc.service_field in call.data
         }
     )
-    await entity.async_update_todo_item(item=TodoItem(**updated_data))
+
+    # Perform a partial update on the existing entity.
+    updated_item = dataclasses.replace(found, **info)
+    await entity.async_update_todo_item(updated_item)
 
 
 async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
@@ -561,9 +564,12 @@ async def _async_remove_completed_items(entity: TodoListEntity, _: ServiceCall) 
 
 async def _async_update_todo_list(entity: TodoListEntity, call: ServiceCall) -> None:
     """Update all items in the To-do list."""
+    # Prepare patch for todo item(s) based on the fields present in the
+    # update. This allows explicitly clearing any of the extended fields
+    # present and set to None.
     info = {}
     if status := call.data.get(ATTR_STATUS):
         info["status"] = TodoItemStatus(status)
 
-    # At least 1 key is guaranteed by schema
+    # Pass patch to integration
     await entity.async_update_todo_list(info=info)

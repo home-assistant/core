@@ -11,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
+    ATTR_DUE,
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
@@ -956,8 +957,8 @@ async def test_bulk_update(
     # Store original values of attributes that shouldn't change
     original_items = await ws_get_items()
     names = [item["summary"] for item in original_items]
-    due_datetimes = [item.get("due") for item in original_items]
-    descriptions = [item.get("description") for item in original_items]
+    due_datetimes = [item.get(ATTR_DUE) for item in original_items]
+    descriptions = [item.get(ATTR_DESCRIPTION) for item in original_items]
 
     # ACT: bulk-update list
     await hass.services.async_call(
@@ -982,5 +983,5 @@ async def test_bulk_update(
 
     # Verify nothing else changed
     assert [item["summary"] for item in items] == names
-    assert [item.get("due") for item in items] == due_datetimes
-    assert [item.get("description") for item in items] == descriptions
+    assert [item.get(ATTR_DUE) for item in items] == due_datetimes
+    assert [item.get(ATTR_DESCRIPTION) for item in items] == descriptions
