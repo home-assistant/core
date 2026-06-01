@@ -227,6 +227,49 @@ async def test_setup_initial_refresh_elke27_error_returns_not_ready(
     hub.async_disconnect.assert_awaited_once()
 
 
+async def test_setup_initial_refresh_permanent_elke27_error_fails_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Test permanent Elke27 refresh errors fail setup instead of retrying."""
+    hub = SimpleNamespace(
+        panel_name=None,
+        async_connect=AsyncMock(return_value=None),
+        async_disconnect=AsyncMock(return_value=None),
+    )
+    coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
+        async_refresh_now=AsyncMock(
+            side_effect=Elke27Error("refresh failed", code=1, is_transient=False)
+        ),
+        async_stop=AsyncMock(return_value=None),
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.13",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
+            CONF_CLIENT_ID: "112233445566",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch(
+            "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    coordinator.async_stop.assert_awaited_once()
+    hub.async_disconnect.assert_awaited_once()
+
+
 async def test_setup_forward_entry_setups_error_cleans_up(
     hass: HomeAssistant,
 ) -> None:
