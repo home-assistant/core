@@ -1,4 +1,4 @@
-"""Plugin to ensure correct use of constants."""
+"""Plugin to encourage correct use of DOMAIN constants in tests."""
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
@@ -16,16 +16,16 @@ _METHOD_CHECKS: list[tuple[str, str, int | None, str]] = [
 ]
 
 
-class HassEnforceConstantsChecker(BaseChecker):
-    """Checker for correct use of constants."""
+class DomainConstantChecker(BaseChecker):
+    """Checker for correct use of DOMAIN constants in tests."""
 
-    name = "hass_enforce_constants"
+    name = "home_assistant_domain_constant"
     priority = -1
     msgs = {
         "C7414": (
             "Argument %s should be a domain constant or variable in %s",
-            "hass-domain-argument",
-            "Used when function/method argument should be a domain constant/variable.",
+            "home-assistant-domain-argument",
+            "Used when argument should be a domain constant/variable.",
         ),
     }
 
@@ -78,16 +78,20 @@ class HassEnforceConstantsChecker(BaseChecker):
         """Ensure the argument node is a domain constant or variable.
 
         We allow:
-         - DOMAIN constant (or x.DOMAIN attribute)
-         - domain variable (or x.domain attribute)
-         - constants ending with _DOMAIN
-         - variables ending with _domain
+         - x.DOMAIN attribute (or x.ABC_DOMAIN)
+         - x.domain attribute (or x.abc_domain)
+         - DOMAIN constant (or ABC_DOMAIN)
+         - domain variable (or abc_domain)
         """
         match arg_node:
             case nodes.Attribute():
-                if arg_node.attrname in {"DOMAIN", "domain"}:
+                if (
+                    (attrname := arg_node.attrname) not in {"DOMAIN", "domain"}
+                    and not attrname.endswith("_DOMAIN")
+                    and not attrname.endswith("_domain")
+                ):
                     self.add_message(
-                        "hass-domain-argument",
+                        "home-assistant-domain-argument",
                         node=arg_node,
                         args=(arg_node.as_string(), call_node.func.as_string()),
                     )
@@ -99,7 +103,7 @@ class HassEnforceConstantsChecker(BaseChecker):
                     and not node_name.endswith("_domain")
                 ):
                     self.add_message(
-                        "hass-domain-argument",
+                        "home-assistant-domain-argument",
                         node=arg_node,
                         args=(arg_node.as_string(), call_node.func.as_string()),
                     )
@@ -109,7 +113,7 @@ class HassEnforceConstantsChecker(BaseChecker):
                 return
 
         self.add_message(
-            "hass-domain-argument",
+            "home-assistant-domain-argument",
             node=arg_node,
             args=(arg_node.as_string(), call_node.func.as_string()),
         )
@@ -117,4 +121,4 @@ class HassEnforceConstantsChecker(BaseChecker):
 
 def register(linter: PyLinter) -> None:
     """Register the checker."""
-    linter.register_checker(HassEnforceConstantsChecker(linter))
+    linter.register_checker(DomainConstantChecker(linter))
