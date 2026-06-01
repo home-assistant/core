@@ -272,3 +272,47 @@ async def test_labs_enabled_before_setup_loads_media_player_platform(
     assert media_player_entry is not None
     assert media_player_entry.disabled_by is None
     assert hass.states.get("media_player.echo_test") is not None
+
+
+async def test_labs_disable_logs_warning_when_unload_fails(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a warning is logged and media_player_loaded stays True when platform unload fails."""
+    assert await async_setup_component(hass, "labs", {})
+
+    await async_update_preview_feature(hass, DOMAIN, "alexa_media", True)
+    await hass.async_block_till_done()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("media_player.echo_test") is not None
+
+    with (
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms",
+            return_value=False,
+        ) as mock_unload,
+        patch("homeassistant.components.alexa_devices._LOGGER") as mock_logger,
+    ):
+        await async_update_preview_feature(hass, DOMAIN, "alexa_media", False)
+        await hass.async_block_till_done()
+
+    mock_unload.assert_awaited_once()
+    mock_logger.warning.assert_called_once_with(
+        "Failed to unload media player platform for %s",
+        mock_config_entry.entry_id,
+    )
+
+    # Confirm media_player_loaded stayed True — unload is attempted again on next disable event
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms",
+        return_value=False,
+    ) as mock_unload2:
+        await async_update_preview_feature(hass, DOMAIN, "alexa_media", False)
+        await hass.async_block_till_done()
+
+    mock_unload2.assert_awaited_once()
