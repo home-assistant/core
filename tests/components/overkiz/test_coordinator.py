@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 from aiohttp import ClientConnectorError
+from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.exceptions import (
     InvalidEventListenerIdException,
     MaintenanceException,
@@ -12,10 +13,19 @@ from pyoverkiz.exceptions import (
 )
 import pytest
 
+from homeassistant.components.overkiz.const import UPDATE_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import MockOverkizClient, SetupOverkizIntegration
+from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
+
+from tests.common import async_fire_time_changed
+
+TEMPERATURE_SENSOR = FixtureDevice(
+    "setup/cloud_nexity_rail_din_europe.json",
+    "io://1234-5678-1698/15702199#2",
+    "sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature",
+)
 
 
 @pytest.mark.parametrize(
@@ -43,14 +53,31 @@ async def test_transient_error_is_retried(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     exception: Exception,
 ) -> None:
-    """Transient errors are translated into a retryable UpdateFailed."""
-    config_entry = await setup_overkiz_integration()
-    coordinator = config_entry.runtime_data.coordinator
+    """Transient errors are handled cleanly: entities go unavailable, then recover."""
+    await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
 
+    initial_state = hass.states.get(TEMPERATURE_SENSOR.entity_id)
+    assert initial_state.state != STATE_UNAVAILABLE
+
+    # A transient error during a refresh makes the entities unavailable, without
+    # surfacing it as an unexpected coordinator error.
     mock_client.fetch_events.side_effect = exception
-    await coordinator.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert coordinator.last_update_success is False
-    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+    assert "Unexpected error fetching" not in caplog.text
+
+    # Once the server recovers, the next refresh restores the entities.
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
