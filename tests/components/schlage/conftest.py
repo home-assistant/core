@@ -61,7 +61,7 @@ async def mock_add_config_entry(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.schlage.async_setup_entry", return_value=True
@@ -70,14 +70,14 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_schlage() -> Generator[Mock, None, None]:
+def mock_schlage() -> Generator[Mock]:
     """Mock pyschlage.Schlage."""
     with patch("pyschlage.Schlage", autospec=True) as mock_schlage:
         yield mock_schlage.return_value
 
 
 @pytest.fixture
-def mock_pyschlage_auth() -> Generator[Mock, None, None]:
+def mock_pyschlage_auth() -> Generator[Mock]:
     """Mock pyschlage.Auth."""
     with patch("pyschlage.Auth", autospec=True) as mock_auth:
         mock_auth.return_value.user_id = "abc123"

@@ -1,7 +1,6 @@
 """Test schlage lock."""
 
 from collections.abc import Awaitable, Callable
-from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -60,7 +59,6 @@ async def test_lock_jammed(
         lock = hass.states.get("lock.vault_door")
         assert lock is not None
         assert lock.state == LockState.JAMMED
-
 
 
 async def test_lock_disconnected(

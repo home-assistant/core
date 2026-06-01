@@ -1,7 +1,6 @@
 """Test Schlage binary_sensor."""
 
 from collections.abc import Awaitable, Callable
-from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
