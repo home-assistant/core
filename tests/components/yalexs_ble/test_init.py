@@ -44,6 +44,11 @@ async def test_setup_retries_when_not_advertising_at_startup(
     with (
         patch("homeassistant.components.yalexs_ble.close_stale_connections_by_address"),
         patch("homeassistant.components.yalexs_ble.PushLock", return_value=push_lock),
+        patch(
+            "homeassistant.components.yalexs_ble.bluetooth."
+            "async_address_reachability_diagnostics",
+            return_value="mock reachability reason",
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -51,6 +56,6 @@ async def test_setup_retries_when_not_advertising_at_startup(
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert (
         f"{YALE_ACCESS_LOCK_DISCOVERY_INFO.name} "
-        f"({YALE_ACCESS_LOCK_DISCOVERY_INFO.address}) is not advertising yet"
-        in caplog.text
+        f"({YALE_ACCESS_LOCK_DISCOVERY_INFO.address}) is not advertising yet: "
+        "mock reachability reason" in caplog.text
     )
