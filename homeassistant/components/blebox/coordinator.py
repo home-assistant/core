@@ -38,4 +38,8 @@ class BleBoxCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.box.async_update_data()
         except Error as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
