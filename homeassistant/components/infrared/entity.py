@@ -39,7 +39,22 @@ class InfraredEmitterEntityDescription(EntityDescription, frozen_or_thawed=True)
     """Describes infrared emitter entities."""
 
 
-class InfraredEmitterEntity(RestoreEntity):
+class _InfraredEntity(RestoreEntity):
+    """Base class with capabilities shared by infrared emitters and receivers."""
+
+    _attr_supported_frequencies: list[int] | None = None
+
+    @property
+    def supported_frequencies(self) -> list[int] | None:
+        """Return the carrier frequencies (in Hz) the entity supports.
+
+        Returns ``None`` when the supported frequencies are unknown or the
+        entity is not restricted to a specific set of carrier frequencies.
+        """
+        return self._attr_supported_frequencies
+
+
+class InfraredEmitterEntity(_InfraredEntity):
     """Base class for infrared emitter entities."""
 
     entity_description: InfraredEmitterEntityDescription
@@ -89,7 +104,7 @@ class InfraredReceiverEntityDescription(EntityDescription, frozen_or_thawed=True
     """Describes infrared receiver entities."""
 
 
-class InfraredReceiverEntity(RestoreEntity):
+class InfraredReceiverEntity(_InfraredEntity):
     """Base class for infrared receiver entities."""
 
     entity_description: InfraredReceiverEntityDescription

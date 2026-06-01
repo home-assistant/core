@@ -49,6 +49,7 @@ def ws_list_proxies(
                 ),
                 "name": state.name if state is not None else entity.name,
                 "type": port_type,
+                "supported_frequencies": entity.supported_frequencies,
             }
         )
 

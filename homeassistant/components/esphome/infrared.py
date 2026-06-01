@@ -61,6 +61,13 @@ class EsphomeInfraredReceiverEntity(_EsphomeInfraredEntity, InfraredReceiverEnti
 
     _unsub_receive: CALLBACK_TYPE | None = None
 
+    @property
+    def supported_frequencies(self) -> list[int] | None:
+        """Return the receiver's demodulation frequency, if the device reports one."""
+        if frequency := self._static_info.receiver_frequency:
+            return [frequency]
+        return None
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks including IR receive subscription."""
         await super().async_added_to_hass()
