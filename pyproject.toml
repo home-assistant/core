@@ -746,8 +746,6 @@ ignore = [
   "PT011",   # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
   "PT018",   # Assertion should be broken down into multiple parts
   "RUF001",  # String contains ambiguous unicode character.
-  "RUF002",  # Docstring contains ambiguous unicode character.
-  "RUF003",  # Comment contains ambiguous unicode character.
   "RUF012",  # Mutable class attributes should be annotated with typing.ClassVar
   "RUF015",  # Prefer next(...) over single element slice
   "RUF043",  # Pattern passed to match= contains metacharacters but is neither escaped nor raw

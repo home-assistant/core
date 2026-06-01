@@ -76,7 +76,7 @@ class RidwellSensor(RidwellEntity, SensorEntity):
             else:
                 # Ridwell's API will return distinct objects, even if they have the
                 # same name (e.g. two pickups of Latex Paint will show up as two
-                # objects) – so, we sum the quantities:
+                # objects) - so, we sum the quantities:
                 attrs[ATTR_PICKUP_TYPES][pickup.name][ATTR_QUANTITY] += pickup.quantity
 
         return attrs

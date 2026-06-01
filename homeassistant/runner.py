@@ -218,7 +218,7 @@ def _async_loop_exception_handler(
     if exception := context.get("exception"):
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
         if isinstance(exception, OSError) and exception.errno == errno.EMFILE:
-            # Too many open files – something is leaking them, and it's likely
+            # Too many open files - something is leaking them, and it's likely
             # to be quite unrecoverable if the event loop can't pump messages
             # (e.g. unable to accept a socket).
             fatal_error = str(exception)

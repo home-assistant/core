@@ -403,7 +403,7 @@ async def test_multi_day_range(hass: HomeAssistant, get_calendar_events) -> None
     start = dt.datetime(2024, 1, 15, 0, 0, 0)
     end = dt.datetime.combine(dt.date(2024, 1, 17), dt.time.max)
     events = await get_calendar_events(hass, DAILY_EVENTS, start, end)
-    # 3 days × 4 default daily events per day = 12
+    # 3 days x 4 default daily events per day = 12
     assert len(events) == 12
 
 

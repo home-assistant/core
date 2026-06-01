@@ -358,7 +358,7 @@ DISCOVERY_SCHEMAS = [
                     None if x is None else min(x, 200) / 2
                 )  # Matter range (1-200, capped at 200)
             ),
-            ha_to_device=lambda x: round(x * 2),  # HA range 0.5–100.0%
+            ha_to_device=lambda x: round(x * 2),  # HA range 0.5-100.0%
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterLevelControlNumber,
