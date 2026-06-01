@@ -395,11 +395,20 @@ async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
         client.async_disconnect.assert_awaited_once()
 
 
-async def test_cannot_connect_returns_error(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(Elke27TimeoutError(), id="library-timeout"),
+        pytest.param(OSError("connection refused"), id="os-error"),
+    ],
+)
+async def test_cannot_connect_returns_error(
+    hass: HomeAssistant, error: Exception
+) -> None:
     """Test connection errors return a form error."""
     client = AsyncMock()
     client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
-    client.async_connect = AsyncMock(side_effect=Elke27TimeoutError())
+    client.async_connect = AsyncMock(side_effect=error)
     client.async_disconnect = AsyncMock(return_value=None)
 
     with (

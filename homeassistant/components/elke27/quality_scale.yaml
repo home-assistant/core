@@ -31,9 +31,7 @@ rules:
   action-exceptions:
     status: todo
     comment: Silver quality-scale validation is deferred to a follow-up PR.
-  config-entry-unloading:
-    status: todo
-    comment: Silver quality-scale validation is deferred to a follow-up PR.
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: todo
     comment: Silver quality-scale validation is deferred to a follow-up PR.
@@ -52,9 +50,7 @@ rules:
   parallel-updates:
     status: todo
     comment: Silver quality-scale validation is deferred to a follow-up PR.
-  reauthentication-flow:
-    status: todo
-    comment: Silver quality-scale validation is deferred to a follow-up PR.
+  reauthentication-flow: done
   test-coverage:
     status: todo
     comment: Silver quality-scale validation is deferred to a follow-up PR.
