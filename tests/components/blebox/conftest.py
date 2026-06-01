@@ -83,6 +83,20 @@ def feature_fixture(request: pytest.FixtureRequest) -> Any:
     return request.getfixturevalue(request.param)
 
 
+async def async_setup_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    *,
+    assert_success: bool = False,
+) -> None:
+    """Add and set up the given config entry."""
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.async_setup(config_entry.entry_id)
+    if assert_success:
+        assert result
+    await hass.async_block_till_done()
+
+
 async def async_setup_entities(
     hass: HomeAssistant, entity_ids: list[str]
 ) -> list[er.RegistryEntry]:

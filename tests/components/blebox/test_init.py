@@ -8,7 +8,11 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import patch_product_identify, setup_product_mock
+from .conftest import (
+    async_setup_config_entry,
+    patch_product_identify,
+    setup_product_mock,
+)
 
 from tests.common import MockConfigEntry
 
@@ -22,11 +26,8 @@ async def test_setup_failure(
 
     patch_product_identify(None, side_effect=blebox_uniapi.error.ClientError)
 
-    config_entry.add_to_hass(hass)
-
     caplog.set_level(logging.ERROR)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_setup_config_entry(hass, config_entry)
 
     assert "Identify failed at 172.100.123.4:80 ()" in caplog.text
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -41,11 +42,8 @@ async def test_setup_failure_on_connection(
 
     patch_product_identify(None, side_effect=blebox_uniapi.error.ConnectionError)
 
-    config_entry.add_to_hass(hass)
-
     caplog.set_level(logging.ERROR)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_setup_config_entry(hass, config_entry)
 
     assert "Identify failed at 172.100.123.4:80 ()" in caplog.text
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -57,10 +55,7 @@ async def test_unload_config_entry(
     """Test that unloading works properly."""
     setup_product_mock("switches", [])
 
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_setup_config_entry(hass, config_entry)
     assert hasattr(config_entry, "runtime_data")
 
     await hass.config_entries.async_unload(config_entry.entry_id)

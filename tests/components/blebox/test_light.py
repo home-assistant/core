@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import async_setup_entity, mock_feature
+from .conftest import async_setup_config_entry, async_setup_entity, mock_feature
 
 from tests.common import MockConfigEntry
 
@@ -583,9 +583,7 @@ async def test_update_failure(
         side_effect=blebox_uniapi.error.ClientError
     )
 
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_setup_config_entry(hass, config_entry)
 
     feature_mock.product.async_update_data.assert_called()
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
