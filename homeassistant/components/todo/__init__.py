@@ -193,14 +193,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         TodoServices.UPDATE_LIST,
-        cv.make_entity_service_schema(
-            {
-                # Right now, this is the only supported field so it's required,
-                # but it could be optional if there were more options, c.f. UPDATE_ITEM.
-                vol.Required(ATTR_STATUS): vol.In(
-                    {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
-                ),
-            }
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional(ATTR_STATUS): vol.In(
+                        {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
+                    ),
+                }
+            ),
+            cv.has_at_least_one_key(  # allow this to be extended later
+                ATTR_STATUS,
+            ),
         ),
         _async_update_todo_list,
         required_features=[TodoListEntityFeature.UPDATE_TODO_LIST],
