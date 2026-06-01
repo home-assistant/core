@@ -52,13 +52,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
-    # Currently only a single Jellyfin server is supported
-    if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
-        raise BrowseError("Jellyfin integration not loaded")
-    entry: JellyfinConfigEntry = entries[0]
-    coordinator = entry.runtime_data
-
-    return JellyfinSource(hass, coordinator.api_client, entry)
+    return JellyfinSource(hass)
 
 
 class JellyfinSource(MediaSource):
@@ -66,21 +60,28 @@ class JellyfinSource(MediaSource):
 
     name: str = "Jellyfin"
 
-    def __init__(
-        self, hass: HomeAssistant, client: JellyfinClient, entry: JellyfinConfigEntry
-    ) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Jellyfin media source."""
         super().__init__(DOMAIN)
-
         self.hass = hass
-        self.entry = entry
+        self.entry: JellyfinConfigEntry
+        self.client: JellyfinClient
+        self.api: Any
+        self.url: str
 
-        self.client = client
-        self.api = client.jellyfin
-        self.url = jellyfin_url(client, "")
+    def _ensure_loaded(self) -> None:
+        """Ensure the Jellyfin integration is loaded and set up instance state."""
+        if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
+            raise BrowseError("Jellyfin integration not loaded")
+        entry: JellyfinConfigEntry = entries[0]
+        self.entry = entry
+        self.client = entry.runtime_data.api_client
+        self.api = self.client.jellyfin
+        self.url = jellyfin_url(self.client, "")
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type."""
+        self._ensure_loaded()
         media_item = await self.hass.async_add_executor_job(
             self.api.get_item, item.identifier
         )
@@ -96,6 +97,7 @@ class JellyfinSource(MediaSource):
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return a browsable Jellyfin media source."""
+        self._ensure_loaded()
         if not item.identifier:
             return await self._build_libraries()
 
