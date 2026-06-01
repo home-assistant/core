@@ -10,11 +10,13 @@ from bleak_retry_connector import (
 from ld2410_ble import LD2410BLE
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import LD2410BLECoordinator
 from .models import LD2410BLEConfigEntry, LD2410BLEData
 
@@ -34,7 +36,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LD2410BLEConfigEntry) ->
     ) or await get_device(address)
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Could not find LD2410B device with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
 
     ld2410_ble = LD2410BLE(ble_device)
