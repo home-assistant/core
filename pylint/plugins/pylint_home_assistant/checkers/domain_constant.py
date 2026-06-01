@@ -33,7 +33,7 @@ class DomainConstantChecker(BaseChecker):
 
     def visit_module(self, node: nodes.Module) -> None:
         """Visit Module node."""
-        self._in_test_module = node.name.startswith("tests.components.")
+        self._in_test_module = node.name.startswith("tests.")
 
     def visit_call(self, node: nodes.Call) -> None:
         """Visit Call node."""
