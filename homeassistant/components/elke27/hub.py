@@ -177,7 +177,9 @@ class Elke27Hub:
             except asyncio.CancelledError as err:
                 cancel_error = err
             except Exception:  # noqa: BLE001
-                pass
+                _LOGGER.debug(
+                    "Error while unsubscribing connection callback", exc_info=True
+                )
             self._connection_unsubscribe = None
         if self._client is not None:
             try:
@@ -185,7 +187,7 @@ class Elke27Hub:
             except asyncio.CancelledError as err:
                 cancel_error = err
             except Exception:  # noqa: BLE001
-                pass
+                _LOGGER.debug("Error while disconnecting client", exc_info=True)
         self._client = None
         self._clear_typed_subscriptions()
         if was_connected and not self._stopping and log_unavailable:

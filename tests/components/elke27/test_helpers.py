@@ -1,6 +1,7 @@
 """Tests for Elke27 entity helpers."""
 
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from elke27_lib import PanelInfo, PanelSnapshot, TableInfo
@@ -55,6 +56,8 @@ async def test_get_panel_field_handles_typed_snapshot() -> None:
     )
 
     assert get_panel_field(snapshot, "Panel A", "name") == "Panel A"
+    snapshot_with_name = _snapshot(SimpleNamespace(name="Pânel Étage"))
+    assert get_panel_field(snapshot_with_name, None, "name") == "Pânel Étage"
     assert get_panel_field(snapshot, None, "mac") == "aa:bb:cc:dd:ee:ff"
     assert get_panel_field(snapshot, None, "serial") == "1234"
     assert get_panel_field(snapshot, None, "model") == "E27"
@@ -141,4 +144,6 @@ def test_build_unique_id() -> None:
 def test_sanitize_and_panel_field() -> None:
     """Verify sanitize_name and get_panel_field behavior."""
     assert sanitize_name(None) is None
+    assert sanitize_name("Pânel Étage") == "Pânel Étage"
+    assert sanitize_name("Panel\x00 One\x1f") == "Panel One"
     assert get_panel_field(None, None, "name") is None
