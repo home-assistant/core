@@ -92,7 +92,10 @@ async def async_setup_entry(
 
 
 def _convert_item(item: TodoItem) -> Todo:
-    """Convert a HomeAssistant TodoItem to an ical Todo."""
+    """Convert a HomeAssistant TodoItem to an ical Todo.
+
+    Needs to be synchronised with `_prepare_edit`.
+    """
     todo = Todo()
     if item.uid:
         todo.uid = item.uid
@@ -104,6 +107,32 @@ def _convert_item(item: TodoItem) -> Todo:
     if todo.due and not isinstance(todo.due, datetime.datetime):
         todo.due += datetime.timedelta(days=1)
     todo.description = item.description
+    return todo
+
+
+def _prepare_edit(info: dict[str, Any]) -> Todo:
+    """Convert a HomeAssistant TodoItem patch to an ical Todo edit.
+
+    Preserve unset status so that "TodoStore.edit" modifies the right
+    fields, including ones set to None.
+
+    Needs to be synchronised with `_convert_item`.
+    """
+    todo = Todo()
+
+    if "uid" in info:
+        todo.uid = info["uid"]
+    if "summary" in info:
+        todo.summary = info["summary"]
+    if "status" in info:
+        todo.status = ICS_TODO_STATUS_MAP_INV[info["status"]]
+    if "due" in info:
+        todo.due = info["due"]
+        if todo.due and not isinstance(todo.due, datetime.datetime):
+            todo.due += datetime.timedelta(days=1)
+    if "description" in info:
+        todo.description = info["description"]
+
     return todo
 
 
@@ -181,7 +210,7 @@ class LocalTodoListEntity(TodoListEntity):
 
     async def async_update_todo_list(self, info: dict[str, Any]) -> None:
         """Update all items in the To-do list."""
-        item = _convert_item(TodoItem(**info))
+        item = _prepare_edit(info)
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
             for todo in todo_store.todo_list():
