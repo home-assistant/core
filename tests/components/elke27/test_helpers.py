@@ -1,6 +1,7 @@
 """Tests for Elke27 entity helpers."""
 
 from datetime import UTC, datetime
+from unittest.mock import patch
 
 from elke27_lib import PanelInfo, PanelSnapshot, TableInfo
 
@@ -85,6 +86,9 @@ async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
     device_info = device_info_for_entry(hub, coordinator, entry)
     assert device_info["name"] == "Panel A"
     assert device_info["serial_number"] == "1234"
+    assert device_info["connections"] == {
+        ("mac", "aa:bb:cc:dd:ee:ff"),
+    }
     assert device_info["identifiers"] == {("elke27", "entryclientid")}
     assert unique_base(entry) == "entryclientid"
 
@@ -106,6 +110,27 @@ async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
 
     hass.config_entries.async_update_entry(entry, unique_id=None)
     assert unique_base(entry) == entry.entry_id
+
+
+async def test_device_info_ignores_invalid_mac(hass: HomeAssistant) -> None:
+    """Verify invalid panel MAC values do not break device info setup."""
+    entry = MockConfigEntry(
+        domain="elke27",
+        data={CONF_HOST: "192.168.1.10", CONF_CLIENT_ID: "entryclientid"},
+    )
+    entry.add_to_hass(hass)
+    hub = _Hub()
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    coordinator.async_set_updated_data(_snapshot(PanelInfo(mac="aa:bb:cc:dd:ee:ff")))
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+
+    with patch(
+        "homeassistant.components.elke27.helpers.format_mac",
+        side_effect=ValueError,
+    ):
+        device_info = device_info_for_entry(hub, coordinator, entry)
+
+    assert device_info["connections"] == set()
 
 
 def test_build_unique_id() -> None:

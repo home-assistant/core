@@ -258,6 +258,6 @@ def _snapshot_to_dict(snapshot: Any) -> dict[str, Any]:
         return {}
     if is_dataclass(snapshot) and not isinstance(snapshot, type):
         return asdict(snapshot)
-    if isinstance(snapshot, dict):
+    if isinstance(snapshot, Mapping):
         return dict(snapshot)
     return {}

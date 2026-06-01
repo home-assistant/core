@@ -58,7 +58,10 @@ def device_info_for_entry(
     snapshot = coordinator.data
     panel_name = get_panel_field(snapshot, hub.panel_name, "name") or entry.title
     mac = get_panel_field(snapshot, hub.panel_name, "mac")
-    formatted_mac = format_mac(str(mac)) if mac else None
+    try:
+        formatted_mac = format_mac(str(mac)) if mac else None
+    except ValueError:
+        formatted_mac = None
     panel_serial = get_panel_field(snapshot, hub.panel_name, "serial")
     model = get_panel_field(snapshot, hub.panel_name, "model")
     firmware = get_panel_field(snapshot, hub.panel_name, "firmware")

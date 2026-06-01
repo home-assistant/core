@@ -4,7 +4,7 @@ import builtins
 from collections.abc import Callable
 from dataclasses import dataclass
 import importlib
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from elke27_lib import LinkKeys
@@ -76,6 +76,7 @@ def test_snapshot_to_dict() -> None:
     )
     assert data["panel_name"] == "Panel"
     assert config_flow._snapshot_to_dict({"a": 1}) == {"a": 1}
+    assert config_flow._snapshot_to_dict(MappingProxyType({"a": 1})) == {"a": 1}
     assert config_flow._snapshot_to_dict(None) == {}
     assert config_flow._snapshot_to_dict(object()) == {}
 

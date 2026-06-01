@@ -62,7 +62,7 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
             self._unsubscribe = None
         if self._debounce_task is not None:
             self._debounce_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
+            with contextlib.suppress(asyncio.CancelledError, Exception):
                 await self._debounce_task
             self._debounce_task = None
 

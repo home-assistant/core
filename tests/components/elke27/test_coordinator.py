@@ -218,6 +218,25 @@ async def test_async_stop_cancels_debounce(hass: HomeAssistant) -> None:
     assert coordinator._debounce_task is None
 
 
+async def test_async_stop_suppresses_debounce_task_error(
+    hass: HomeAssistant,
+) -> None:
+    """Verify async_stop suppresses already failed debounce tasks."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    hub = _FakeHub(SimpleNamespace(version=1))
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+
+    async def _raise() -> None:
+        raise RuntimeError("debounce failed")
+
+    coordinator._debounce_task = asyncio.create_task(_raise())
+    await hass.async_block_till_done()
+
+    await coordinator.async_stop()
+
+    assert coordinator._debounce_task is None
+
+
 async def test_async_stop_suppresses_unsubscribe_error(hass: HomeAssistant) -> None:
     """Verify stop suppresses unsubscribe callback errors."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
