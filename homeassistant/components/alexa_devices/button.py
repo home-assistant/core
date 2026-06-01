@@ -39,11 +39,8 @@ async def async_setup_entry(
 class AmazonRoutineButton(AmazonServiceEntity, ButtonEntity):
     """Button entity for Alexa routine."""
 
-    _attr_has_entity_name = True
-
     def __init__(self, coordinator: AmazonDevicesCoordinator, routine: str) -> None:
         """Initialize the routine button entity."""
-        self._coordinator = coordinator
         self._routine = routine
         super().__init__(
             coordinator,
@@ -52,4 +49,4 @@ class AmazonRoutineButton(AmazonServiceEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle button press action."""
-        await self._coordinator.api.call_routine(self._routine)
+        await self.coordinator.api.call_routine(self._routine)
