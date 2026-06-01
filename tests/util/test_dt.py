@@ -188,7 +188,8 @@ def test_get_age() -> None:
     assert dt_util.get_age(diff, precision=2) == "1 second"
 
     diff = dt_util.now() + timedelta(seconds=1)
-    pytest.raises(ValueError, dt_util.get_age, diff)
+    with pytest.raises(ValueError):
+        dt_util.get_age(diff)
 
     diff = dt_util.now() - timedelta(seconds=30)
     assert dt_util.get_age(diff) == "30 seconds"
@@ -213,7 +214,8 @@ def test_get_age() -> None:
     assert dt_util.get_age(diff, precision=2) == "1 day 14 hours"
     assert dt_util.get_age(diff, precision=3) == "1 day 14 hours 24 minutes"
     diff = dt_util.now() + timedelta(minutes=1.6 * 60 * 24)
-    pytest.raises(ValueError, dt_util.get_age, diff)
+    with pytest.raises(ValueError):
+        dt_util.get_age(diff)
 
     diff = dt_util.now() - timedelta(minutes=2 * 60 * 24)
     assert dt_util.get_age(diff) == "2 days"
@@ -240,7 +242,8 @@ def test_time_remaining() -> None:
     assert dt_util.get_time_remaining(diff) == "1 second"
 
     diff = dt_util.now() - timedelta(seconds=1)
-    pytest.raises(ValueError, dt_util.get_time_remaining, diff)
+    with pytest.raises(ValueError):
+        dt_util.get_time_remaining(diff)
 
     diff = dt_util.now() + timedelta(seconds=30)
     assert dt_util.get_time_remaining(diff) == "30 seconds"
@@ -264,7 +267,8 @@ def test_time_remaining() -> None:
     assert dt_util.get_time_remaining(diff, precision=2) == "1 day 14 hours"
     assert dt_util.get_time_remaining(diff, precision=3) == "1 day 14 hours 24 minutes"
     diff = dt_util.now() - timedelta(minutes=1.6 * 60 * 24)
-    pytest.raises(ValueError, dt_util.get_time_remaining, diff)
+    with pytest.raises(ValueError):
+        dt_util.get_time_remaining(diff)
 
     diff = dt_util.now() + timedelta(minutes=2 * 60 * 24)
     assert dt_util.get_time_remaining(diff) == "2 days"
