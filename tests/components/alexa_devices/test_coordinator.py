@@ -142,9 +142,19 @@ async def test_sync_history_state_error(
             id="cannot_connect",
         ),
         pytest.param(
-            Exception,
+            TimeoutError,
             ConfigEntryState.SETUP_RETRY,
-            id="unexpected_exception",
+            id="timeout_error",
+        ),
+        pytest.param(
+            CannotRetrieveData,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_retrieve_data",
+        ),
+        pytest.param(
+            ValueError,
+            ConfigEntryState.SETUP_RETRY,
+            id="value_error",
         ),
     ],
 )
