@@ -28,8 +28,9 @@ STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 
 # Bit 0x08 of the first security policy flags byte is the legacy "Beacons"
-# flag. Newer OpenThread Border Router versions clear it by default without
-# incrementing the active timestamp, so it is ignored when comparing datasets.
+# flag. It was removed from the Thread security policy in v1.2.1 (2022), so
+# current Thread stacks no longer set it; datasets that still carry it were
+# created by older implementations. It is ignored when comparing datasets.
 SECURITY_POLICY_BEACONS_FLAG = 0x08
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,14 +59,15 @@ def _normalize_dataset(
 ) -> dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem]:
     """Normalize a dataset for equivalence comparison.
 
-    Newer OpenThread Border Router versions report functionally equivalent
-    datasets without incrementing the active timestamp. To recognize these as
-    equivalent, ignore the fields that don't affect how Home Assistant uses the
-    dataset:
-    - WAKEUP_CHANNEL: added in OpenThread but the wake-up protocol isn't defined
-      yet, so we treat it as if it were always present.
-    - The Beacons bit in the security policy flags: newer OpenThread versions
-      clear this legacy flag by default.
+    Thread Border Routers may report functionally equivalent datasets without
+    incrementing the active timestamp. To recognize these as equivalent, ignore
+    the fields that don't affect how Home Assistant uses the dataset:
+    - WAKEUP_CHANNEL: added in newer OpenThread Border Router versions, but the
+      wake-up protocol isn't defined yet, so we treat it as if it were always
+      present.
+    - The legacy Beacons bit in the security policy flags: it was removed from
+      the Thread security policy in v1.2.1, so datasets created by older
+      implementations may still set it while current routers don't.
     """
     normalized = {
         key: value
