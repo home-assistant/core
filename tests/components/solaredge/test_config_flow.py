@@ -59,7 +59,7 @@ async def test_user_api_key(
         },
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "solaredge_site_1_2_3"
+    assert result.get("title") == SITE_ID
 
     data = result.get("data")
     assert data
@@ -95,7 +95,7 @@ async def test_user_web_login(
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "solaredge_site_1_2_3"
+    assert result.get("title") == SITE_ID
 
     data = result.get("data")
     assert data
@@ -185,7 +185,7 @@ async def test_ignored_entry_does_not_cause_error(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
+    assert result["title"] == SITE_ID
 
     data = result["data"]
     assert data
