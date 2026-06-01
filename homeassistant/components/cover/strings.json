@@ -210,21 +210,6 @@
       "name": "Window"
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "close_cover": {
       "description": "Closes a cover.",

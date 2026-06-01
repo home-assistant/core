@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud devices."""
 
-from __future__ import annotations
-
 import logging
 
 import voluptuous as vol
@@ -25,7 +23,7 @@ from .const import (
     HMIPC_NAME,
 )
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .migration import _migrate_unique_id
+from .migration import _match_legacy_class_name, _migrate_unique_id
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -156,6 +154,73 @@ async def async_migrate_entry(
                     entry.unique_id,
                 )
                 entity_registry.async_remove(entry.entity_id)
+
+        # Pre-pass: deduplicate legacy entries that would migrate to the same
+        # new unique_id, and drop legacy entries whose target is already
+        # occupied by a stable-format entry from a previously-aborted
+        # migration. Two collision shapes are handled here:
+        #
+        #   a) Two or more legacy entries share the same new target id (e.g.
+        #      HomematicipNotificationLight + HomematicipNotificationLightV2
+        #      for the same HmIP-BSL after firmware 2.0.0, or Switch +
+        #      SwitchMeasuring on a device whose capability class changed).
+        #
+        #   b) One legacy entry shares its target with a stable-format entry
+        #      that was successfully migrated on a previous run before the
+        #      run aborted on a sibling collision. async_migrate_entries
+        #      commits each update individually with no rollback, so partial
+        #      migration is the steady state for any user who already hit
+        #      this bug at least once.
+        #
+        # When deduplicating pure-legacy groups, prefer the entry whose
+        # legacy class name is longer — that is the more specific variant
+        # (V2 over V1, Measuring over plain) and the one HA has been
+        # actively binding to since the class transition.
+        legacy_by_target: dict[tuple[str, str], list[er.RegistryEntry]] = {}
+        stable_targets: set[tuple[str, str]] = set()
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        ):
+            new_id = _migrate_unique_id(entry.unique_id)
+            if new_id is None:
+                # Stable-format entry — record so we can detect (b).
+                stable_targets.add((entry.domain, entry.unique_id))
+                continue
+            legacy_by_target.setdefault((entry.domain, new_id), []).append(entry)
+
+        for key, group in legacy_by_target.items():
+            if key in stable_targets:
+                # (b): stable entry already occupies the target. Drop every
+                # legacy duplicate; the surviving stable entry stays put.
+                for dup in group:
+                    _LOGGER.warning(
+                        "Removing legacy registry entry %s (%s) — its"
+                        " migration target %s is already in use by a stable"
+                        " entry from a previously-aborted migration",
+                        dup.entity_id,
+                        dup.unique_id,
+                        key[1],
+                    )
+                    entity_registry.async_remove(dup.entity_id)
+                continue
+            if len(group) <= 1:
+                continue
+            # (a): multiple legacy entries collide on the same target.
+            group.sort(
+                key=lambda e: len(_match_legacy_class_name(e.unique_id) or ""),
+                reverse=True,
+            )
+            keeper, *duplicates = group
+            for dup in duplicates:
+                _LOGGER.warning(
+                    "Removing duplicate registry entry %s (%s) — collides"
+                    " with %s on migration to %s",
+                    dup.entity_id,
+                    dup.unique_id,
+                    keeper.entity_id,
+                    key[1],
+                )
+                entity_registry.async_remove(dup.entity_id)
 
         @callback
         def _update_unique_id(

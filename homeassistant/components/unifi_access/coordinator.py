@@ -1,7 +1,5 @@
 """Data update coordinator for the UniFi Access integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, replace
@@ -199,13 +197,25 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                     self.client.get_emergency_status(),
                 )
         except ApiAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_auth",
+            ) from err
         except ApiConnectionError as err:
-            raise UpdateFailed(f"Error connecting to API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_connection",
+            ) from err
         except ApiError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_api",
+            ) from err
         except TimeoutError as err:
-            raise UpdateFailed("Timeout communicating with UniFi Access API") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_timeout",
+            ) from err
 
         previous_lock_rules = self.data.door_lock_rules.copy() if self.data else {}
         door_lock_rules: dict[str, DoorLockRuleStatus] = {}

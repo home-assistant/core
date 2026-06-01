@@ -408,6 +408,9 @@
           "window": "Window"
         }
       },
+      "nvr_arm_profile": {
+        "name": "Alarm profile"
+      },
       "paired_camera": {
         "name": "Paired camera"
       },
@@ -569,7 +572,7 @@
       "detections_baby_cry": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_baby_cry::name%]"
       },
-      "detections_barking": {
+      "detections_bark": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_barking::name%]"
       },
       "detections_car_alarm": {
@@ -676,6 +679,12 @@
     "device_not_found": {
       "message": "No device found for device id: {device_id}"
     },
+    "entry_auth_failed": {
+      "message": "Authentication failed, please reauthenticate"
+    },
+    "event_ongoing": {
+      "message": "Event is still ongoing"
+    },
     "global_alarm_manager": {
       "message": "The alarm manager on this UniFi Protect NVR is set to Global mode and cannot be controlled locally."
     },
@@ -714,6 +723,12 @@
     },
     "stream_error": {
       "message": "Error playing audio, check the logs for more details"
+    },
+    "unexpected_identifier": {
+      "message": "Unexpected identifier: {identifier}"
+    },
+    "unknown_camera_id": {
+      "message": "Unknown camera ID: {camera_id}"
     }
   },
   "issues": {

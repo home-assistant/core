@@ -112,6 +112,18 @@ VICTRON_INVERTER_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+VICTRON_INVERTER_RS_SERVICE_INFO = BluetoothServiceInfo(
+    name="Inverter RS",
+    address="01:02:03:04:05:16",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("1000a2a2061252dad26f0b8eb39162074d140df410"),
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
 # SmartLithium (8-cell, 24V)
 
 VICTRON_SMART_LITHIUM_SERVICE_INFO = BluetoothServiceInfo(

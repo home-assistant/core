@@ -1,7 +1,5 @@
 """Tests for the lifx component."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import socket
 from typing import Any
@@ -177,6 +175,6 @@ async def test_config_entry_wrong_serial(
         assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert (
-        "Unexpected device found at 127.0.0.1; expected aa:bb:cc:dd:ee:c0, found aa:bb:cc:dd:ee:cc"
-        in caplog.text
+        "Unexpected device found at 127.0.0.1; expected"
+        " aa:bb:cc:dd:ee:c0, found aa:bb:cc:dd:ee:cc" in caplog.text
     )

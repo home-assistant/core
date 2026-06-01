@@ -1,7 +1,5 @@
 """Support for setting the level of logging for components."""
 
-from __future__ import annotations
-
 import logging
 import re
 
@@ -75,7 +73,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for key, value in log_filters.items():
             _add_log_filter(logging.getLogger(key), value)
 
-    # Combine log levels configured in configuration.yaml with log levels set by frontend
+    # Combine log levels configured in configuration.yaml
+    # with log levels set by frontend
     combined_logs = await settings.async_get_levels(hass)
     set_log_levels(hass, combined_logs)
 

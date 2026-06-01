@@ -1,7 +1,5 @@
 """Light platform support for yeelight."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import logging
 import math
@@ -597,6 +595,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         """Set the music mode on or off."""
         try:
             await self._async_set_music_mode(music_mode)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AssertionError as ex:
             _LOGGER.error("Unable to turn on music mode, consider disabling it: %s", ex)
 

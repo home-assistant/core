@@ -1,7 +1,5 @@
 """Test for Yale Smart Alarm component Init."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock, patch
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN

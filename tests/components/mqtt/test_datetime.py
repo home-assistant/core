@@ -1,7 +1,5 @@
 """The tests for the MQTT datetime platform."""
 
-from __future__ import annotations
-
 import datetime as datetime_lib
 from typing import Any
 from unittest.mock import patch
@@ -290,7 +288,11 @@ async def test_sending_mqtt_commands_and_optimistic(
     await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "2025-12-01T10:12:00+00:00", 2, False
+        "command-topic",
+        "2025-12-01T10:12:00+00:00",
+        2,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("datetime.test")
@@ -490,7 +492,10 @@ async def test_discovery_update_unchanged_update(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered update."""
-    data1 = '{ "name": "Beer", "state_topic": "state-topic", "command_topic": "command-topic"}'
+    data1 = (
+        '{ "name": "Beer", "state_topic": "state-topic",'
+        ' "command_topic": "command-topic"}'
+    )
     with patch(
         "homeassistant.components.mqtt.datetime.MqttDateTime.discovery_update"
     ) as discovery_update:
@@ -699,6 +704,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

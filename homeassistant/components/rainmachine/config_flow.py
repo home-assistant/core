@@ -1,7 +1,5 @@
 """Config flow to configure the RainMachine component."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from regenmaschine import Client
@@ -105,7 +103,7 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
         # from being shown in discovery.
         # Uses the discovered IP address as a temporary unique ID for
         # discovery de-duplication until the MAC address is available.
-        # pylint: disable-next=hass-unique-id-ip-based
+        # pylint: disable-next=home-assistant-unique-id-ip-based
         await self.async_set_unique_id(ip_address)
         self._abort_if_unique_id_configured()
         self.discovered_ip_address = ip_address

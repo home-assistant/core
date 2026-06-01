@@ -1,7 +1,5 @@
 """Interface implementation for cloud client."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime
@@ -222,8 +220,11 @@ class CloudClient(Interface):
                 )
                 if is_cloud_ice_servers_enabled:
                     if self._cloud_ice_servers_listener is None:
-                        self._cloud_ice_servers_listener = await self.cloud.ice_servers.async_register_ice_servers_listener(
-                            register_cloud_ice_server
+                        ice_servers = self.cloud.ice_servers
+                        self._cloud_ice_servers_listener = (
+                            await ice_servers.async_register_ice_servers_listener(
+                                register_cloud_ice_server
+                            )
                         )
                 elif self._cloud_ice_servers_listener:
                     self._cloud_ice_servers_listener()
@@ -374,7 +375,11 @@ class CloudClient(Interface):
             method=payload["method"],
             query_string=payload["query"],
             mock_source=DOMAIN,
-            remote=None,  # Remote will be used for the local_only check, but since this is from the cloud we want it to be None to mark it as non-local and bypass the ip parsing and remote checks
+            # Remote will be used for the local_only check, but
+            # since this is from the cloud we want it to be None
+            # to mark it as non-local and bypass the ip parsing
+            # and remote checks
+            remote=None,
         )
 
         response = await webhook.async_handle_webhook(

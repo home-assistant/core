@@ -1,7 +1,5 @@
 """MQTT (entity) component mixins and helpers."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import partial
@@ -86,6 +84,7 @@ from .const import (
     CONF_JSON_ATTRS_TEMPLATE,
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
+    CONF_MESSAGE_EXPIRY_INTERVAL,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
@@ -96,7 +95,6 @@ from .const import (
     CONF_SW_VERSION,
     CONF_TOPIC,
     CONF_VIA_DEVICE,
-    DEFAULT_ENCODING,
     DOMAIN,
     MQTT_CONNECTION_STATE,
 )
@@ -154,6 +152,8 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "unique_id",
     "unit_of_measurement",
 }
+
+PUBLISH_KWARGS = (CONF_MESSAGE_EXPIRY_INTERVAL,)
 
 
 @callback
@@ -530,7 +530,7 @@ class MqttAttributesMixin(Entity):
                         self._attributes_message_received,
                         {
                             "_attr_extra_state_attributes",
-                            "_attr_gps_accuracy",
+                            "_attr_location_accuracy",
                             "_attr_latitude",
                             "_attr_location_name",
                             "_attr_longitude",
@@ -1240,7 +1240,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Stop listening to signal and cleanup discovery data.."""
+        """Stop listening to signal and cleanup discovery data."""
         self._cleanup_discovery_on_remove()
 
     def _cleanup_discovery_on_remove(self) -> None:
@@ -1541,36 +1541,20 @@ class MqttEntity(
         await MqttDiscoveryUpdateMixin.async_will_remove_from_hass(self)
         debug_info.remove_entity_data(self.hass, self.entity_id)
 
-    async def async_publish(
-        self,
-        topic: str,
-        payload: PublishPayloadType,
-        qos: int = 0,
-        retain: bool = False,
-        encoding: str | None = DEFAULT_ENCODING,
-    ) -> None:
-        """Publish message to an MQTT topic."""
-        log_message(self.hass, self.entity_id, topic, payload, qos, retain)
-        await async_publish(
-            self.hass,
-            topic,
-            payload,
-            qos,
-            retain,
-            encoding,
-        )
-
     async def async_publish_with_config(
         self, topic: str, payload: PublishPayloadType
     ) -> None:
         """Publish payload to a topic using config."""
-        await self.async_publish(
-            topic,
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        kwargs: dict[str, Any] = {
+            key: value for key, value in self._config.items() if key in PUBLISH_KWARGS
+        }
+        qos: int = self._config[CONF_QOS]
+        retain: bool = self._config[CONF_RETAIN]
+        encoding: str = self._config[CONF_ENCODING]
+        log_message(
+            self.hass, self.entity_id, topic, payload, qos, retain, encoding, **kwargs
         )
+        await async_publish(self.hass, topic, payload, qos, retain, encoding, **kwargs)
 
     @staticmethod
     @abstractmethod

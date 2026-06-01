@@ -7,7 +7,7 @@
       'friendly_name': 'Markise Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.markise_identify',
+    'entity_id': 'button.terrasse_markise_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

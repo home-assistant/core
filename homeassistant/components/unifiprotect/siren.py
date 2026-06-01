@@ -1,7 +1,5 @@
 """UniFi Protect siren platform (Public API)."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import Any
@@ -202,7 +200,7 @@ class ProtectSiren(SirenEntity):
 
         # Set volume if requested (separate API call).
         if volume_level is not None:
-            # HA passes volume as 0.0–1.0; UFP expects 0–100.
+            # HA passes volume as 0.0-1.0; UFP expects 0-100.
             await siren.set_volume(round(volume_level * 100))
 
         await siren.play(duration=norm_duration)

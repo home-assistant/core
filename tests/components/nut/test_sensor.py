@@ -126,7 +126,7 @@ async def test_pdu_devices_with_unique_ids(
         hass,
         entity_registry,
         unique_id=f"{unique_id_base}_input.voltage",
-        device_id="sensor.ups1_input_voltage",
+        device_id="sensor.device_location_ups1_input_voltage",
         state_value="122.91",
         expected_attributes={
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
@@ -140,7 +140,7 @@ async def test_pdu_devices_with_unique_ids(
         hass,
         entity_registry,
         unique_id=f"{unique_id_base}_ambient.humidity.status",
-        device_id="sensor.ups1_ambient_humidity_status",
+        device_id="sensor.device_location_ups1_ambient_humidity_status",
         state_value="good",
         expected_attributes={
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
@@ -152,7 +152,7 @@ async def test_pdu_devices_with_unique_ids(
         hass,
         entity_registry,
         unique_id=f"{unique_id_base}_ambient.temperature.status",
-        device_id="sensor.ups1_ambient_temperature_status",
+        device_id="sensor.device_location_ups1_ambient_temperature_status",
         state_value="good",
         expected_attributes={
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
@@ -332,7 +332,7 @@ async def test_pdu_dynamic_outlets(
         hass,
         entity_registry,
         unique_id=f"{unique_id_base}_outlet.1.current",
-        device_id="sensor.ups1_outlet_a1_current",
+        device_id="sensor.device_location_ups1_outlet_a1_current",
         state_value="0",
         expected_attributes={
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
@@ -345,7 +345,7 @@ async def test_pdu_dynamic_outlets(
         hass,
         entity_registry,
         unique_id=f"{unique_id_base}_outlet.24.current",
-        device_id="sensor.ups1_outlet_a24_current",
+        device_id="sensor.device_location_ups1_outlet_a24_current",
         state_value="0.19",
         expected_attributes={
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,

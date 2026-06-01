@@ -1,7 +1,5 @@
 """Config flow to configure the Synology DSM integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from contextlib import suppress
 from ipaddress import ip_address as ip
@@ -307,7 +305,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         friendly_name = upnp_friendly_name.split("(", 1)[0].strip()
         mac_address = discovery_info.upnp[ATTR_UPNP_SERIAL]
         discovered_macs = [format_synology_mac(mac_address)]
-        # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
+        # Synology NAS can broadcast on multiple IP addresses,
+        # since they can be connected to multiple Ethernet interfaces.
         # The serial of the NAS is actually its MAC address.
         host = cast(str, parsed_url.hostname)
         return await self._async_from_discovery(host, friendly_name, discovered_macs)

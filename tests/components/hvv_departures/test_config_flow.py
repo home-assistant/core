@@ -303,7 +303,12 @@ async def test_options_flow(hass: HomeAssistant) -> None:
                 {
                     "serviceID": "HHA-U:U1_HHA-U",
                     "stationIDs": ["Master:10902"],
-                    "label": "Fuhlsbüttel Nord / Ochsenzoll / Norderstedt Mitte / Kellinghusenstraße / Ohlsdorf / Garstedt",
+                    "label": (
+                        "Fuhlsbüttel Nord / Ochsenzoll /"
+                        " Norderstedt Mitte /"
+                        " Kellinghusenstraße /"
+                        " Ohlsdorf / Garstedt"
+                    ),
                     "serviceName": "U1",
                 }
             ],

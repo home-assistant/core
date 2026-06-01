@@ -1,7 +1,5 @@
 """Conversation support for the Google Generative AI Conversation integration."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 import codecs
@@ -174,7 +172,7 @@ def _format_tool(
 def _escape_decode(value: Any) -> Any:
     """Recursively call codecs.escape_decode on all values."""
     if isinstance(value, str):
-        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")  # type: ignore[attr-defined]
+        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")
     if isinstance(value, list):
         return [_escape_decode(item) for item in value]
     if isinstance(value, dict):
@@ -370,7 +368,9 @@ async def _transform_stream(
                 thinking_content_index = 0
                 tool_call_index = 0
 
-            # According to the API docs, this would mean no candidate is returned, so we can safely throw an error here.
+            # According to the API docs, this would mean no
+            # candidate is returned, so we can safely throw
+            # an error here.
             if response.prompt_feedback or not response.candidates:
                 reason = (
                     response.prompt_feedback.block_reason_message
@@ -378,7 +378,8 @@ async def _transform_stream(
                     else "unknown"
                 )
                 raise HomeAssistantError(
-                    f"The message got blocked due to content violations, reason: {reason}"
+                    "The message got blocked due to content"
+                    f" violations, reason: {reason}"
                 )
 
             candidate = response.candidates[0]
@@ -512,9 +513,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
-        # Using search grounding allows the model to retrieve information from the web,
-        # however, it may interfere with how the model decides to use some tools, or entities
-        # for example weather entity may be disregarded if the model chooses to Google it.
+        # Using search grounding allows the model to retrieve
+        # information from the web, however, it may interfere
+        # with how the model decides to use some tools, or
+        # entities for example weather entity may be
+        # disregarded if the model chooses to Google it.
         if options.get(CONF_USE_GOOGLE_SEARCH_TOOL) is True:
             tools = tools or []
             tools.append(Tool(google_search=GoogleSearch()))
@@ -550,8 +553,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 not isinstance(chat_content, conversation.ToolResultContent)
                 and chat_content.content == ""
             ):
-                # Skipping is not possible since the number of function calls need to match the number of function responses
-                # and skipping one would mean removing the other and hence this would prevent a proper chat log
+                # Skipping is not possible since the number of
+                # function calls need to match the number of
+                # function responses and skipping one would
+                # mean removing the other and hence this would
+                # prevent a proper chat log
                 chat_content = replace(chat_content, content=" ")
 
             if tool_results:
@@ -574,17 +580,17 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
-        generateContentConfig = self.create_generate_content_config()
-        generateContentConfig.tools = tools or None
-        generateContentConfig.system_instruction = (
+        generate_content_config = self.create_generate_content_config()
+        generate_content_config.tools = tools or None
+        generate_content_config.system_instruction = (
             prompt if supports_system_instruction else None
         )
-        generateContentConfig.automatic_function_calling = (
+        generate_content_config.automatic_function_calling = (
             AutomaticFunctionCallingConfig(disable=True, maximum_remote_calls=None)
         )
         if structure:
-            generateContentConfig.response_mime_type = "application/json"
-            generateContentConfig.response_schema = _format_schema(
+            generate_content_config.response_mime_type = "application/json"
+            generate_content_config.response_schema = _format_schema(
                 convert(
                     structure,
                     custom_serializer=(
@@ -602,7 +608,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 *messages,
             ]
         chat = self._genai_client.aio.chats.create(
-            model=model_name, history=messages, config=generateContentConfig
+            model=model_name, history=messages, config=generate_content_config
         )
         user_message = chat_log.content[-1]
         assert isinstance(user_message, conversation.UserContent)
@@ -748,9 +754,11 @@ async def async_prepare_files_for_prompt(
                 config={"http_options": {"timeout": TIMEOUT_MILLIS}},
             )
 
-        if uploaded_file.state == FileState.FAILED:
+        if uploaded_file.state is FileState.FAILED:
             raise HomeAssistantError(
-                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
+                f"File `{uploaded_file.name}` processing"
+                " failed, reason:"
+                f" {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
             )
 
     prompt_parts = await hass.async_add_executor_job(upload_files)
@@ -758,7 +766,7 @@ async def async_prepare_files_for_prompt(
     tasks = [
         asyncio.create_task(wait_for_file_processing(part))
         for part in prompt_parts
-        if part.state != FileState.ACTIVE
+        if part.state is not FileState.ACTIVE
     ]
     async with asyncio.timeout(TIMEOUT_MILLIS / 1000):
         await asyncio.gather(*tasks)
