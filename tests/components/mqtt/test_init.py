@@ -5,6 +5,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import json
+import logging
 import time
 from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
@@ -28,6 +29,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    CONF_PORT,
     CONF_PROTOCOL,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
@@ -53,6 +55,7 @@ from tests.common import (
     MockEntity,
     MockEntityPlatform,
     MockMqttReasonCode,
+    async_capture_events,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -2470,3 +2473,125 @@ async def test_yaml_config_with_active_mqtt_config_entry(
     state = hass.states.get("sensor.mqtt_sensor")
     assert state is not None
     assert issue is None
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+        },
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PORT: 1883,
+        },
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "3.1.1",
+            CONF_PORT: 1883,
+        },
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "3.1",
+            CONF_PORT: 1883,
+        },
+    ],
+    ids=[
+        "entry_without_protocol_without_port",
+        "entry_without_protocol_with_port",
+        "entry_with_protocol_3.1.1",
+        "entry_with_protocol_3.1",
+    ],
+)
+async def test_mqtt_protocol_successful_migration_to_v5(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the silent MQTT protocol migration is successful."""
+    assert await async_setup_component(hass, "repairs", {})
+
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    with caplog.at_level(logging.INFO):
+        await mqtt_mock_entry()
+        assert len(events) == 0
+        assert (
+            "The MQTT protocol version was successfully updated to version 5"
+            in caplog.text
+        )
+        entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+        assert entry.data[mqtt.CONF_PROTOCOL] == mqtt.PROTOCOL_5
+
+
+@pytest.mark.parametrize("mock_v5_protocol_check", [False])
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "current_protocol"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PORT: 1883,
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1.1",
+                CONF_PORT: 1883,
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1",
+                CONF_PORT: 1883,
+            },
+            "3.1",
+        ),
+    ],
+    ids=[
+        "entry_without_protocol_without_port",
+        "entry_without_protocol_with_port",
+        "entry_with_protocol_3.1.1",
+        "entry_with_protocol_3.1",
+    ],
+)
+async def test_mqtt_protocol_failed_migration_to_v5(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    current_protocol: str,
+) -> None:
+    """Test failed silent MQTT protocol migration creates a repair issue."""
+    assert await async_setup_component(hass, "repairs", {})
+
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    await mqtt_mock_entry()
+    assert len(events) == 1
+    assert events[0].data["issue_id"] == "protocol_5_migration"
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(mqtt.DOMAIN, "protocol_5_migration")
+    assert issue is not None
+    assert issue.translation_key == "protocol_5_migration"
+    assert issue.translation_placeholders == {
+        "broker": "mock-broker",
+        "protocol": current_protocol,
+    }
+    assert (
+        "The MQTT protocol version was successfully updated to version 5"
+        not in caplog.text
+    )
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert entry.data.get(mqtt.CONF_PROTOCOL, mqtt.PROTOCOL_311) == current_protocol

@@ -530,7 +530,7 @@ class MqttAttributesMixin(Entity):
                         self._attributes_message_received,
                         {
                             "_attr_extra_state_attributes",
-                            "_attr_gps_accuracy",
+                            "_attr_location_accuracy",
                             "_attr_latitude",
                             "_attr_location_name",
                             "_attr_longitude",
@@ -1240,7 +1240,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Stop listening to signal and cleanup discovery data.."""
+        """Stop listening to signal and cleanup discovery data."""
         self._cleanup_discovery_on_remove()
 
     def _cleanup_discovery_on_remove(self) -> None:
