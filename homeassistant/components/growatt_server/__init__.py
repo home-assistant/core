@@ -35,7 +35,11 @@ from requests import RequestException
 
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -263,6 +267,10 @@ def get_device_list_v1(
         if e.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
             raise ConfigEntryAuthFailed(
                 f"Authentication failed for Growatt API: {e.error_msg or str(e)}"
+            ) from e
+        if e.error_code == GrowattV1ApiErrorCode.RATE_LIMITED:
+            raise ConfigEntryNotReady(
+                f"Growatt API rate limited, will retry: {e.error_msg or str(e)}"
             ) from e
         raise ConfigEntryError(
             f"API error during device list: {e.error_msg or str(e)}"

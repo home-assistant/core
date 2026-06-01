@@ -79,6 +79,14 @@ async def test_device_info(
             json.decoder.JSONDecodeError("Invalid JSON", "", 0),
             ConfigEntryState.SETUP_ERROR,
         ),
+        (
+            growattServer.GrowattV1ApiError(
+                message="Rate limited",
+                error_code=GrowattV1ApiErrorCode.RATE_LIMITED,
+                error_msg="Access frequency limit",
+            ),
+            ConfigEntryState.SETUP_RETRY,
+        ),
     ],
 )
 async def test_setup_error_on_api_failure(
