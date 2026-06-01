@@ -520,7 +520,7 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
 
     # Perform a partial update on the existing entity.
     updated_item = dataclasses.replace(found, **info)
-    await entity.async_update_todo_item(updated_item)
+    await entity.async_update_todo_item(item=updated_item)
 
 
 async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
