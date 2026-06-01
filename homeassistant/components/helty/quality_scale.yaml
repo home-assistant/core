@@ -78,7 +78,7 @@ rules:
   icon-translations:
     status: exempt
     comment: The fan entity uses the default fan icon.
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: This integration has no repairable issues to surface.

@@ -15,8 +15,8 @@ class HeltyEntity(CoordinatorEntity[HeltyDataUpdateCoordinator]):
     def __init__(self, coordinator: HeltyDataUpdateCoordinator) -> None:
         """Initialize the entity and its shared device info."""
         super().__init__(coordinator)
-        entry = coordinator.config_entry
-        self._device_id = entry.unique_id or entry.entry_id
+        # The unit exposes no serial/MAC, so the config entry id identifies it.
+        self._device_id = coordinator.config_entry.entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             name=coordinator.data.name,

@@ -49,6 +49,7 @@ class HeltyFan(HeltyEntity, FanEntity):
     """The ventilation unit's fan, the device's primary feature."""
 
     _attr_name = None
+    _attr_speed_count = len(ORDERED_SPEEDS)
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.PRESET_MODE
@@ -59,7 +60,7 @@ class HeltyFan(HeltyEntity, FanEntity):
     def __init__(self, coordinator: HeltyDataUpdateCoordinator) -> None:
         """Initialize the fan."""
         super().__init__(coordinator)
-        self._attr_unique_id = self._device_id
+        self._attr_unique_id = f"{self._device_id}_fan"
         self._attr_preset_modes = list(PRESET_TO_MODE)
 
     @property
@@ -70,11 +71,6 @@ class HeltyFan(HeltyEntity, FanEntity):
     def is_on(self) -> bool:
         """Return whether the fan is running."""
         return self._mode is not FanMode.OFF
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of discrete speeds."""
-        return len(ORDERED_SPEEDS)
 
     @property
     def percentage(self) -> int | None:

@@ -7,13 +7,12 @@ from pyhelty import FanMode, HeltyData
 import pytest
 
 from homeassistant.components.helty.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
 DEVICE_NAME = "VMC Soggiorno"
 HOST = "192.168.20.232"
-PORT = 5001
 
 
 def make_data(fan_mode: FanMode = FanMode.LOW) -> HeltyData:
@@ -64,10 +63,9 @@ def mock_helty_client() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a configured Helty entry, unique_id = device name."""
+    """Return a configured Helty entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=DEVICE_NAME,
-        unique_id=DEVICE_NAME,
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        data={CONF_HOST: HOST},
     )

@@ -2,7 +2,7 @@
 
 from pyhelty import HeltyClient
 
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import HeltyConfigEntry, HeltyDataUpdateCoordinator
@@ -12,7 +12,7 @@ PLATFORMS: list[Platform] = [Platform.FAN]
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeltyConfigEntry) -> bool:
     """Set up Helty Flow from a config entry."""
-    client = HeltyClient(entry.data[CONF_HOST], entry.data[CONF_PORT])
+    client = HeltyClient(entry.data[CONF_HOST])
     coordinator = HeltyDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
