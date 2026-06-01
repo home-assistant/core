@@ -212,15 +212,18 @@ class SecuritySystem(HomeAccessory):
             return
         if hass_state is not None:
             hass_state = AlarmControlPanelState(hass_state)
+        if not hass_state:
+            return
+        current_state = HASS_TO_HOMEKIT_CURRENT.get(hass_state)
+        target_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
+        if current_state is None and target_state is None:
+            return
         current_supported, target_supported = _supported_states(
             new_state.attributes.get(
                 ATTR_SUPPORTED_FEATURES, DEFAULT_SUPPORTED_FEATURES
             )
         )
-        if (
-            hass_state
-            and (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None
-        ):
+        if current_state is not None:
             if not self._set_or_reload(
                 self.char_current_state, current_state, current_supported
             ):
@@ -231,8 +234,5 @@ class SecuritySystem(HomeAccessory):
                 hass_state,
                 current_state,
             )
-        if (
-            hass_state
-            and (target_state := HASS_TO_HOMEKIT_TARGET.get(hass_state)) is not None
-        ):
+        if target_state is not None:
             self._set_or_reload(self.char_target_state, target_state, target_supported)
