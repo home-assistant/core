@@ -320,7 +320,7 @@ class AFSAPIDevice(MediaPlayerEntity):
     @fs_command_exception_wrap
     async def async_media_play(self) -> None:
         """Send play command."""
-        if (await self.fs_device.get_play_state()) == PlayState.STOPPED:
+        if (await self.fs_device.get_play_status()) == PlayState.STOPPED:
             # The 'play' command only seems to work when the current stream is paused.
             # We need to send a 'stop' command instead to resume a stopped stream.
             await self.fs_device.stop()
