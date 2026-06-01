@@ -18,6 +18,9 @@ from pylint_home_assistant.checkers.greek_micro_char import (
 )
 from pylint_home_assistant.checkers.imports import HassImportsFormatChecker
 from pylint_home_assistant.checkers.runtime_data import HassEnforceRuntimeDataChecker
+from pylint_home_assistant.checkers.runtime_data_type import (
+    HassEnforceRuntimeDataTypeChecker,
+)
 from pylint_home_assistant.checkers.sorted_platforms import (
     HassEnforceSortedPlatformsChecker,
 )
@@ -121,6 +124,14 @@ def enforce_runtime_data_checker_fixture(linter: UnittestLinter) -> BaseChecker:
     enforce_runtime_data_checker = HassEnforceRuntimeDataChecker(linter)
     enforce_runtime_data_checker.module = "homeassistant.components.pylint_test"
     return enforce_runtime_data_checker
+
+
+@pytest.fixture(name="enforce_runtime_data_type_checker")
+def enforce_runtime_data_type_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a runtime_data type checker."""
+    checker = HassEnforceRuntimeDataTypeChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
 
 
 @pytest.fixture(name="enforce_greek_micro_char_checker")
