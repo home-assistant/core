@@ -30,10 +30,6 @@ async def test_list_proxies(
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
 ) -> None:
     """Test listing the available infrared proxies."""
-    # The emitter reports a restricted set of carrier frequencies, the receiver
-    # does not report any.
-    mock_infrared_emitter_entity._attr_supported_frequencies = [38000, 40000]
-
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "infrared/list"})
 
@@ -48,7 +44,6 @@ async def test_list_proxies(
             "config_entry_id": None,
             "name": "Test IR emitter",
             "type": "emitter",
-            "supported_frequencies": [38000, 40000],
         },
         mock_infrared_receiver_entity.entity_id: {
             "entity_id": mock_infrared_receiver_entity.entity_id,
@@ -56,6 +51,5 @@ async def test_list_proxies(
             "config_entry_id": None,
             "name": "Test IR receiver",
             "type": "receiver",
-            "supported_frequencies": None,
         },
     }

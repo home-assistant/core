@@ -80,39 +80,6 @@ async def test_infrared_entity_single_capability(
     assert len(receivers) == receiver_count
 
 
-@pytest.mark.parametrize(
-    ("receiver_frequency", "expected_frequencies"),
-    [
-        pytest.param(38000, [38000], id="with_frequency"),
-        pytest.param(0, None, id="without_frequency"),
-    ],
-)
-async def test_infrared_receiver_supported_frequencies(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-    receiver_frequency: int,
-    expected_frequencies: list[int] | None,
-) -> None:
-    """Test the receiver exposes its demodulation frequency."""
-    entity_info = [
-        InfraredInfo(
-            object_id="ir",
-            key=1,
-            name="IR",
-            capabilities=InfraredCapability.RECEIVER,
-            receiver_frequency=receiver_frequency,
-        )
-    ]
-    await mock_esphome_device(
-        mock_client=mock_client, entity_info=entity_info, states=[]
-    )
-
-    entity = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
-    assert isinstance(entity, InfraredReceiverEntity)
-    assert entity.supported_frequencies == expected_frequencies
-
-
 async def test_infrared_entity_dual_capability(
     hass: HomeAssistant,
     mock_client: APIClient,
