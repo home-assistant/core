@@ -1,6 +1,7 @@
 """Tests for the Overkiz climate platform."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -68,12 +69,16 @@ async def test_valve_hvac_action_none_state(
 
 
 @pytest.mark.parametrize(
-    "event_name",
+    ("event_name", "device_states"),
     [
-        EventName.DEVICE_AVAILABLE,
-        EventName.DEVICE_UNAVAILABLE,
-        EventName.DEVICE_STATE_CHANGED,
-        EventName.DEVICE_REMOVED,
+        pytest.param(EventName.DEVICE_AVAILABLE, None, id="available"),
+        pytest.param(EventName.DEVICE_UNAVAILABLE, None, id="unavailable"),
+        pytest.param(
+            EventName.DEVICE_STATE_CHANGED,
+            [{"name": "core:OnOffState", "type": 3, "value": "on"}],
+            id="state_changed",
+        ),
+        pytest.param(EventName.DEVICE_REMOVED, None, id="removed"),
     ],
 )
 async def test_events_for_unknown_device_url(
@@ -82,6 +87,7 @@ async def test_events_for_unknown_device_url(
     mock_client: MockOverkizClient,
     setup_overkiz_integration: SetupOverkizIntegration,
     event_name: EventName,
+    device_states: list[dict[str, Any]] | None,
 ) -> None:
     """Test that events for unknown device URLs don't crash the coordinator."""
     await setup_overkiz_integration(fixture=VALVE.fixture)
@@ -94,7 +100,7 @@ async def test_events_for_unknown_device_url(
             build_event(
                 event_name,
                 device_url="zigbee://1234-5678-1698/65535",
-                device_states=[{"name": "core:OnOffState", "type": 3, "value": "on"}],
+                device_states=device_states,
             )
         ],
     )
