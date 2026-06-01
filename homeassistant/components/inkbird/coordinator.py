@@ -7,9 +7,11 @@ from typing import Any
 from inkbird_ble import INKBIRDBluetoothDeviceData, SensorUpdate
 
 from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
+    async_address_reachability_diagnostics,
     async_ble_device_from_address,
     async_last_service_info,
 )
@@ -26,6 +28,11 @@ from .const import CONF_DEVICE_DATA, CONF_DEVICE_TYPE, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 FALLBACK_POLL_INTERVAL = timedelta(seconds=180)
+
+# IBS-TH2 broadcasts every ~20-30s and only carries sensor data in the scan
+# response, so the default 10s active window misses the device most cycles.
+# 25s covers one full broadcast interval with margin to absorb jitter.
+ACTIVE_SCAN_DURATION = 25.0
 
 
 class INKBIRDActiveBluetoothProcessorCoordinator(
@@ -57,6 +64,7 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             needs_poll_method=self._async_needs_poll,
             poll_method=self._async_poll_data,
             connectable=False,  # Polling only happens if active scanning is disabled
+            scan_duration=ACTIVE_SCAN_DURATION,
         )
 
     async def async_init(self) -> None:
@@ -78,7 +86,14 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="no_advertisement",
-                translation_placeholders={"address": self.address},
+                translation_placeholders={
+                    "address": self.address,
+                    "reason": async_address_reachability_diagnostics(
+                        self.hass,
+                        self.address.upper(),
+                        BluetoothReachabilityIntent.ACTIVE_ADVERTISEMENT,
+                    ),
+                },
             )
         await self._data.async_start(service_info, service_info.device)
         self._entry.async_on_unload(self._data.async_stop)
