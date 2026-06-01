@@ -94,12 +94,7 @@ class DomainConstantChecker(BaseChecker):
                     "DOMAIN",
                     "domain",
                 } or node_name.endswith(("_DOMAIN", "_domain")):
-                    self.add_message(
-                        "home-assistant-domain-argument",
-                        node=arg_node,
-                        args=(arg_node.as_string(), call_node.func.as_string()),
-                    )
-                return
+                    return
             case nodes.Const():
                 if isinstance(arg_node.value, str):
                     return
