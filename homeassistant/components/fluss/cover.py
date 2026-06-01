@@ -76,7 +76,7 @@ class FlussCover(FlussEntity, CoverEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="command_failed"
             ) from err
-        await self.coordinator.async_request_refresh_after_command()
+        await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -86,4 +86,4 @@ class FlussCover(FlussEntity, CoverEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="command_failed"
             ) from err
-        await self.coordinator.async_request_refresh_after_command()
+        await self.coordinator.async_request_refresh()

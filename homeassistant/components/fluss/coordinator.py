@@ -36,23 +36,13 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             name=f"Fluss+ ({slugify(api_key[:8])})",
             config_entry=config_entry,
             update_interval=UPDATE_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass,
+                LOGGER,
+                cooldown=COMMAND_REFRESH_COOLDOWN,
+                immediate=False,
+            ),
         )
-        self._command_refresh_debouncer: Debouncer[Any] = Debouncer(
-            hass,
-            LOGGER,
-            cooldown=COMMAND_REFRESH_COOLDOWN,
-            immediate=False,
-            function=self.async_refresh,
-        )
-
-    async def async_request_refresh_after_command(self) -> None:
-        """Schedule a debounced refresh after a device command."""
-        await self._command_refresh_debouncer.async_call()
-
-    async def async_shutdown(self) -> None:
-        """Cancel pending refreshes, including any debounced command refresh."""
-        self._command_refresh_debouncer.async_shutdown()
-        await super().async_shutdown()
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch Fluss+ devices and merge per-device status."""
