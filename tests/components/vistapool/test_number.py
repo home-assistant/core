@@ -113,6 +113,25 @@ async def test_number_electrolysis_max_fallback(
     assert state.attributes["max"] == 50.0
 
 
+async def test_number_hydrolysis_setpoint_branch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the hydrolysis (non-electrolysis) branch creates the right entity."""
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasHidro": 1, "version": 1},
+        "hidro": {"is_electrolysis": False, "level": 200},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("number.my_pool_hydrolysis_setpoint") is not None
+    assert hass.states.get("number.my_pool_electrolysis_setpoint") is None
+
+
 async def test_number_heating_requires_has_heat(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

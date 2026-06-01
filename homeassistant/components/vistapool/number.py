@@ -94,19 +94,6 @@ NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_path="filtration.intel.temp",
     ),
-    VistapoolNumberEntityDescription(
-        key="electrolysis_setpoint",
-        translation_key="electrolysis_setpoint",
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=0,
-        native_max_value=50.0,
-        native_step=0.1,
-        native_unit_of_measurement="g/h",
-        value_path="hidro.level",
-        scale=10,
-        exists_path=PATH_HASHIDRO,
-        max_value_fn=_max_electrolysis,
-    ),
     *(
         VistapoolNumberEntityDescription(
             key=key,
@@ -165,6 +152,30 @@ async def async_setup_entry(
                 if not all(coordinator.get_value(path) for path in required):
                     continue
             entities.append(VistapoolNumber(coordinator, description))
+
+        if coordinator.get_value(PATH_HASHIDRO):
+            key = (
+                "electrolysis_setpoint"
+                if coordinator.get_value("hidro.is_electrolysis")
+                else "hydrolysis_setpoint"
+            )
+            entities.append(
+                VistapoolNumber(
+                    coordinator,
+                    VistapoolNumberEntityDescription(
+                        key=key,
+                        translation_key=key,
+                        entity_category=EntityCategory.CONFIG,
+                        native_min_value=0,
+                        native_max_value=50.0,
+                        native_step=0.1,
+                        native_unit_of_measurement="g/h",
+                        value_path="hidro.level",
+                        scale=10,
+                        max_value_fn=_max_electrolysis,
+                    ),
+                )
+            )
 
     async_add_entities(entities)
 
