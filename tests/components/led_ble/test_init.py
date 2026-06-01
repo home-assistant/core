@@ -27,7 +27,8 @@ async def test_setup_retries_when_device_not_found(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.bluetooth.async_address_reachability_diagnostics",
+        "homeassistant.components.led_ble.bluetooth."
+        "async_address_reachability_diagnostics",
         return_value="mock reachability reason",
     ):
         await hass.config_entries.async_setup(entry.entry_id)
