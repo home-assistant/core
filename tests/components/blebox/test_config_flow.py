@@ -358,13 +358,20 @@ async def test_reconfigure_flow_works(hass: HomeAssistant, product_class_mock) -
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {config_flow.CONF_HOST: "172.2.3.5", config_flow.CONF_PORT: 80},
+            {
+                config_flow.CONF_HOST: "172.2.3.5",
+                config_flow.CONF_PORT: 80,
+                config_flow.CONF_USERNAME: "admin",
+                config_flow.CONF_PASSWORD: "secret",
+            },
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[config_flow.CONF_HOST] == "172.2.3.5"
     assert entry.data[config_flow.CONF_PORT] == 80
+    assert entry.data[config_flow.CONF_USERNAME] == "admin"
+    assert entry.data[config_flow.CONF_PASSWORD] == "secret"
 
 
 async def test_reconfigure_flow_unique_id_mismatch(
