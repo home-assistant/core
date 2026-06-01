@@ -14,6 +14,7 @@ from inkbird_ble import (
     Units,
 )
 from inkbird_ble.parser import Model
+import pytest
 from sensor_state_data import SensorDeviceClass
 
 from homeassistant.components.bluetooth import async_last_service_info
@@ -210,7 +211,9 @@ async def test_fallback_poll_queries_latest_service_info(hass: HomeAssistant) ->
     await hass.async_block_till_done()
 
 
-async def test_notify_sensor_no_advertisement(hass: HomeAssistant) -> None:
+async def test_notify_sensor_no_advertisement(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting up a notify sensor that has no advertisement."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -219,10 +222,18 @@ async def test_notify_sensor_no_advertisement(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.inkbird.coordinator."
+        "async_address_reachability_diagnostics",
+        return_value="mock reachability reason",
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        "62:00:A1:3C:AE:7B is not advertising: mock reachability reason" in caplog.text
+    )
 
 
 async def test_notify_sensor(hass: HomeAssistant) -> None:
