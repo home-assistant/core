@@ -152,6 +152,7 @@ async def _setup_media_player_platform(
     """Set up integration with only the media player platform enabled."""
     assert await async_setup_component(hass, "labs", {})
     await async_update_preview_feature(hass, DOMAIN, "alexa_media", True)
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]

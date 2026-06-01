@@ -112,10 +112,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
             else:
                 _async_set_media_player_registry(enabled=False)
                 if media_player_loaded:
-                    await hass.config_entries.async_unload_platforms(
+                    if await hass.config_entries.async_unload_platforms(
                         entry, [Platform.MEDIA_PLAYER]
-                    )
-                    media_player_loaded = False
+                    ):
+                        media_player_loaded = False
+                    else:
+                        _LOGGER.warning(
+                            "Failed to unload media player platform for %s",
+                            entry.entry_id,
+                        )
 
     entry.async_on_unload(
         async_subscribe_preview_feature(

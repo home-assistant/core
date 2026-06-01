@@ -264,6 +264,7 @@ async def test_labs_enabled_before_setup_loads_media_player_platform(
     """Test media player platform is loaded on setup when labs feature is already enabled."""
     assert await async_setup_component(hass, "labs", {})
     await async_update_preview_feature(hass, DOMAIN, "alexa_media", True)
+    await hass.async_block_till_done()
 
     await setup_integration(hass, mock_config_entry)
 
