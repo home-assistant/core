@@ -14,7 +14,7 @@ description: Reviews code changes and provides constructive feedback. Should be 
 - Documentation updates if needed
 
 ## Verification:
-- After the review, run parallel subagents for each finding to double check it.
+- After the review, run parallel subagents for each finding to double-check it.
 - Spawn up to a maximum of 10 parallel subagents at a time.
 - Gather the results from the subagents and summarize them in the final review comments.
 
