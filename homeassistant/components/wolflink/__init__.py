@@ -9,7 +9,7 @@ from wolf_comm.wolf_client import FetchFailed, WolfClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
@@ -48,6 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> 
     selected_ids: list[int] | None = entry.data.get(DEVICE_ID)
     if selected_ids:
         devices = [d for d in devices if d.id in selected_ids]
+        if not devices:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="selected_devices_missing",
+            )
 
     device_registry = dr.async_get(hass)
 
@@ -121,7 +126,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         username = entry.data[CONF_USERNAME]
         target_unique_id = username.lower()
         old_device_id = entry.data.get(DEVICE_ID)
-        new_id = int(old_device_id) if old_device_id else None
+
+        # Normalize the legacy device id into a list[int]. v1 entries stored
+        # a scalar (int in v1.1, str in v1.2 after the int→str migration), but
+        # tolerate a list shape too in case of partial or manual edits.
+        new_ids: list[int] = []
+        if isinstance(old_device_id, list):
+            new_ids = [int(did) for did in old_device_id if did is not None]
+        elif old_device_id is not None:
+            new_ids = [int(old_device_id)]
 
         # If a sibling entry for the same account already exists (either
         # already migrated, or migrated earlier in this startup), merge into
@@ -136,11 +149,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         if sibling is not None:
             existing_ids: list[int] = sibling.data.get(DEVICE_ID, [])
-            merged_ids = list(
-                dict.fromkeys(
-                    [*existing_ids, new_id] if new_id is not None else existing_ids
-                )
-            )
+            merged_ids = list(dict.fromkeys([*existing_ids, *new_ids]))
             hass.config_entries.async_update_entry(
                 sibling,
                 data={**sibling.data, DEVICE_ID: merged_ids},
@@ -154,7 +163,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_data = {
             CONF_USERNAME: username,
             CONF_PASSWORD: entry.data[CONF_PASSWORD],
-            DEVICE_ID: [new_id] if new_id is not None else [],
+            DEVICE_ID: new_ids,
         }
         hass.config_entries.async_update_entry(
             entry,

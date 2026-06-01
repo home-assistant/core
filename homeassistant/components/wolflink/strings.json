@@ -120,5 +120,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "selected_devices_missing": {
+      "message": "The selected devices are no longer available on this account. Reconfigure the integration to update your selection."
+    }
   }
 }

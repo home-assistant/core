@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from httpx import RequestError
+import pytest
 
 from homeassistant.components.wolflink.const import DEVICE_ID, DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
@@ -144,6 +145,41 @@ async def test_migration_merges_duplicate_v1_entries(hass: HomeAssistant) -> Non
     assert sorted(surviving.data[DEVICE_ID]) == [1234, 5678]
 
 
+@pytest.mark.parametrize(
+    "stored_ids",
+    [
+        pytest.param([1234, 5678], id="list_of_int"),
+        pytest.param(["1234", "5678"], id="list_of_str"),
+    ],
+)
+async def test_migration_v1_with_list_device_id(
+    hass: HomeAssistant, stored_ids: list[int] | list[str]
+) -> None:
+    """Test v1 migration tolerates DEVICE_ID stored as a list of int or str."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234",
+        data={**LEGACY_CONFIG, "device_id": stored_ids},
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.WolfClient",
+        autospec=True,
+    ) as wolf_mock:
+        wolf_mock.return_value.fetch_system_list.side_effect = RequestError(
+            "Unable to connect"
+        )
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 1
+    assert config_entry.unique_id == "test-username"
+    assert sorted(config_entry.data[DEVICE_ID]) == [1234, 5678]
+
+
 async def test_setup_no_devices_on_account(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -198,3 +234,26 @@ async def test_setup_fetch_parameters_fails(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_selected_devices_missing(
+    hass: HomeAssistant, mock_wolflink: MagicMock
+) -> None:
+    """Test setup fails when none of the selected devices exist on the account."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            DEVICE_ID: [9999],
+        },
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
