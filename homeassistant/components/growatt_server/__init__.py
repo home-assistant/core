@@ -10,8 +10,8 @@ Classic API (username/password):
 
 Open API V1 (API token):
 - Stateless — no login call, token is sent as a Bearer header on every request.
-- Auth failure is signalled by raising GrowattV1ApiError with error_code=10011
-  (GrowattV1ApiErrorCode.NO_PRIVILEGE). The library NEVER returns a failure silently;
+- Auth failure is signalled by raising GrowattV1ApiError with
+  error_code=GrowattV1ApiErrorCode.NO_PRIVILEGE. The library NEVER returns a failure silently;
   any non-zero error_code raises an exception via _process_response().
 - Because the library always raises on error, return-value validation after a
   successful V1 API call is unnecessary — if it returned, the token was valid.
