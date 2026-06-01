@@ -97,6 +97,14 @@ MOCK_FB_SERVICES: dict[str, dict[str, Any]] = {
     },
     "UserInterface1": {
         "GetInfo": {},
+        "X_AVM-DE_GetInfo": {
+            "NewX_AVM-DE_AutoUpdateMode": "notify",
+            "NewX_AVM-DE_UpdateTime": "2026-05-17T18:54:37+02:00",
+            "NewX_AVM-DE_LastFwVersion": "256.08.20,124233",
+            "NewX_AVM-DE_LastInfoUrl": "http://download.avm.de/fritzbox/fritzbox-7530-ax/deutschland/fritz.os/info_en.txt",
+            "NewX_AVM-DE_CurrentFwVersion": "256.08.25",
+            "NewX_AVM-DE_UpdateSuccessful": "succeeded",
+        },
     },
     "WANCommonIFC1": {
         "GetCommonLinkProperties": {
