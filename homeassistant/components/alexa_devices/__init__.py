@@ -114,12 +114,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
                         entry, [Platform.MEDIA_PLAYER]
                     )
                     media_player_loaded = True
-            elif media_player_loaded:
+            else:
                 _async_set_media_player_registry(enabled=False)
-                await hass.config_entries.async_unload_platforms(
-                    entry, [Platform.MEDIA_PLAYER]
-                )
-                media_player_loaded = False
+                if media_player_loaded:
+                    await hass.config_entries.async_unload_platforms(
+                        entry, [Platform.MEDIA_PLAYER]
+                    )
+                    media_player_loaded = False
 
     entry.async_on_unload(
         async_subscribe_preview_feature(
