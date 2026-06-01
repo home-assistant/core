@@ -562,8 +562,8 @@ async def _async_remove_completed_items(entity: TodoListEntity, _: ServiceCall) 
 async def _async_update_todo_list(entity: TodoListEntity, call: ServiceCall) -> None:
     """Update all items in the To-do list."""
     info = {}
-    if status := call.data.get("status"):
+    if status := call.data.get(ATTR_STATUS):
         info["status"] = TodoItemStatus(status)
 
-    if info:
-        await entity.async_update_todo_list(info=info)
+    # At least 1 key is guaranteed by schema
+    await entity.async_update_todo_list(info=info)
