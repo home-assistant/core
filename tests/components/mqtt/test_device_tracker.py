@@ -570,8 +570,8 @@ async def test_setting_device_tracker_location_via_in_zones_message(
         '{"in_zones": "home","source_type": "router"}',
     )
     assert (
-        "Extra state attributes received at None and template "
-        "attributes-topic contains invalid in_zones attribute" in caplog.text
+        "Extra state attributes received at attributes-topic and template "
+        "None contains invalid in_zones attribute" in caplog.text
     )
     # Test in_zones with known `home` object name
     async_fire_mqtt_message(
