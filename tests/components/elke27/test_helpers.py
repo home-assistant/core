@@ -1,13 +1,13 @@
 """Tests for Elke27 entity helpers."""
 
-from types import SimpleNamespace
 from unittest.mock import patch
 
-from elke27_lib import PanelInfo, PanelSnapshot, TableInfo
+from elke27_lib import AreaState, PanelInfo, PanelSnapshot, TableInfo
 
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from homeassistant.components.elke27.helpers import (
     build_unique_id,
+    device_info_for_area,
     device_info_for_entry,
     get_panel_field,
     sanitize_name,
@@ -56,12 +56,7 @@ async def test_get_panel_field_handles_typed_snapshot() -> None:
     )
 
     assert get_panel_field(snapshot, "Panel A", "name") == "Panel A"
-    snapshot_with_name = _snapshot(SimpleNamespace(name="Pânel Étage"))
-    assert get_panel_field(snapshot_with_name, None, "name") == "Pânel Étage"
-    assert get_panel_field(snapshot_with_name, None, "mac") is None
-    assert get_panel_field(snapshot_with_name, None, "serial") is None
-    assert get_panel_field(snapshot_with_name, None, "model") is None
-    assert get_panel_field(snapshot_with_name, None, "firmware") is None
+    assert get_panel_field(snapshot, None, "name") is None
     assert get_panel_field(snapshot, None, "mac") == "aa:bb:cc:dd:ee:ff"
     assert get_panel_field(snapshot, None, "serial") == "1234"
     assert get_panel_field(snapshot, None, "model") == "E27"
@@ -138,6 +133,24 @@ async def test_device_info_ignores_invalid_mac(hass: HomeAssistant) -> None:
         device_info = device_info_for_entry(hub, coordinator, entry)
 
     assert device_info["connections"] == set()
+
+
+async def test_device_info_for_area(hass: HomeAssistant) -> None:
+    """Verify area device info links the area to the panel device."""
+    entry = MockConfigEntry(
+        domain="elke27",
+        data={CONF_HOST: "192.168.1.10", CONF_CLIENT_ID: "entryclientid"},
+    )
+    entry.add_to_hass(hass)
+    area = AreaState(area_id=1, name="Area 1")
+
+    device_info = device_info_for_area(entry, area)
+
+    assert device_info == {
+        "identifiers": {("elke27", "entryclientid:area:1")},
+        "name": "Area 1",
+        "via_device": ("elke27", "entryclientid"),
+    }
 
 
 def test_build_unique_id() -> None:

@@ -18,7 +18,9 @@ from elke27_lib.events import (
     TableCsmChanged,
     ZoneStatusUpdated,
 )
+from elke27_lib.errors import Elke27Error, Elke27TimeoutError
 from elke27_lib.types import CsmSnapshot
+import pytest
 
 from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import (
@@ -26,6 +28,8 @@ from homeassistant.components.elke27.coordinator import (
     _normalize_domains,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -70,11 +74,23 @@ class _FakeHub:
             self._subscribe_typed(event)
 
 
+def _coordinator(
+    hass: HomeAssistant,
+    hub: _FakeHub,
+    entry: MockConfigEntry,
+    *,
+    debounce_seconds: float = 0,
+) -> Elke27DataUpdateCoordinator:
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    coordinator._debounce_seconds = debounce_seconds
+    return coordinator
+
+
 async def test_coordinator_subscribes_and_sets_snapshot(hass: HomeAssistant) -> None:
     """Verify the coordinator subscribes and stores the initial snapshot."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
 
     await coordinator.async_start()
 
@@ -91,7 +107,7 @@ async def test_coordinator_uses_empty_snapshot_when_snapshot_missing(
     """Verify the coordinator uses an empty snapshot when the hub has none."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(None)
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
 
     await coordinator.async_start()
 
@@ -104,7 +120,7 @@ async def test_coordinator_start_suppresses_unsubscribe_error(
     """Verify start suppresses errors from a previous unsubscribe callback."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
 
     def _raise() -> None:
         raise RuntimeError("unsubscribe failed")
@@ -120,7 +136,7 @@ async def test_domain_csm_change_refreshes_domain(hass: HomeAssistant) -> None:
     """Verify DomainCsmChanged events refresh the domain and update snapshot."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
 
     await coordinator.async_start()
     hub.emit(
@@ -144,7 +160,7 @@ async def test_csm_snapshot_event_updates_data(hass: HomeAssistant) -> None:
     """Verify CSM snapshot updates replace coordinator data."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0.05)
+    coordinator = _coordinator(hass, hub, entry, debounce_seconds=0.05)
 
     await coordinator.async_start()
     updated_snapshot = SimpleNamespace(version=2)
@@ -175,7 +191,7 @@ async def test_csm_change_event_coalesces_refresh(hass: HomeAssistant) -> None:
     """Verify CSM change events are debounced and coalesced."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
 
     await coordinator.async_start()
     hub.emit(
@@ -211,7 +227,7 @@ async def test_async_stop_cancels_debounce(hass: HomeAssistant) -> None:
     """Verify async_stop cancels debounce task."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0.1)
+    coordinator = _coordinator(hass, hub, entry, debounce_seconds=0.1)
     await coordinator.async_start()
     coordinator._debounce_task = asyncio.create_task(asyncio.sleep(0.2))
     await coordinator.async_stop()
@@ -224,7 +240,7 @@ async def test_async_stop_suppresses_debounce_task_error(
     """Verify async_stop suppresses already failed debounce tasks."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
 
     async def _raise() -> None:
         raise RuntimeError("debounce failed")
@@ -241,7 +257,7 @@ async def test_async_stop_suppresses_unsubscribe_error(hass: HomeAssistant) -> N
     """Verify stop suppresses unsubscribe callback errors."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
 
     def _raise() -> None:
         raise RuntimeError("unsubscribe failed")
@@ -257,9 +273,43 @@ async def test_async_refresh_now_updates_snapshot(hass: HomeAssistant) -> None:
     """Verify async_refresh_now refreshes snapshot."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
     await coordinator.async_refresh_now()
     assert hub.refresh_csm_calls == 1
+
+
+async def test_update_data_maps_transient_errors_to_update_failed(
+    hass: HomeAssistant,
+) -> None:
+    """Verify transient refresh errors are retryable update failures."""
+
+    class ErrorHub(_FakeHub):
+        async def refresh_csm(self) -> None:
+            raise Elke27TimeoutError()
+
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    hub = ErrorHub(SimpleNamespace(version=1))
+    coordinator = _coordinator(hass, hub, entry)
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+
+async def test_update_data_maps_permanent_errors_to_config_entry_error(
+    hass: HomeAssistant,
+) -> None:
+    """Verify permanent refresh errors fail setup instead of retrying."""
+
+    class ErrorHub(_FakeHub):
+        async def refresh_csm(self) -> None:
+            raise Elke27Error("refresh failed", code=1, is_transient=False)
+
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    hub = ErrorHub(SimpleNamespace(version=1))
+    coordinator = _coordinator(hass, hub, entry)
+
+    with pytest.raises(ConfigEntryError):
+        await coordinator._async_update_data()
 
 
 async def test_async_refresh_now_serializes_refreshes(hass: HomeAssistant) -> None:
@@ -282,7 +332,7 @@ async def test_async_refresh_now_serializes_refreshes(hass: HomeAssistant) -> No
 
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = SlowHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
 
     await asyncio.gather(
         coordinator.async_refresh_now(), coordinator.async_refresh_now()
@@ -301,7 +351,7 @@ async def test_queue_domain_refresh_handles_exception(hass: HomeAssistant) -> No
 
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = ErrorHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
     await coordinator.async_start()
     coordinator._queue_domain_refresh({"zone"})
     await asyncio.sleep(0)
@@ -314,7 +364,7 @@ async def test_connection_state_event_triggers_refresh(
     """Verify connection state events schedule a refresh."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
 
     await coordinator.async_start()
     coordinator.async_refresh_now = AsyncMock()
@@ -350,7 +400,7 @@ async def test_zone_status_event_updates_snapshot(hass: HomeAssistant) -> None:
     """Verify zone status events keep snapshot updated."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+    coordinator = _coordinator(hass, hub, entry)
     await coordinator.async_start()
     event = ZoneStatusUpdated(
         kind=ZoneStatusUpdated.KIND,

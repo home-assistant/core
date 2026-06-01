@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This panel is already configured.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "This panel is already configured."
     },
     "error": {
       "cannot_connect": "Unable to connect to the panel. Confirm the host is reachable and the panel is online.",
@@ -11,18 +10,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "access_code": "Access code (used for linking, NOT a PIN)",
-          "passphrase": "Passphrase"
-        },
-        "data_description": {
-          "access_code": "The panel access code used during linking. It is not a PIN.",
-          "passphrase": "The passphrase used during linking."
-        },
-        "description": "Enter the linking credentials again.",
-        "title": "Reauthenticate Elk E27 Alarm Panel"
-      },
       "user": {
         "data": {
           "access_code": "Access code (used for linking, NOT a PIN)",

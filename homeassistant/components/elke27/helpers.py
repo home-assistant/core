@@ -3,7 +3,7 @@
 import re
 from typing import Any
 
-from elke27_lib import PanelSnapshot
+from elke27_lib import AreaState, PanelSnapshot
 
 from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.helpers.device_registry import (
@@ -37,17 +37,15 @@ def get_panel_field(
         return None
     panel_info = snapshot.panel
     if field == "name":
-        return sanitize_name(
-            getattr(panel_info, "panel_name", None) or getattr(panel_info, "name", None)
-        )
+        return None
     if field == "mac":
-        return getattr(panel_info, "mac", None)
+        return panel_info.mac
     if field == "serial":
-        return getattr(panel_info, "serial", None)
+        return panel_info.serial
     if field == "model":
-        return getattr(panel_info, "model", None)
+        return panel_info.model
     if field == "firmware":
-        return getattr(panel_info, "firmware", None)
+        return panel_info.firmware
     return None
 
 
@@ -78,6 +76,17 @@ def device_info_for_entry(
         model=model,
         sw_version=firmware,
         serial_number=panel_serial,
+    )
+
+
+def device_info_for_area(entry: Elke27ConfigEntry, area: AreaState) -> DeviceInfo:
+    """Build device info for an alarm area tied to the panel device."""
+    panel_identifier = unique_base(entry)
+    area_identifier = build_unique_id(panel_identifier, f"area:{area.area_id}")
+    return DeviceInfo(
+        identifiers={(DOMAIN, area_identifier)},
+        name=sanitize_name(area.name) or f"Area {area.area_id}",
+        via_device=(DOMAIN, panel_identifier),
     )
 
 
