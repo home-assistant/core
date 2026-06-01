@@ -8,7 +8,7 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 from uuid import uuid4
 
-from aiohasupervisor import SupervisorError
+from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
     AddonsStats,
     AddonStage,
@@ -189,6 +189,67 @@ async def test_setup_api_ping_fails(
     assert is_hassio(hass)
     entry = hass.config_entries.async_entries("hassio")[0]
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_onboarding_supervisor_update(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test that during onboarding, supervisor.update() success triggers retry."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch("homeassistant.components.hassio.async_is_onboarded", return_value=False),
+    ):
+        result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+    assert result
+    assert is_hassio(hass)
+    entry = hass.config_entries.async_entries("hassio")[0]
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    supervisor_client.supervisor.update.assert_called_once()
+
+
+async def test_setup_onboarding_supervisor_no_update(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test that during onboarding, SupervisorBadRequestError means no update needed."""
+    supervisor_client.supervisor.update.side_effect = SupervisorBadRequestError
+
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch("homeassistant.components.hassio.async_is_onboarded", return_value=False),
+    ):
+        result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+    assert result
+    assert is_hassio(hass)
+    entry = hass.config_entries.async_entries("hassio")[0]
+    assert entry.state is ConfigEntryState.LOADED
+    supervisor_client.supervisor.update.assert_called_once()
+
+
+async def test_setup_onboarding_supervisor_update_error(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test that during onboarding, an unknown SupervisorError causes retry."""
+    supervisor_client.supervisor.update.side_effect = SupervisorError
+
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch("homeassistant.components.hassio.async_is_onboarded", return_value=False),
+    ):
+        result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+    assert result
+    assert is_hassio(hass)
+    entry = hass.config_entries.async_entries("hassio")[0]
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    supervisor_client.supervisor.update.assert_called_once()
 
 
 async def test_setup_app_panel(hass: HomeAssistant) -> None:
