@@ -959,7 +959,8 @@ class HomeAssistantHTTP:
 
             def _stop_and_join() -> None:
                 watcher.stop()
-                watcher.join(SSL_WATCHER_JOIN_TIMEOUT)
+                with contextlib.suppress(RuntimeError):
+                    watcher.join(SSL_WATCHER_JOIN_TIMEOUT)
                 if watcher.is_alive():
                     _LOGGER.warning("SSL certificate watcher did not stop in time")
 
