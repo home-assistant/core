@@ -42,6 +42,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+
 class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Elke27."""
 

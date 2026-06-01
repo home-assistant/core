@@ -19,9 +19,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.elke27 import config_flow
-from homeassistant.components.elke27.config_flow import (
-    STEP_USER_DATA_SCHEMA,
-)
+from homeassistant.components.elke27.config_flow import STEP_USER_DATA_SCHEMA
 from homeassistant.components.elke27.const import (
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,

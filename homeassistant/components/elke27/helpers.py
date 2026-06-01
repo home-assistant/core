@@ -56,7 +56,9 @@ def device_info_for_entry(
 ) -> DeviceInfo:
     """Build device info for entities tied to a config entry."""
     snapshot = coordinator.data
-    panel_name = get_panel_field(snapshot, hub.panel_name, "name") or entry.title
+    panel_name = get_panel_field(snapshot, hub.panel_name, "name") or sanitize_name(
+        entry.title
+    )
     mac = get_panel_field(snapshot, hub.panel_name, "mac")
     try:
         formatted_mac = format_mac(str(mac)) if mac else None
