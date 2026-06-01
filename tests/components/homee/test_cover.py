@@ -364,7 +364,7 @@ async def test_invalid_cover(
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a cover, that has no Attribute for is_closed state."""
+    """Test a cover that has no Attribute for is_closed state."""
     mock_homee.nodes = [build_mock_node("cover_invalid.json")]
     await setup_integration(hass, mock_config_entry)
 
