@@ -79,7 +79,7 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
             # We need to set the _attr_native_unit_of_measurement in two cases:
             # 1. When there is known device class which support multiple units. In this case
             # we publish what we have and HA will allow conversion to other supported units.
-            # We specifically dont put those cases in the translation file by the merge script
+            # We specifically don't put those cases in the translation file by the merge script
             # not to waste translation resources so it has to come from here.
             # 2. Dynamic units come from user-configured MQTT topics (e.g.
             # SwitchableOutput Settings/Unit) and have no translation file
