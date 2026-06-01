@@ -1477,7 +1477,7 @@ async def test_position_updates(
     assert state.attributes[ATTR_MEDIA_POSITION] == 42
     # updated_at should be recent
     updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-    assert updated_at == datetime.now(UTC)
+    assert updated_at == datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
 
     # Position only updated by 1 second; should not update attributes
     new_track_info = current_track_info.copy()
@@ -1507,6 +1507,7 @@ async def test_position_updates(
         await hass.async_block_till_done(wait_background_tasks=True)
         state = hass.states.get(entity_id)
         assert state.attributes[ATTR_MEDIA_POSITION] == 70
+        # pylint: disable-next=home-assistant-enforce-utcnow
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == datetime.now(UTC)
 
 

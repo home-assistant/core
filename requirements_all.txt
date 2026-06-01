@@ -1350,7 +1350,7 @@ imgw_pib==2.2.0
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.8.2
+indevolt-api==1.8.3
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -2477,7 +2477,7 @@ pyrail==0.4.1
 pyrainbird==6.3.0
 
 # homeassistant.components.playstation_network
-pyrate-limiter==4.1.0
+pyrate-limiter==4.2.0
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2872,7 +2872,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.10
+renault-api==0.5.11
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2881,7 +2881,7 @@ renson-endura-delta==1.7.2
 reolink-aio==0.20.0
 
 # homeassistant.components.radio_frequency
-rf-protocols==4.0.0
+rf-protocols==4.0.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
