@@ -221,6 +221,7 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
             ):
                 try:
                     value = float(current_state.state)
+                    # pylint: disable-next=home-assistant-enforce-utcnow
                     timestamp = current_state.last_updated or dt.datetime.now(dt.UTC)
                     client.get_or_create_sensor(energyid_key).update(value, timestamp)
                 except ValueError, TypeError:

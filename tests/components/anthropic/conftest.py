@@ -170,6 +170,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
             ):
                 container = Container(
                     id=kwargs.get("container_id", "container_1234567890ABCDEFGHIJKLMN"),
+                    # pylint: disable-next=home-assistant-enforce-utcnow
                     expires_at=datetime.datetime.now(tz=datetime.UTC)
                     + datetime.timedelta(minutes=5),
                 )

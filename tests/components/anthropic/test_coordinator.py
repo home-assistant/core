@@ -121,6 +121,7 @@ async def test_connection_error_handling(
     assert state.state == "2026-02-27T12:00:00+00:00"
 
     # Verify the background check period
+    # pylint: disable-next=home-assistant-enforce-utcnow
     test_time = datetime.datetime.now(datetime.UTC) + UPDATE_INTERVAL_DISCONNECTED
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
@@ -151,6 +152,7 @@ async def test_connection_check_reauth(
 
     # Get timeout
     assert mock_model_list.await_count == 0
+    # pylint: disable-next=home-assistant-enforce-utcnow
     test_time = datetime.datetime.now(datetime.UTC) + UPDATE_INTERVAL_CONNECTED
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
@@ -230,6 +232,7 @@ async def test_connection_restore(
 
     # Wait for background check to run and fail
     assert mock_model_list.await_count == 0
+    # pylint: disable-next=home-assistant-enforce-utcnow
     test_time = datetime.datetime.now(datetime.UTC) + UPDATE_INTERVAL_DISCONNECTED
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()

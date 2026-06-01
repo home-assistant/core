@@ -91,6 +91,7 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
 
         session_id_expires = session.get(SZ_SESSION_ID_EXPIRES)
         if session_id_expires is None:
+            # pylint: disable-next=home-assistant-enforce-utcnow
             self._session_id_expires = datetime.now(tz=UTC) + timedelta(minutes=15)
         else:
             self._session_id_expires = datetime.fromisoformat(session_id_expires)

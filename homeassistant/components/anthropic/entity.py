@@ -372,7 +372,7 @@ def _convert_content(  # noqa: C901
                     )
                 if (
                     content.native.container is not None
-                    and content.native.container.expires_at > datetime.now(UTC)
+                    and content.native.container.expires_at > datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
                 ):
                     container_id = content.native.container.id
 
