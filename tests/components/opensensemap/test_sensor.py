@@ -44,10 +44,8 @@ async def test_missing_measurements_omit_entities(
     """Test sensors are not created for measurements absent from the station."""
     mock_opensensemap_api.air_pressure = None
     mock_opensensemap_api.illuminance = None
-    mock_opensensemap_api.uv = None
     mock_opensensemap_api.wind_speed = None
     mock_opensensemap_api.wind_direction = None
-    mock_opensensemap_api.precipitation = None
     mock_opensensemap_api.pm1_0 = None
 
     mock_config_entry.add_to_hass(hass)

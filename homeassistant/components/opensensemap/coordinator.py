@@ -57,10 +57,8 @@ class OpenSenseMapStationData:
     humidity: Measurement
     air_pressure: Measurement
     illuminance: Measurement
-    uv: Measurement
     wind_speed: Measurement
     wind_direction: Measurement
-    precipitation: Measurement
 
 
 def _detect_unit(
@@ -125,11 +123,9 @@ class OpenSenseMapCoordinator(DataUpdateCoordinator[OpenSenseMapStationData]):
                 _detect_unit(self.api, "Air Pressure", PRESSURE_UNITS),
             ),
             illuminance=Measurement(self.api.illuminance),
-            uv=Measurement(self.api.uv),
             wind_speed=Measurement(
                 self.api.wind_speed,
                 _detect_unit(self.api, "Wind Speed", WIND_SPEED_UNITS),
             ),
             wind_direction=Measurement(self.api.wind_direction),
-            precipitation=Measurement(self.api.precipitation),
         )

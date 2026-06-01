@@ -14,7 +14,6 @@ from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
-    UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -91,12 +90,6 @@ SENSOR_DESCRIPTIONS: tuple[OpenSenseMapSensorEntityDescription, ...] = (
         value_fn=lambda data: data.illuminance,
     ),
     OpenSenseMapSensorEntityDescription(
-        key="uv_index",
-        translation_key="uv_index",
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.uv,
-    ),
-    OpenSenseMapSensorEntityDescription(
         key="wind_speed",
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
@@ -109,13 +102,6 @@ SENSOR_DESCRIPTIONS: tuple[OpenSenseMapSensorEntityDescription, ...] = (
         native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT_ANGLE,
         value_fn=lambda data: data.wind_direction,
-    ),
-    OpenSenseMapSensorEntityDescription(
-        key="precipitation",
-        device_class=SensorDeviceClass.PRECIPITATION,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.precipitation,
     ),
 )
 
