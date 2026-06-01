@@ -748,7 +748,6 @@ ignore = [
   "RUF001",  # String contains ambiguous unicode character.
   "RUF002",  # Docstring contains ambiguous unicode character.
   "RUF003",  # Comment contains ambiguous unicode character.
-  "RUF009",  # Do not perform function call in dataclass defaults
   "RUF012",  # Mutable class attributes should be annotated with typing.ClassVar
   "RUF015",  # Prefer next(...) over single element slice
   "RUF043",  # Pattern passed to match= contains metacharacters but is neither escaped nor raw
