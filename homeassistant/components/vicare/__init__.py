@@ -171,6 +171,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     ) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
+    if not entry.runtime_data.devices:
+        # All known devices reported `isOnline() == False`. This is common when
+        # the integration is set up while the Viessmann gateway is still booting
+        # (e.g. after a power outage). Raise so HA core retries setup with
+        # backoff instead of leaving the entry permanently empty until a manual
+        # reload.
+        raise ConfigEntryNotReady("No online ViCare devices found")
+
     for device in entry.runtime_data.devices:
         # Migration can be removed in 2025.4.0
         await async_migrate_devices_and_entities(hass, entry, device)

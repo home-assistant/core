@@ -10,6 +10,7 @@ from PyViCare.PyViCareUtils import (
 )
 
 from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.types import ViCareData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -314,6 +315,28 @@ async def test_setup_entry_invalid_credentials(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_no_online_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup raises ConfigEntryNotReady when no devices are online."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=ViCareData(client=Mock(), devices=[]),
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_invalid_configuration(
