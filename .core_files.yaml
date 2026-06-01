@@ -42,6 +42,7 @@ base_platforms: &base_platforms
   - homeassistant/components/media_player/**
   - homeassistant/components/notify/**
   - homeassistant/components/number/**
+  - homeassistant/components/osram_infrared/**
   - homeassistant/components/remote/**
   - homeassistant/components/scene/**
   - homeassistant/components/select/**
