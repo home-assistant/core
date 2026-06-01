@@ -58,6 +58,10 @@ async def test_get_panel_field_handles_typed_snapshot() -> None:
     assert get_panel_field(snapshot, "Panel A", "name") == "Panel A"
     snapshot_with_name = _snapshot(SimpleNamespace(name="Pânel Étage"))
     assert get_panel_field(snapshot_with_name, None, "name") == "Pânel Étage"
+    assert get_panel_field(snapshot_with_name, None, "mac") is None
+    assert get_panel_field(snapshot_with_name, None, "serial") is None
+    assert get_panel_field(snapshot_with_name, None, "model") is None
+    assert get_panel_field(snapshot_with_name, None, "firmware") is None
     assert get_panel_field(snapshot, None, "mac") == "aa:bb:cc:dd:ee:ff"
     assert get_panel_field(snapshot, None, "serial") == "1234"
     assert get_panel_field(snapshot, None, "model") == "E27"

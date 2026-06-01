@@ -41,13 +41,13 @@ def get_panel_field(
             getattr(panel_info, "panel_name", None) or getattr(panel_info, "name", None)
         )
     if field == "mac":
-        return panel_info.mac
+        return getattr(panel_info, "mac", None)
     if field == "serial":
-        return panel_info.serial
+        return getattr(panel_info, "serial", None)
     if field == "model":
-        return panel_info.model
+        return getattr(panel_info, "model", None)
     if field == "firmware":
-        return panel_info.firmware
+        return getattr(panel_info, "firmware", None)
     return None
 
 
