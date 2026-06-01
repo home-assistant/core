@@ -95,6 +95,11 @@ async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
     area_1 = next(entity for entity in entities if entity._area_id == 1)
     area_2 = next(entity for entity in entities if entity._area_id == 2)
 
+    assert area_1.device_info == {
+        "identifiers": {(DOMAIN, "entryclientid:area:1")},
+        "name": "Area 1",
+        "via_device": (DOMAIN, "entryclientid"),
+    }
     assert area_1.state == "disarmed"
     assert area_2.state == "armed_away"
 
@@ -106,6 +111,9 @@ async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert area_1.state == "armed_home"
+    assert area_1.area == AreaState(
+        area_id=1, name="Area 1", arm_mode=ArmMode.ARMED_STAY
+    )
 
 
 async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:

@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from elke27_lib import LinkKeys
-from elke27_lib.errors import Elke27Error, Elke27LinkRequiredError, Elke27TimeoutError
+from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
 import pytest
 
 from homeassistant.components.elke27 import async_unload_entry
@@ -17,6 +17,7 @@ from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -32,8 +33,7 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     )
 
     coordinator = SimpleNamespace(
-        async_start=AsyncMock(return_value=None),
-        async_refresh_now=AsyncMock(return_value=None),
+        async_config_entry_first_refresh=AsyncMock(return_value=None),
         async_stop=AsyncMock(return_value=None),
         data=None,
     )
@@ -76,8 +76,7 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
         await hass.async_block_till_done()
 
         hub.async_connect.assert_awaited_once()
-        coordinator.async_start.assert_awaited_once()
-        coordinator.async_refresh_now.assert_awaited_once()
+        coordinator.async_config_entry_first_refresh.assert_awaited_once()
         assert isinstance(entry.runtime_data, Elke27RuntimeData)
 
         assert await hass.config_entries.async_unload(entry.entry_id)
@@ -146,8 +145,7 @@ async def test_setup_initial_refresh_error_cleans_up_and_returns_not_ready(
         async_disconnect=AsyncMock(return_value=None),
     )
     coordinator = SimpleNamespace(
-        async_start=AsyncMock(return_value=None),
-        async_refresh_now=AsyncMock(side_effect=Elke27TimeoutError()),
+        async_config_entry_first_refresh=AsyncMock(side_effect=ConfigEntryNotReady),
         async_stop=AsyncMock(return_value=None),
     )
 
@@ -178,69 +176,23 @@ async def test_setup_initial_refresh_error_cleans_up_and_returns_not_ready(
         await hass.async_block_till_done()
 
     hub.async_connect.assert_awaited_once()
-    coordinator.async_start.assert_awaited_once()
-    coordinator.async_refresh_now.assert_awaited_once()
+    coordinator.async_config_entry_first_refresh.assert_awaited_once()
     coordinator.async_stop.assert_awaited_once()
     hub.async_disconnect.assert_awaited_once()
     forward_entry_setups.assert_not_called()
 
 
-async def test_setup_initial_refresh_elke27_error_returns_not_ready(
+async def test_setup_initial_refresh_config_entry_error_fails_setup(
     hass: HomeAssistant,
 ) -> None:
-    """Test base Elke27 refresh errors clean up setup resources."""
+    """Test config entry refresh errors clean up and fail setup."""
     hub = SimpleNamespace(
         panel_name=None,
         async_connect=AsyncMock(return_value=None),
         async_disconnect=AsyncMock(return_value=None),
     )
     coordinator = SimpleNamespace(
-        async_start=AsyncMock(return_value=None),
-        async_refresh_now=AsyncMock(
-            side_effect=Elke27Error("refresh failed", code=1, is_transient=True)
-        ),
-        async_stop=AsyncMock(return_value=None),
-    )
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.13",
-            CONF_PORT: DEFAULT_PORT,
-            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
-            CONF_CLIENT_ID: "112233445566",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    with (
-        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
-        patch(
-            "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
-            return_value=coordinator,
-        ),
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    coordinator.async_stop.assert_awaited_once()
-    hub.async_disconnect.assert_awaited_once()
-
-
-async def test_setup_initial_refresh_permanent_elke27_error_fails_setup(
-    hass: HomeAssistant,
-) -> None:
-    """Test permanent Elke27 refresh errors fail setup instead of retrying."""
-    hub = SimpleNamespace(
-        panel_name=None,
-        async_connect=AsyncMock(return_value=None),
-        async_disconnect=AsyncMock(return_value=None),
-    )
-    coordinator = SimpleNamespace(
-        async_start=AsyncMock(return_value=None),
-        async_refresh_now=AsyncMock(
-            side_effect=Elke27Error("refresh failed", code=1, is_transient=False)
-        ),
+        async_config_entry_first_refresh=AsyncMock(side_effect=ConfigEntryError),
         async_stop=AsyncMock(return_value=None),
     )
 
@@ -280,8 +232,7 @@ async def test_setup_forward_entry_setups_error_cleans_up(
         async_disconnect=AsyncMock(return_value=None),
     )
     coordinator = SimpleNamespace(
-        async_start=AsyncMock(return_value=None),
-        async_refresh_now=AsyncMock(return_value=None),
+        async_config_entry_first_refresh=AsyncMock(return_value=None),
         async_stop=AsyncMock(return_value=None),
     )
     entry = MockConfigEntry(
@@ -394,7 +345,6 @@ async def test_setup_link_required_raises_auth_failed(
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_ERROR
-        assert any(entry.async_get_active_flows(hass, {"reauth"}))
 
 
 async def test_setup_uses_client_id(hass: HomeAssistant) -> None:
@@ -405,8 +355,7 @@ async def test_setup_uses_client_id(hass: HomeAssistant) -> None:
         async_disconnect=AsyncMock(return_value=None),
     )
     coordinator = SimpleNamespace(
-        async_start=AsyncMock(return_value=None),
-        async_refresh_now=AsyncMock(return_value=None),
+        async_config_entry_first_refresh=AsyncMock(return_value=None),
         async_stop=AsyncMock(return_value=None),
         data=None,
     )

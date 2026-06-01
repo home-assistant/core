@@ -19,7 +19,7 @@ from elke27_lib.errors import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import selector
@@ -41,13 +41,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ACCESS_CODE): selector({"text": {"type": "password"}}),
-        vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
-    }
-)
-
 
 class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Elke27."""
@@ -85,34 +78,6 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication."""
-        self._selected_host = entry_data[CONF_HOST]
-        self._selected_port = entry_data[CONF_PORT]
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm reauthentication."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            return await self._async_link_and_create_entry(
-                access_code=user_input[CONF_ACCESS_CODE],
-                passphrase=user_input[CONF_PASSPHRASE],
-                errors=errors,
-                step_id="reauth_confirm",
-                data_schema=STEP_REAUTH_DATA_SCHEMA,
-            )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=STEP_REAUTH_DATA_SCHEMA,
-            errors=errors,
-        )
-
     async def _async_link_and_create_entry(
         self,
         access_code: str,
@@ -132,15 +97,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        reauth_entry = (
-            self._get_reauth_entry() if self.source == SOURCE_REAUTH else None
-        )
-        if reauth_entry is not None:
-            client_id = reauth_entry.data.get(
-                CONF_CLIENT_ID, derive_client_id(self.flow_id)
-            )
-        else:
-            client_id = derive_client_id(self.flow_id)
+        client_id = derive_client_id(self.flow_id)
         client_identity = build_client_identity(client_id)
         client = _create_client()
         link_keys: LinkKeys | None = None
@@ -197,8 +154,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         panel_unique_id = _panel_unique_id(panel_info)
         if panel_unique_id is not None:
             await self.async_set_unique_id(panel_unique_id)
-            if reauth_entry is None:
-                self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured()
         data: dict[str, Any] = {
             CONF_HOST: host,
             CONF_PORT: port,
@@ -212,13 +168,6 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         title = _panel_name(panel_info) or host
-        if reauth_entry is not None:
-            return self.async_update_reload_and_abort(
-                reauth_entry,
-                data=data,
-                options=options,
-            )
-
         result = self.async_create_entry(title=title, data=data, options=options)
         if "title" not in result:
             result["title"] = title

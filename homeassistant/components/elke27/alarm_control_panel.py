@@ -1,7 +1,6 @@
 """Alarm control panel platform for Elke27 areas."""
 
 import asyncio
-import logging
 
 from elke27_lib import AreaState, ArmMode, PanelSnapshot
 from elke27_lib.errors import Elke27PinRequiredError
@@ -18,11 +17,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import Elke27DataUpdateCoordinator
-from .helpers import build_unique_id, device_info_for_entry, sanitize_name, unique_base
+from .helpers import build_unique_id, device_info_for_area, sanitize_name, unique_base
 from .hub import Elke27Hub
 from .models import Elke27ConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -42,7 +39,6 @@ async def async_setup_entry(
         for area in snapshot.areas.values()
     ]
     if entities:
-        _LOGGER.debug("Adding %s area entities", len(entities))
         async_add_entities(entities)
 
 
@@ -79,15 +75,18 @@ class Elke27AreaAlarmControlPanel(
             unique_base(entry),
             area.area_id,
         )
-        self._attr_device_info = device_info_for_entry(hub, coordinator, entry)
-        self._missing_logged = False
+        self._attr_device_info = device_info_for_area(entry, area)
+
+    @property
+    def area(self) -> AreaState | None:
+        """Return the current area snapshot."""
+        return _get_area(self.coordinator.data, self._area_id)
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the current alarm state."""
-        area = _get_area(self.coordinator.data, self._area_id)
+        area = self.area
         if area is None:
-            self._log_missing()
             return None
         return _area_state_to_ha(area)
 
@@ -96,7 +95,7 @@ class Elke27AreaAlarmControlPanel(
         """Return if the entity is available."""
         return (
             self._hub.is_ready
-            and _get_area(self.coordinator.data, self._area_id) is not None
+            and self.area is not None
         )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
@@ -117,9 +116,7 @@ class Elke27AreaAlarmControlPanel(
         faulted_zones = list(self.coordinator.data.faulted_zones)
         results = await asyncio.gather(
             *(
-                self._hub.async_set_zone_bypass(
-                    zone.zone_id, bypassed=True, pin=code
-                )
+                self._hub.async_set_zone_bypass(zone.zone_id, bypassed=True, pin=code)
                 for zone in faulted_zones
             ),
             return_exceptions=True,
@@ -163,14 +160,6 @@ class Elke27AreaAlarmControlPanel(
         if not armed:
             msg = "Area arm command was not acknowledged."
             raise HomeAssistantError(msg)
-
-    def _log_missing(self) -> None:
-        """Log when the area snapshot is missing."""
-        if self._missing_logged:
-            return
-        self._missing_logged = True
-        _LOGGER.debug("Area %s missing from snapshot", self._area_id)
-
 
 def _get_area(snapshot: PanelSnapshot, area_id: int) -> AreaState | None:
     return snapshot.areas.get(area_id)

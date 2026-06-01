@@ -14,15 +14,23 @@ from elke27_lib.events import (
     TableCsmChanged,
     ZoneStatusUpdated,
 )
+from elke27_lib.errors import (
+    Elke27ConnectionError,
+    Elke27DisconnectedError,
+    Elke27Error,
+    Elke27TimeoutError,
+)
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 from .hub import Elke27Hub
 from .models import Elke27ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+_DEBOUNCE_SECONDS = 0.3
 
 
 class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
@@ -33,19 +41,21 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
         hass: HomeAssistant,
         hub: Elke27Hub,
         entry: Elke27ConfigEntry,
-        *,
-        debounce_seconds: float = 0.3,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, config_entry=entry)
         self._hub = hub
-        self._debounce_seconds = debounce_seconds
+        self._debounce_seconds = _DEBOUNCE_SECONDS
         self._pending_domains: set[str] = set()
         self._refresh_lock = asyncio.Lock()
         self._debounce_task: asyncio.Task[None] | None = None
         self._unsubscribe: Callable[[], None] | None = None
 
     async def async_start(self) -> None:
+        """Subscribe to hub events and seed snapshot data."""
+        await self._async_setup()
+
+    async def _async_setup(self) -> None:
         """Subscribe to hub events and seed snapshot data."""
         if self._unsubscribe is not None:
             with contextlib.suppress(Exception):
@@ -68,9 +78,29 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
 
     async def async_refresh_now(self) -> None:
         """Perform a full CSM refresh and update the snapshot."""
+        await self.async_refresh()
+
+    async def _async_update_data(self) -> PanelSnapshot:
+        """Perform a full CSM refresh and return the latest snapshot."""
         async with self._refresh_lock:
-            await self._hub.refresh_csm()
-            self._set_snapshot(self._hub.get_snapshot())
+            try:
+                await self._hub.refresh_csm()
+            except (
+                Elke27ConnectionError,
+                Elke27TimeoutError,
+                Elke27DisconnectedError,
+                OSError,
+            ) as err:
+                raise UpdateFailed("Unable to refresh initial panel data") from err
+            except Elke27Error as err:
+                if getattr(err, "is_transient", False):
+                    raise UpdateFailed("Unable to refresh initial panel data") from err
+                msg = f"Unable to refresh initial panel data: {err}"
+                raise ConfigEntryError(msg) from err
+            except HomeAssistantError as err:
+                msg = f"Unable to refresh initial panel data: {err}"
+                raise ConfigEntryError(msg) from err
+            return self._hub.get_snapshot() or PanelSnapshot.empty()
 
     def _handle_event(self, event: Any) -> None:
         """Handle hub events on the Home Assistant event loop."""
