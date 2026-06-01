@@ -207,7 +207,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         return None
 
     @property
-    def is_closed(self) -> bool | None:
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         if (
             attribute := self._node.get_attribute_by_type(AttributeType.POSITION)
