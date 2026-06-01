@@ -1,6 +1,5 @@
 """Tests for Elke27 alarm control panel areas."""
 
-from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 from elke27_lib import (
@@ -20,6 +19,7 @@ from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordina
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -51,7 +51,7 @@ def _snapshot(
         locks={},
         thermostats={},
         version=1,
-        updated_at=datetime.now(UTC),
+        updated_at=dt_util.utcnow(),
     )
 
 

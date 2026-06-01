@@ -1,7 +1,6 @@
 """Tests for the Elke27 data update coordinator."""
 
 import asyncio
-from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock
@@ -27,6 +26,7 @@ from homeassistant.components.elke27.coordinator import (
     _normalize_domains,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -153,7 +153,7 @@ async def test_csm_snapshot_event_updates_data(hass: HomeAssistant) -> None:
         domain_csms={"zone": 2},
         table_csms={"zone": 11},
         version=2,
-        updated_at=datetime.now(tz=UTC),
+        updated_at=dt_util.utcnow(),
     )
     hub.emit(
         CsmSnapshotUpdated(
