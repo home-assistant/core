@@ -6,6 +6,14 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://192.168.1.1',
     'connections': set({
+      tuple(
+        'mac',
+        '20:97:27:aa:bb:cc',
+      ),
+      tuple(
+        'mac',
+        '20:97:27:aa:bb:cd',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,

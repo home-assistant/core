@@ -33,6 +33,7 @@ CONF_IGNORE_WIRED_BUG = "ignore_wired_bug"
 CONF_TRACK_CLIENTS = "track_clients"
 CONF_TRACK_DEVICES = "track_devices"
 CONF_TRACK_WIRED_CLIENTS = "track_wired_clients"
+CONF_MORE_OPTIONS = "more_options"
 CONF_SSID_FILTER = "ssid_filter"
 
 DEFAULT_ALLOW_BANDWIDTH_SENSORS = False

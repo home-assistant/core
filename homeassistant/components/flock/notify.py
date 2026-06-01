@@ -63,5 +63,6 @@ class FlockNotificationService(BaseNotificationService):
                     response.status,
                     result,
                 )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TimeoutError:
             _LOGGER.error("Timeout accessing Flock at %s", self._url)

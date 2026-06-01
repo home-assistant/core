@@ -1,0 +1,151 @@
+# serializer version: 1
+# name: test_entities[button.marantz_pm6006_integrated_amplifier_loudness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.marantz_pm6006_integrated_amplifier_loudness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Loudness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Loudness',
+    'platform': 'marantz_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'loudness',
+    'unique_id': '01JTEST0000000000000000000_loudness',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.marantz_pm6006_integrated_amplifier_loudness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Marantz PM6006 Integrated Amplifier Loudness',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.marantz_pm6006_integrated_amplifier_loudness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.marantz_pm6006_integrated_amplifier_source_direct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.marantz_pm6006_integrated_amplifier_source_direct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Source direct',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Source direct',
+    'platform': 'marantz_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'source_direct',
+    'unique_id': '01JTEST0000000000000000000_source_direct',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.marantz_pm6006_integrated_amplifier_source_direct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Marantz PM6006 Integrated Amplifier Source direct',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.marantz_pm6006_integrated_amplifier_source_direct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.marantz_pm6006_integrated_amplifier_speaker_a_b-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.marantz_pm6006_integrated_amplifier_speaker_a_b',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Speaker A/B',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speaker A/B',
+    'platform': 'marantz_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_ab',
+    'unique_id': '01JTEST0000000000000000000_speaker_ab',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.marantz_pm6006_integrated_amplifier_speaker_a_b-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Marantz PM6006 Integrated Amplifier Speaker A/B',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.marantz_pm6006_integrated_amplifier_speaker_a_b',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

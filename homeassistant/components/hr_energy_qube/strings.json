@@ -199,6 +199,33 @@
       "temp_supply": {
         "name": "Supply temperature CH"
       }
+    },
+    "switch": {
+      "anti_legionella_cycle": {
+        "name": "Anti-legionella cycle"
+      },
+      "heating_curve": {
+        "name": "Heating curve"
+      },
+      "heating_demand": {
+        "name": "Heating demand"
+      },
+      "summer_mode": {
+        "name": "Summer mode"
+      }
+    },
+    "water_heater": {
+      "water_heater": {
+        "name": "Domestic hot water"
+      }
+    }
+  },
+  "exceptions": {
+    "set_temperature_failed": {
+      "message": "Failed to set the target temperature."
+    },
+    "switch_command_failed": {
+      "message": "Failed to send command to the heat pump."
     }
   }
 }

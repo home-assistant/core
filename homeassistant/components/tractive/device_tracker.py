@@ -34,6 +34,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     """Tractive device tracker."""
 
     _attr_translation_key = "tracker"
+    _attr_name = None
 
     def __init__(self, client: TractiveClient, item: Trackables) -> None:
         """Initialize tracker entity."""
@@ -78,7 +79,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._attr_available = True
         self.async_write_ha_state()
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if not self._client.subscribed:
