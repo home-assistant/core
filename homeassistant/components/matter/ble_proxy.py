@@ -53,7 +53,7 @@ class HaBluetoothScanSource(BleScanSource):
             return
 
         # Drop HA's synchronous replay of stale history on register; otherwise a
-        # rotating peripheral's old addresses each become a PASE connect candidate.
+        # rotating peripheral's old addresses each become a parallel connect candidate.
         # `MONOTONIC_TIME` is the clock that stamps `service_info.time`.
         scan_start = MONOTONIC_TIME()
 
