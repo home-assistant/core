@@ -654,42 +654,7 @@ required-version = ">=0.15.14"
 select = [
   "A001",   # Variable {name} is shadowing a Python builtin
   "ASYNC",  # flake8-async
-  "B002",   # Python does not support the unary prefix increment
-  "B003",   # Assigning to os.environ doesn't clear the environment
-  "B004",   # Using hasattr(x, "__call__") instead of callable(x)
-  "B005",   # Using .strip() with multi-character strings is misleading
-  "B006",   # Do not use mutable data structures for argument defaults
-  "B007",   # Loop control variable {name} not used within loop body
-  "B009",   # Do not call getattr with a constant attribute value. It is not any safer than normal property access.
-  "B010",   # Do not call setattr with a constant attribute value. It is not any safer than normal property access.
-  "B011",   # Do not call assert False since python -O removes these calls
-  "B012",   # Use of break/continue/return inside a finally block
-  "B013",   # A length-one tuple literal is redundant in exception handlers
-  "B014",   # Exception handler with duplicate exception
-  "B015",   # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
-  "B016",   # Cannot raise a literal. Did you intend to return it or raise an exception?
-  "B017",   # pytest.raises(BaseException) should be considered evil
-  "B018",   # Found useless attribute access. Either assign it to a variable or remove it.
-  "B020",   # Loop control variable overrides iterable it iterates
-  "B021",   # f-string used as docstring
-  "B022",   # No arguments passed to contextlib.suppress
-  "B023",   # Function definition does not bind loop variable {name}
-  "B024",   # `{name}` is an abstract base class, but it has no abstract methods or properties
-  "B025",   # try-except* block with duplicate exception {name}
-  "B026",   # Star-arg unpacking after a keyword argument is strongly discouraged
-  "B027",   # Empty method in abstract base class without abstract decorator
-  "B028",   # No explicit stacklevel keyword argument found in warnings.warn
-  "B029",   # Using except (): with an empty tuple is a no-op
-  "B030",   # Except handlers should only be exception classes
-  "B031",   # Using the result of the groupby() generator
-  "B032",   # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
-  "B033",   # Set should not contain duplicate items
-  "B034",   # re.sub/subn/split should pass count/maxsplit as keyword arguments
-  "B035",   # Dictionary comprehension uses static key
-  "B039",   # ContextVar with mutable literal or function call as default
-  "B904",   # Use raise from to specify exception cause
-  "B905",   # zip() without an explicit strict= parameter
-  "B911",   # itertools.batched() without explicit strict= parameter
+  "B",      # flake8-bugbear (see `ignore` for exclusions)
   "BLE",
   "C",      # complexity
   "COM818", # Trailing comma on bare tuple prohibited
@@ -786,6 +751,8 @@ ignore = [
   "ASYNC109", # Async function definition with a `timeout` parameter Use `asyncio.timeout` instead
   "ASYNC110", # Use `asyncio.Event` instead of awaiting `asyncio.sleep` in a `while` loop
   "ASYNC240", # Use an async function for entering the file system
+  "B008",     # Do not perform function call in argument defaults; commonly used in Home Assistant (e.g. cv.* validators)
+  "B019",     # Use of functools.lru_cache or functools.cache on methods can lead to memory leaks
   "D202",     # No blank lines allowed after function docstring
   "D203",     # 1 blank line required before class docstring
   "D213",     # Multi-line docstring summary should start at the second line
