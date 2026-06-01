@@ -268,7 +268,9 @@ class ValueMappingZwaveFan(ZwaveFan):
         speed_level = math.ceil(
             percentage_to_ranged_value((1, self.speed_count), percentage)
         )
-        return self.fan_value_mapping.speeds[speed_level - 1][1]
+        min_speed, max_speed = self.fan_value_mapping.speeds[speed_level - 1]
+        # Use the midpoint rather than the range maximum for robustness.
+        return (min_speed + max_speed) // 2
 
     def zwave_speed_to_percentage(self, zwave_speed: int) -> int | None:
         """Convert a Zwave speed to a percentage.
