@@ -251,8 +251,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     "Extra state attributes received at %s and template %s "
                     "contains invalid in_zones attribute, "
                     "expected a list of strings. Got %s",
-                    self._config.get(CONF_JSON_ATTRS_TEMPLATE),
                     self._config.get(CONF_JSON_ATTRS_TOPIC),
+                    self._config.get(CONF_JSON_ATTRS_TEMPLATE),
                     extra_state_attributes,
                 )
                 return
