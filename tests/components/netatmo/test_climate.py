@@ -1144,7 +1144,7 @@ async def test_thermostat_update_with_none_therm_setpoint_mode(
     state = hass.states.get(climate_entity_livingroom)
     assert state is not None
     assert state.state == HVACMode.AUTO
-    assert state.attributes["preset_mode"] == PRESET_SCHEDULE
+    assert state.attributes["preset_mode"] == PRESET_AWAY
     assert state.attributes["temperature"] == 20
 
 
