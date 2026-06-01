@@ -25,7 +25,7 @@ from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
 from .entity import YotoEntity
 
 URI_SCHEME = "yoto"
-# First path segment names the content type. Only cards exist today;
+# The URI authority ("card") names the content type. Only cards exist today;
 # reserving it leaves room for groups without breaking URIs.
 URI_CARD = "card"
 
