@@ -78,7 +78,7 @@ async def test_select_current_option(
 @pytest.mark.parametrize(
     "raw_value",
     [
-        pytest.param(None, id="missing"),
+        pytest.param(None, id="null"),
         pytest.param("garbage", id="non_numeric"),
         pytest.param(99, id="out_of_range"),
     ],
