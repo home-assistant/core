@@ -239,6 +239,7 @@ async def test_play_media(
         pytest.param("yoto://card-test/01", id="missing_card_prefix"),
         pytest.param("yoto://card/", id="missing_card_id"),
         pytest.param("yoto://card/card-test/01/01-INT/extra", id="too_many_segments"),
+        pytest.param("yoto://card/card-test//01-INT", id="empty_segment"),
     ],
 )
 async def test_play_media_invalid_uri_raises(
@@ -287,6 +288,33 @@ async def test_play_media_unknown_target_raises(
                 ATTR_ENTITY_ID: ENTITY_ID,
                 "media_content_type": "music",
                 "media_content_id": media_content_id,
+            },
+            blocking=True,
+        )
+
+    mock_yoto_client.play_card.assert_not_called()
+
+
+async def test_play_media_card_detail_failure_raises(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A failure fetching card chapters surfaces as HomeAssistantError."""
+    card = mock_yoto_client.library["card-test"]
+    card.chapters = {}
+    mock_yoto_client.update_card_detail.side_effect = YotoError("offline")
+
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                "media_content_type": "music",
+                "media_content_id": "yoto://card/card-test/01",
             },
             blocking=True,
         )

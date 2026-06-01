@@ -238,8 +238,8 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             if track_key is None and chapter.tracks:
                 track_key = next(iter(chapter.tracks))
 
-        # Chapter/track plays start at 0; a card play keeps its resume point.
-        seconds_in = 0 if track_key is not None else None
+        # Targeted chapter/track plays start at 0; a card play keeps its resume point.
+        seconds_in = 0 if chapter_key is not None else None
         try:
             await client.play_card(
                 self._player_id,
@@ -432,8 +432,8 @@ def _parse_uri(media_id: str) -> tuple[str, str | None, str | None]:
     prefix = f"{URI_SCHEME}://{URI_CARD}/"
     if not media_id.startswith(prefix):
         raise ValueError(f"Not a Yoto media identifier: {media_id}")
-    parts = [segment for segment in media_id[len(prefix) :].split("/") if segment]
-    if not parts or len(parts) > 3:
+    parts = media_id[len(prefix) :].split("/")
+    if not parts or len(parts) > 3 or any(not segment for segment in parts):
         raise ValueError(f"Not a Yoto media identifier: {media_id}")
     card_id = parts[0]
     chapter_key = parts[1] if len(parts) > 1 else None
