@@ -6,6 +6,7 @@ from typing import Any
 import switchbot
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.components.sensor import ConfigType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -310,6 +311,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
             translation_placeholders={
                 "sensor_type": entry.data[CONF_SENSOR_TYPE],
                 "address": entry.data[CONF_ADDRESS],
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    entry.data[CONF_ADDRESS].upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
             },
         )
 
@@ -331,7 +337,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_not_found_error",
-            translation_placeholders={"sensor_type": sensor_type, "address": address},
+            translation_placeholders={
+                "sensor_type": sensor_type,
+                "address": address,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION
+                    if connectable
+                    else BluetoothReachabilityIntent.PASSIVE_ADVERTISEMENT,
+                ),
+            },
         )
 
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)

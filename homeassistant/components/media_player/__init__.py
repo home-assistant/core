@@ -1287,25 +1287,16 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
-        missing_media_image_is_not_found = False
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")
             data, content_type = await player.async_get_browse_image(
                 media_content_type, media_content_id, media_image_id
             )
         else:
-            missing_media_image_is_not_found = (
-                player.media_image_url is None and player.media_image_hash is not None
-            )
             data, content_type = await player.async_get_media_image()
 
         if data is None:
-            status = (
-                HTTPStatus.NOT_FOUND
-                if missing_media_image_is_not_found
-                else HTTPStatus.INTERNAL_SERVER_ERROR
-            )
-            return web.Response(status=status)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)
