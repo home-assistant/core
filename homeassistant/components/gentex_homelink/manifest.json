@@ -1,7 +1,7 @@
 {
   "domain": "gentex_homelink",
   "name": "HomeLink",
-  "codeowners": ["@rjones-gentex"],
+  "codeowners": ["@Gentex-Corporation/Homelink", "@rjones-gentex"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/gentex_homelink",

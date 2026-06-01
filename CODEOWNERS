@@ -623,8 +623,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/generic_hygrostat/ @Shulyaka
 /homeassistant/components/geniushub/ @manzanotti
 /tests/components/geniushub/ @manzanotti
-/homeassistant/components/gentex_homelink/ @rjones-gentex
-/tests/components/gentex_homelink/ @rjones-gentex
+/homeassistant/components/gentex_homelink/ @Gentex-Corporation/Homelink @rjones-gentex
+/tests/components/gentex_homelink/ @Gentex-Corporation/Homelink @rjones-gentex
 /homeassistant/components/geo_json_events/ @exxamalte
 /tests/components/geo_json_events/ @exxamalte
 /homeassistant/components/geo_location/ @home-assistant/core
