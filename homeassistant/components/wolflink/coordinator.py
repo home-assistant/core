@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the Wolf SmartSet Service integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -16,7 +17,16 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type WolflinkConfigEntry = ConfigEntry[WolfLinkCoordinator]
+
+@dataclass
+class WolflinkData:
+    """Runtime data for the wolflink integration."""
+
+    client: WolfClient
+    coordinators: list[WolfLinkCoordinator]
+
+
+type WolflinkConfigEntry = ConfigEntry[WolflinkData]
 
 
 class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
@@ -32,6 +42,7 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
         parameters: list[Parameter],
         gateway_id: int,
         device_id: int,
+        device_name: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -45,6 +56,7 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
         self.parameters = parameters
         self._gateway_id = gateway_id
         self.device_id = device_id
+        self.device_name = device_name
         self._refetch_parameters = False
 
     async def _async_update_data(self) -> dict[int, tuple[int, str]]:

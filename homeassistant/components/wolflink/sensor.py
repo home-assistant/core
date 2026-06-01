@@ -134,14 +134,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all entries for Wolf Platform."""
-    coordinator = config_entry.runtime_data
+    wolflink_data = config_entry.runtime_data
 
-    entities: list[WolfLinkSensor] = [
-        WolfLinkSensor(coordinator, parameter, coordinator.device_id, description)
-        for parameter in coordinator.parameters
-        for description in SENSOR_DESCRIPTIONS
-        if description.supported_fn(parameter)
-    ]
+    entities: list[WolfLinkSensor] = []
+    for coordinator in wolflink_data.coordinators:
+        entities.extend(
+            WolfLinkSensor(coordinator, parameter, coordinator.device_id, description)
+            for parameter in coordinator.parameters
+            for description in SENSOR_DESCRIPTIONS
+            if description.supported_fn(parameter)
+        )
 
     async_add_entities(entities, True)
 
@@ -169,6 +171,7 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
             identifiers={(DOMAIN, str(device_id))},
             configuration_url="https://www.wolf-smartset.com/",
             manufacturer=MANUFACTURER,
+            name=coordinator.device_name,
         )
 
     @property

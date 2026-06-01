@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -11,9 +12,15 @@
     "step": {
       "device": {
         "data": {
-          "device_name": "[%key:common::config_flow::data::device%]"
+          "device_id": "Devices"
         },
-        "title": "Select WOLF device"
+        "title": "Select WOLF devices"
+      },
+      "reconfigure": {
+        "data": {
+          "device_id": "Devices"
+        },
+        "title": "Select WOLF devices"
       },
       "user": {
         "data": {
