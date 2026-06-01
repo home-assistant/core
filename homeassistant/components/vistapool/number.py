@@ -155,9 +155,9 @@ async def async_setup_entry(
 
         if coordinator.get_value(PATH_HASHIDRO):
             key = (
-                "electrolysis_setpoint"
-                if coordinator.get_value("hidro.is_electrolysis")
-                else "hydrolysis_setpoint"
+                "hydrolysis_setpoint"
+                if coordinator.get_value("hidro.is_electrolysis") is False
+                else "electrolysis_setpoint"
             )
             entities.append(
                 VistapoolNumber(
