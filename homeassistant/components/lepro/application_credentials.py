@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 
-from .const import DOMAIN
+from .const import DOMAIN, OAUTH2_SCOPES
 
 
 class LoproOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -28,10 +28,28 @@ class LoproOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementati
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve auth code to token, converting absolute expires_in to relative seconds."""
-        token = await super().async_resolve_external_data(external_data)
+        token = await self._token_request(
+            {
+                "grant_type": "authorization_code",
+                "code": external_data["code"],
+                "redirect_uri": external_data["state"]["redirect_uri"],
+                "scope": OAUTH2_SCOPES,
+            }
+        )
         if "expires_in" in token:
             token["expires_in"] = max(0, int(token["expires_in"]) - int(time.time()))
         return token
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh token, including scope."""
+        new_token = await self._token_request(
+            {
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": token["refresh_token"],
+            }
+        )
+        return {**token, **new_token}
 
     async def async_refresh_token(self, token: dict) -> dict:
         """Refresh token, handling server's absolute expires_in timestamp."""
@@ -59,5 +77,5 @@ async def async_get_auth_implementation(
         credential.client_id,
         credential.client_secret,
         f"{api_host}/oauth2/web/login.html",
-        f"{api_host}/oauth2/token",
+        f"{api_host}/v2/oauth2/token",
     )

@@ -46,6 +46,7 @@ class LoproOAuth2FlowHandler(
         data: dict = {"scope": quote(OAUTH2_SCOPES, safe=" ")}
         if self._account:
             data[CONF_ACCOUNT] = self._account
+        data["source"] = "ha"
         return data
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
@@ -83,6 +84,7 @@ class LoproOAuth2FlowHandler(
         resp.raise_for_status()
         body = await resp.json()
         return "https://" + body["data"]["apiHost"]
+        # return "http://192.168.30.3:9999"
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create a config entry after OAuth, storing the resolved API host."""
