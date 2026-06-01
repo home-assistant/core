@@ -91,7 +91,7 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
                     "reason": async_address_reachability_diagnostics(
                         self.hass,
                         self.address.upper(),
-                        BluetoothReachabilityIntent.PASSIVE_ADVERTISEMENT,
+                        BluetoothReachabilityIntent.ACTIVE_ADVERTISEMENT,
                     ),
                 },
             )
