@@ -7,12 +7,20 @@ from opensensemap_api import OpenSenseMap
 from opensensemap_api.exceptions import OpenSenseMapError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(minutes=10)
+
+TEMPERATURE_UNITS: dict[str, str] = {
+    "°C": UnitOfTemperature.CELSIUS,
+    "C": UnitOfTemperature.CELSIUS,
+    "°F": UnitOfTemperature.FAHRENHEIT,
+    "F": UnitOfTemperature.FAHRENHEIT,
+}
 
 
 @dataclass(slots=True, frozen=True)
@@ -21,6 +29,41 @@ class OpenSenseMapStationData:
 
     pm2_5: float | None
     pm10: float | None
+    pm1_0: float | None
+    temperature: float | None
+    temperature_unit: str | None
+    humidity: float | None
+    air_pressure: float | None
+    illuminance: float | None
+    uv: float | None
+    wind_speed: float | None
+    wind_direction: float | None
+    precipitation: float | None
+
+
+def _detect_temperature_unit(api: OpenSenseMap) -> str | None:
+    """Return the temperature unit reported by the station, if known."""
+    value = api.temperature
+    if value is None:
+        return None
+    # The library exposes only values, not units. Temperature is the one
+    # measurement that varies (°C vs °F) across stations, so scan the raw
+    # data to find the sensor whose value matches and read its unit.
+    try:
+        target = float(value)
+    except TypeError, ValueError:
+        return None
+    for sensor in api.data.get("sensors", []):
+        raw = sensor.get("lastMeasurement", {}).get("value")
+        try:
+            if float(raw) != target:
+                continue
+        except TypeError, ValueError:
+            continue
+        unit = sensor.get("unit")
+        if unit in TEMPERATURE_UNITS:
+            return TEMPERATURE_UNITS[unit]
+    return None
 
 
 type OpenSenseMapConfigEntry = ConfigEntry[OpenSenseMapCoordinator]
@@ -55,4 +98,17 @@ class OpenSenseMapCoordinator(DataUpdateCoordinator[OpenSenseMapStationData]):
             raise UpdateFailed(
                 f"Unable to fetch data from openSenseMap: {err}"
             ) from err
-        return OpenSenseMapStationData(pm2_5=self.api.pm2_5, pm10=self.api.pm10)
+        return OpenSenseMapStationData(
+            pm2_5=self.api.pm2_5,
+            pm10=self.api.pm10,
+            pm1_0=self.api.pm1_0,
+            temperature=self.api.temperature,
+            temperature_unit=_detect_temperature_unit(self.api),
+            humidity=self.api.humidity,
+            air_pressure=self.api.air_pressure,
+            illuminance=self.api.illuminance,
+            uv=self.api.uv,
+            wind_speed=self.api.wind_speed,
+            wind_direction=self.api.wind_direction,
+            precipitation=self.api.precipitation,
+        )
