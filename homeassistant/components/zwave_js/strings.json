@@ -295,6 +295,9 @@
     "access_control_not_supported": {
       "message": "Access control is not supported on this device"
     },
+    "add_user_failed": {
+      "message": "Failed to add user: {error}"
+    },
     "clear_lock_usercode_failed": {
       "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
     },
@@ -430,6 +433,40 @@
     }
   },
   "services": {
+    "add_user": {
+      "description": "Creates a new access-control user on a lock entity, optionally writing a credential (PIN code or password) in the same operation. Returns the allocated user_id, plus the credential_slot when a credential was written, for each targeted lock entity.",
+      "fields": {
+        "active": {
+          "description": "Whether the user is active.",
+          "name": "Active"
+        },
+        "credential_data": {
+          "description": "The credential data (e.g. PIN digits or password string).",
+          "name": "Credential data"
+        },
+        "credential_rule": {
+          "description": "Credential rule for the user (single, dual, or triple).",
+          "name": "Credential rule"
+        },
+        "credential_type": {
+          "description": "The type of credential (pin_code or password).",
+          "name": "Credential type"
+        },
+        "user_id": {
+          "description": "User slot index. If not specified, the first available slot is used.",
+          "name": "User index"
+        },
+        "user_name": {
+          "description": "Display name for the user.",
+          "name": "User name"
+        },
+        "user_type": {
+          "description": "The type of user (e.g. general, programming, remote_only).",
+          "name": "User type"
+        }
+      },
+      "name": "Add user"
+    },
     "bulk_set_partial_config_parameters": {
       "description": "Allows for bulk setting partial parameters. Useful when multiple partial parameters have to be set at the same time.",
       "fields": {

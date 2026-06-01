@@ -100,6 +100,28 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass,
         const.DOMAIN,
+        "add_user",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Optional(const.ATTR_USER_ID): uint16_id,
+            vol.Optional(const.ATTR_USER_NAME): cv.string,
+            vol.Optional(const.ATTR_USER_TYPE): vol.In(USER_TYPE_REVERSE_MAP.keys()),
+            vol.Optional(const.ATTR_CREDENTIAL_RULE): vol.In(
+                CREDENTIAL_RULE_REVERSE_MAP.keys()
+            ),
+            vol.Optional(const.ATTR_USER_ACTIVE): cv.boolean,
+            vol.Inclusive(const.ATTR_CREDENTIAL_TYPE, "credential"): vol.In(
+                const.WRITABLE_CREDENTIAL_TYPES
+            ),
+            vol.Inclusive(const.ATTR_CREDENTIAL_DATA, "credential"): cv.string,
+        },
+        func="async_add_user",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
         "delete_user",
         entity_domain=LOCK_DOMAIN,
         schema={vol.Required(const.ATTR_USER_ID): uint16_id},
