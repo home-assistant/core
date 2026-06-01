@@ -12,7 +12,7 @@ from homeassistant.components.device_tracker import (
     SourceType,
     TrackerEntity,
 )
-from homeassistant.components.zone import DATA_ZONE_ENTITY_IDS, DOMAIN as ZONE_DOMAIN
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -260,11 +260,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self._attr_latitude = None
             self._attr_longitude = None
             reported_zones: set[str] = {str(zone) for zone in attr_in_zones}
-            zone_entity_ids = set(self.hass.data.get(DATA_ZONE_ENTITY_IDS, ()))
             zone_names: dict[str, str] = {
                 zone_state.name: zone_state.entity_id
                 for zone_state in self.hass.states.async_all(ZONE_DOMAIN)
             }
+            zone_entity_ids = set(zone_names.values())
             # Match zone with entity, object_id or zone name
             self._attr_in_zones = list(
                 {
