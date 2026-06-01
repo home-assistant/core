@@ -66,9 +66,15 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.on_history_event = Signal(client)
         client.on_volume_state_event = Signal(client)
         client.on_media_state_event = Signal(client)
-        http2_task = asyncio.Future()
-        http2_task.set_result(None)
-        client.start_http2_processing = AsyncMock(return_value=http2_task)
+
+        async def _start_http2_processing(*_args, **_kwargs) -> asyncio.Task[None]:
+            async def _completed_task() -> None:
+                return
+
+            return asyncio.create_task(_completed_task())
+
+        client.start_http2_processing = AsyncMock(side_effect=_start_http2_processing)
+        client.stop_http2_processing = AsyncMock()
         client.send_sound_notification = AsyncMock()
         yield client
 

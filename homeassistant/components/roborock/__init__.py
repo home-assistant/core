@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import aiohttp
 from roborock import (
     RoborockException,
     RoborockInvalidCredentials,
@@ -120,12 +119,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
-        ) from err
-    except (aiohttp.ClientError, TimeoutError) as err:
-        _LOGGER.debug("Network error setting up Roborock: %s", err)
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="network_error",
         ) from err
 
     async def shutdown_roborock(_: Event | None = None) -> None:
