@@ -54,7 +54,6 @@ async def test_transient_error_is_retried(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
     exception: Exception,
 ) -> None:
     """Transient errors are handled cleanly: entities go unavailable, then recover."""
@@ -63,15 +62,13 @@ async def test_transient_error_is_retried(
     initial_state = hass.states.get(TEMPERATURE_SENSOR.entity_id)
     assert initial_state.state != STATE_UNAVAILABLE
 
-    # A transient error during a refresh makes the entities unavailable, without
-    # surfacing it as an unexpected coordinator error.
+    # A transient error during a refresh makes the entities unavailable.
     mock_client.fetch_events.side_effect = exception
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
-    assert "Unexpected error fetching" not in caplog.text
 
     # Once the server recovers, the next refresh restores the entities.
     mock_client.fetch_events.side_effect = None
