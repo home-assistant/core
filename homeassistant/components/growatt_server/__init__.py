@@ -282,7 +282,9 @@ def get_device_list_v1(
             ) from e
         if e.error_code == V1_API_ERROR_RATE_LIMITED:
             raise ConfigEntryNotReady(
-                f"Growatt API rate limited, will retry: {e.error_msg or str(e)}"
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+                translation_placeholders={"error": e.error_msg or str(e)},
             ) from e
         raise ConfigEntryError(
             translation_domain=DOMAIN,

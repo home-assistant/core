@@ -655,6 +655,9 @@
     "no_devices_configured": {
       "message": "No {device_type} devices with token authentication are configured. Actions require {device_type} devices with V1 API access."
     },
+    "rate_limited": {
+      "message": "Growatt API rate limited, will retry: {error}"
+    },
     "token_auth_required": {
       "message": "This action requires token authentication (V1 API)."
     },
