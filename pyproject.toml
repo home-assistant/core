@@ -746,11 +746,9 @@ ignore = [
   "PT011",   # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
   "PT018",   # Assertion should be broken down into multiple parts
   "RUF001",  # String contains ambiguous unicode character.
-  "RUF009",  # Do not perform function call in dataclass defaults
   "RUF012",  # Mutable class attributes should be annotated with typing.ClassVar
   "RUF015",  # Prefer next(...) over single element slice
   "RUF043",  # Pattern passed to match= contains metacharacters but is neither escaped nor raw
-  "RUF061",  # Use context-manager form of pytest.raises()
   "SIM102",  # Use a single if statement instead of nested if statements
   "SIM103",  # Return the condition {condition} directly
   "SIM108",  # Use ternary operator {contents} instead of if-else-block
