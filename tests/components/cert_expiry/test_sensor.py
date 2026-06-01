@@ -35,7 +35,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=timestamp,
-    ):
+        ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -301,7 +301,7 @@ async def test_async_setup_entry_empty_cert(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.cert_expiry.helper.async_get_cert",
         return_value={},
-    ):
+):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -311,3 +311,30 @@ async def test_async_setup_entry_empty_cert(hass: HomeAssistant) -> None:
     assert state.state != STATE_UNAVAILABLE
     assert state.attributes.get("error") is not None
     assert not state.attributes.get("is_valid")
+
+
+async def test_non_default_port(hass: HomeAssistant) -> None:
+    """Test sensor naming and unique_id when a non-default port is used."""
+    assert hass.state is CoreState.running
+
+    non_default_port = 8443
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: non_default_port},
+        unique_id=f"{HOST}:{non_default_port}",
+    )
+
+    timestamp = future_timestamp(100)
+
+    with patch(
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+        return_value=timestamp,
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_8443_cert_expiry")
+    assert state is not None
+    assert state.state == timestamp.isoformat()
+    assert entry.unique_id == f"{HOST}:{non_default_port}"
