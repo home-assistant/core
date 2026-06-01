@@ -2855,6 +2855,12 @@
         "zwave"
       ]
     },
+    "helty": {
+      "name": "Helty Flow",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "here_travel_time": {
       "name": "HERE Travel Time",
       "integration_type": "service",

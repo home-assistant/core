@@ -1216,7 +1216,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.8.0
+habluetooth==6.8.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1269,7 +1269,7 @@ hole==0.9.0
 holidays==0.97
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260527.1
+home-assistant-frontend==20260527.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.5.5
@@ -2203,6 +2203,9 @@ pygti==0.9.4
 
 # homeassistant.components.version
 pyhaversion==22.8.0
+
+# homeassistant.components.helty
+pyhelty==0.2.0
 
 # homeassistant.components.heos
 pyheos==1.0.6
