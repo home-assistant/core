@@ -20,6 +20,7 @@ from homeassistant.components.growatt_server.const import (
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
+    V1_API_ERROR_RATE_LIMITED,
     V1_API_ERROR_WRONG_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -78,6 +79,14 @@ async def test_device_info(
         (
             json.decoder.JSONDecodeError("Invalid JSON", "", 0),
             ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            growattServer.GrowattV1ApiError(
+                message="Rate limited",
+                error_code=V1_API_ERROR_RATE_LIMITED,
+                error_msg="Access frequency limit",
+            ),
+            ConfigEntryState.SETUP_RETRY,
         ),
     ],
 )
