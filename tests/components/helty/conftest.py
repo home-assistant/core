@@ -68,4 +68,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title=DEVICE_NAME,
         data={CONF_HOST: HOST},
+        entry_id="01HHHHHHHHHHHHHHHHHHHHHHHH",
     )

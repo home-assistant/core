@@ -1,9 +1,10 @@
 """Test the Helty Flow fan platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from pyhelty import FanMode
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -16,35 +17,31 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
 from .conftest import make_data
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 FAN_ENTITY = "fan.vmc_soggiorno"
 
 
-async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_fan_speed_state(
+async def test_all_entities(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_helty_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the fan reports a discrete speed."""
-    await _setup(hass, mock_config_entry)
+    """Test all entities."""
+    with patch("homeassistant.components.helty.PLATFORMS", [Platform.FAN]):
+        await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(FAN_ENTITY)
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_PERCENTAGE] == 25  # LOW = 1/4
-    assert state.attributes[ATTR_PRESET_MODE] is None
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_fan_preset_state(
@@ -54,7 +51,7 @@ async def test_fan_preset_state(
 ) -> None:
     """Test the fan reports an active preset."""
     mock_helty_client.async_get_data.return_value = make_data(fan_mode=FanMode.NIGHT)
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(FAN_ENTITY)
     assert state.attributes[ATTR_PRESET_MODE] == "night"
@@ -67,7 +64,7 @@ async def test_fan_set_preset(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting a preset mode."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -90,7 +87,7 @@ async def test_fan_set_percentage(
     expected: FanMode,
 ) -> None:
     """Test mapping a percentage to a discrete speed."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -107,7 +104,7 @@ async def test_fan_set_percentage_zero_turns_off(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting 0% turns the fan off."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -124,7 +121,7 @@ async def test_fan_turn_off_and_on(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning the fan off and back on."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: FAN_ENTITY}, blocking=True
@@ -143,7 +140,7 @@ async def test_fan_turn_on_with_percentage(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning on with an explicit percentage."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -160,7 +157,7 @@ async def test_fan_turn_on_with_preset(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning on with an explicit preset."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         FAN_DOMAIN,

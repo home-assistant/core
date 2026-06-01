@@ -60,7 +60,7 @@ class HeltyFan(HeltyEntity, FanEntity):
     def __init__(self, coordinator: HeltyDataUpdateCoordinator) -> None:
         """Initialize the fan."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{self._device_id}_fan"
+        self._attr_unique_id = self._device_id
         self._attr_preset_modes = list(PRESET_TO_MODE)
 
     @property
