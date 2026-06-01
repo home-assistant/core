@@ -44,7 +44,7 @@
         "name": "Rain delay"
       },
       "water_hammer_duration": {
-        "name": "Water hammer duration"
+        "name": "Water hammer reduction"
       },
       "zone_delay": {
         "name": "Zone delay"
