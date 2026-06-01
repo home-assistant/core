@@ -15,13 +15,16 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+type BleBoxConfigEntry = ConfigEntry[BleBoxCoordinator]
+
+
 class BleBoxCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a single BleBox device."""
 
-    config_entry: ConfigEntry
+    config_entry: BleBoxConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, box: Box
+        self, hass: HomeAssistant, config_entry: BleBoxConfigEntry, box: Box
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

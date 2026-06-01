@@ -6,7 +6,6 @@ from blebox_uniapi.box import Box
 from blebox_uniapi.error import Error
 from blebox_uniapi.session import ApiHost
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -18,10 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DEFAULT_SETUP_TIMEOUT
-from .coordinator import BleBoxCoordinator
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .helpers import get_maybe_authenticated_session
-
-type BleBoxConfigEntry = ConfigEntry[BleBoxCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
