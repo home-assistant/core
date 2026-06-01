@@ -79,9 +79,8 @@ class UPBConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_DEVICE: user_input[CONF_DEVICE]})
             try:
-                if self._device_already_configured(user_input[CONF_DEVICE]):
-                    return self.async_abort(reason="already_configured")
                 network_id, info = await _validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -106,13 +105,6 @@ class UPBConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    def _device_already_configured(self, device: str) -> bool:
-        """See if we already have a UPB PIM matching user input configured."""
-        existing_devices = {
-            entry.data[CONF_DEVICE] for entry in self._async_current_entries()
-        }
-        return device in existing_devices
 
 
 class CannotConnect(HomeAssistantError):
