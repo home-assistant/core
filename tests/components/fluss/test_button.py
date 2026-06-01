@@ -3,10 +3,12 @@
 from unittest.mock import AsyncMock
 
 from fluss_api import FlussApiClient, FlussApiClientError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.fluss.const import UPDATE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -14,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_buttons(
@@ -80,6 +82,7 @@ async def test_button_unavailable_on_status_error(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Buttons become unavailable when a status refresh errors."""
     await setup_integration(hass, mock_config_entry)
@@ -88,8 +91,9 @@ async def test_button_unavailable_on_status_error(
     mock_api_client.async_get_device_status.side_effect = FlussApiClientError(
         "device offline"
     )
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("button.device_1").state == STATE_UNAVAILABLE
     assert hass.states.get("button.device_2").state == STATE_UNAVAILABLE

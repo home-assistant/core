@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from fluss_api import FlussApiClientError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,7 +14,7 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
 )
-from homeassistant.components.fluss.const import DOMAIN
+from homeassistant.components.fluss.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_CLOSED,
@@ -100,6 +101,7 @@ async def test_cover_unavailable_on_transient_status_error(
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A failed per-device status fetch raises UpdateFailed and marks the cover unavailable."""
     mock_api_client.async_get_device_status.return_value = {
@@ -109,11 +111,10 @@ async def test_cover_unavailable_on_transient_status_error(
     assert hass.states.get(ENTITY_ID_1).state == STATE_CLOSED
 
     mock_api_client.async_get_device_status.side_effect = FlussApiClientError("boom")
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert coordinator.last_update_success is False
     assert hass.states.get(ENTITY_ID_1).state == STATE_UNAVAILABLE
     assert entity_registry.async_get(ENTITY_ID_1) is not None
 
