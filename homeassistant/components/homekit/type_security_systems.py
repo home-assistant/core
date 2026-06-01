@@ -185,7 +185,7 @@ class SecuritySystem(HomeAccessory):
           changed since build -> reload to rebuild the accessory.
         - value not valid and not supported now either: the entity is reporting
           a state it doesn't advertise -> reloading wouldn't help (and would
-          loop), so log once and skip.
+          loop), so log and skip.
 
         Returns True if the value was pushed, False otherwise.
         """
