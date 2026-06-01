@@ -925,15 +925,17 @@ async def test_bulk_update(
             TodoServices.ADD_ITEM,
             {
                 ATTR_ITEM: f"item {_i}",
+                ATTR_DUE_DATE: f"2026-06-{_i + 1:02d}",
+                ATTR_DESCRIPTION: f"Thing {_i + 1}",
             },
             target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
+    # Set status for completed items
     items = await ws_get_items()
     assert len(items) == total_items
     uids = [item["uid"] for item in items]
-    names = [item["summary"] for item in items]
 
     for _i in completed_items:
         await hass.services.async_call(
@@ -951,7 +953,13 @@ async def test_bulk_update(
     assert state
     assert state.state == str(expected_state)
 
-    # Bulk-update list
+    # Store original values of attributes that shouldn't change
+    original_items = await ws_get_items()
+    names = [item["summary"] for item in original_items]
+    due_datetimes = [item.get("due") for item in original_items]
+    descriptions = [item.get("description") for item in original_items]
+
+    # ACT: bulk-update list
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_LIST,
@@ -962,7 +970,6 @@ async def test_bulk_update(
 
     items = await ws_get_items()
     assert len(items) == total_items
-    assert [item["summary"] for item in items] == names
 
     # Verify status
     if status := info.get("status"):
@@ -972,3 +979,8 @@ async def test_bulk_update(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == str(expected_state)
+
+    # Verify nothing else changed
+    assert [item["summary"] for item in items] == names
+    assert [item.get("due") for item in items] == due_datetimes
+    assert [item.get("description") for item in items] == descriptions
