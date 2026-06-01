@@ -17,7 +17,12 @@ from homeassistant.components.schlage.const import (
     SERVICE_GET_CODES,
     UPDATE_INTERVAL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
