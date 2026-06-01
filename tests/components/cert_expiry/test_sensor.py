@@ -288,6 +288,31 @@ async def test_error_attribute_is_none_when_cert_valid(hass: HomeAssistant) -> N
     assert state.attributes.get("is_valid") is True
 
 
+async def test_async_setup_entry_empty_cert(hass: HomeAssistant) -> None:
+    """Test setup when peer certificate is empty (e.g. verify_mode=CERT_NONE)."""
+    assert hass.state is CoreState.running
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+
+    with patch(
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
+        return_value={},
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes.get("error") is not None
+    assert not state.attributes.get("is_valid")
+
+
 async def test_non_default_port(hass: HomeAssistant) -> None:
     """Test sensor naming and unique_id when a non-default port is used."""
     assert hass.state is CoreState.running
