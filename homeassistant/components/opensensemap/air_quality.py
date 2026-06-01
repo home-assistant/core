@@ -1,9 +1,5 @@
 """Support for openSenseMap Air Quality data."""
 
-from datetime import timedelta
-
-from opensensemap_api import OpenSenseMap
-from opensensemap_api.exceptions import OpenSenseMapError
 import voluptuous as vol
 
 from homeassistant.components.air_quality import (
@@ -20,18 +16,16 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OpenSenseMapConfigEntry
 from .const import (
     CONF_STATION_ID,
     DEPRECATED_YAML_BREAKS_IN_VERSION,
     DOMAIN,
     INTEGRATION_TITLE,
     KNOWN_IMPORT_ABORT_REASONS,
-    LOGGER,
 )
-
-SCAN_INTERVAL = timedelta(minutes=10)
+from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapCoordinator
 
 PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_STATION_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
@@ -107,33 +101,25 @@ async def async_setup_entry(
     )
 
 
-class OpenSenseMapQuality(AirQualityEntity):
+class OpenSenseMapQuality(CoordinatorEntity[OpenSenseMapCoordinator], AirQualityEntity):
     """Implementation of an openSenseMap air quality entity."""
 
     _attr_attribution = "Data provided by openSenseMap"
 
-    def __init__(self, api: OpenSenseMap, station_id: str, name: str) -> None:
+    def __init__(
+        self, coordinator: OpenSenseMapCoordinator, station_id: str, name: str
+    ) -> None:
         """Initialize the air quality entity."""
-        self._api = api
+        super().__init__(coordinator)
         self._attr_name = name
         self._attr_unique_id = station_id
 
     @property
     def particulate_matter_2_5(self) -> float | None:
         """Return the particulate matter 2.5 level."""
-        return self._api.pm2_5
+        return self.coordinator.data.pm2_5
 
     @property
     def particulate_matter_10(self) -> float | None:
         """Return the particulate matter 10 level."""
-        return self._api.pm10
-
-    async def async_update(self) -> None:
-        """Fetch latest data from the openSenseMap API."""
-        try:
-            await self._api.get_data()
-        except OpenSenseMapError as err:
-            LOGGER.warning("Unable to fetch data from openSenseMap: %s", err)
-            self._attr_available = False
-        else:
-            self._attr_available = True
+        return self.coordinator.data.pm10
