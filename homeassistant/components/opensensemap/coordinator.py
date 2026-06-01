@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 
-from opensensemap_api import OpenSenseMap
+from opensensemap_api import _TITLES, OpenSenseMap
 from opensensemap_api.exceptions import OpenSenseMapError
 
 from homeassistant.config_entries import ConfigEntry
@@ -43,26 +43,13 @@ class OpenSenseMapStationData:
 
 def _detect_temperature_unit(api: OpenSenseMap) -> str | None:
     """Return the temperature unit reported by the station, if known."""
-    value = api.temperature
-    if value is None:
-        return None
-    # The library exposes only values, not units. Temperature is the one
-    # measurement that varies (°C vs °F) across stations, so scan the raw
-    # data to find the sensor whose value matches and read its unit.
-    try:
-        target = float(value)
-    except TypeError, ValueError:
-        return None
-    for sensor in api.data.get("sensors", []):
-        raw = sensor.get("lastMeasurement", {}).get("value")
-        try:
-            if float(raw) != target:
-                continue
-        except TypeError, ValueError:
-            continue
-        unit = sensor.get("unit")
-        if unit in TEMPERATURE_UNITS:
-            return TEMPERATURE_UNITS[unit]
+    # The library resolves a measurement by matching localized sensor titles
+    # (opensensemap_api._TITLES) and exposes only its value, not the unit.
+    # Walk the same titles to find that sensor and read its unit.
+    for title in (*_TITLES["Temperature"], "Temperature"):
+        for sensor in api.data.get("sensors", []):
+            if sensor.get("title", "").casefold() == title.casefold():
+                return TEMPERATURE_UNITS.get(sensor.get("unit"))
     return None
 
 

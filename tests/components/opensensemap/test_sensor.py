@@ -64,12 +64,12 @@ async def test_missing_measurements_omit_entities(
     assert keys == {"pm2_5", "pm10", "temperature", "humidity"}
 
 
-async def test_temperature_fahrenheit_unit(
+async def test_temperature_unit_detection(
     hass: HomeAssistant,
     mock_opensensemap_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the native temperature unit follows the station's reported unit."""
+    """Test that the temperature unit is detected correctly and converted as needed."""
     # Set the sensor to °F (the mock has °C) and make sure it converts to °C correctly
     for sensor in mock_opensensemap_api.data["sensors"]:
         if sensor["title"] == "Temperature":
