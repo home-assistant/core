@@ -57,7 +57,7 @@
     'manufacturer': None,
     'model': 'shutter_position_switch',
     'model_id': None,
-    'name': 'Test Cover',
+    'name': 'Shutter with position and slats',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

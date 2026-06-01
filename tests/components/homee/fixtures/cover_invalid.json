@@ -1,6 +1,6 @@
 {
-  "id": 1,
-  "name": "Slats & Position",
+  "id": 4,
+  "name": "Invalid Cover",
   "profile": 2002,
   "image": "default",
   "favorite": 0,
@@ -20,31 +20,7 @@
   "attributes": [
     {
       "id": 1,
-      "node_id": 1,
-      "instance": 0,
-      "minimum": -45,
-      "maximum": 90,
-      "current_value": 1.0,
-      "target_value": 1.0,
-      "last_value": -21.0,
-      "unit": "°",
-      "step_value": 1.0,
-      "editable": 1,
-      "type": 113,
-      "state": 1,
-      "last_changed": 1678284920,
-      "changed_by": 1,
-      "changed_by_id": 0,
-      "based_on": 1,
-      "data": "",
-      "name": "",
-      "options": {
-        "automations": ["step"]
-      }
-    },
-    {
-      "id": 2,
-      "node_id": 1,
+      "node_id": 4,
       "instance": 0,
       "minimum": 0,
       "maximum": 2,
