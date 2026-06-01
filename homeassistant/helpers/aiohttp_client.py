@@ -448,7 +448,7 @@ class HomeAssistantTCPConnector(aiohttp.TCPConnector):
         traces: list[Any],
         timeout: aiohttp.ClientTimeout,
         *,
-        client_error: type[Exception] | None = None,
+        client_error: type[Exception] = aiohttp.ClientConnectorError,
     ) -> Any:
         """Wrap _create_direct_connection to clear DNS cache on failure."""
         try:
