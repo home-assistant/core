@@ -64,7 +64,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Required("y1"): vol.Coerce(int),
                 vol.Required("x2"): vol.Coerce(int),
                 vol.Required("y2"): vol.Coerce(int),
-                vol.Required("repeats"): vol.Coerce(int),
+                vol.Required("repeats"): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=2)
+                ),
             },
         ),
         func="async_set_vacuum_zoned_cleaning",

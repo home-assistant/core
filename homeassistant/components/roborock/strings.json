@@ -800,7 +800,7 @@
       "description": "Starts cleaning the specified zone.",
       "fields": {
         "repeats": {
-          "description": "The number of times the zone cleaning ist repeated. '0' is just cleaning once.",
+          "description": "The number of times the zone cleaning is repeated. '0' is just cleaning once.",
           "name": "Repeats"
         },
         "x1": {
