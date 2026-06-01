@@ -5523,7 +5523,7 @@
         }
       }
     },
-    "powersensor": {
+    "powersensor_au": {
       "name": "Powersensor",
       "integration_type": "hub",
       "config_flow": true,

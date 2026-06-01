@@ -1,4 +1,4 @@
-"""Tests for the powersensor Home Assistant  config_flow.
+"""Tests for the powersensor_au Home Assistant  config_flow.
 
 This module includes various unit tests to ensure that the configuration flow for
 the power sensor component works correctly.
@@ -11,16 +11,16 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant import config_entries
-import homeassistant.components.powersensor
-from homeassistant.components.powersensor import PowersensorConfigFlow
-from homeassistant.components.powersensor.config_flow import get_sensor_display_name
-from homeassistant.components.powersensor.const import (
+import homeassistant.components.powersensor_au
+from homeassistant.components.powersensor_au import PowersensorConfigFlow
+from homeassistant.components.powersensor_au.const import (
     DOMAIN,
     ROLE_UNKNOWN,
     ROLE_UPDATE_SIGNAL,
     ROLE_WATER,
 )
-from homeassistant.components.powersensor.sensor import PowersensorRuntimeData
+from homeassistant.components.powersensor_au.sensor import PowersensorRuntimeData
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -32,19 +32,19 @@ SECOND_MAC = "a4cf1218f160"
 
 @pytest.fixture(autouse=True)
 def bypass_setup(monkeypatch: pytest.MonkeyPatch):
-    """A pytest fixture to bypass the actual setup of the powersensor component during tests.
+    """A pytest fixture to bypass the actual setup of the powersensor_au component during tests.
 
     It replaces the async_setup_entry method with a mock that returns True.
     """
     monkeypatch.setattr(
-        homeassistant.components.powersensor,
+        homeassistant.components.powersensor_au,
         "async_setup_entry",
         AsyncMock(return_value=True),
     )
 
 
 def validate_config_data(data):
-    """Validates the configuration data received from the powersensor config flow.
+    """Validates the configuration data received from the powersensor_au config flow.
 
     Args:
         data (dict): The configuration data to be validated.
@@ -52,7 +52,7 @@ def validate_config_data(data):
     Raises:
         AssertionError: If the configuration data does not meet the expected format.
     """
-    assert isinstance(data["devices"], dict)
+    # CFG_DEVICES removed in refactor; discovery is runtime-only
     assert isinstance(data["roles"], dict)
 
 
@@ -60,7 +60,7 @@ def validate_config_data(data):
 
 
 async def test_user(hass: HomeAssistant) -> None:
-    """Tests the user-initiated configuration flow for the powersensor."""
+    """Tests the user-initiated configuration flow for the powersensor_au."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -76,7 +76,7 @@ async def test_user(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf(hass: HomeAssistant) -> None:
-    """Tests the zeroconf-initiated configuration flow for the powersensor."""
+    """Tests the zeroconf-initiated configuration flow for the powersensor_au."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -102,7 +102,6 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     validate_config_data(result["data"])
-    assert MAC in result["data"]["devices"]
 
 
 async def test_zeroconf_two_plugs(hass: HomeAssistant) -> None:
@@ -150,7 +149,6 @@ async def test_zeroconf_two_plugs(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     validate_config_data(result["data"])
-    assert MAC in result["data"]["devices"]
 
     # # we expect the second plug config flow to get canceled if the integration has already been configured
     assert second_result["type"] == FlowResultType.ABORT
@@ -226,7 +224,6 @@ async def test_zeroconf_two_plugs_race(
     )
     assert second_result["type"] == FlowResultType.CREATE_ENTRY
     validate_config_data(second_result["data"])
-    assert MAC in second_result["data"]["devices"]
 
 
 async def test_zeroconf_two_plugs_simultaneous_discovery(
@@ -341,7 +338,6 @@ async def test_zeroconf_already_discovered(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     validate_config_data(result["data"])
-    assert MAC in result["data"]["devices"]
 
 
 async def test_zeroconf_missing_id(hass: HomeAssistant) -> None:
@@ -377,7 +373,7 @@ async def test_reconfigure(
     monkeypatch.setattr(hass.config_entries, "async_get_entry", my_entry)
 
     # Patch async_update_entry so it doesn't require the entry to be registered
-    updated_data: dict = {}
+    updated_data: dict[str, object] = {}
 
     def capture_update(entry, *, data=None, **_kwargs):
         if data is not None:
@@ -385,6 +381,7 @@ async def test_reconfigure(
         return True
 
     monkeypatch.setattr(hass.config_entries, "async_update_entry", capture_update)
+    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
     # Kick off the reconfigure
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -407,7 +404,7 @@ async def test_reconfigure(
 
     # Prepare user_input, and submit it
     mac2name = {
-        mac: get_sensor_display_name(def_config_entry, mac)
+        mac: f"Powersensor Sensor ({mac})"
         for mac in def_config_entry.runtime_data.dispatcher.sensors
     }
     result = await hass.config_entries.flow.async_configure(
@@ -436,6 +433,7 @@ async def test_unknown_role(
         return True
 
     monkeypatch.setattr(hass.config_entries, "async_update_entry", capture_update)
+    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
 
     # Kick off the reconfigure
     result = await hass.config_entries.flow.async_init(
@@ -459,7 +457,7 @@ async def test_unknown_role(
 
     # Prepare user_input, and submit it
     mac2name = {
-        mac: get_sensor_display_name(def_config_entry, mac)
+        mac: f"Powersensor Sensor ({mac})"
         for mac in def_config_entry.runtime_data.dispatcher.sensors
     }
     result = await hass.config_entries.flow.async_configure(
@@ -471,11 +469,41 @@ async def test_unknown_role(
     assert called == 1
 
 
+async def test_reconfigure_aborts_when_entry_not_loaded(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, def_config_entry
+) -> None:
+    """Test that reconfigure aborts when the entry is not in LOADED state (line 40).
+
+    config_flow.py checks entry.state before accessing runtime_data; if the
+    entry is not loaded the flow must abort with 'cannot_reconfigure'.
+    """
+
+    # Force the entry into a non-loaded state.
+    object.__setattr__(def_config_entry, "state", ConfigEntryState.NOT_LOADED)
+
+    def my_entry(_):
+        return def_config_entry
+
+    monkeypatch.setattr(hass.config_entries, "async_get_entry", my_entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": def_config_entry.entry_id,
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_reconfigure"
+
+
 async def test_abort_due_to_missing_runtime_data(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, def_config_entry
 ) -> None:
     """Tests the system's response to missing runtime data during the configuration step."""
     del def_config_entry.runtime_data
+    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
 
     # Make the config_flow use our pre-canned entry
     def my_entry(_):
@@ -501,9 +529,10 @@ async def test_abort_due_to_missing_dispatcher(
     _old_rd = def_config_entry.runtime_data
     def_config_entry.runtime_data = PowersensorRuntimeData(
         vhh=_old_rd.vhh,
-        dispatcher=None,
-        zeroconf=None,
+        dispatcher=None,  # type: ignore[arg-type]
+        devices=_old_rd.devices,
     )
+    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
 
     # Make the config_flow use our pre-canned entry
     def my_entry(_):
@@ -568,6 +597,7 @@ async def test_reconfigure_sensor_disappears_between_form_and_submit(
     monkeypatch.setattr(
         hass.config_entries, "async_update_entry", lambda *a, **kw: True
     )
+    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -582,7 +612,7 @@ async def test_reconfigure_sensor_disappears_between_form_and_submit(
     # Now remove it so mac2name on the second call won't contain it,
     # causing name2mac.get() to return None for it.
     mac2name = {
-        mac: get_sensor_display_name(def_config_entry, mac)
+        mac: f"Powersensor Sensor ({mac})"
         for mac in def_config_entry.runtime_data.dispatcher.sensors
     }
     def_config_entry.runtime_data.dispatcher.sensors = {

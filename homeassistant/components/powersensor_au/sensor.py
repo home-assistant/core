@@ -52,13 +52,11 @@ from .const import (
     CREATE_SENSOR_SIGNAL,
     DATA_UPDATE_SIGNAL_PREFIX,
     DOMAIN,
-    PLUG_ADDED_TO_HA_SIGNAL,
     ROLE_APPLIANCE,
     ROLE_HOUSENET,
     ROLE_SOLAR,
     ROLE_UPDATE_SIGNAL,
     ROLE_WATER,
-    SENSOR_ADDED_TO_HA_SIGNAL,
     UPDATE_VHH_SIGNAL,
 )
 from .models import (
@@ -294,7 +292,8 @@ PLUG_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     ),
 )
 
-HOUSEHOLD_DESCRIPTIONS: tuple[
+# Consumption (mains-only) VHH entities — always created when a house-net sensor exists.
+CONSUMPTION_DESCRIPTIONS: tuple[
     PowersensorVirtualHouseholdSensorEntityDescription, ...
 ] = (
     PowersensorVirtualHouseholdSensorEntityDescription(
@@ -320,28 +319,6 @@ HOUSEHOLD_DESCRIPTIONS: tuple[
         message_key="watts",
     ),
     PowersensorVirtualHouseholdSensorEntityDescription(
-        key="power_to_grid",
-        translation_key="power_to_grid",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-        formatter=int,
-        event="to_grid",
-        message_key="watts",
-    ),
-    PowersensorVirtualHouseholdSensorEntityDescription(
-        key="power_solar_generation",
-        translation_key="power_solar_generation",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-        formatter=int,
-        event="solar_generation",
-        message_key="watts",
-    ),
-    PowersensorVirtualHouseholdSensorEntityDescription(
         key="energy_home_use",
         translation_key="energy_home_use",
         device_class=SensorDeviceClass.ENERGY,
@@ -362,6 +339,34 @@ HOUSEHOLD_DESCRIPTIONS: tuple[
         formatter=_joules_to_kwh,
         event="from_grid_summation",
         message_key="summation_joules",
+    ),
+)
+
+# Production (solar) VHH entities — only created when a solar sensor exists.
+PRODUCTION_DESCRIPTIONS: tuple[
+    PowersensorVirtualHouseholdSensorEntityDescription, ...
+] = (
+    PowersensorVirtualHouseholdSensorEntityDescription(
+        key="power_to_grid",
+        translation_key="power_to_grid",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        formatter=int,
+        event="to_grid",
+        message_key="watts",
+    ),
+    PowersensorVirtualHouseholdSensorEntityDescription(
+        key="power_solar_generation",
+        translation_key="power_solar_generation",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        formatter=int,
+        event="solar_generation",
+        message_key="watts",
     ),
     PowersensorVirtualHouseholdSensorEntityDescription(
         key="energy_to_grid",
@@ -385,29 +390,6 @@ HOUSEHOLD_DESCRIPTIONS: tuple[
         event="solar_generation_summation",
         message_key="summation_joules",
     ),
-)
-
-CONSUMPTION_DESCRIPTIONS: tuple[
-    PowersensorVirtualHouseholdSensorEntityDescription, ...
-] = tuple(
-    d
-    for d in HOUSEHOLD_DESCRIPTIONS
-    if d.key
-    in {"power_home_use", "power_from_grid", "energy_home_use", "energy_from_grid"}
-)
-
-PRODUCTION_DESCRIPTIONS: tuple[
-    PowersensorVirtualHouseholdSensorEntityDescription, ...
-] = tuple(
-    d
-    for d in HOUSEHOLD_DESCRIPTIONS
-    if d.key
-    in {
-        "power_to_grid",
-        "power_solar_generation",
-        "energy_to_grid",
-        "energy_solar_generation",
-    }
 )
 
 
@@ -454,10 +436,11 @@ class PowersensorEntity(SensorEntity):
         return self._has_recently_received_update_message
 
     def _schedule_unavailable(self) -> None:
-        """(Re-)schedule the unavailability timer using async_call_later."""
+        """(Re-)schedule the unavailability timer."""
+        if not self.hass:
+            return
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
-
         self._remove_unavailability_tracker = async_call_later(
             self.hass,
             self._timeout.total_seconds(),
@@ -477,24 +460,23 @@ class PowersensorEntity(SensorEntity):
             self._remove_unavailability_tracker = None
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to dispatcher signals when added to HA."""
+        """Subscribe to the data-update signal and register the unavailability timer.
+
+        Subclasses that need additional subscriptions (e.g. ROLE_UPDATE_SIGNAL)
+        should call ``await super().async_added_to_hass()`` first and then add
+        their own ``async_on_remove`` registrations.
+        """
         self._has_recently_received_update_message = False
         self.async_on_remove(
             async_dispatcher_connect(self.hass, self._signal, self._handle_update)
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, ROLE_UPDATE_SIGNAL, self._handle_role_update
-            )
         )
         self.async_on_remove(self._cancel_unavailability_tracker)
 
     def _rename_based_on_role(self) -> bool:
         """Return True if a role change requires refreshing device translation data.
 
-        This is a subclass hook used by ``_handle_role_update`` to decide whether
-        the device registry should be updated with a new ``translation_key`` and
-        related placeholders after the role changes.
+        Subclass hook: return True to trigger a device registry update with the
+        new translation_key after a role change.  Default is False (no rename).
         """
         return False
 
@@ -518,11 +500,10 @@ class PowersensorEntity(SensorEntity):
                 translation_key=info.get("translation_key"),
                 translation_placeholders=info.get("translation_placeholders"),
             )
-
         self.async_write_ha_state()
 
     @callback
-    def _handle_update(self, event: str, message: dict[str, Any]) -> None:
+    def _handle_update(self, event: str | None, message: dict[str, Any]) -> None:
         """Handle a pushed data update from the dispatcher."""
         self._has_recently_received_update_message = True
 
@@ -534,8 +515,7 @@ class PowersensorEntity(SensorEntity):
             elif desc.key == "device_role" and isinstance(raw, str):
                 # State translation keys must be snake_case.  The wire value
                 # "house-net" is normalised to "house_net" so it matches the
-                # key in strings.json.  All other role strings are already
-                # valid (no hyphens).
+                # key in strings.json.  All other role strings are already valid.
                 self._attr_native_value = raw.replace("-", "_")
             else:
                 self._attr_native_value = raw
@@ -545,7 +525,7 @@ class PowersensorEntity(SensorEntity):
 
 
 # ---------------------------------------------------------------------------
-# electricity / water sensor entity
+# Electricity / water sensor entity
 # ---------------------------------------------------------------------------
 
 
@@ -590,6 +570,20 @@ class PowersensorSensorEntity(PowersensorEntity):
             return True
         return False
 
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to data-update signal and also ROLE_UPDATE_SIGNAL.
+
+        Sensors can change role at runtime (e.g. when first assigned via the
+        app), so they need the role-update subscription in addition to the
+        common data-update subscription provided by the base class.
+        """
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, ROLE_UPDATE_SIGNAL, self._handle_role_update
+            )
+        )
+
 
 # ---------------------------------------------------------------------------
 # Smart plug entity
@@ -619,13 +613,10 @@ class PowersensorPlugEntity(PowersensorEntity):
 class PowersensorHouseholdEntity(SensorEntity):
     """Sensor entity backed by the Powersensor VirtualHousehold calculation engine."""
 
-    # Household entities are always considered available because the
-    # VirtualHousehold is a pure in-process calculation layer with no network
-    # dependency of its own.  If the underlying plug or sensor devices go
-    # offline their own entities will become unavailable, which is the correct
-    # signal to the user.  The VHH continues to hold its last-known values and
-    # will resume updating as soon as data arrives again — marking it
-    # unavailable in the interim would only cause unnecessary dashboard churn.
+    # Household entities are always considered available because VirtualHousehold
+    # is a pure in-process calculation layer.  If the underlying devices go offline,
+    # their own entities become unavailable — marking the VHH unavailable too would
+    # cause unnecessary dashboard churn.
     _attr_available = True
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -661,9 +652,8 @@ class PowersensorHouseholdEntity(SensorEntity):
     async def _on_event(self, _event: str, msg: dict[str, Any]) -> None:
         """Handle a VirtualHousehold update.
 
-        Must be ``async def``: VirtualHousehold.subscribe awaits every
-        registered callback, so a plain synchronous function would be awaited
-        as a coroutine and silently produce no result.
+        Must be ``async def``: VirtualHousehold.subscribe awaits every registered
+        callback, so a synchronous function would silently produce no result.
         """
         desc = self.entity_description
         if (val := msg.get(desc.message_key)) is not None:
@@ -686,20 +676,16 @@ async def async_setup_entry(
     vhh: VirtualHousehold = runtime.vhh
     dispatcher: PowersensorMessageDispatcher = runtime.dispatcher
 
-    # Sensor-platform bookkeeping — local to this closure so that a reload
-    # always starts clean without touching RuntimeData.
+    # Tracks which VHH entity groups have been added this session.
+    # Reset on every reload since this is a closure-local, not RuntimeData.
     vhh_state = PowersensorVirtualHouseholdState()
-    role_specific_entities_added: set[tuple[str, str]] = set()
+
+    # Tracks which role-gated sensor entities have been created, keyed by
+    # (mac, description.key).  Used only to prevent handle_role_update from
+    # re-adding entities that handle_discovered_sensor already created.
+    role_entities_added: set[tuple[str, str]] = set()
 
     entry_id = entry.entry_id
-
-    def _with_solar() -> bool:
-        """Return True when any known sensor carries the solar role."""
-        return ROLE_SOLAR in entry.data.get(CFG_ROLES, {}).values()
-
-    def _with_mains() -> bool:
-        """Return True when any known sensor carries the house-net role."""
-        return ROLE_HOUSENET in entry.data.get(CFG_ROLES, {}).values()
 
     # ------------------------------------------------------------------
     # Role update handling
@@ -708,72 +694,45 @@ async def async_setup_entry(
     @callback
     def handle_role_update(mac_address: str, new_role: str | None) -> None:
         """Persist role changes and trigger a VHH refresh when needed."""
-        # Plugs report None or ROLE_APPLIANCE and have all their entities
-        # created unconditionally at discovery time — nothing to do here.
-
-        # Build a fresh copy of entry.data with an updated roles dict.
-        # entry.data is immutable by convention — async_update_entry replaces it
-        # atomically — so we construct a new top-level dict and a new roles dict
-        # rather than mutating any nested object in place.
         existing_roles: dict[str, str | None] = dict(entry.data.get(CFG_ROLES, {}))
         old_role = existing_roles.get(mac_address)
-        new_data = {
-            **entry.data,
-            CFG_ROLES: {**existing_roles, mac_address: new_role},
-        }
 
-        if mac_address in dispatcher.plugs:
-            # Plugs only get ROLE_APPLIANCE (or None) — they don't roam between
-            # roles the way sensors do, so we only persist when the role is
-            # ROLE_APPLIANCE and has actually changed.  All plug entities are
-            # created unconditionally at discovery time, so no entity creation
-            # is needed here regardless of the new role.
-            if new_role == ROLE_APPLIANCE and old_role != new_role:
-                _LOGGER.debug(
-                    "Updating role for %s from %s to %s",
-                    mac_address,
-                    old_role,
-                    new_role,
-                )
-                hass.config_entries.async_update_entry(entry, data=new_data)
+        if old_role == new_role:
             return
 
-        if old_role != new_role:
+        _LOGGER.debug("Updating role for %s: %s → %s", mac_address, old_role, new_role)
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CFG_ROLES: {**existing_roles, mac_address: new_role}},
+        )
+
+        if mac_address in dispatcher.plugs:
+            # Plugs always have ROLE_APPLIANCE — no entity creation needed here.
+            return
+
+        if new_role in (ROLE_SOLAR, ROLE_HOUSENET):
+            async_dispatcher_send(hass, UPDATE_VHH_SIGNAL)
+
+        # Create any role-gated entities not present at initial discovery
+        # (e.g. power/energy when a sensor is assigned ROLE_HOUSENET/ROLE_SOLAR,
+        # or flow/volume when assigned ROLE_WATER).
+        new_entities = [
+            PowersensorSensorEntity(entry_id, mac_address, new_role, desc)
+            for desc in SENSOR_DESCRIPTIONS
+            if desc.supported_roles is not None
+            and new_role in desc.supported_roles
+            and (mac_address, desc.key) not in role_entities_added
+        ]
+        if new_entities:
             _LOGGER.debug(
-                "Updating role for %s from %s to %s", mac_address, old_role, new_role
+                "Adding %d role-specific entities for %s (role=%s)",
+                len(new_entities),
+                mac_address,
+                new_role,
             )
-            hass.config_entries.async_update_entry(entry, data=new_data)
-
-            if new_role in (ROLE_SOLAR, ROLE_HOUSENET):
-                async_dispatcher_send(hass, UPDATE_VHH_SIGNAL)
-
-            # Add any role-specific entities that weren't created at discovery
-            # time (e.g. water_flow_rate / total_water_consumption when a sensor
-            # is reassigned to ROLE_WATER, or power / total_energy when it moves
-            # to ROLE_HOUSENET / ROLE_SOLAR).
-            # Only touch descriptions that are role-gated (supported_roles is
-            # not None) to avoid re-creating universal entities (battery, rssi,
-            # device_role) which already exist and would trigger
-            # duplicate-unique-ID warnings.
-            new_role_entities = [
-                PowersensorSensorEntity(entry_id, mac_address, new_role, desc)
-                for desc in SENSOR_DESCRIPTIONS
-                if desc.supported_roles is not None
-                and new_role in desc.supported_roles
-                and (mac_address, desc.key) not in role_specific_entities_added
-            ]
-            if new_role_entities:
-                _LOGGER.debug(
-                    "Adding %d role-specific entities for %s (role=%s)",
-                    len(new_role_entities),
-                    mac_address,
-                    new_role,
-                )
-                for e in new_role_entities:
-                    role_specific_entities_added.add(
-                        (mac_address, e.entity_description.key)
-                    )
-                async_add_entities(new_role_entities, True)
+            for e in new_entities:
+                role_entities_added.add((mac_address, e.entity_description.key))
+            async_add_entities(new_entities, True)
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, handle_role_update)
@@ -785,26 +744,22 @@ async def async_setup_entry(
 
     @callback
     def handle_discovered_sensor(sensor_mac: str, sensor_role: str | None) -> None:
-        """Create entities for a newly discovered sensor and signal HA."""
+        """Create entities for a newly discovered sensor."""
         new_sensors = [
             PowersensorSensorEntity(entry_id, sensor_mac, sensor_role, desc)
             for desc in SENSOR_DESCRIPTIONS
             if desc.supported_roles is None or sensor_role in desc.supported_roles
         ]
 
-        # Record role-gated entities now so that handle_role_update — which fires
-        # shortly after via SENSOR_ADDED_TO_HA_SIGNAL → ROLE_UPDATE_SIGNAL — sees
-        # them as already created and doesn't add duplicates.
+        # Pre-populate role_entities_added so handle_role_update — which fires
+        # shortly after via ROLE_UPDATE_SIGNAL — doesn't add duplicates.
         for e in new_sensors:
             if e.entity_description.supported_roles is not None:
-                role_specific_entities_added.add((sensor_mac, e.entity_description.key))
+                role_entities_added.add((sensor_mac, e.entity_description.key))
 
         async_add_entities(new_sensors, True)
-        async_dispatcher_send(hass, SENSOR_ADDED_TO_HA_SIGNAL, sensor_mac, sensor_role)
 
-        if (
-            sensor_role == ROLE_SOLAR and _with_mains()
-        ) or sensor_role == ROLE_HOUSENET:
+        if sensor_role in (ROLE_HOUSENET, ROLE_SOLAR):
             async_dispatcher_send(hass, UPDATE_VHH_SIGNAL)
 
     entry.async_on_unload(
@@ -812,33 +767,24 @@ async def async_setup_entry(
     )
 
     # ------------------------------------------------------------------
-    # Plug handling
+    # Plug discovery
     # ------------------------------------------------------------------
 
-    def _create_plug_entities(plug_mac: str, role: str) -> list[PowersensorPlugEntity]:
-        """Return plug sensor entities for a given MAC address."""
-        return [
-            PowersensorPlugEntity(entry_id, plug_mac, role, desc)
-            for desc in PLUG_DESCRIPTIONS
-        ]
-
-    for plug_mac in dispatcher.plugs:
-        async_add_entities(_create_plug_entities(plug_mac, ROLE_APPLIANCE), True)
-
     @callback
-    def handle_discovered_plug(plug_mac: str, host: str, port: int, name: str) -> None:
-        """Create entities for a newly discovered plug and signal HA."""
-        async_add_entities(_create_plug_entities(plug_mac, ROLE_APPLIANCE), True)
-        async_dispatcher_send(hass, PLUG_ADDED_TO_HA_SIGNAL, plug_mac, host, port, name)
+    def handle_discovered_plug(plug_mac: str) -> None:
+        """Create entities for a newly discovered plug."""
+        _LOGGER.debug("Plug discovered: %s", plug_mac)
+        async_add_entities(
+            [
+                PowersensorPlugEntity(entry_id, plug_mac, ROLE_APPLIANCE, desc)
+                for desc in PLUG_DESCRIPTIONS
+            ],
+            True,
+        )
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, CREATE_PLUG_SIGNAL, handle_discovered_plug)
     )
-
-    # Catch sensors whose messages arrived before the platform was ready.
-    # Clear the queue afterwards so a reload does not re-process them.
-    for mac, role in dispatcher.drain_on_start_sensor_queue():
-        handle_discovered_sensor(mac, role)
 
     # ------------------------------------------------------------------
     # Virtual Household
@@ -846,60 +792,41 @@ async def async_setup_entry(
 
     @callback
     def update_virtual_household_entities() -> None:
-        """Add VHH sensor entities once the required sensor roles are available.
+        """Add VHH sensor entities once the required sensor roles are present.
 
-        Called at startup and whenever a sensor role changes.  The first time a
-        solar sensor is seen we must reconstruct the VirtualHousehold with
-        ``with_solar=True`` — the library does not support enabling solar on an
-        existing instance.  We transfer the dispatcher's reference and re-wire any
-        existing entity subscriptions via a brief unsubscribe / re-subscribe cycle
-        so that entities already added to HA continue to receive events.
+        Called at startup and whenever a sensor role changes to ROLE_HOUSENET
+        or ROLE_SOLAR.
 
-        This is a synchronous @callback because it only calls async_add_entities
-        (which is itself synchronous) and accesses in-memory state.  The lock is
-        not needed here since HA callbacks are serialised on the event loop.
+        VirtualHousehold automatically enables solar processing when it first
+        receives a solar-role event (see VirtualHousehold.process_average_power_event),
+        so no reload is needed when a solar sensor is discovered mid-session.
         """
-        if not _with_mains():
+        has_mains = any(role == ROLE_HOUSENET for role in dispatcher.sensors.values())
+        has_solar = any(role == ROLE_SOLAR for role in dispatcher.sensors.values())
+
+        if not has_mains:
             _LOGGER.debug("No house-net sensor yet; VHH not operational")
             return
 
-        household_entities: list[PowersensorHouseholdEntity] = []
-
         if not vhh_state.mains_added:
             _LOGGER.debug("Enabling mains components in virtual household")
-            household_entities.extend(
-                PowersensorHouseholdEntity(vhh, desc)
-                for desc in CONSUMPTION_DESCRIPTIONS
+            async_add_entities(
+                [
+                    PowersensorHouseholdEntity(vhh, desc)
+                    for desc in CONSUMPTION_DESCRIPTIONS
+                ]
             )
             vhh_state.mains_added = True
 
-        if _with_solar() and not vhh_state.solar_added:
+        if has_solar and not vhh_state.solar_added:
             _LOGGER.debug("Enabling solar components in virtual household")
-
-            # Guard: the VirtualHousehold must be constructed with
-            # with_solar=True to emit solar events.  If a solar sensor is
-            # discovered mid-session (i.e. after __init__.py already built the
-            # VHH with False), schedule a config-entry reload so that
-            # async_setup_entry re-reads entry.data — which by this point
-            # already has the solar role persisted — and rebuilds the VHH
-            # correctly.  Return early so we don't add solar entities that
-            # would be subscribed to an incapable VHH instance.
-            if not runtime.with_solar:
-                _LOGGER.debug(
-                    "VirtualHousehold lacks solar support; scheduling reload "
-                    "to rebuild with with_solar=True"
-                )
-                hass.config_entries.async_schedule_reload(entry.entry_id)
-                return
-
-            household_entities.extend(
-                PowersensorHouseholdEntity(vhh, desc)
-                for desc in PRODUCTION_DESCRIPTIONS
+            async_add_entities(
+                [
+                    PowersensorHouseholdEntity(vhh, desc)
+                    for desc in PRODUCTION_DESCRIPTIONS
+                ]
             )
             vhh_state.solar_added = True
-
-        if household_entities:
-            async_add_entities(household_entities)
 
     entry.async_on_unload(
         async_dispatcher_connect(

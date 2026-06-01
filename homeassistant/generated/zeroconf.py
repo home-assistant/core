@@ -871,7 +871,7 @@ ZEROCONF = {
     ],
     "_powersensor._udp.local.": [
         {
-            "domain": "powersensor",
+            "domain": "powersensor_au",
         },
     ],
     "_powerview._tcp.local.": [

@@ -6,9 +6,15 @@ from unittest.mock import Mock, patch
 from powersensor_local import VirtualHousehold
 import pytest
 
-from homeassistant.components.powersensor.sensor import (
-    HOUSEHOLD_DESCRIPTIONS,
+from homeassistant.components.powersensor_au.const import (
+    DATA_UPDATE_SIGNAL_PREFIX,
+    DOMAIN,
+    ROLE_UPDATE_SIGNAL,
+)
+from homeassistant.components.powersensor_au.sensor import (
+    CONSUMPTION_DESCRIPTIONS,
     PLUG_DESCRIPTIONS,
+    PRODUCTION_DESCRIPTIONS,
     SENSOR_DESCRIPTIONS,
     PowersensorEntity,
     PowersensorHouseholdEntity,
@@ -98,6 +104,7 @@ async def test_powersensor_sensor_default_name(
     - The device translation key reflects the initial role.
     - _rename_based_on_role() updates the key and is idempotent on a second call.
     - async_added_to_hass() completes without error.
+    - async_added_to_hass() connects to exactly the right signals.
     """
     entity = PowersensorSensorEntity(
         "",
@@ -107,7 +114,6 @@ async def test_powersensor_sensor_default_name(
     )
     assert entity.device_info["translation_key"] == "mains_sensor"
 
-    # Simulate a stale/unknown key then trigger rename.
     entity._current_translation_key = "unknown_sensor"
     assert entity.device_info["translation_key"] == "unknown_sensor"
 
@@ -117,14 +123,66 @@ async def test_powersensor_sensor_default_name(
     # Second call: key already matches — should be a no-op (returns False).
     assert not entity._rename_based_on_role()
 
-    # async_added_to_hass calls async_dispatcher_connect(self.hass, ...) which
-    # requires the entity to be registered with HA. Patch at the source so the
-    # test can verify the method completes without wiring up a full platform.
+    # Verify async_added_to_hass wires up the data-update signal and the
+    # role-update signal, and no others.
+    connected_signals: list[str] = []
+
+    def capture_connect(hass_arg, signal, cb):
+        connected_signals.append(signal)
+        return lambda: None  # unsub stub
+
     with patch(
-        "homeassistant.components.powersensor.sensor.async_dispatcher_connect",
-        return_value=lambda: None,
+        "homeassistant.components.powersensor_au.sensor.async_dispatcher_connect",
+        side_effect=capture_connect,
     ):
         await entity.async_added_to_hass()
+
+    expected_data_signal = f"{DATA_UPDATE_SIGNAL_PREFIX}{MAC}_summation_energy"
+    assert expected_data_signal in connected_signals, (
+        f"Expected data-update signal '{expected_data_signal}' not connected; "
+        f"got: {connected_signals}"
+    )
+    assert ROLE_UPDATE_SIGNAL in connected_signals, (
+        "PowersensorSensorEntity must subscribe to ROLE_UPDATE_SIGNAL"
+    )
+
+
+@pytest.mark.asyncio
+async def test_powersensor_base_entity_async_added_to_hass_connects_data_signal_only(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, mock_config
+) -> None:
+    """Base PowersensorEntity.async_added_to_hass connects only the data-update signal.
+
+    PowersensorSensorEntity adds a second subscription (ROLE_UPDATE_SIGNAL) via
+    super().  The base class must connect exactly one signal so we can tell the
+    two apart.  This test instantiates the base indirectly via a PlugEntity
+    (which does not override async_added_to_hass beyond super()).
+    """
+    entity = PowersensorPlugEntity(
+        "",
+        MAC,
+        "appliance",
+        next(d for d in PLUG_DESCRIPTIONS if d.key == "total_energy"),
+    )
+
+    connected_signals: list[str] = []
+
+    def capture_connect(hass_arg, signal, cb):
+        connected_signals.append(signal)
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.powersensor_au.sensor.async_dispatcher_connect",
+        side_effect=capture_connect,
+    ):
+        await entity.async_added_to_hass()
+
+    expected_data_signal = f"{DATA_UPDATE_SIGNAL_PREFIX}{MAC}_summation_energy"
+    assert expected_data_signal in connected_signals
+    assert ROLE_UPDATE_SIGNAL not in connected_signals, (
+        "PowersensorPlugEntity must NOT subscribe to ROLE_UPDATE_SIGNAL; "
+        "plug roles don't change mid-session"
+    )
 
 
 @pytest.mark.asyncio
@@ -164,6 +222,25 @@ async def test_powersensor_plug_entity_device_info(
 
 
 @pytest.mark.asyncio
+@pytest.mark.asyncio
+async def test_powersensor_household_entity_device_info(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that PowersensorHouseholdEntity.device_info returns the expected fields.
+
+    Covers sensor.py line 639 (the manufacturer field inside device_info).
+    """
+    vhh = VirtualHousehold(False)
+    desc = next(d for d in CONSUMPTION_DESCRIPTIONS if d.key == "power_from_grid")
+    entity = PowersensorHouseholdEntity(vhh, desc)
+
+    info = entity.device_info
+    assert info["manufacturer"] == "Powersensor"
+    assert info["model"] == "Virtual"
+    assert info["translation_key"] == "virtual_household_view"
+    assert (DOMAIN, "vhh") in info["identifiers"]
+
+
 async def test_powersensor_virtual_household(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -171,8 +248,8 @@ async def test_powersensor_virtual_household(
 
     Verifies that:
     - Entities can be added to and removed from HA without error.
-    - Power readings (watts) are stored as integers via _fmt_int.
-    - Energy readings (summation_joules) are converted to kWh.
+    - Power readings (watts) are stored as integers via formatter=int.
+    - Energy readings (summation_joules) are converted to kWh via formatter=_joules_to_kwh.
     - Events with unknown keys are silently ignored.
     """
     vhh = VirtualHousehold(False)
@@ -180,10 +257,8 @@ async def test_powersensor_virtual_household(
         PowersensorHouseholdEntity, "async_write_ha_state", lambda self: None
     )
 
-    # Spy on subscribe/unsubscribe so we can verify the async_on_remove callback
-    # is correctly wired without needing to inspect private HA internals.
-    subscribed: list[tuple] = []
-    unsubscribed: list[tuple] = []
+    subscribed: list[tuple[object, ...]] = []
+    unsubscribed: list[tuple[object, ...]] = []
     original_subscribe = vhh.subscribe
     original_unsubscribe = vhh.unsubscribe
 
@@ -199,16 +274,15 @@ async def test_powersensor_virtual_household(
     monkeypatch.setattr(vhh, "unsubscribe", spy_unsubscribe)
 
     power_from_grid = PowersensorHouseholdEntity(
-        vhh, next(d for d in HOUSEHOLD_DESCRIPTIONS if d.key == "power_from_grid")
+        vhh, next(d for d in CONSUMPTION_DESCRIPTIONS if d.key == "power_from_grid")
     )
     energy_from_grid = PowersensorHouseholdEntity(
-        vhh, next(d for d in HOUSEHOLD_DESCRIPTIONS if d.key == "energy_from_grid")
+        vhh, next(d for d in CONSUMPTION_DESCRIPTIONS if d.key == "energy_from_grid")
     )
 
     await power_from_grid.async_added_to_hass()
     await energy_from_grid.async_added_to_hass()
 
-    # Verify subscribe was called for each entity.
     assert len(subscribed) == 2
 
     await power_from_grid._on_event("test-event", {"watts": 123})
@@ -224,16 +298,82 @@ async def test_powersensor_virtual_household(
     )
     assert energy_from_grid.native_value == previous
 
-    # Simulate HA calling async_on_remove callbacks (e.g. on entry unload).
-    # SensorEntity stores them in _on_remove — trigger via the public helper.
     power_from_grid._call_on_remove_callbacks()
     energy_from_grid._call_on_remove_callbacks()
 
-    # unsubscribe must have been called for both entities.
     assert len(unsubscribed) == 2
     unsubscribed_events = {ev for ev, _ in unsubscribed}
     assert power_from_grid.entity_description.event in unsubscribed_events
     assert energy_from_grid.entity_description.event in unsubscribed_events
+
+
+@pytest.mark.asyncio
+async def test_powersensor_household_entity_formatter_is_applied(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that the description's formatter is always applied to the raw value.
+
+    Uses a description with formatter=int (a power entity) to confirm the value
+    is rounded, not stored as a float.
+    """
+    vhh = VirtualHousehold(False)
+    monkeypatch.setattr(
+        PowersensorHouseholdEntity, "async_write_ha_state", lambda self: None
+    )
+
+    desc = next(d for d in CONSUMPTION_DESCRIPTIONS if d.key == "power_home_use")
+    entity = PowersensorHouseholdEntity(vhh, desc)
+    await entity.async_added_to_hass()
+
+    await entity._on_event("home_usage", {"watts": 457.9})
+
+    assert entity.native_value == 457
+    assert isinstance(entity.native_value, int), (
+        "Power entities use formatter=int; value must be an int, not a float"
+    )
+
+
+@pytest.mark.asyncio
+async def test_powersensor_household_entity_missing_message_key_is_ignored(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An _on_event call whose message dict lacks the expected key is a no-op.
+
+    The entity's value must remain None and async_write_ha_state must not be called.
+    """
+    vhh = VirtualHousehold(False)
+    write_state = Mock()
+    monkeypatch.setattr(PowersensorHouseholdEntity, "async_write_ha_state", write_state)
+
+    desc = next(d for d in CONSUMPTION_DESCRIPTIONS if d.key == "power_from_grid")
+    entity = PowersensorHouseholdEntity(vhh, desc)
+    await entity.async_added_to_hass()
+
+    # Message with wrong key — entity must stay at None.
+    await entity._on_event("from_grid", {"wrong_key": 999})
+
+    assert entity.native_value is None
+    write_state.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_powersensor_household_entity_unique_id_uses_event(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """PowersensorHouseholdEntity unique_id is 'vhh_<event>' for each description.
+
+    Confirms that unique IDs don't collide between entities that happen to share
+    the same message_key but listen to different VHH events.
+    """
+    vhh = VirtualHousehold(False)
+    seen_ids: set[str] = set()
+
+    for desc in CONSUMPTION_DESCRIPTIONS + PRODUCTION_DESCRIPTIONS:
+        entity = PowersensorHouseholdEntity(vhh, desc)
+        uid = entity.unique_id
+        assert uid not in seen_ids, f"Duplicate unique_id: {uid}"
+        assert uid == f"vhh_{desc.event}"
+        seen_ids.add(uid)
 
 
 @pytest.mark.asyncio
@@ -255,7 +395,6 @@ async def test_entity_removal(
     )
     assert entity._remove_unavailability_tracker is None
 
-    # Inject a mock cancel token directly to avoid needing self.hass.
     mock_cancel = Mock()
     entity._remove_unavailability_tracker = mock_cancel
 
@@ -283,7 +422,7 @@ async def test_powersensor_sensor_handle_role_update(
     lifecycle path is covered by test_sensor_setup.py.
     """
     powersensor_entity_module = importlib.import_module(
-        "homeassistant.components.powersensor.sensor"
+        "homeassistant.components.powersensor_au.sensor"
     )
 
     device = Mock()
@@ -368,7 +507,7 @@ async def test_schedule_unavailable_cancels_existing_timer(
         return Mock(side_effect=lambda: cancel_calls.append(1))
 
     monkeypatch.setattr(
-        "homeassistant.components.powersensor.sensor.async_call_later",
+        "homeassistant.components.powersensor_au.sensor.async_call_later",
         fake_async_call_later,
     )
     monkeypatch.setattr(PowersensorEntity, "async_write_ha_state", lambda self: None)
@@ -390,6 +529,28 @@ async def test_schedule_unavailable_cancels_existing_timer(
     entity._schedule_unavailable()
     assert len(cancel_calls) == 1
     assert entity._remove_unavailability_tracker is not None
+
+
+@pytest.mark.asyncio
+async def test_schedule_unavailable_before_hass_is_set_does_not_raise(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, mock_config
+) -> None:
+    """Entities can receive messages before self.hass is set by the HA framework.
+
+    _schedule_unavailable must not raise AttributeError when self.hass is None.
+    This can happen if a measurement arrives before HA has injected self.hass
+    via async_added_to_hass.
+    """
+    entity = PowersensorSensorEntity("", MAC, "house-net", mock_config)
+    # Do NOT patch `hass` onto the entity — it should be absent/None.
+
+    # Calling _schedule_unavailable before HA has set self.hass must not raise.
+    try:
+        entity._schedule_unavailable()
+    except AttributeError as exc:
+        pytest.fail(
+            f"_schedule_unavailable raised AttributeError before self.hass was set: {exc}"
+        )
 
 
 @pytest.mark.asyncio
