@@ -301,6 +301,7 @@ FLOWS = {
         "harmony",
         "hdfury",
         "hegel",
+        "helty",
         "heos",
         "here_travel_time",
         "hikvision",
