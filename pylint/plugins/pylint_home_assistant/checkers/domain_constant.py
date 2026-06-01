@@ -101,16 +101,13 @@ class DomainConstantChecker(BaseChecker):
                 } or node_name.endswith(("_DOMAIN", "_domain")):
                     return
             case nodes.Subscript():
-                # Ignore cases like dict["something"] or dict.get("something")
+                # Ignore subscripts like dict["key"]
                 return
 
         self.add_message(
             "home-assistant-domain-argument",
             node=arg_node,
-            args=(
-                f"{arg_node.as_string()} ({type(arg_node)}",
-                call_node.func.as_string(),
-            ),
+            args=(arg_node.as_string(), call_node.func.as_string()),
         )
 
 
