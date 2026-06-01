@@ -2367,7 +2367,7 @@ pynina==1.0.2
 pynintendoauth==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.3.4
+pynintendoparental==2.4.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.9.0
@@ -2477,7 +2477,7 @@ pyrail==0.4.1
 pyrainbird==6.3.0
 
 # homeassistant.components.playstation_network
-pyrate-limiter==4.1.0
+pyrate-limiter==4.2.0
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2881,7 +2881,7 @@ renson-endura-delta==1.7.2
 reolink-aio==0.20.0
 
 # homeassistant.components.radio_frequency
-rf-protocols==4.0.0
+rf-protocols==4.0.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
