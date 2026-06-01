@@ -67,8 +67,8 @@ class ShoppingTodoListEntity(TodoListEntity):
     async def async_update_todo_list(self, info: dict[str, Any]) -> None:
         """Update all items in the To-do list."""
         data = {}
-        if status := info.get("status"):
-            data["complete"] = status == TodoItemStatus.COMPLETED
+        if "status" in info:
+            data["complete"] = info["status"] == TodoItemStatus.COMPLETED
 
         if data:
             await self._data.async_update_list(info=data)
