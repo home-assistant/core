@@ -854,6 +854,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if current_value is None or target_value is None:
             return None
 
+        if current_value in (_POSITION_MY, _POSITION_UNKNOWN):
+            return None
+
         return current_value - target_value
 
 
