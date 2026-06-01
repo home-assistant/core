@@ -16,6 +16,7 @@ from zwave_js_server.const.command_class.access_control import (
     UserCredentialType,
     UserCredentialUserType,
 )
+from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.access_control import (
     AddUserCredential,
     SetUserOptions,
@@ -456,13 +457,14 @@ async def async_add_user(
     if user_id is None:
         user_id = await _async_find_available_user_slot(node)
 
+    user_caps = await node.access_control.get_user_capabilities_cached()
+
     credential: AddUserCredential | None = None
     credential_slot: int | None = None
     if credential_type is not None and credential_data is not None:
         type_cap = await _validate_credential_data(
             node, credential_type, credential_data
         )
-        user_caps = await node.access_control.get_user_capabilities_cached()
         if user_caps.supports_users_without_credentials:
             # Users and credentials are independent here, so the credential can
             # go in any free slot of its type.
@@ -478,6 +480,14 @@ async def async_add_user(
             credential_slot=credential_slot,
             data=credential_data,
         )
+    elif not user_caps.supports_users_without_credentials:
+        # On User Code CC a user cannot exist without its code, so zwave-js
+        # rejects addUser without a credential. Fail early with a clear error
+        # instead of letting the command fail downstream.
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="credential_required",
+        )
 
     options = SetUserOptions(
         active=active,
@@ -488,7 +498,22 @@ async def async_add_user(
 
     result = await node.access_control.add_user(user_id, options, credential)
     _raise_on_set_user_error(result.user)
-    if result.credential is not None:
+    if (
+        result.credential is not None
+        and result.credential is not SetCredentialResult.OK
+    ):
+        # zwave-js's addUser is not atomic on User Credential CC: it creates the
+        # user first, so a failed credential write leaves a user with no
+        # credential. Roll the user back so the lock returns to its prior state
+        # before surfacing the credential error. On User Code CC the user and
+        # credential share a slot, so this partial failure cannot occur.
+        try:
+            await node.access_control.delete_user(user_id)
+        except FailedZWaveCommand:
+            _LOGGER.warning(
+                "Could not roll back user %s after its credential failed to add",
+                user_id,
+            )
         _raise_on_set_credential_error(result.credential)
 
     return AddUserReturn(user_id=user_id, credential_slot=credential_slot)

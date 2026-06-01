@@ -277,6 +277,80 @@ async def test_add_user_auto_find(
     assert result == {entity_id: {"user_id": 1, "credential_slot": 1}}
 
 
+async def test_add_user_rolls_back_on_credential_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """If the credential write fails, the just-created user is rolled back."""
+    api = _mock_access_control(lock_schlage_be469)
+    # User created OK, but the credential was rejected as a duplicate.
+    api.add_user.return_value = AddUserResult(
+        user=SetUserResult.OK,
+        credential=SetCredentialResult.ERROR_DUPLICATE_CREDENTIAL,
+    )
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            "add_user",
+            {
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                "user_name": "Alice",
+                "credential_type": "pin_code",
+                "credential_data": "1234",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # The credential error is surfaced, and the auto-allocated user (slot 1) is
+    # deleted so the lock is not left with a credential-less user.
+    assert exc.value.translation_key == "credential_rejected_duplicate"
+    api.delete_user.assert_called_once_with(1)
+
+
+async def test_add_user_rollback_failure_still_raises_credential_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """A failed rollback is swallowed; the credential error is still surfaced."""
+    api = _mock_access_control(lock_schlage_be469)
+    api.add_user.return_value = AddUserResult(
+        user=SetUserResult.OK,
+        credential=SetCredentialResult.ERROR_DUPLICATE_CREDENTIAL,
+    )
+    api.delete_user.side_effect = FailedZWaveCommand("boom", 1, "boom")
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            "add_user",
+            {
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                "user_name": "Alice",
+                "credential_type": "pin_code",
+                "credential_data": "1234",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc.value.translation_key == "credential_rejected_duplicate"
+    api.delete_user.assert_called_once_with(1)
+
+
 @pytest.mark.parametrize(
     ("supports_users_without_credentials", "expected_credential_slot"),
     [
@@ -410,6 +484,39 @@ async def test_add_user_without_credential(
         None,
     )
     assert result == {entity_id: {"user_id": 1, "credential_slot": None}}
+
+
+async def test_add_user_requires_credential_on_user_code_cc(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """User Code CC locks reject adding a user without a credential."""
+    api = _mock_access_control(
+        lock_schlage_be469, supports_users_without_credentials=False
+    )
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            "add_user",
+            {
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                "user_name": "Alice",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Users and codes share a slot here, so a user cannot be created without a
+    # credential; the helper rejects it before reaching the device.
+    assert exc.value.translation_key == "credential_required"
+    api.add_user.assert_not_called()
 
 
 async def test_delete_user(
