@@ -102,7 +102,7 @@ async def test_setup_reload_service(hass: HomeAssistant) -> None:
     yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            PLATFORM,
+            PLATFORM,  # pylint: disable=home-assistant-domain-argument
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -150,7 +150,7 @@ async def test_setup_reload_service_when_async_process_component_config_fails(
         ),
     ):
         await hass.services.async_call(
-            PLATFORM,
+            PLATFORM,  # pylint: disable=home-assistant-domain-argument
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -198,7 +198,7 @@ async def test_setup_reload_service_with_platform_that_provides_async_reset_plat
     yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            PLATFORM,
+            PLATFORM,  # pylint: disable=home-assistant-domain-argument
             SERVICE_RELOAD,
             {},
             blocking=True,
