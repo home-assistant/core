@@ -193,33 +193,35 @@ async def test_already_configured(hass: HomeAssistant, valid_feature_mock) -> No
     assert result["reason"] == "address_already_configured"
 
 
-async def test_async_setup_entry(hass: HomeAssistant, valid_feature_mock) -> None:
+async def test_async_setup_entry(
+    hass: HomeAssistant, valid_feature_mock, config_entry: MockConfigEntry
+) -> None:
     """Test async_setup_entry (for coverage)."""
 
-    config = mock_config()
-    config.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config.entry_id)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.config_entries.async_entries() == [config]
-    assert config.state is ConfigEntryState.LOADED
+    assert hass.config_entries.async_entries() == [config_entry]
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_async_remove_entry(hass: HomeAssistant, valid_feature_mock) -> None:
+async def test_async_remove_entry(
+    hass: HomeAssistant, valid_feature_mock, config_entry: MockConfigEntry
+) -> None:
     """Test async_setup_entry (for coverage)."""
 
-    config = mock_config()
-    config.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config.entry_id)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_remove(config.entry_id)
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries() == []
-    assert config.state is ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:

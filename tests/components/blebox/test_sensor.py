@@ -18,7 +18,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import async_setup_entity, mock_config, mock_feature
+from .conftest import async_setup_entity, mock_feature
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="airsensor")
@@ -97,7 +99,10 @@ async def test_update(tempsensor, hass: HomeAssistant) -> None:
 
 
 async def test_update_failure(
-    tempsensor, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    tempsensor,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that update failures cause config entry setup retry."""
 
@@ -108,7 +113,6 @@ async def test_update_failure(
         side_effect=blebox_uniapi.error.ClientError
     )
 
-    config_entry = mock_config()
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

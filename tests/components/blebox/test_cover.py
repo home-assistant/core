@@ -32,7 +32,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import async_setup_entity, mock_config, mock_feature
+from .conftest import async_setup_entity, mock_feature
+
+from tests.common import MockConfigEntry
 
 ALL_COVER_FIXTURES = ["gatecontroller", "shutterbox", "gatebox"]
 FIXTURES_SUPPORTING_STOP = ["gatecontroller", "shutterbox"]
@@ -452,7 +454,10 @@ async def test_tilt_with_position_supported_features(
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
 async def test_update_failure(
-    feature, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    feature,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that update failures cause config entry setup retry."""
 
@@ -463,7 +468,6 @@ async def test_update_failure(
         side_effect=blebox_uniapi.error.ClientError
     )
 
-    config_entry = mock_config()
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

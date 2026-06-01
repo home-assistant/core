@@ -22,11 +22,12 @@ from homeassistant.helpers import device_registry as dr
 from .conftest import (
     async_setup_entities,
     async_setup_entity,
-    mock_config,
     mock_feature,
     mock_only_feature,
     setup_product_mock,
 )
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="switchbox")
@@ -350,7 +351,10 @@ ALL_SWITCH_FIXTURES = ["switchbox", "switchbox_d"]
 
 @pytest.mark.parametrize("feature", ALL_SWITCH_FIXTURES, indirect=["feature"])
 async def test_update_failure(
-    feature, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    feature,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that update failures cause config entry setup retry."""
 
@@ -366,7 +370,6 @@ async def test_update_failure(
         side_effect=blebox_uniapi.error.ClientError
     )
 
-    config_entry = mock_config()
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

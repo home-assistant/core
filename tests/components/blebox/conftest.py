@@ -65,6 +65,12 @@ def mock_config(ip_address="172.100.123.4"):
     return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80})
 
 
+@pytest.fixture(name="config_entry")
+def config_entry_fixture() -> MockConfigEntry:
+    """Return a MockConfigEntry for blebox."""
+    return mock_config()
+
+
 @pytest.fixture(name="config")
 def config_fixture():
     """Create hass config fixture."""
