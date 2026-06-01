@@ -752,7 +752,6 @@ ignore = [
   "RUF012",  # Mutable class attributes should be annotated with typing.ClassVar
   "RUF015",  # Prefer next(...) over single element slice
   "RUF043",  # Pattern passed to match= contains metacharacters but is neither escaped nor raw
-  "RUF061",  # Use context-manager form of pytest.raises()
   "SIM102",  # Use a single if statement instead of nested if statements
   "SIM103",  # Return the condition {condition} directly
   "SIM108",  # Use ternary operator {contents} instead of if-else-block
