@@ -117,6 +117,7 @@ update_list:
         - todo.TodoListEntityFeature.UPDATE_TODO_LIST
   fields:
     status:
+      required: true # actually at least one of, but currently only
       example: "needs_action"
       selector:
         select:
