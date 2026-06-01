@@ -1072,7 +1072,7 @@ async def test_update_todo_list_action(
     test_entity: TodoListEntity,
     status: str,
 ) -> None:
-    """Test reset todo items service."""
+    """Test update todo list service."""
     await create_mock_platform(hass, [test_entity])
 
     await hass.services.async_call(
@@ -1098,7 +1098,7 @@ async def test_update_todo_list_action_raises(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
 ) -> None:
-    """Test reset todo items from a To-do list that raises an error."""
+    """Test update todo list that raises an error."""
 
     await create_mock_platform(hass, [test_entity])
 
