@@ -557,9 +557,9 @@ async def test_update_item_service_invalid_input(
 @pytest.mark.parametrize(
     ("update_data"),
     [
-        ({"due_datetime": f"2023-11-13T17:00:00{TEST_OFFSET}"}),
-        ({"due_date": "2023-11-13"}),
-        ({"description": "Submit revised draft"}),
+        ({ATTR_DUE_DATETIME: f"2023-11-13T17:00:00{TEST_OFFSET}"}),
+        ({ATTR_DUE_DATE: "2023-11-13"}),
+        ({ATTR_DESCRIPTION: "Submit revised draft"}),
     ],
 )
 async def test_update_todo_item_field_unsupported(
@@ -625,6 +625,7 @@ async def test_update_todo_item_extended_fields(
 ) -> None:
     """Test updating an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= supported_entity_feature
     await create_mock_platform(hass, [test_entity])
 
@@ -647,32 +648,32 @@ async def test_update_todo_item_extended_fields(
     [
         (
             [TodoItem(uid="1", summary="Summary", description="description")],
-            {"description": "Submit revised draft"},
+            {ATTR_DESCRIPTION: "Submit revised draft"},
             TodoItem(uid="1", summary="Summary", description="Submit revised draft"),
         ),
         (
             [TodoItem(uid="1", summary="Summary", description="description")],
-            {"description": ""},
+            {ATTR_DESCRIPTION: ""},
             TodoItem(uid="1", summary="Summary", description=""),
         ),
         (
             [TodoItem(uid="1", summary="Summary", description="description")],
-            {"description": None},
+            {ATTR_DESCRIPTION: None},
             TodoItem(uid="1", summary="Summary"),
         ),
         (
             [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {"due_date": datetime.date(2024, 1, 2)},
+            {ATTR_DUE_DATE: datetime.date(2024, 1, 2)},
             TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 2)),
         ),
         (
             [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {"due_date": None},
+            {ATTR_DUE_DATE: None},
             TodoItem(uid="1", summary="Summary"),
         ),
         (
             [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {"due_datetime": datetime.datetime(2024, 1, 1, 10, 0, 0)},
+            {ATTR_DUE_DATETIME: datetime.datetime(2024, 1, 1, 10, 0, 0)},
             TodoItem(
                 uid="1",
                 summary="Summary",
@@ -689,7 +690,7 @@ async def test_update_todo_item_extended_fields(
                     due=datetime.datetime(2024, 1, 1, 10, 0, 0),
                 )
             ],
-            {"due_datetime": None},
+            {ATTR_DUE_DATETIME: None},
             TodoItem(uid="1", summary="Summary"),
         ),
     ],
@@ -711,6 +712,7 @@ async def test_update_todo_item_extended_fields_overwrite_existing_values(
 ) -> None:
     """Test updating an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= (
         TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
