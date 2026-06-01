@@ -1,5 +1,7 @@
 """Test the LED BLE integration init."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.led_ble.const import DOMAIN
@@ -24,11 +26,15 @@ async def test_setup_retries_when_device_not_found(
     )
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.bluetooth.async_address_reachability_diagnostics",
+        return_value="mock reachability reason",
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert (
-        f"Could not find LED BLE device with address {LED_BLE_DISCOVERY_INFO.address}"
-        in caplog.text
+        "Could not find LED BLE device with address "
+        f"{LED_BLE_DISCOVERY_INFO.address}: mock reachability reason" in caplog.text
     )
