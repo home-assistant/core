@@ -97,6 +97,11 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._data[CONF_URL] = url
 
+        self.context["title_placeholders"] = {
+            "model": discovery_info.properties["device"],
+            "name": discovery_info.name.rsplit(" ", maxsplit=1)[0],
+        }
+
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(

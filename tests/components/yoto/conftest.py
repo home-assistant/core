@@ -9,11 +9,13 @@ import jwt
 import pytest
 from yoto_api import (
     Card,
+    Chapter,
     Device,
     PlaybackEvent,
     PlaybackStatus,
     PlayerInfo,
     PlayerStatus,
+    Track,
     YotoPlayer,
 )
 
@@ -36,12 +38,32 @@ ACCESS_TOKEN = jwt.encode({"sub": USER_ID}, "test-secret-long-enough-for-hmac-sh
 
 
 def _build_card() -> Card:
-    """Build a representative Yoto library card."""
+    """Build a representative Yoto library card with chapters and tracks."""
     return Card(
         id=CARD_ID,
         title="Outer Space",
         author="Ladybird Audio Adventures",
         cover_image_large="https://example.test/cover.jpg",
+        chapters={
+            "01": Chapter(
+                key="01",
+                title="Introduction",
+                icon="https://example.test/ch01.png",
+                tracks={
+                    "01-INT": Track(key="01-INT", title="Welcome", duration=120),
+                    "01-MAIN": Track(
+                        key="01-MAIN", title="The Story Begins", duration=240
+                    ),
+                },
+            ),
+            "02": Chapter(
+                key="02",
+                title="Planets",
+                tracks={
+                    "02-MER": Track(key="02-MER", title="Mercury", duration=180),
+                },
+            ),
+        },
     )
 
 
