@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from elke27_lib import LinkKeys
 from elke27_lib.errors import Elke27Error, Elke27LinkRequiredError, Elke27TimeoutError
+import pytest
 
 from homeassistant.components.elke27 import async_unload_entry
 from homeassistant.components.elke27.const import (
@@ -86,13 +87,20 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     hub.async_disconnect.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(Elke27TimeoutError(), id="library-timeout"),
+        pytest.param(OSError("connection refused"), id="os-error"),
+    ],
+)
 async def test_setup_transient_error_returns_not_ready(
-    hass: HomeAssistant,
+    hass: HomeAssistant, error: Exception
 ) -> None:
     """Test transient setup errors return not ready."""
     hub = SimpleNamespace(
         panel_name=None,
-        async_connect=AsyncMock(side_effect=Elke27TimeoutError()),
+        async_connect=AsyncMock(side_effect=error),
         async_disconnect=AsyncMock(return_value=None),
     )
 

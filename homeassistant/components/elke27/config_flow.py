@@ -175,6 +175,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             Elke27ConnectionError,
             Elke27TimeoutError,
             Elke27DisconnectedError,
+            OSError,
         ):
             errors["base"] = "cannot_connect"
         except Elke27LinkRequiredError:

@@ -196,6 +196,30 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
         await area_1.async_alarm_arm_away(code="1234")
 
 
+async def test_custom_bypass_handles_multiple_faulted_zones(
+    hass: HomeAssistant,
+) -> None:
+    """Test custom bypass handles all faulted zones before arming."""
+    hub, entities = _setup_area_entities(
+        hass,
+        _snapshot(
+            areas={1: AreaState(area_id=1, name="Area 1")},
+            zones={
+                1: ZoneState(zone_id=1, name="Front Door", open=True, bypassed=False),
+                2: ZoneState(zone_id=2, name="Window", open=True, bypassed=False),
+            },
+        ),
+    )
+    area_1 = entities[0]
+    hub.async_set_zone_bypass.side_effect = [True, False]
+
+    with pytest.raises(HomeAssistantError, match="Zone 2 bypass was not acknowledged."):
+        await area_1.async_alarm_arm_custom_bypass(code="1234")
+
+    assert hub.async_set_zone_bypass.await_count == 2
+    hub.async_arm_area.assert_not_awaited()
+
+
 def test_area_state_helpers() -> None:
     """Verify state mapping."""
     assert (

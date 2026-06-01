@@ -1,5 +1,6 @@
 """Alarm control panel platform for Elke27 areas."""
 
+import asyncio
 import logging
 
 from elke27_lib import AreaState, ArmMode, PanelSnapshot
@@ -113,15 +114,28 @@ class Elke27AreaAlarmControlPanel(
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Arm the area with a custom bypass."""
         code = _normalize_code(code)
-        for zone in self.coordinator.data.faulted_zones:
-            try:
-                bypassed = await self._hub.async_set_zone_bypass(
+        faulted_zones = list(self.coordinator.data.faulted_zones)
+        results = await asyncio.gather(
+            *(
+                self._hub.async_set_zone_bypass(
                     zone.zone_id, bypassed=True, pin=code
                 )
-            except Elke27PinRequiredError as err:
+                for zone in faulted_zones
+            ),
+            return_exceptions=True,
+        )
+        for zone, result in zip(faulted_zones, results, strict=True):
+            if isinstance(result, asyncio.CancelledError):
+                raise result
+            if isinstance(result, Elke27PinRequiredError):
                 msg = "PIN required to perform this action."
-                raise HomeAssistantError(msg) from err
-            if not bypassed:
+                raise HomeAssistantError(msg) from result
+            if isinstance(result, HomeAssistantError):
+                raise result
+            if isinstance(result, Exception):
+                msg = f"Zone {zone.zone_id} bypass failed."
+                raise HomeAssistantError(msg) from result
+            if not result:
                 msg = f"Zone {zone.zone_id} bypass was not acknowledged."
                 raise HomeAssistantError(msg)
         await self._async_arm(_custom_bypass_mode(), code)

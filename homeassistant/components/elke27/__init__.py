@@ -50,7 +50,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
     except Elke27LinkRequiredError as err:
         msg = "Panel requires linking; please reauthenticate"
         raise ConfigEntryAuthFailed(msg) from err
-    except (Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError) as err:
+    except (
+        Elke27ConnectionError,
+        Elke27TimeoutError,
+        Elke27DisconnectedError,
+        OSError,
+    ) as err:
         _LOGGER.warning("Failed to set up connection to %s:%s: %s", host, port, err)
         with contextlib.suppress(Exception):
             await hub.async_disconnect()
@@ -65,6 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
         Elke27ConnectionError,
         Elke27TimeoutError,
         Elke27DisconnectedError,
+        OSError,
         Elke27Error,
         HomeAssistantError,
     ) as err:
