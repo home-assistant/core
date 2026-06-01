@@ -1,6 +1,6 @@
 """Constants used by the izone component."""
 
-IZONE = "izone"
+DOMAIN = "izone"
 
 DATA_DISCOVERY_SERVICE = "izone_discovery"
 DATA_CONFIG = "izone_config"
