@@ -222,11 +222,19 @@ async def test_notify_sensor_no_advertisement(
     )
     entry.add_to_hass(hass)
 
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.inkbird.coordinator."
+        "async_address_reachability_diagnostics",
+        return_value="mock reachability reason",
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert "62:00:A1:3C:AE:7B is not advertising" in caplog.text
+    assert (
+        "62:00:A1:3C:AE:7B is not advertising: mock reachability reason"
+        in caplog.text
+    )
 
 
 async def test_notify_sensor(hass: HomeAssistant) -> None:
