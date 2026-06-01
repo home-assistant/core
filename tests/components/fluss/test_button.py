@@ -81,12 +81,15 @@ async def test_button_unavailable_on_status_error(
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Buttons become unavailable when the status call errors."""
+    """Buttons become unavailable when a status refresh errors."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("button.device_1").state != STATE_UNAVAILABLE
+
     mock_api_client.async_get_device_status.side_effect = FlussApiClientError(
         "device offline"
     )
-
-    await setup_integration(hass, mock_config_entry)
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
 
     assert hass.states.get("button.device_1").state == STATE_UNAVAILABLE
     assert hass.states.get("button.device_2").state == STATE_UNAVAILABLE

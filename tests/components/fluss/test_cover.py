@@ -95,13 +95,13 @@ async def test_cover_unavailable_when_offline(
     assert hass.states.get(ENTITY_ID_1).state == STATE_UNAVAILABLE
 
 
-async def test_cover_state_preserved_on_transient_status_error(
+async def test_cover_unavailable_on_transient_status_error(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Last-known status is preserved when a per-device status fetch fails."""
+    """A failed per-device status fetch raises UpdateFailed and marks the cover unavailable."""
     mock_api_client.async_get_device_status.return_value = {
         "status": {"internetConnected": True, "openCloseStatus": "Closed"}
     }
@@ -109,13 +109,12 @@ async def test_cover_state_preserved_on_transient_status_error(
     assert hass.states.get(ENTITY_ID_1).state == STATE_CLOSED
 
     mock_api_client.async_get_device_status.side_effect = FlussApiClientError("boom")
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=31))
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.data[DEVICE_ID_1]["openCloseStatus"] == "Closed"
-    assert coordinator.data[DEVICE_ID_1]["internetConnected"] is True
-    assert hass.states.get(ENTITY_ID_1).state == STATE_CLOSED
+    assert coordinator.last_update_success is False
+    assert hass.states.get(ENTITY_ID_1).state == STATE_UNAVAILABLE
     assert entity_registry.async_get(ENTITY_ID_1) is not None
 
 

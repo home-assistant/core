@@ -44,6 +44,14 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             ),
         )
 
+    async def _async_get_status(self, device_id: str) -> dict[str, Any]:
+        """Return per-device status."""
+        try:
+            response = await self.api.async_get_device_status(device_id)
+        except FlussApiClientError as err:
+            raise UpdateFailed(f"Error fetching status for {device_id}: {err}") from err
+        return response["status"]
+
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch Fluss+ devices and merge per-device status."""
         try:
@@ -59,22 +67,9 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             if device["userPermissions"]["canUseWiFi"]
         ]
 
-        async def _status(device_id: str) -> dict[str, Any]:
-            """Return per-device status; preserve last-known fields on API error."""
-            try:
-                response = await self.api.async_get_device_status(device_id)
-            except FlussApiClientError:
-                previous = (self.data or {}).get(device_id)
-                if previous is None:
-                    return {"internetConnected": False}
-                return {
-                    k: v
-                    for k, v in previous.items()
-                    if k in ("internetConnected", "openCloseStatus")
-                }
-            return response["status"]
-
-        statuses = await asyncio.gather(*(_status(d["deviceId"]) for d in device_list))
+        statuses = await asyncio.gather(
+            *(self._async_get_status(d["deviceId"]) for d in device_list)
+        )
         return {
             device["deviceId"]: {**device, **status}
             for device, status in zip(device_list, statuses, strict=False)

@@ -10,7 +10,6 @@ from fluss_api import (
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -57,17 +56,15 @@ async def test_async_setup_entry_authentication_error(
     assert mock_config_entry.state is state
 
 
-async def test_status_authentication_error_marks_device_offline(
+async def test_status_error_during_setup_retries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
 ) -> None:
-    """Test that an auth error from a per-device status call marks the device offline."""
-    mock_api_client.async_get_device_status.side_effect = (
-        FlussApiClientAuthenticationError("permission revoked")
+    """A per-device status failure raises UpdateFailed and retries setup."""
+    mock_api_client.async_get_device_status.side_effect = FlussApiClientError(
+        "permission revoked"
     )
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("button.device_1").state == STATE_UNAVAILABLE
-    assert hass.states.get("button.device_2").state == STATE_UNAVAILABLE
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
