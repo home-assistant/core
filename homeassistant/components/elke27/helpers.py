@@ -17,27 +17,29 @@ from .coordinator import Elke27DataUpdateCoordinator
 from .hub import Elke27Hub
 from .models import Elke27ConfigEntry
 
-_NAME_SAFE_RE = re.compile(r"[^A-Za-z0-9 _-]")
+_CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 
 
 def sanitize_name(name: str | None) -> str | None:
-    """Normalize entity names to Home Assistant-safe characters."""
+    """Remove control characters from display names."""
     if name is None:
         return None
-    return _NAME_SAFE_RE.sub("", name)
+    return _CONTROL_CHARS_RE.sub("", name)
 
 
 def get_panel_field(
     snapshot: PanelSnapshot | None, panel_name: str | None, field: str
 ) -> Any:
-    """Return a field from the current panel snapshot."""
+    """Return a configured panel field or a field from the current panel snapshot."""
     if field == "name" and panel_name:
         return sanitize_name(panel_name)
     if snapshot is None:
         return None
     panel_info = snapshot.panel
     if field == "name":
-        return None
+        return sanitize_name(
+            getattr(panel_info, "panel_name", None) or getattr(panel_info, "name", None)
+        )
     if field == "mac":
         return panel_info.mac
     if field == "serial":

@@ -960,6 +960,7 @@ async def test_disconnect_clears_typed_subscriptions(hass: HomeAssistant) -> Non
 
 async def test_disconnect_suppresses_client_disconnect_errors(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify disconnect cleanup continues when the client raises."""
     hub = Elke27Hub(
@@ -976,10 +977,36 @@ async def test_disconnect_suppresses_client_disconnect_errors(
         async_disconnect=AsyncMock(side_effect=RuntimeError("boom"))
     )
 
-    await hub._async_disconnect()
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.elke27.hub"):
+        await hub._async_disconnect()
 
     assert hub._client is None
     unsubscribe.assert_called_once()
+    assert "Error while disconnecting client" in caplog.text
+
+
+async def test_disconnect_logs_unsubscribe_errors(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Verify disconnect cleanup logs connection unsubscribe errors."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.80",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._connection_unsubscribe = Mock(side_effect=RuntimeError("unsubscribe failed"))
+    hub._client = SimpleNamespace(async_disconnect=AsyncMock(return_value=None))
+
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.elke27.hub"):
+        await hub._async_disconnect()
+
+    assert hub._connection_unsubscribe is None
+    assert hub._client is None
+    assert "Error while unsubscribing connection callback" in caplog.text
 
 
 async def test_disconnect_reraises_client_disconnect_cancel_after_cleanup(
