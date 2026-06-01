@@ -7,16 +7,20 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_OPTION,
+    SERVICE_SELECT_OPTION,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEST_PLATFORM = SELECT_DOMAIN
 pytestmark = [
-    pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)]),
+    pytest.mark.parametrize("platforms", [(Platform.SELECT,)]),
     pytest.mark.parametrize(
         "load_action_file", ["action_freezer.json"], ids=["freezer"]
     ),
@@ -45,7 +49,7 @@ async def test_selecting(
     """Test the select service."""
 
     await hass.services.async_call(
-        TEST_PLATFORM,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "sabbath"},
         blocking=True,
@@ -65,7 +69,7 @@ async def test_api_failure(
         HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
     ):
         await hass.services.async_call(
-            TEST_PLATFORM,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "sabbath"},
             blocking=True,
@@ -85,7 +89,7 @@ async def test_invalid_option(
         ServiceValidationError, match=f'Invalid option: "normal" on {ENTITY_ID}'
     ):
         await hass.services.async_call(
-            TEST_PLATFORM,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "normal"},
             blocking=True,

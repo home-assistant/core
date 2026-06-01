@@ -876,7 +876,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
             attribute values before they are written to the state. Use
             this when the trigger stores its tracked value on a different
             scale than the threshold — e.g. `media_player` volume is
-            stored as 0.0–1.0 but the threshold is in percent, so pass
+            stored as 0.0-1.0 but the threshold is in percent, so pass
             `attribute_value_scale=0.01`.
         attribute_required: When True, `(state, {attribute: None})` is
             classified as an *excluded* state (filtered out of the all/count
@@ -1024,7 +1024,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
             attribute values before they are written to the state. Use
             this when the trigger stores its tracked value on a different
             scale than the threshold — e.g. `media_player` volume is
-            stored as 0.0–1.0 but the threshold is in percent, so pass
+            stored as 0.0-1.0 but the threshold is in percent, so pass
             `attribute_value_scale=0.01`.
         attribute_required: When True, `(state, {attribute: None})` is
             classified as an *excluded* state (filtered out of the all/count
@@ -2210,9 +2210,9 @@ def parametrize_numerical_attribute_condition_above_below_any(
             attribute values before they are written to the state. Use
             this when the condition stores its tracked value on a
             different scale than the threshold — e.g. `media_player`
-            volume is stored as 0.0–1.0 but the threshold is in percent,
+            volume is stored as 0.0-1.0 but the threshold is in percent,
             so pass `attribute_value_scale=0.01`; light brightness is
-            stored as 0–255 but the threshold is in percent, so pass
+            stored as 0-255 but the threshold is in percent, so pass
             `attribute_value_scale=255/100`.
     """
     condition_options = condition_options or {}
@@ -2357,9 +2357,9 @@ def parametrize_numerical_attribute_condition_above_below_all(
             attribute values before they are written to the state. Use
             this when the condition stores its tracked value on a
             different scale than the threshold — e.g. `media_player`
-            volume is stored as 0.0–1.0 but the threshold is in percent,
+            volume is stored as 0.0-1.0 but the threshold is in percent,
             so pass `attribute_value_scale=0.01`; light brightness is
-            stored as 0–255 but the threshold is in percent, so pass
+            stored as 0-255 but the threshold is in percent, so pass
             `attribute_value_scale=255/100`.
     """
     condition_options = condition_options or {}
