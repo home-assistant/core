@@ -30,7 +30,7 @@ from tests.common import (
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
-PLATFORM = "test_platform"
+COMPONENT_DOMAIN = "test_platform"
 
 
 async def test_reload_platform(hass: HomeAssistant) -> None:
@@ -43,34 +43,36 @@ async def test_reload_platform(hass: HomeAssistant) -> None:
         setup_called.append(args)
 
     mock_integration(hass, MockModule(DOMAIN, setup=component_setup))
-    mock_integration(hass, MockModule(PLATFORM, dependencies=[DOMAIN]))
+    mock_integration(hass, MockModule(COMPONENT_DOMAIN, dependencies=[DOMAIN]))
 
     platform = MockPlatform(async_setup_platform=setup_platform)
-    mock_platform(hass, f"{PLATFORM}.{DOMAIN}", platform)
+    mock_platform(hass, f"{COMPONENT_DOMAIN}.{DOMAIN}", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    await component.async_setup({DOMAIN: {"platform": PLATFORM, "sensors": None}})
+    await component.async_setup(
+        {DOMAIN: {"platform": COMPONENT_DOMAIN, "sensors": None}}
+    )
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
+    assert f"{COMPONENT_DOMAIN}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
-    platform = async_get_platform_without_config_entry(hass, PLATFORM, DOMAIN)
-    assert platform.platform_name == PLATFORM
+    platform = async_get_platform_without_config_entry(hass, COMPONENT_DOMAIN, DOMAIN)
+    assert platform.platform_name == COMPONENT_DOMAIN
     assert platform.domain == DOMAIN
 
     yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
-        await async_reload_integration_platforms(hass, PLATFORM, [DOMAIN])
+        await async_reload_integration_platforms(hass, COMPONENT_DOMAIN, [DOMAIN])
 
     assert len(setup_called) == 2
 
-    existing_platforms = async_get_platforms(hass, PLATFORM)
+    existing_platforms = async_get_platforms(hass, COMPONENT_DOMAIN)
     for existing_platform in existing_platforms:
         existing_platform.config_entry = "abc"
-    assert not async_get_platform_without_config_entry(hass, PLATFORM, DOMAIN)
+    assert not async_get_platform_without_config_entry(hass, COMPONENT_DOMAIN, DOMAIN)
 
 
 async def test_setup_reload_service(hass: HomeAssistant) -> None:
@@ -83,26 +85,28 @@ async def test_setup_reload_service(hass: HomeAssistant) -> None:
         setup_called.append(args)
 
     mock_integration(hass, MockModule(DOMAIN, setup=component_setup))
-    mock_integration(hass, MockModule(PLATFORM, dependencies=[DOMAIN]))
+    mock_integration(hass, MockModule(COMPONENT_DOMAIN, dependencies=[DOMAIN]))
 
     platform = MockPlatform(async_setup_platform=setup_platform)
-    mock_platform(hass, f"{PLATFORM}.{DOMAIN}", platform)
+    mock_platform(hass, f"{COMPONENT_DOMAIN}.{DOMAIN}", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    await component.async_setup({DOMAIN: {"platform": PLATFORM, "sensors": None}})
+    await component.async_setup(
+        {DOMAIN: {"platform": COMPONENT_DOMAIN, "sensors": None}}
+    )
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
+    assert f"{COMPONENT_DOMAIN}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
-    await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
+    await async_setup_reload_service(hass, COMPONENT_DOMAIN, [DOMAIN])
 
     yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            PLATFORM,
+            COMPONENT_DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -124,21 +128,23 @@ async def test_setup_reload_service_when_async_process_component_config_fails(
         setup_called.append(args)
 
     mock_integration(hass, MockModule(DOMAIN, setup=component_setup))
-    mock_integration(hass, MockModule(PLATFORM, dependencies=[DOMAIN]))
+    mock_integration(hass, MockModule(COMPONENT_DOMAIN, dependencies=[DOMAIN]))
 
     platform = MockPlatform(async_setup_platform=setup_platform)
-    mock_platform(hass, f"{PLATFORM}.{DOMAIN}", platform)
+    mock_platform(hass, f"{COMPONENT_DOMAIN}.{DOMAIN}", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    await component.async_setup({DOMAIN: {"platform": PLATFORM, "sensors": None}})
+    await component.async_setup(
+        {DOMAIN: {"platform": COMPONENT_DOMAIN, "sensors": None}}
+    )
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
+    assert f"{COMPONENT_DOMAIN}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
-    await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
+    await async_setup_reload_service(hass, COMPONENT_DOMAIN, [DOMAIN])
 
     yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with (
@@ -150,7 +156,7 @@ async def test_setup_reload_service_when_async_process_component_config_fails(
         ),
     ):
         await hass.services.async_call(
-            PLATFORM,
+            COMPONENT_DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -179,26 +185,26 @@ async def test_setup_reload_service_with_platform_that_provides_async_reset_plat
     integration = await async_get_integration(hass, DOMAIN)
     integration.get_component().async_reset_platform = async_reset_platform
 
-    mock_integration(hass, MockModule(PLATFORM, dependencies=[DOMAIN]))
+    mock_integration(hass, MockModule(COMPONENT_DOMAIN, dependencies=[DOMAIN]))
 
     platform = MockPlatform(async_setup_platform=setup_platform)
-    mock_platform(hass, f"{PLATFORM}.{DOMAIN}", platform)
+    mock_platform(hass, f"{COMPONENT_DOMAIN}.{DOMAIN}", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    await component.async_setup({DOMAIN: {"platform": PLATFORM, "name": "xyz"}})
+    await component.async_setup({DOMAIN: {"platform": COMPONENT_DOMAIN, "name": "xyz"}})
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
+    assert f"{COMPONENT_DOMAIN}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
-    await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
+    await async_setup_reload_service(hass, COMPONENT_DOMAIN, [DOMAIN])
 
     yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            PLATFORM,
+            COMPONENT_DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
