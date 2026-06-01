@@ -14,15 +14,13 @@
       "reauth_confirm": {
         "data": {
           "access_code": "Access code (used for linking, NOT a PIN)",
-          "host": "Host",
           "passphrase": "Passphrase"
         },
         "data_description": {
           "access_code": "The panel access code used during linking. It is not a PIN.",
-          "host": "The panel host name or IP address.",
           "passphrase": "The passphrase used during linking."
         },
-        "description": "Enter the host and linking credentials again.",
+        "description": "Enter the linking credentials again.",
         "title": "Reauthenticate Elk E27 Alarm Panel"
       },
       "user": {

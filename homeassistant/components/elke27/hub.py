@@ -7,7 +7,7 @@ from enum import Enum
 import logging
 from typing import Any
 
-from elke27_lib import ArmMode, ClientConfig, LinkKeys
+from elke27_lib import ArmMode, ClientConfig, LinkKeys, PanelSnapshot
 from elke27_lib.client import Elke27Client
 from elke27_lib.errors import (
     Elke27ConnectionError,
@@ -18,6 +18,7 @@ from elke27_lib.errors import (
     Elke27PinRequiredError,
     Elke27TimeoutError,
 )
+from elke27_lib.types import CsmSnapshot
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -192,14 +193,14 @@ class Elke27Hub:
         if cancel_error is not None:
             raise cancel_error
 
-    def get_snapshot(self) -> Any | None:
+    def get_snapshot(self) -> PanelSnapshot | None:
         """Return the latest client snapshot."""
         client = self._client
         if client is None:
             return None
         return client.get_snapshot()
 
-    async def refresh_csm(self) -> Any:
+    async def refresh_csm(self) -> CsmSnapshot:
         """Refresh the panel CSM snapshot."""
         client = self._client
         if client is None:
