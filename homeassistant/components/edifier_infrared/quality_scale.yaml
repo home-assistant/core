@@ -61,7 +61,7 @@ rules:
   discovery:
     status: exempt
     comment: |
-      This integration is configured manually via config flow.
+      Discovery is not supported for infrared integrations.
   docs-data-update:
     status: exempt
     comment: |
