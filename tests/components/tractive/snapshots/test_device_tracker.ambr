@@ -39,7 +39,6 @@
 # name: test_device_tracker[device_tracker.tracker_device_id_123-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'battery_level': 88,
       'friendly_name': 'Tracker device_id_123',
       'gps_accuracy': 99,
       'in_zones': list([
