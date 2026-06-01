@@ -19,5 +19,10 @@
         "description": "Your Fluss API key, available in the profile page of the Fluss+ app"
       }
     }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Failed to send command to Fluss+ device"
+    }
   }
 }
