@@ -35,7 +35,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=timestamp,
-        ):
+    ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -301,7 +301,7 @@ async def test_async_setup_entry_empty_cert(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.cert_expiry.helper.async_get_cert",
         return_value={},
-):
+    ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
