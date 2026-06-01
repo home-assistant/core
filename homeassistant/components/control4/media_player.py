@@ -1,7 +1,5 @@
 """Platform for Control4 Rooms Media Players."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import enum
@@ -224,7 +222,8 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
     def _create_api_object(self) -> C4Room:
         """Create a pyControl4 device object.
 
-        This exists so the director token used is always the latest one, without needing to re-init the entire entity.
+        This exists so the director token used is always the
+        latest one, without needing to re-init the entire entity.
         """
         return C4Room(self.runtime_data.director, self._idx)
 

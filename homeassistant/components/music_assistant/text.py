@@ -1,7 +1,5 @@
 """Music Assistant text platform."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from music_assistant_client.client import MusicAssistantClient

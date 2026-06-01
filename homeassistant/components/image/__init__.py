@@ -1,7 +1,5 @@
 """The image integration."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from contextlib import suppress
@@ -209,7 +207,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def __init__(self, hass: HomeAssistant, verify_ssl: bool = False) -> None:
         """Initialize an image entity."""
         self._client = get_async_client(hass, verify_ssl=verify_ssl)
-        self.access_tokens: collections.deque = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque(maxlen=2)
         self.async_update_token()
 
     @cached_property
@@ -481,7 +479,9 @@ async def async_handle_snapshot_service(
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
         raise HomeAssistantError(
-            f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+            f"Cannot write `{snapshot_file}`, no access to path;"
+            " `allowlist_external_dirs` may need to be adjusted"
+            " in `configuration.yaml`"
         )
 
     async with asyncio.timeout(IMAGE_TIMEOUT):

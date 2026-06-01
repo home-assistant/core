@@ -1,7 +1,5 @@
 """Support for getting the disk temperature of a host."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import socket
@@ -16,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
+    ATTR_MODEL,
     CONF_DISKS,
     CONF_HOST,
     CONF_NAME,
@@ -30,7 +29,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = "device"
-ATTR_MODEL = "model"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 7634

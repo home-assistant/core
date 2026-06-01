@@ -79,7 +79,7 @@ async def test_form_already_configured(
 
 @pytest.mark.usefixtures("mock_psnawpapi")
 async def test_form_already_configured_as_subentry(hass: HomeAssistant) -> None:
-    """Test we abort form login when entry is already configured as subentry of another entry."""
+    """Test we abort when entry is already configured as subentry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="PublicUniversalFriend",
@@ -452,7 +452,7 @@ async def test_add_friend_flow_already_configured(
 async def test_add_friend_flow_already_configured_as_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test we abort add friend subentry flow when already configured as config entry."""
+    """Test we abort add friend flow when already a config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="test-user",
@@ -523,7 +523,7 @@ async def test_add_friend_flow_no_friends(
 async def test_add_friend_disabled_config_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test we abort add friend subentry flow when the parent config entry is disabled."""
+    """Test we abort add friend flow when parent entry is disabled."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="test-user",

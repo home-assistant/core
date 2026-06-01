@@ -8,28 +8,34 @@ from aiohasupervisor.models import IngressPanel
 from aiohttp import web
 
 from homeassistant.components import frontend
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant
+from homeassistant.components.http import HomeAssistantView, require_admin
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.core import Event, HomeAssistant
 
 from .handler import get_supervisor_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_addon_panel(hass: HomeAssistant) -> None:
+def async_setup_addon_panel(hass: HomeAssistant) -> None:
     """Add-on Ingress Panel setup."""
     hassio_addon_panel = HassIOAddonPanel(hass)
     hass.http.register_view(hassio_addon_panel)
 
-    # If panels are exists
-    if not (panels := await hassio_addon_panel.get_panels()):
-        return
+    # Handle existing panels on startup
+    async def _async_panel_start_handler(event: Event) -> None:
+        """Process all existing panels on startup."""
+        # Check if there are panels to register
+        if not (panels := await hassio_addon_panel.get_panels()):
+            return
 
-    # Register available panels
-    for addon, data in panels.items():
-        if not data.enable:
-            continue
-        _register_panel(hass, addon, data)
+        # Register available panels
+        for addon, data in panels.items():
+            if not data.enable:
+                continue
+            _register_panel(hass, addon, data)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_panel_start_handler)
 
 
 class HassIOAddonPanel(HomeAssistantView):
@@ -43,6 +49,7 @@ class HassIOAddonPanel(HomeAssistantView):
         self.hass = hass
         self.client = get_supervisor_client(hass)
 
+    @require_admin
     async def post(self, request: web.Request, addon: str) -> web.Response:
         """Handle new add-on panel requests."""
         panels = await self.get_panels()
@@ -56,6 +63,7 @@ class HassIOAddonPanel(HomeAssistantView):
         _register_panel(self.hass, addon, panels[addon])
         return web.Response()
 
+    @require_admin
     async def delete(self, request: web.Request, addon: str) -> web.Response:
         """Handle remove add-on panel requests."""
         frontend.async_remove_panel(self.hass, addon)

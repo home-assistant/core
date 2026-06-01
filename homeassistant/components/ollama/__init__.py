@@ -1,7 +1,5 @@
 """The Ollama integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from types import MappingProxyType
@@ -10,7 +8,13 @@ import httpx
 import ollama
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_MODEL,
+    CONF_PROMPT,
+    CONF_URL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -28,9 +32,7 @@ from homeassistant.util.ssl import get_default_context
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
-    CONF_MODEL,
     CONF_NUM_CTX,
-    CONF_PROMPT,
     CONF_THINK,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_NAME,
@@ -85,8 +87,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
             raise ConfigEntryAuthFailed from err
         if err.status_code >= 500 or err.status_code == 429:
             raise ConfigEntryNotReady(err) from err
-        # If the response is a 4xx error other than 401 or 403, it likely means the URL is valid but not an Ollama instance,
-        # so we raise ConfigEntryError to show an error in the UI, instead of ConfigEntryNotReady which would just keep retrying.
+        # If the response is a 4xx error other than 401 or 403,
+        # it likely means the URL is valid but not an Ollama
+        # instance, so we raise ConfigEntryError to show an error
+        # in the UI, instead of ConfigEntryNotReady which would
+        # just keep retrying.
         raise ConfigEntryError(err) from err
     except (TimeoutError, httpx.ConnectError) as err:
         raise ConfigEntryNotReady(err) from err

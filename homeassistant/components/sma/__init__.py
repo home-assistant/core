@@ -1,7 +1,5 @@
 """The SMA integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pysma import SMAWebConnect

@@ -1,7 +1,5 @@
 """Support for ESPHome media players."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 from typing import Any, cast
@@ -72,7 +70,9 @@ _FEATURES = {
     EspMediaPlayerEntityFeature.CLEAR_PLAYLIST: MediaPlayerEntityFeature.CLEAR_PLAYLIST,
     EspMediaPlayerEntityFeature.PLAY: MediaPlayerEntityFeature.PLAY,
     EspMediaPlayerEntityFeature.SHUFFLE_SET: MediaPlayerEntityFeature.SHUFFLE_SET,
-    EspMediaPlayerEntityFeature.SELECT_SOUND_MODE: MediaPlayerEntityFeature.SELECT_SOUND_MODE,
+    EspMediaPlayerEntityFeature.SELECT_SOUND_MODE: (
+        MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    ),
     EspMediaPlayerEntityFeature.BROWSE_MEDIA: MediaPlayerEntityFeature.BROWSE_MEDIA,
     EspMediaPlayerEntityFeature.REPEAT_SET: MediaPlayerEntityFeature.REPEAT_SET,
     EspMediaPlayerEntityFeature.GROUPING: MediaPlayerEntityFeature.GROUPING,
