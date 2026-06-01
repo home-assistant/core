@@ -1,6 +1,5 @@
 """Tests for Elke27 entity helpers."""
 
-from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -17,6 +16,7 @@ from homeassistant.components.elke27.helpers import (
 from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -40,7 +40,7 @@ def _snapshot(panel: PanelInfo | None = None) -> PanelSnapshot:
         locks={},
         thermostats={},
         version=1,
-        updated_at=datetime.now(UTC),
+        updated_at=dt_util.utcnow(),
     )
 
 
