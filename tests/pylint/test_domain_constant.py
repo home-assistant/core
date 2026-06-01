@@ -228,7 +228,7 @@ def test_not_test_module_ignored(
     linter: UnittestLinter,
     domain_constant_checker: DomainConstantChecker,
 ) -> None:
-    """Test that modules outside tests.components are ignored."""
+    """Test that modules outside tests are ignored."""
     root_node = astroid.parse(
         """
 async_setup_component(hass, OTHER, {})

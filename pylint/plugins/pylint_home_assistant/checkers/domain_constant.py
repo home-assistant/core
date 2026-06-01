@@ -4,6 +4,8 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from pylint_home_assistant.helpers.module_info import is_test_module
+
 _FUNCTION_CHECKS: list[tuple[str, int | None, str]] = [
     ("async_setup_component", 1, "domain"),
     ("async_mock_service", 1, "domain"),
@@ -33,7 +35,7 @@ class DomainConstantChecker(BaseChecker):
 
     def visit_module(self, node: nodes.Module) -> None:
         """Visit Module node."""
-        self._in_test_module = node.name.startswith("tests.")
+        self._in_test_module = is_test_module(node.name)
 
     def visit_call(self, node: nodes.Call) -> None:
         """Visit Call node."""
