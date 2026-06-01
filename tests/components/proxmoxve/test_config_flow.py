@@ -523,6 +523,11 @@ def sanitize_config_entry(data: dict[str, Any]) -> dict[str, Any]:
             MOCK_USER_AUTH_STEP_OTHER_TOKEN,
             MOCK_TEST_TOKEN_OTHER_CONFIG,
         ),
+        (
+            MOCK_USER_STEP_TOKEN,
+            MOCK_USER_AUTH_STEP_TOKEN_FULL_ID,
+            MOCK_TEST_TOKEN_CONFIG,
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
