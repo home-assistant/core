@@ -1,0 +1,12 @@
+{
+  "domain": "helty",
+  "name": "Helty Flow",
+  "codeowners": ["@ebaschiera"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/helty",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["pyhelty"],
+  "quality_scale": "bronze",
+  "requirements": ["pyhelty==0.2.0"]
+}
