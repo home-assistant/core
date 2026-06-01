@@ -91,20 +91,26 @@ class DomainConstantChecker(BaseChecker):
                     "domain",
                 } or attrname.endswith(("_DOMAIN", "_domain")):
                     return
+            case nodes.Const():
+                if isinstance(arg_node.value, str):
+                    return
             case nodes.Name():
                 if (node_name := arg_node.name) in {
                     "DOMAIN",
                     "domain",
                 } or node_name.endswith(("_DOMAIN", "_domain")):
                     return
-            case nodes.Const():
-                if isinstance(arg_node.value, str):
-                    return
+            case nodes.Subscript():
+                # Ignore cases like dict["something"] or dict.get("something")
+                return
 
         self.add_message(
             "home-assistant-domain-argument",
             node=arg_node,
-            args=(arg_node.as_string(), call_node.func.as_string()),
+            args=(
+                f"{arg_node.as_string()} ({type(arg_node)}",
+                call_node.func.as_string(),
+            ),
         )
 
 
