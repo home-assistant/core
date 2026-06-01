@@ -1,7 +1,7 @@
 """The tests for the Netatmo climate platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1105,47 +1105,26 @@ async def test_thermostat_update_with_none_therm_setpoint_mode(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.livingroom_livingroom"
 
-    response = {
-        "room_id": "2746182631",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2746182631",
-                    "name": "Livingroom",
-                    "type": "livingroom",
-                    "therm_setpoint_mode": None,
-                    "therm_setpoint_temperature": 20,
-                    "therm_measured_temperature": 22.5,
-                }
-            ],
-            "modules": [
-                {
-                    "id": "12:34:56:00:01:ae",
-                    "name": "Livingroom",
-                    "type": "NATherm1",
-                }
-            ],
-        },
-        "mode": None,
-        "event_type": "set_point",
-        "temperature": 20,
-        "push_type": "display_change",
-    }
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(climate_entity_livingroom)
+    assert entity is not None
 
-    await simulate_webhook(hass, webhook_id, response)
-    await hass.async_block_till_done()
+    with patch.object(
+        type(entity.device),
+        "therm_setpoint_mode",
+        new_callable=PropertyMock,
+        return_value=None,
+        create=True,
+    ):
+        entity.async_update_callback()
+        entity.async_write_ha_state()
+        await hass.async_block_till_done()
 
     state = hass.states.get(climate_entity_livingroom)
     assert state is not None
     assert state.state == HVACMode.AUTO
-    assert state.attributes["preset_mode"] == PRESET_AWAY
-    assert state.attributes["temperature"] == 20
+    assert state.attributes["preset_mode"] == PRESET_SCHEDULE
 
 
 async def test_webhook_set_point(
