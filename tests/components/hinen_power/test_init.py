@@ -283,7 +283,7 @@ async def test_coordinator_backend_error_raises_update_failed(
 
     coordinator = HinenDataUpdateCoordinator(hass, config_entry, mock_auth)
 
-    with pytest.raises(UpdateFailed, match="Couldn't connect to Hinen"):
+    with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
 

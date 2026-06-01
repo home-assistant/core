@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
-from homeassistant.components.number import SERVICE_SET_VALUE
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -87,7 +87,7 @@ async def test_number_set_values(
 
     # Call the service to set the value
     await hass.services.async_call(
-        Platform.NUMBER,
+        NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {"entity_id": entity_id, "value": test_value},
         blocking=True,
@@ -116,7 +116,7 @@ async def test_number_set_value_error(
     # Attempt to set value
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.NUMBER,
+            NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {
                 "entity_id": "number.cms_sf2000_discharge_limit",

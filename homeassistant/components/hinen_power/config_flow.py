@@ -10,7 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_DEVICES,
+    CONF_TOKEN,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -26,15 +32,69 @@ from . import application_credentials
 from .const import (
     ATTR_AUTH_LANGUAGE,
     ATTR_REGION_CODE,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_DEVICES,
     DOMAIN,
     HOST,
     LOGGER,
     SUPPORTED_LANGUAGES,
 )
 from .coordinator import HinenPowerConfigEntry
+
+
+class HinenOpenFlowHandler(OptionsFlow):
+    """Hinen Open Options flow handler."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Initialize form."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.config_entry.title,
+                data=user_input,
+            )
+
+        hinen_open = HinenOpen(
+            self.config_entry.data[CONF_TOKEN][HOST],
+            session=async_get_clientsession(self.hass),
+        )
+        await hinen_open.set_user_authentication(
+            self.config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN],
+            self.config_entry.data[CONF_TOKEN]["refresh_token"],
+        )
+
+        # Get user's own devices
+        device_infos = [
+            device_info async for device_info in hinen_open.get_device_infos()
+        ]
+        if not device_infos:
+            return self.async_abort(
+                reason="no_device",
+            )
+
+        # Start with user's own channels
+        selectable_devices = [
+            SelectOptionDict(
+                value=str(device_info.id),
+                label=f"{device_info.device_name},{device_info.serial_number}",
+            )
+            for device_info in device_infos
+        ]
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_DEVICES): SelectSelector(
+                            SelectSelectorConfig(
+                                options=selectable_devices, multiple=True
+                            )
+                        ),
+                    }
+                ),
+                self.config_entry.options,
+            ),
+        )
 
 
 class OAuth2FlowHandler(
@@ -214,60 +274,3 @@ class OAuth2FlowHandler(
         hinen_public = HinenPublic(session=async_get_clientsession(self.hass))
         countries = await hinen_public.get_country_list()
         return [country["code"] for country in countries]
-
-
-class HinenOpenFlowHandler(OptionsFlow):
-    """Hinen Open Options flow handler."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Initialize form."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.config_entry.title,
-                data=user_input,
-            )
-
-        hinen_open = HinenOpen(
-            self.config_entry.data[CONF_TOKEN][HOST],
-            session=async_get_clientsession(self.hass),
-        )
-        await hinen_open.set_user_authentication(
-            self.config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN],
-            self.config_entry.data[CONF_TOKEN]["refresh_token"],
-        )
-
-        # Get user's own devices
-        device_infos = [
-            device_info async for device_info in hinen_open.get_device_infos()
-        ]
-        if not device_infos:
-            return self.async_abort(
-                reason="no_device",
-            )
-
-        # Start with user's own channels
-        selectable_devices = [
-            SelectOptionDict(
-                value=str(device_info.id),
-                label=f"{device_info.device_name},{device_info.serial_number}",
-            )
-            for device_info in device_infos
-        ]
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
-                    {
-                        vol.Required(CONF_DEVICES): SelectSelector(
-                            SelectSelectorConfig(
-                                options=selectable_devices, multiple=True
-                            )
-                        ),
-                    }
-                ),
-                self.config_entry.options,
-            ),
-        )

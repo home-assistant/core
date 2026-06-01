@@ -45,7 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HinenPowerConfigEntry) -
     except ClientResponseError as err:
         if 400 <= err.status < 500:
             raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
             ) from err
         raise ConfigEntryNotReady from err
     except ClientError as err:

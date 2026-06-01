@@ -87,6 +87,14 @@
       }
     }
   },
+  "exceptions": {
+    "auth_failed": {
+      "message": "OAuth session is not valid, re-authentication required."
+    },
+    "update_failed": {
+      "message": "Failed to update Hinen Power data."
+    }
+  },
   "options": {
     "abort": {
       "no_device": "Please create a Hinen Device to be able to use the integration"

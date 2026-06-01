@@ -11,7 +11,7 @@ import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS, Host
 from reolink_aio.baichuan import DEFAULT_BC_PORT
-from reolink_aio.enums import SubType
+from reolink_aio.enums import ConnectionEnum, SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
 from homeassistant.components import webhook
@@ -36,6 +36,7 @@ from .const import (
     BATTERY_ALL_WAKE_UPDATE_INTERVAL,
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     BATTERY_WAKE_UPDATE_INTERVAL,
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
@@ -77,6 +78,12 @@ class ReolinkHost:
         self._config_entry = config_entry
         self._config = config
         self._unique_id: str = ""
+        try:
+            bc_connection = ConnectionEnum(
+                config.get(CONF_BC_CONNECT, ConnectionEnum.unknown.value)
+            )
+        except ValueError:
+            bc_connection = ConnectionEnum.unknown
 
         def get_aiohttp_session() -> aiohttp.ClientSession:
             """Return the HA aiohttp session."""
@@ -96,6 +103,7 @@ class ReolinkHost:
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=get_aiohttp_session,
             bc_port=config.get(CONF_BC_PORT, DEFAULT_BC_PORT),
+            bc_connection=bc_connection,
             bc_only=config.get(CONF_BC_ONLY, False),
         )
 
@@ -171,6 +179,7 @@ class ReolinkHost:
                     translation_placeholders={"name": self._config_entry.title},
                 )
 
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise PasswordIncompatible(
                 "Reolink password contains incompatible special character or "
                 "is too long, please change the password to only contain characters: "
@@ -192,9 +201,11 @@ class ReolinkHost:
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ReolinkSetupException("Could not get mac address")
 
         if not self._api.is_admin:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UserNotAdmin(
                 f"User '{self._api.username}' has authorization level "
                 f"'{self._api.user_level}', only admin users can change camera settings"
@@ -499,7 +510,9 @@ class ReolinkHost:
                 wake[channel] = False
 
             # check privacy mode if enabled
-            if self._api.baichuan.privacy_mode(channel):
+            if self._api.baichuan.privacy_mode(channel) and (
+                not self._api.is_battery or wake[channel]
+            ):
                 await self._api.baichuan.get_privacy_mode(channel)
 
         if all(wake.values()):
@@ -679,7 +692,7 @@ class ReolinkHost:
                 self._api.host,
                 sub_type,
             )
-            if sub_type == SubType.push:
+            if sub_type is SubType.push:
                 await self.subscribe()
                 return
 
@@ -739,6 +752,7 @@ class ReolinkHost:
                 self._base_url = get_url(self._hass, prefer_external=True)
             except NoURLAvailableError as err:
                 self.unregister_webhook()
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise ReolinkWebhookException(
                     f"Error registering URL for webhook {event_id}: "
                     "HomeAssistant URL is not available"

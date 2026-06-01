@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""

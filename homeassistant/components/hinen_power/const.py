@@ -5,12 +5,9 @@ import logging
 DOMAIN = "hinen_power"
 MANUFACTURER = "hinen"
 
-CONF_DEVICES = "devices"
 COORDINATOR = "coordinator"
 AUTH = "auth"
 HOST = "host"
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 
 LOGGER = logging.getLogger(__package__)
 

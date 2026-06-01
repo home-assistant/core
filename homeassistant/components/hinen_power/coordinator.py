@@ -7,7 +7,7 @@ from typing import Any
 from hinen_open_api.exceptions import HinenBackendError, UnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ID, ATTR_SERIAL_NUMBER
+from homeassistant.const import ATTR_ID, ATTR_SERIAL_NUMBER, CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -17,20 +17,10 @@ from .const import (
     ATTR_ALERT_STATUS,
     ATTR_DEVICE_NAME,
     ATTR_STATUS,
-    CONF_DEVICES,
     DOMAIN,
     LOGGER,
     PROPERTIES,
 )
-
-
-@dataclass
-class HinenPowerRuntimeData:
-    """Hinen power runtime data."""
-
-    coordinator: HinenDataUpdateCoordinator
-    auth: AsyncConfigEntryAuth
-
 
 type HinenPowerConfigEntry = ConfigEntry[HinenPowerRuntimeData]
 
@@ -84,9 +74,20 @@ class HinenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err
         except HinenBackendError as err:
-            raise UpdateFailed("Couldn't connect to Hinen") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from err
         return res
 
     async def async_update_data(self) -> dict[str, Any]:
         """Fetch data from Hinen."""
         return await self._async_update_data()
+
+
+@dataclass
+class HinenPowerRuntimeData:
+    """Hinen power runtime data."""
+
+    coordinator: HinenDataUpdateCoordinator
+    auth: AsyncConfigEntryAuth

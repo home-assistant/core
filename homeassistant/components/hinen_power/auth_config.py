@@ -143,6 +143,7 @@ class HinenImplementation(AuthImplementation):
                     error_trace_id,
                 )
                 if resp.status == 429 or 500 <= resp.status <= 599:
+                    # pylint: disable-next=home-assistant-exception-not-translated
                     raise OAuth2TokenRequestTransientError(
                         request_info=resp.request_info,
                         history=resp.history,
@@ -151,6 +152,7 @@ class HinenImplementation(AuthImplementation):
                         headers=resp.headers,
                         domain=self.domain,
                     ) from None
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise OAuth2TokenRequestReauthError(
                     request_info=resp.request_info,
                     history=resp.history,

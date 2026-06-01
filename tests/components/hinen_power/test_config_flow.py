@@ -9,9 +9,9 @@ from homeassistant import config_entries
 from homeassistant.components.hinen_power.const import (
     ATTR_AUTH_LANGUAGE,
     ATTR_REGION_CODE,
-    CONF_DEVICES,
     DOMAIN,
 )
+from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
