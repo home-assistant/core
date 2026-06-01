@@ -232,8 +232,7 @@ async def test_notify_sensor_no_advertisement(
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert (
-        "62:00:A1:3C:AE:7B is not advertising: mock reachability reason"
-        in caplog.text
+        "62:00:A1:3C:AE:7B is not advertising: mock reachability reason" in caplog.text
     )
 
 
