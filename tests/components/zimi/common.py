@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, create_autospec, patch
 from zcc.device import ControlPointDevice
 
 from homeassistant.components.zimi.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -64,7 +64,7 @@ def mock_api_device(
 
 async def setup_platform(
     hass: HomeAssistant,
-    platform: str,
+    platform: Platform,
 ) -> MockConfigEntry:
     """Set up the specified Zimi platform."""
 
