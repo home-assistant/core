@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
                 "reason": bluetooth.async_address_reachability_diagnostics(
                     hass,
                     address.upper(),
-                    BluetoothReachabilityIntent.PASSIVE_ADVERTISEMENT,
+                    BluetoothReachabilityIntent.CONNECTION,
                 ),
             },
         )
