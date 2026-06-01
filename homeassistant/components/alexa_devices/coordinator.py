@@ -204,7 +204,26 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     async def sync_media_state(self) -> None:
         """Sync media state."""
-        await self.api.sync_media_state()
+        try:
+            await self.api.sync_media_state()
+        except CannotAuthenticate as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except (CannotConnect, TimeoutError) as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect_with_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except (CannotRetrieveData, ValueError) as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_data_with_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
     async def media_state_event_handler(
         self, media_state: dict[str, AmazonMediaState]
