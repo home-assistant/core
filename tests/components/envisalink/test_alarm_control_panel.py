@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelState,
     CodeFormat,
 )
@@ -16,7 +17,6 @@ from homeassistant.const import (
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -77,7 +77,7 @@ async def test_arm_disarm_commands(
     assert await setup_envisalink(hass)
 
     await hass.services.async_call(
-        Platform.ALARM_CONTROL_PANEL,
+        ALARM_CONTROL_PANEL_DOMAIN,
         service,
         {"entity_id": ALARM_ENTITY},
         blocking=True,
@@ -93,7 +93,7 @@ async def test_trigger_calls_panic(
     assert await setup_envisalink(hass)
 
     await hass.services.async_call(
-        Platform.ALARM_CONTROL_PANEL,
+        ALARM_CONTROL_PANEL_DOMAIN,
         SERVICE_ALARM_TRIGGER,
         {"entity_id": ALARM_ENTITY},
         blocking=True,
