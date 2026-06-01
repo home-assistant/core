@@ -432,7 +432,7 @@ class AutomationBehavior(StrEnum):
 
     ALL = "all"
     FIRST = "first"
-    LAST = "last"
+    EACH = "each"
     ANY = "any"
 
 
@@ -446,8 +446,8 @@ class AutomationBehaviorSelectorMode(StrEnum):
 _AUTOMATION_BEHAVIOR_MODES: dict[AutomationBehaviorSelectorMode, list[str]] = {
     AutomationBehaviorSelectorMode.TRIGGER: [
         AutomationBehavior.FIRST,
-        AutomationBehavior.LAST,
-        AutomationBehavior.ANY,
+        AutomationBehavior.ALL,
+        AutomationBehavior.EACH,
     ],
     AutomationBehaviorSelectorMode.CONDITION: [
         AutomationBehavior.ALL,

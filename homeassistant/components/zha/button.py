@@ -52,7 +52,7 @@ class ZHAButton(ZHAEntity, ButtonEntity):
                 self.entity_data.entity.info_object.device_class
             )
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_press(self) -> None:
         """Send out a update command."""
         await self.entity_data.entity.async_press()
