@@ -25,6 +25,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
         data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=1,
     )
 
     mock_entry.add_to_hass(hass)
@@ -90,3 +91,6 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     for entity_id, unique_id in unique_id_map.items():
         entry = ent_reg.async_get(entity_id)
         assert entry.unique_id == unique_id
+
+    # Test if the config entry is migrated to the latest minor version
+    assert mock_entry.minor_version == 2

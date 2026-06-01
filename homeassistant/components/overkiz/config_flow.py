@@ -40,6 +40,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overkiz (by Somfy)."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     _verify_ssl: bool = True
     _api_type: APIType = APIType.CLOUD
