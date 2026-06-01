@@ -6,13 +6,13 @@ from pylint.lint import PyLinter
 
 
 class HassEnforceConstantsChecker(BaseChecker):
-    """Checker for use of constants."""
+    """Checker for correct use of constants."""
 
     name = "hass_enforce_constants"
     priority = -1
     msgs = {
-        "W7491": (
-            "Argument %s should be a DOMAIN constant in %s",
+        "C7414": (
+            "Argument %s should be a DOMAIN constant or a domain variable in %s",
             "hass-argument-domain-constant",
             "Used when method argument should be a DOMAIN constant.",
         ),
