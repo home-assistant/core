@@ -34,6 +34,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     """Tractive device tracker."""
 
     _attr_translation_key = "tracker"
+    _attr_name = None
 
     def __init__(self, client: TractiveClient, item: Trackables) -> None:
         """Initialize tracker entity."""
