@@ -82,6 +82,7 @@ class DomainConstantChecker(BaseChecker):
          - x.domain attribute (or x.abc_domain)
          - DOMAIN constant (or ABC_DOMAIN)
          - domain variable (or abc_domain)
+         - string literals (for cases where the constant is not imported)
         """
         match arg_node:
             case nodes.Attribute():
