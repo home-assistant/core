@@ -677,9 +677,6 @@
     "mqtt_unauthorized": {
       "message": "Roborock MQTT servers rejected the connection due to rate limiting or invalid credentials. You may either attempt to reauthenticate or wait and reload the integration."
     },
-    "network_error": {
-      "message": "Network error connecting to Roborock servers. Check your internet connection and the Roborock service status."
-    },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
     },
