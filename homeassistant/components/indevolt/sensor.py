@@ -939,10 +939,22 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        """Return False when the device is not in the required energy mode."""
+        """Return False for sensors in a non-applicable state."""
+
+        # Check whether device is not in the required energy mode
         if self.entity_description.energy_mode is not None:
             energy_mode = self.coordinator.data.get(IndevoltConfig.READ_ENERGY_MODE)
             if energy_mode != self.entity_description.energy_mode:
+                return False
+
+        # Check whether inverter is reporting 0 degrees with heater not active (thus reporting to indicate "idle")
+        # Pending fix by Indevolt: https://discord.com/channels/1417471269942591571/1510277757689659522
+        if self.entity_description.key == IndevoltBattery.GEN_1_INVERTER_TEMPERATURE:
+            inverter_temp = self.coordinator.data.get(
+                IndevoltBattery.GEN_1_INVERTER_TEMPERATURE
+            )
+            heating_state = self.coordinator.data.get(IndevoltSystem.HEATING_STATE)
+            if inverter_temp == 0 and heating_state != 1000:
                 return False
 
         return super().available
