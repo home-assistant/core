@@ -43,12 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     async def _on_http2_reauth_required() -> None:
         entry.async_start_reauth(hass)
 
-    async def _stop_http2() -> None:
-        try:
-            await coordinator.api.stop_http2_processing()
-        except Exception:  # noqa: BLE001
-            _LOGGER.exception("Error while stopping HTTP/2 processing")
-
     alexa_httpx_client = httpx_client.get_async_client(
         hass,
         alpn_protocols=SSL_ALPN_HTTP11_HTTP2,
@@ -59,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
         on_reauth_required=_on_http2_reauth_required,
     )
 
-    entry.async_on_unload(_stop_http2)
+    entry.async_on_unload(coordinator.api.stop_http2_processing)
 
     entry.runtime_data = coordinator
 
