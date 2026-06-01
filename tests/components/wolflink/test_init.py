@@ -1,10 +1,11 @@
 """Test the Wolf SmartSet Service."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from httpx import RequestError
 
 from homeassistant.components.wolflink.const import DEVICE_ID, DOMAIN, MANUFACTURER
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -141,3 +142,59 @@ async def test_migration_merges_duplicate_v1_entries(hass: HomeAssistant) -> Non
     assert surviving.version == 2
     assert surviving.minor_version == 1
     assert sorted(surviving.data[DEVICE_ID]) == [1234, 5678]
+
+
+async def test_setup_no_devices_on_account(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setup raises ConfigEntryNotReady if the account has no devices."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.WolfClient",
+        autospec=True,
+    ) as wolf_mock:
+        wolf_mock.return_value.fetch_system_list.return_value = []
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_migrate_future_version_aborts(hass: HomeAssistant) -> None:
+    """Test migration refuses to downgrade a future-version entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            DEVICE_ID: [1234],
+        },
+        version=3,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_setup_fetch_parameters_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wolflink: MagicMock,
+) -> None:
+    """Test setup raises ConfigEntryNotReady if fetching parameters fails."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.fetch_parameters",
+        side_effect=RequestError("Unable to fetch parameters"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

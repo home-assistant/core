@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from httpcore import ConnectError
+import pytest
 from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
 
@@ -195,8 +196,20 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     assert entry.data[DEVICE_ID] == [1234, 5678]
 
 
-async def test_reconfigure_retries_on_error(hass: HomeAssistant) -> None:
-    """Test reconfigure re-shows the form on connection errors so the user can retry."""
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(ConnectError("boom"), "cannot_connect", id="cannot_connect"),
+        pytest.param(InvalidAuth, "invalid_auth", id="invalid_auth"),
+        pytest.param(Exception("boom"), "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_retries_on_error(
+    hass: HomeAssistant,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reconfigure re-shows the form on errors so the user can retry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-username",
@@ -209,13 +222,13 @@ async def test_reconfigure_retries_on_error(hass: HomeAssistant) -> None:
     # First attempt: fetch fails — expect the reconfigure form re-shown with errors.
     with patch(
         "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
-        side_effect=ConnectError("boom"),
+        side_effect=side_effect,
     ):
         result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
     # User retries: fetch now succeeds — expect the device-selection form.
     with patch(
@@ -240,3 +253,24 @@ async def test_reconfigure_retries_on_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[DEVICE_ID] == [1234]
+
+
+async def test_reconfigure_no_devices_abort(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when the account has no devices."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+        data=CONFIG,
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+        return_value=[],
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices"
