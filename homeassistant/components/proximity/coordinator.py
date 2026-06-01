@@ -6,14 +6,16 @@ import logging
 from typing import cast
 
 from homeassistant.components.device_tracker import ATTR_IN_ZONES
-from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN, ENTITY_ID_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
+    STATE_HOME,
 )
 from homeassistant.core import (
     Event,
@@ -141,7 +143,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 },
             )
 
-    def _device_in_zone(self, device: State) -> bool:
+    def _device_in_zone(self, zone: State, device: State) -> bool:
         """Return whether the tracked entity is currently in the proximity zone.
 
         Trackers report zone membership in the ``in_zones`` attribute, which
@@ -149,17 +151,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         so fall back to comparing the device state against the zone's friendly
         name, which is what the device state is set to for non-home zones.
         """
-        zone_id = self.proximity_zone_id
-
         if (in_zones := device.attributes.get(ATTR_IN_ZONES)) is not None:
-            return zone_id in in_zones
+            return zone.entity_id in in_zones
 
-        zone_state = self.hass.states.get(zone_id)
-        zone_friendly_name = zone_state.name if zone_state else None
+        zone_friendly_name = zone.attributes.get(ATTR_FRIENDLY_NAME)
         return (
             zone_friendly_name is not None
             and device.state.lower() == zone_friendly_name.lower()
-        )
+        ) or (device.state == STATE_HOME and zone.entity_id == ENTITY_ID_HOME)
 
     def _calc_distance_to_zone(
         self,
@@ -168,7 +167,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         latitude: float | None,
         longitude: float | None,
     ) -> int | None:
-        if self._device_in_zone(device):
+        if self._device_in_zone(zone, device):
             _LOGGER.debug(
                 "%s: %s in zone -> distance=0",
                 self.name,
@@ -210,7 +209,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         new_latitude: float | None,
         new_longitude: float | None,
     ) -> str | None:
-        if self._device_in_zone(device):
+        if self._device_in_zone(zone, device):
             _LOGGER.debug(
                 "%s: %s in zone -> direction_of_travel=arrived",
                 self.name,

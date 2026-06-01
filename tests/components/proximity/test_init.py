@@ -1,5 +1,7 @@
 """The tests for the Proximity component."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components.proximity.const import (
@@ -338,7 +340,7 @@ async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
 )
 async def test_device_tracker_in_non_home_zone(
     hass: HomeAssistant,
-    tracker_attributes: dict[str, list[str]],
+    tracker_attributes: dict[str, Any],
 ) -> None:
     """Test that a tracker in a non-home zone reports arrived.
 
@@ -350,7 +352,12 @@ async def test_device_tracker_in_non_home_zone(
     hass.states.async_set(
         "zone.work_office",
         "zoning",
-        {"name": "Work Office", "latitude": 2.3, "longitude": 1.3, "radius": 10},
+        {
+            "friendly_name": "Work Office",
+            "latitude": 2.3,
+            "longitude": 1.3,
+            "radius": 10,
+        },
     )
 
     await async_setup_single_entry(
