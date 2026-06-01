@@ -135,6 +135,25 @@ async def test_device_info_ignores_invalid_mac(hass: HomeAssistant) -> None:
     assert device_info["connections"] == set()
 
 
+async def test_device_info_sanitizes_title_fallback(hass: HomeAssistant) -> None:
+    """Verify title fallback is sanitized before creating device info."""
+    entry = MockConfigEntry(
+        domain="elke27",
+        title="Panel\x00 One",
+        data={CONF_HOST: "192.168.1.10", CONF_CLIENT_ID: "entryclientid"},
+    )
+    entry.add_to_hass(hass)
+    hub = _Hub()
+    hub.panel_name = None
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    coordinator.async_set_updated_data(_snapshot())
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+
+    device_info = device_info_for_entry(hub, coordinator, entry)
+
+    assert device_info["name"] == "Panel One"
+
+
 async def test_device_info_for_area(hass: HomeAssistant) -> None:
     """Verify area device info links the area to the panel device."""
     entry = MockConfigEntry(

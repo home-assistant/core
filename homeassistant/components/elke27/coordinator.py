@@ -7,18 +7,18 @@ import logging
 from typing import Any
 
 from elke27_lib import PanelSnapshot
+from elke27_lib.errors import (
+    Elke27ConnectionError,
+    Elke27DisconnectedError,
+    Elke27Error,
+    Elke27TimeoutError,
+)
 from elke27_lib.events import (
     ConnectionStateChanged,
     CsmSnapshotUpdated,
     DomainCsmChanged,
     TableCsmChanged,
     ZoneStatusUpdated,
-)
-from elke27_lib.errors import (
-    Elke27ConnectionError,
-    Elke27DisconnectedError,
-    Elke27Error,
-    Elke27TimeoutError,
 )
 
 from homeassistant.core import HomeAssistant, callback

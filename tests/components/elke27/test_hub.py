@@ -1104,6 +1104,50 @@ async def test_unsubscribe_typed_suppresses_unsubscribe_errors(
     unsubscribe.assert_called_once()
 
 
+async def test_unsubscribe_typed_preserves_cancelled_error(
+    hass: HomeAssistant,
+) -> None:
+    """Verify typed unsubscribe cleanup preserves cancellation."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.77",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    callback = Mock()
+    unsubscribe = Mock(side_effect=asyncio.CancelledError)
+    hub._typed_callbacks = {callback: unsubscribe}
+
+    with pytest.raises(asyncio.CancelledError):
+        hub.unsubscribe_typed(callback)
+
+    unsubscribe.assert_called_once()
+
+
+async def test_clear_typed_subscriptions_preserves_cancelled_error(
+    hass: HomeAssistant,
+) -> None:
+    """Verify typed subscription cleanup preserves cancellation."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.77",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    callback = Mock()
+    unsubscribe = Mock(side_effect=asyncio.CancelledError)
+    hub._typed_callbacks = {callback: unsubscribe}
+
+    with pytest.raises(asyncio.CancelledError):
+        hub._clear_typed_subscriptions()
+
+    unsubscribe.assert_called_once()
+
+
 async def test_handle_connection_event_triggers_reconnect(
     hass: HomeAssistant,
 ) -> None:

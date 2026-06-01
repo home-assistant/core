@@ -93,10 +93,7 @@ class Elke27AreaAlarmControlPanel(
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return (
-            self._hub.is_ready
-            and self.area is not None
-        )
+        return self._hub.is_ready and self.area is not None
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the area in away mode."""
@@ -160,6 +157,7 @@ class Elke27AreaAlarmControlPanel(
         if not armed:
             msg = "Area arm command was not acknowledged."
             raise HomeAssistantError(msg)
+
 
 def _get_area(snapshot: PanelSnapshot, area_id: int) -> AreaState | None:
     return snapshot.areas.get(area_id)

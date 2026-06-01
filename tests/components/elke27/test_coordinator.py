@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 from elke27_lib import PanelSnapshot
+from elke27_lib.errors import Elke27Error, Elke27TimeoutError
 from elke27_lib.events import (
     UNSET_AT,
     UNSET_CLASSIFICATION,
@@ -18,7 +19,6 @@ from elke27_lib.events import (
     TableCsmChanged,
     ZoneStatusUpdated,
 )
-from elke27_lib.errors import Elke27Error, Elke27TimeoutError
 from elke27_lib.types import CsmSnapshot
 import pytest
 

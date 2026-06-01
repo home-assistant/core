@@ -143,15 +143,11 @@ class Elke27Hub:
                     self._unavailable_logged = False
             except asyncio.CancelledError:
                 await asyncio.shield(
-                    self._async_cleanup_failed_connect(
-                        client, connection_unsubscribe
-                    )
+                    self._async_cleanup_failed_connect(client, connection_unsubscribe)
                 )
                 raise
             except Exception:
-                await self._async_cleanup_failed_connect(
-                    client, connection_unsubscribe
-                )
+                await self._async_cleanup_failed_connect(client, connection_unsubscribe)
                 raise
 
     async def async_disconnect(self) -> None:
@@ -248,8 +244,7 @@ class Elke27Hub:
         if listener in self._typed_callbacks:
             unsubscribe = self._typed_callbacks.pop(listener)
             if unsubscribe is not None:
-                with contextlib.suppress(Exception):
-                    unsubscribe()
+                _unsubscribe_callback(unsubscribe)
             return True
         return False
 
@@ -318,8 +313,7 @@ class Elke27Hub:
         """Clear typed subscriptions when the client disconnects."""
         for cb, unsubscribe in list(self._typed_callbacks.items()):
             if unsubscribe is not None:
-                with contextlib.suppress(Exception):
-                    unsubscribe()
+                _unsubscribe_callback(unsubscribe)
             self._typed_callbacks[cb] = None
 
     async def _async_cleanup_connecting_client(
@@ -490,6 +484,16 @@ def _event_type(event: Any) -> str | None:
 def _set_client_identity(client: Elke27Client, client_identity: dict[str, str]) -> None:
     """Set the client identity used for future connects."""
     client.set_client_identity(client_identity)
+
+
+def _unsubscribe_callback(unsubscribe: Callable[[], None]) -> None:
+    """Call an unsubscribe callback while preserving cancellation."""
+    try:
+        unsubscribe()
+    except asyncio.CancelledError:
+        raise
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("Error while unsubscribing callback", exc_info=True)
 
 
 def _normalize_arm_mode(mode: Any) -> ArmMode:
