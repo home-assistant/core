@@ -10,7 +10,11 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import EntityCategory, UnitOfElectricPotential, UnitOfTemperature
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
