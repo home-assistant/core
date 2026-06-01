@@ -79,7 +79,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
         raise ConfigEntryNotReady(msg) from err
 
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        with contextlib.suppress(Exception):
+            await coordinator.async_stop()
+        with contextlib.suppress(Exception):
+            await hub.async_disconnect()
+        raise
     return True
 
 

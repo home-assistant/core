@@ -219,6 +219,50 @@ async def test_setup_initial_refresh_elke27_error_returns_not_ready(
     hub.async_disconnect.assert_awaited_once()
 
 
+async def test_setup_forward_entry_setups_error_cleans_up(
+    hass: HomeAssistant,
+) -> None:
+    """Test platform setup errors clean up setup resources."""
+    hub = SimpleNamespace(
+        panel_name=None,
+        async_connect=AsyncMock(return_value=None),
+        async_disconnect=AsyncMock(return_value=None),
+    )
+    coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
+        async_refresh_now=AsyncMock(return_value=None),
+        async_stop=AsyncMock(return_value=None),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.13",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
+            CONF_CLIENT_ID: "112233445566",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch(
+            "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            AsyncMock(side_effect=RuntimeError("platform setup failed")),
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator.async_stop.assert_awaited_once()
+    hub.async_disconnect.assert_awaited_once()
+
+
 async def test_unload_keeps_runtime_when_platform_unload_fails(
     hass: HomeAssistant,
 ) -> None:
