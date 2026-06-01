@@ -383,7 +383,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'main_electric_heating_state',
-    'unique_id': 'SolidFlex2000-87654321_9079',
+    'unique_id': 'SolidFlex2000-87654321_9080',
     'unit_of_measurement': None,
   })
 # ---
