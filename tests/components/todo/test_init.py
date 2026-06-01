@@ -1089,7 +1089,8 @@ async def test_update_todo_list_action(
     assert args
     info = args.kwargs.get("info")
     assert sorted(info) == ["status"]
-    assert info["status"] == (expected_status := TodoItemStatus(status))
+    expected_status = TodoItemStatus(status)
+    assert info["status"] == expected_status
 
     assert not [
         item for item in test_entity.todo_items or () if item.status != expected_status
