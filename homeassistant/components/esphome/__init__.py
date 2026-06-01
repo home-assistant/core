@@ -1,25 +1,38 @@
 """Support for esphome devices."""
 
 import logging
+from typing import cast
 
-from aioesphomeapi import APIClient, APIConnectionError
+from aioesphomeapi import (
+    APIClient,
+    APIConnectionError,
+    RadioFrequencyCapability,
+    RadioFrequencyInfo,
+)
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.components.usb import (
     SerialDevice,
+    SerialProxy,
     USBDevice,
     async_register_serial_port_scanner,
+    async_register_serial_proxy_provider,
 )
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
     __version__ as ha_version,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -28,7 +41,7 @@ from . import assist_satellite, dashboard, ffmpeg_proxy, serial_proxy
 from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
 from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData, build_device_unique_id
 from .manager import DEVICE_CONFLICT_ISSUE_FORMAT, ESPHomeManager, cleanup_instance
 from .websocket_api import async_setup as async_setup_websocket_api
 
@@ -70,6 +83,62 @@ def _async_scan_serial_ports(
     return ports
 
 
+@callback
+def _async_serial_proxies(hass: HomeAssistant) -> list[SerialProxy]:
+    """Return serial proxies exposed by connected ESPHome devices.
+
+    Each proxy is annotated with the radio frequency transmitter entities the
+    device exposes so callers can discover which frequencies a proxied radio
+    supports.
+    """
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    proxies: list[SerialProxy] = []
+
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        entry_data = entry.runtime_data
+        if not entry_data.available:
+            continue
+
+        device_info = entry_data.device_info
+        if device_info is None or not device_info.serial_proxies:
+            continue
+
+        device = dev_reg.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+        )
+
+        entity_ids: list[str] = []
+        frequency_ranges: list[tuple[int, int]] = []
+        for info in entry_data.info.get(RadioFrequencyInfo, {}).values():
+            info = cast(RadioFrequencyInfo, info)
+            if not info.capabilities & RadioFrequencyCapability.TRANSMITTER:
+                continue
+            unique_id = build_device_unique_id(device_info.mac_address, info)
+            if entity_id := ent_reg.async_get_entity_id(
+                Platform.RADIO_FREQUENCY, DOMAIN, unique_id
+            ):
+                entity_ids.append(entity_id)
+            frequency_ranges.append((info.frequency_min, info.frequency_max))
+
+        proxies.extend(
+            SerialProxy(
+                device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
+                name=proxy.name,
+                config_entry_id=entry.entry_id,
+                device_id=device.id if device else None,
+                port_type=(
+                    proxy.port_type.name if proxy.port_type is not None else None
+                ),
+                entity_ids=entity_ids,
+                supported_frequency_ranges=frequency_ranges,
+            )
+            for proxy in device_info.serial_proxies
+        )
+
+    return proxies
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the esphome component."""
     ffmpeg_proxy.async_setup(hass)
@@ -79,6 +148,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if "usb" in hass.config.components:
         async_register_serial_port_scanner(hass, _async_scan_serial_ports)
+        async_register_serial_proxy_provider(hass, _async_serial_proxies)
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP,
             serial_proxy.register_serialx_transport(hass.loop),

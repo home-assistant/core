@@ -3,15 +3,26 @@
 from unittest.mock import AsyncMock, call, patch
 
 from aioesphomeapi import APIClient
-from aioesphomeapi.model import SerialProxyInfo, SerialProxyPortType
+from aioesphomeapi.model import (
+    RadioFrequencyCapability,
+    RadioFrequencyInfo,
+    SerialProxyInfo,
+    SerialProxyPortType,
+)
 import pytest
 from serialx.platforms.serial_esphome import InvalidSettingsError
 from yarl import URL
 
-from homeassistant.components.esphome import _async_scan_serial_ports, serial_proxy
+from homeassistant.components.esphome import (
+    _async_scan_serial_ports,
+    _async_serial_proxies,
+    serial_proxy,
+)
 from homeassistant.components.esphome.const import DOMAIN
-from homeassistant.components.usb import SerialDevice
+from homeassistant.components.usb import SerialDevice, SerialProxy
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDeviceType
@@ -153,6 +164,109 @@ async def test_scan_serial_ports_skips_unavailable(
     device.entry.runtime_data.available = False
 
     assert _async_scan_serial_ports(hass) == []
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_serial_proxies_no_entries(hass: HomeAssistant) -> None:
+    """No loaded ESPHome entries yields no serial proxies."""
+    assert _async_serial_proxies(hass) == []
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_serial_proxies_happy_path(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Serial proxies are annotated with device, config entry and radio info."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[
+            RadioFrequencyInfo(
+                object_id="radio",
+                key=1,
+                name="Radio",
+                capabilities=RadioFrequencyCapability.TRANSMITTER,
+                frequency_min=433050000,
+                frequency_max=434790000,
+            )
+        ],
+        device_info={
+            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "serial_proxies": [
+                SerialProxyInfo(name="uart0", port_type=SerialProxyPortType.RS485),
+            ],
+        },
+    )
+
+    entry_id = device.entry.entry_id
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")}
+    )
+    assert device_entry is not None
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.RADIO_FREQUENCY, DOMAIN, "AA:BB:CC:DD:EE:FF-radio_frequency-radio"
+    )
+    assert entity_id is not None
+
+    assert _async_serial_proxies(hass) == [
+        SerialProxy(
+            device=str(serial_proxy.build_url(entry_id, "uart0")),
+            name="uart0",
+            config_entry_id=entry_id,
+            device_id=device_entry.id,
+            port_type="RS485",
+            entity_ids=[entity_id],
+            supported_frequency_ranges=[(433050000, 434790000)],
+        )
+    ]
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_serial_proxies_without_radio(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """A proxy on a device without a radio has no entity or frequency info."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "serial_proxies": [
+                SerialProxyInfo(name="uart0", port_type=SerialProxyPortType.TTL),
+            ],
+        },
+    )
+
+    proxies = _async_serial_proxies(hass)
+    assert len(proxies) == 1
+    proxy = proxies[0]
+    assert proxy.config_entry_id == device.entry.entry_id
+    assert proxy.port_type == "TTL"
+    assert proxy.entity_ids == []
+    assert proxy.supported_frequency_ranges == []
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_serial_proxies_skips_unavailable(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Unavailable entries are skipped by the serial proxy provider."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "serial_proxies": [
+                SerialProxyInfo(name="uart0", port_type=SerialProxyPortType.TTL)
+            ],
+        },
+    )
+    device.entry.runtime_data.available = False
+
+    assert _async_serial_proxies(hass) == []
 
 
 @pytest.mark.usefixtures("mock_zeroconf")

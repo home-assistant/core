@@ -12,7 +12,7 @@ from serialx import SerialPortInfo, create_serial_connection, serial_for_url
 from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.components.usb import DOMAIN, async_scan_serial_ports
-from homeassistant.components.usb.models import SerialDevice, USBDevice
+from homeassistant.components.usb.models import SerialDevice, SerialProxy, USBDevice
 from homeassistant.components.usb.serial_proxy_stub import HassESPHomeSerialStub
 from homeassistant.components.usb.utils import usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
@@ -1429,6 +1429,107 @@ async def test_async_scan_serial_ports_scanner_raises(
     assert devices == [real_port, contributed_port]
     assert "Error in USB scanner callback" in caplog.text
     assert "scanner broke" in caplog.text
+
+
+async def test_async_get_serial_proxies_with_provider(hass: HomeAssistant) -> None:
+    """Serial proxies from registered providers are aggregated and de-duplicated."""
+    proxy_a = SerialProxy(
+        device="esphome-hass://esphome/entry_a?port_name=uart0",
+        name="uart0",
+        config_entry_id="entry_a",
+        device_id="device_a",
+        port_type="TTL",
+        entity_ids=["radio_frequency.kitchen"],
+        supported_frequency_ranges=[(433050000, 434790000)],
+    )
+    proxy_b = SerialProxy(
+        device="esphome-hass://esphome/entry_b?port_name=uart1",
+        name="uart1",
+        config_entry_id="entry_b",
+    )
+    proxy_a_override = SerialProxy(
+        device="esphome-hass://esphome/entry_a?port_name=uart0",
+        name="uart0",
+        config_entry_id="entry_a",
+        device_id="device_a_updated",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    assert usb.async_get_serial_proxies(hass) == []
+
+    unregister = usb.async_register_serial_proxy_provider(
+        hass, lambda _hass: [proxy_a, proxy_b]
+    )
+    # Later providers override earlier ones for the same device address.
+    usb.async_register_serial_proxy_provider(hass, lambda _hass: [proxy_a_override])
+
+    assert usb.async_get_serial_proxies(hass) == [proxy_a_override, proxy_b]
+
+    unregister()
+
+    assert usb.async_get_serial_proxies(hass) == [proxy_a_override]
+
+
+async def test_async_get_serial_proxies_provider_raises(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A provider raising does not prevent other providers from contributing."""
+    proxy = SerialProxy(
+        device="esphome-hass://esphome/entry_a?port_name=uart0",
+        name="uart0",
+        config_entry_id="entry_a",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    def broken_provider(_hass: HomeAssistant) -> list:
+        raise RuntimeError("provider broke")
+
+    usb.async_register_serial_proxy_provider(hass, broken_provider)
+    usb.async_register_serial_proxy_provider(hass, lambda _hass: [proxy])
+
+    assert usb.async_get_serial_proxies(hass) == [proxy]
+    assert "Error in serial proxy provider callback" in caplog.text
+    assert "provider broke" in caplog.text
+
+
+async def test_list_serial_proxies(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test listing serial proxies via websocket."""
+    proxy = SerialProxy(
+        device="esphome-hass://esphome/entry_a?port_name=uart0",
+        name="uart0",
+        config_entry_id="entry_a",
+        device_id="device_a",
+        port_type="RS485",
+        entity_ids=["radio_frequency.kitchen"],
+        supported_frequency_ranges=[(433050000, 434790000)],
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+    await hass.async_block_till_done()
+
+    usb.async_register_serial_proxy_provider(hass, lambda _hass: [proxy])
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_proxies"})
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "device": "esphome-hass://esphome/entry_a?port_name=uart0",
+            "name": "uart0",
+            "config_entry_id": "entry_a",
+            "device_id": "device_a",
+            "port_type": "RS485",
+            "entity_ids": ["radio_frequency.kitchen"],
+            "supported_frequency_ranges": [[433050000, 434790000]],
+        }
+    ]
 
 
 def test_usb_device_from_path_finds_by_symlink() -> None:

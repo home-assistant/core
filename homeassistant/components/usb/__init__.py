@@ -32,7 +32,7 @@ from homeassistant.loader import USBMatcher, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .models import SerialDevice, USBDevice
+from .models import SerialDevice, SerialProxy, USBDevice
 from .serial_proxy_stub import register_serialx_transport
 from .utils import (
     scan_serial_ports,
@@ -47,6 +47,7 @@ _USB_DATA: HassKey[USBDiscovery] = HassKey(DOMAIN)
 
 PORT_EVENT_CALLBACK_TYPE = Callable[[set[USBDevice], set[USBDevice]], None]
 SERIAL_PORT_SCANNER_TYPE = Callable[[HomeAssistant], Sequence[USBDevice | SerialDevice]]
+SERIAL_PROXY_PROVIDER_TYPE = Callable[[HomeAssistant], Sequence[SerialProxy]]
 
 POLLING_MONITOR_SCAN_PERIOD = timedelta(seconds=5)
 REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
@@ -54,11 +55,14 @@ ADD_REMOVE_SCAN_COOLDOWN = 5  # 5 second cooldown to give devices a chance to re
 
 __all__ = [
     "SerialDevice",
+    "SerialProxy",
     "USBCallbackMatcher",
     "USBDevice",
+    "async_get_serial_proxies",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
     "async_register_serial_port_scanner",
+    "async_register_serial_proxy_provider",
     "async_scan_serial_ports",
     "scan_serial_ports",
     "usb_device_from_path",
@@ -114,6 +118,20 @@ def async_register_serial_port_scanner(
 ) -> CALLBACK_TYPE:
     """Register a scanner that contributes additional serial ports to scans."""
     return hass.data[_USB_DATA].async_register_serial_port_scanner(scanner)
+
+
+@hass_callback
+def async_register_serial_proxy_provider(
+    hass: HomeAssistant, provider: SERIAL_PROXY_PROVIDER_TYPE
+) -> CALLBACK_TYPE:
+    """Register a provider that contributes serial proxies."""
+    return hass.data[_USB_DATA].async_register_serial_proxy_provider(provider)
+
+
+@hass_callback
+def async_get_serial_proxies(hass: HomeAssistant) -> list[SerialProxy]:
+    """Return the serial proxies currently exposed by registered providers."""
+    return hass.data[_USB_DATA].async_get_serial_proxies()
 
 
 @hass_callback
@@ -185,6 +203,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[_USB_DATA] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
     websocket_api.async_register_command(hass, websocket_usb_list_serial_ports)
+    websocket_api.async_register_command(hass, websocket_usb_list_serial_proxies)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, register_serialx_transport())
 
@@ -217,6 +236,7 @@ class USBDiscovery:
         self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
         self._port_event_callbacks: set[PORT_EVENT_CALLBACK_TYPE] = set()
         self._serial_port_scanners: list[SERIAL_PORT_SCANNER_TYPE] = []
+        self._serial_proxy_providers: list[SERIAL_PROXY_PROVIDER_TYPE] = []
         self._last_processed_devices: set[USBDevice] = set()
         self._scan_lock = asyncio.Lock()
 
@@ -366,6 +386,39 @@ class USBDiscovery:
                 _LOGGER.exception("Error in USB scanner callback")
 
         return list(ports.values())
+
+    @hass_callback
+    def async_register_serial_proxy_provider(
+        self,
+        provider: SERIAL_PROXY_PROVIDER_TYPE,
+    ) -> CALLBACK_TYPE:
+        """Register a provider that contributes serial proxies."""
+        self._serial_proxy_providers.append(provider)
+
+        @hass_callback
+        def _async_remove_callback() -> None:
+            with suppress(ValueError):
+                self._serial_proxy_providers.remove(provider)
+
+        return _async_remove_callback
+
+    @hass_callback
+    def async_get_serial_proxies(self) -> list[SerialProxy]:
+        """Return the serial proxies currently exposed by registered providers.
+
+        Later providers override earlier ones for proxies with the same device
+        address.
+        """
+        proxies: dict[str, SerialProxy] = {}
+
+        for provider in self._serial_proxy_providers:
+            try:
+                for proxy in provider(self.hass):
+                    proxies[proxy.device] = proxy
+            except Exception:
+                _LOGGER.exception("Error in serial proxy provider callback")
+
+        return list(proxies.values())
 
     @hass_callback
     def async_get_usb_matchers_for_device(self, device: USBDevice) -> list[USBMatcher]:
@@ -569,3 +622,16 @@ async def websocket_usb_list_serial_ports(
         result.append(entry)
 
     connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "usb/list_serial_proxies"})
+@hass_callback
+def websocket_usb_list_serial_proxies(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List available serial proxies exposed by integrations."""
+    proxies = [dataclasses.asdict(proxy) for proxy in async_get_serial_proxies(hass)]
+    connection.send_result(msg["id"], proxies)
