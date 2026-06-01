@@ -31,6 +31,7 @@ from .models import Elke27ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 _DEBOUNCE_SECONDS = 0.3
+_REFRESH_FAILED = "Unable to refresh panel data"
 
 
 class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
@@ -91,14 +92,14 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
                 Elke27DisconnectedError,
                 OSError,
             ) as err:
-                raise UpdateFailed("Unable to refresh initial panel data") from err
+                raise UpdateFailed(_REFRESH_FAILED) from err
             except Elke27Error as err:
                 if getattr(err, "is_transient", False):
-                    raise UpdateFailed("Unable to refresh initial panel data") from err
-                msg = f"Unable to refresh initial panel data: {err}"
+                    raise UpdateFailed(_REFRESH_FAILED) from err
+                msg = f"{_REFRESH_FAILED}: {err}"
                 raise ConfigEntryError(msg) from err
             except HomeAssistantError as err:
-                msg = f"Unable to refresh initial panel data: {err}"
+                msg = f"{_REFRESH_FAILED}: {err}"
                 raise ConfigEntryError(msg) from err
             return self._hub.get_snapshot() or PanelSnapshot.empty()
 

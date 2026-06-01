@@ -143,17 +143,15 @@ class Elke27Hub:
                     self._unavailable_logged = False
             except asyncio.CancelledError:
                 await asyncio.shield(
-                    self._async_cleanup_connecting_client(
+                    self._async_cleanup_failed_connect(
                         client, connection_unsubscribe
                     )
                 )
-                await asyncio.shield(self._async_disconnect(log_unavailable=False))
                 raise
             except Exception:
-                await self._async_cleanup_connecting_client(
+                await self._async_cleanup_failed_connect(
                     client, connection_unsubscribe
                 )
-                await self._async_disconnect(log_unavailable=False)
                 raise
 
     async def async_disconnect(self) -> None:
@@ -272,8 +270,6 @@ class Elke27Hub:
         )
         try:
             await client.async_set_zone_bypass(zone_id, bypassed=bypassed, pin=pin)
-        except Elke27PinRequiredError:
-            raise
         except (Elke27Error, Elke27InvalidArgument, ValueError) as err:
             _raise_command_error("Zone bypass", err)
         return True
@@ -338,6 +334,17 @@ class Elke27Hub:
         with contextlib.suppress(asyncio.CancelledError, Exception):
             await client.async_disconnect()
         self._clear_typed_subscriptions()
+
+    async def _async_cleanup_failed_connect(
+        self,
+        client: Elke27Client,
+        connection_unsubscribe: Callable[[], None] | None,
+    ) -> None:
+        """Clean up one failed connection attempt."""
+        if self._client is client:
+            await self._async_disconnect(log_unavailable=False)
+            return
+        await self._async_cleanup_connecting_client(client, connection_unsubscribe)
 
     async def async_disarm_area(
         self,

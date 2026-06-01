@@ -63,18 +63,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception:
-        await coordinator.async_stop()
-        await hub.async_disconnect()
+        await _async_cleanup_failed_setup(coordinator, hub)
         raise
 
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception:
-        await coordinator.async_stop()
-        await hub.async_disconnect()
+        await _async_cleanup_failed_setup(coordinator, hub)
         raise
     return True
+
+
+async def _async_cleanup_failed_setup(
+    coordinator: Elke27DataUpdateCoordinator, hub: Elke27Hub
+) -> None:
+    """Clean up setup resources without masking the original setup failure."""
+    with contextlib.suppress(Exception):
+        await coordinator.async_stop()
+    with contextlib.suppress(Exception):
+        await hub.async_disconnect()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bool:
