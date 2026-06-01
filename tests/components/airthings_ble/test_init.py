@@ -1,6 +1,7 @@
 """Test the Airthings BLE integration init."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 from airthings_ble import AirthingsDeviceType
 from freezegun.api import FrozenDateTimeFactory
@@ -79,14 +80,21 @@ async def test_setup_retries_when_device_not_found(
     )
     entry.add_to_hass(hass)
 
-    with patch_async_ble_device_from_address(None):
+    with (
+        patch_async_ble_device_from_address(None),
+        patch(
+            "homeassistant.components.bluetooth."
+            "async_address_reachability_diagnostics",
+            return_value="mock reachability reason",
+        ),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert (
-        f"Could not find Airthings device with address {WAVE_SERVICE_INFO.address}"
-        in caplog.text
+        "Could not find Airthings device with address "
+        f"{WAVE_SERVICE_INFO.address}: mock reachability reason" in caplog.text
     )
 
 
