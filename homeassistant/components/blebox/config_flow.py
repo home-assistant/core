@@ -1,6 +1,5 @@
 """Config flow for BleBox devices integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -34,33 +33,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_reconfigure_schema(entry_data: Mapping[str, Any]) -> vol.Schema:
-    """Create a schema for reconfiguration with current entry values as defaults."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
-            vol.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
-        }
-    )
-
-
-def create_schema(previous_input=None):
-    """Create a schema with given values as default."""
-    if previous_input is not None:
-        host = previous_input[CONF_HOST]
-        port = previous_input[CONF_PORT]
-    else:
-        host = DEFAULT_HOST
-        port = DEFAULT_PORT
-
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=host): str,
-            vol.Required(CONF_PORT, default=port): int,
-            vol.Inclusive(CONF_USERNAME, "auth"): str,
-            vol.Inclusive(CONF_PASSWORD, "auth"): str,
-        }
-    )
+STEP_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Inclusive(CONF_USERNAME, "auth"): str,
+        vol.Inclusive(CONF_PASSWORD, "auth"): str,
+    }
+)
 
 
 LOG_MSG = {
@@ -156,12 +136,11 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle initial user-triggered config step."""
         hass = self.hass
-        schema = create_schema(user_input)
 
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=STEP_SCHEMA,
                 errors={},
                 description_placeholders={},
             )
@@ -190,7 +169,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         except UnsupportedBoxVersion as ex:
             return self.handle_step_exception(
                 ex,
-                schema,
+                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
                 host,
                 port,
                 UNSUPPORTED_VERSION,
@@ -198,17 +177,32 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except UnauthorizedRequest as ex:
             return self.handle_step_exception(
-                ex, schema, host, port, CANNOT_CONNECT, _LOGGER.error
+                ex,
+                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
+                host,
+                port,
+                CANNOT_CONNECT,
+                _LOGGER.error,
             )
 
         except Error as ex:
             return self.handle_step_exception(
-                ex, schema, host, port, CANNOT_CONNECT, _LOGGER.warning
+                ex,
+                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
+                host,
+                port,
+                CANNOT_CONNECT,
+                _LOGGER.warning,
             )
 
         except RuntimeError as ex:
             return self.handle_step_exception(
-                ex, schema, host, port, UNKNOWN, _LOGGER.error
+                ex,
+                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
+                host,
+                port,
+                UNKNOWN,
+                _LOGGER.error,
             )
 
         # Check if configured but IP changed since
@@ -226,14 +220,16 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=create_reconfigure_schema(reconfigure_entry.data),
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_SCHEMA, reconfigure_entry.data
+                ),
             )
 
         host = user_input[CONF_HOST]
         port = user_input[CONF_PORT]
 
-        username = reconfigure_entry.data.get(CONF_USERNAME)
-        password = reconfigure_entry.data.get(CONF_PASSWORD)
+        username = user_input.get(CONF_USERNAME)
+        password = user_input.get(CONF_PASSWORD)
         websession = get_maybe_authenticated_session(self.hass, password, username)
         api_host = ApiHost(
             host, port, DEFAULT_SETUP_TIMEOUT, websession, self.hass.loop, _LOGGER
@@ -244,7 +240,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         except UnsupportedBoxVersion as ex:
             return self.handle_step_exception(
                 ex,
-                create_reconfigure_schema(user_input),
+                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
                 host,
                 port,
                 UNSUPPORTED_VERSION,
@@ -254,7 +250,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         except UnauthorizedRequest as ex:
             return self.handle_step_exception(
                 ex,
-                create_reconfigure_schema(user_input),
+                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
                 host,
                 port,
                 CANNOT_CONNECT,
@@ -264,7 +260,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         except Error as ex:
             return self.handle_step_exception(
                 ex,
-                create_reconfigure_schema(user_input),
+                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
                 host,
                 port,
                 CANNOT_CONNECT,
@@ -274,7 +270,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         except RuntimeError as ex:
             return self.handle_step_exception(
                 ex,
-                create_reconfigure_schema(user_input),
+                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
                 host,
                 port,
                 UNKNOWN,
@@ -285,7 +281,13 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(product.unique_id)
         self._abort_if_unique_id_mismatch()
 
+        data_updates: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
+        if username is not None:
+            data_updates[CONF_USERNAME] = username
+        if password is not None:
+            data_updates[CONF_PASSWORD] = password
+
         return self.async_update_reload_and_abort(
             reconfigure_entry,
-            data_updates={CONF_HOST: host, CONF_PORT: port},
+            data_updates=data_updates,
         )
