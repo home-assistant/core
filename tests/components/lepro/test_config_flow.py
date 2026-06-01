@@ -73,7 +73,7 @@ async def test_full_flow(
     assert resp.status == 200
 
     aioclient_mock.post(
-        f"{API_HOST}/oauth2/token",
+        f"{API_HOST}/v2/oauth2/token",
         json=TOKEN_RESPONSE,
     )
 
@@ -148,7 +148,7 @@ async def test_already_configured(
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
 
     aioclient_mock.post(
-        f"{API_HOST}/oauth2/token",
+        f"{API_HOST}/v2/oauth2/token",
         json=TOKEN_RESPONSE,
     )
 

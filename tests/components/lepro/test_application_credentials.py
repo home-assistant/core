@@ -73,15 +73,39 @@ async def test_async_resolve_external_data_converts_expires_in(
     token = {"access_token": "tok", "expires_in": future_abs}
 
     with patch.object(
-        impl.__class__.__bases__[0],
-        "async_resolve_external_data",
-        new_callable=AsyncMock,
-        return_value=token,
+        impl, "_token_request", new_callable=AsyncMock, return_value=token
     ):
-        result = await impl.async_resolve_external_data({"code": "abc"})
+        result = await impl.async_resolve_external_data(
+            {
+                "code": "abc",
+                "state": {"redirect_uri": "https://example.com/auth/external/callback"},
+            }
+        )
 
     # Result should be relative, roughly 3600s
     assert 3590 <= result["expires_in"] <= 3600
+
+
+async def test_async_refresh_token_raw(
+    hass: HomeAssistant,
+    impl: LoproOAuth2Implementation,
+) -> None:
+    """Test that _async_refresh_token merges old and new token fields."""
+    old_token = {
+        "access_token": "old-tok",
+        "refresh_token": "old-ref",
+        "scope": "device.all",
+    }
+    new_token_data = {"access_token": "new-tok", "refresh_token": "new-ref"}
+
+    with patch.object(
+        impl, "_token_request", new_callable=AsyncMock, return_value=new_token_data
+    ):
+        result = await impl._async_refresh_token(old_token)
+
+    assert result["access_token"] == "new-tok"
+    assert result["refresh_token"] == "new-ref"
+    assert result["scope"] == "device.all"
 
 
 async def test_async_refresh_token_converts_expires_in(
