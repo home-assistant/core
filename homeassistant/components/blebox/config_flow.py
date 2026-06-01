@@ -72,6 +72,32 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"address": f"{host}:{port}"},
         )
 
+    async def _async_from_host_or_form(
+        self, api_host: ApiHost, user_input: dict[str, Any], step_id: str
+    ) -> tuple[Box, None] | tuple[None, ConfigFlowResult]:
+        """Try to connect to the device; return product or an error form."""
+        schema = self.add_suggested_values_to_schema(STEP_SCHEMA, user_input)
+        host = user_input[CONF_HOST]
+        port = user_input[CONF_PORT]
+        try:
+            return await Box.async_from_host(api_host), None
+        except UnsupportedBoxVersion as ex:
+            return None, self.handle_step_exception(
+                ex, schema, host, port, UNSUPPORTED_VERSION, _LOGGER.debug, step_id
+            )
+        except UnauthorizedRequest as ex:
+            return None, self.handle_step_exception(
+                ex, schema, host, port, CANNOT_CONNECT, _LOGGER.error, step_id
+            )
+        except Error as ex:
+            return None, self.handle_step_exception(
+                ex, schema, host, port, CANNOT_CONNECT, _LOGGER.warning, step_id
+            )
+        except RuntimeError as ex:
+            return None, self.handle_step_exception(
+                ex, schema, host, port, UNKNOWN, _LOGGER.error, step_id
+            )
+
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -163,47 +189,12 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         api_host = ApiHost(
             host, port, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER
         )
-        try:
-            product = await Box.async_from_host(api_host)
-
-        except UnsupportedBoxVersion as ex:
-            return self.handle_step_exception(
-                ex,
-                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
-                host,
-                port,
-                UNSUPPORTED_VERSION,
-                _LOGGER.debug,
-            )
-        except UnauthorizedRequest as ex:
-            return self.handle_step_exception(
-                ex,
-                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
-                host,
-                port,
-                CANNOT_CONNECT,
-                _LOGGER.error,
-            )
-
-        except Error as ex:
-            return self.handle_step_exception(
-                ex,
-                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
-                host,
-                port,
-                CANNOT_CONNECT,
-                _LOGGER.warning,
-            )
-
-        except RuntimeError as ex:
-            return self.handle_step_exception(
-                ex,
-                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
-                host,
-                port,
-                UNKNOWN,
-                _LOGGER.error,
-            )
+        product, error = await self._async_from_host_or_form(
+            api_host, user_input, "user"
+        )
+        if error is not None:
+            return error
+        assert product is not None
 
         # Check if configured but IP changed since
         await self.async_set_unique_id(product.unique_id, raise_on_progress=False)
@@ -235,48 +226,12 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             host, port, DEFAULT_SETUP_TIMEOUT, websession, self.hass.loop, _LOGGER
         )
 
-        try:
-            product = await Box.async_from_host(api_host)
-        except UnsupportedBoxVersion as ex:
-            return self.handle_step_exception(
-                ex,
-                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
-                host,
-                port,
-                UNSUPPORTED_VERSION,
-                _LOGGER.debug,
-                step_id="reconfigure",
-            )
-        except UnauthorizedRequest as ex:
-            return self.handle_step_exception(
-                ex,
-                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
-                host,
-                port,
-                CANNOT_CONNECT,
-                _LOGGER.error,
-                step_id="reconfigure",
-            )
-        except Error as ex:
-            return self.handle_step_exception(
-                ex,
-                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
-                host,
-                port,
-                CANNOT_CONNECT,
-                _LOGGER.warning,
-                step_id="reconfigure",
-            )
-        except RuntimeError as ex:
-            return self.handle_step_exception(
-                ex,
-                self.add_suggested_values_to_schema(STEP_SCHEMA, user_input),
-                host,
-                port,
-                UNKNOWN,
-                _LOGGER.error,
-                step_id="reconfigure",
-            )
+        product, error = await self._async_from_host_or_form(
+            api_host, user_input, "reconfigure"
+        )
+        if error is not None:
+            return error
+        assert product is not None
 
         await self.async_set_unique_id(product.unique_id)
         self._abort_if_unique_id_mismatch()
