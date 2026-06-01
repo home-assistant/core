@@ -13,6 +13,7 @@ from pyoverkiz.exceptions import (
     InvalidEventListenerIdException,
     MaintenanceException,
     NotAuthenticatedException,
+    ServiceUnavailableException,
     TooManyConcurrentRequestsException,
     TooManyRequestsException,
 )
@@ -85,6 +86,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceException as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
+        except ServiceUnavailableException as exception:
+            raise UpdateFailed("Server is unavailable.") from exception
         except InvalidEventListenerIdException as exception:
             raise UpdateFailed(exception) from exception
         except (TimeoutError, ClientConnectorError) as exception:
