@@ -175,10 +175,10 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 self._attr_latitude = None
                 self._attr_longitude = None
                 _LOGGER.warning(
-                    "Extra state attributes received at % and template %s "
+                    "Extra state attributes received at %s and template %s "
                     "contain invalid or incomplete location info. Got %s",
-                    self._config.get(CONF_JSON_ATTRS_TEMPLATE),
                     self._config.get(CONF_JSON_ATTRS_TOPIC),
+                    self._config.get(CONF_JSON_ATTRS_TEMPLATE),
                     extra_state_attributes,
                 )
 
@@ -190,11 +190,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     self._attr_location_accuracy = gps_accuracy
                 else:
                     _LOGGER.warning(
-                        "Extra state attributes received at % and template %s "
+                        "Extra state attributes received at %s and template %s "
                         "contain invalid GPS accuracy setting, "
                         "gps_accuracy was set to 0 as the default. Got %s",
-                        self._config.get(CONF_JSON_ATTRS_TEMPLATE),
                         self._config.get(CONF_JSON_ATTRS_TOPIC),
+                        self._config.get(CONF_JSON_ATTRS_TEMPLATE),
                         extra_state_attributes,
                     )
                     self._attr_location_accuracy = 0
