@@ -104,6 +104,15 @@ class HassEnforceConstantsChecker(BaseChecker):
                         args=(arg_node.as_string(), call_node.func.as_string()),
                     )
                 return
+            case nodes.Const():
+                # We allow string literals
+                return
+
+        self.add_message(
+            "hass-domain-argument",
+            node=arg_node,
+            args=(arg_node.as_string(), call_node.func.as_string()),
+        )
 
 
 def register(linter: PyLinter) -> None:
