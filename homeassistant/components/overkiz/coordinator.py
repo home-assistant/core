@@ -144,7 +144,7 @@ async def on_device_available(
     coordinator: OverkizDataUpdateCoordinator, event: Event
 ) -> None:
     """Handle device available event."""
-    if event.device_url:
+    if event.device_url and event.device_url in coordinator.devices:
         coordinator.devices[event.device_url].available = True
 
 
@@ -154,7 +154,7 @@ async def on_device_unavailable_disabled(
     coordinator: OverkizDataUpdateCoordinator, event: Event
 ) -> None:
     """Handle device unavailable / disabled event."""
-    if event.device_url:
+    if event.device_url and event.device_url in coordinator.devices:
         coordinator.devices[event.device_url].available = False
 
 
@@ -174,7 +174,7 @@ async def on_device_state_changed(
     coordinator: OverkizDataUpdateCoordinator, event: Event
 ) -> None:
     """Handle device state changed event."""
-    if not event.device_url:
+    if not event.device_url or event.device_url not in coordinator.devices:
         return
 
     for state in event.device_states:
@@ -198,7 +198,7 @@ async def on_device_removed(
     ):
         registry.async_remove_device(registered_device.id)
 
-    if event.device_url:
+    if event.device_url and event.device_url in coordinator.devices:
         del coordinator.devices[event.device_url]
 
 
