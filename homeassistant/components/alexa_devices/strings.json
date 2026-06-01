@@ -125,9 +125,6 @@
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
-    },
-    "unknown": {
-      "message": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "preview_features": {
