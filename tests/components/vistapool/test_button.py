@@ -30,9 +30,7 @@ def _only_button_platform() -> Generator[None]:
 @pytest.fixture(autouse=True)
 def _skip_pulse_delay() -> Generator[None]:
     """Skip the LED pulse delay so tests don't actually sleep."""
-    with patch(
-        "homeassistant.components.vistapool.button._LED_PULSE_DELAY_SECONDS", 0
-    ):
+    with patch("homeassistant.components.vistapool.button._LED_PULSE_DELAY_SECONDS", 0):
         yield
 
 
