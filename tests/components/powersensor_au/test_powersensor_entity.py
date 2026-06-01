@@ -222,7 +222,6 @@ async def test_powersensor_plug_entity_device_info(
 
 
 @pytest.mark.asyncio
-@pytest.mark.asyncio
 async def test_powersensor_household_entity_device_info(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -241,6 +240,7 @@ async def test_powersensor_household_entity_device_info(
     assert (DOMAIN, "vhh") in info["identifiers"]
 
 
+@pytest.mark.asyncio
 async def test_powersensor_virtual_household(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:

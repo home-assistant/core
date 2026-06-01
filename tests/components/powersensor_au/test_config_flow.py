@@ -19,7 +19,7 @@ from homeassistant.components.powersensor_au.const import (
     ROLE_UPDATE_SIGNAL,
     ROLE_WATER,
 )
-from homeassistant.components.powersensor_au.sensor import PowersensorRuntimeData
+from homeassistant.components.powersensor_au.models import PowersensorRuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
