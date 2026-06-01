@@ -204,7 +204,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm1_0',
+    'translation_key': None,
     'unique_id': 'test-station-id_pm1_0',
     'unit_of_measurement': 'μg/m³',
   })
@@ -260,7 +260,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm10',
+    'translation_key': None,
     'unique_id': 'test-station-id_pm10',
     'unit_of_measurement': 'μg/m³',
   })
@@ -316,7 +316,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm2_5',
+    'translation_key': None,
     'unique_id': 'test-station-id_pm2_5',
     'unit_of_measurement': 'μg/m³',
   })
@@ -517,7 +517,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -537,14 +537,14 @@
     'object_id_base': 'Wind direction',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
     'platform': 'opensensemap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_direction',
+    'translation_key': None,
     'unique_id': 'test-station-id_wind_direction',
     'unit_of_measurement': '°',
   })
@@ -553,8 +553,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by openSenseMap',
+      'device_class': 'wind_direction',
       'friendly_name': 'Test Station Wind direction',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,

@@ -24,20 +24,8 @@
   },
   "entity": {
     "sensor": {
-      "pm10": {
-        "name": "PM10"
-      },
-      "pm1_0": {
-        "name": "PM1"
-      },
-      "pm2_5": {
-        "name": "PM2.5"
-      },
       "uv_index": {
         "name": "UV index"
-      },
-      "wind_direction": {
-        "name": "Wind direction"
       }
     }
   },

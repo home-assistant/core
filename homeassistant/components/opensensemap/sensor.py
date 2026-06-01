@@ -42,7 +42,6 @@ class OpenSenseMapSensorEntityDescription(SensorEntityDescription):
 SENSOR_DESCRIPTIONS: tuple[OpenSenseMapSensorEntityDescription, ...] = (
     OpenSenseMapSensorEntityDescription(
         key="pm2_5",
-        translation_key="pm2_5",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -50,7 +49,6 @@ SENSOR_DESCRIPTIONS: tuple[OpenSenseMapSensorEntityDescription, ...] = (
     ),
     OpenSenseMapSensorEntityDescription(
         key="pm10",
-        translation_key="pm10",
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -58,7 +56,6 @@ SENSOR_DESCRIPTIONS: tuple[OpenSenseMapSensorEntityDescription, ...] = (
     ),
     OpenSenseMapSensorEntityDescription(
         key="pm1_0",
-        translation_key="pm1_0",
         device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -107,9 +104,9 @@ SENSOR_DESCRIPTIONS: tuple[OpenSenseMapSensorEntityDescription, ...] = (
     ),
     OpenSenseMapSensorEntityDescription(
         key="wind_direction",
-        translation_key="wind_direction",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
         value_fn=lambda data: data.wind_direction,
     ),
     OpenSenseMapSensorEntityDescription(
@@ -164,7 +161,6 @@ class OpenSenseMapSensor(CoordinatorEntity[OpenSenseMapCoordinator], SensorEntit
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, station_id)},
             manufacturer=INTEGRATION_TITLE,
-            name=coordinator.config_entry.title,
             configuration_url=f"https://opensensemap.org/explore/{station_id}",
         )
 
