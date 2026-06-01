@@ -615,6 +615,25 @@
       "tank_volume": {
         "name": "Tank volume"
       },
+      "thread_channel": {
+        "name": "Thread channel"
+      },
+      "thread_network_name": {
+        "name": "Thread network name"
+      },
+      "thread_routing_role": {
+        "name": "Thread routing role",
+        "state": {
+          "end_device": "End device",
+          "leader": "Leader",
+          "reed": "Router eligible end device",
+          "router": "Router",
+          "sleepy_end_device": "Sleepy end device",
+          "unassigned": "Unassigned",
+          "unknown": "Unknown",
+          "unspecified": "Unspecified"
+        }
+      },
       "tvoc_level": {
         "name": "TVOC level",
         "state": {
@@ -632,6 +651,9 @@
       },
       "voltage": {
         "name": "Voltage"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
       },
       "window_covering_target_position": {
         "name": "Target opening position"
