@@ -223,7 +223,6 @@
       "iot_class": "local_push"
     },
     "alert": {
-      "name": "Alert",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
@@ -438,8 +437,7 @@
         "homekit_controller": {
           "integration_type": "device",
           "config_flow": true,
-          "iot_class": "local_push",
-          "name": "HomeKit Device"
+          "iot_class": "local_push"
         },
         "homekit": {
           "integration_type": "hub",
@@ -633,7 +631,6 @@
       }
     },
     "aurora": {
-      "name": "Aurora",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1007,7 +1004,6 @@
       "iot_class": "cloud_polling"
     },
     "cert_expiry": {
-      "name": "Certificate Expiry",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1226,7 +1222,6 @@
       "supported_by": "overkiz"
     },
     "cpuspeed": {
-      "name": "CPU Speed",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push",
@@ -1332,7 +1327,6 @@
       "iot_class": "local_polling"
     },
     "demo": {
-      "name": "Demo",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated",
@@ -1815,13 +1809,11 @@
       "iot_class": "local_push"
     },
     "emulated_roku": {
-      "name": "Emulated Roku",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
     },
     "energenie_power_sockets": {
-      "name": "Energenie Power Sockets",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -2071,7 +2063,6 @@
       "iot_class": "local_polling"
     },
     "filesize": {
-      "name": "File Size",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -2395,7 +2386,6 @@
       "iot_class": "cloud_polling"
     },
     "garages_amsterdam": {
-      "name": "Garages Amsterdam",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2418,7 +2408,6 @@
       "iot_class": "cloud_polling"
     },
     "generic": {
-      "name": "Generic Camera",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
@@ -2625,8 +2614,7 @@
         "google_travel_time": {
           "integration_type": "service",
           "config_flow": true,
-          "iot_class": "cloud_polling",
-          "name": "Google Maps Travel Time"
+          "iot_class": "cloud_polling"
         },
         "google_weather": {
           "integration_type": "service",
@@ -2733,7 +2721,6 @@
       "iot_class": "local_polling"
     },
     "growatt_server": {
-      "name": "Growatt",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2932,7 +2919,6 @@
       "iot_class": "local_push"
     },
     "holiday": {
-      "name": "Holiday",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3377,7 +3363,6 @@
       "iot_class": "cloud_polling"
     },
     "irm_kmi": {
-      "name": "IRM KMI Weather Belgium",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3395,7 +3380,6 @@
       "iot_class": "local_polling"
     },
     "islamic_prayer_times": {
-      "name": "Islamic Prayer Times",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "calculated"
@@ -3908,7 +3892,6 @@
       "iot_class": "cloud_push"
     },
     "local_calendar": {
-      "name": "Local Calendar",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3920,14 +3903,12 @@
       "iot_class": "local_polling"
     },
     "local_ip": {
-      "name": "Local IP Address",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling",
       "single_config_entry": true
     },
     "local_todo": {
-      "name": "Local To-do",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4394,7 +4375,6 @@
       "iot_class": "local_push"
     },
     "mobile_app": {
-      "name": "Mobile App",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
@@ -4424,7 +4404,6 @@
       "iot_class": "local_polling"
     },
     "moehlenhoff_alpha2": {
-      "name": "M\u00f6hlenhoff Alpha 2",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -4453,7 +4432,6 @@
       "iot_class": "cloud_polling"
     },
     "moon": {
-      "name": "Moon",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "calculated",
@@ -4716,7 +4694,6 @@
       "supported_by": "overkiz"
     },
     "nextbus": {
-      "name": "NextBus",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4789,7 +4766,6 @@
       "iot_class": "cloud_polling"
     },
     "nmap_tracker": {
-      "name": "Nmap Tracker",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5439,7 +5415,6 @@
       "iot_class": "cloud_push"
     },
     "plant": {
-      "name": "Plant Monitor",
       "integration_type": "hub",
       "config_flow": false
     },
@@ -5567,7 +5542,6 @@
       "iot_class": "cloud_push"
     },
     "proximity": {
-      "name": "Proximity",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated"
@@ -5823,8 +5797,7 @@
         "rpi_power": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "Raspberry Pi Power Supply Checker"
+          "iot_class": "local_polling"
         },
         "remote_rpi_gpio": {
           "integration_type": "hub",
@@ -5901,7 +5874,6 @@
       "iot_class": "cloud_push"
     },
     "remote_calendar": {
-      "name": "Remote Calendar",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -6230,7 +6202,6 @@
       "iot_class": "local_polling"
     },
     "season": {
-      "name": "Season",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6386,7 +6357,6 @@
       "iot_class": "cloud_polling"
     },
     "shopping_list": {
-      "name": "Shopping List",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -6860,7 +6830,6 @@
       "iot_class": "cloud_polling"
     },
     "sun": {
-      "name": "Sun",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "calculated",
@@ -7285,7 +7254,6 @@
       }
     },
     "time_date": {
-      "name": "Time & Date",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
@@ -7652,7 +7620,6 @@
       "supported_by": "motion_blinds"
     },
     "uptime": {
-      "name": "Uptime",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push",
@@ -7706,7 +7673,6 @@
       "iot_class": "cloud_polling"
     },
     "vegehub": {
-      "name": "Vegetronix VegeHub",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -7753,7 +7719,6 @@
       "iot_class": "local_polling"
     },
     "version": {
-      "name": "Version",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -7937,7 +7902,6 @@
       "iot_class": "cloud_polling"
     },
     "waze_travel_time": {
-      "name": "Waze Travel Time",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -8055,7 +8019,6 @@
       "iot_class": "cloud_polling"
     },
     "workday": {
-      "name": "Workday",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -8354,7 +8317,6 @@
       "iot_class": "cloud_polling"
     },
     "zodiac": {
-      "name": "Zodiac",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated"
@@ -8397,78 +8359,64 @@
   },
   "helper": {
     "counter": {
-      "name": "Counter",
       "integration_type": "helper",
       "config_flow": false
     },
     "derivative": {
-      "name": "Derivative",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
     },
     "filter": {
-      "name": "Filter",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_push"
     },
     "generic_hygrostat": {
-      "name": "Generic hygrostat",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "generic_thermostat": {
-      "name": "Generic Thermostat",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "group": {
-      "name": "Group",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
     },
     "history_stats": {
-      "name": "History Stats",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "input_boolean": {
-      "name": "Input Boolean",
       "integration_type": "helper",
       "config_flow": false
     },
     "input_button": {
-      "name": "Input Button",
       "integration_type": "helper",
       "config_flow": false
     },
     "input_datetime": {
-      "name": "Input Datetime",
       "integration_type": "helper",
       "config_flow": false
     },
     "input_number": {
-      "name": "Input Number",
       "integration_type": "helper",
       "config_flow": false
     },
     "input_select": {
-      "name": "Input Select",
       "integration_type": "helper",
       "config_flow": false
     },
     "input_text": {
-      "name": "Input Text",
       "integration_type": "helper",
       "config_flow": false
     },
     "integration": {
-      "name": "Integral",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_push"
@@ -8480,13 +8428,11 @@
       "iot_class": "calculated"
     },
     "min_max": {
-      "name": "Min/Max",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
     },
     "mold_indicator": {
-      "name": "Mold Indicator",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -8498,24 +8444,20 @@
       "iot_class": "local_polling"
     },
     "random": {
-      "name": "Random",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
     },
     "schedule": {
-      "name": "Schedule",
       "integration_type": "helper",
       "config_flow": false
     },
     "statistics": {
-      "name": "Statistics",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "switch_as_x": {
-      "name": "Change device type of a switch",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -8527,34 +8469,93 @@
       "iot_class": "local_push"
     },
     "threshold": {
-      "name": "Threshold",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "timer": {
-      "name": "Timer",
       "integration_type": "helper",
       "config_flow": false
     },
     "tod": {
-      "name": "Times of the Day",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
     },
     "trend": {
-      "name": "Trend",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
     },
     "utility_meter": {
-      "name": "Utility Meter",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_push"
     }
   },
-  "translated_name": []
+  "translated_name": [
+    "alert",
+    "aurora",
+    "cert_expiry",
+    "counter",
+    "cpuspeed",
+    "demo",
+    "derivative",
+    "emulated_roku",
+    "energenie_power_sockets",
+    "filesize",
+    "filter",
+    "garages_amsterdam",
+    "generic",
+    "generic_hygrostat",
+    "generic_thermostat",
+    "google_travel_time",
+    "group",
+    "growatt_server",
+    "history_stats",
+    "holiday",
+    "homekit_controller",
+    "input_boolean",
+    "input_button",
+    "input_datetime",
+    "input_number",
+    "input_select",
+    "input_text",
+    "integration",
+    "irm_kmi",
+    "islamic_prayer_times",
+    "local_calendar",
+    "local_ip",
+    "local_todo",
+    "min_max",
+    "mobile_app",
+    "moehlenhoff_alpha2",
+    "mold_indicator",
+    "moon",
+    "nextbus",
+    "nmap_tracker",
+    "plant",
+    "proximity",
+    "random",
+    "remote_calendar",
+    "rpi_power",
+    "schedule",
+    "season",
+    "shopping_list",
+    "statistics",
+    "sun",
+    "switch_as_x",
+    "threshold",
+    "time_date",
+    "timer",
+    "tod",
+    "trend",
+    "uptime",
+    "utility_meter",
+    "vegehub",
+    "version",
+    "waze_travel_time",
+    "workday",
+    "zodiac"
+  ]
 }
