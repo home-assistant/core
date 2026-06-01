@@ -129,8 +129,8 @@ class SecuritySystem(HomeAccessory):
         serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
         current_char = serv_alarm.get_characteristic(CHAR_CURRENT_SECURITY_STATE)
         target_char = serv_alarm.get_characteristic(CHAR_TARGET_SECURITY_STATE)
-        default_current_states = current_char.properties.get("ValidValues")
-        default_target_services = target_char.properties.get("ValidValues")
+        default_current_states = current_char.properties.get(PROP_VALID_VALUES)
+        default_target_services = target_char.properties.get(PROP_VALID_VALUES)
 
         current_supported_states, target_supported_services = _supported_states(
             supported_states

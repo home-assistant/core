@@ -388,7 +388,8 @@ async def test_reload_when_supported_features_grew(
         acc.async_update_state(grew)
         await hass.async_block_till_done()
 
-    assert mock_reload.called
+    # Exactly one reload; more would suggest a reload loop.
+    assert mock_reload.call_count == 1
 
 
 async def test_skip_when_state_not_supported(
