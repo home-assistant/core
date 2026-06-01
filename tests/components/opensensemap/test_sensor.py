@@ -64,25 +64,59 @@ async def test_missing_measurements_omit_entities(
     assert keys == {"pm2_5", "pm10", "temperature", "humidity"}
 
 
-async def test_temperature_unit_detection(
+@pytest.mark.parametrize(
+    ("title", "entity_id", "station_unit", "expected_unit", "expected_state"),
+    [
+        pytest.param(
+            "Temperature",
+            "sensor.test_station_temperature",
+            "°F",
+            "°C",
+            (21.3 - 32) * 5 / 9,
+            id="temperature_fahrenheit_to_celsius",
+        ),
+        pytest.param(
+            "Wind Speed",
+            "sensor.test_station_wind_speed",
+            "km/h",
+            "km/h",
+            2.5,
+            id="wind_speed_kmh",
+        ),
+        pytest.param(
+            "Air Pressure",
+            "sensor.test_station_atmospheric_pressure",
+            "Pa",
+            "hPa",
+            1013.2 / 100,
+            id="air_pressure_pa_to_hpa",
+        ),
+    ],
+)
+async def test_unit_detection(
     hass: HomeAssistant,
     mock_opensensemap_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    title: str,
+    entity_id: str,
+    station_unit: str,
+    expected_unit: str,
+    expected_state: float,
 ) -> None:
-    """Test that the temperature unit is detected correctly and converted as needed."""
-    # Set the sensor to °F (the mock has °C) and make sure it converts to °C correctly
+    """Test units are detected from the station and converted for the metric system."""
+    # The fixture reports metric units; override one sensor's unit (the values
+    # used here are the fixture's raw values) so it must be detected and
+    # converted, e.g. °F -> °C, km/h stays km/h, Pa -> hPa.
     for sensor in mock_opensensemap_api.data["sensors"]:
-        if sensor["title"] == "Temperature":
-            sensor["unit"] = "°F"
+        if sensor["title"] == title:
+            sensor["unit"] = station_unit
             break
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.test_station_temperature")
+    state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes["unit_of_measurement"] == "°C"
-    assert float(state.state) == pytest.approx(
-        (mock_opensensemap_api.temperature - 32) * 5 / 9, abs=0.01
-    )
+    assert state.attributes["unit_of_measurement"] == expected_unit
+    assert float(state.state) == pytest.approx(expected_state, abs=0.01)

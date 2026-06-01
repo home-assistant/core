@@ -26,6 +26,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_STATION_ID, DOMAIN, INTEGRATION_TITLE
 from .coordinator import (
+    Measurement,
     OpenSenseMapConfigEntry,
     OpenSenseMapCoordinator,
     OpenSenseMapStationData,
@@ -36,7 +37,7 @@ from .coordinator import (
 class OpenSenseMapSensorEntityDescription(SensorEntityDescription):
     """Describes openSenseMap sensor entities."""
 
-    value_fn: Callable[[OpenSenseMapStationData], float | str | None]
+    value_fn: Callable[[OpenSenseMapStationData], Measurement]
 
 
 SENSOR_DESCRIPTIONS: tuple[OpenSenseMapSensorEntityDescription, ...] = (
@@ -129,11 +130,10 @@ async def async_setup_entry(
     data = coordinator.data
     entities: list[OpenSenseMapSensor] = []
     for description in SENSOR_DESCRIPTIONS:
-        if description.value_fn(data) is None:
+        measurement = description.value_fn(data)
+        if measurement.value is None:
             continue
-        native_unit = description.native_unit_of_measurement
-        if description.key == "temperature" and data.temperature_unit is not None:
-            native_unit = data.temperature_unit
+        native_unit = measurement.unit or description.native_unit_of_measurement
         entities.append(OpenSenseMapSensor(coordinator, description, native_unit))
     async_add_entities(entities)
 
@@ -167,4 +167,4 @@ class OpenSenseMapSensor(CoordinatorEntity[OpenSenseMapCoordinator], SensorEntit
     @property
     def native_value(self) -> float | str | None:
         """Return the latest value reported by the station."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data).value
