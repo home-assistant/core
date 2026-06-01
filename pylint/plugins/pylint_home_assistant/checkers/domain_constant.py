@@ -30,12 +30,10 @@ class DomainConstantChecker(BaseChecker):
     }
 
     _in_test_module: bool
-    _component: str | None
 
     def visit_module(self, node: nodes.Module) -> None:
         """Visit Module node."""
         self._in_test_module = node.name.startswith("tests.components.")
-        self._component = node.name.split(".")[2] if self._in_test_module else None
 
     def visit_call(self, node: nodes.Call) -> None:
         """Visit Call node."""
@@ -73,7 +71,7 @@ class DomainConstantChecker(BaseChecker):
                 return
 
     def _ensure_domain_argument_node(
-        self, call_node: nodes.Call, arg_node: nodes.Argument | nodes.Keyword
+        self, call_node: nodes.Call, arg_node: nodes.NodeNG
     ) -> None:
         """Ensure the argument node is a domain constant or variable.
 
@@ -86,23 +84,16 @@ class DomainConstantChecker(BaseChecker):
         """
         match arg_node:
             case nodes.Attribute():
-                if (
-                    (attrname := arg_node.attrname) not in {"DOMAIN", "domain"}
-                    and not attrname.endswith("_DOMAIN")
-                    and not attrname.endswith("_domain")
-                ):
-                    self.add_message(
-                        "home-assistant-domain-argument",
-                        node=arg_node,
-                        args=(arg_node.as_string(), call_node.func.as_string()),
-                    )
-                return
+                if (attrname := arg_node.attrname) in {
+                    "DOMAIN",
+                    "domain",
+                } or attrname.endswith(("_DOMAIN", "_domain")):
+                    return
             case nodes.Name():
-                if (
-                    (node_name := arg_node.name) not in {"DOMAIN", "domain"}
-                    and not node_name.endswith("_DOMAIN")
-                    and not node_name.endswith("_domain")
-                ):
+                if (node_name := arg_node.name) in {
+                    "DOMAIN",
+                    "domain",
+                } or node_name.endswith(("_DOMAIN", "_domain")):
                     self.add_message(
                         "home-assistant-domain-argument",
                         node=arg_node,
@@ -110,8 +101,8 @@ class DomainConstantChecker(BaseChecker):
                     )
                 return
             case nodes.Const():
-                # We allow string literals
-                return
+                if isinstance(arg_node.value, str):
+                    return
 
         self.add_message(
             "home-assistant-domain-argument",
