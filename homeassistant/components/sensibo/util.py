@@ -25,6 +25,7 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> str:
             user_query = await client.async_get_me()
     except AuthenticationError as err:
         LOGGER.error("Could not authenticate on Sensibo servers %s", err)
+        # pylint: disable-next=home-assistant-raise-third-party-exception
         raise AuthenticationError from err
     except SENSIBO_ERRORS as err:
         LOGGER.error("Failed to get information from Sensibo servers %s", err)

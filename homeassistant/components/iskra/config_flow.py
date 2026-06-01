@@ -78,6 +78,7 @@ async def test_rest_api_connection(host: str, user_input: dict[str, Any]) -> Bas
     try:
         basic_info = await rest_api.get_basic_info()
     except NotAuthorised as e:
+        # pylint: disable-next=home-assistant-raise-third-party-exception
         raise NotAuthorised from e
     except (DeviceConnectionError, DeviceTimeoutError, InvalidResponseCode) as e:
         raise CannotConnect from e
@@ -100,6 +101,7 @@ async def test_modbus_connection(host: str, user_input: dict[str, Any]) -> Basic
     try:
         basic_info = await modbus_api.get_basic_info()
     except NotAuthorised as e:
+        # pylint: disable-next=home-assistant-raise-third-party-exception
         raise NotAuthorised from e
     except (DeviceConnectionError, DeviceTimeoutError, InvalidResponseCode) as e:
         raise CannotConnect from e

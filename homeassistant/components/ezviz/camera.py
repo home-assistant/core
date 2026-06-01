@@ -160,6 +160,7 @@ class EzvizCamera(EzvizEntity, Camera):
             self.coordinator.ezviz_client.set_camera_defence(self._serial, 1)
 
         except InvalidHost as err:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise InvalidHost("Error enabling motion detection") from err
 
     def disable_motion_detection(self) -> None:
@@ -168,6 +169,7 @@ class EzvizCamera(EzvizEntity, Camera):
             self.coordinator.ezviz_client.set_camera_defence(self._serial, 0)
 
         except InvalidHost as err:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise InvalidHost("Error disabling motion detection") from err
 
     async def async_camera_image(
@@ -204,4 +206,5 @@ class EzvizCamera(EzvizEntity, Camera):
         try:
             self.coordinator.ezviz_client.get_detection_sensibility(self._serial)
         except (HTTPError, PyEzvizError) as err:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise PyEzvizError("Cannot wake device") from err

@@ -152,6 +152,7 @@ class PjLinkDevice(MediaPlayerEntity):
             projector.authenticate(self._password)
         except (TimeoutError, OSError) as err:
             self._attr_available = False
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise ProjectorError(ERR_PROJECTOR_UNAVAILABLE) from err
 
         return projector

@@ -301,6 +301,7 @@ class CloudClient(Interface):
     async def async_cloud_connect_update(self, connect: bool) -> None:
         """Process cloud remote message to client."""
         if not self._prefs.remote_allow_remote_enable:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise RemoteActivationNotAllowed
         await self._prefs.async_update(remote_enabled=connect)
 

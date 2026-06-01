@@ -104,6 +104,7 @@ Every check has a code following the
 | `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
 | `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
+| `W7423` | [`home-assistant-raise-third-party-exception`](#w7423-home-assistant-raise-third-party-exception) | Do not raise exception classes from third-party libraries |
 
 
 ## `home_assistant_logger` checker
@@ -413,3 +414,41 @@ The helper is implemented as
 `functools.partial(datetime.datetime.now, UTC)` and avoids the global
 lookup of `UTC` on every call, while keeping the codebase consistent in
 how the current UTC time is obtained.
+
+
+## `home_assistant_raise_third_party` checker
+
+Flags `raise X(...)` (or `raise X`) where the exception class `X` is
+imported from a third-party library. Integrations should translate
+errors from their dependency into a stdlib exception (`ValueError`,
+`RuntimeError`, ...), a `HomeAssistantError` subclass
+(`ConfigEntryNotReady`, `UpdateFailed`, `ServiceValidationError`, ...),
+or an integration-local exception type. Raising the third-party
+exception class leaks the dependency's type into Home Assistant's
+public surface (entity service errors, config-flow errors, ...) and
+couples consumers to that library.
+
+Bare `raise` (re-raising the currently caught exception) is always
+allowed; this checker only flags raises that explicitly name a class.
+
+Two framework-level libraries are allowed because raising one of their
+exception classes is the documented idiomatic pattern:
+
+* `voluptuous` -- raising `vol.Invalid` is how validators signal
+  failure.
+* `aiohttp.web` / `aiohttp.web_exceptions` -- raising
+  `web.HTTPNotFound`, `HTTPMethodNotAllowed`, ... is how aiohttp
+  handlers return the corresponding HTTP response.
+
+### `W7423`: `home-assistant-raise-third-party-exception`
+
+A `raise` statement names an exception class imported from a
+third-party library. Wrap the third-party error in a Home Assistant
+exception, e.g.:
+
+```python
+try:
+    await client.do_thing()
+except ThirdPartyError as err:
+    raise HomeAssistantError("Could not do the thing") from err
+```

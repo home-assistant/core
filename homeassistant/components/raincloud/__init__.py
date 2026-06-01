@@ -50,6 +50,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     try:
         raincloud = RainCloudy(username=username, password=password)
         if not raincloud.is_connected:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise HTTPError  # noqa: TRY301
         hass.data[DATA_RAINCLOUD] = RainCloudHub(raincloud)
     except (ConnectTimeout, HTTPError) as ex:

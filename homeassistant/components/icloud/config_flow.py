@@ -139,6 +139,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 getattr, self.api, "devices"
             )
             if not devices:
+                # pylint: disable-next=home-assistant-raise-third-party-exception
                 raise PyiCloudNoDevicesException  # noqa: TRY301
         except PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException:
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
@@ -277,12 +278,14 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 if not await self.hass.async_add_executor_job(
                     self.api.validate_2fa_code, self._verification_code
                 ):
+                    # pylint: disable-next=home-assistant-raise-third-party-exception
                     raise PyiCloudException("The code you entered is not valid.")  # noqa: TRY301
             elif not await self.hass.async_add_executor_job(
                 self.api.validate_verification_code,
                 self._trusted_device,
                 self._verification_code,
             ):
+                # pylint: disable-next=home-assistant-raise-third-party-exception
                 raise PyiCloudException("The code you entered is not valid.")  # noqa: TRY301
         except PyiCloudException as error:
             # Reset to the initial 2FA state to allow the user to retry

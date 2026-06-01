@@ -143,6 +143,7 @@ class ONVIFDevice:
 
         # No camera profiles to add
         if not self.profiles:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise ONVIFError("No camera profiles found")
 
         if self.capabilities.ptz:

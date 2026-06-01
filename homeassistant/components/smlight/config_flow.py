@@ -199,6 +199,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                 return not await self.client.authenticate(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise SmlightAuthError
         return False
 

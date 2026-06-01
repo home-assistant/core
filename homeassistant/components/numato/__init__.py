@@ -190,6 +190,7 @@ class NumatoAPI:
                 if self.ports_registered[(device_id, port)] == gpio.IN
                 else "output"
             )
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise gpio.NumatoGpioError(
                 f"Device {device_id} port {port} already in use as {io}."
             )
@@ -200,12 +201,14 @@ class NumatoAPI:
         Fail with exception.
         """
         if device_id not in gpio.devices:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise gpio.NumatoGpioError(f"Device {device_id} not available.")
 
     def check_port(self, device_id: int, port: int, direction: int) -> None:
         """Raise an error if the port setup doesn't match the direction."""
         self.check_device_id(device_id)
         if (device_id, port) not in self.ports_registered:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise gpio.NumatoGpioError(
                 f"Port {port} is not set up for numato device {device_id}."
             )
@@ -218,6 +221,7 @@ class NumatoAPI:
             ),
         }
         if self.ports_registered[(device_id, port)] != direction:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise gpio.NumatoGpioError(msg[direction])
 
     def setup_output(self, device_id: int, port: int) -> None:

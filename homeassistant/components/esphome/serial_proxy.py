@@ -44,9 +44,11 @@ async def _resolve_client(entry_id: str) -> APIClient:
     entry = cast(ESPHomeConfigEntry, hass.config_entries.async_get_entry(entry_id))
 
     if entry is None or entry.domain != DOMAIN:
+        # pylint: disable-next=home-assistant-raise-third-party-exception
         raise InvalidSettingsError(f"No ESPHome config entry with id {entry_id!r}")
 
     if entry.state is not ConfigEntryState.LOADED:
+        # pylint: disable-next=home-assistant-raise-third-party-exception
         raise InvalidSettingsError(f"ESPHome config entry {entry_id!r} is not loaded")
 
     return entry.runtime_data.client
@@ -65,17 +67,20 @@ class HassESPHomeSerial(ESPHomeSerial):
 
             entry_id = parsed.path.lstrip("/")
             if not entry_id:
+                # pylint: disable-next=home-assistant-raise-third-party-exception
                 raise InvalidSettingsError(
                     f"No ESPHome config entry id in URL {self._path!r}"
                 )
 
             if "port_name" not in parsed.query:
+                # pylint: disable-next=home-assistant-raise-third-party-exception
                 raise InvalidSettingsError("Port name is required")
 
             self._port_name = parsed.query["port_name"]
 
             hass_loop = _HASS_LOOP
             if hass_loop is None:
+                # pylint: disable-next=home-assistant-raise-third-party-exception
                 raise InvalidSettingsError(
                     "ESPHome integration has not registered its event loop"
                 )

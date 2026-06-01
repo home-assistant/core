@@ -87,6 +87,7 @@ async def validate_input(data: dict[str, Any]) -> str:
 
         await hub.connect()
         if hub.installation_id is None:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise CannotConnectError("Victron hub did not provide an installation_id")
 
         return hub.installation_id

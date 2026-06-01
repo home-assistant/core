@@ -17,6 +17,7 @@ from pylint_home_assistant.checkers.greek_micro_char import (
     HassEnforceGreekMicroCharChecker,
 )
 from pylint_home_assistant.checkers.imports import HassImportsFormatChecker
+from pylint_home_assistant.checkers.raise_third_party import HassRaiseThirdPartyChecker
 from pylint_home_assistant.checkers.runtime_data import HassEnforceRuntimeDataChecker
 from pylint_home_assistant.checkers.sorted_platforms import (
     HassEnforceSortedPlatformsChecker,
@@ -137,3 +138,11 @@ def enforce_utcnow_checker_fixture(linter: UnittestLinter) -> BaseChecker:
     enforce_utcnow_checker = HassEnforceUtcnowChecker(linter)
     enforce_utcnow_checker.module = "homeassistant.components.pylint_test"
     return enforce_utcnow_checker
+
+
+@pytest.fixture(name="raise_third_party_checker")
+def raise_third_party_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a raise-third-party-exception checker."""
+    checker = HassRaiseThirdPartyChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker

@@ -117,6 +117,7 @@ class RenaultHub:
                 },
             )
         else:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise NotAuthenticatedException
 
         account_id: str = config_entry.data[

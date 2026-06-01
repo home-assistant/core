@@ -91,6 +91,7 @@ def ensure_pin_format(pin: str, allow_insecure_setup_codes: Any = None) -> str:
     If incorrect code is entered, an exception is raised.
     """
     if not (match := PIN_FORMAT.search(pin.strip())):
+        # pylint: disable-next=home-assistant-raise-third-party-exception
         raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
     pin_without_dashes = "".join(match.groups())
     if not allow_insecure_setup_codes and pin_without_dashes in INSECURE_CODES:

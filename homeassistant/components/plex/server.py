@@ -200,7 +200,7 @@ class PlexServer:
                         if _update_plexdirect_hostname():
                             config_entry_update_needed = True
                         else:
-                            # pylint: disable-next=raise-missing-from
+                            # pylint: disable-next=raise-missing-from,home-assistant-raise-third-party-exception
                             raise Unauthorized(  # noqa: B904
                                 "New certificate cannot be validated"
                                 " with provided token"
