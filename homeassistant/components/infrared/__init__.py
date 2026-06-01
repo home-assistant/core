@@ -27,6 +27,7 @@ from .helpers import (
     async_send_command,
     async_subscribe_receiver,
 )
+from .websocket_api import async_setup as async_setup_websocket_api
 
 __all__ = [
     "DOMAIN",
@@ -61,6 +62,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         InfraredEmitterEntity | InfraredReceiverEntity
     ](_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
+
+    async_setup_websocket_api(hass)
 
     return True
 
