@@ -279,7 +279,7 @@
     'supported_features': 0,
     'translation_key': 'redox_setpoint',
     'unique_id': 'ABCDEF1234567890-redox_setpoint',
-    'unit_of_measurement': 'mV',
+    'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
   })
 # ---
 # name: test_all_entities[number.my_pool_redox_setpoint-state]
@@ -290,7 +290,7 @@
       'min': 500,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
-      'unit_of_measurement': 'mV',
+      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.my_pool_redox_setpoint',
