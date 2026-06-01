@@ -71,8 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
         Elke27TimeoutError,
         Elke27DisconnectedError,
         OSError,
-        Elke27Error,
-        HomeAssistantError,
     ) as err:
         _LOGGER.warning(
             "Failed to refresh initial data from %s:%s: %s", host, port, err
@@ -83,6 +81,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
             await hub.async_disconnect()
         msg = "Unable to refresh initial panel data"
         raise ConfigEntryNotReady(msg) from err
+    except Elke27Error as err:
+        _LOGGER.warning(
+            "Failed to refresh initial data from %s:%s: %s", host, port, err
+        )
+        with contextlib.suppress(Exception):
+            await coordinator.async_stop()
+        with contextlib.suppress(Exception):
+            await hub.async_disconnect()
+        if getattr(err, "is_transient", False):
+            msg = "Unable to refresh initial panel data"
+            raise ConfigEntryNotReady(msg) from err
+        raise
+    except HomeAssistantError:
+        with contextlib.suppress(Exception):
+            await coordinator.async_stop()
+        with contextlib.suppress(Exception):
+            await hub.async_disconnect()
+        raise
 
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
     try:

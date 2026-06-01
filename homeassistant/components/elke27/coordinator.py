@@ -131,7 +131,7 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
         self._set_snapshot(self._hub.get_snapshot())
 
     def _set_snapshot(self, snapshot: PanelSnapshot | None) -> None:
-        """Update coordinator data and track snapshot version."""
+        """Update coordinator data from a panel snapshot."""
         self.async_set_updated_data(snapshot or PanelSnapshot.empty())
 
 
