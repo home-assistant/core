@@ -1,7 +1,5 @@
 """Config flow for LD2410BLE integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -9,6 +7,7 @@ from bluetooth_data_tools import human_readable_name
 from ld2410_ble import BLEAK_EXCEPTIONS, LD2410BLE
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -79,6 +78,7 @@ class Ld2410BleConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
         else:
+            await bluetooth.async_request_active_scan(self.hass)
             current_addresses = self._async_current_ids(include_ignore=False)
             for discovery in async_discovered_service_info(self.hass):
                 if (
@@ -99,7 +99,9 @@ class Ld2410BleConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_ADDRESS): vol.In(
                     {
-                        service_info.address: f"{service_info.name} ({service_info.address})"
+                        service_info.address: (
+                            f"{service_info.name} ({service_info.address})"
+                        )
                         for service_info in self._discovered_devices.values()
                     }
                 ),

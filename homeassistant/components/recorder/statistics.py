@@ -1,7 +1,5 @@
 """Statistics helper."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Sequence
 import dataclasses
@@ -689,14 +687,15 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
 
 
 CUSTOM_EQUIVALENT_UNITS_SCHEMA = vol.Schema({str: {vol.Any(str, None): str}})
-# Keep track of domains for which a warning about failure to collect custom units has been logged
+# Keep track of domains for which a warning about failure
+# to collect custom units has been logged
 _warn_custom_units_error: set[str] = set()
 
 
 def _get_custom_equivalent_units(
     hass: HomeAssistant,
 ) -> dict[str, dict[str | None, str]]:
-    """Check whether any integration supplies custom equivalent units for its entities."""
+    """Check whether any integration supplies custom equivalent units."""
     custom_equivalent_units_per_entity: dict[str, dict[str | None, str]] = {}
     for domain, platform in hass.data[DATA_RECORDER].recorder_platforms.items():
         custom_equivalent_units = getattr(
@@ -733,7 +732,8 @@ def _get_custom_equivalent_units(
             if domain not in _warn_custom_units_error:
                 _warn_custom_units_error.add(domain)
                 _LOGGER.warning(
-                    "Error processing result of %s for recorder platform domain %s: %s for object: %s",
+                    "Error processing result of %s for recorder"
+                    " platform domain %s: %s for object: %s",
                     INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
                     domain,
                     inv,
@@ -1259,7 +1259,8 @@ def reduce_day_ts_factory() -> tuple[
     _lower_bound: float = 0
     _upper_bound: float = 0
 
-    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    # We have to recreate _local_from_timestamp in the closure
+    # in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
@@ -1307,7 +1308,8 @@ def reduce_week_ts_factory() -> tuple[
     _lower_bound: float = 0
     _upper_bound: float = 0
 
-    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    # We have to recreate _local_from_timestamp in the closure
+    # in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
@@ -1364,7 +1366,8 @@ def reduce_month_ts_factory() -> tuple[
     _lower_bound: float = 0
     _upper_bound: float = 0
 
-    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    # We have to recreate _local_from_timestamp in the closure
+    # in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
@@ -1410,7 +1413,8 @@ def reduce_year_ts_factory() -> tuple[
     _lower_bound: float = 0
     _upper_bound: float = 0
 
-    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    # We have to recreate _local_from_timestamp in the closure
+    # in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
@@ -2378,7 +2382,7 @@ def get_latest_short_term_statistics_with_session(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
 ) -> dict[str, list[StatisticsRow]]:
-    """Return the latest short term statistics for a list of statistic_ids with a session."""
+    """Return latest short term statistics for a list of statistic_ids."""
     # Fetch metadata for the given statistic_ids
     if not metadata:
         metadata = get_instance(hass).statistics_meta_manager.get_many(
@@ -2799,7 +2803,8 @@ def _async_import_statistics(
             )
         if start.minute != 0 or start.second != 0 or start.microsecond != 0:
             raise HomeAssistantError(
-                "Invalid timestamp: timestamps must be from the top of the hour (minutes and seconds = 0)"
+                "Invalid timestamp: timestamps must be from the"
+                " top of the hour (minutes and seconds = 0)"
             )
 
         statistic["start"] = dt_util.as_utc(start)
@@ -3160,7 +3165,8 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
             with session_scope(session=instance.get_session()) as session:
                 session.connection().execute(
                     text(
-                        f"update {table} set start = NULL, created = NULL, last_reset = NULL;"  # noqa: S608
+                        f"update {table} set start = NULL,"  # noqa: S608
+                        " created = NULL, last_reset = NULL;"
                     )
                 )
     elif engine.dialect.name == SupportedDialect.MYSQL:
@@ -3170,7 +3176,10 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     session.connection()
                     .execute(
                         text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 100000;"  # noqa: S608
+                            f"UPDATE {table} set start=NULL,"  # noqa: S608
+                            " created=NULL, last_reset=NULL"
+                            " where start is not NULL"
+                            " LIMIT 100000;"
                         )
                     )
                     .rowcount
@@ -3185,8 +3194,11 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     session.connection()
                     .execute(
                         text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL "  # noqa: S608
-                            f"where id in (select id from {table} where start is not NULL LIMIT 100000)"
+                            f"UPDATE {table} set start=NULL,"  # noqa: S608
+                            " created=NULL, last_reset=NULL "
+                            "where id in (select id from "
+                            f"{table} where start is not NULL"
+                            " LIMIT 100000)"
                         )
                     )
                     .rowcount

@@ -1,7 +1,5 @@
 """Test the Elk-M1 Control config flow."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from unittest.mock import patch
 
@@ -430,7 +428,7 @@ async def test_form_user_with_secure_elk_with_discovery(hass: HomeAssistant) -> 
 async def test_form_user_with_secure_elk_with_discovery_pick_manual(
     hass: HomeAssistant,
 ) -> None:
-    """Test we can setup a secure elk with discovery but user picks manual and directed discovery fails."""
+    """Test secure elk setup with discovery, manual pick, directed fail."""
 
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
@@ -491,7 +489,7 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual(
 async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_discovery(
     hass: HomeAssistant,
 ) -> None:
-    """Test we can setup a secure elk with discovery but user picks manual and directed discovery succeeds."""
+    """Test secure elk setup with discovery, manual pick, directed success."""
 
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
@@ -805,7 +803,8 @@ async def test_unknown_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # Simulate an unexpected exception (ValueError) and verify the flow returns an "unknown" error
+    # Simulate an unexpected exception (ValueError) and verify
+    # the flow returns an "unknown" error
     assert result2["errors"] == {"base": "unknown"}
 
     # Retry with successful connection
@@ -1286,7 +1285,7 @@ async def test_form_import_existing(hass: HomeAssistant) -> None:
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, ELK_DISCOVERY_INFO),
     ],
 )
-async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already_configured(
+async def test_discovered_by_dhcp_or_discovery_mac_mismatch_host_configured(
     hass: HomeAssistant, source, data
 ) -> None:
     """Test we abort if the host is already configured but the mac does not match."""
@@ -1339,7 +1338,7 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
 
 
 async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
-    """Test we get the form with discovery and abort for dhcp source when we get both."""
+    """Test we get the form with discovery and abort for dhcp source."""
 
     with _patch_discovery(), _patch_elk():
         result = await hass.config_entries.flow.async_init(
@@ -1550,7 +1549,7 @@ async def test_discovered_by_dhcp_udp_responds(hass: HomeAssistant) -> None:
 async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(
     hass: HomeAssistant,
 ) -> None:
-    """Test we can setup when discovered from dhcp but with udp response using the non-secure port."""
+    """Test setup from dhcp with udp response using non-secure port."""
 
     with _patch_discovery(device=ELK_NON_SECURE_DISCOVERY), _patch_elk():
         result = await hass.config_entries.flow.async_init(
@@ -1599,7 +1598,7 @@ async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(
 async def test_discovered_by_dhcp_udp_responds_existing_config_entry(
     hass: HomeAssistant,
 ) -> None:
-    """Test we can setup when discovered from dhcp but with udp response with an existing config entry."""
+    """Test setup from dhcp with udp response and existing config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "elks://6.6.6.6"},
@@ -2038,7 +2037,7 @@ async def test_reconfigure_nonsecure(
 async def test_reconfigure_tls(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test reconfigure flow switching to TLS 1.2 protocol, validating host, username, and password update."""
+    """Test reconfigure flow switching to TLS 1.2 protocol."""
     mock_config_entry.add_to_hass(hass)
     await hass.async_block_till_done()
 
@@ -2225,7 +2224,8 @@ async def test_reconfigure_different_device(
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
-    # Abort occurs when the discovered device's unique_id does not match the existing config entry.
+    # Abort occurs when the discovered device's unique_id
+    # does not match the existing config entry.
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "unique_id_mismatch"
 
@@ -2294,7 +2294,7 @@ async def test_reconfigure_unknown_error(
 async def test_reconfigure_preserves_existing_config_entry_fields(
     hass: HomeAssistant,
 ) -> None:
-    """Test reconfigure only updates changed fields and preserves existing config entry data."""
+    """Test reconfigure only updates changed fields, preserves others."""
     # Simulate a config entry imported from yaml with extra fields
     initial_data = {
         CONF_HOST: "elks://1.2.3.4",

@@ -1,7 +1,5 @@
 """Support for WebDav Calendar."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from functools import partial
 import logging
@@ -40,6 +38,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
+from .const import TIMEOUT
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +92,12 @@ async def async_setup_platform(
     days = config[CONF_DAYS]
 
     client = caldav.DAVClient(
-        url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL]
+        url,
+        None,
+        username,
+        password,
+        ssl_verify_cert=config[CONF_VERIFY_SSL],
+        timeout=TIMEOUT,
     )
 
     calendars = await async_get_calendars(hass, client, SUPPORTED_COMPONENT)
@@ -233,7 +237,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             await self.hass.async_add_executor_job(
                 partial(self.coordinator.calendar.add_event, **item_data),
             )
-        except (requests.ConnectionError, DAVError) as err:
+        except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
     @callback

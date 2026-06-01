@@ -442,6 +442,43 @@ async def test_knx_get_schema(
     assert res == snapshot
 
 
+async def test_knx_get_expose_groups(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test knx/get_expose_groups command returning proper expose groups data."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_expose.json",
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/get_expose_groups"})
+    res = await client.receive_json()
+    assert res == snapshot
+
+
+async def test_knx_get_expose_config(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test knx/get_expose_config command returning proper expose config data."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_expose.json",
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "knx/get_expose_config",
+            "entity_id": "cover.test",
+        }
+    )
+    res = await client.receive_json()
+    assert res == snapshot
+
+
 @pytest.mark.parametrize(
     "endpoint",
     [

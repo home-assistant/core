@@ -4,9 +4,9 @@ from http import HTTPStatus
 
 from airly.exceptions import AirlyError
 
-from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
+from homeassistant.components.airly.const import CONF_USE_NEAREST, DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -16,7 +16,6 @@ from tests.common import MockConfigEntry, async_load_fixture, patch
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 CONFIG = {
-    CONF_NAME: "Home",
     CONF_API_KEY: "foo",
     CONF_LATITUDE: 123,
     CONF_LONGITUDE: 456,
@@ -124,7 +123,7 @@ async def test_create_entry(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == CONFIG[CONF_NAME]
+    assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
     assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
@@ -151,7 +150,7 @@ async def test_create_entry_with_nearest_method(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == CONFIG[CONF_NAME]
+    assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
     assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]

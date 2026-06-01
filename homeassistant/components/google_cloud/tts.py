@@ -1,7 +1,5 @@
 """Support for the Google Cloud TTS service."""
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 from typing import Any, cast
@@ -195,7 +193,8 @@ class BaseGoogleCloudProvider:
                 ssml_gender=gender,
                 name=voice,
             ),
-            # Avoid: "This voice does not support speaking rate or pitch parameters at this time."
+            # Avoid: "This voice does not support speaking rate
+            # or pitch parameters at this time."
             # by not specifying the fields unless they differ from the defaults
             audio_config=texttospeech.AudioConfig(
                 audio_encoding=encoding,

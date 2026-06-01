@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_fan_timer": {
+      "service": "mdi:fan-clock"
+    }
+  }
+}

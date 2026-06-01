@@ -1,7 +1,5 @@
 """Helpers for components that manage entities."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 from datetime import timedelta
@@ -69,7 +67,8 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
     as 'hue.light'.
 
     This class has the following responsibilities:
-     - Process the configuration and set up a platform based component, for example light.
+     - Process the configuration and set up a platform based component,
+       for example light.
      - Manage the platforms and their entities.
      - Help extract the entities from a service call.
      - Listen for discovery events for platforms related to the domain.

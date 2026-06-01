@@ -1,7 +1,5 @@
 """Constants used by Home Assistant components."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -16,7 +14,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 5
+MINOR_VERSION: Final = 7
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -172,6 +170,7 @@ CONF_MODEL_ID: Final = "model_id"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
+CONF_NOTE: Final = "note"
 CONF_OFFSET: Final = "offset"
 CONF_OPTIMISTIC: Final = "optimistic"
 CONF_OPTIONS: Final = "options"
@@ -946,10 +945,6 @@ WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 PRECISION_WHOLE: Final = 1
 PRECISION_HALVES: Final = 0.5
 PRECISION_TENTHS: Final = 0.1
-
-# Static list of entities that will never be exposed to
-# cloud, alexa, or google_home components
-CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
 
 class EntityCategory(StrEnum):

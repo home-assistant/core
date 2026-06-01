@@ -160,7 +160,6 @@ async def test_climate_error_handling(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        FumisAuthenticationError,
         FumisStoveOfflineError,
         FumisConnectionError,
         FumisError,

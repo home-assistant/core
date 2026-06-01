@@ -1,7 +1,5 @@
 """Tests for the DLNA DMR media_player module."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
@@ -1938,7 +1936,8 @@ async def test_ssdp_bootid(
     assert dmr_device_mock.async_subscribe_services.call_count == 1
     assert dmr_device_mock.async_unsubscribe_services.call_count == 0
 
-    # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
+    # Send a new SSDP alive with an incremented boot ID,
+    # device should be dis/reconnected
     await ssdp_callback(
         SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,

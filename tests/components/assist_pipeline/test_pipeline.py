@@ -1053,7 +1053,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
     mock_chat_session: chat_session.ChatSession,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
 ) -> None:
-    """Test that sentence triggers are checked before a non-default conversation agent."""
+    """Test sentence triggers checked before non-default agent."""
     assert await async_setup_component(
         hass,
         "automation",
@@ -1281,7 +1281,8 @@ async def test_intent_continue_conversation(
     ]
     assert results[1]["intent_output"]["continue_conversation"] is True
 
-    # Change conversation agent to default one and register sentence trigger that should not be called
+    # Change conversation agent to default one and register
+    # sentence trigger that should not be called
     await assist_pipeline.pipeline.async_update_pipeline(
         hass, pipeline, conversation_engine=None
     )
@@ -1367,7 +1368,7 @@ async def test_stt_language_used_instead_of_conversation_language(
     mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that the STT language is used first when the conversation language is '*' (all languages)."""
+    """Test STT language is used first when conversation language is '*'."""
     client = await hass_ws_client(hass)
 
     events: list[assist_pipeline.PipelineEvent] = []
@@ -1443,7 +1444,7 @@ async def test_tts_language_used_instead_of_conversation_language(
     mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that the TTS language is used after STT when the conversation language is '*' (all languages)."""
+    """Test TTS language used after STT when conversation language is '*'."""
     client = await hass_ws_client(hass)
 
     events: list[assist_pipeline.PipelineEvent] = []
@@ -1519,7 +1520,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
     mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that the pipeline language is used last when the conversation language is '*' (all languages)."""
+    """Test pipeline language used last when conversation language is '*'."""
     client = await hass_ws_client(hass)
 
     events: list[assist_pipeline.PipelineEvent] = []
@@ -2042,7 +2043,7 @@ async def test_acknowledge_other_agents(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that acknowledge sound is only played when intents are processed locally for other agents."""
+    """Test acknowledge sound only plays for locally processed intents."""
     area_1 = area_registry.async_get_or_create("area_1")
 
     light_1 = entity_registry.async_get_or_create(
@@ -2153,3 +2154,123 @@ async def test_acknowledge_other_agents(
         text_to_speech.assert_not_called()
         async_converse.assert_called_once()
         get_all_targets_in_satellite_area.assert_not_called()
+
+
+async def test_stt_vad_enabled_based_on_audio_processing(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSTTProvider,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test VAD enabled only when requires_external_vad is True."""
+
+    async def audio_data():
+        yield make_10ms_chunk(b"silence!")
+        yield make_10ms_chunk(b"speech!")
+        yield b""
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    # Test with requires_external_vad=True (default)
+    # VAD should be used
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline.VoiceCommandSegmenter"
+        ) as mock_vad,
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=mock_stt_provider,
+        ),
+    ):
+        # Set the audio_processing on the mock provider
+        mock_stt_provider._audio_processing = stt.SpeechAudioProcessing(
+            requires_external_vad=True,
+            prefers_auto_gain_enabled=True,
+            prefers_noise_reduction_enabled=True,
+        )
+
+        mock_vad_instance = Mock()
+        mock_vad.return_value = mock_vad_instance
+        mock_vad_instance.process.return_value = False  # No voice command
+
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            session=mock_chat_session,
+            device_id=None,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-US",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.STT,
+                end_stage=assist_pipeline.PipelineStage.STT,
+                event_callback=lambda _: None,
+                audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # VAD should be created when requires_external_vad is True
+        mock_vad.assert_called_once()
+        assert mock_vad_instance.process.called
+
+    # Test with requires_external_vad=False
+    # VAD should NOT be used
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline.VoiceCommandSegmenter"
+        ) as mock_vad,
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=mock_stt_provider,
+        ),
+    ):
+        # Set the audio_processing on the mock provider
+        mock_stt_provider._audio_processing = stt.SpeechAudioProcessing(
+            requires_external_vad=False,
+            prefers_auto_gain_enabled=True,
+            prefers_noise_reduction_enabled=True,
+        )
+
+        mock_vad_instance = Mock()
+        mock_vad.return_value = mock_vad_instance
+
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            session=mock_chat_session,
+            device_id=None,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-US",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.STT,
+                end_stage=assist_pipeline.PipelineStage.STT,
+                event_callback=lambda _: None,
+                audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # VAD should NOT be created when requires_external_vad is False
+        mock_vad.assert_not_called()

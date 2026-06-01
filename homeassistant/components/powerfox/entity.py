@@ -1,7 +1,5 @@
 """Generic entity for Powerfox."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from powerfox import Device

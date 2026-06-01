@@ -1,7 +1,5 @@
 """Support for ReCollect Waste calendars."""
 
-from __future__ import annotations
-
 import datetime
 
 from aiorecollect.client import PickupEvent
@@ -9,6 +7,7 @@ from aiorecollect.client import PickupEvent
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
 from .entity import ReCollectWasteEntity
@@ -70,7 +69,7 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
             current_event = next(
                 event
                 for event in self.coordinator.data
-                if event.date >= datetime.date.today()
+                if event.date >= dt_util.now().date()
             )
         except StopIteration:
             self._event = None

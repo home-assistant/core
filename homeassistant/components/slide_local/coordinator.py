@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for slide_local integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -102,7 +100,8 @@ class SlideCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             if not self.config_entry.options.get(CONF_INVERT_POSITION, False):
                 # For slide 0->open, 1->closed; for HA 0->closed, 1->open
-                # Value has therefore to be inverted, unless CONF_INVERT_POSITION is true
+                # Value has therefore to be inverted,
+                # unless CONF_INVERT_POSITION is true
                 data["pos"] = 1 - data["pos"]
 
             if oldpos is None or oldpos == data["pos"]:

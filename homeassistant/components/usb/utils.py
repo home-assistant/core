@@ -1,14 +1,11 @@
 """The USB Discovery integration."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 import fnmatch
 import os
 
 from serialx import SerialPortInfo, list_serial_ports
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.loader import USBMatcher
 
@@ -26,7 +23,10 @@ def usb_device_from_port(port: SerialPortInfo) -> USBDevice:
         pid=f"{hex(port.pid)[2:]:0>4}".upper(),
         serial_number=port.serial_number,
         manufacturer=port.manufacturer,
-        description=port.product,
+        description=port.description,
+        bcd_device=port.bcd_device,
+        interface_description=port.interface_description,
+        interface_num=port.interface_num,
     )
 
 
@@ -36,7 +36,9 @@ def serial_device_from_port(port: SerialPortInfo) -> SerialDevice:
         device=port.device,
         serial_number=port.serial_number,
         manufacturer=port.manufacturer,
-        description=port.product,
+        description=port.description,
+        interface_description=port.interface_description,
+        interface_num=port.interface_num,
     )
 
 
@@ -50,13 +52,6 @@ def usb_serial_device_from_port(port: SerialPortInfo) -> USBDevice | SerialDevic
 def scan_serial_ports() -> Sequence[USBDevice | SerialDevice]:
     """Scan serial ports and return USB and other serial devices."""
     return [usb_serial_device_from_port(port) for port in list_serial_ports()]
-
-
-async def async_scan_serial_ports(
-    hass: HomeAssistant,
-) -> Sequence[USBDevice | SerialDevice]:
-    """Scan serial ports and return USB and other serial devices, async."""
-    return await hass.async_add_executor_job(scan_serial_ports)
 
 
 def usb_device_from_path(device_path: str) -> USBDevice | None:

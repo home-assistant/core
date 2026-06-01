@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import override
 
 from aiohttp import ClientResponseError
 from incomfortclient import (
@@ -95,6 +96,7 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
         self.client = client
         self.unique_id = config_entry.unique_id
 
+    @override
     async def _async_update_data(self) -> InComfortData:
         """Fetch data from Incomfort."""
         try:

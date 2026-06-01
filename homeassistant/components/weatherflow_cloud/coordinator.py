@@ -1,6 +1,7 @@
 """Improved coordinator design with better type safety."""
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from datetime import timedelta
 
 from aiohttp import ClientResponseError
@@ -29,13 +30,27 @@ from homeassistant.util.ssl import client_context
 from .const import DOMAIN, LOGGER
 
 
+@dataclass
+class WeatherFlowCoordinators:
+    """Data Class for Entry Data."""
+
+    rest: WeatherFlowCloudUpdateCoordinatorREST
+    wind: WeatherFlowWindCoordinator
+    observation: WeatherFlowObservationCoordinator
+
+
+type WeatherFlowCloudConfigEntry = ConfigEntry[WeatherFlowCoordinators]
+
+
 class BaseWeatherFlowCoordinator[T](DataUpdateCoordinator[dict[int, T]], ABC):
     """Base class for WeatherFlow coordinators."""
+
+    config_entry: WeatherFlowCloudConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WeatherFlowCloudConfigEntry,
         rest_api: WeatherFlowRestAPI,
         stations: StationsResponseREST,
         update_interval: timedelta | None = None,
@@ -70,7 +85,7 @@ class WeatherFlowCloudUpdateCoordinatorREST(
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WeatherFlowCloudConfigEntry,
         rest_api: WeatherFlowRestAPI,
         stations: StationsResponseREST,
     ) -> None:
@@ -111,7 +126,7 @@ class BaseWebsocketCoordinator[T](BaseWeatherFlowCoordinator[dict[int, T | None]
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WeatherFlowCloudConfigEntry,
         rest_api: WeatherFlowRestAPI,
         websocket_api: WeatherFlowWebsocketAPI,
         stations: StationsResponseREST,
@@ -168,8 +183,10 @@ class WeatherFlowWindCoordinator(BaseWebsocketCoordinator[EventDataRapidWind]):
         """Create rapid wind listen message."""
         return RapidWindListenStartMessage(device_id=str(device_id))
 
-    async def _handle_websocket_message(self, data: RapidWindWS) -> None:
+    async def _handle_websocket_message(self, data: RapidWindWS | None) -> None:
         """Handle rapid wind websocket data."""
+        if data is None:
+            return
         device_id = data.device_id
         station_id = self.device_to_station_map[device_id]
 
@@ -187,8 +204,12 @@ class WeatherFlowObservationCoordinator(BaseWebsocketCoordinator[WebsocketObserv
         """Create observation listen message."""
         return ListenStartMessage(device_id=str(device_id))
 
-    async def _handle_websocket_message(self, data: ObservationTempestWS) -> None:
+    async def _handle_websocket_message(
+        self, data: ObservationTempestWS | None
+    ) -> None:
         """Handle observation websocket data."""
+        if data is None:
+            return
         device_id = data.device_id
         station_id = self.device_to_station_map[device_id]
 

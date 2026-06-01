@@ -1,7 +1,5 @@
 """Support for Ecovacs Ecovacs Vacuums."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
@@ -357,8 +355,8 @@ class EcovacsVacuum(
                 name = info.get("nick", info["name"])
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="vacuum_send_command_area_not_supported",
-                    translation_placeholders={"name": name},
+                    translation_key="vacuum_send_command_not_supported",
+                    translation_placeholders={"command": command, "name": name},
                 )
 
             if command == "spot_area":
@@ -415,9 +413,11 @@ class EcovacsVacuum(
         """Get the segments that can be cleaned."""
         last_seen = self.last_seen_segments or []
         if self._room_event is None or not self._maps:
-            # If we don't have the necessary information to determine segments, return the last
-            # seen segments to avoid temporarily losing all segments until we get the necessary
-            # information, which could cause unnecessary issues to be created
+            # If we don't have the necessary information to
+            # determine segments, return the last seen segments to
+            # avoid temporarily losing all segments until we get
+            # the necessary information, which could cause
+            # unnecessary issues to be created
             return last_seen
 
         map_id = self._room_event.map_id
@@ -431,8 +431,9 @@ class EcovacsVacuum(
             for map_obj in self._maps.values()
             if map_obj.id != self._room_event.map_id
         }
-        # Include segments from the current map and any segments from other maps that were
-        # previously seen, as we want to continue showing segments from other maps for
+        # Include segments from the current map and any segments
+        # from other maps that were previously seen, as we want
+        # to continue showing segments from other maps for
         # mapping purposes
         segments = [
             seg for seg in last_seen if _split_composite_id(seg.id)[0] in other_map_ids
@@ -488,7 +489,8 @@ class EcovacsVacuum(
 
         if not valid_room_ids:
             _LOGGER.warning(
-                "No valid segments to clean after validation, skipping clean segments command"
+                "No valid segments to clean after validation,"
+                " skipping clean segments command"
             )
             return
 

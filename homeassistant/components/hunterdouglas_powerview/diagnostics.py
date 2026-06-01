@@ -1,7 +1,5 @@
 """Diagnostics support for Powerview Hunter Douglas."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 

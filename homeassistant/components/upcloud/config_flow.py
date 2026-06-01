@@ -1,7 +1,5 @@
 """Config flow for UpCloud."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -107,6 +105,8 @@ class UpCloudOptionsFlow(OptionsFlow):
 
         data_schema = vol.Schema(
             {
+                # Polling interval is user-configurable, which is no longer allowed
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(CONF_SCAN_INTERVAL)

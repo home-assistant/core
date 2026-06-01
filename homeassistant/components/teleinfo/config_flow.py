@@ -1,7 +1,5 @@
 """Config flow for the Teleinfo integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -92,16 +90,6 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
             usb.get_serial_by_id, discovery_info.device
         )
 
-        # Validate by reading a real Teleinfo frame — silent abort on failure
-        errors, decoded_data = await self._validate_serial_port(dev_path)
-        if errors or decoded_data is None:
-            return self.async_abort(reason="not_teleinfo_device")
-
-        # Use ADCO (meter serial number) as unique_id — same as manual entry
-        adco = decoded_data["ADCO"]
-        await self.async_set_unique_id(adco)
-        self._abort_if_unique_id_configured(updates={CONF_SERIAL_PORT: dev_path})
-
         self._discovered_device = dev_path
         self.context["title_placeholders"] = {
             "name": human_readable_device_name(
@@ -122,6 +110,20 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert self._discovered_device is not None
         if user_input is not None:
+            # Validate by reading a real Teleinfo frame — silent abort on failure
+            errors, decoded_data = await self._validate_serial_port(
+                self._discovered_device
+            )
+            if errors or decoded_data is None:
+                return self.async_abort(reason="not_teleinfo_device")
+
+            # Use ADCO (meter serial number) as unique_id — same as manual entry
+            adco = decoded_data["ADCO"]
+            await self.async_set_unique_id(adco)
+            self._abort_if_unique_id_configured(
+                updates={CONF_SERIAL_PORT: self._discovered_device}
+            )
+
             return self.async_create_entry(
                 title=f"Teleinfo ({self._discovered_device})",
                 data={CONF_SERIAL_PORT: self._discovered_device},

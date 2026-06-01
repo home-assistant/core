@@ -1,7 +1,5 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
 
-from __future__ import annotations
-
 from incomfortclient import Gateway as InComfortGateway
 
 from homeassistant.const import CONF_HOST, Platform
