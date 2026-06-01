@@ -1,6 +1,6 @@
 """Test the Wolf SmartSet Service."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from httpx import RequestError
 
@@ -101,38 +101,43 @@ async def test_migration_v1_2_to_v2(
     }
 
 
-async def test_duplicate_entries_removed(
-    hass: HomeAssistant, mock_wolflink: MagicMock
-) -> None:
-    """Test that duplicate config entries for the same account are removed."""
-    entry1 = MockConfigEntry(
+async def test_migration_merges_duplicate_v1_entries(hass: HomeAssistant) -> None:
+    """Test that migrating two v1 entries for the same account merges them into one v2 entry."""
+    first_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="test-username",
-        data={
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            DEVICE_ID: [1234],
-        },
-        version=2,
-        minor_version=1,
+        unique_id="1234",
+        data={**LEGACY_CONFIG, "device_id": 1234},
+        version=1,
+        minor_version=2,
     )
-    entry2 = MockConfigEntry(
+    second_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="test-username",
-        data={
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            DEVICE_ID: [1234],
-        },
-        version=2,
-        minor_version=1,
+        unique_id="5678",
+        data={**LEGACY_CONFIG, "device_id": 5678},
+        version=1,
+        minor_version=2,
     )
-    entry1.add_to_hass(hass)
-    entry2.add_to_hass(hass)
+    first_entry.add_to_hass(hass)
+    second_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry1.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.wolflink.WolfClient",
+        autospec=True,
+    ) as wolf_mock:
+        wolf_mock.return_value.fetch_system_list.side_effect = RequestError(
+            "Unable to connect"
+        )
+        # Migrate the first entry — becomes the v2 hub entry.
+        await hass.config_entries.async_setup(first_entry.entry_id)
+        # Migrate the second entry — should merge into the first and be removed.
+        await second_entry.async_migrate(hass)
+        await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].entry_id == entry1.entry_id
+    surviving = entries[0]
+    assert surviving.entry_id == first_entry.entry_id
+    assert surviving.unique_id == "test-username"
+    assert surviving.version == 2
+    assert surviving.minor_version == 1
+    assert sorted(surviving.data[DEVICE_ID]) == [1234, 5678]

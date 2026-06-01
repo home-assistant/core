@@ -50,6 +50,8 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if not self._fetched_systems:
+                    return self.async_abort(reason="no_devices")
                 self._username = user_input[CONF_USERNAME]
                 self._password = user_input[CONF_PASSWORD]
                 return await self.async_step_device()
@@ -92,18 +94,17 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration to change selected devices."""
         entry = self._get_reconfigure_entry()
-        errors: dict[str, str] = {}
 
-        if user_input is not None:
-            selected_ids = user_input[DEVICE_ID]
+        if user_input is not None and DEVICE_ID in user_input:
             return self.async_update_reload_and_abort(
                 entry,
                 data={
                     **entry.data,
-                    DEVICE_ID: [int(did) for did in selected_ids],
+                    DEVICE_ID: [int(did) for did in user_input[DEVICE_ID]],
                 },
             )
 
+        errors: dict[str, str] = {}
         wolf_client = WolfClient(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
         try:
             self._fetched_systems = await wolf_client.fetch_system_list()
@@ -116,7 +117,16 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         if errors:
-            return self.async_abort(reason=next(iter(errors.values())))
+            # Re-show the reconfigure step with an empty schema so the user
+            # can retry the connection without re-entering credentials.
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=vol.Schema({}),
+                errors=errors,
+            )
+
+        if not self._fetched_systems:
+            return self.async_abort(reason="no_devices")
 
         current_ids = entry.data.get(DEVICE_ID, [])
         device_options = {
@@ -132,6 +142,4 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             }
         )
-        return self.async_show_form(
-            step_id="reconfigure", data_schema=data_schema, errors=errors
-        )
+        return self.async_show_form(step_id="reconfigure", data_schema=data_schema)

@@ -114,6 +114,20 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "unknown"}
 
 
+async def test_no_devices_abort(hass: HomeAssistant) -> None:
+    """Test we abort if the account has no devices."""
+    with patch(
+        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices"
+
+
 async def test_already_configured_error(hass: HomeAssistant) -> None:
     """Test already configured while creating entry."""
     with (
@@ -179,3 +193,50 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[DEVICE_ID] == [1234, 5678]
+
+
+async def test_reconfigure_retries_on_error(hass: HomeAssistant) -> None:
+    """Test reconfigure re-shows the form on connection errors so the user can retry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+        data=CONFIG,
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    # First attempt: fetch fails — expect the reconfigure form re-shown with errors.
+    with patch(
+        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+        side_effect=ConnectError("boom"),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # User retries: fetch now succeeds — expect the device-selection form.
+    with patch(
+        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+        return_value=[DEVICE],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert not result.get("errors")
+
+    # User submits selection: expect successful reconfigure.
+    with patch(
+        "homeassistant.components.wolflink.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {DEVICE_ID: ["1234"]},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[DEVICE_ID] == [1234]

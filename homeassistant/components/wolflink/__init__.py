@@ -1,11 +1,12 @@
 """The Wolf SmartSet Service integration."""
 
-import logging
+import asyncio
 
 from httpx import RequestError
+from wolf_comm.models import Device
 from wolf_comm.wolf_client import FetchFailed, WolfClient
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -19,8 +20,6 @@ from .coordinator import (
     WolflinkData,
     fetch_parameters,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -51,13 +50,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> 
         devices = [d for d in devices if d.id in selected_ids]
 
     device_registry = dr.async_get(hass)
-    coordinators: list[WolfLinkCoordinator] = []
 
-    for device in devices:
+    async def _async_setup_device(device: Device) -> WolfLinkCoordinator:
+        """Initialize a coordinator and register the device."""
         parameters = await _fetch_parameters_init(
             wolf_client, device.gateway, device.id
         )
-
         coordinator = WolfLinkCoordinator(
             hass,
             entry,
@@ -68,7 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> 
             device.name,
         )
         await coordinator.async_config_entry_first_refresh()
-
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, str(device.id))},
@@ -76,14 +73,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> 
             manufacturer=MANUFACTURER,
             name=device.name,
         )
+        return coordinator
 
-        coordinators.append(coordinator)
+    coordinators = list(
+        await asyncio.gather(*(_async_setup_device(device) for device in devices))
+    )
 
     entry.runtime_data = WolflinkData(client=wolf_client, coordinators=coordinators)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    _async_remove_duplicate_entries(hass, entry)
 
     return True
 
@@ -121,36 +119,52 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # v1 → v2: convert from device-oriented to hub-oriented
         username = entry.data[CONF_USERNAME]
+        target_unique_id = username.lower()
         old_device_id = entry.data.get(DEVICE_ID)
+        new_id = int(old_device_id) if old_device_id else None
+
+        # If a sibling entry for the same account already exists (either
+        # already migrated, or migrated earlier in this startup), merge into
+        # it and drop the current entry instead of creating a duplicate.
+        sibling = next(
+            (
+                e
+                for e in hass.config_entries.async_entries(DOMAIN)
+                if e.entry_id != entry.entry_id and e.unique_id == target_unique_id
+            ),
+            None,
+        )
+        if sibling is not None:
+            existing_ids: list[int] = sibling.data.get(DEVICE_ID, [])
+            merged_ids = list(
+                dict.fromkeys(
+                    [*existing_ids, new_id] if new_id is not None else existing_ids
+                )
+            )
+            hass.config_entries.async_update_entry(
+                sibling,
+                data={**sibling.data, DEVICE_ID: merged_ids},
+            )
+            # Mark this duplicate as migrated so HA doesn't retry, then remove it.
+            hass.config_entries.async_update_entry(entry, version=2, minor_version=1)
+            hass.async_create_task(hass.config_entries.async_reload(sibling.entry_id))
+            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+            return True
+
         new_data = {
             CONF_USERNAME: username,
             CONF_PASSWORD: entry.data[CONF_PASSWORD],
-            DEVICE_ID: [old_device_id] if old_device_id else [],
+            DEVICE_ID: [new_id] if new_id is not None else [],
         }
         hass.config_entries.async_update_entry(
             entry,
             data=new_data,
-            unique_id=username.lower(),
+            unique_id=target_unique_id,
             version=2,
             minor_version=1,
         )
 
     return True
-
-
-def _async_remove_duplicate_entries(
-    hass: HomeAssistant, current_entry: WolflinkConfigEntry
-) -> None:
-    """Remove duplicate config entries for the same account."""
-    entries = hass.config_entries.async_entries(DOMAIN)
-    for entry in entries:
-        if (
-            entry.entry_id != current_entry.entry_id
-            and entry.unique_id == current_entry.unique_id
-            and entry.state is not ConfigEntryState.LOADED
-        ):
-            _LOGGER.info("Removing duplicate wolflink config entry %s", entry.entry_id)
-            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
 
 
 async def _fetch_parameters_init(client: WolfClient, gateway_id: int, device_id: int):
