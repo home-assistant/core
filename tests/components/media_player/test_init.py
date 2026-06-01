@@ -169,7 +169,7 @@ async def test_get_image_http_log_credentials_redacted(
 
         resp = await client.get(state.attributes["entity_picture"])
 
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
     assert f"Error retrieving proxied image from {url}" not in caplog.text
     assert (
         "Error retrieving proxied image from "
