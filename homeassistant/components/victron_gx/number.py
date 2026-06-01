@@ -72,10 +72,13 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         """Initialize the number entity."""
         super().__init__(device, metric, device_info, installation_id)
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
-        if self._attr_device_class is not None or metric.metric_type == MetricType.DYNAMIC:
+        if (
+            self._attr_device_class is not None
+            or metric.metric_type == MetricType.DYNAMIC
+        ):
             # We need to set the _attr_native_unit_of_measurement in two cases:
             # 1. When there is known device class which support multiple units. In this case
-            # we publish what we have and HA will allow convertion to other supported units.
+            # we publish what we have and HA will allow conversion to other supported units.
             # We specifically dont put those cases in the translation file by the merge script
             # not to waste translation resources so it has to come from here.
             # 2. Dynamic units come from user-configured MQTT topics (e.g.
