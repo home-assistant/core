@@ -542,7 +542,9 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
 
 
 async def test_setting_device_tracker_location_via_in_zones_message(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the in_zones setting in combination with GPS coordinates."""
     hass.config.latitude = 32.87336
@@ -561,11 +563,21 @@ async def test_setting_device_tracker_location_via_in_zones_message(
 
     assert state.state == STATE_UNKNOWN
 
-    # Test in_zones with known `home` object name
+    # Test validation of in_zones attribute
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
         '{"in_zones": "home","source_type": "router"}',
+    )
+    assert (
+        "Extra state attributes received at None and template "
+        "attributes-topic contains invalid in_zones attribute" in caplog.text
+    )
+    # Test in_zones with known `home` object name
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"in_zones": ["home"],"source_type": "router"}',
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["in_zones"] == ["zone.home"]
@@ -579,7 +591,7 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
-        '{"in_zones": null,"source_type": "router"}',
+        '{"in_zones": [],"source_type": "router"}',
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["in_zones"] == []
@@ -623,7 +635,7 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
-        '{"in_zones": "unknown","source_type": "router"}',
+        '{"in_zones": ["unknown"],"source_type": "router"}',
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["in_zones"] == []

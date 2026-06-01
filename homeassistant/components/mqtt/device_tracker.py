@@ -12,7 +12,7 @@ from homeassistant.components.device_tracker import (
     SourceType,
     TrackerEntity,
 )
-from homeassistant.components.zone import DATA_ZONE_ENTITY_IDS
+from homeassistant.components.zone import DATA_ZONE_ENTITY_IDS, DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -188,6 +188,12 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @callback
+    def _ensure_entity_id_from_zone_id(self, zone_id: str) -> str:
+        """Return an entity id for a zone_id."""
+        _, _, object_id = zone_id.partition(".")
+        return f"zone.{zone_id}" if object_id == "" else zone_id
+
+    @callback
     def _process_update_extra_state_attributes(
         self, extra_state_attributes: dict[str, Any]
     ) -> None:
@@ -239,33 +245,38 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             else:
                 self._attr_location_accuracy = 0
         elif ATTR_IN_ZONES in extra_state_attributes:
+            attr_in_zones: list[str] | Any = extra_state_attributes[ATTR_IN_ZONES]
+            if not isinstance(attr_in_zones, list):
+                _LOGGER.warning(
+                    "Extra state attributes received at %s and template %s "
+                    "contains invalid in_zones attribute, "
+                    "expected a list of strings. Got %s",
+                    self._config.get(CONF_JSON_ATTRS_TEMPLATE),
+                    self._config.get(CONF_JSON_ATTRS_TOPIC),
+                    extra_state_attributes,
+                )
+                return
             # Determine zones
             self._attr_latitude = None
             self._attr_longitude = None
-            in_zones_list: set[str] = {
-                str(name)
-                for name in cv.ensure_list(extra_state_attributes[ATTR_IN_ZONES])
-            }
-            zone_entity_ids = self.hass.data.get(DATA_ZONE_ENTITY_IDS, ())
+            reported_zones: set[str] = {str(zone) for zone in attr_in_zones}
+            zone_entity_ids = set(self.hass.data.get(DATA_ZONE_ENTITY_IDS, ()))
             zone_names: dict[str, str] = {
-                zone_name: entity_id
-                for entity_id in zone_entity_ids
-                if (zone_state := self.hass.states.get(entity_id)) is not None
-                and (zone_name := zone_state.attributes.get("friendly_name"))
-                is not None
+                zone_state.name: zone_state.entity_id
+                for zone_state in self.hass.states.async_all(ZONE_DOMAIN)
             }
-            # Match zone with entity, object_name or zone name
+            # Match zone with entity, object_id or zone name
             self._attr_in_zones = list(
                 {
-                    entity_id
-                    for entity_id in zone_entity_ids
-                    if entity_id in in_zones_list
-                    or entity_id.partition(".")[2] in in_zones_list
+                    self._ensure_entity_id_from_zone_id(zone_id)
+                    for zone_id in reported_zones
+                    if zone_id in zone_entity_ids
+                    or f"zone.{zone_id}" in zone_entity_ids
                 }
                 | {
                     entity_id
                     for name, entity_id in zone_names.items()
-                    if name in in_zones_list
+                    if name in reported_zones
                 }
             )
 
