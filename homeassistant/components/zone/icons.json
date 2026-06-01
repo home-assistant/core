@@ -3,5 +3,13 @@
     "reload": {
       "service": "mdi:reload"
     }
+  },
+  "triggers": {
+    "entered": {
+      "trigger": "mdi:map-marker-plus"
+    },
+    "left": {
+      "trigger": "mdi:map-marker-minus"
+    }
   }
 }

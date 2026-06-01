@@ -411,7 +411,6 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
                 data_schema=vol.Schema(schema),
                 description_placeholders={
                     "url": "https://example.com",
-                    "show_advanced_options": self.show_advanced_options,
                 },
                 errors={"username": "Should be unique."},
             )
@@ -419,7 +418,7 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
-            json={"handler": "test", "show_advanced_options": True},
+            json={"handler": "test"},
         )
 
     assert resp.status == HTTPStatus.OK
@@ -437,7 +436,6 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
         ],
         "description_placeholders": {
             "url": "https://example.com",
-            "show_advanced_options": True,
         },
         "errors": {"username": "Should be unique."},
         "last_step": None,
@@ -469,7 +467,7 @@ async def test_initialize_flow_unmet_dependency(
     with mock_config_flow("test2", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
-            json={"handler": "test2", "show_advanced_options": True},
+            json={"handler": "test2"},
         )
 
     assert resp.status == HTTPStatus.BAD_REQUEST

@@ -58,14 +58,12 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
         try:
             data = await self.interface.get_data()
         except aioptdevices.PTDevicesRequestError as err:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except aioptdevices.PTDevicesUnauthorizedError as err:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_access_token",
