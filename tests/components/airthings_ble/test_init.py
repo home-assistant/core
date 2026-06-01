@@ -83,7 +83,7 @@ async def test_setup_retries_when_device_not_found(
     with (
         patch_async_ble_device_from_address(None),
         patch(
-            "homeassistant.components.bluetooth."
+            "homeassistant.components.airthings_ble.coordinator.bluetooth."
             "async_address_reachability_diagnostics",
             return_value="mock reachability reason",
         ),
