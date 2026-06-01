@@ -91,21 +91,28 @@ async def async_setup_entry(
         await entity.async_save()
 
 
-def _convert_item(item: TodoItem) -> Todo:
-    """Convert a HomeAssistant TodoItem to an ical Todo.
+def _convert_status(value: TodoItemStatus) -> TodoStatus:
+    return ICS_TODO_STATUS_MAP_INV[value]
 
-    Needs to be synchronised with `_prepare_edit`.
-    """
+
+def _convert_due_value(
+    value: datetime.datetime | datetime.date | None,
+) -> datetime.datetime | datetime.date | None:
+    if value and not isinstance(value, datetime.datetime):
+        value += datetime.timedelta(days=1)
+    return value
+
+
+def _convert_item(item: TodoItem) -> Todo:
+    """Convert a HomeAssistant TodoItem to an ical Todo."""
     todo = Todo()
     if item.uid:
         todo.uid = item.uid
     if item.summary:
         todo.summary = item.summary
     if item.status:
-        todo.status = ICS_TODO_STATUS_MAP_INV[item.status]
-    todo.due = item.due
-    if todo.due and not isinstance(todo.due, datetime.datetime):
-        todo.due += datetime.timedelta(days=1)
+        todo.status = _convert_status(item.status)
+    todo.due = _convert_due_value(item.due)
     todo.description = item.description
     return todo
 
@@ -113,26 +120,14 @@ def _convert_item(item: TodoItem) -> Todo:
 def _prepare_edit(info: dict[str, Any]) -> Todo:
     """Convert a HomeAssistant TodoItem patch to an ical Todo edit.
 
-    Preserve unset status so that "TodoStore.edit" modifies the right
-    fields, including ones set to None.
+    For use with todo.update_list action.
 
-    Needs to be synchronised with `_convert_item`.
+    Preserves unset status so that "TodoStore.edit" modifies the right
+    fields, including any set to None.
     """
     todo = Todo()
-
-    if "uid" in info:
-        todo.uid = info["uid"]
-    if "summary" in info:
-        todo.summary = info["summary"]
     if "status" in info:
-        todo.status = ICS_TODO_STATUS_MAP_INV[info["status"]]
-    if "due" in info:
-        todo.due = info["due"]
-        if todo.due and not isinstance(todo.due, datetime.datetime):
-            todo.due += datetime.timedelta(days=1)
-    if "description" in info:
-        todo.description = info["description"]
-
+        todo.status = _convert_status(info["status"])
     return todo
 
 
