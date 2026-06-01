@@ -99,6 +99,7 @@ Every check has a code following the
 | `W7407` | [`home-assistant-config-flow-polling-field`](#w7407-home-assistant-config-flow-polling-field) | Config flow should not include polling interval fields |
 | `W7408` | [`home-assistant-config-flow-name-field`](#w7408-home-assistant-config-flow-name-field) | Config flow should not include name fields |
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
+| `C7415` | [`home-assistant-domain-argument`](#c7415-home-assistant-domain-argument) | Domain argument in tests should be a domain constant or variable |
 | `W7418` | [`home-assistant-tests-direct-async-setup-entry`](#w7418-home-assistant-tests-direct-async-setup-entry) | Tests should not call an integration's `async_setup_entry` directly |
 | `W7420` | [`home-assistant-tests-direct-platform-async-setup-entry`](#w7420-home-assistant-tests-direct-platform-async-setup-entry) | Tests should not call a platform's `async_setup_entry` directly |
 | `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
@@ -344,6 +345,27 @@ This keeps the function signature clean and makes it clear the fixture is
 only needed for its side effects.
 
 This rule only applies to `test_*` functions, not to fixture functions.
+
+
+## `home_assistant_domain_constant` checker
+
+Encourages the use of `DOMAIN` constants (or variables) instead of hardcoded
+string literals when passing a domain to common test helpers. Only runs on
+test modules.
+
+### `C7415`: `home-assistant-domain-argument`
+
+The domain (or handler) argument to test helpers such as
+`async_setup_component`, `async_mock_service`, `MockConfigEntry`,
+`hass.services.async_call`, `hass.services.call`, and
+`hass.config_entries.flow.async_init` should be a domain constant or
+variable rather than a hardcoded value. The following are accepted:
+
+* a `DOMAIN`/`domain` attribute or one ending in `_DOMAIN`/`_domain`
+  (e.g. `sensor.DOMAIN`),
+* a `DOMAIN`/`domain` name or one ending in `_DOMAIN`/`_domain`,
+* a string literal (for cases where the constant is not imported),
+* a subscript expression (e.g. `data["key"]`).
 
 
 ## `home_assistant_tests_direct_async_setup_entry` checker

@@ -24,7 +24,7 @@ class DomainConstantChecker(BaseChecker):
     name = "home_assistant_domain_constant"
     priority = -1
     msgs = {
-        "C7414": (
+        "C7415": (
             "Argument %s should be a domain constant or variable in %s",
             "home-assistant-domain-argument",
             "Used when argument should be a domain constant/variable.",
