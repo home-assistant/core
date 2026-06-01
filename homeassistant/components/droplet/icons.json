@@ -1,10 +1,10 @@
 {
   "entity": {
     "binary_sensor": {
-      "high_leak": {
+      "leak": {
         "default": "mdi:alert-circle"
       },
-      "low_leak": {
+      "unusual_flow": {
         "default": "mdi:alert-circle"
       }
     },

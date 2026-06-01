@@ -18,12 +18,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, KEY_HIGH_LEAK, KEY_LOW_LEAK
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(kw_only=True, frozen=True)
 class DropletBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Droplet binary sensor entity."""
 
-    value_fn: Callable[[Droplet], bool]
+    value_fn: Callable[[Droplet], bool | None]
 
 
 BINARY_SENSORS: list[DropletBinarySensorEntityDescription] = [
@@ -87,6 +89,6 @@ class DropletBinarySensor(
         return self.coordinator.get_availability()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.droplet)

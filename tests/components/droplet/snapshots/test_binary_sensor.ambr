@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensors[binary_sensor.mock_title_high_leak-entry]
+# name: test_binary_sensors[binary_sensor.mock_title_leak-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.mock_title_high_leak',
+    'entity_id': 'binary_sensor.mock_title_leak',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,36 +21,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'High leak',
+    'object_id_base': 'Leak',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
-    'original_name': 'High leak',
+    'original_name': 'Leak',
     'platform': 'droplet',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'high_leak',
-    'unique_id': 'Droplet-1234_high_leak',
+    'translation_key': 'leak',
+    'unique_id': 'Droplet-1234_leak',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.mock_title_high_leak-state]
+# name: test_binary_sensors[binary_sensor.mock_title_leak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
-      'friendly_name': 'Mock Title High leak',
+      'friendly_name': 'Mock Title Leak',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_title_high_leak',
+    'entity_id': 'binary_sensor.mock_title_leak',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.mock_title_low_leak-entry]
+# name: test_binary_sensors[binary_sensor.mock_title_unusual_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.mock_title_low_leak',
+    'entity_id': 'binary_sensor.mock_title_unusual_flow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,29 +72,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Low leak',
+    'object_id_base': 'Unusual flow',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
-    'original_name': 'Low leak',
+    'original_name': 'Unusual flow',
     'platform': 'droplet',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'low_leak',
-    'unique_id': 'Droplet-1234_low_leak',
+    'translation_key': 'unusual_flow',
+    'unique_id': 'Droplet-1234_unusual_flow',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.mock_title_low_leak-state]
+# name: test_binary_sensors[binary_sensor.mock_title_unusual_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
-      'friendly_name': 'Mock Title Low leak',
+      'friendly_name': 'Mock Title Unusual flow',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_title_low_leak',
+    'entity_id': 'binary_sensor.mock_title_unusual_flow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
