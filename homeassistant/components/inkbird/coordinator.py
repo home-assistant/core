@@ -7,9 +7,11 @@ from typing import Any
 from inkbird_ble import INKBIRDBluetoothDeviceData, SensorUpdate
 
 from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
+    async_address_reachability_diagnostics,
     async_ble_device_from_address,
     async_last_service_info,
 )
@@ -84,7 +86,14 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="no_advertisement",
-                translation_placeholders={"address": self.address},
+                translation_placeholders={
+                    "address": self.address,
+                    "reason": async_address_reachability_diagnostics(
+                        self.hass,
+                        self.address.upper(),
+                        BluetoothReachabilityIntent.PASSIVE_ADVERTISEMENT,
+                    ),
+                },
             )
         await self._data.async_start(service_info, service_info.device)
         self._entry.async_on_unload(self._data.async_stop)
