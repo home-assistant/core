@@ -121,13 +121,13 @@ def mock_incomfort(
         room_temp: float
         setpoint: float
         status: dict[str, Any]
-        set_override: AsyncMock
+        set_override: MagicMock
 
         def __init__(self) -> None:
             """Initialize mocked room."""
             self.room_no = 1
             self.status = mock_room_status
-            self.set_override = AsyncMock()
+            self.set_override = MagicMock()
 
         @property
         def override(self) -> str:
@@ -164,29 +164,24 @@ def mock_incomfort(
         def __init__(self) -> None:
             """Initialize mocked heater."""
             self.serial_no = "c0ffeec0ffee"
-            # Initialize all attributes from status
-            for key, value in mock_heater_status.items():
-                setattr(self, key, value)
-            self.rooms = [MockRoom()]
 
         async def update(self) -> None:
             self.status = mock_heater_status
             for key, value in mock_heater_status.items():
                 setattr(self, key, value)
+            self.rooms = [MockRoom()]
 
-    mock_gateway = MagicMock()
-    mock_gateway.heaters = AsyncMock(return_value=[MockHeater()])
-    mock_gateway.mock_heater_status = mock_heater_status
-    mock_gateway.mock_room_status = mock_room_status
-
+    mock_cls = MagicMock()
     with (
         patch(
-            "homeassistant.components.incomfort.InComfortGateway",
-            return_value=mock_gateway,
-        ),
+            "homeassistant.components.incomfort.InComfortGateway", mock_cls
+        ) as patch_gateway,
         patch(
-            "homeassistant.components.incomfort.config_flow.InComfortGateway",
-            return_value=mock_gateway,
+            "homeassistant.components.incomfort.config_flow.InComfortGateway", mock_cls
         ),
     ):
-        yield mock_gateway
+        patch_gateway().heaters = AsyncMock()
+        patch_gateway().heaters.return_value = [MockHeater()]
+        patch_gateway().mock_heater_status = mock_heater_status
+        patch_gateway().mock_room_status = mock_room_status
+        yield patch_gateway

@@ -76,8 +76,7 @@ async def test_target_temp(
     state = hass.states.get("climate.thermostat_1")
     assert state is not None
 
-    coordinator = mock_config_entry.runtime_data
-    incomfort_data = coordinator.data
+    incomfort_data = mock_config_entry.runtime_data.data
 
     with patch.object(
         incomfort_data.heaters[0].rooms[0], "set_override", AsyncMock()
