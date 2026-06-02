@@ -13,7 +13,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -99,7 +99,7 @@ async def test_select_current_option_unknown(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("select.my_pool_pump_mode").state == "unknown"
+    assert hass.states.get("select.my_pool_pump_mode").state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
