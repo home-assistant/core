@@ -672,7 +672,7 @@ def validate_user_input(
     """Do post validation of user input.
 
     For sensors: Validate unit of measurement.
-    For all domaines: Set template type.
+    For all domains: Set template type.
     """
 
     async def _validate_user_input(
