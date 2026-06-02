@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "blue": "mdi:palette",
+              "cyan": "mdi:palette",
+              "dark_cyan": "mdi:palette",
+              "diy1": "mdi:numeric-1",
+              "diy2": "mdi:numeric-2",
+              "diy3": "mdi:numeric-3",
+              "diy4": "mdi:numeric-4",
+              "fade": "mdi:gradient-horizontal",
+              "fire": "mdi:fire",
+              "flash": "mdi:flash",
+              "green": "mdi:palette",
+              "light_green": "mdi:palette",
+              "meteor": "mdi:meteor",
+              "orange": "mdi:palette",
+              "orange_red": "mdi:palette",
+              "plum": "mdi:palette",
+              "purple": "mdi:palette",
+              "rainbow": "mdi:looks",
+              "rebecca_purple": "mdi:palette",
+              "red": "mdi:palette",
+              "sky_blue": "mdi:palette",
+              "smooth": "mdi:looks",
+              "stars": "mdi:creation-outline",
+              "strobe": "mdi:light-flood-down",
+              "tomato": "mdi:palette",
+              "turquoise": "mdi:palette",
+              "white": "mdi:palette",
+              "yellow": "mdi:palette"
+            }
+          }
+        }
+      }
+    }
+  }
+}

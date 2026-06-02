@@ -410,6 +410,7 @@ FLOWS = {
         "ld2410_ble",
         "leaone",
         "led_ble",
+        "led_infrared",
         "lektrico",
         "letpot",
         "lg_infrared",

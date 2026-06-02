@@ -995,6 +995,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/leaone/ @bdraco
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
+/homeassistant/components/led_infrared/ @tr4nt0r
+/tests/components/led_infrared/ @tr4nt0r
 /homeassistant/components/lektrico/ @lektrico
 /tests/components/lektrico/ @lektrico
 /homeassistant/components/letpot/ @jpelgrom
