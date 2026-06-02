@@ -33,23 +33,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_schema(previous_input=None):
-    """Create a schema with given values as default."""
-    if previous_input is not None:
-        host = previous_input[CONF_HOST]
-        port = previous_input[CONF_PORT]
-    else:
-        host = DEFAULT_HOST
-        port = DEFAULT_PORT
-
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=host): str,
-            vol.Required(CONF_PORT, default=port): int,
-            vol.Inclusive(CONF_USERNAME, "auth"): str,
-            vol.Inclusive(CONF_PASSWORD, "auth"): str,
-        }
-    )
+STEP_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Inclusive(CONF_USERNAME, "auth"): str,
+        vol.Inclusive(CONF_PASSWORD, "auth"): str,
+    }
+)
 
 
 LOG_MSG = {
@@ -69,17 +60,43 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         self.device_config: dict[str, Any] = {}
 
     def handle_step_exception(
-        self, step, exception, schema, host, port, message_id, log_fn
+        self, exception, schema, host, port, message_id, log_fn, step_id
     ):
         """Handle step exceptions."""
         log_fn("%s at %s:%d (%s)", LOG_MSG[message_id], host, port, exception)
 
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=schema,
             errors={"base": message_id},
             description_placeholders={"address": f"{host}:{port}"},
         )
+
+    async def _async_from_host_or_form(
+        self, api_host: ApiHost, user_input: dict[str, Any], step_id: str
+    ) -> tuple[Box, None] | tuple[None, ConfigFlowResult]:
+        """Try to connect to the device; return product or an error form."""
+        schema = self.add_suggested_values_to_schema(STEP_SCHEMA, user_input)
+        host = user_input[CONF_HOST]
+        port = user_input[CONF_PORT]
+        try:
+            return await Box.async_from_host(api_host), None
+        except UnsupportedBoxVersion as ex:
+            return None, self.handle_step_exception(
+                ex, schema, host, port, UNSUPPORTED_VERSION, _LOGGER.debug, step_id
+            )
+        except UnauthorizedRequest as ex:
+            return None, self.handle_step_exception(
+                ex, schema, host, port, CANNOT_CONNECT, _LOGGER.error, step_id
+            )
+        except Error as ex:
+            return None, self.handle_step_exception(
+                ex, schema, host, port, CANNOT_CONNECT, _LOGGER.warning, step_id
+            )
+        except RuntimeError as ex:
+            return None, self.handle_step_exception(
+                ex, schema, host, port, UNKNOWN, _LOGGER.error, step_id
+            )
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -145,12 +162,11 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle initial user-triggered config step."""
         hass = self.hass
-        schema = create_schema(user_input)
 
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=STEP_SCHEMA,
                 errors={},
                 description_placeholders={},
             )
@@ -173,36 +189,60 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         api_host = ApiHost(
             host, port, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER
         )
-        try:
-            product = await Box.async_from_host(api_host)
-
-        except UnsupportedBoxVersion as ex:
-            return self.handle_step_exception(
-                "user",
-                ex,
-                schema,
-                host,
-                port,
-                UNSUPPORTED_VERSION,
-                _LOGGER.debug,
-            )
-        except UnauthorizedRequest as ex:
-            return self.handle_step_exception(
-                "user", ex, schema, host, port, CANNOT_CONNECT, _LOGGER.error
-            )
-
-        except Error as ex:
-            return self.handle_step_exception(
-                "user", ex, schema, host, port, CANNOT_CONNECT, _LOGGER.warning
-            )
-
-        except RuntimeError as ex:
-            return self.handle_step_exception(
-                "user", ex, schema, host, port, UNKNOWN, _LOGGER.error
-            )
+        product, error = await self._async_from_host_or_form(
+            api_host, user_input, step_id="user"
+        )
+        if error is not None:
+            return error
+        assert product is not None
 
         # Check if configured but IP changed since
         await self.async_set_unique_id(product.unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=product.name, data=user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a BleBox device."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_SCHEMA, reconfigure_entry.data
+                ),
+            )
+
+        host = user_input[CONF_HOST]
+        port = user_input[CONF_PORT]
+
+        username = user_input.get(CONF_USERNAME)
+        password = user_input.get(CONF_PASSWORD)
+        websession = get_maybe_authenticated_session(self.hass, password, username)
+        api_host = ApiHost(
+            host, port, DEFAULT_SETUP_TIMEOUT, websession, self.hass.loop, _LOGGER
+        )
+
+        product, error = await self._async_from_host_or_form(
+            api_host, user_input, step_id="reconfigure"
+        )
+        if error is not None:
+            return error
+        assert product is not None
+
+        await self.async_set_unique_id(product.unique_id, raise_on_progress=False)
+        self._abort_if_unique_id_mismatch()
+
+        data_updates: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
+        if username is not None:
+            data_updates[CONF_USERNAME] = username
+        if password is not None:
+            data_updates[CONF_PASSWORD] = password
+
+        return self.async_update_reload_and_abort(
+            reconfigure_entry,
+            data_updates=data_updates,
+        )
