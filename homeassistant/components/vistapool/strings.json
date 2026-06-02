@@ -36,9 +36,9 @@
       "filtration_timer_speed": {
         "name": "Filtration timer speed {number}",
         "state": {
-          "high": "High",
-          "medium": "Medium",
-          "slow": "Slow"
+          "high": "[%key:component::vistapool::entity::select::pump_speed::state::high%]",
+          "medium": "[%key:component::vistapool::entity::select::pump_speed::state::medium%]",
+          "slow": "[%key:component::vistapool::entity::select::pump_speed::state::slow%]"
         }
       },
       "pump_mode": {
