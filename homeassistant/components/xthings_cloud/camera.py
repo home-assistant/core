@@ -15,8 +15,9 @@ from homeassistant.components.camera import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from webrtc_models import RTCIceCandidateInit
 
 from .const import DOMAIN, LOGGER
 from .coordinator import XthingsCloudCoordinator
@@ -25,7 +26,7 @@ from .coordinator import XthingsCloudCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up camera platform."""
     coordinator: XthingsCloudCoordinator = entry.runtime_data
@@ -115,7 +116,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
     # --- WebRTC support (HA 2024.1+ only) ---
 
     async def async_handle_async_webrtc_offer(
-        self, offer_sdp: str, session_id: str, send_message: Any
+        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
         """Handle WebRTC offer via KVS signaling."""
         from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -141,7 +142,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             # Bridge: convert dict ICE candidates to HA WebRTCCandidate objects
             def _on_ice(cand: dict) -> None:
                 try:
-                    from webrtc_models import RTCIceCandidateInit
                     send_message(WebRTCCandidate(
                         candidate=RTCIceCandidateInit(
                             candidate=cand.get("candidate", ""),
@@ -168,7 +168,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             LOGGER.error("KVS WebRTC failed: %s", err)
             send_message(WebRTCError(code="kvs_error", message=str(err)))
 
-    async def async_on_webrtc_candidate(self, session_id: str, candidate: Any) -> None:
+    async def async_on_webrtc_candidate(self, session_id: str, candidate: RTCIceCandidateInit) -> None:
         """Forward ICE candidate to KVS signaling channel."""
         kvs_client = self._kvs_sessions.get(session_id)
         if kvs_client:
