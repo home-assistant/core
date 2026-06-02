@@ -1,6 +1,9 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: |
+      No custom actions are defined.
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -39,6 +42,7 @@ rules:
   parallel-updates: todo
   reauthentication-flow: done
   test-coverage: done
+
   # Gold
   devices: done
   diagnostics: done
@@ -56,12 +60,12 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: todo
+  entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
