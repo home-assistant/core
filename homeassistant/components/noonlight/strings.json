@@ -57,7 +57,10 @@
           "api_token": "API token"
         },
         "description": "Your Noonlight token was rejected. Paste a new token to restore service.",
-        "title": "Re-authenticate Noonlight"
+        "title": "Re-authenticate Noonlight",
+        "data_description": {
+          "api_token": "Long-lived token from your Noonlight account portal."
+        }
       },
       "reconfigure": {
         "data": {
@@ -86,7 +89,10 @@
           "safety_ack": "I understand this integration can summon real police, fire, and medical responders, and that false dispatches may incur fines from local authorities."
         },
         "description": "You selected the production environment.",
-        "title": "Safety acknowledgment"
+        "title": "Safety acknowledgment",
+        "data_description": {
+          "safety_ack": "You must acknowledge this to use the production environment."
+        }
       },
       "user": {
         "data": {
@@ -106,9 +112,15 @@
   },
   "entity": {
     "binary_sensor": {
-      "api_reachable": { "name": "API reachable" },
-      "dispatch_active": { "name": "Dispatch active" },
-      "dispatch_pending": { "name": "Dispatch pending" }
+      "api_reachable": {
+        "name": "API reachable"
+      },
+      "dispatch_active": {
+        "name": "Dispatch active"
+      },
+      "dispatch_pending": {
+        "name": "Dispatch pending"
+      }
     },
     "sensor": {
       "dispatch_state": {
@@ -121,8 +133,12 @@
           "pending": "Pending"
         }
       },
-      "last_event": { "name": "Last event" },
-      "last_health_check": { "name": "Last health check" }
+      "last_event": {
+        "name": "Last event"
+      },
+      "last_health_check": {
+        "name": "Last health check"
+      }
     }
   },
   "issues": {
@@ -149,7 +165,10 @@
           "services_granted": "Granted services"
         },
         "data_description": {
-          "heartbeat_minutes": "How often (minutes) to silently verify Noonlight is reachable and your token is valid, so a problem surfaces before an emergency rather than during one. Set to 0 to disable."
+          "heartbeat_minutes": "How often (minutes) to silently verify Noonlight is reachable and your token is valid, so a problem surfaces before an emergency rather than during one. Set to 0 to disable.",
+          "default_entry_delay_seconds": "Grace window before a dispatch fires; cancelable during this time.",
+          "dedupe_seconds": "After a dispatch fires, repeat dispatches for the same service within this window are ignored.",
+          "services_granted": "Only the selected dispatch services will be available."
         },
         "description": "Caller, address, and site changes are made with the Reconfigure action.",
         "title": "Noonlight options"

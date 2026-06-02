@@ -99,6 +99,7 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN} ({entry.title})",
             update_interval=timedelta(seconds=POLL_INTERVAL),
         )

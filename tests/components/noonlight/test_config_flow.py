@@ -206,6 +206,7 @@ async def test_different_address_allowed(hass: HomeAssistant, setup_entry) -> No
 @respx.mock
 async def test_options_flow(hass: HomeAssistant, setup_entry) -> None:
     """Options flow updates entry delay, dedupe, and granted services."""
+    respx.get(url__regex=r".*/status").mock(return_value=Response(404))
     result = await hass.config_entries.options.async_init(setup_entry.entry_id)
     assert result["step_id"] == "init"
 
