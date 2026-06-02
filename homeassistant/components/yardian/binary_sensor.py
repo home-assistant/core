@@ -10,9 +10,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
 
 
@@ -121,7 +123,23 @@ class YardianBinarySensor(
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.yid}-{description.key}"
-        self._attr_device_info = coordinator.device_info
+
+        # -----------------------------------------------------
+        # NEW LOGIC: Check if this is a zone-specific sensor
+        # -----------------------------------------------------
+        if description.key.startswith("zone_enabled_"):
+            # Extract the integer zone_id from the end of the string (e.g. "zone_enabled_0" -> 0)
+            zone_id = int(description.key.split("_")[-1])
+
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"{coordinator.yid}_{zone_id}")},
+                name=coordinator.data.zones[zone_id].name,
+                manufacturer="Aeon Matrix",
+                via_device=(DOMAIN, coordinator.yid),
+            )
+        else:
+            # It's a global sensor, attach it to the main controller
+            self._attr_device_info = coordinator.device_info
 
     @property
     def is_on(self) -> bool | None:
