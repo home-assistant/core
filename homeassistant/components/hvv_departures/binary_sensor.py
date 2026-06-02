@@ -6,7 +6,8 @@ import logging
 from typing import Any
 
 from aiohttp import ClientConnectorError
-from pygti.exceptions import InvalidAuth
+from pygti.exceptions import GTIError
+from pygti.models import ElevatorState, SDName, SDNameType, StationInformationRequest
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -46,12 +47,12 @@ async def async_setup_entry(
         if station_information is None:
             return {}
 
-        for partial_station in station_information.get("partialStations", []):
-            for elevator in partial_station.get("elevators", []):
-                state = elevator.get("state") != "READY"
-                available = elevator.get("state") != "UNKNOWN"
-                label = elevator.get("label")
-                description = elevator.get("description")
+        for partial_station in station_information.partialStations or []:
+            for elevator in partial_station.elevators or []:
+                state = elevator.state != ElevatorState.READY
+                available = elevator.state != ElevatorState.UNKNOWN
+                label = elevator.label
+                description = elevator.description
 
                 if label is not None:
                     name = f"Elevator {label}"
@@ -61,7 +62,7 @@ async def async_setup_entry(
                 if description is not None:
                     name += f" ({description})"
 
-                lines = elevator.get("lines")
+                lines = elevator.lines
 
                 idx = f"{station_name}-{label}-{lines}"
 
@@ -70,12 +71,12 @@ async def async_setup_entry(
                     "name": name,
                     "available": available,
                     "attributes": {
-                        "cabin_width": elevator.get("cabinWidth"),
-                        "cabin_length": elevator.get("cabinLength"),
-                        "door_width": elevator.get("doorWidth"),
-                        "elevator_type": elevator.get("elevatorType"),
-                        "button_type": elevator.get("buttonType"),
-                        "cause": elevator.get("cause"),
+                        "cabin_width": elevator.cabinWidth,
+                        "cabin_length": elevator.cabinLength,
+                        "door_width": elevator.doorWidth,
+                        "elevator_type": elevator.elevatorType,
+                        "button_type": elevator.buttonType,
+                        "cause": elevator.cause,
                         "lines": lines,
                     },
                 }
@@ -88,15 +89,17 @@ async def async_setup_entry(
         so entities can quickly look up their data.
         """
 
-        payload = {"station": {"id": station["id"], "type": station["type"]}}
+        payload = StationInformationRequest(
+            station=SDName(id=station["id"], type=SDNameType(station["type"]))
+        )
 
         try:
             async with asyncio.timeout(10):
                 return get_elevator_entities_from_station_information(
-                    station_name, await hub.gti.stationInformation(payload)
+                    station_name, await hub.gti.getStationInformation(payload)
                 )
-        except InvalidAuth as err:
-            raise UpdateFailed(f"Authentication failed: {err}") from err
+        except GTIError as err:
+            raise UpdateFailed(f"GTI API error: {err}") from err
         except ClientConnectorError as err:
             raise UpdateFailed(f"Network not available: {err}") from err
         except Exception as err:

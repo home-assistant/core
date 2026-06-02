@@ -138,6 +138,8 @@ SAVE_DELAY = 1
 
 DISCOVERY_COOLDOWN = 1
 
+SETUP_RETRY_MAX_WAIT = 600  # 10 minutes
+
 ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
 UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
 
@@ -629,7 +631,9 @@ class ConfigEntry[_DataT = Any]:
                             subentry_flow_handler, "async_step_reconfigure"
                         )
                     }
-                    for subentry_flow_type, subentry_flow_handler in supported_flows.items()
+                    for subentry_flow_type, subentry_flow_handler in (
+                        supported_flows.items()
+                    )
                 },
             )
         return self._supported_subentry_types or {}
@@ -822,7 +826,7 @@ class ConfigEntry[_DataT = Any]:
                 auth_message,
             )
             logger.debug("Full exception", exc_info=True)
-            self.async_start_reauth(hass)
+            self.async_start_reauth_if_available(hass)
         except ConfigEntryNotReady as exc:
             message = str(exc)
             error_reason_translation_key = exc.translation_key
@@ -834,7 +838,7 @@ class ConfigEntry[_DataT = Any]:
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
             )
-            wait_time = 2 ** min(self._tries, 4) * 5 + (
+            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
@@ -983,7 +987,7 @@ class ConfigEntry[_DataT = Any]:
             self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
             return True
 
-        if self.state == ConfigEntryState.NOT_LOADED:
+        if self.state is ConfigEntryState.NOT_LOADED:
             return True
 
         if not integration and (integration := self._integration_for_domain) is None:
@@ -1287,6 +1291,19 @@ class ConfigEntry[_DataT = Any]:
             f"config entry reauth {self.title} {self.domain} {self.entry_id}",
             eager_start=True,
         )
+
+    @callback
+    def async_start_reauth_if_available(
+        self,
+        hass: HomeAssistant,
+        context: ConfigFlowContext | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reauth flow only if the integration implements one."""
+        handler = HANDLERS.get(self.domain)
+        if handler is None or not hasattr(handler, "async_step_reauth"):
+            return
+        self.async_start_reauth(hass, context, data)
 
     async def _async_init_reauth(
         self,
@@ -1646,7 +1663,7 @@ class ConfigEntriesFlowManager(
         """
         flow = cast(ConfigFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             # If there's a config entry with a matching unique ID,
             # update the discovery key.
             if (
@@ -2175,7 +2192,7 @@ class ConfigEntries:
         """
         entries = self._entries.get_entries_for_domain(domain)
 
-        return [entry for entry in entries if entry.state == ConfigEntryState.LOADED]
+        return [entry for entry in entries if entry.state is ConfigEntryState.LOADED]
 
     @callback
     def async_entry_for_domain_unique_id(
@@ -3649,7 +3666,7 @@ class ConfigSubentryFlowManager(
         """
         flow = cast(ConfigSubentryFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
         entry_id, subentry_type = flow.handler
@@ -3872,7 +3889,7 @@ class OptionsFlowManager(
         """
         flow = cast(OptionsFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
         entry = self.hass.config_entries.async_get_known_entry(flow.handler)
