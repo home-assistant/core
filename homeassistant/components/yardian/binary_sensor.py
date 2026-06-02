@@ -10,12 +10,10 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
+from .entity import YardianEntity, YardianZoneEntity
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -81,13 +79,15 @@ async def async_setup_entry(
     """Set up Yardian binary sensors."""
     coordinator = config_entry.runtime_data
 
+    # 1. Global/Main device sensors
     entities: list[BinarySensorEntity] = [
         YardianBinarySensor(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
     ]
 
-    zone_descriptions = [
-        YardianBinarySensorEntityDescription(
+    # 2. Zone/Child device sensors
+    for zone_id in range(len(coordinator.data.zones)):
+        description = YardianBinarySensorEntityDescription(
             key=f"zone_enabled_{zone_id}",
             translation_key="zone_enabled",
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -95,24 +95,15 @@ async def async_setup_entry(
             value_fn=_zone_value_factory(zone_id),
             translation_placeholders={"zone": str(zone_id + 1)},
         )
-        for zone_id in range(len(coordinator.data.zones))
-    ]
-
-    entities.extend(
-        YardianBinarySensor(coordinator, description)
-        for description in zone_descriptions
-    )
+        entities.append(YardianZoneBinarySensor(coordinator, description, zone_id))
 
     async_add_entities(entities)
 
 
-class YardianBinarySensor(
-    CoordinatorEntity[YardianUpdateCoordinator], BinarySensorEntity
-):
-    """Representation of a Yardian binary sensor based on a description."""
+class YardianBinarySensor(YardianEntity, BinarySensorEntity):
+    """Representation of a Yardian binary sensor assigned to the main device."""
 
     entity_description: YardianBinarySensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -124,22 +115,27 @@ class YardianBinarySensor(
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.yid}-{description.key}"
 
-        # -----------------------------------------------------
-        # NEW LOGIC: Check if this is a zone-specific sensor
-        # -----------------------------------------------------
-        if description.key.startswith("zone_enabled_"):
-            # Extract the integer zone_id from the end of the string (e.g. "zone_enabled_0" -> 0)
-            zone_id = int(description.key.split("_")[-1])
+    @property
+    def is_on(self) -> bool | None:
+        """Return the current state based on the description's value function."""
+        return self.entity_description.value_fn(self.coordinator)
 
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{coordinator.yid}_{zone_id}")},
-                name=coordinator.data.zones[zone_id].name,
-                manufacturer="Aeon Matrix",
-                via_device=(DOMAIN, coordinator.yid),
-            )
-        else:
-            # It's a global sensor, attach it to the main controller
-            self._attr_device_info = coordinator.device_info
+
+class YardianZoneBinarySensor(YardianZoneEntity, BinarySensorEntity):
+    """Representation of a Yardian binary sensor assigned to a zone child device."""
+
+    entity_description: YardianBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: YardianUpdateCoordinator,
+        description: YardianBinarySensorEntityDescription,
+        zone_id: int,
+    ) -> None:
+        """Initialize the Yardian zone binary sensor."""
+        super().__init__(coordinator, zone_id)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.yid}-{description.key}"
 
     @property
     def is_on(self) -> bool | None:

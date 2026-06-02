@@ -7,13 +7,12 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_WATERING_DURATION, DOMAIN
+from .const import DEFAULT_WATERING_DURATION
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
+from .entity import YardianZoneEntity
 
 SERVICE_START_IRRIGATION = "start_irrigation"
 SERVICE_SCHEMA_START_IRRIGATION: VolDictType = {
@@ -44,25 +43,15 @@ async def async_setup_entry(
     )
 
 
-class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
+class YardianSwitch(YardianZoneEntity, SwitchEntity):
     """Representation of a Yardian switch."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "switch"
 
-    def __init__(self, coordinator: YardianUpdateCoordinator, zone_id) -> None:
+    def __init__(self, coordinator: YardianUpdateCoordinator, zone_id: int) -> None:
         """Initialize a Yardian Switch Device."""
-        super().__init__(coordinator)
-        self._zone_id = zone_id
+        super().__init__(coordinator, zone_id)
         self._attr_unique_id = f"{coordinator.yid}-{zone_id}"
-
-        # Define this zone as its own Device, linked to the main controller
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{coordinator.yid}_{zone_id}")},
-            name=coordinator.data.zones[zone_id].name,
-            manufacturer="Aeon Matrix",
-            via_device=(DOMAIN, coordinator.yid),
-        )
 
     @property
     def name(self) -> str:
