@@ -134,6 +134,9 @@ class OverkizExecutor:
             after the batch is executed. Disable it to refresh only once
             when this batch is part of a larger sequence of commands.
         """
+        if not commands:
+            return
+
         try:
             exec_id = await self.coordinator.client.execute_commands(
                 self.device.device_url,

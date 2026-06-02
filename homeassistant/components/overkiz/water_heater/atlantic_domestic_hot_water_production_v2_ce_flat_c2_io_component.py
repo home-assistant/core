@@ -86,7 +86,6 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
         | WaterHeaterEntityFeature.AWAY_MODE
-        | WaterHeaterEntityFeature.ON_OFF
     )
     _attr_operation_list = [*OPERATION_MODE_TO_OVERKIZ, STATE_PERFORMANCE]
 
@@ -179,7 +178,14 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
 
             return
 
-        previous_operation = self.current_operation
+        # Read the underlying DHW mode rather than current_operation: the
+        # latter reports STATE_PERFORMANCE while boost is on, which would mask
+        # an auto mode that still needs a target temperature refresh.
+        previous_dhw_mode = None
+        if dhw_mode := self.device.states[OverkizState.IO_DHW_MODE]:
+            previous_dhw_mode = OVERKIZ_TO_OPERATION_MODE.get(
+                cast(str, dhw_mode.value_as_str)
+            )
 
         # Disable boost and away before changing DHW mode
         if self.is_boost_mode_on:
@@ -194,7 +200,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         )
 
         # Switching from auto changes the target temperature, so refresh it.
-        if previous_operation == STATE_AUTO:
+        if previous_dhw_mode == STATE_AUTO:
             await self.executor.async_execute_command(
                 OverkizCommand.REFRESH_WATER_TARGET_TEMPERATURE,
                 refresh_afterwards=False,
