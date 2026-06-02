@@ -2,15 +2,12 @@
 
 from unittest.mock import patch
 
-from elke27_lib import AreaState, PanelInfo, PanelSnapshot, TableInfo
+from elke27_lib import PanelInfo, PanelSnapshot, TableInfo
 
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from homeassistant.components.elke27.helpers import (
     build_unique_id,
-    device_info_for_area,
     device_info_for_entry,
-    get_panel_field,
-    sanitize_name,
     unique_base,
 )
 from homeassistant.components.elke27.models import Elke27RuntimeData
@@ -42,26 +39,6 @@ def _snapshot(panel: PanelInfo | None = None) -> PanelSnapshot:
         version=1,
         updated_at=dt_util.utcnow(),
     )
-
-
-async def test_get_panel_field_handles_typed_snapshot() -> None:
-    """Verify panel fields are extracted from typed snapshots."""
-    snapshot = _snapshot(
-        PanelInfo(
-            mac="aa:bb:cc:dd:ee:ff",
-            serial="1234",
-            model="E27",
-            firmware="1.0",
-        )
-    )
-
-    assert get_panel_field(snapshot, "Panel A", "name") == "Panel A"
-    assert get_panel_field(snapshot, None, "name") is None
-    assert get_panel_field(snapshot, None, "mac") == "aa:bb:cc:dd:ee:ff"
-    assert get_panel_field(snapshot, None, "serial") == "1234"
-    assert get_panel_field(snapshot, None, "model") == "E27"
-    assert get_panel_field(snapshot, None, "firmware") == "1.0"
-    assert get_panel_field(snapshot, None, "unknown") is None
 
 
 async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
@@ -135,8 +112,8 @@ async def test_device_info_ignores_invalid_mac(hass: HomeAssistant) -> None:
     assert device_info["connections"] == set()
 
 
-async def test_device_info_sanitizes_title_fallback(hass: HomeAssistant) -> None:
-    """Verify title fallback is sanitized before creating device info."""
+async def test_device_info_uses_title_fallback(hass: HomeAssistant) -> None:
+    """Verify entry title is used when the hub has no panel name."""
     entry = MockConfigEntry(
         domain="elke27",
         title="Panel\x00 One",
@@ -151,35 +128,9 @@ async def test_device_info_sanitizes_title_fallback(hass: HomeAssistant) -> None
 
     device_info = device_info_for_entry(hub, coordinator, entry)
 
-    assert device_info["name"] == "Panel One"
-
-
-async def test_device_info_for_area(hass: HomeAssistant) -> None:
-    """Verify area device info links the area to the panel device."""
-    entry = MockConfigEntry(
-        domain="elke27",
-        data={CONF_HOST: "192.168.1.10", CONF_CLIENT_ID: "entryclientid"},
-    )
-    entry.add_to_hass(hass)
-    area = AreaState(area_id=1, name="Area 1")
-
-    device_info = device_info_for_area(entry, area)
-
-    assert device_info == {
-        "identifiers": {("elke27", "entryclientid:area:1")},
-        "name": "Area 1",
-        "via_device": ("elke27", "entryclientid"),
-    }
+    assert device_info["name"] == "Panel\x00 One"
 
 
 def test_build_unique_id() -> None:
     """Verify unique ID formatting."""
     assert build_unique_id("entryclientid", 3) == "entryclientid:3"
-
-
-def test_sanitize_and_panel_field() -> None:
-    """Verify sanitize_name and get_panel_field behavior."""
-    assert sanitize_name(None) is None
-    assert sanitize_name("Pânel Étage") == "Pânel Étage"
-    assert sanitize_name("Panel\x00 One\x1f") == "Panel One"
-    assert get_panel_field(None, None, "name") is None

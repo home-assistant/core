@@ -101,7 +101,10 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
             except HomeAssistantError as err:
                 msg = f"{_REFRESH_FAILED}: {err}"
                 raise ConfigEntryError(msg) from err
-            return self._hub.get_snapshot() or PanelSnapshot.empty()
+            snapshot = self._hub.get_snapshot()
+            if snapshot is None:
+                raise UpdateFailed(_REFRESH_FAILED)
+            return snapshot
 
     def _handle_event(self, event: Any) -> None:
         """Handle hub events on the Home Assistant event loop."""

@@ -37,6 +37,7 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     )
 
     coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
         async_config_entry_first_refresh=AsyncMock(return_value=None),
         async_stop=AsyncMock(return_value=None),
         data=None,
@@ -80,6 +81,7 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
         await hass.async_block_till_done()
 
         hub.async_connect.assert_awaited_once()
+        coordinator.async_start.assert_awaited_once()
         coordinator.async_config_entry_first_refresh.assert_awaited_once()
         assert isinstance(entry.runtime_data, Elke27RuntimeData)
 
@@ -196,6 +198,7 @@ async def test_setup_initial_refresh_error_cleans_up_and_returns_not_ready(
         async_disconnect=AsyncMock(return_value=None),
     )
     coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
         async_config_entry_first_refresh=AsyncMock(side_effect=ConfigEntryNotReady),
         async_stop=AsyncMock(return_value=None),
     )
@@ -227,6 +230,7 @@ async def test_setup_initial_refresh_error_cleans_up_and_returns_not_ready(
         await hass.async_block_till_done()
 
     hub.async_connect.assert_awaited_once()
+    coordinator.async_start.assert_awaited_once()
     coordinator.async_config_entry_first_refresh.assert_awaited_once()
     coordinator.async_stop.assert_awaited_once()
     hub.async_disconnect.assert_awaited_once()
@@ -243,6 +247,7 @@ async def test_setup_initial_refresh_config_entry_error_fails_setup(
         async_disconnect=AsyncMock(return_value=None),
     )
     coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
         async_config_entry_first_refresh=AsyncMock(side_effect=ConfigEntryError),
         async_stop=AsyncMock(return_value=None),
     )
@@ -269,20 +274,22 @@ async def test_setup_initial_refresh_config_entry_error_fails_setup(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    coordinator.async_start.assert_awaited_once()
     coordinator.async_stop.assert_awaited_once()
     hub.async_disconnect.assert_awaited_once()
 
 
-async def test_setup_forward_entry_setups_error_cleans_up(
+async def test_setup_start_error_cleans_up(
     hass: HomeAssistant,
 ) -> None:
-    """Test platform setup errors clean up setup resources."""
+    """Test coordinator start errors clean up setup resources."""
     hub = SimpleNamespace(
         panel_name=None,
         async_connect=AsyncMock(return_value=None),
         async_disconnect=AsyncMock(return_value=None),
     )
     coordinator = SimpleNamespace(
+        async_start=AsyncMock(side_effect=ConfigEntryError),
         async_config_entry_first_refresh=AsyncMock(return_value=None),
         async_stop=AsyncMock(return_value=None),
     )
@@ -303,15 +310,12 @@ async def test_setup_forward_entry_setups_error_cleans_up(
             "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
             return_value=coordinator,
         ),
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            AsyncMock(side_effect=RuntimeError("platform setup failed")),
-        ),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+    coordinator.async_start.assert_awaited_once()
+    coordinator.async_config_entry_first_refresh.assert_not_awaited()
     coordinator.async_stop.assert_awaited_once()
     hub.async_disconnect.assert_awaited_once()
 
@@ -406,6 +410,7 @@ async def test_setup_uses_client_id(hass: HomeAssistant) -> None:
         async_disconnect=AsyncMock(return_value=None),
     )
     coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
         async_config_entry_first_refresh=AsyncMock(return_value=None),
         async_stop=AsyncMock(return_value=None),
         data=None,

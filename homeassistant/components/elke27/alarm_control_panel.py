@@ -12,12 +12,13 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import Elke27DataUpdateCoordinator
-from .helpers import build_unique_id, device_info_for_area, sanitize_name, unique_base
+from .const import DOMAIN
+from .helpers import build_unique_id, unique_base
 from .hub import Elke27Hub
 from .models import Elke27ConfigEntry
 
@@ -48,6 +49,7 @@ class Elke27AreaAlarmControlPanel(
     """Representation of an Elke27 area."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_code_format = CodeFormat.NUMBER
     _attr_code_arm_required = True
     _attr_code_disarm_required = True
@@ -70,12 +72,17 @@ class Elke27AreaAlarmControlPanel(
         self._hub = hub
         self._entry = entry
         self._area_id = area.area_id
-        self._attr_name = sanitize_name(area.name) or f"Area {area.area_id}"
         self._attr_unique_id = build_unique_id(
             unique_base(entry),
             area.area_id,
         )
-        self._attr_device_info = device_info_for_area(entry, area)
+        panel_identifier = unique_base(entry)
+        area_identifier = build_unique_id(panel_identifier, f"area:{area.area_id}")
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, area_identifier)},
+            "name": area.name or f"Area {area.area_id}",
+            "via_device": (DOMAIN, panel_identifier),
+        }
 
     @property
     def area(self) -> AreaState | None:
@@ -93,7 +100,7 @@ class Elke27AreaAlarmControlPanel(
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return self._hub.is_ready and self.area is not None
+        return super().available and self._hub.is_ready and self.area is not None
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the area in away mode."""
@@ -190,5 +197,5 @@ def _normalize_code(code: str | None) -> str | None:
     normalized = code.strip()
     if not normalized.isdigit():
         msg = "Code must be numeric."
-        raise HomeAssistantError(msg)
+        raise ServiceValidationError(msg)
     return normalized

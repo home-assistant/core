@@ -20,7 +20,6 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.elke27 import config_flow
-from homeassistant.components.elke27.config_flow import STEP_USER_DATA_SCHEMA
 from homeassistant.components.elke27.const import (
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,
@@ -75,8 +74,6 @@ def test_snapshot_to_dict() -> None:
     assert data["panel_name"] == "Panel"
     assert config_flow._snapshot_to_dict({"a": 1}) == {"a": 1}
     assert config_flow._snapshot_to_dict(MappingProxyType({"a": 1})) == {"a": 1}
-    assert config_flow._snapshot_to_dict(None) == {}
-    assert config_flow._snapshot_to_dict(object()) == {}
 
 
 def test_panel_helpers() -> None:
@@ -87,27 +84,12 @@ def test_panel_helpers() -> None:
     assert config_flow._panel_unique_id({"mac": "AA:BB:CC:DD:EE:FF"}) == (
         "aabbccddeeff"
     )
-    assert config_flow._panel_unique_id({}) is None
 
 
 def test_create_client() -> None:
     """Verify client factory returns a client instance."""
     client = config_flow._create_client()
     assert client is not None
-
-
-async def test_link_and_create_entry_missing_host(hass: HomeAssistant) -> None:
-    """Test link/create returns unknown when host/port missing."""
-    flow = config_flow.Elke27ConfigFlow()
-    flow.hass = hass
-    result = await flow._async_link_and_create_entry(
-        access_code="1",
-        passphrase="2",
-        errors={},
-        step_id="user",
-        data_schema=STEP_USER_DATA_SCHEMA,
-    )
-    assert result["errors"]["base"] == "unknown"
 
 
 async def test_link_and_create_entry_wait_ready_false(hass: HomeAssistant) -> None:
@@ -122,19 +104,17 @@ async def test_link_and_create_entry_wait_ready_false(hass: HomeAssistant) -> No
     flow.hass = hass
     flow._context = {}
     flow.flow_id = "flow123"
-    flow._selected_host = "1.2.3.4"
-    flow._selected_port = DEFAULT_PORT
 
     with patch(
         "homeassistant.components.elke27.config_flow._create_client",
         side_effect=_client_factory([client]),
     ):
         result = await flow._async_link_and_create_entry(
+            host="1.2.3.4",
+            port=DEFAULT_PORT,
             access_code="1",
             passphrase="2",
             errors={},
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
         )
         assert result["errors"]["base"] == "cannot_connect"
 
@@ -153,19 +133,17 @@ async def test_link_and_create_entry_suppresses_disconnect_error(
     flow.hass = hass
     flow._context = {}
     flow.flow_id = "flow123"
-    flow._selected_host = "1.2.3.4"
-    flow._selected_port = DEFAULT_PORT
 
     with patch(
         "homeassistant.components.elke27.config_flow._create_client",
         side_effect=_client_factory([client]),
     ):
         result = await flow._async_link_and_create_entry(
+            host="1.2.3.4",
+            port=DEFAULT_PORT,
             access_code="1",
             passphrase="2",
             errors={},
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
         )
 
     assert result["errors"]["base"] == "cannot_connect"
@@ -186,8 +164,6 @@ async def test_link_and_create_entry_preserves_disconnect_cancellation(
     flow.hass = hass
     flow._context = {}
     flow.flow_id = "flow123"
-    flow._selected_host = "1.2.3.4"
-    flow._selected_port = DEFAULT_PORT
 
     with (
         patch(
@@ -197,11 +173,11 @@ async def test_link_and_create_entry_preserves_disconnect_cancellation(
         pytest.raises(asyncio.CancelledError),
     ):
         await flow._async_link_and_create_entry(
+            host="1.2.3.4",
+            port=DEFAULT_PORT,
             access_code="1",
             passphrase="2",
             errors={},
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
         )
 
     client.async_disconnect.assert_awaited_once()
@@ -222,8 +198,6 @@ async def test_create_entry_adds_title_when_missing(hass: HomeAssistant) -> None
     flow = config_flow.Elke27ConfigFlow()
     flow.hass = hass
     flow.flow_id = "flow123"
-    flow._selected_host = "1.2.3.4"
-    flow._selected_port = DEFAULT_PORT
 
     with (
         patch(
@@ -242,11 +216,11 @@ async def test_create_entry_adds_title_when_missing(hass: HomeAssistant) -> None
         ),
     ):
         result = await flow._async_link_and_create_entry(
+            host="1.2.3.4",
+            port=DEFAULT_PORT,
             access_code="1",
             passphrase="2",
             errors={},
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
         )
         assert result["title"] == "Panel"
 
