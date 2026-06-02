@@ -4,8 +4,6 @@
 # Current and forecast will create general, controlled load and feed in as required
 # At the moment renewables in the only grid sensor.
 
-from __future__ import annotations
-
 from typing import Any
 
 from amberelectric.models.channel import ChannelType

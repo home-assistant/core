@@ -1,7 +1,5 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

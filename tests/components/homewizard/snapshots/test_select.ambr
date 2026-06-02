@@ -1,8 +1,8 @@
 # serializer version: 1
-# name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_mode]
+# name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_charging_strategy]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Battery group mode',
+      'friendly_name': 'Device Battery group charging strategy',
       'options': list([
         'standby',
         'to_full',
@@ -10,14 +10,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.device_battery_group_mode',
+    'entity_id': 'select.device_battery_group_charging_strategy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'zero',
   })
 # ---
-# name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_mode].1
+# name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_charging_strategy].1
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -37,7 +37,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.device_battery_group_mode',
+    'entity_id': 'select.device_battery_group_charging_strategy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -45,12 +45,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery group mode',
+    'object_id_base': 'Battery group charging strategy',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Battery group mode',
+    'original_name': 'Battery group charging strategy',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -60,7 +60,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_mode].2
+# name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_charging_strategy].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -90,7 +90,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })

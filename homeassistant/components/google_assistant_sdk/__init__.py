@@ -1,7 +1,5 @@
 """Support for Google Assistant SDK."""
 
-from __future__ import annotations
-
 from aiohttp import ClientError
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials
@@ -17,6 +15,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_validation as cv, discovery, intent
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -52,7 +51,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
 ) -> bool:
     """Set up Google Assistant SDK from a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()

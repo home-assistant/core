@@ -1,7 +1,5 @@
 """Module which encapsulates the NVR/camera API and subscription."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Mapping
@@ -13,7 +11,7 @@ import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS, Host
 from reolink_aio.baichuan import DEFAULT_BC_PORT
-from reolink_aio.enums import SubType
+from reolink_aio.enums import ConnectionEnum, SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
 from homeassistant.components import webhook
@@ -38,6 +36,7 @@ from .const import (
     BATTERY_ALL_WAKE_UPDATE_INTERVAL,
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     BATTERY_WAKE_UPDATE_INTERVAL,
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
@@ -79,6 +78,12 @@ class ReolinkHost:
         self._config_entry = config_entry
         self._config = config
         self._unique_id: str = ""
+        try:
+            bc_connection = ConnectionEnum(
+                config.get(CONF_BC_CONNECT, ConnectionEnum.unknown.value)
+            )
+        except ValueError:
+            bc_connection = ConnectionEnum.unknown
 
         def get_aiohttp_session() -> aiohttp.ClientSession:
             """Return the HA aiohttp session."""
@@ -98,6 +103,7 @@ class ReolinkHost:
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=get_aiohttp_session,
             bc_port=config.get(CONF_BC_PORT, DEFAULT_BC_PORT),
+            bc_connection=bc_connection,
             bc_only=config.get(CONF_BC_ONLY, False),
         )
 
@@ -173,6 +179,7 @@ class ReolinkHost:
                     translation_placeholders={"name": self._config_entry.title},
                 )
 
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise PasswordIncompatible(
                 "Reolink password contains incompatible special character or "
                 "is too long, please change the password to only contain characters: "
@@ -194,9 +201,11 @@ class ReolinkHost:
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ReolinkSetupException("Could not get mac address")
 
         if not self._api.is_admin:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UserNotAdmin(
                 f"User '{self._api.username}' has authorization level "
                 f"'{self._api.user_level}', only admin users can change camera settings"
@@ -362,14 +371,16 @@ class ReolinkHost:
         # start long polling if ONVIF push failed immediately
         if not self._onvif_push_supported and not self._api.baichuan.privacy_mode():
             _LOGGER.debug(
-                "Camera model %s does not support ONVIF push, using ONVIF long polling instead",
+                "Camera model %s does not support ONVIF push,"
+                " using ONVIF long polling instead",
                 self._api.model,
             )
             try:
                 await self._async_start_long_polling(initial=True)
             except NotSupportedError:
                 _LOGGER.debug(
-                    "Camera model %s does not support ONVIF long polling, using fast polling instead",
+                    "Camera model %s does not support ONVIF long"
+                    " polling, using fast polling instead",
                     self._api.model,
                 )
                 self._onvif_long_poll_supported = False
@@ -490,14 +501,18 @@ class ReolinkHost:
                 or (now - self.last_wake[channel] > BATTERY_WAKE_UPDATE_INTERVAL)
                 or (now - self.last_all_wake > BATTERY_ALL_WAKE_UPDATE_INTERVAL)
             ):
-                # let a waking update coincide with the camera waking up by itself unless it did not wake for BATTERY_WAKE_UPDATE_INTERVAL
+                # let a waking update coincide with the camera
+                # waking up by itself unless it did not wake
+                # for BATTERY_WAKE_UPDATE_INTERVAL
                 wake[channel] = True
                 self.last_wake[channel] = now
             else:
                 wake[channel] = False
 
             # check privacy mode if enabled
-            if self._api.baichuan.privacy_mode(channel):
+            if self._api.baichuan.privacy_mode(channel) and (
+                not self._api.is_battery or wake[channel]
+            ):
                 await self._api.baichuan.get_privacy_mode(channel)
 
         if all(wake.values()):
@@ -677,7 +692,7 @@ class ReolinkHost:
                 self._api.host,
                 sub_type,
             )
-            if sub_type == SubType.push:
+            if sub_type is SubType.push:
                 await self.subscribe()
                 return
 
@@ -737,6 +752,7 @@ class ReolinkHost:
                 self._base_url = get_url(self._hass, prefer_external=True)
             except NoURLAvailableError as err:
                 self.unregister_webhook()
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise ReolinkWebhookException(
                     f"Error registering URL for webhook {event_id}: "
                     "HomeAssistant URL is not available"
@@ -832,7 +848,7 @@ class ReolinkHost:
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ) -> None:
-        """Read the incoming webhook from Reolink for inbound messages and schedule processing."""
+        """Read the incoming webhook from Reolink and schedule processing."""
         _LOGGER.debug("Webhook '%s' called", webhook_id)
         data: bytes | None = None
         try:
@@ -863,7 +879,8 @@ class ReolinkHost:
             raise
         finally:
             # We want handle_webhook to return as soon as possible
-            # so we process the data in the background, this also shields from cancellation
+            # so we process the data in the background,
+            # this also shields from cancellation
             hass.async_create_background_task(
                 self._process_webhook_data(hass, webhook_id, data),
                 "Process Reolink webhook",
@@ -883,7 +900,8 @@ class ReolinkHost:
             if not data:
                 if not await self._api.get_motion_state_all_ch():
                     _LOGGER.error(
-                        "Could not poll motion state after losing connection during receiving ONVIF event"
+                        "Could not poll motion state after losing"
+                        " connection during receiving ONVIF event"
                     )
                     return
                 self._signal_write_ha_state()

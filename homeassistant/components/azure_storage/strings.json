@@ -54,7 +54,7 @@
       "message": "Storage account {account_name} not found"
     },
     "cannot_connect": {
-      "message": "Can not connect to storage account {account_name}"
+      "message": "Cannot connect to storage account {account_name}"
     },
     "container_not_found": {
       "message": "Storage container {container_name} not found"

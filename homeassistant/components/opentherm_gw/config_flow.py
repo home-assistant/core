@@ -1,7 +1,5 @@
 """OpenTherm Gateway config flow."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -101,6 +99,8 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(CONF_NAME): str,
                     vol.Required(CONF_DEVICE): str,
                     vol.Optional(CONF_ID): str,

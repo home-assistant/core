@@ -42,6 +42,8 @@
       'friendly_name': 'Test Location',
       'gps_accuracy': 0,
       'heading': 185,
+      'in_zones': list([
+      ]),
       'latitude': -30.222626,
       'longitude': -97.6236871,
       'source_type': <SourceType.GPS: 'gps'>,
@@ -97,6 +99,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Route',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 30.2226265,
       'longitude': -97.6236871,
       'source_type': <SourceType.GPS: 'gps'>,

@@ -1,7 +1,5 @@
 """Support for govee ble sensors."""
 
-from __future__ import annotations
-
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -147,6 +145,6 @@ class GoveeBluetoothSensorEntity(
         )
 
     @property
-    def native_value(self) -> _SensorValueType:  # pylint: disable=hass-return-type
+    def native_value(self) -> _SensorValueType:  # pylint: disable=home-assistant-return-type
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

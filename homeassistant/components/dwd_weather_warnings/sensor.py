@@ -9,8 +9,6 @@ Warnungen vor markantem Wetter (Stufe 2)  # codespell:ignore vor
 Wetterwarnungen (Stufe 1)
 """
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from typing import Any
 
@@ -102,7 +100,7 @@ class DwdWeatherWarningsSensor(
         if warnings is None:
             return []
 
-        now = datetime.now(UTC)
+        now = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
         return [warning for warning in warnings if warning[API_ATTR_WARNING_END] > now]
 
     @property

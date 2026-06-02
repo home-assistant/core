@@ -47,7 +47,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_setup_entry():
-    """Override async_setup_entry so config flow tests don't try to setup the integration."""
+    """Override async_setup_entry for config flow tests."""
     with patch(
         "homeassistant.components.orvibo.async_setup_entry", return_value=True
     ) as mock_setup:

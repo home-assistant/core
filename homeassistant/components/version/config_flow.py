@@ -1,7 +1,5 @@
 """Config flow for Version integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -64,10 +62,7 @@ class VersionConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input[CONF_SOURCE] = VERSION_SOURCE_MAP[user_input[CONF_VERSION_SOURCE]]
         self._entry_data.update(user_input)
 
-        if not self.show_advanced_options or user_input[CONF_SOURCE] in (
-            "local",
-            "haio",
-        ):
+        if user_input[CONF_SOURCE] in ("local", "haio"):
             return self.async_create_entry(
                 title=self._config_entry_name,
                 data=self._entry_data,

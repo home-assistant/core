@@ -1,7 +1,5 @@
 """Support for ISY lights."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
@@ -83,7 +81,6 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     def async_on_update(self, event: NodeProperty) -> None:
         """Save brightness in the update event from the ISY Node."""
         if self._node.status not in (0, ISY_VALUE_UNKNOWN):
-            self._last_brightness = self._node.status
             if self._node.uom == UOM_PERCENTAGE:
                 self._last_brightness = round(self._node.status * 255.0 / 100.0)
             else:

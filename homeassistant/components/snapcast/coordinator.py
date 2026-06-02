@@ -1,7 +1,5 @@
 """Data update coordinator for Snapcast server."""
 
-from __future__ import annotations
-
 import logging
 
 from snapcast.control.server import Snapserver
@@ -13,13 +11,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+type SnapcastConfigEntry = ConfigEntry[SnapcastUpdateCoordinator]
+
 
 class SnapcastUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for pushed data from Snapcast server."""
 
-    config_entry: ConfigEntry
+    config_entry: SnapcastConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: SnapcastConfigEntry) -> None:
         """Initialize coordinator."""
         host = config_entry.data[CONF_HOST]
         port = config_entry.data[CONF_PORT]

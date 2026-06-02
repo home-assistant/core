@@ -1,7 +1,5 @@
 """Support for Qwikswitch devices."""
 
-from __future__ import annotations
-
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

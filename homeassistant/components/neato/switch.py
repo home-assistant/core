@@ -1,7 +1,5 @@
 """Support for Neato Connected Vacuums switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -10,12 +8,12 @@ from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
+from . import NeatoConfigEntry
+from .const import SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
 from .hub import NeatoHub
 
@@ -30,14 +28,14 @@ SWITCH_TYPES = {SWITCH_TYPE_SCHEDULE: ["Schedule"]}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NeatoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Neato switch with config entry."""
-    neato: NeatoHub = hass.data[NEATO_LOGIN]
+    hub = entry.runtime_data
     dev = [
-        NeatoConnectedSwitch(neato, robot, type_name)
-        for robot in hass.data[NEATO_ROBOTS]
+        NeatoConnectedSwitch(hub, robot, type_name)
+        for robot in hub.robots
         for type_name in SWITCH_TYPES
     ]
 
@@ -102,6 +100,7 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
         if self.type == SWITCH_TYPE_SCHEDULE:
             try:
                 self.robot.enable_schedule()
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
                 _LOGGER.error(
                     "Neato switch connection error '%s': %s", self.entity_id, ex
@@ -112,6 +111,7 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
         if self.type == SWITCH_TYPE_SCHEDULE:
             try:
                 self.robot.disable_schedule()
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
                 _LOGGER.error(
                     "Neato switch connection error '%s': %s", self.entity_id, ex

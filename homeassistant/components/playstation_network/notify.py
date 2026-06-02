@@ -1,7 +1,5 @@
 """Notify platform for PlayStation Network."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -174,7 +172,7 @@ class PlaystationNetworkNotifyEntity(PlaystationNetworkNotifyBaseEntity):
 
 
 class PlaystationNetworkDirectMessageNotifyEntity(PlaystationNetworkNotifyBaseEntity):
-    """Representation of a PlayStation Network notify entity for sending direct messages."""
+    """PlayStation Network notify entity for direct messages."""
 
     coordinator: PlaystationNetworkFriendlistCoordinator
 

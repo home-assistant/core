@@ -1,7 +1,5 @@
 """Switches for Yale Alarm."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from yalesmartalarmclient import YaleLock

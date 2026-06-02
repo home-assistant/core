@@ -1,7 +1,5 @@
 """The Portainer integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pyportainer import Portainer
@@ -22,10 +20,11 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .const import API_MAX_RETRIES, DOMAIN
-from .coordinator import PortainerCoordinator
+from .coordinator import PortainerCoordinator, PortainerDockerDiskSpaceCoordinator
 from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [
@@ -45,18 +44,44 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Set up Portainer from a config entry."""
 
+    session = async_create_clientsession(
+        hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+    )
+
     client = Portainer(
         api_url=entry.data[CONF_URL],
         api_key=entry.data[CONF_API_TOKEN],
-        session=async_create_clientsession(
-            hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
-        ),
-        request_timeout=30,
+        session=session,
+        request_timeout=10,
         max_retries=API_MAX_RETRIES,
     )
 
     coordinator = PortainerCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
+
+    docker_system_df_client = Portainer(
+        api_url=entry.data[CONF_URL],
+        api_key=entry.data[CONF_API_TOKEN],
+        session=session,
+        request_timeout=60,
+        max_retries=API_MAX_RETRIES,
+    )
+
+    docker_disk_space_coordinator = PortainerDockerDiskSpaceCoordinator(
+        hass, entry, docker_system_df_client
+    )
+    coordinator.docker_disk_space = docker_disk_space_coordinator
+
+    async def _defer_docker_disk_space_refresh(_: HomeAssistant) -> None:
+        """Defer the first refresh until Home Assistant has started."""
+        hass.async_create_task(
+            docker_disk_space_coordinator.async_refresh(),
+            "portainer_docker_disk_space_initial_refresh",
+        )
+
+    # On lower-end hardware, the DF endpoint can take long
+    # Do not block the setup, but defer the first refresh until HA is fully started
+    entry.async_on_unload(async_at_started(hass, _defer_docker_disk_space_refresh))
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
@@ -94,7 +119,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         entity_registry = er.async_get(hass)
         devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
         for device in devices:
-            # This means it's an endpoint. This can be skipped, we're only interested in the containers
+            # This means it's an endpoint. This can be skipped,
+            # we're only interested in the containers
             if device.via_device_id is None:
                 continue
 
@@ -172,7 +198,8 @@ async def async_remove_config_entry_device(
     coordinator = entry.runtime_data
     valid_identifiers: set[tuple[str, str]] = set()
 
-    # The Portainer integration creates devices for both endpoints and containers. That's why we're doing it double
+    # The Portainer integration creates devices for both
+    # endpoints and containers. That's why we're doing it double
     valid_identifiers.update(
         (DOMAIN, f"{entry.entry_id}_{endpoint_id}") for endpoint_id in coordinator.data
     )

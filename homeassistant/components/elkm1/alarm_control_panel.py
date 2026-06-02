@@ -1,7 +1,5 @@
 """Each ElkM1 area will be created as a separate alarm_control_panel."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from elkm1_lib.areas import Area
@@ -18,6 +16,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
+from homeassistant.const import SERVICE_ALARM_ARM_VACATION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,7 +44,6 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA: VolDictType = {
 }
 
 SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"
-SERVICE_ALARM_ARM_VACATION = "alarm_arm_vacation"
 SERVICE_ALARM_ARM_HOME_INSTANT = "alarm_arm_home_instant"
 SERVICE_ALARM_ARM_NIGHT_INSTANT = "alarm_arm_night_instant"
 SERVICE_ALARM_BYPASS = "alarm_bypass"
