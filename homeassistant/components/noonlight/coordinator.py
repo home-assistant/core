@@ -327,6 +327,7 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         if self._heartbeat_failures >= HEARTBEAT_FAILURE_THRESHOLD:
             data["api_healthy"] = False
+            assert err is not None  # always set when a probe failed
             # Reuse the dispatch error mapping: raises the right Repair issue
             # and starts reauth on an auth failure.
             self._handle_api_error(err)

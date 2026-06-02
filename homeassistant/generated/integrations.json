@@ -4794,6 +4794,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "noonlight": {
+      "name": "Noonlight",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "nordpool": {
       "name": "Nord Pool",
       "integration_type": "service",

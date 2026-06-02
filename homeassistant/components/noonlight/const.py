@@ -147,7 +147,7 @@ US_STATE_CODES: Final = frozenset(
         "NM",
         "NY",
         "NC",
-        "ND",
+        "ND",  # codespell:ignore
         "OH",
         "OK",
         "OR",
