@@ -36,17 +36,20 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
         )
 
     @property
-    def device(self) -> ImouHaDevice | None:
+    def device(self) -> ImouHaDevice:
         """Return the live device from the coordinator, or None if removed."""
-        return self.coordinator.get_device(self._device_key)
+        return self.coordinator.devices_by_key[self._device_key]
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        if not super().available:
+        if (
+            not super().available
+            or self._device_key not in self.coordinator.devices_by_key
+        ):
             return False
-        if (device := self.device) is None:
+        if PARAM_STATUS not in self.device.sensors:
             return False
-        if PARAM_STATUS not in device.sensors:
-            return False
-        return device.sensors[PARAM_STATUS][PARAM_STATE] != DeviceStatus.OFFLINE.value
+        return (
+            self.device.sensors[PARAM_STATUS][PARAM_STATE] != DeviceStatus.OFFLINE.value
+        )

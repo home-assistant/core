@@ -8,17 +8,34 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    BUTTON_TYPES,
-    PARAM_RESTART_DEVICE,
-    PTZ_BUTTON_TYPES,
-    PTZ_MOVE_DURATION_MS,
-    imou_device_identifier,
-)
+from .const import PTZ_MOVE_DURATION_MS, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
 PARALLEL_UPDATES = 1
+# Button types
+PARAM_RESTART_DEVICE = "restart_device"
+PARAM_MUTE = "mute"
+PARAM_PTZ_UP = "ptz_up"
+PARAM_PTZ_DOWN = "ptz_down"
+PARAM_PTZ_LEFT = "ptz_left"
+PARAM_PTZ_RIGHT = "ptz_right"
+
+BUTTON_TYPES = (
+    PARAM_RESTART_DEVICE,
+    PARAM_MUTE,
+    PARAM_PTZ_UP,
+    PARAM_PTZ_DOWN,
+    PARAM_PTZ_LEFT,
+    PARAM_PTZ_RIGHT,
+)
+
+PTZ_BUTTON_TYPES = (
+    PARAM_PTZ_UP,
+    PARAM_PTZ_DOWN,
+    PARAM_PTZ_LEFT,
+    PARAM_PTZ_RIGHT,
+)
 
 BUTTON_DEVICE_CLASS: dict[str, ButtonDeviceClass] = {
     PARAM_RESTART_DEVICE: ButtonDeviceClass.RESTART,
@@ -81,12 +98,10 @@ class ImouButton(ImouEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle button press."""
-        if (device := self.device) is None:
-            raise HomeAssistantError("Device is no longer available")
         duration = PTZ_MOVE_DURATION_MS if self._entity_type in PTZ_BUTTON_TYPES else 0
         try:
             await self.coordinator.device_manager.async_press_button(
-                device,
+                self.device,
                 self._entity_type,
                 duration,
             )

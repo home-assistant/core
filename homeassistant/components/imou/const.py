@@ -29,29 +29,6 @@ CONF_APP_SECRET = "app_secret"
 PARAM_STATUS = "status"
 PARAM_STATE = "state"
 
-# Button types
-PARAM_RESTART_DEVICE = "restart_device"
-PARAM_MUTE = "mute"
-PARAM_PTZ_UP = "ptz_up"
-PARAM_PTZ_DOWN = "ptz_down"
-PARAM_PTZ_LEFT = "ptz_left"
-PARAM_PTZ_RIGHT = "ptz_right"
-
-BUTTON_TYPES = (
-    PARAM_RESTART_DEVICE,
-    PARAM_MUTE,
-    PARAM_PTZ_UP,
-    PARAM_PTZ_DOWN,
-    PARAM_PTZ_LEFT,
-    PARAM_PTZ_RIGHT,
-)
-
-PTZ_BUTTON_TYPES = (
-    PARAM_PTZ_UP,
-    PARAM_PTZ_DOWN,
-    PARAM_PTZ_LEFT,
-    PARAM_PTZ_RIGHT,
-)
 
 # How long each PTZ button press moves the camera, in milliseconds (Imou cloud API).
 PTZ_MOVE_DURATION_MS = 500

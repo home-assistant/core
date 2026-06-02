@@ -59,10 +59,7 @@ def mock_imou_ha_device_manager(
     imou_mock_devices: list[ImouHaDevice],
 ) -> Generator[MagicMock]:
     """Mock ImouHaDeviceManager with a default device list."""
-    with patch(
-        PATCH_IMOU_HA_DEVICE_MANAGER,
-        autospec=True,
-    ) as mock_manager:
+    with patch(PATCH_IMOU_HA_DEVICE_MANAGER, autospec=True) as mock_manager:
         device_manager = mock_manager.return_value
         device_manager.async_get_devices.return_value = imou_mock_devices
         yield device_manager
@@ -73,7 +70,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry so config flow tests do not load the full integration."""
     with patch(
         "homeassistant.components.imou.async_setup_entry",
-        new_callable=AsyncMock,
         return_value=True,
     ) as mock_setup:
         yield mock_setup

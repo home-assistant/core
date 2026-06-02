@@ -1,6 +1,6 @@
 """Tests for Imou button platform."""
 
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.exceptions import ImouException
@@ -9,9 +9,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import (
-    PARAM_MUTE,
-    PARAM_PTZ_UP,
     PARAM_STATE,
     PARAM_STATUS,
     PTZ_MOVE_DURATION_MS,
@@ -195,32 +194,16 @@ async def test_press_button_fails_when_device_removed_from_account(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Pressing a button whose device left the account raises HomeAssistantError."""
-    mute_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entry.unique_id == "d1$mute"
-    )
+    assert hass.states.get("button.device_1_mute").state != STATE_UNAVAILABLE
 
-    with (
-        patch(
-            "homeassistant.components.imou.entity.ImouEntity.available",
-            new_callable=PropertyMock,
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.imou.entity.ImouEntity.device",
-            new_callable=PropertyMock,
-            return_value=None,
-        ),
-        pytest.raises(HomeAssistantError, match="no longer available"),
-    ):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: mute_entry.entity_id},
-            blocking=True,
-        )
+    mock_imou_ha_device_manager.async_get_devices.return_value = []
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("button.device_1_mute").state == STATE_UNAVAILABLE
