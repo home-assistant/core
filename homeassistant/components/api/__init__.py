@@ -294,7 +294,6 @@ class APIEntityStateView(HomeAssistantView):
 
         # Read the state back for our response
         status_code = HTTPStatus.CREATED if is_new_state else HTTPStatus.OK
-        state = hass.states.get(entity_id)
         if (state := hass.states.get(entity_id)) is None:
             return self.json_message(
                 "Error storing state.", HTTPStatus.INTERNAL_SERVER_ERROR
