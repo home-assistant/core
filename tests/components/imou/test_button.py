@@ -204,9 +204,13 @@ async def test_press_button_fails_when_device_removed_from_account(
         )
         if entry.unique_id == "d1$mute"
     )
-    entity = hass.data["entity_components"]["button"].get_entity(mute_entry.entity_id)
 
     with (
+        patch(
+            "homeassistant.components.imou.entity.ImouEntity.available",
+            new_callable=PropertyMock,
+            return_value=True,
+        ),
         patch(
             "homeassistant.components.imou.entity.ImouEntity.device",
             new_callable=PropertyMock,
@@ -214,4 +218,9 @@ async def test_press_button_fails_when_device_removed_from_account(
         ),
         pytest.raises(HomeAssistantError, match="no longer available"),
     ):
-        await entity.async_press()
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: mute_entry.entity_id},
+            blocking=True,
+        )

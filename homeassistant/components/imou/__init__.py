@@ -4,7 +4,7 @@ from pyimouapi.device import ImouDeviceManager
 from pyimouapi.ha_device import ImouHaDeviceManager
 from pyimouapi.openapi import ImouOpenApiClient
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, PLATFORMS
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
@@ -23,6 +23,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool
     await imou_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = imou_coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    @callback
+    def _async_keep_polling() -> None:
+        """Keep periodic polling when no entities are registered yet."""
+
+    entry.async_on_unload(imou_coordinator.async_add_listener(_async_keep_polling))
+
     return True
 
 

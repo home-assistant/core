@@ -44,6 +44,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self._device_manager = device_manager
         self._devices_by_key: dict[str, ImouHaDevice] = {}
+        self._devices_initialized = False
         self.new_device_callbacks: list[Callable[[list[ImouHaDevice]], None]] = []
 
     @property
@@ -98,8 +99,9 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     def _async_add_remove_devices(self, fresh_by_key: dict[str, ImouHaDevice]) -> None:
         """Add new devices, remove devices no longer in the account."""
-        if not self._devices_by_key:
+        if not self._devices_initialized:
             self._devices_by_key = fresh_by_key
+            self._devices_initialized = True
             return
 
         current_keys = set(fresh_by_key)

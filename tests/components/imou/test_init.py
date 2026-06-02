@@ -122,6 +122,41 @@ async def test_multiple_channels_create_separate_devices(
         assert state.state != STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("imou_mock_devices", [[]], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_adds_entities_after_initial_empty_device_list(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Devices added after an empty first refresh still get entities via callbacks."""
+    entity_registry = er.async_get(hass)
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == 0
+    )
+
+    mock_imou_ha_device_manager.async_get_devices.return_value = DEFAULT_MOCK_DEVICES
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entries) == 3
+    assert {entry.unique_id for entry in entries} == {
+        "d1$mute",
+        "d1$ptz_up",
+        "d1$restart_device",
+    }
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_coordinator_adds_entities_for_new_device(
     hass: HomeAssistant,
