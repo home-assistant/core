@@ -15,6 +15,8 @@ TO_REDACT = {
     "lat",
     "lng",
     "street",
+    "title",
+    "unique_id",
     "wifi",
     "zipcode",
 }

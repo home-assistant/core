@@ -18,8 +18,8 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': 'testuser@example.com',
-      'unique_id': 'firebase-uid-testuser',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
       'version': 1,
     }),
     'pools': list([
