@@ -44,7 +44,9 @@ from tests.common import (
     MockConfigEntry,
     assert_setup_component,
     async_fire_time_changed,
+    async_mock_restore_state_shutdown_restart,
     mock_restore_cache,
+    mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
 from tests.components.switch.common import MockSwitch
@@ -1616,6 +1618,115 @@ async def test_restore_state_uncoherence_case(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
     assert state.state == STATE_OFF
+
+
+async def test_restore_state_from_extra_data_when_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure settings are restored from extra data after an ungraceful reboot.
+
+    On a hard/VM reboot the sensor has not reported yet, so the hygrostat is
+    unavailable and the persisted state has no attributes. The settings must
+    still be restored from the entity specific extra stored data. Regression
+    test for https://github.com/home-assistant/core/issues/153788.
+    """
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("humidifier.test_hygrostat", STATE_UNAVAILABLE),
+                {
+                    "state": True,
+                    "target_humidity": 40,
+                    "saved_target_humidity": 50,
+                    "is_away": True,
+                },
+            ),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+
+    await async_setup_component(
+        hass,
+        HUMIDIFIER_DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test_hygrostat",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "away_humidity": 32,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.attributes[ATTR_SAVED_HUMIDITY] == 50
+    assert state.attributes[ATTR_MODE] == MODE_AWAY
+    assert state.state == STATE_ON
+
+
+async def test_restore_state_round_trip(hass: HomeAssistant) -> None:
+    """Ensure settings survive a shutdown/restart cycle via extra stored data."""
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        HUMIDIFIER_DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test_hygrostat",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "away_humidity": 32,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN,
+        SERVICE_SET_HUMIDITY,
+        {ATTR_ENTITY_ID: "humidifier.test_hygrostat", ATTR_HUMIDITY: 44},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "humidifier.test_hygrostat"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Persist current states and reload them, mimicking a restart.
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    hass.set_state(CoreState.starting)
+    await async_setup_component(
+        hass,
+        HUMIDIFIER_DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test_hygrostat",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "away_humidity": 32,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state.attributes[ATTR_HUMIDITY] == 44
+    assert state.state == STATE_ON
 
 
 async def _setup_humidifier(hass: HomeAssistant) -> None:

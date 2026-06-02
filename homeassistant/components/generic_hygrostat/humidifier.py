@@ -2,9 +2,10 @@
 
 import asyncio
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
@@ -51,7 +52,7 @@ from homeassistant.helpers.event import (
     async_track_state_report_event,
     async_track_time_interval,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
@@ -76,6 +77,40 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_SAVED_HUMIDITY = "saved_humidity"
 
 PLATFORM_SCHEMA = HUMIDIFIER_PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
+
+
+@dataclass
+class GenericHygrostatExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data.
+
+    Stored independently of the entity state so that the settings survive a
+    restart even when the entity is unavailable (i.e. its sensor has not yet
+    reported a value), which drops all state attributes.
+    """
+
+    state: bool | None
+    target_humidity: float | None
+    saved_target_humidity: float | None
+    is_away: bool
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return {
+            "state": self.state,
+            "target_humidity": self.target_humidity,
+            "saved_target_humidity": self.saved_target_humidity,
+            "is_away": self.is_away,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self:
+        """Initialize a stored state from a dict."""
+        return cls(
+            restored.get("state"),
+            restored.get("target_humidity"),
+            restored.get("saved_target_humidity"),
+            restored.get("is_away", False),
+        )
 
 
 async def async_setup_platform(
@@ -264,7 +299,21 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
-        if (old_state := await self.async_get_last_state()) is not None:
+        if (extra_data := await self.async_get_last_extra_data()) is not None:
+            # Extra stored data is persisted regardless of availability, so it
+            # survives a restart even when the entity was unavailable (its
+            # sensor had not yet reported a value), which drops state attributes.
+            stored = GenericHygrostatExtraStoredData.from_dict(extra_data.as_dict())
+            self._is_away = stored.is_away
+            if stored.target_humidity is not None:
+                self._target_humidity = stored.target_humidity
+            if stored.saved_target_humidity is not None:
+                self._saved_target_humidity = stored.saved_target_humidity
+            if stored.state is not None:
+                self._state = stored.state
+        elif (old_state := await self.async_get_last_state()) is not None:
+            # Fall back to the legacy state-attribute restore for entities that
+            # were last stored before extra stored data was introduced.
             if old_state.attributes.get(ATTR_MODE) == MODE_AWAY:
                 self._is_away = True
                 self._saved_target_humidity = self._target_humidity
@@ -307,6 +356,16 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         if self._saved_target_humidity:
             return {ATTR_SAVED_HUMIDITY: self._saved_target_humidity}
         return None
+
+    @property
+    def extra_restore_state_data(self) -> GenericHygrostatExtraStoredData:
+        """Return hygrostat specific state data to be restored."""
+        return GenericHygrostatExtraStoredData(
+            state=self._state,
+            target_humidity=self._target_humidity,
+            saved_target_humidity=self._saved_target_humidity,
+            is_away=self._is_away,
+        )
 
     @property
     def name(self) -> str:
