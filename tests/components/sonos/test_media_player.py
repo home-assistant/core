@@ -1,7 +1,6 @@
 """Tests for the Sonos Media Player platform."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
 import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
