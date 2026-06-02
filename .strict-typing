@@ -594,6 +594,7 @@ homeassistant.components.transmission.*
 homeassistant.components.trend.*
 homeassistant.components.trmnl.*
 homeassistant.components.tts.*
+homeassistant.components.tween_light_ir.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifi.*
 homeassistant.components.unifi_access.*

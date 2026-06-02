@@ -1,0 +1,10 @@
+{
+  "domain": "tween_light_ir",
+  "name": "Tween Light Infrared",
+  "codeowners": ["@tr4nt0r"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tween_light_ir",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze"
+}
