@@ -1,7 +1,5 @@
 """Support for Imou devices."""
 
-import logging
-
 from pyimouapi.device import ImouDeviceManager
 from pyimouapi.ha_device import ImouHaDeviceManager
 from pyimouapi.openapi import ImouOpenApiClient
@@ -10,8 +8,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, PLATFORMS
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
-
-_LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool:
