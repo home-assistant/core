@@ -26,7 +26,7 @@ from tests.components.common import (
     target_entities,
 )
 
-# Volume is stored as 0.0–1.0 but the threshold is in percent.
+# Volume is stored as 0.0-1.0 but the threshold is in percent.
 _VOLUME_VALUE_SCALE = 0.01
 
 _IS_VOLUME_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}

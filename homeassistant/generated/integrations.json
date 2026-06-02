@@ -576,7 +576,7 @@
       "name": "Ambient Radio Weather Network",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "aseko_pool_live": {
       "name": "Aseko Pool Live",
@@ -2848,6 +2848,12 @@
       "iot_standards": [
         "zwave"
       ]
+    },
+    "helty": {
+      "name": "Helty Flow",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
