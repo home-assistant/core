@@ -122,6 +122,34 @@ class OverkizExecutor:
         if refresh_afterwards:
             await self.coordinator.async_refresh()
 
+    async def async_execute_commands(
+        self, commands: list[Command], refresh_afterwards: bool = True
+    ) -> None:
+        """Execute multiple device commands as a single batch execution.
+
+        The Overkiz API processes all commands in order within a single action group,
+        execution which is required when commands depend on each other.
+
+        :param refresh_afterwards: Whether to refresh the device state
+            after the batch is executed. Disable it to refresh only once
+            when this batch is part of a larger sequence of commands.
+        """
+        try:
+            exec_id = await self.coordinator.client.execute_commands(
+                self.device.device_url,
+                commands,
+                "Home Assistant",
+            )
+        except BaseOverkizException as exception:
+            raise HomeAssistantError(exception) from exception
+
+        self.coordinator.executions[exec_id] = {
+            "device_url": self.device.device_url,
+            "command_name": commands[-1].name,
+        }
+        if refresh_afterwards:
+            await self.coordinator.async_refresh()
+
     async def async_cancel_command(
         self, commands_to_cancel: list[OverkizCommand]
     ) -> bool:
