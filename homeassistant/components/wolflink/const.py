@@ -7,6 +7,8 @@ DEVICE_GATEWAY = "device_gateway"
 DEVICE_NAME = "device_name"
 MANUFACTURER = "WOLF GmbH"
 
+SUBENTRY_TYPE_DEVICE = "device"
+
 STATES = {
     "Ein": "ein",
     "Deaktiviert": "deaktiviert",

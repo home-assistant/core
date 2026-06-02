@@ -134,18 +134,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all entries for Wolf Platform."""
-    wolflink_data = config_entry.runtime_data
-
-    entities: list[WolfLinkSensor] = []
-    for coordinator in wolflink_data.coordinators:
-        entities.extend(
-            WolfLinkSensor(coordinator, parameter, coordinator.device_id, description)
-            for parameter in coordinator.parameters
-            for description in SENSOR_DESCRIPTIONS
-            if description.supported_fn(parameter)
+    for coordinator in config_entry.runtime_data.values():
+        async_add_entities(
+            (
+                WolfLinkSensor(coordinator, parameter, description)
+                for parameter in coordinator.parameters
+                for description in SENSOR_DESCRIPTIONS
+                if description.supported_fn(parameter)
+            ),
+            config_subentry_id=coordinator.subentry.subentry_id,
         )
-
-    async_add_entities(entities, True)
 
 
 class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
@@ -157,7 +155,6 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
         self,
         coordinator: WolfLinkCoordinator,
         wolf_object: Parameter,
-        device_id: int,
         description: WolflinkSensorEntityDescription,
     ) -> None:
         """Initialize."""
@@ -165,13 +162,13 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
         self.entity_description = description
         self.wolf_object = wolf_object
         self._attr_name = wolf_object.name
-        self._attr_unique_id = f"{device_id}:{wolf_object.parameter_id}"
+        self._attr_unique_id = f"{coordinator.device_id}:{wolf_object.parameter_id}"
         self._state: str | None = None
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(device_id))},
+            identifiers={(DOMAIN, str(coordinator.device_id))},
             configuration_url="https://www.wolf-smartset.com/",
             manufacturer=MANUFACTURER,
-            name=coordinator.device_name,
+            name=coordinator.subentry.title,
         )
 
     @property

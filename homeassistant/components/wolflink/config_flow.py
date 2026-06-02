@@ -8,11 +8,18 @@ from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import WolfClient
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryData,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import callback
 
-from .const import DEVICE_ID, DOMAIN
+from .const import DEVICE_ID, DOMAIN, SUBENTRY_TYPE_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,15 +28,38 @@ USER_SCHEMA = vol.Schema(
 )
 
 
+async def _fetch_systems(
+    client: WolfClient,
+) -> tuple[list[Device], dict[str, str]]:
+    """Fetch the system list, returning ``(devices, errors)``."""
+    errors: dict[str, str] = {}
+    try:
+        devices = await client.fetch_system_list()
+    except ConnectError:
+        errors["base"] = "cannot_connect"
+    except InvalidAuth:
+        errors["base"] = "invalid_auth"
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+    if errors:
+        return [], errors
+    return devices, errors
+
+
 class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Wolf SmartSet Service."""
 
     VERSION = 2
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
-    _fetched_systems: list[Device]
-    _username: str
-    _password: str
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this handler."""
+        return {SUBENTRY_TYPE_DEVICE: DeviceSubentryFlow}
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -37,109 +67,81 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step to get connection parameters."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
+            self._abort_if_unique_id_configured()
+
             wolf_client = WolfClient(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
-            try:
-                self._fetched_systems = await wolf_client.fetch_system_list()
-            except ConnectError:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                if not self._fetched_systems:
+            devices, errors = await _fetch_systems(wolf_client)
+            if not errors:
+                if not devices:
                     return self.async_abort(reason="no_devices")
-                self._username = user_input[CONF_USERNAME]
-                self._password = user_input[CONF_PASSWORD]
-                return await self.async_step_device()
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME],
+                    data={
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                    subentries=[
+                        ConfigSubentryData(
+                            data={DEVICE_ID: device.id},
+                            subentry_type=SUBENTRY_TYPE_DEVICE,
+                            title=device.name,
+                            unique_id=str(device.id),
+                        )
+                        for device in devices
+                    ],
+                )
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
-    async def async_step_device(
+
+class DeviceSubentryFlow(ConfigSubentryFlow):
+    """Subentry flow for adding a device that is no longer configured."""
+
+    _fetched_systems: list[Device]
+
+    async def async_step_user(
         self, user_input: dict[str, list[str]] | None = None
-    ) -> ConfigFlowResult:
-        """Allow user to select devices to add."""
-        if user_input is not None:
-            selected_ids = user_input[DEVICE_ID]
-            await self.async_set_unique_id(self._username.lower())
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=self._username,
-                data={
-                    CONF_USERNAME: self._username,
-                    CONF_PASSWORD: self._password,
-                    DEVICE_ID: [int(did) for did in selected_ids],
-                },
-            )
-
-        device_options = {
-            str(device.id): device.name for device in self._fetched_systems
-        }
-        data_schema = vol.Schema(
-            {
-                vol.Required(DEVICE_ID): vol.All(
-                    cv.multi_select(device_options),
-                    vol.Length(min=1),
-                )
-            }
-        )
-        return self.async_show_form(step_id="device", data_schema=data_schema)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, list[str]] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration to change selected devices."""
-        entry = self._get_reconfigure_entry()
-
-        if user_input is not None and DEVICE_ID in user_input:
-            return self.async_update_reload_and_abort(
-                entry,
-                data={
-                    **entry.data,
-                    DEVICE_ID: [int(did) for did in user_input[DEVICE_ID]],
-                },
-            )
-
-        errors: dict[str, str] = {}
+    ) -> SubentryFlowResult:
+        """Fetch devices available on the account that are not yet configured."""
+        entry = self._get_entry()
         wolf_client = WolfClient(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
-        try:
-            self._fetched_systems = await wolf_client.fetch_system_list()
-        except ConnectError:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-
+        devices, errors = await _fetch_systems(wolf_client)
         if errors:
-            # Re-show the reconfigure step with an empty schema so the user
-            # can retry the connection without re-entering credentials.
-            return self.async_show_form(
-                step_id="reconfigure",
-                data_schema=vol.Schema({}),
-                errors=errors,
+            return self.async_abort(reason=errors["base"])
+
+        configured_ids = {
+            subentry.unique_id
+            for subentry in entry.subentries.values()
+            if subentry.subentry_type == SUBENTRY_TYPE_DEVICE
+        }
+        self._fetched_systems = [
+            device for device in devices if str(device.id) not in configured_ids
+        ]
+        if not self._fetched_systems:
+            return self.async_abort(reason="no_devices_to_add")
+        return await self.async_step_device()
+
+    async def async_step_device(
+        self, user_input: dict[str, str] | None = None
+    ) -> SubentryFlowResult:
+        """Allow user to pick a device to add."""
+        if user_input is not None:
+            device_id = int(user_input[DEVICE_ID])
+            device = next(d for d in self._fetched_systems if d.id == device_id)
+            return self.async_create_entry(
+                title=device.name,
+                data={DEVICE_ID: device.id},
+                unique_id=str(device.id),
             )
 
-        if not self._fetched_systems:
-            return self.async_abort(reason="no_devices")
-
-        current_ids = entry.data.get(DEVICE_ID, [])
         device_options = {
             str(device.id): device.name for device in self._fetched_systems
         }
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    DEVICE_ID, default=[str(did) for did in current_ids]
-                ): vol.All(
-                    cv.multi_select(device_options),
-                    vol.Length(min=1),
-                )
-            }
+        return self.async_show_form(
+            step_id="device",
+            data_schema=vol.Schema({vol.Required(DEVICE_ID): vol.In(device_options)}),
         )
-        return self.async_show_form(step_id="reconfigure", data_schema=data_schema)
