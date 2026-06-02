@@ -1,0 +1,65 @@
+"""Reauth-flow tests (token re-entry after a 401)."""
+
+from __future__ import annotations
+
+from httpx import Response
+import respx
+
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.noonlight.const import CONF_API_TOKEN, DOMAIN
+
+
+def _start_reauth(hass, entry):
+    return hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=dict(entry.data),
+    )
+
+
+@respx.mock
+async def test_reauth_success_updates_token(hass, setup_entry):
+    # 404 against the bogus probe id == reachable + authorised.
+    respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(404))
+    result = await _start_reauth(hass, setup_entry)
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "fresh-token"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert setup_entry.data[CONF_API_TOKEN] == "fresh-token"
+
+
+@respx.mock
+async def test_reauth_bad_token_shows_error(hass, setup_entry):
+    respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(401))
+    result = await _start_reauth(hass, setup_entry)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "still-bad"}
+    )
+
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == "invalid_auth"
+    # Original token is left untouched.
+    assert setup_entry.data[CONF_API_TOKEN] == "test-token"
+
+
+@respx.mock
+async def test_reauth_cannot_connect_shows_error(hass, setup_entry):
+    respx.route(method="GET", url__regex=r".*/status").mock(
+        side_effect=__import__("httpx").ConnectError("down")
+    )
+    result = await _start_reauth(hass, setup_entry)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "whatever"}
+    )
+
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == "cannot_connect"

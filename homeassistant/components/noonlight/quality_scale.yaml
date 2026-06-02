@@ -1,0 +1,133 @@
+rules:
+  # Bronze
+  action-setup:
+    status: todo
+    comment: >-
+      Services are registered in async_setup_entry; move registration to
+      async_setup so they exist (and raise cleanly) even when no entry is
+      loaded.
+  appropriate-polling: done
+  brands:
+    status: todo
+    comment: Pending the home-assistant/brands PR (logo + icon).
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: todo
+    comment: >-
+      API code is an inline httpx client; must move to a published, versioned
+      PyPI library (revive/fork noonlight-py or publish a new client) and be
+      listed in manifest requirements.
+  docs-actions:
+    status: todo
+    comment: Pending the home-assistant.io documentation PR.
+  docs-high-level-description:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-installation-instructions:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-removal-instructions:
+    status: todo
+    comment: Pending the documentation PR.
+  entity-event-setup:
+    status: exempt
+    comment: Entities are coordinator-driven; no explicit event subscriptions.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: todo
+    comment: >-
+      Coordinator is stored in hass.data[DOMAIN][entry_id]; migrate to
+      entry.runtime_data.
+  test-before-configure: done
+  test-before-setup:
+    status: todo
+    comment: >-
+      Setup does not raise ConfigEntryNotReady on an unreachable API; consider
+      a startup connectivity check (the heartbeat covers post-setup).
+  unique-config-entry:
+    status: todo
+    comment: >-
+      Entries have no unique_id and duplicates are not prevented; derive a
+      unique id (e.g. from the account/token) to guard duplicate setup.
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-installation-parameters:
+    status: todo
+    comment: Pending the documentation PR.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: todo
+    comment: PARALLEL_UPDATES not yet set on the entity platforms.
+  reauthentication-flow: done
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: No diagnostics platform yet.
+  discovery:
+    status: exempt
+    comment: Cloud service; nothing to discover on the local network.
+  discovery-update-info:
+    status: exempt
+    comment: Cloud service; no IP/network info to update.
+  docs-data-update:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-examples:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-known-limitations:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-supported-devices:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-supported-functions:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-troubleshooting:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-use-cases:
+    status: todo
+    comment: Pending the documentation PR.
+  dynamic-devices:
+    status: exempt
+    comment: One service device per config entry; nothing added at runtime.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities are essential to a safety integration.
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: Service errors are not yet translated.
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: One device per entry; removed with the entry.
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: Depends on the future PyPI client being fully async.
+  inject-websession:
+    status: todo
+    comment: >-
+      Uses HA's shared httpx client via get_async_client; the future library
+      should accept an injected session.
+  strict-typing:
+    status: todo
+    comment: Not yet added to .strict-typing.

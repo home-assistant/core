@@ -1,0 +1,51 @@
+# Service schemas surfaced in the Home Assistant UI (Developer Tools → Actions).
+# User-facing names/descriptions live in strings.json / translations.
+
+dispatch_police:
+  fields:
+    entry_delay_seconds: &entry_delay
+      example: 30
+      selector:
+        number:
+          min: 0
+          max: 120
+          unit_of_measurement: seconds
+          mode: box
+    instructions: &instructions
+      example: Triggered by Front Door motion
+      selector:
+        text:
+    account: &account
+      example: Home
+      selector:
+        text:
+
+dispatch_fire:
+  fields:
+    entry_delay_seconds: *entry_delay
+    instructions: *instructions
+    account: *account
+
+dispatch_medical:
+  fields:
+    entry_delay_seconds: *entry_delay
+    instructions: *instructions
+    account: *account
+
+dispatch_all:
+  fields:
+    entry_delay_seconds: *entry_delay
+    instructions: *instructions
+    account: *account
+
+cancel:
+  fields:
+    reason:
+      example: User entered correct disarm code
+      selector:
+        text:
+    account: *account
+
+test_dispatch:
+  fields:
+    account: *account

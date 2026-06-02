@@ -1,0 +1,22 @@
+{
+  "services": {
+    "dispatch_police": {
+      "service": "mdi:police-badge"
+    },
+    "dispatch_fire": {
+      "service": "mdi:fire-truck"
+    },
+    "dispatch_medical": {
+      "service": "mdi:ambulance"
+    },
+    "dispatch_all": {
+      "service": "mdi:car-emergency"
+    },
+    "cancel": {
+      "service": "mdi:close-octagon"
+    },
+    "test_dispatch": {
+      "service": "mdi:test-tube"
+    }
+  }
+}

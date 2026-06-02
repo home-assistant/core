@@ -1,0 +1,11 @@
+{
+  "domain": "noonlight",
+  "name": "Noonlight",
+  "codeowners": ["@brentb2529"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/noonlight",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": []
+}

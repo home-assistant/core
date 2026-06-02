@@ -1,0 +1,6 @@
+{
+  "id": "abc123",
+  "status": "ACTIVE",
+  "owner_id": "owner-1",
+  "services": { "police": true }
+}

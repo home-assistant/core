@@ -1,0 +1,171 @@
+"""Config-flow tests for the Noonlight integration."""
+
+from __future__ import annotations
+
+from httpx import Response
+import respx
+
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.noonlight.const import (
+    ALL_NOONLIGHT_SERVICES,
+    CONF_ADDRESS,
+    CONF_API_TOKEN,
+    CONF_BASE_URL,
+    CONF_CITY,
+    CONF_DEDUPE_SECONDS,
+    CONF_DEFAULT_ENTRY_DELAY,
+    CONF_ENVIRONMENT,
+    CONF_NAME,
+    CONF_PHONE,
+    CONF_SAFETY_ACK,
+    CONF_SERVICES_GRANTED,
+    CONF_STATE,
+    CONF_ZIP,
+    DOMAIN,
+    ENV_CUSTOM,
+    ENV_PRODUCTION,
+    ENV_SANDBOX,
+)
+
+_CALLER = {
+    CONF_NAME: "Main",
+    CONF_PHONE: "+15555550123",
+    CONF_ADDRESS: "1 Test St",
+    CONF_CITY: "Testville",
+    CONF_STATE: "CA",
+    CONF_ZIP: "90001",
+}
+_DEFAULTS = {
+    CONF_DEFAULT_ENTRY_DELAY: 30,
+    CONF_DEDUPE_SECONDS: 300,
+    CONF_SERVICES_GRANTED: ALL_NOONLIGHT_SERVICES,
+}
+
+
+def _mock_token_probe(status: int = 404) -> None:
+    """A GET against the bogus connection-test id validates the token."""
+    respx.route(method="GET", url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+        return_value=Response(status)
+    )
+
+
+@respx.mock
+async def test_sandbox_flow_skips_safety(hass):
+    """Sandbox setup completes without the production safety step."""
+    _mock_token_probe()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "tok", CONF_ENVIRONMENT: ENV_SANDBOX},
+    )
+    assert result["step_id"] == "caller"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], _CALLER)
+    assert result["step_id"] == "defaults"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _DEFAULTS
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Main"
+    assert result["data"][CONF_ENVIRONMENT] == ENV_SANDBOX
+    assert result["options"][CONF_SERVICES_GRANTED] == ALL_NOONLIGHT_SERVICES
+
+
+@respx.mock
+async def test_production_requires_safety_ack(hass):
+    """Production setup must pass the safety step before creating the entry."""
+    _mock_token_probe()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "tok", CONF_ENVIRONMENT: ENV_PRODUCTION},
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], _CALLER)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _DEFAULTS
+    )
+    assert result["step_id"] == "safety"
+
+    # Refusing the ack keeps us on the safety step with an error.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SAFETY_ACK: False}
+    )
+    assert result["step_id"] == "safety"
+    assert result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SAFETY_ACK: True}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SAFETY_ACK] is True
+
+
+@respx.mock
+async def test_invalid_auth_surfaced(hass):
+    """A 401 during validation shows an invalid_auth error."""
+    respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(401))
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "bad", CONF_ENVIRONMENT: ENV_SANDBOX},
+    )
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "invalid_auth"
+
+
+@respx.mock
+async def test_cannot_connect_surfaced(hass):
+    """A transport failure during validation shows a cannot_connect error."""
+    respx.route(method="GET", url__regex=r".*/status").mock(
+        side_effect=__import__("httpx").ConnectError("down")
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "tok", CONF_ENVIRONMENT: ENV_SANDBOX},
+    )
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "cannot_connect"
+
+
+async def test_custom_requires_base_url(hass):
+    """Selecting the custom environment without a URL is rejected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "tok", CONF_ENVIRONMENT: ENV_CUSTOM},
+    )
+    assert result["step_id"] == "user"
+    assert result["errors"][CONF_BASE_URL] == "base_url_required"
+
+
+@respx.mock
+async def test_options_flow(hass, setup_entry):
+    """Options flow updates entry delay, dedupe, and granted services."""
+    result = await hass.config_entries.options.async_init(setup_entry.entry_id)
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_DEFAULT_ENTRY_DELAY: 10,
+            CONF_DEDUPE_SECONDS: 60,
+            CONF_SERVICES_GRANTED: ["police"],
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert setup_entry.options[CONF_DEFAULT_ENTRY_DELAY] == 10
+    assert setup_entry.options[CONF_SERVICES_GRANTED] == ["police"]
