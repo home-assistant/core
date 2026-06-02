@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant.components import climate
 from homeassistant.components.climate import (
+    ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -54,6 +55,17 @@ SET_TEMPERATURE_ACTION = make_test_action(
         ATTR_TARGET_TEMP_LOW: "{{ target_temp_low | default(None) }}",
         ATTR_TARGET_TEMP_HIGH: "{{ target_temp_high | default(None) }}",
         ATTR_HVAC_MODE: "{{ hvac_mode | default(None) }}",
+    },
+)
+SET_HUMIDITY_ACTION = make_test_action(
+    "set_humidity",
+    {ATTR_HUMIDITY: "{{ humidity }}"},
+)
+SET_PRESETS_ACTION = make_test_action(
+    "set_presets",
+    {
+        "presets": "{{ presets }}",
+        "changed": "{{ changed }}",
     },
 )
 
@@ -311,6 +323,52 @@ async def test_set_temperature_action_with_explicit_precision(
 
 
 @pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "hvac_modes": [HVACMode.OFF, HVACMode.HEAT],
+                "temp_step": 0.5,
+                **SET_TEMPERATURE_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_climate")
+async def test_set_temperature_action_rounds_midpoint_up(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test midpoint temperatures round up to the next configured step."""
+    await hass.services.async_call(
+        climate.DOMAIN,
+        climate.SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: TEST_CLIMATE.entity_id,
+            ATTR_TEMPERATURE: 20.25,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 20.5
+
+    assert_action(
+        TEST_CLIMATE,
+        calls,
+        1,
+        "set_temperature",
+        temperature=20.5,
+    )
+
+
+@pytest.mark.parametrize(
     "style",
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
@@ -422,3 +480,182 @@ async def test_apply_preset_with_hvac_mode_only_uses_set_hvac_mode_action(
     assert state.state == HVACMode.HEAT
 
     assert_action(TEST_CLIMATE, calls, 1, "set_hvac_mode", hvac_mode=HVACMode.HEAT)
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_apply_preset_with_unsupported_single_target_temperature_raises(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    calls: list[ServiceCall],
+) -> None:
+    """Test presets cannot apply single target temp when feature is unsupported."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                TEST_CLIMATE.entity_id,
+                HVACMode.OFF,
+                {
+                    "presets": {"eco": {"target_temperature": 20}},
+                },
+            ),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+    mock_component(hass, "recorder")
+
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        1,
+        {
+            "hvac_modes": [HVACMode.OFF, HVACMode.HEAT_COOL],
+            "preset_modes": ["eco"],
+            CONF_PRESETS_FEATURES: TemplateClimateEntityPresetFeature.TARGET_TEMPERATURE,
+            **SET_TEMPERATURE_ACTION,
+        },
+    )
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            climate.DOMAIN,
+            climate.SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: TEST_CLIMATE.entity_id, ATTR_PRESET_MODE: "eco"},
+            blocking=True,
+        )
+
+    assert len(calls) == 0
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_apply_preset_with_unsupported_target_temperature_range_raises(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    calls: list[ServiceCall],
+) -> None:
+    """Test presets cannot apply target temp range when feature is unsupported."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                TEST_CLIMATE.entity_id,
+                HVACMode.OFF,
+                {
+                    "presets": {
+                        "eco": {
+                            "target_temperature_low": 19,
+                            "target_temperature_high": 22,
+                        }
+                    },
+                },
+            ),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+    mock_component(hass, "recorder")
+
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        1,
+        {
+            "hvac_modes": [HVACMode.OFF, HVACMode.HEAT],
+            "preset_modes": ["eco"],
+            CONF_PRESETS_FEATURES: TemplateClimateEntityPresetFeature.TARGET_TEMPERATURE_RANGE,
+            **SET_TEMPERATURE_ACTION,
+        },
+    )
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            climate.DOMAIN,
+            climate.SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: TEST_CLIMATE.entity_id, ATTR_PRESET_MODE: "eco"},
+            blocking=True,
+        )
+
+    assert len(calls) == 0
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_set_humidity_updates_editable_preset_and_runs_set_presets_action(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    calls: list[ServiceCall],
+) -> None:
+    """Test setting humidity updates editable preset and runs set_presets action."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                TEST_CLIMATE.entity_id,
+                HVACMode.HEAT,
+                {
+                    ATTR_PRESET_MODE: "eco",
+                    "presets": {"eco": {"target_humidity": 45}},
+                },
+            ),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+    mock_component(hass, "recorder")
+
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        1,
+        {
+            "hvac_modes": [HVACMode.OFF, HVACMode.HEAT],
+            "preset_modes": ["eco"],
+            CONF_PRESETS_FEATURES: (
+                TemplateClimateEntityPresetFeature.EDITABLE
+                | TemplateClimateEntityPresetFeature.TARGET_HUMIDITY
+            ),
+            **SET_HUMIDITY_ACTION,
+            **SET_PRESETS_ACTION,
+        },
+    )
+
+    await hass.services.async_call(
+        climate.DOMAIN,
+        climate.SERVICE_SET_HUMIDITY,
+        {ATTR_ENTITY_ID: TEST_CLIMATE.entity_id, ATTR_HUMIDITY: 55},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_HUMIDITY] == 55
+
+    assert_action(
+        TEST_CLIMATE,
+        calls,
+        2,
+        "set_humidity",
+        index=0,
+        humidity=55,
+    )
+    assert_action(
+        TEST_CLIMATE,
+        calls,
+        2,
+        "set_presets",
+        index=1,
+        presets={"eco": {"target_humidity": 55}},
+        changed={"eco": {"target_humidity": 55}},
+    )

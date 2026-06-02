@@ -1,17 +1,12 @@
 """Support for Template climates."""
 
+from decimal import ROUND_HALF_UP, Decimal
 from enum import IntFlag
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    DOMAIN as CLIMATE_DOMAIN,
-    ENTITY_ID_FORMAT,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
-from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -26,9 +21,13 @@ from homeassistant.components.climate.const import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
+    DOMAIN as CLIMATE_DOMAIN,
+    ENTITY_ID_FORMAT,
     FAN_LOW,
     PRESET_COMFORT,
     SWING_OFF,
+    ClimateEntity,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
@@ -158,6 +157,15 @@ class TemplateClimateEntityPresetFeature(IntFlag):
 def _hvac_mode_list(value: Any) -> list[HVACMode]:
     """Validate and coerce a configured HVAC mode list."""
     return [HVACMode(item) for item in cv.ensure_list(value)]
+
+
+def _round_to_step(value: float, step: float) -> float:
+    """Round a temperature to the nearest step using half-up midpoint handling."""
+    decimal_value = Decimal(str(value))
+    decimal_step = Decimal(str(step))
+    return float(
+        (decimal_value / decimal_step).quantize(0, ROUND_HALF_UP) * decimal_step
+    )
 
 
 CLIMATE_COMMON_SCHEMA = vol.Schema(
@@ -581,10 +589,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         if self._attr_target_temperature_step is None:
             return float(value)
 
-        return (
-            round(float(value) / self._attr_target_temperature_step)
-            * self._attr_target_temperature_step
-        )
+        return _round_to_step(float(value), self._attr_target_temperature_step)
 
     def _validate_target_temperature_low(self, result: Any) -> float | None:
         """Validate a low target temperature template result."""
@@ -948,7 +953,10 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 )
                 self._presets[self._attr_preset_mode]["hvac_mode"] = hvac_mode
 
-        if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+        if (
+            (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is not None
+            and self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
+        ):
             validated = self._validate_target_temperature(target_temperature)
             if validated is None:
                 raise ValueError(f"Invalid target temperature: {target_temperature}")
@@ -965,7 +973,11 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 ] = validated
                 self._presets[self._attr_preset_mode]["target_temperature"] = validated
 
-        if (target_temperature_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
+        if (
+            (target_temperature_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None
+            and self._attr_supported_features
+            & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        ):
             validated = self._validate_target_temperature_low(target_temperature_low)
             if validated is None:
                 raise ValueError(
@@ -986,7 +998,11 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                     validated
                 )
 
-        if (target_temperature_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
+        if (
+            (target_temperature_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None
+            and self._attr_supported_features
+            & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        ):
             validated = self._validate_target_temperature_high(target_temperature_high)
             if validated is None:
                 raise ValueError(

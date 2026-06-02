@@ -332,7 +332,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             ),
             vol.Optional(CONF_PRESETS_FEATURES): selector.NumberSelector(
                 selector.NumberSelectorConfig(
-                    min=0, step=1, mode=selector.NumberSelectorMode.BOX
+                    min=0, max=255,step=1, mode=selector.NumberSelectorMode.BOX
                 )
             ),
             vol.Optional(CONF_MAX_ACTION): selector.NumberSelector(
