@@ -1,7 +1,10 @@
 {
   "services": {
-    "dispatch_police": {
-      "service": "mdi:police-badge"
+    "cancel": {
+      "service": "mdi:close-octagon"
+    },
+    "dispatch_all": {
+      "service": "mdi:car-emergency"
     },
     "dispatch_fire": {
       "service": "mdi:fire-truck"
@@ -9,11 +12,8 @@
     "dispatch_medical": {
       "service": "mdi:ambulance"
     },
-    "dispatch_all": {
-      "service": "mdi:car-emergency"
-    },
-    "cancel": {
-      "service": "mdi:close-octagon"
+    "dispatch_police": {
+      "service": "mdi:police-badge"
     },
     "test_dispatch": {
       "service": "mdi:test-tube"
