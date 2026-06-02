@@ -96,7 +96,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         if min_temp := self.device.states[
             OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
         ]:
-            return min_temp.value_as_float
+            return cast(float, min_temp.value_as_float)
         return DEFAULT_MIN_TEMP
 
     @property
@@ -105,7 +105,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         if max_temp := self.device.states[
             OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
         ]:
-            return max_temp.value_as_float
+            return cast(float, max_temp.value_as_float)
         return DEFAULT_MAX_TEMP
 
     @property
@@ -164,7 +164,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
             return STATE_PERFORMANCE
 
         if dhw_mode := self.device.states[OverkizState.IO_DHW_MODE]:
-            return OVERKIZ_TO_OPERATION_MODE.get(dhw_mode.value_as_str)
+            return OVERKIZ_TO_OPERATION_MODE.get(cast(str, dhw_mode.value_as_str))
 
         return None
 

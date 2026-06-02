@@ -17,24 +17,6 @@
         }
       }
     },
-    "water_heater": {
-      "overkiz": {
-        "state": {
-          "auto": "mdi:thermostat-auto",
-          "manual": "mdi:hand-back-right-outline",
-          "performance": "mdi:rocket-launch"
-        },
-        "state_attributes": {
-          "operation_mode": {
-            "state": {
-              "auto": "mdi:thermostat-auto",
-              "manual": "mdi:hand-back-right-outline",
-              "performance": "mdi:rocket-launch"
-            }
-          }
-        }
-      }
-    },
     "select": {
       "active_zones": {
         "default": "mdi:shield-lock"
@@ -57,6 +39,24 @@
         "state": {
           "cooling": "mdi:snowflake",
           "heating": "mdi:heat-wave"
+        }
+      }
+    },
+    "water_heater": {
+      "overkiz": {
+        "state": {
+          "auto": "mdi:thermostat-auto",
+          "manual": "mdi:hand-back-right-outline",
+          "performance": "mdi:rocket-launch"
+        },
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "auto": "mdi:thermostat-auto",
+              "manual": "mdi:hand-back-right-outline",
+              "performance": "mdi:rocket-launch"
+            }
+          }
         }
       }
     }

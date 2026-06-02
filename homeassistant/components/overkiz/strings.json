@@ -92,24 +92,6 @@
         }
       }
     },
-    "water_heater": {
-      "overkiz": {
-        "state": {
-          "auto": "[%key:common::state::auto%]",
-          "manual": "[%key:common::state::manual%]",
-          "performance": "Boost"
-        },
-        "state_attributes": {
-          "operation_mode": {
-            "state": {
-              "auto": "[%key:common::state::auto%]",
-              "manual": "[%key:common::state::manual%]",
-              "performance": "Boost"
-            }
-          }
-        }
-      }
-    },
     "select": {
       "memorized_simple_volume": {
         "state": {
@@ -194,6 +176,24 @@
           "closed": "[%key:common::state::closed%]",
           "open": "[%key:common::state::open%]",
           "tilt": "Tilt"
+        }
+      }
+    },
+    "water_heater": {
+      "overkiz": {
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
+          "performance": "Boost"
+        },
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]",
+              "performance": "Boost"
+            }
+          }
         }
       }
     }
