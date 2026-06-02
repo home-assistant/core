@@ -168,10 +168,10 @@
   },
   "exceptions": {
     "authentication_error": {
-      "message": "Authentication failed while communicating with the charger."
+      "message": "Authentication failed: {error}"
     },
     "communication_error": {
-      "message": "Failed to communicate with the charger."
+      "message": "Failed to communicate with the charger: {error}"
     },
     "invalid_value": {
       "message": "Value {value} is invalid for the charger."

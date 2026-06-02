@@ -27,11 +27,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
         await charger.test_and_get()
     except TimeoutError as ex:
         raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="communication_error"
+            translation_domain=DOMAIN,
+            translation_key="communication_error",
+            translation_placeholders={"error": str(ex)},
         ) from ex
     except AuthenticationError as ex:
         raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="authentication_error"
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
+            translation_placeholders={"error": str(ex)},
         ) from ex
 
     coordinator = OpenEVSEDataUpdateCoordinator(hass, entry, charger)

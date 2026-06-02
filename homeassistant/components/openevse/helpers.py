@@ -19,6 +19,13 @@ from homeassistant.exceptions import (
 from .const import DOMAIN
 
 
+def _get_error_message(err: Exception) -> str:
+    """Extract error message from exception."""
+    if isinstance(err, ContentTypeError) and hasattr(err, "message"):
+        return err.message
+    return str(err)
+
+
 @contextmanager
 def openevse_exception_handler(value: float) -> Iterator[None]:
     """Context manager to handle and translate OpenEVSE exceptions."""
@@ -34,6 +41,7 @@ def openevse_exception_handler(value: float) -> Iterator[None]:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_error",
+            translation_placeholders={"error": _get_error_message(err)},
         ) from err
     except UnsupportedFeature as err:
         raise HomeAssistantError(
@@ -49,4 +57,5 @@ def openevse_exception_handler(value: float) -> Iterator[None]:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="communication_error",
+            translation_placeholders={"error": _get_error_message(err)},
         ) from err

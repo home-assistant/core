@@ -65,9 +65,11 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
+                translation_placeholders={"error": str(error)},
             ) from error
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_error",
+                translation_placeholders={"error": str(error)},
             ) from error
