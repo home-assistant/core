@@ -1189,6 +1189,9 @@
       "multi_acin_voltage_phase": {
         "name": "[%key:component::victron_gx::common::voltage_on_phase%]"
       },
+      "multi_acout_current_phase": {
+        "name": "Output current on {phase}"
+      },
       "multi_acout_output_current_phase": {
         "name": "AC-out-{output} current on {phase}"
       },
@@ -1198,11 +1201,17 @@
       "multi_acout_output_voltage_phase": {
         "name": "AC-out-{output} voltage on {phase}"
       },
+      "multi_acout_power_phase": {
+        "name": "Output power on {phase}"
+      },
       "multi_acout_to_acin1": {
         "name": "AC-out to AC-in-1"
       },
       "multi_acout_to_inverter": {
         "name": "AC-out to inverter"
+      },
+      "multi_acout_voltage_phase": {
+        "name": "Output voltage on {phase}"
       },
       "multi_active_input": {
         "name": "[%key:component::victron_gx::common::active_ac_input%]",
