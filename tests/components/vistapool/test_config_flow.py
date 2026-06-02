@@ -280,3 +280,26 @@ async def test_dhcp_discovery_aborts_when_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_aborts_when_in_progress(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a second DHCP discovery aborts while another flow is in progress."""
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=_DHCP_INFO,
+    )
+    assert first["type"] is FlowResultType.FORM
+
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=_DHCP_INFO,
+    )
+
+    assert second["type"] is FlowResultType.ABORT
+    assert second["reason"] == "already_in_progress"
