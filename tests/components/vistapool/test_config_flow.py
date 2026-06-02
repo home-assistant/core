@@ -17,10 +17,17 @@ from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_PASSWORD, MOCK_POOLS, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
+
+_DHCP_INFO = DhcpServiceInfo(
+    ip="192.168.2.70",
+    hostname="sugarwifi",
+    macaddress="aabbccddeeff",
+)
 
 
 @pytest.fixture
@@ -228,6 +235,48 @@ async def test_duplicate_account_aborts(
     mock_config_entry.add_to_hass(hass)
 
     result = await _configure(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+# ── DHCP discovery ────────────────────────────────────────────────
+
+
+async def test_dhcp_discovery_starts_user_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test DHCP discovery routes the user into the credentials step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=_DHCP_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await _submit(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_USERNAME
+
+
+async def test_dhcp_discovery_aborts_when_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test DHCP discovery aborts when an account is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=_DHCP_INFO,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
