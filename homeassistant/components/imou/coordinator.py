@@ -93,6 +93,10 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         failures: list[Exception] = []
         for device, result in zip(devices, results, strict=True):
+            if isinstance(result, BaseException) and not isinstance(result, Exception):
+                # Propagate CancelledError and other BaseExceptions instead of
+                # swallowing them as a regular device failure.
+                raise result
             if not isinstance(result, Exception):
                 continue
             device_key = imou_device_identifier(device)
