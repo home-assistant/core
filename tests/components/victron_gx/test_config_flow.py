@@ -208,6 +208,10 @@ async def test_options_flow(
 ) -> None:
     """Test Victron GX options flow."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 45},
+    )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -216,19 +220,24 @@ async def test_options_flow(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    schema_keys = {k.schema: k for k in result["data_schema"].schema}
+    assert (
+        schema_keys[CONF_STATE_WRITE_DEBOUNCE_INTERVAL].description["suggested_value"]
+        == 45
+    )
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 0.5},
+        user_input={CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 60},
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 0.5}
+    assert result["data"] == {CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 60}
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    assert entry.options == {CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 0.5}
+    assert entry.options == {CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 60}
 
 
 @pytest.mark.usefixtures("mock_victron_hub")

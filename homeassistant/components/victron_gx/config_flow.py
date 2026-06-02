@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    UnitOfTime,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector
@@ -86,6 +87,7 @@ OPTIONS_DATA_SCHEMA = vol.Schema(
                 min=0,
                 max=300,
                 step=1,
+                unit_of_measurement=UnitOfTime.SECONDS,
                 mode=selector.NumberSelectorMode.BOX,
             )
         )
