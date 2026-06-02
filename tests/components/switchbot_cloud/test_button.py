@@ -106,7 +106,7 @@ async def test_switchmode_bot_no_button_entity(
     ],
 )
 async def test_loaded_buttons(
-    hass: HomeAssistant, mock_list_devices, mock_get_status, buttons
+    hass: HomeAssistant, mock_list_devices, mock_get_status, mock_setup_webhook, buttons
 ) -> None:
     """Test press."""
     mock_list_devices.return_value = [
