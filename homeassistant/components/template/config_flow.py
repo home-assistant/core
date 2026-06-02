@@ -9,9 +9,9 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
+from homeassistant.components.climate.const import HVACMode
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.event import EventDeviceClass
-from homeassistant.components.climate.const import HVACMode
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -88,9 +88,9 @@ from .climate import (
     CONF_TARGET_TEMPERATURE_HIGH_TEMPLATE,
     CONF_TARGET_TEMPERATURE_LOW_TEMPLATE,
     CONF_TARGET_TEMPERATURE_TEMPLATE,
+    CONF_TEMP_STEP,
     CONF_TEMPERATURE_MAX,
     CONF_TEMPERATURE_MIN,
-    CONF_TEMP_STEP,
     async_create_preview_climate,
 )
 from .const import (
@@ -251,11 +251,17 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
     if domain == Platform.CLIMATE:
         schema |= {
             vol.Optional(CONF_HVAC_MODE_TEMPLATE): selector.TemplateSelector(),
-            vol.Optional(CONF_CURRENT_TEMPERATURE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(
+                CONF_CURRENT_TEMPERATURE_TEMPLATE
+            ): selector.TemplateSelector(),
             vol.Optional(CONF_CURRENT_HUMIDITY_TEMPLATE): selector.TemplateSelector(),
             vol.Optional(CONF_TARGET_TEMPERATURE_TEMPLATE): selector.TemplateSelector(),
-            vol.Optional(CONF_TARGET_TEMPERATURE_LOW_TEMPLATE): selector.TemplateSelector(),
-            vol.Optional(CONF_TARGET_TEMPERATURE_HIGH_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(
+                CONF_TARGET_TEMPERATURE_LOW_TEMPLATE
+            ): selector.TemplateSelector(),
+            vol.Optional(
+                CONF_TARGET_TEMPERATURE_HIGH_TEMPLATE
+            ): selector.TemplateSelector(),
             vol.Optional(CONF_TARGET_HUMIDITY_TEMPLATE): selector.TemplateSelector(),
             vol.Optional(CONF_FAN_MODE_TEMPLATE): selector.TemplateSelector(),
             vol.Optional(CONF_PRESET_MODE_TEMPLATE): selector.TemplateSelector(),
@@ -268,7 +274,9 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_SET_FAN_MODE_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_SET_PRESET_MODE_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_SET_SWING_MODE_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_HVAC_MODE_LIST, default=[HVACMode.OFF, HVACMode.HEAT]): selector.SelectSelector(
+            vol.Optional(
+                CONF_HVAC_MODE_LIST, default=[HVACMode.OFF, HVACMode.HEAT]
+            ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[mode.value for mode in HVACMode],
                     multiple=True,
@@ -318,7 +326,9 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                 )
             ),
             vol.Optional(CONF_TEMP_STEP): selector.NumberSelector(
-                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX)
+                selector.NumberSelectorConfig(
+                    min=0.1, mode=selector.NumberSelectorMode.BOX
+                )
             ),
             vol.Optional(CONF_PRESETS_FEATURES): selector.NumberSelector(
                 selector.NumberSelectorConfig(

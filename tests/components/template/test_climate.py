@@ -5,9 +5,14 @@ import pytest
 from homeassistant.components import climate
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     HVACMode,
+)
+from homeassistant.components.template.climate import (
+    CONF_PRESETS_FEATURES,
+    TemplateClimateEntityPresetFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -17,7 +22,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
@@ -29,6 +34,8 @@ from .conftest import (
     make_test_trigger,
     setup_entity,
 )
+
+from tests.common import mock_component, mock_restore_cache
 
 TEST_STATE_ENTITY_ID = "sensor.test_climate_state"
 TEST_CLIMATE = TemplatePlatformSetup(
@@ -186,9 +193,15 @@ async def test_turn_on_off_uses_last_hvac_mode(
     assert state is not None
     assert state.state == HVACMode.HEAT
 
-    assert_action(TEST_CLIMATE, calls, 3, "set_hvac_mode", index=0, hvac_mode=HVACMode.HEAT)
-    assert_action(TEST_CLIMATE, calls, 3, "set_hvac_mode", index=1, hvac_mode=HVACMode.OFF)
-    assert_action(TEST_CLIMATE, calls, 3, "set_hvac_mode", index=2, hvac_mode=HVACMode.HEAT)
+    assert_action(
+        TEST_CLIMATE, calls, 3, "set_hvac_mode", index=0, hvac_mode=HVACMode.HEAT
+    )
+    assert_action(
+        TEST_CLIMATE, calls, 3, "set_hvac_mode", index=1, hvac_mode=HVACMode.OFF
+    )
+    assert_action(
+        TEST_CLIMATE, calls, 3, "set_hvac_mode", index=2, hvac_mode=HVACMode.HEAT
+    )
 
 
 @pytest.mark.parametrize(
@@ -295,3 +308,117 @@ async def test_set_temperature_action_with_explicit_precision(
         target_temp_high=22.5,
         hvac_mode=HVACMode.HEAT_COOL,
     )
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_restore_turn_on_off_with_string_hvac_mode_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    calls: list[ServiceCall],
+) -> None:
+    """Test restoring last_on_mode/off_mode with string values works."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                TEST_CLIMATE.entity_id,
+                HVACMode.OFF,
+                {
+                    "last_on_mode": {"hvac_mode": HVACMode.HEAT.value},
+                    "off_mode": {"hvac_mode": HVACMode.OFF.value},
+                },
+            ),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+    mock_component(hass, "recorder")
+
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        1,
+        {"hvac_modes": [HVACMode.OFF, HVACMode.HEAT], **SET_HVAC_MODE_ACTION},
+    )
+
+    await hass.services.async_call(
+        climate.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_CLIMATE.entity_id},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        climate.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_CLIMATE.entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+
+    assert_action(
+        TEST_CLIMATE, calls, 2, "set_hvac_mode", index=0, hvac_mode=HVACMode.HEAT
+    )
+    assert_action(
+        TEST_CLIMATE, calls, 2, "set_hvac_mode", index=1, hvac_mode=HVACMode.OFF
+    )
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_apply_preset_with_hvac_mode_only_uses_set_hvac_mode_action(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    calls: list[ServiceCall],
+) -> None:
+    """Test hvac-only presets route through set_hvac_mode, not set_temperature."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                TEST_CLIMATE.entity_id,
+                HVACMode.OFF,
+                {
+                    "presets": {"eco": {"hvac_mode": HVACMode.HEAT.value}},
+                },
+            ),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+    mock_component(hass, "recorder")
+
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        1,
+        {
+            "hvac_modes": [HVACMode.OFF, HVACMode.HEAT],
+            "preset_modes": ["eco"],
+            CONF_PRESETS_FEATURES: TemplateClimateEntityPresetFeature.HVAC_MODE,
+            **SET_HVAC_MODE_ACTION,
+            **SET_TEMPERATURE_ACTION,
+        },
+    )
+
+    await hass.services.async_call(
+        climate.DOMAIN,
+        climate.SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: TEST_CLIMATE.entity_id, ATTR_PRESET_MODE: "eco"},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+
+    assert_action(TEST_CLIMATE, calls, 1, "set_hvac_mode", hvac_mode=HVACMode.HEAT)
