@@ -35,10 +35,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "airtouch3",
-        "hostname": "*airtouch3*",
-    },
-    {
-        "domain": "airtouch3",
         "hostname": "*aritouch3*",
     },
     {
