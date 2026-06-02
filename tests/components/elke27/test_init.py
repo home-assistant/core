@@ -1,5 +1,6 @@
 """Tests for the Elke27 integration setup."""
 
+import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -7,7 +8,10 @@ from elke27_lib import LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
 import pytest
 
-from homeassistant.components.elke27 import async_unload_entry
+from homeassistant.components.elke27 import (
+    _async_disconnect_failed_setup,
+    async_unload_entry,
+)
 from homeassistant.components.elke27.const import (
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,
@@ -168,6 +172,18 @@ async def test_setup_transient_error_suppresses_disconnect_error(
     coordinator_cls.assert_not_called()
     hub.async_disconnect.assert_awaited_once()
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_disconnect_failed_setup_preserves_cancelled_error() -> None:
+    """Test setup cleanup preserves cancellation."""
+    hub = SimpleNamespace(
+        async_disconnect=AsyncMock(side_effect=asyncio.CancelledError),
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await _async_disconnect_failed_setup(hub)
+
+    hub.async_disconnect.assert_awaited_once()
 
 
 async def test_setup_initial_refresh_error_cleans_up_and_returns_not_ready(

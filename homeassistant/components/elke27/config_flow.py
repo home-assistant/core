@@ -1,9 +1,8 @@
 """Config flow for the Elke27 integration."""
 
+import asyncio
 from collections.abc import Mapping
-import contextlib
 from dataclasses import asdict, is_dataclass
-import re
 from typing import Any
 
 from elke27_lib import ClientConfig, LinkKeys
@@ -25,14 +24,12 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import selector
 
 from .const import CONF_LINK_KEYS_JSON, DEFAULT_PORT, DOMAIN, READY_TIMEOUT
-from .identity import build_client_identity, derive_client_id
+from .identity import build_client_identity, derive_client_id, normalize_identifier
 
 CONF_ACCESS_CODE = "access_code"
 CONF_PASSPHRASE = "passphrase"
 CONF_PANEL_INFO = "panel_info"
 CONF_TABLE_INFO = "table_info"
-
-_UNIQUE_ID_RE = re.compile(r"[^a-z0-9]")
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -141,8 +138,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         except Elke27Error:
             errors["base"] = "unknown"
         finally:
-            with contextlib.suppress(Exception):
-                await client.async_disconnect()
+            await _async_disconnect_client(client)
 
         if errors or link_keys is None:
             return self.async_show_form(
@@ -180,6 +176,16 @@ def _create_client() -> Elke27Client:
     return Elke27Client(ClientConfig())
 
 
+async def _async_disconnect_client(client: Elke27Client) -> None:
+    """Disconnect a config-flow client while preserving cancellation."""
+    try:
+        await client.async_disconnect()
+    except asyncio.CancelledError:
+        raise
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _panel_name(panel_info: dict[str, Any]) -> str | None:
     return (
         panel_info.get("panel_name")
@@ -199,7 +205,7 @@ def _panel_unique_id(panel_info: dict[str, Any]) -> str | None:
     )
     if unique_id is None:
         return None
-    normalized = _UNIQUE_ID_RE.sub("", str(unique_id).lower())
+    normalized = normalize_identifier(str(unique_id))
     return normalized or None
 
 
