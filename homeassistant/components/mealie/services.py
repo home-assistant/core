@@ -1,7 +1,6 @@
 """Define services for the Mealie integration."""
 
 from dataclasses import asdict
-from datetime import date
 
 from aiomealie import (
     MealieConnectionError,
@@ -12,6 +11,7 @@ from aiomealie import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DATE
 from homeassistant.core import (
     HomeAssistant,
@@ -22,6 +22,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_END_DATE,
@@ -63,6 +64,8 @@ SERVICE_GET_RECIPES_SCHEMA = vol.Schema(
         vol.Optional(ATTR_RESULT_LIMIT): int,
     }
 )
+
+SERVICE_GET_SHOPPING_LIST_ITEMS = "get_shopping_list_items"
 
 SERVICE_IMPORT_RECIPE = "import_recipe"
 SERVICE_IMPORT_RECIPE_SCHEMA = vol.Schema(
@@ -134,8 +137,8 @@ async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    start_date = call.data.get(ATTR_START_DATE, date.today())
-    end_date = call.data.get(ATTR_END_DATE, date.today())
+    start_date = call.data.get(ATTR_START_DATE, dt_util.now().date())
+    end_date = call.data.get(ATTR_END_DATE, dt_util.now().date())
     if end_date < start_date:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -320,4 +323,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _async_set_mealplan,
         schema=SERVICE_SET_MEALPLAN_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_GET_SHOPPING_LIST_ITEMS,
+        entity_domain=TODO_DOMAIN,
+        schema=None,
+        func="async_get_shopping_list_items",
+        supports_response=SupportsResponse.ONLY,
     )

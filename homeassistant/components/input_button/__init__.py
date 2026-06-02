@@ -1,7 +1,5 @@
 """Support to keep track of user controlled buttons which can be used in automations."""
 
-from __future__ import annotations
-
 import logging
 from typing import Self, cast
 
@@ -105,8 +103,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all input buttons and load new ones from config."""
         conf = await component.async_prepare_reload(skip_reset=True)
-        if conf is None:
-            return
         await yaml_collection.async_load(
             [
                 {CONF_ID: id_, **(conf or {})}
@@ -127,7 +123,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     """Representation of a button."""
 

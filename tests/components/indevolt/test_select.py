@@ -1,0 +1,161 @@
+"""Tests for the Indevolt select platform."""
+
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
+
+from freezegun.api import FrozenDateTimeFactory
+from indevolt_api import IndevoltConfig, IndevoltEnergyMode
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
+from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("generation", [2, 1], indirect=True)
+async def test_select(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_indevolt: AsyncMock,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test select entity registration and states."""
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+@pytest.mark.parametrize(
+    ("option", "expected_value"),
+    [
+        ("self_consumed_prioritized", IndevoltEnergyMode.SELF_CONSUMED_PRIORITIZED),
+        ("real_time_control", IndevoltEnergyMode.REAL_TIME_CONTROL),
+        ("charge_discharge_schedule", IndevoltEnergyMode.CHARGE_DISCHARGE_SCHEDULE),
+    ],
+)
+async def test_select_option(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    option: str,
+    expected_value: int,
+) -> None:
+    """Test selecting all valid energy mode options."""
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    # Reset mock call count for this iteration
+    mock_indevolt.set_data.reset_mock()
+
+    # Update mock data to reflect the new value
+    mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (
+        expected_value
+    )
+
+    # Attempt to change option
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {"entity_id": "select.cms_sf2000_energy_mode", "option": option},
+        blocking=True,
+    )
+
+    # Verify set_data was called with correct parameters
+    mock_indevolt.set_data.assert_called_with(
+        IndevoltConfig.WRITE_ENERGY_MODE, expected_value
+    )
+
+    # Verify updated state
+    assert (state := hass.states.get("select.cms_sf2000_energy_mode")) is not None
+    assert state.state == option
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_select_set_option_error(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error handling when selecting an option."""
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_indevolt.set_data.return_value = False
+
+    # Attempt to change option
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                "entity_id": "select.cms_sf2000_energy_mode",
+                "option": "real_time_control",
+            },
+            blocking=True,
+        )
+
+    # Verify set_data was called before failing
+    mock_indevolt.set_data.assert_called_once()
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_select_unavailable_outdoor_portable(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entity is unavailable in outdoor/portable mode (value 0)."""
+
+    # Update mock data to fake outdoor/portable mode
+    mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (
+        IndevoltEnergyMode.OUTDOOR_PORTABLE
+    )
+
+    # Initialize platform to test availability logic
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    # Verify entity state is unavailable
+    assert (state := hass.states.get("select.cms_sf2000_energy_mode")) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_select_availability(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test select entity availability when coordinator fails."""
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    # Confirm initial state is available
+    assert (state := hass.states.get("select.cms_sf2000_energy_mode")) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # Simulate a fetch error
+    mock_indevolt.fetch_data.side_effect = ConnectionError
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Verify entity state is unavailable
+    assert (state := hass.states.get("select.cms_sf2000_energy_mode")) is not None
+    assert state.state == STATE_UNAVAILABLE

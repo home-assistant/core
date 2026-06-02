@@ -18,6 +18,9 @@ from .conftest import KNXTestKit
 MOCK_TIMESTAMP = "2023-07-02T14:51:24.045162-07:00"
 MOCK_TELEGRAMS = [
     {
+        # None since CEMIHandler is mocked away and doesn't
+        # set it to False
+        "data_secure": None,
         "destination": "1/3/4",
         "destination_name": "",
         "direction": "Incoming",
@@ -33,6 +36,7 @@ MOCK_TELEGRAMS = [
         "value": None,
     },
     {
+        "data_secure": None,
         "destination": "2/2/2",
         "destination_name": "",
         "direction": "Outgoing",
@@ -51,7 +55,7 @@ MOCK_TELEGRAMS = [
 
 
 def assert_telegram_history(telegrams: list[TelegramDict]) -> bool:
-    """Assert that the mock telegrams are equal to the given telegrams. Omitting timestamp."""
+    """Assert mock telegrams equal the given telegrams, omitting timestamp."""
     assert len(telegrams) == len(MOCK_TELEGRAMS)
     for index, value in enumerate(telegrams):
         test_telegram = copy(value)  # don't modify the original

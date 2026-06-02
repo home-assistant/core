@@ -9,14 +9,12 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN
-from .coordinator import MicroBeesUpdateCoordinator
+from . import MicroBeesConfigEntry
 from .entity import MicroBeesEntity
 
 COVER_IDS = {47: "roller_shutter"}
@@ -24,13 +22,11 @@ COVER_IDS = {47: "roller_shutter"}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MicroBeesConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the microBees cover platform."""
-    coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ].coordinator
+    coordinator = entry.runtime_data.coordinator
 
     async_add_entities(
         MBCover(
@@ -88,12 +84,12 @@ class MBCover(MicroBeesEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        sendCommand = await self.coordinator.microbees.sendCommand(
+        send_command = await self.coordinator.microbees.sendCommand(
             self.actuator_up_id,
             self.actuator_up.configuration.actuator_timing * 1000,
         )
 
-        if not sendCommand:
+        if not send_command:
             raise HomeAssistantError(f"Failed to open {self.name}")
 
         self._attr_is_opening = True
@@ -105,11 +101,11 @@ class MBCover(MicroBeesEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        sendCommand = await self.coordinator.microbees.sendCommand(
+        send_command = await self.coordinator.microbees.sendCommand(
             self.actuator_down_id,
             self.actuator_down.configuration.actuator_timing * 1000,
         )
-        if not sendCommand:
+        if not send_command:
             raise HomeAssistantError(f"Failed to close {self.name}")
 
         self._attr_is_closing = True

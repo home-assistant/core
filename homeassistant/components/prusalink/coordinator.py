@@ -1,7 +1,5 @@
 """Coordinators for the PrusaLink integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from datetime import timedelta
@@ -16,6 +14,7 @@ from pyprusalink import (
     PrinterInfo,
     PrinterStatus,
     PrusaLink,
+    VersionInfo,
 )
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 
@@ -32,17 +31,33 @@ _LOGGER = logging.getLogger(__name__)
 # rapidly-changing metrics.
 _MINIMUM_REFRESH_INTERVAL = 1.0
 
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
+# Job is the only coordinator whose payload can be None — pyprusalink's
+# get_job() returns None on HTTP 204 when no job is running. The other
+# endpoints always return data or raise on failure. Using `bound=` rather
+# than constraint members so `JobInfo | None` fits without forcing a union
+# into the constraint list.
+T = TypeVar(
+    "T",
+    bound=PrinterStatus
+    | LegacyPrinterStatus
+    | JobInfo
+    | None
+    | PrinterInfo
+    | VersionInfo,
+)
+
+
+type PrusaLinkConfigEntry = ConfigEntry[dict[str, PrusaLinkUpdateCoordinator]]
 
 
 class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
     """Update coordinator for the printer."""
 
-    config_entry: ConfigEntry
+    config_entry: PrusaLinkConfigEntry
     expect_change_until = 0.0
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: PrusaLink
+        self, hass: HomeAssistant, config_entry: PrusaLinkConfigEntry, api: PrusaLink
     ) -> None:
         """Initialize the update coordinator."""
         self.api = api
@@ -83,8 +98,15 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
         """Expect a change."""
         self.expect_change_until = monotonic() + 30
 
-    def _get_update_interval(self, data: T) -> timedelta:
-        """Get new update interval."""
+    def _get_update_interval(self, data: T | None) -> timedelta:
+        """Get new update interval.
+
+        `data` is unused by the base implementation today, but kept on the
+        signature so subclasses can override based on payload state — e.g. a
+        future transfer coordinator that polls faster while a transfer is
+        active. The base class is called once from `__init__` with `None`
+        before the first fetch, hence `T | None`.
+        """
         if self.expect_change_until > monotonic():
             return timedelta(seconds=5)
 
@@ -107,10 +129,15 @@ class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):
         return await self.api.get_legacy_printer()
 
 
-class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
-    """Job update coordinator."""
+class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo | None]):
+    """Job update coordinator.
 
-    async def _fetch_data(self) -> JobInfo:
+    The job endpoint returns nothing (HTTP 204) when no job is running, so
+    `data` can legitimately be `None` here. Entity code that reads from this
+    coordinator's data must be `None`-aware.
+    """
+
+    async def _fetch_data(self) -> JobInfo | None:
         """Fetch the printer data."""
         return await self.api.get_job()
 
@@ -121,3 +148,11 @@ class InfoUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
     async def _fetch_data(self) -> PrinterInfo:
         """Fetch the printer data."""
         return await self.api.get_info()
+
+
+class VersionUpdateCoordinator(PrusaLinkUpdateCoordinator[VersionInfo]):
+    """Version update coordinator."""
+
+    async def _fetch_data(self) -> VersionInfo:
+        """Fetch the version data."""
+        return await self.api.get_version()

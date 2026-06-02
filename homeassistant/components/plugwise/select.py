@@ -1,7 +1,5 @@
 """Plugwise Select component for Home Assistant."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription

@@ -1,8 +1,10 @@
 """Test homee covers."""
 
-from unittest.mock import MagicMock
+from collections.abc import AsyncGenerator
+from unittest.mock import MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from websockets import frames
 from websockets.exceptions import ConnectionClosed
 
@@ -28,14 +30,23 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import build_mock_node, setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.COVER]):
+        yield
 
 
 async def test_open_close_stop_cover(
@@ -52,19 +63,19 @@ async def test_open_close_stop_cover(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.test_cover"},
+        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.test_cover"},
+        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.test_cover"},
+        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
 
@@ -88,13 +99,13 @@ async def test_open_close_reverse_cover(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.test_cover"},
+        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.test_cover"},
+        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
 
@@ -117,19 +128,19 @@ async def test_set_cover_position(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_cover", ATTR_POSITION: 100},
+        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats", ATTR_POSITION: 100},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_cover", ATTR_POSITION: 0},
+        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats", ATTR_POSITION: 0},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_cover", ATTR_POSITION: 50},
+        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats", ATTR_POSITION: 50},
         blocking=True,
     )
 
@@ -149,7 +160,7 @@ async def test_close_open_slats(
 
     await setup_integration(hass, mock_config_entry)
 
-    attributes = hass.states.get("cover.test_slats").attributes
+    attributes = hass.states.get("cover.slats_position").attributes
     assert attributes.get("supported_features") == (
         CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
@@ -159,13 +170,13 @@ async def test_close_open_slats(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.test_slats"},
+        {ATTR_ENTITY_ID: "cover.slats_position"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.test_slats"},
+        {ATTR_ENTITY_ID: "cover.slats_position"},
         blocking=True,
     )
 
@@ -185,7 +196,7 @@ async def test_close_open_reversed_slats(
 
     await setup_integration(hass, mock_config_entry)
 
-    attributes = hass.states.get("cover.test_slats").attributes
+    attributes = hass.states.get("cover.slats_position").attributes
     assert attributes.get("supported_features") == (
         CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
@@ -195,13 +206,13 @@ async def test_close_open_reversed_slats(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.test_slats"},
+        {ATTR_ENTITY_ID: "cover.slats_position"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.test_slats"},
+        {ATTR_ENTITY_ID: "cover.slats_position"},
         blocking=True,
     )
 
@@ -224,19 +235,19 @@ async def test_set_slat_position(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_slats", ATTR_TILT_POSITION: 100},
+        {ATTR_ENTITY_ID: "cover.slats_position", ATTR_TILT_POSITION: 100},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_slats", ATTR_TILT_POSITION: 0},
+        {ATTR_ENTITY_ID: "cover.slats_position", ATTR_TILT_POSITION: 0},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_slats", ATTR_TILT_POSITION: 50},
+        {ATTR_ENTITY_ID: "cover.slats_position", ATTR_TILT_POSITION: 50},
         blocking=True,
     )
 
@@ -260,9 +271,12 @@ async def test_cover_positions(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("cover.test_cover").state == CoverState.OPEN
+    assert (
+        hass.states.get("cover.shutter_with_position_and_slats").state
+        == CoverState.OPEN
+    )
 
-    attributes = hass.states.get("cover.test_cover").attributes
+    attributes = hass.states.get("cover.shutter_with_position_and_slats").attributes
     assert attributes.get("supported_features") == (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
@@ -279,10 +293,13 @@ async def test_cover_positions(
     cover.add_on_changed_listener.call_args_list[0][0][0](cover)
     await hass.async_block_till_done()
 
-    attributes = hass.states.get("cover.test_cover").attributes
+    attributes = hass.states.get("cover.shutter_with_position_and_slats").attributes
     assert attributes.get("current_position") == 0
     assert attributes.get("current_tilt_position") == 0
-    assert hass.states.get("cover.test_cover").state == CoverState.CLOSED
+    assert (
+        hass.states.get("cover.shutter_with_position_and_slats").state
+        == CoverState.CLOSED
+    )
 
     cover.attributes[0].current_value = 3
     cover.attributes[1].current_value = 75
@@ -290,8 +307,11 @@ async def test_cover_positions(
     cover.add_on_changed_listener.call_args_list[0][0][0](cover)
     await hass.async_block_till_done()
 
-    assert hass.states.get("cover.test_cover").state == CoverState.OPENING
-    attributes = hass.states.get("cover.test_cover").attributes
+    assert (
+        hass.states.get("cover.shutter_with_position_and_slats").state
+        == CoverState.OPENING
+    )
+    attributes = hass.states.get("cover.shutter_with_position_and_slats").attributes
     assert attributes.get("current_position") == 25
     assert attributes.get("current_tilt_position") == 25
 
@@ -301,8 +321,11 @@ async def test_cover_positions(
     cover.add_on_changed_listener.call_args_list[0][0][0](cover)
     await hass.async_block_till_done()
 
-    assert hass.states.get("cover.test_cover").state == CoverState.CLOSING
-    attributes = hass.states.get("cover.test_cover").attributes
+    assert (
+        hass.states.get("cover.shutter_with_position_and_slats").state
+        == CoverState.CLOSING
+    )
+    attributes = hass.states.get("cover.shutter_with_position_and_slats").attributes
     assert attributes.get("current_position") == 75
     assert attributes.get("current_tilt_position") == 74
 
@@ -322,17 +345,30 @@ async def test_reversed_cover(
     cover.add_on_changed_listener.call_args_list[0][0][0](cover)
     await hass.async_block_till_done()
 
-    attributes = hass.states.get("cover.test_cover").attributes
+    attributes = hass.states.get("cover.no_position").attributes
     assert attributes.get("supported_features") == (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
-    assert hass.states.get("cover.test_cover").state == CoverState.OPEN
+    assert hass.states.get("cover.no_position").state == CoverState.OPEN
 
     cover.attributes[0].current_value = 0
     cover.add_on_changed_listener.call_args_list[0][0][0](cover)
     await hass.async_block_till_done()
 
-    assert hass.states.get("cover.test_cover").state == CoverState.CLOSED
+    assert hass.states.get("cover.no_position").state == CoverState.CLOSED
+
+
+async def test_invalid_cover(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a cover that has no Attribute for is_closed state."""
+    mock_homee.nodes = [build_mock_node("cover_invalid.json")]
+    await setup_integration(hass, mock_config_entry)
+
+    assert "Cover Invalid Cover could not be added, " in caplog.text
 
 
 async def test_send_error(
@@ -352,7 +388,7 @@ async def test_send_error(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test_cover"},
+            {ATTR_ENTITY_ID: "cover.no_position"},
             blocking=True,
         )
 
@@ -370,19 +406,19 @@ async def test_node_entity_connection_listener(
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
-    states = hass.states.get("cover.test_cover")
+    states = hass.states.get("cover.shutter_with_position_and_slats")
     assert states.state != STATE_UNAVAILABLE
 
     await mock_homee.add_connection_listener.call_args_list[1][0][0](False)
     await hass.async_block_till_done()
 
-    states = hass.states.get("cover.test_cover")
+    states = hass.states.get("cover.shutter_with_position_and_slats")
     assert states.state == STATE_UNAVAILABLE
 
     await mock_homee.add_connection_listener.call_args_list[1][0][0](True)
     await hass.async_block_till_done()
 
-    states = hass.states.get("cover.test_cover")
+    states = hass.states.get("cover.shutter_with_position_and_slats")
     assert states.state != STATE_UNAVAILABLE
 
 
@@ -400,8 +436,28 @@ async def test_node_entity_update_action(
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "cover.test_cover"},
+        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
 
     mock_homee.update_node.assert_called_once_with(3)
+
+
+async def test_cover_snapshot(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test snapshot of covers to assert cover_invalid is not created."""
+    mock_homee.nodes = [
+        build_mock_node("cover_with_slats_position.json"),
+        build_mock_node("cover_without_position.json"),
+        build_mock_node("cover_with_position_slats.json"),
+        build_mock_node("cover_invalid.json"),
+    ]
+    mock_homee.get_node_by_id = lambda node_id: mock_homee.nodes[node_id - 1]
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

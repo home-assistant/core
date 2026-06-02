@@ -1,7 +1,5 @@
 """Constants for the Tuya integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
@@ -17,6 +15,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     Platform,
+    UnitOfConductivity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -34,7 +33,6 @@ CONF_ENDPOINT = "endpoint"
 CONF_TERMINAL_ID = "terminal_id"
 CONF_TOKEN_INFO = "token_info"
 CONF_USER_CODE = "user_code"
-CONF_USERNAME = "username"
 
 TUYA_CLIENT_ID = "HA_3y9q4ak7g4ephrvke"
 TUYA_SCHEMA = "haauthorize"
@@ -80,18 +78,6 @@ class WorkMode(StrEnum):
     MUSIC = "music"
     SCENE = "scene"
     WHITE = "white"
-
-
-class DPType(StrEnum):
-    """Data point types."""
-
-    BITMAP = "Bitmap"
-    BOOLEAN = "Boolean"
-    ENUM = "Enum"
-    INTEGER = "Integer"
-    JSON = "Json"
-    RAW = "Raw"
-    STRING = "String"
 
 
 class DeviceCategory(StrEnum):
@@ -671,6 +657,7 @@ class DPCode(StrEnum):
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    COMPRESSOR_STRENGTH = "compressor_strength"
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
     CONTROL = "control"
     CONTROL_2 = "control_2"
@@ -709,6 +696,7 @@ class DPCode(StrEnum):
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DELAY_CLEAN_TIME = "delay_clean_time"
     DELAY_SET = "delay_set"
+    DEVICE_RESTART = "device_restart"
     DEW_POINT_TEMP = "dew_point_temp"
     DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
@@ -717,6 +705,7 @@ class DPCode(StrEnum):
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
     DUSTER_CLOTH = "duster_cloth"
+    EC_CURRENT = "ec_current"
     ECO2 = "eco2"
     EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
@@ -763,6 +752,10 @@ class DPCode(StrEnum):
     HUMIDITY_VALUE = "humidity_value"  # Humidity
     INSTALLATION_HEIGHT = "installation_height"
     INVERTER_OUTPUT_POWER = "inverter_output_power"
+    IPC_AUTO_SIREN = "ipc_auto_siren"
+    IPC_BRIGHT = "ipc_bright"
+    IPC_CONTRAST = "ipc_contrast"
+    IPC_SHARP = "ipc_sharp"
     IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
@@ -788,6 +781,7 @@ class DPCode(StrEnum):
     MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
     MOODLIGHTING = "moodlighting"  # Mood light
+    MOTION_AREA_SWITCH = "motion_area_switch"  # Activity area
     MOTION_RECORD = "motion_record"
     MOTION_SENSITIVITY = "motion_sensitivity"
     MOTION_SWITCH = "motion_switch"  # Motion switch
@@ -796,6 +790,7 @@ class DPCode(StrEnum):
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
+    ORP_CURRENT = "orp_current"
     OUTPUT_POWER_LIMIT = "output_power_limit"
     OXYGEN = "oxygen"  # Oxygen bar
     PAUSE = "pause"
@@ -808,6 +803,7 @@ class DPCode(StrEnum):
     PHASE_A = "phase_a"
     PHASE_B = "phase_b"
     PHASE_C = "phase_c"
+    PH_CURRENT = "ph_current"
     PIR = "pir"  # Motion sensor
     PM1 = "pm1"
     PM10 = "pm10"
@@ -915,8 +911,10 @@ class DPCode(StrEnum):
     TARGET_DIS_CLOSEST = "target_dis_closest"  # Closest target distance
     TDS_IN = "tds_in"  # Total dissolved solids
     TEMP = "temp"  # Temperature setting
+    TEMP_AROUND = "temp_around"  # Current around (outside) temperature
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
+    TEMP_COILER = "temp_coiler"  # Current coil temperature
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CORRECTION = "temp_correction"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
@@ -937,12 +935,15 @@ class DPCode(StrEnum):
         "temp_current_external_f"  # Current external temperature in Fahrenheit
     )
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_EFFLUENT = "temp_effluent"  # Current flow temperature
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
+    TEMP_SETTING_QUICK_C = "temp_setting_quick_c"
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
+    TEMP_VENTING = "temp_venting"  # Current heat plate temperature
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation
@@ -957,6 +958,7 @@ class DPCode(StrEnum):
     UP_DOWN = "up_down"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
+    USE_TIME_ONE = "use_time_one"
     UV = "uv"  # UV sterilization
     UV_INDEX = "uv_index"
     UV_RUNTIME = "uv_runtime"  # UV runtime
@@ -989,7 +991,9 @@ class DPCode(StrEnum):
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
     WORK_POWER = "work_power"
+    WORK_STATE = "work_state"
     WORK_STATE_E = "work_state_e"
+    WORK_TYPE = "work_type"
 
 
 @dataclass
@@ -1178,6 +1182,20 @@ UNITS = (
         unit=UnitOfElectricPotential.MILLIVOLT,
         aliases={"mv", "millivolt"},
         device_classes={SensorDeviceClass.VOLTAGE},
+    ),
+    UnitOfMeasurement(
+        unit="",
+        aliases={"ph"},
+        device_classes={
+            SensorDeviceClass.PH,
+        },
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfConductivity.MICROSIEMENS_PER_CM,
+        aliases={"us"},
+        device_classes={
+            SensorDeviceClass.CONDUCTIVITY,
+        },
     ),
 )
 

@@ -1,12 +1,10 @@
 """Camera platform that receives images through HTTP POST."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import Any, cast
 
 from aiohttp import web
 import voluptuous as vol
@@ -120,7 +118,7 @@ class PushCamera(Camera):
         self._filename = None
         self._expired_listener = None
         self._timeout = timeout
-        self.queue: deque[bytes] = deque([], buffer_size)
+        self.queue: deque[bytes] = deque(maxlen=buffer_size)
         self._current_image: bytes | None = None
         self._image_field = image_field
         self.webhook_id = webhook_id
@@ -183,7 +181,7 @@ class PushCamera(Camera):
         return self._current_image
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             name: value

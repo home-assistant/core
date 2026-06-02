@@ -1,7 +1,5 @@
 """Access point for the HomematicIP Cloud component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import logging
@@ -12,7 +10,10 @@ from homematicip.auth import Auth
 from homematicip.base.enums import EventType
 from homematicip.connection.connection_context import ConnectionContextBuilder
 from homematicip.connection.rest_connection import RestConnection
-from homematicip.exceptions.connection_exceptions import HmipConnectionError
+from homematicip.exceptions.connection_exceptions import (
+    HmipAuthenticationError,
+    HmipConnectionError,
+)
 
 import homeassistant
 from homeassistant.config_entries import ConfigEntry
@@ -161,6 +162,11 @@ class HomematicipHAP:
             _LOGGER.error("HMIP access point has lost connection with the cloud")
             self._ws_connection_closed.set()
             self.set_all_to_unavailable()
+        elif self._ws_connection_closed.is_set():
+            _LOGGER.info("HMIP access point has reconnected to the cloud")
+            self._get_state_task = self.hass.async_create_task(self._try_get_state())
+            self._get_state_task.add_done_callback(self.get_state_finished)
+            self._ws_connection_closed.clear()
 
     @callback
     def async_create_entity(self, *args, **kwargs) -> None:
@@ -175,7 +181,10 @@ class HomematicipHAP:
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
     async def _try_get_state(self) -> None:
-        """Call get_state in a loop until no error occurs, using exponential backoff on error."""
+        """Call get_state in a loop until no error occurs.
+
+        Uses exponential backoff on error.
+        """
 
         # Wait until WebSocket connection is established.
         while not self.home.websocket_is_connected():
@@ -186,6 +195,12 @@ class HomematicipHAP:
         while True:
             try:
                 await self.get_state()
+                break
+            except HmipAuthenticationError:
+                _LOGGER.error(
+                    "Authentication error from HomematicIP Cloud, triggering reauth"
+                )
+                self.config_entry.async_start_reauth(self.hass)
                 break
             except HmipConnectionError as err:
                 _LOGGER.warning(
@@ -209,7 +224,8 @@ class HomematicipHAP:
             )
         else:
             _LOGGER.info(
-                "Updating state after HMIP access point reconnect finished successfully",
+                "Updating state after HMIP access point"
+                " reconnect finished successfully",
             )
 
     def set_all_to_unavailable(self) -> None:
@@ -270,9 +286,10 @@ class HomematicipHAP:
         self._ws_connection_closed.set()
 
     async def ws_reconnected_handler(self, reason: str) -> None:
-        """Handle websocket reconnection. Is called when Websocket tries to reconnect."""
+        """Handle websocket reconnection."""
         _LOGGER.info(
-            "Websocket connection to HomematicIP Cloud trying to reconnect due to reason: %s",
+            "Websocket connection to HomematicIP Cloud trying"
+            " to reconnect due to reason: %s",
             reason,
         )
 

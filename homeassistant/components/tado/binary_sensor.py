@@ -1,7 +1,5 @@
 """Support for Tado sensors for each zone."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -120,7 +118,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado sensor platform."""
 
-    tado = entry.runtime_data.coordinator
+    tado = entry.runtime_data
     devices = tado.devices
     zones = tado.zones
     entities: list[BinarySensorEntity] = []

@@ -1,7 +1,5 @@
 """Helper functions for mysensors package."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable
 from enum import IntEnum
@@ -62,6 +60,8 @@ def discover_mysensors_node(
     hass: HomeAssistant, gateway_id: GatewayId, node_id: int
 ) -> None:
     """Discover a MySensors node."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     discovered_nodes = hass.data[DOMAIN].setdefault(
         MYSENSORS_DISCOVERED_NODES.format(gateway_id), set()
     )
@@ -70,7 +70,7 @@ def discover_mysensors_node(
         discovered_nodes.add(node_id)
         async_dispatcher_send(
             hass,
-            MYSENSORS_NODE_DISCOVERY,
+            MYSENSORS_NODE_DISCOVERY.format(gateway_id),
             {
                 ATTR_GATEWAY_ID: gateway_id,
                 ATTR_NODE_ID: node_id,
@@ -157,7 +157,10 @@ def invalid_msg(
     """Return a message for an invalid child during schema validation."""
     presentation = gateway.const.Presentation
     set_req = gateway.const.SetReq
-    return f"{presentation(child.type).name} requires value_type {set_req[value_type_name].name}"
+    return (
+        f"{presentation(child.type).name} requires"
+        f" value_type {set_req[value_type_name].name}"
+    )
 
 
 def validate_set_msg(

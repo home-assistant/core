@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_select_empty[zoe_40][select.reg_zoe_40_charge_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -63,8 +64,9 @@
 # ---
 # name: test_select_errors[zoe_40][select.reg_zoe_40_charge_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -125,8 +127,9 @@
 # ---
 # name: test_selects[zoe_40][select.reg_zoe_40_charge_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

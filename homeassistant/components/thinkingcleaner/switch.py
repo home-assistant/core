@@ -1,7 +1,5 @@
 """Support for ThinkingCleaner switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import time
 from typing import Any
@@ -123,7 +121,7 @@ class ThinkingCleanerSwitch(SwitchEntity):
         return True
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         if self.entity_description.key == "clean":
             return (

@@ -1,7 +1,5 @@
 """Config flow for OneDrive."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any, cast
@@ -102,7 +100,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             reauth_entry = self._get_reauth_entry()
             return self.async_update_reload_and_abort(
                 entry=reauth_entry,
-                data=data,
+                data_updates=data,
             )
 
         if self.source != SOURCE_RECONFIGURE:

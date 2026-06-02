@@ -9,27 +9,28 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as DOMAIN_ALARM_CONTROL_PANEL,
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
 )
-from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.blueprint import (
     is_blueprint_instance_config,
     schemas as blueprint_schemas,
 )
-from homeassistant.components.button import DOMAIN as DOMAIN_BUTTON
-from homeassistant.components.cover import DOMAIN as DOMAIN_COVER
-from homeassistant.components.event import DOMAIN as DOMAIN_EVENT
-from homeassistant.components.fan import DOMAIN as DOMAIN_FAN
-from homeassistant.components.image import DOMAIN as DOMAIN_IMAGE
-from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
-from homeassistant.components.lock import DOMAIN as DOMAIN_LOCK
-from homeassistant.components.number import DOMAIN as DOMAIN_NUMBER
-from homeassistant.components.select import DOMAIN as DOMAIN_SELECT
-from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
-from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
-from homeassistant.components.update import DOMAIN as DOMAIN_UPDATE
-from homeassistant.components.vacuum import DOMAIN as DOMAIN_VACUUM
-from homeassistant.components.weather import DOMAIN as DOMAIN_WEATHER
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
     CONF_ACTION,
@@ -59,6 +60,7 @@ from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
+    device_tracker as device_tracker_platform,
     event as event_platform,
     fan as fan_platform,
     image as image_platform,
@@ -73,11 +75,7 @@ from . import (
     weather as weather_platform,
 )
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
-from .helpers import (
-    async_get_blueprints,
-    create_legacy_template_issue,
-    rewrite_legacy_to_modern_configs,
-)
+from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,8 +84,8 @@ PACKAGE_MERGE_HINT = "list"
 
 def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
     """Validate that binary sensors with auto_off have triggers."""
-    if CONF_TRIGGERS not in obj and DOMAIN_BINARY_SENSOR in obj:
-        binary_sensors: list[ConfigType] = obj[DOMAIN_BINARY_SENSOR]
+    if CONF_TRIGGERS not in obj and BINARY_SENSOR_DOMAIN in obj:
+        binary_sensors: list[ConfigType] = obj[BINARY_SENSOR_DOMAIN]
         for binary_sensor in binary_sensors:
             if binary_sensor_platform.CONF_AUTO_OFF not in binary_sensor:
                 continue
@@ -123,7 +121,10 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
             invalid = {CONF_TRIGGERS, CONF_ACTIONS}
             if found_invalid := invalid.intersection(set(obj.keys())):
                 raise vol.Invalid(
-                    f"Unsupported option(s) found for domain {found_domains.pop()}, please remove ({', '.join(found_invalid)}) from your configuration",
+                    f"Unsupported option(s) found for domain"
+                    f" {found_domains.pop()}, please remove"
+                    f" ({', '.join(found_invalid)})"
+                    " from your configuration",
                 )
 
         return obj
@@ -158,7 +159,8 @@ def validate_trigger_format(
         [CONF_SENSORS, CONF_BINARY_SENSORS, *PLATFORMS]
     ):
         _LOGGER.warning(
-            "Invalid template configuration found, trigger option is missing matching domain"
+            "Invalid template configuration found,"
+            " trigger option is missing matching domain"
         )
         create_trigger_format_issue(hass, raw_config, CONF_TRIGGERS)
 
@@ -182,63 +184,60 @@ CONFIG_SECTION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
-                binary_sensor_platform.BINARY_SENSOR_LEGACY_YAML_SCHEMA
-            ),
             vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
-            vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
-                sensor_platform.SENSOR_LEGACY_YAML_SCHEMA
-            ),
             vol.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-            vol.Optional(DOMAIN_ALARM_CONTROL_PANEL): vol.All(
+            vol.Optional(ALARM_CONTROL_PANEL_DOMAIN): vol.All(
                 cv.ensure_list,
                 [alarm_control_panel_platform.ALARM_CONTROL_PANEL_YAML_SCHEMA],
             ),
-            vol.Optional(DOMAIN_BINARY_SENSOR): vol.All(
+            vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
                 cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_BUTTON): vol.All(
+            vol.Optional(BUTTON_DOMAIN): vol.All(
                 cv.ensure_list, [button_platform.BUTTON_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_COVER): vol.All(
+            vol.Optional(COVER_DOMAIN): vol.All(
                 cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_EVENT): vol.All(
+            vol.Optional(DEVICE_TRACKER_DOMAIN): vol.All(
+                cv.ensure_list, [device_tracker_platform.TRACKER_YAML_SCHEMA]
+            ),
+            vol.Optional(EVENT_DOMAIN): vol.All(
                 cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_FAN): vol.All(
+            vol.Optional(FAN_DOMAIN): vol.All(
                 cv.ensure_list, [fan_platform.FAN_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_IMAGE): vol.All(
+            vol.Optional(IMAGE_DOMAIN): vol.All(
                 cv.ensure_list, [image_platform.IMAGE_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_LIGHT): vol.All(
+            vol.Optional(LIGHT_DOMAIN): vol.All(
                 cv.ensure_list, [light_platform.LIGHT_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_LOCK): vol.All(
+            vol.Optional(LOCK_DOMAIN): vol.All(
                 cv.ensure_list, [lock_platform.LOCK_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_NUMBER): vol.All(
+            vol.Optional(NUMBER_DOMAIN): vol.All(
                 cv.ensure_list, [number_platform.NUMBER_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_SELECT): vol.All(
+            vol.Optional(SELECT_DOMAIN): vol.All(
                 cv.ensure_list, [select_platform.SELECT_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_SENSOR): vol.All(
+            vol.Optional(SENSOR_DOMAIN): vol.All(
                 cv.ensure_list, [sensor_platform.SENSOR_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_SWITCH): vol.All(
+            vol.Optional(SWITCH_DOMAIN): vol.All(
                 cv.ensure_list, [switch_platform.SWITCH_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_UPDATE): vol.All(
+            vol.Optional(UPDATE_DOMAIN): vol.All(
                 cv.ensure_list, [update_platform.UPDATE_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_VACUUM): vol.All(
+            vol.Optional(VACUUM_DOMAIN): vol.All(
                 cv.ensure_list, [vacuum_platform.VACUUM_YAML_SCHEMA]
             ),
-            vol.Optional(DOMAIN_WEATHER): vol.All(
+            vol.Optional(WEATHER_DOMAIN): vol.All(
                 cv.ensure_list,
                 [
                     vol.Any(
@@ -250,7 +249,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
         },
     ),
     ensure_domains_do_not_have_trigger_or_action(
-        DOMAIN_BUTTON,
+        BUTTON_DOMAIN,
     ),
     validate_binary_sensor_auto_off_has_trigger,
 )
@@ -309,8 +308,10 @@ async def _async_resolve_template_config(
     # Trigger based template entities retain CONF_VARIABLES because the variables are
     # always executed between the trigger and action.
     elif CONF_TRIGGERS not in config and CONF_VARIABLES in config:
-        # State based template entities have 2 layers of variables.  Variables at the section level
-        # and variables at the entity level should be merged together at the entity level.
+        # State based template entities have 2 layers of
+        # variables. Variables at the section level and
+        # variables at the entity level should be merged
+        # together at the entity level.
         section_variables = config.pop(CONF_VARIABLES)
         platform_config: list[ConfigType] | ConfigType
         platforms = [platform for platform in PLATFORMS if platform in config]
@@ -376,42 +377,6 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             async_log_schema_error(err, DOMAIN, cfg, hass)
             async_notify_setup_error(hass, DOMAIN)
             continue
-
-        legacy_warn_printed = False
-
-        for old_key, new_key, legacy_fields in (
-            (
-                CONF_SENSORS,
-                DOMAIN_SENSOR,
-                sensor_platform.LEGACY_FIELDS,
-            ),
-            (
-                CONF_BINARY_SENSORS,
-                DOMAIN_BINARY_SENSOR,
-                binary_sensor_platform.LEGACY_FIELDS,
-            ),
-        ):
-            if old_key not in template_config:
-                continue
-
-            if not legacy_warn_printed:
-                legacy_warn_printed = True
-                _LOGGER.warning(
-                    "The entity definition format under template: differs from the"
-                    " platform "
-                    "configuration format. See "
-                    "https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
-                )
-
-            definitions = (
-                list(template_config[new_key]) if new_key in template_config else []
-            )
-            for definition in rewrite_legacy_to_modern_configs(
-                hass, new_key, template_config[old_key], legacy_fields
-            ):
-                create_legacy_template_issue(hass, definition, new_key)
-                definitions.append(definition)
-            template_config = TemplateConfig({**template_config, new_key: definitions})
 
         config_sections.append(template_config)
 

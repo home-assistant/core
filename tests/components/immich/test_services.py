@@ -1,5 +1,6 @@
 """Test the Immich services."""
 
+import re
 from unittest.mock import Mock, patch
 
 from aioimmich.exceptions import ImmichError, ImmichNotFoundError
@@ -96,7 +97,7 @@ async def test_upload_file_config_entry_not_found(
     """Test upload_file service raising config_entry_not_found."""
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPLOAD_FILE,
@@ -109,6 +110,7 @@ async def test_upload_file_config_entry_not_found(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
 
 async def test_upload_file_config_entry_not_loaded(
@@ -120,7 +122,7 @@ async def test_upload_file_config_entry_not_loaded(
     mock_config_entry.disabled_by = er.RegistryEntryDisabler.USER
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_loaded"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPLOAD_FILE,
@@ -133,6 +135,7 @@ async def test_upload_file_config_entry_not_loaded(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_upload_file_only_local_media_supported(
@@ -208,8 +211,30 @@ async def test_upload_file_album_not_found(
         )
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_err_message"),
+    [
+        (
+            ImmichError(
+                {
+                    "message": "Boom! Upload failed",
+                    "error": "Bad Request",
+                    "statusCode": 400,
+                    "correlationId": "nyzxjkno",
+                }
+            ),
+            "Boom! Upload failed (error: 'Bad Request' code: '400' correlation_id: 'nyzxjkno')",
+        ),
+        (
+            FileNotFoundError(2, "No such file or directory", "/media/screenshot.jpg"),
+            "[Errno 2] No such file or directory: '/media/screenshot.jpg'",
+        ),
+    ],
+)
 async def test_upload_file_upload_failed(
     hass: HomeAssistant,
+    side_effect: Exception,
+    expected_err_message: str,
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
     mock_media_source: Mock,
@@ -217,16 +242,12 @@ async def test_upload_file_upload_failed(
     """Test upload_file service raising upload_failed."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_immich.assets.async_upload_asset.side_effect = ImmichError(
-        {
-            "message": "Boom! Upload failed",
-            "error": "Bad Request",
-            "statusCode": 400,
-            "correlationId": "nyzxjkno",
-        }
-    )
+    mock_immich.assets.async_upload_asset.side_effect = side_effect
     with pytest.raises(
-        ServiceValidationError, match="Upload of file `/media/screenshot.jpg` failed"
+        ServiceValidationError,
+        match=re.escape(
+            f"Upload of file `/media/screenshot.jpg` failed ({expected_err_message})"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,

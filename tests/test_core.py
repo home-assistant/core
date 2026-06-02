@@ -1,7 +1,5 @@
 """Test to verify that Home Assistant core works."""
 
-from __future__ import annotations
-
 import array
 import asyncio
 from datetime import datetime, timedelta
@@ -58,7 +56,6 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers.json import json_dumps
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.read_only_dict import ReadOnlyDict
@@ -657,7 +654,7 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
 async def test_stage_shutdown_generic_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
+    """Simulate a shutdown, test generic error doesn't prevent it."""
 
     task = asyncio.Future()
     hass._tasks.add(task)
@@ -670,7 +667,7 @@ async def test_stage_shutdown_generic_error(
         assert patched_call.called
 
     assert "test_exception" in caplog.text
-    assert hass.state == ha.CoreState.stopped
+    assert hass.state is ha.CoreState.stopped
 
 
 async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
@@ -716,7 +713,7 @@ async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
 async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(
     hass: HomeAssistant,
 ) -> None:
-    """Ensure shutdown_run_callback_threadsafe is called before the final async_block_till_done."""
+    """Ensure shutdown_run_callback_threadsafe precedes final async_block_till_done."""
     stop_calls = []
 
     async def _record_block_till_done(wait_background_tasks: bool = False):
@@ -855,6 +852,114 @@ async def test_add_job_with_none(hass: HomeAssistant) -> None:
     """Try to add a job with None as function."""
     with pytest.raises(ValueError):
         hass.async_add_job(None, "test_arg")
+
+
+async def test_add_job_coroutine_object(hass: HomeAssistant) -> None:
+    """Test add_job with a coroutine object from an executor thread."""
+    result: list[str] = []
+
+    async def my_coro() -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append("called")
+
+    await hass.async_add_executor_job(hass.add_job, my_coro())
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_coroutine_function(hass: HomeAssistant) -> None:
+    """Test add_job with a coroutine function from an executor thread."""
+    result: list[str] = []
+
+    async def my_coro(value: str) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_coro, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_callback(hass: HomeAssistant) -> None:
+    """Test add_job with a @callback from an executor thread."""
+    result: list[str] = []
+
+    @ha.callback
+    def my_callback(value: str) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_callback, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_executor(hass: HomeAssistant) -> None:
+    """Test add_job with a regular function from an executor thread."""
+    result: list[str] = []
+
+    def my_func(value: str) -> None:
+        with pytest.raises(RuntimeError):
+            asyncio.get_running_loop()
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_func, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_partial_callback(hass: HomeAssistant) -> None:
+    """Test add_job with a partial-wrapped @callback from an executor thread."""
+    result: list[tuple[str, int]] = []
+
+    @ha.callback
+    def my_callback(name: str, value: int) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append((name, value))
+
+    await hass.async_add_executor_job(
+        hass.add_job, functools.partial(my_callback, "partial"), 1
+    )
+    await hass.async_block_till_done()
+
+    assert result == [("partial", 1)]
+
+
+async def test_add_job_partial_coroutine_function(
+    hass: HomeAssistant,
+) -> None:
+    """Test add_job with a partial-wrapped coroutine function."""
+    result: list[tuple[str, int]] = []
+
+    async def my_coro(name: str, value: int) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append((name, value))
+
+    await hass.async_add_executor_job(
+        hass.add_job, functools.partial(my_coro, "partial"), 2
+    )
+    await hass.async_block_till_done()
+
+    assert result == [("partial", 2)]
+
+
+async def test_add_job_async_with_callback_decorator(hass: HomeAssistant) -> None:
+    """Test add_job with an async function incorrectly marked as @callback."""
+    result: list[str] = []
+
+    @ha.callback
+    async def my_async(value: str) -> None:  # pylint: disable=home-assistant-async-callback-decorator
+        assert asyncio.get_running_loop() is hass.loop
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_async, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
 
 
 def test_event_eq() -> None:
@@ -1117,7 +1222,10 @@ def test_state_as_compressed_state_json() -> None:
         last_changed=last_time,
         context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
     )
-    expected = b'"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    expected = (
+        b'"happy.happy":{"s":"on","a":{"pig":"dog"}'
+        b',"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    )
     as_compressed_state = state.as_compressed_state_json
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
@@ -1348,26 +1456,15 @@ async def test_eventbus_max_length_exceeded(hass: HomeAssistant) -> None:
         "this_event_exceeds_the_max_character_length_even_with_the_new_limit"
     )
 
-    # Without cached translations the translation key is returned
-    with pytest.raises(MaxLengthExceeded) as exc_info:
-        hass.bus.async_fire(long_evt_name)
-
-    assert str(exc_info.value) == "max_length_exceeded"
-    assert exc_info.value.property_name == "event_type"
-    assert exc_info.value.max_length == 64
-    assert exc_info.value.value == long_evt_name
-
-    # Fetch translations
-    await async_setup_component(hass, "homeassistant", {})
-
     # With cached translations the formatted message is returned
     with pytest.raises(MaxLengthExceeded) as exc_info:
         hass.bus.async_fire(long_evt_name)
 
     assert (
-        str(exc_info.value)
-        == f"Value {long_evt_name} for property event_type has a maximum length of 64 characters"
+        str(exc_info.value) == f"Value {long_evt_name} for property event_type"
+        " has a maximum length of 64 characters"
     )
+    assert exc_info.value.translation_key == "max_length_exceeded"
     assert exc_info.value.property_name == "event_type"
     assert exc_info.value.max_length == 64
     assert exc_info.value.value == long_evt_name
@@ -1732,7 +1829,6 @@ async def test_serviceregistry_remove_service(hass: HomeAssistant) -> None:
 
 async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> None:
     """Test remove service that not exists."""
-    await async_setup_component(hass, "homeassistant", {})
     calls_remove = async_capture_events(hass, EVENT_SERVICE_REMOVED)
     assert not hass.services.has_service("test_xxx", "test_yyy")
     hass.services.async_remove("test_xxx", "test_yyy")
@@ -1830,7 +1926,6 @@ async def test_services_call_return_response_requires_blocking(
     hass: HomeAssistant,
 ) -> None:
     """Test that non-blocking service calls cannot ask for response data."""
-    await async_setup_component(hass, "homeassistant", {})
     async_mock_service(hass, "test_domain", "test_service")
     with pytest.raises(ServiceValidationError, match="blocking=False") as exc:
         await hass.services.async_call(
@@ -1860,7 +1955,6 @@ async def test_serviceregistry_return_response_invalid(
     hass: HomeAssistant, response_data: Any, expected_error: str
 ) -> None:
     """Test service call response data must be json serializable objects."""
-    await async_setup_component(hass, "homeassistant", {})
 
     def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
@@ -1897,7 +1991,6 @@ async def test_serviceregistry_return_response_arguments(
     expected_error: str,
 ) -> None:
     """Test service call response data invalid arguments."""
-    await async_setup_component(hass, "homeassistant", {})
 
     hass.services.async_register(
         "test_domain",
@@ -1963,12 +2056,12 @@ async def test_start_taking_too_long(caplog: pytest.LogCaptureFixture) -> None:
         with patch("asyncio.wait", return_value=(set(), {asyncio.Future()})):
             await hass.async_start()
 
-        assert hass.state == ha.CoreState.running
+        assert hass.state is ha.CoreState.running
         assert "Something is blocking Home Assistant" in caplog.text
 
     finally:
         await hass.async_stop()
-        assert hass.state == ha.CoreState.stopped
+        assert hass.state is ha.CoreState.stopped
 
 
 async def test_service_executed_with_subservices(hass: HomeAssistant) -> None:
@@ -2062,7 +2155,7 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
     runs = []
 
     @ha.callback
-    async def test():  # pylint: disable=hass-async-callback-decorator
+    async def test():  # pylint: disable=home-assistant-async-callback-decorator
         runs.append(True)
 
     await hass.async_add_job(test)
@@ -2073,7 +2166,7 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
     assert len(runs) == 2
 
     @ha.callback
-    async def service_handler(call):  # pylint: disable=hass-async-callback-decorator
+    async def service_handler(call):  # pylint: disable=home-assistant-async-callback-decorator
         runs.append(True)
 
     hass.services.async_register("test_domain", "test_service", service_handler)
@@ -2225,7 +2318,7 @@ async def test_log_blocking_events(
 async def test_chained_logging_hits_log_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Ensure we log which task is blocking startup when there is a task chain and debug logging is on."""
+    """Ensure we log which task is blocking startup on chain."""
     caplog.set_level(logging.DEBUG)
 
     created = 0
@@ -2254,7 +2347,7 @@ async def test_chained_logging_hits_log_timeout(
 async def test_chained_logging_misses_log_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Ensure we do not log which task is blocking startup if we do not hit the timeout."""
+    """Ensure we do not log blocking task if no timeout hit."""
     caplog.set_level(logging.DEBUG)
 
     created = 0
@@ -2936,19 +3029,19 @@ def test_is_callback_check_partial() -> None:
         pass
 
     assert ha.is_callback(callback_func)
-    assert HassJob(callback_func).job_type == ha.HassJobType.Callback
+    assert HassJob(callback_func).job_type is ha.HassJobType.Callback
     assert ha.is_callback_check_partial(functools.partial(callback_func))
-    assert HassJob(functools.partial(callback_func)).job_type == ha.HassJobType.Callback
+    assert HassJob(functools.partial(callback_func)).job_type is ha.HassJobType.Callback
     assert ha.is_callback_check_partial(
         functools.partial(functools.partial(callback_func))
     )
-    assert HassJob(functools.partial(functools.partial(callback_func))).job_type == (
+    assert HassJob(functools.partial(functools.partial(callback_func))).job_type is (
         ha.HassJobType.Callback
     )
     assert not ha.is_callback_check_partial(not_callback_func)
-    assert HassJob(not_callback_func).job_type == ha.HassJobType.Executor
+    assert HassJob(not_callback_func).job_type is ha.HassJobType.Executor
     assert not ha.is_callback_check_partial(functools.partial(not_callback_func))
-    assert HassJob(functools.partial(not_callback_func)).job_type == (
+    assert HassJob(functools.partial(not_callback_func)).job_type is (
         ha.HassJobType.Executor
     )
 
@@ -2956,7 +3049,7 @@ def test_is_callback_check_partial() -> None:
     assert not ha.is_callback_check_partial(
         ha.callback(functools.partial(not_callback_func))
     )
-    assert HassJob(ha.callback(functools.partial(not_callback_func))).job_type == (
+    assert HassJob(ha.callback(functools.partial(not_callback_func))).job_type is (
         ha.HassJobType.Executor
     )
 
@@ -2973,13 +3066,13 @@ def test_hassjob_passing_job_type() -> None:
 
     assert (
         HassJob(callback_func, job_type=ha.HassJobType.Callback).job_type
-        == ha.HassJobType.Callback
+        is ha.HassJobType.Callback
     )
 
     # We should trust the job_type passed in
     assert (
         HassJob(not_callback_func, job_type=ha.HassJobType.Callback).job_type
-        == ha.HassJobType.Callback
+        is ha.HassJobType.Callback
     )
 
 
@@ -3084,7 +3177,8 @@ async def test_async_add_hass_job_deprecated(
 
     hass.async_add_hass_job(HassJob(_test))
     assert (
-        "Detected code that calls `async_add_hass_job`, which should be reviewed against "
+        "Detected code that calls `async_add_hass_job`,"
+        " which should be reviewed against "
         "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
         " for replacement options. This will stop working in Home Assistant 2025.5"
     ) in caplog.text

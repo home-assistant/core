@@ -1,7 +1,5 @@
 """Sensor platform for the GitHub integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -76,6 +74,13 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
         value_fn=lambda data: data["pull_request"]["total"],
     ),
     GitHubSensorEntityDescription(
+        key="merged_pulls_count",
+        translation_key="merged_pulls_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data["merged_pull_request"]["total"],
+    ),
+    GitHubSensorEntityDescription(
         key="latest_commit",
         translation_key="latest_commit",
         value_fn=lambda data: data["default_branch_ref"]["commit"]["message"][:255],
@@ -143,13 +148,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up GitHub sensor based on a config entry."""
     repositories = entry.runtime_data
-    async_add_entities(
-        (
-            GitHubSensorEntity(coordinator, description)
-            for description in SENSOR_DESCRIPTIONS
-            for coordinator in repositories.values()
-        ),
-    )
+    for subentry_id, coordinator in repositories.items():
+        async_add_entities(
+            (
+                GitHubSensorEntity(coordinator, description)
+                for description in SENSOR_DESCRIPTIONS
+            ),
+            config_subentry_id=subentry_id,
+        )
 
 
 class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorEntity):

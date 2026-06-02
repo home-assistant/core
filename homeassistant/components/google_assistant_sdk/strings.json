@@ -48,6 +48,9 @@
     "grpc_error": {
       "message": "Failed to communicate with Google Assistant"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "reauth_required": {
       "message": "Credentials are invalid, re-authentication required"
     }

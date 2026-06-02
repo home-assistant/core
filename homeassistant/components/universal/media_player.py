@@ -1,7 +1,5 @@
 """Combination of multiple media players for a universal controller."""
 
-from __future__ import annotations
-
 from copy import copy
 from typing import Any
 
@@ -78,6 +76,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -107,7 +106,8 @@ STATES_ORDER = [
     STATE_UNAVAILABLE,
     MediaPlayerState.OFF,
     MediaPlayerState.IDLE,
-    MediaPlayerState.STANDBY,
+    # Not using MediaPlayerState.STANDBY to avoid deprecation warning
+    "standby",
     MediaPlayerState.ON,
     MediaPlayerState.PAUSED,
     MediaPlayerState.BUFFERING,
@@ -144,7 +144,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the universal media players."""
-    await async_setup_reload_service(hass, "universal", ["media_player"])
+    await async_setup_reload_service(hass, "universal", [Platform.MEDIA_PLAYER])
 
     player = UniversalMediaPlayer(hass, config)
     async_add_entities([player])
@@ -154,6 +154,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
     _attr_should_poll = False
+    _attr_media_image_remotely_accessible = True
 
     def __init__(
         self,
@@ -533,7 +534,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return flags
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         active_child = self._child_state
         return {ATTR_ACTIVE_CHILD: active_child.entity_id} if active_child else {}

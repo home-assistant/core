@@ -1,7 +1,5 @@
 """Constants for the UptimeRobot integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from logging import Logger, getLogger
 from typing import Final
@@ -21,3 +19,9 @@ ATTRIBUTION: Final = "Data provided by UptimeRobot"
 ATTR_TARGET: Final = "target"
 
 API_ATTR_OK: Final = "ok"
+
+STATUS_UP = "UP"
+STATUS_DOWN = "DOWN"
+STATUS_STARTED = "STARTED"
+
+STATUSES_ON = [STATUS_UP, STATUS_STARTED]

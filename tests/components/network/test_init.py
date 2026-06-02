@@ -1,7 +1,5 @@
 """Test the Network Configuration."""
 
-from __future__ import annotations
-
 from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -54,7 +52,7 @@ def _mock_socket_exception(exc):
 async def test_async_detect_interfaces_setting_non_loopback_route(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test without default interface config and the route returns a non-loopback address."""
+    """Test without default interface config, route is non-loopback."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
@@ -112,7 +110,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(
 async def test_async_detect_interfaces_setting_loopback_route(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test without default interface config and the route returns a loopback address."""
+    """Test without default interface config, route is loopback."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
@@ -532,7 +530,7 @@ async def test_async_get_source_ip_cannot_determine_target(
 async def test_async_get_ipv4_broadcast_addresses_default(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test getting ipv4 broadcast addresses when only the default address is enabled."""
+    """Test getting ipv4 broadcast addresses with default only."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
         "key": STORAGE_KEY,
@@ -599,7 +597,7 @@ async def test_async_get_source_ip_no_enabled_addresses(
 async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses(
     hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test getting the source ip address when all adapters are disabled and getting it fails."""
+    """Test getting source ip when all adapters disabled and it fails."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
         "key": STORAGE_KEY,
@@ -619,7 +617,7 @@ async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses
 async def test_async_get_source_ip_no_ip_loopback(
     hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test getting the source ip address when all adapters are disabled no target is specified."""
+    """Test getting source ip when all adapters disabled, no target."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
         "key": STORAGE_KEY,

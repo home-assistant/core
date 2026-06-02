@@ -40,8 +40,9 @@
 # ---
 # name: test_all_fan_entities[fan.test_vmc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([

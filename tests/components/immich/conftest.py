@@ -42,6 +42,7 @@ from homeassistant.util.aiohttp import MockStreamReaderChunked
 from .const import (
     MOCK_ALBUM_WITH_ASSETS,
     MOCK_ALBUM_WITHOUT_ASSETS,
+    MOCK_FAVORITE_ASSETS,
     MOCK_PEOPLE_ASSETS,
     MOCK_TAGS_ASSETS,
 )
@@ -112,7 +113,10 @@ def mock_immich_people() -> AsyncMock:
                 "id": "6176838a-ac5a-4d1f-9a35-91c591d962d8",
                 "name": "Me",
                 "birthDate": None,
-                "thumbnailPath": "upload/thumbs/e7ef5713-9dab-4bd4-b899-715b0ca4379e/61/76/6176838a-ac5a-4d1f-9a35-91c591d962d8.jpeg",
+                "thumbnailPath": (
+                    "upload/thumbs/e7ef5713-9dab-4bd4-b899-715b0ca4379e"
+                    "/61/76/6176838a-ac5a-4d1f-9a35-91c591d962d8.jpeg"
+                ),
                 "isHidden": False,
                 "isFavorite": False,
                 "updatedAt": "2025-05-11T11:07:41.651Z",
@@ -123,7 +127,10 @@ def mock_immich_people() -> AsyncMock:
                 "id": "3e66aa4a-a4a8-41a4-86fe-2ae5e490078f",
                 "name": "I",
                 "birthDate": None,
-                "thumbnailPath": "upload/thumbs/e7ef5713-9dab-4bd4-b899-715b0ca4379e/3e/66/3e66aa4a-a4a8-41a4-86fe-2ae5e490078f.jpeg",
+                "thumbnailPath": (
+                    "upload/thumbs/e7ef5713-9dab-4bd4-b899-715b0ca4379e"
+                    "/3e/66/3e66aa4a-a4a8-41a4-86fe-2ae5e490078f.jpeg"
+                ),
                 "isHidden": False,
                 "isFavorite": False,
                 "updatedAt": "2025-05-19T22:10:21.953Z",
@@ -134,7 +141,10 @@ def mock_immich_people() -> AsyncMock:
                 "id": "a3c83297-684a-4576-82dc-b07432e8a18f",
                 "name": "Myself",
                 "birthDate": None,
-                "thumbnailPath": "upload/thumbs/e7ef5713-9dab-4bd4-b899-715b0ca4379e/a3/c8/a3c83297-684a-4576-82dc-b07432e8a18f.jpeg",
+                "thumbnailPath": (
+                    "upload/thumbs/e7ef5713-9dab-4bd4-b899-715b0ca4379e"
+                    "/a3/c8/a3c83297-684a-4576-82dc-b07432e8a18f.jpeg"
+                ),
                 "isHidden": False,
                 "isFavorite": False,
                 "updatedAt": "2025-05-12T21:07:04.044Z",
@@ -149,6 +159,7 @@ def mock_immich_people() -> AsyncMock:
 def mock_immich_search() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichSearch)
+    mock.async_get_all_favorites.return_value = MOCK_FAVORITE_ASSETS
     mock.async_get_all_by_person_ids.return_value = MOCK_PEOPLE_ASSETS
     mock.async_get_all_by_tag_ids.return_value = MOCK_TAGS_ASSETS
     return mock
@@ -287,7 +298,9 @@ async def mock_immich(
 ) -> AsyncGenerator[AsyncMock]:
     """Mock the Immich API."""
     with (
-        patch("homeassistant.components.immich.Immich", autospec=True) as mock_immich,
+        patch(
+            "homeassistant.components.immich.coordinator.Immich", autospec=True
+        ) as mock_immich,
         patch("homeassistant.components.immich.config_flow.Immich", new=mock_immich),
     ):
         client = mock_immich.return_value

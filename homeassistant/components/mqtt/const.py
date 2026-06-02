@@ -11,10 +11,10 @@ from homeassistant.exceptions import TemplateError
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
 ATTR_DISCOVERY_TOPIC = "discovery_topic"
+ATTR_MESSAGE_EXPIRY_INTERVAL = "message_expiry_interval"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
-ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_TOPIC = "topic"
 
 AVAILABILITY_ALL = "all"
@@ -42,19 +42,21 @@ CONF_COMMAND_TOPIC = "command_topic"
 CONF_CONTENT_TYPE = "content_type"
 CONF_DEFAULT_ENTITY_ID = "default_entity_id"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
+CONF_DISCOVERY_QOS = "discovery_qos"
 CONF_ENCODING = "encoding"
 CONF_IMAGE_ENCODING = "image_encoding"
 CONF_IMAGE_TOPIC = "image_topic"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
 CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_KEEPALIVE = "keepalive"
-CONF_OPTIONS = "options"
+CONF_MESSAGE_EXPIRY_INTERVAL = "message_expiry_interval"
 CONF_ORIGIN = "origin"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
 CONF_SCHEMA = "schema"
 CONF_STATE_TOPIC = "state_topic"
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
+CONF_TIMEZONE = "timezone"
 CONF_TOPIC = "topic"
 CONF_TRANSPORT = "transport"
 CONF_WS_PATH = "ws_path"
@@ -71,7 +73,6 @@ CONF_BRIGHTNESS_SCALE = "brightness_scale"
 CONF_BRIGHTNESS_STATE_TOPIC = "brightness_state_topic"
 CONF_BRIGHTNESS_TEMPLATE = "brightness_template"
 CONF_BRIGHTNESS_VALUE_TEMPLATE = "brightness_value_template"
-CONF_COLOR_MODE = "color_mode"
 CONF_COLOR_MODE_STATE_TOPIC = "color_mode_state_topic"
 CONF_COLOR_MODE_VALUE_TEMPLATE = "color_mode_value_template"
 CONF_COLOR_TEMP_COMMAND_TEMPLATE = "color_temp_command_template"
@@ -110,6 +111,7 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_GET_POSITION_TEMPLATE = "position_template"
 CONF_GET_POSITION_TOPIC = "position_topic"
 CONF_GREEN_TEMPLATE = "green_template"
+CONF_GROUP = "group"
 CONF_HS_COMMAND_TEMPLATE = "hs_command_template"
 CONF_HS_COMMAND_TOPIC = "hs_command_topic"
 CONF_HS_STATE_TOPIC = "hs_state_topic"
@@ -269,7 +271,6 @@ CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
 CONF_CONFIGURATION_URL = "configuration_url"
-CONF_OBJECT_ID = "object_id"
 CONF_SUPPORT_URL = "support_url"
 
 DEFAULT_ALARM_CONTROL_PANEL_COMMAND_TEMPLATE = "{{action}}"
@@ -348,14 +349,14 @@ REMOTE_CODE_TEXT = "REMOTE_CODE_TEXT"
 PROTOCOL_31 = "3.1"
 PROTOCOL_311 = "3.1.1"
 PROTOCOL_5 = "5"
-SUPPORTED_PROTOCOLS = [PROTOCOL_31, PROTOCOL_311, PROTOCOL_5]
+SUPPORTED_PROTOCOLS = [PROTOCOL_5, PROTOCOL_311, PROTOCOL_31]
 
 TRANSPORT_TCP = "tcp"
 TRANSPORT_WEBSOCKETS = "websockets"
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
-DEFAULT_PROTOCOL = PROTOCOL_311
+DEFAULT_PROTOCOL = PROTOCOL_5
 DEFAULT_TRANSPORT = TRANSPORT_TCP
 
 DEFAULT_BIRTH = {
@@ -402,6 +403,8 @@ ENTITY_PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
     Platform.DEVICE_TRACKER,
     Platform.EVENT,
     Platform.FAN,
@@ -418,6 +421,7 @@ ENTITY_PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.VALVE,
@@ -433,6 +437,8 @@ SUPPORTED_COMPONENTS = (
     "camera",
     "climate",
     "cover",
+    "date",
+    "datetime",
     "device_automation",
     "device_tracker",
     "event",
@@ -451,6 +457,7 @@ SUPPORTED_COMPONENTS = (
     "switch",
     "tag",
     "text",
+    "time",
     "update",
     "vacuum",
     "valve",

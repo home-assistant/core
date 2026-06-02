@@ -1,5 +1,6 @@
 """Test the Liebherr sensor platform."""
 
+import copy
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -26,7 +27,7 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -59,7 +60,7 @@ async def test_single_zone_sensor(
         device_name="K2601",
     )
     mock_liebherr_client.get_devices.return_value = [device]
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    single_zone_state = DeviceState(
         device=device,
         controls=[
             TemperatureControl(
@@ -71,6 +72,9 @@ async def test_single_zone_sensor(
                 unit=TemperatureUnit.CELSIUS,
             )
         ],
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        single_zone_state
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -88,7 +92,7 @@ async def test_multi_zone_with_none_position(
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test multi-zone device with None zone_position falls back to no translation key."""
+    """Test multi-zone device with None zone_position falls back."""
     device = Device(
         device_id="multi_zone_none",
         nickname="Multi Zone Fridge",
@@ -96,12 +100,13 @@ async def test_multi_zone_with_none_position(
         device_name="CBNes9999",
     )
     mock_liebherr_client.get_devices.return_value = [device]
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    multi_zone_state = DeviceState(
         device=device,
         controls=[
             TemperatureControl(
                 zone_id=1,
-                zone_position=None,  # None triggers fallback in _get_zone_translation_key
+                # None triggers fallback in _get_zone_translation_key
+                zone_position=None,
                 name="Fridge",
                 type="fridge",
                 value=5,
@@ -116,6 +121,9 @@ async def test_multi_zone_with_none_position(
                 unit=TemperatureUnit.CELSIUS,
             ),
         ],
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        multi_zone_state
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -170,7 +178,9 @@ async def test_sensor_update_failure(
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate recovery
-    mock_liebherr_client.get_device_state.side_effect = None
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        MOCK_DEVICE_STATE
+    )
 
     freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)
@@ -228,7 +238,7 @@ async def test_sensor_unavailable_when_control_missing(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test sensor becomes unavailable when temperature control is removed from device."""
+    """Test sensor becomes unavailable when control is removed."""
     entity_id = "sensor.test_fridge_top_zone"
 
     # Initial state should be available
@@ -237,7 +247,7 @@ async def test_sensor_unavailable_when_control_missing(
     assert state.state == "5"
 
     # Device stops reporting controls (e.g., zone removed or API issue)
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: DeviceState(
         device=MOCK_DEVICE, controls=[]
     )
 

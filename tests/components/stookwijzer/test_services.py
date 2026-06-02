@@ -40,7 +40,7 @@ async def test_service_entry_not_loaded(
     mock_config_entry2 = MockConfigEntry(domain=DOMAIN)
     mock_config_entry2.add_to_hass(hass)
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_loaded"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_FORECAST,
@@ -48,6 +48,7 @@ async def test_service_entry_not_loaded(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -57,7 +58,7 @@ async def test_service_integration_not_found(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test error handling when integration not in registry."""
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_FORECAST,
@@ -65,3 +66,4 @@ async def test_service_integration_not_found(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"

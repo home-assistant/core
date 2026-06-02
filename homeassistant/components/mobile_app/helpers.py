@@ -1,7 +1,5 @@
 """Helpers for mobile_app."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from http import HTTPStatus
 import logging
@@ -11,7 +9,12 @@ from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder, HexEncoder, RawEncoder
 from nacl.secret import SecretBox
 
-from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    CONTENT_TYPE_JSON,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.json import json_bytes
@@ -23,8 +26,6 @@ from .const import (
     ATTR_APP_NAME,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SUPPORTS_ENCRYPTION,
@@ -114,6 +115,15 @@ def decrypt_payload_legacy(key: str, ciphertext: bytes) -> JsonValueType | None:
     )
 
 
+async def async_is_local_only_user(hass: HomeAssistant, user_id: str) -> bool:
+    """Return True if the user is local only."""
+    user = await hass.auth.async_get_user(user_id)
+    if user is None:
+        # Treat unknown/missing users as local-only to avoid exposing cloud URLs
+        return True
+    return user.local_only
+
+
 def registration_context(registration: Mapping[str, Any]) -> Context:
     """Generate a context from a request."""
     return Context(user_id=registration[CONF_USER_ID])
@@ -161,6 +171,8 @@ def safe_registration(registration: dict) -> dict:
 def savable_state(hass: HomeAssistant) -> dict:
     """Return a clean object containing things that should be saved."""
     return {
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
     }
 
@@ -193,7 +205,7 @@ def webhook_response(
     )
 
 
-def device_info(registration: dict) -> DeviceInfo:
+def device_info(registration: Mapping[str, Any]) -> DeviceInfo:
     """Return the device info for this registration."""
     return DeviceInfo(
         identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},

@@ -1,7 +1,5 @@
 """The Cambridge Audio integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
@@ -16,7 +14,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SELECT, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +31,9 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Cambridge Audio integration from a config entry."""
 
-    client = StreamMagicClient(entry.data[CONF_HOST], async_get_clientsession(hass))
+    client = StreamMagicClient(
+        entry.data[CONF_HOST], async_get_clientsession(hass), should_close_session=False
+    )
 
     async def _connection_update_callback(
         _client: StreamMagicClient, _callback_type: CallbackType

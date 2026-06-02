@@ -1,23 +1,45 @@
 """The Monoprice 6-Zone Amplifier integration."""
 
+from dataclasses import dataclass
 import logging
 
-from pymonoprice import get_monoprice
+from pymonoprice import Monoprice, get_monoprice
 from serial import SerialException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_NOT_FIRST_RUN, DOMAIN, FIRST_RUN, MONOPRICE_OBJECT
+from .const import CONF_NOT_FIRST_RUN, DOMAIN
+from .services import async_setup_services
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type MonopriceConfigEntry = ConfigEntry[MonopriceRuntimeData]
+
+
+@dataclass
+class MonopriceRuntimeData:
+    """Data stored in the config entry for a Monoprice entry."""
+
+    client: Monoprice
+    first_run: bool
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -> bool:
     """Set up Monoprice 6-Zone Amplifier from a config entry."""
     port = entry.data[CONF_PORT]
 
@@ -37,17 +59,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        MONOPRICE_OBJECT: monoprice,
-        FIRST_RUN: first_run,
-    }
+    entry.runtime_data = MonopriceRuntimeData(
+        client=monoprice,
+        first_run=first_run,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
@@ -56,15 +78,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _cleanup(monoprice) -> None:
         """Destroy the Monoprice object.
 
-        Destroying the Monoprice closes the serial connection, do it in an executor so the garbage
-        collection does not block.
+        Destroying the Monoprice closes the serial connection,
+        do it in an executor so the garbage collection
+        does not block.
         """
         del monoprice
 
-    monoprice = hass.data[DOMAIN][entry.entry_id][MONOPRICE_OBJECT]
-    hass.data[DOMAIN].pop(entry.entry_id)
-
-    await hass.async_add_executor_job(_cleanup, monoprice)
+    await hass.async_add_executor_job(_cleanup, entry.runtime_data.client)
 
     return True
 

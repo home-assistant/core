@@ -1,11 +1,10 @@
 """Persistently store thread datasets."""
 
-from __future__ import annotations
-
 from asyncio import Event, Task, wait
 import dataclasses
 from datetime import datetime
 import logging
+from pprint import pformat
 from typing import Any, cast
 
 from propcache.api import cached_property
@@ -14,6 +13,7 @@ from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
@@ -27,7 +27,62 @@ STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 
+# Bit 0x08 of the first security policy flags byte is the legacy "Beacons"
+# flag. It was removed from the Thread security policy in v1.2.1 (2022), so
+# current Thread stacks no longer set it; datasets that still carry it were
+# created by older implementations. It is ignored when comparing datasets.
+SECURITY_POLICY_BEACONS_FLAG = 0x08
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def _format_dataset(
+    dataset: dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem],
+) -> dict[str, str]:
+    """Format a parsed Thread dataset for logging.
+
+    Returns a human-readable dict with enum field names as keys, redacting
+    NETWORKKEY and PSKC to avoid logging sensitive network credentials.
+    """
+    result = {}
+    for key, value in dataset.items():
+        name = key.name if isinstance(key, MeshcopTLVType) else str(key)
+        if key in (MeshcopTLVType.NETWORKKEY, MeshcopTLVType.PSKC):
+            result[name] = REDACTED
+        else:
+            result[name] = str(value)
+    return result
+
+
+def _normalize_dataset(
+    dataset: dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem],
+) -> dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem]:
+    """Normalize a dataset for equivalence comparison.
+
+    Thread Border Routers may report functionally equivalent datasets without
+    incrementing the active timestamp. To recognize these as equivalent, ignore
+    the fields that don't affect how Home Assistant uses the dataset:
+    - WAKEUP_CHANNEL: added in newer OpenThread Border Router versions, but the
+      wake-up protocol isn't defined yet, so we treat it as if it were always
+      present.
+    - The legacy Beacons bit in the security policy flags: it was removed from
+      the Thread security policy in v1.2.1, so datasets created by older
+      implementations may still set it while current routers don't.
+    """
+    normalized = {
+        key: value
+        for key, value in dataset.items()
+        if key != MeshcopTLVType.WAKEUP_CHANNEL
+    }
+    if (security_policy := normalized.get(MeshcopTLVType.SECURITYPOLICY)) and len(
+        security_policy.data
+    ) > 2:
+        flags = bytearray(security_policy.data)
+        flags[2] &= ~SECURITY_POLICY_BEACONS_FLAG
+        normalized[MeshcopTLVType.SECURITYPOLICY] = tlv_parser.MeshcopTLVItem(
+            security_policy.tag, bytes(flags)
+        )
+    return normalized
 
 
 class DatasetPreferredError(HomeAssistantError):
@@ -116,7 +171,8 @@ class DatasetStoreStore(Store):
                         or MeshcopTLVType.ACTIVETIMESTAMP not in entry.dataset
                     ):
                         _LOGGER.warning(
-                            "Dropped invalid Thread dataset '%s'", entry.tlv
+                            "Dropped invalid Thread dataset:\n%s",
+                            pformat(_format_dataset(entry.dataset)),
                         )
                         if entry.id == preferred_dataset:
                             preferred_dataset = None
@@ -125,12 +181,14 @@ class DatasetStoreStore(Store):
                     if entry.extended_pan_id in datasets:
                         if datasets[entry.extended_pan_id].id == preferred_dataset:
                             _LOGGER.warning(
-                                (
-                                    "Dropped duplicated Thread dataset '%s' "
-                                    "(duplicate of preferred dataset '%s')"
+                                "Dropped duplicated Thread dataset"
+                                " (duplicate of preferred dataset):\n%s\nkept:\n%s",
+                                pformat(_format_dataset(entry.dataset)),
+                                pformat(
+                                    _format_dataset(
+                                        datasets[entry.extended_pan_id].dataset
+                                    )
                                 ),
-                                entry.tlv,
-                                datasets[entry.extended_pan_id].tlv,
                             )
                             continue
                         new_timestamp = cast(
@@ -148,21 +206,21 @@ class DatasetStoreStore(Store):
                             new_timestamp.ticks,
                         ):
                             _LOGGER.warning(
-                                (
-                                    "Dropped duplicated Thread dataset '%s' "
-                                    "(duplicate of '%s')"
+                                "Dropped duplicated Thread dataset:\n%s\nkept:\n%s",
+                                pformat(_format_dataset(entry.dataset)),
+                                pformat(
+                                    _format_dataset(
+                                        datasets[entry.extended_pan_id].dataset
+                                    )
                                 ),
-                                entry.tlv,
-                                datasets[entry.extended_pan_id].tlv,
                             )
                             continue
                         _LOGGER.warning(
-                            (
-                                "Dropped duplicated Thread dataset '%s' "
-                                "(duplicate of '%s')"
+                            "Dropped duplicated Thread dataset:\n%s\nkept:\n%s",
+                            pformat(
+                                _format_dataset(datasets[entry.extended_pan_id].dataset)
                             ),
-                            datasets[entry.extended_pan_id].tlv,
-                            entry.tlv,
+                            pformat(_format_dataset(entry.dataset)),
                         )
                     datasets[entry.extended_pan_id] = entry
                 data = {
@@ -256,27 +314,29 @@ class DatasetStore:
                 tlv_parser.Timestamp,
                 entry.dataset[MeshcopTLVType.ACTIVETIMESTAMP],
             )
-            if (old_timestamp.seconds, old_timestamp.ticks) >= (
-                new_timestamp.seconds,
-                new_timestamp.ticks,
-            ):
-                _LOGGER.warning(
-                    (
-                        "Got dataset with same extended PAN ID and same or older active"
-                        " timestamp, old dataset: '%s', new dataset: '%s'"
-                    ),
-                    entry.tlv,
-                    tlv,
+            old_ts = (old_timestamp.seconds, old_timestamp.ticks)
+            new_ts = (new_timestamp.seconds, new_timestamp.ticks)
+            if old_ts >= new_ts:
+                # Silently accept datasets that are functionally equivalent but
+                # reported without a newer active timestamp by some OpenThread
+                # Border Router versions (see _normalize_dataset).
+                if old_ts > new_ts or _normalize_dataset(dataset) != _normalize_dataset(
+                    entry.dataset
+                ):
+                    _LOGGER.warning(
+                        "Got dataset with same extended PAN ID and same or older"
+                        " active timestamp\nold:\n%s\nnew:\n%s",
+                        pformat(_format_dataset(entry.dataset)),
+                        pformat(_format_dataset(dataset)),
+                    )
+                    return
+            elif _LOGGER.isEnabledFor(logging.DEBUG):
+                _LOGGER.debug(
+                    "Updating dataset with same extended PAN ID and newer"
+                    " active timestamp\nold:\n%s\nnew:\n%s",
+                    pformat(_format_dataset(entry.dataset)),
+                    pformat(_format_dataset(dataset)),
                 )
-                return
-            _LOGGER.debug(
-                (
-                    "Updating dataset with same extended PAN ID and newer active "
-                    "timestamp, old dataset: '%s', new dataset: '%s'"
-                ),
-                entry.tlv,
-                tlv,
-            )
             self.datasets[entry.id] = dataclasses.replace(
                 self.datasets[entry.id], tlv=tlv
             )

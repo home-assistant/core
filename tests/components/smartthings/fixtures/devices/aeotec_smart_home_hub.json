@@ -1,0 +1,214 @@
+{
+  "items": [
+    {
+      "deviceId": "8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb",
+      "name": "SmartThings Hub",
+      "label": "Smart Home Hub",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "61128df9-aa3e-3d40-9812-66a122b71e1c",
+      "deviceManufacturerCode": "SAMJIN",
+      "locationId": "a123d440-3337-4e3b-8af2-51427b68052f",
+      "ownerId": "a6f94f18-42d6-28c6-57c8-6c77aaf87439",
+      "roomId": "7b29fa2f-60c1-44c2-ad5f-815bd927ac59",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "bridge",
+              "version": 1
+            },
+            {
+              "id": "wifiInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.networkConfiguration",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungim.devicestatus",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            },
+            {
+              "id": "sec.appliedHubGroupMemberState",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Hub",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2026-01-11T16:01:24.561Z",
+      "childDevices": [],
+      "profile": {
+        "id": "d237eeea-dc06-3630-8bcc-858b745063c2"
+      },
+      "hub": {
+        "hubEui": "D052A813A0FE0001",
+        "firmwareVersion": "000.059.00008",
+        "hubDrivers": [
+          {
+            "driverVersion": "2025-07-28T20:45:03.83690244",
+            "driverId": "01976eca-e7ff-4d1b-91db-9c980ce668d7",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2025-07-14T18:50:31.774045142",
+            "driverId": "166c1c25-fc5c-4849-8ef9-6e127e72e453",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-10-10T18:17:35.032104982",
+            "driverId": "4eb5b19a-7bbc-452f-859b-c6d7d857b2da",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2026-02-23T19:23:10.643933716",
+            "driverId": "5f3c42eb-5704-4c95-9705-c51c1a6764bf",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2026-03-12T16:34:29.714365243",
+            "driverId": "7103039b-68d6-442c-afe5-e1bc955924a9",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2025-02-03T22:38:47.582952919",
+            "driverId": "7beb8bc2-8dfa-45c2-8fdb-7373d4597b12",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-10-21T19:06:49.949052991",
+            "driverId": "9050ac53-358c-47a1-a927-9a70f5f28cee",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-02-06T21:13:33.383236744",
+            "driverId": "97abb0ff-e81d-48d5-a065-aa350a6c97d0",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2026-02-02T18:35:22.128991992",
+            "driverId": "c21a6c77-872c-474e-be5b-5f6f11a240ef",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-01-30T21:36:15.547412569",
+            "driverId": "c856a3fd-69ee-4478-a224-d7279b6d978f",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2026-01-26T23:44:30.725006043",
+            "driverId": "cd898d81-6c27-4d27-a529-dfadc8caae5a",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2025-03-10T21:36:12.512604403",
+            "driverId": "d9c3f8b8-c3c3-4b77-9ddd-01d08102c84b",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-10-10T18:17:54.195543653",
+            "driverId": "dbe192cb-f6a1-4369-a843-d1c42e5c91ba",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2026-03-12T16:34:32.146546103",
+            "driverId": "f2e891c6-00cc-446c-9192-8ebda63d9898",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2026-03-12T16:34:26.399370992",
+            "driverId": "fba178cd-203e-4b7c-bfa0-d4f07197b527",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          }
+        ],
+        "hubData": {
+          "serialNumber": "4022002360",
+          "zwaveStaticDsk": "00000-00000-00000-00000-00000-00000-00000-00000",
+          "zwaveS2": false,
+          "hardwareType": "V4_HUB",
+          "hardwareId": "004C",
+          "zigbeeFirmware": "6.2.5",
+          "zigbee3": true,
+          "zigbeeOta": "ENABLED",
+          "otaEnable": "true",
+          "zigbeeUnsecureRejoin": false,
+          "zigbeeRequiresExternalHardware": false,
+          "threadRequiresExternalHardware": false,
+          "failoverAvailability": "Available",
+          "primarySupportAvailability": "Available",
+          "secondarySupportAvailability": "Available",
+          "zigbeeAvailability": "Available",
+          "zwaveAvailability": "Unsupported",
+          "threadAvailability": "Available",
+          "lanAvailability": "Available",
+          "matterAvailability": "Available",
+          "localVirtualDeviceAvailability": "Available",
+          "childDeviceAvailability": "Unsupported",
+          "edgeDriversAvailability": "Available",
+          "hubReplaceAvailability": "Available",
+          "hubLocalApiAvailability": "Available",
+          "edgeDriverSupportedEndpointApps": {
+            "apps": [
+              {
+                "appName": "viper_12edd070-1b34-11f0-b145-1b5424e72149",
+                "version": "1"
+              }
+            ]
+          },
+          "zigbeeManualFirmwareUpdateSupported": true,
+          "matterRendezvousHedgeSupported": true,
+          "matterSoftwareComponentVersion": "1.5-0",
+          "matterDeviceDiagnosticsAvailability": "Available",
+          "zigbeeDeviceDiagnosticsAvailability": "Available",
+          "hedgeTlsCertificate": "-----BEGIN CERTIFICATE----- REMOVED -----END CERTIFICATE-----\n",
+          "zigbeeChannel": "19",
+          "zigbeePanId": "57E1",
+          "zigbeeEui": "286D9700020C9DCE",
+          "zigbeeNodeID": "0000",
+          "zwaveNodeID": "00",
+          "zwaveHomeID": "00000000",
+          "zwaveSucID": "00",
+          "zwaveVersion": "0000",
+          "zwaveRegion": "0",
+          "macAddress": "68:3A:48:50:1A:75",
+          "localIP": "192.168.1.15",
+          "wifiSsid": "Starfleet",
+          "zigbeeRadioFunctional": true,
+          "zwaveRadioFunctional": false,
+          "zigbeeRadioEnabled": true,
+          "zwaveRadioEnabled": false,
+          "zigbeeRadioDetected": true,
+          "zwaveRadioDetected": false,
+          "enrollmentChannel": "PUBLIC"
+        }
+      },
+      "type": "HUB",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

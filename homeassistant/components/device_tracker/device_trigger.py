@@ -1,26 +1,30 @@
 """Provides device automations for Device Tracker."""
 
-from __future__ import annotations
-
 from operator import attrgetter
 from typing import Final
 
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.zone import DOMAIN as DOMAIN_ZONE, trigger as zone
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN, trigger as zone
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_EVENT,
+    CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TYPE,
     CONF_ZONE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import (
+    TriggerActionType,
+    TriggerInfo,
+    #  protected, but only used for legacy triggers
+    _async_attach_trigger_cls,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -31,7 +35,7 @@ TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN_ZONE),
+        vol.Required(CONF_ZONE): cv.entity_domain(ZONE_DOMAIN),
     }
 )
 
@@ -81,16 +85,18 @@ async def async_attach_trigger(
         event = zone.EVENT_ENTER
     else:
         event = zone.EVENT_LEAVE
-
-    zone_config = {
-        CONF_PLATFORM: DOMAIN_ZONE,
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        CONF_ZONE: config[CONF_ZONE],
-        CONF_EVENT: event,
-    }
-    zone_config = await zone.async_validate_trigger_config(hass, zone_config)
-    return await zone.async_attach_trigger(
-        hass, zone_config, action, trigger_info, platform_type="device"
+    zone_config = await zone.LegacyZoneTrigger.async_validate_config(
+        hass,
+        {
+            CONF_OPTIONS: {
+                CONF_ENTITY_ID: [config[CONF_ENTITY_ID]],
+                CONF_ZONE: config[CONF_ZONE],
+                CONF_EVENT: event,
+            }
+        },
+    )
+    return await _async_attach_trigger_cls(
+        hass, zone.LegacyZoneTrigger, "device", zone_config, action, trigger_info
     )
 
 
@@ -100,7 +106,7 @@ async def async_get_trigger_capabilities(
     """List trigger capabilities."""
     zones = {
         ent.entity_id: ent.name
-        for ent in sorted(hass.states.async_all(DOMAIN_ZONE), key=attrgetter("name"))
+        for ent in sorted(hass.states.async_all(ZONE_DOMAIN), key=attrgetter("name"))
     }
     return {
         "extra_fields": vol.Schema(

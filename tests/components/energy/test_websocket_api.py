@@ -107,41 +107,32 @@ async def test_save_preferences(
 
     new_prefs = {
         "energy_sources": [
+            # Grid 1: heat_pump_meter paired with return_to_grid_peak + power
             {
                 "type": "grid",
-                "flow_from": [
-                    {
-                        "stat_energy_from": "sensor.heat_pump_meter",
-                        "stat_cost": "heat_pump_kwh_cost",
-                        "entity_energy_price": None,
-                        "number_energy_price": None,
-                    },
-                    {
-                        "stat_energy_from": "sensor.heat_pump_meter_2",
-                        "stat_cost": None,
-                        "entity_energy_price": None,
-                        "number_energy_price": 0.20,
-                    },
-                ],
-                "flow_to": [
-                    {
-                        "stat_energy_to": "sensor.return_to_grid_peak",
-                        "stat_compensation": None,
-                        "entity_energy_price": None,
-                        "number_energy_price": None,
-                    },
-                    {
-                        "stat_energy_to": "sensor.return_to_grid_offpeak",
-                        "stat_compensation": None,
-                        "entity_energy_price": None,
-                        "number_energy_price": 0.20,
-                    },
-                ],
-                "power": [
-                    {
-                        "stat_rate": "sensor.grid_power",
-                    }
-                ],
+                "stat_energy_from": "sensor.heat_pump_meter",
+                "stat_energy_to": "sensor.return_to_grid_peak",
+                "stat_cost": "heat_pump_kwh_cost",
+                "stat_compensation": None,
+                "entity_energy_price": None,
+                "number_energy_price": None,
+                "entity_energy_price_export": None,
+                "number_energy_price_export": None,
+                "stat_rate": "sensor.grid_power",
+                "cost_adjustment_day": 1.2,
+                "name": "Main Grid",
+            },
+            # Grid 2: heat_pump_meter_2 paired with return_to_grid_offpeak
+            {
+                "type": "grid",
+                "stat_energy_from": "sensor.heat_pump_meter_2",
+                "stat_energy_to": "sensor.return_to_grid_offpeak",
+                "stat_cost": None,
+                "stat_compensation": None,
+                "entity_energy_price": None,
+                "number_energy_price": 0.20,
+                "entity_energy_price_export": None,
+                "number_energy_price_export": 0.20,
                 "cost_adjustment_day": 1.2,
             },
             {
@@ -149,13 +140,18 @@ async def test_save_preferences(
                 "stat_energy_from": "my_solar_production",
                 "stat_rate": "my_solar_power",
                 "config_entry_solar_forecast": ["predicted_config_entry"],
+                "name": "Panels",
             },
             {
                 "type": "battery",
                 "stat_energy_from": "my_battery_draining",
                 "stat_energy_to": "my_battery_charging",
                 "stat_rate": "my_battery_power",
+                "stat_soc": "sensor.my_battery_state_of_charge",
+                "name": "Battery",
             },
+            {"type": "gas", "stat_energy_from": "sensor.gas", "name": "My gas"},
+            {"type": "water", "stat_energy_from": "sensor.water", "name": "My water"},
         ],
         "device_consumption": [
             {
@@ -206,20 +202,19 @@ async def test_save_preferences(
         "solar_forecast_domains": ["some_domain"],
     }
 
-    # Prefs with limited options
+    # Prefs with limited options (defaults will be applied by schema)
     new_prefs_2 = {
         "energy_sources": [
             {
                 "type": "grid",
-                "flow_from": [
-                    {
-                        "stat_energy_from": "sensor.heat_pump_meter",
-                        "stat_cost": None,
-                        "entity_energy_price": None,
-                        "number_energy_price": None,
-                    }
-                ],
-                "flow_to": [],
+                "stat_energy_from": "sensor.heat_pump_meter",
+                "stat_energy_to": None,
+                "stat_cost": None,
+                "stat_compensation": None,
+                "entity_energy_price": None,
+                "number_energy_price": None,
+                "entity_energy_price_export": None,
+                "number_energy_price_export": None,
                 "cost_adjustment_day": 1.2,
             },
             {
@@ -242,9 +237,10 @@ async def test_save_preferences(
 async def test_handle_duplicate_from_stat(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test we handle duplicate from stats."""
+    """Test we handle duplicate from stats across multiple grid sources."""
     client = await hass_ws_client(hass)
 
+    # Try to create two grids with the same import meter
     await client.send_json(
         {
             "id": 5,
@@ -252,22 +248,12 @@ async def test_handle_duplicate_from_stat(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [
-                        {
-                            "stat_energy_from": "sensor.heat_pump_meter",
-                            "stat_cost": None,
-                            "entity_energy_price": None,
-                            "number_energy_price": None,
-                        },
-                        {
-                            "stat_energy_from": "sensor.heat_pump_meter",
-                            "stat_cost": None,
-                            "entity_energy_price": None,
-                            "number_energy_price": None,
-                        },
-                    ],
-                    "flow_to": [],
-                    "power": [],
+                    "stat_energy_from": "sensor.heat_pump_meter",
+                    "cost_adjustment_day": 0,
+                },
+                {
+                    "type": "grid",
+                    "stat_energy_from": "sensor.heat_pump_meter",
                     "cost_adjustment_day": 0,
                 },
             ],
@@ -1080,7 +1066,7 @@ async def test_fossil_energy_consumption_checks(
 async def test_fossil_energy_consumption_check_missing_hour(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test explicitly if the API keeps the first hour of data for the requested time frame."""
+    """Test the API keeps the first hour of data for the time frame."""
 
     now = dt_util.utcnow()
     later = dt_util.as_utc(dt_util.parse_datetime("2021-08-01 05:00:00"))

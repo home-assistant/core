@@ -1,13 +1,12 @@
 """Support for Switchbot devices."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
 import switchbot
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.components.sensor import ConfigType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -30,9 +29,12 @@ from .const import (
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
+    DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+    DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
     DOMAIN,
     ENCRYPTED_MODELS,
     HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
+    NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
     SupportedModels,
 )
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
@@ -53,8 +55,17 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
-    SupportedModels.HYGROMETER_CO2.value: [Platform.SENSOR],
-    SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.HYGROMETER_CO2.value: [
+        Platform.BUTTON,
+        Platform.NUMBER,
+        Platform.SENSOR,
+        Platform.SELECT,
+    ],
+    SupportedModels.CONTACT.value: [
+        Platform.BINARY_SENSOR,
+        Platform.EVENT,
+        Platform.SENSOR,
+    ],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.PRESENCE_SENSOR.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
@@ -100,16 +111,47 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.LOCK_ULTRA.value: [
         Platform.BINARY_SENSOR,
+        Platform.BUTTON,
         Platform.LOCK,
         Platform.SENSOR,
     ],
-    SupportedModels.AIR_PURIFIER.value: [Platform.FAN, Platform.SENSOR],
-    SupportedModels.AIR_PURIFIER_TABLE.value: [Platform.FAN, Platform.SENSOR],
-    SupportedModels.EVAPORATIVE_HUMIDIFIER: [Platform.HUMIDIFIER, Platform.SENSOR],
+    SupportedModels.AIR_PURIFIER_JP.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+        Platform.SWITCH,
+        Platform.LIGHT,
+    ],
+    SupportedModels.AIR_PURIFIER_US.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+        Platform.SWITCH,
+        Platform.LIGHT,
+    ],
+    SupportedModels.AIR_PURIFIER_TABLE_JP.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+        Platform.SWITCH,
+        Platform.LIGHT,
+    ],
+    SupportedModels.AIR_PURIFIER_TABLE_US.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+        Platform.SWITCH,
+        Platform.LIGHT,
+    ],
+    SupportedModels.EVAPORATIVE_HUMIDIFIER.value: [
+        Platform.HUMIDIFIER,
+        Platform.SENSOR,
+    ],
     SupportedModels.FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.STRIP_LIGHT_3.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBICWW_FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBICWW_STRIP_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.PERMANENT_OUTDOOR_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.GARAGE_DOOR_OPENER.value: [Platform.COVER, Platform.SENSOR],
@@ -123,8 +165,32 @@ PLATFORMS_BY_TYPE = {
         Platform.BINARY_SENSOR,
         Platform.BUTTON,
     ],
-    SupportedModels.KEYPAD_VISION.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
-    SupportedModels.KEYPAD_VISION_PRO.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.KEYPAD_VISION.value: [
+        Platform.SENSOR,
+        Platform.BINARY_SENSOR,
+        Platform.EVENT,
+    ],
+    SupportedModels.KEYPAD_VISION_PRO.value: [
+        Platform.SENSOR,
+        Platform.BINARY_SENSOR,
+        Platform.EVENT,
+    ],
+    SupportedModels.LOCK_VISION.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.LOCK_VISION_PRO.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.LOCK_PRO_WIFI.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.WEATHER_STATION.value: [Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -150,24 +216,71 @@ CLASS_BY_DEVICE = {
     SupportedModels.K20_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.LOCK_LITE.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLock,
-    SupportedModels.AIR_PURIFIER.value: switchbot.SwitchbotAirPurifier,
-    SupportedModels.AIR_PURIFIER_TABLE.value: switchbot.SwitchbotAirPurifier,
-    SupportedModels.EVAPORATIVE_HUMIDIFIER: switchbot.SwitchbotEvaporativeHumidifier,
+    SupportedModels.AIR_PURIFIER_JP.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.AIR_PURIFIER_US.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.AIR_PURIFIER_TABLE_JP.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.AIR_PURIFIER_TABLE_US.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.EVAPORATIVE_HUMIDIFIER.value: (
+        switchbot.SwitchbotEvaporativeHumidifier
+    ),
     SupportedModels.FLOOR_LAMP.value: switchbot.SwitchbotStripLight3,
     SupportedModels.STRIP_LIGHT_3.value: switchbot.SwitchbotStripLight3,
     SupportedModels.RGBICWW_FLOOR_LAMP.value: switchbot.SwitchbotRgbicLight,
     SupportedModels.RGBICWW_STRIP_LIGHT.value: switchbot.SwitchbotRgbicLight,
+    SupportedModels.PERMANENT_OUTDOOR_LIGHT.value: (
+        switchbot.SwitchbotPermanentOutdoorLight
+    ),
     SupportedModels.PLUG_MINI_EU.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
     SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotGarageDoorOpener,
-    SupportedModels.SMART_THERMOSTAT_RADIATOR.value: switchbot.SwitchbotSmartThermostatRadiator,
+    SupportedModels.SMART_THERMOSTAT_RADIATOR.value: (
+        switchbot.SwitchbotSmartThermostatRadiator
+    ),
     SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
     SupportedModels.KEYPAD_VISION.value: switchbot.SwitchbotKeypadVision,
     SupportedModels.KEYPAD_VISION_PRO.value: switchbot.SwitchbotKeypadVision,
+    SupportedModels.HYGROMETER_CO2.value: switchbot.SwitchbotMeterProCO2,
+    SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_PRO_WIFI.value: switchbot.SwitchbotLock,
 }
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _migrate_deprecated_air_purifier_type(
+    hass: HomeAssistant, entry: SwitchbotConfigEntry
+) -> bool:
+    """Migrate deprecated air purifier sensor types introduced before pySwitchbot 2.0.0.
+
+    The old library used a single AIR_PURIFIER/AIR_PURIFIER_TABLE type; the new
+    library distinguishes by region (JP/US). The correct type can be detected from
+    the BLE advertisement local name without connecting or using encryption keys.
+
+    Returns True if migration succeeded, False if device is not in range yet.
+    """
+    address: str = entry.data[CONF_ADDRESS]
+    if service_info := bluetooth.async_last_service_info(
+        hass, address.upper(), connectable=True
+    ):
+        parsed_adv = switchbot.parse_advertisement_data(
+            service_info.device, service_info.advertisement
+        )
+        if (
+            parsed_adv
+            and (adv_model := parsed_adv.data.get("modelName"))
+            in CONNECTABLE_SUPPORTED_MODEL_TYPES
+        ):
+            hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    **entry.data,
+                    CONF_SENSOR_TYPE: str(CONNECTABLE_SUPPORTED_MODEL_TYPES[adv_model]),
+                },
+            )
+            return True
+    return False
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -190,10 +303,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
             data={**entry.data, CONF_ADDRESS: mac},
         )
 
+    # Migrate deprecated air purifier sensor types introduced before pySwitchbot 2.0.0.
+    if entry.data.get(CONF_SENSOR_TYPE) in (
+        DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+        DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
+    ) and not _migrate_deprecated_air_purifier_type(hass, entry):
+        # Device was not in range; retry when it starts advertising again.
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found_error",
+            translation_placeholders={
+                "sensor_type": entry.data[CONF_SENSOR_TYPE],
+                "address": entry.data[CONF_ADDRESS],
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    entry.data[CONF_ADDRESS].upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
+        )
+
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
     switchbot_model = HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL[sensor_type]
     # connectable means we can make connections to the device
-    connectable = switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
+    connectable = (
+        switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
+        and switchbot_model not in NON_CONNECTABLE_SUPPORTED_MODEL_TYPES
+    )
     address: str = entry.data[CONF_ADDRESS]
 
     await switchbot.close_stale_connections_by_address(address)
@@ -205,7 +341,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_not_found_error",
-            translation_placeholders={"sensor_type": sensor_type, "address": address},
+            translation_placeholders={
+                "sensor_type": sensor_type,
+                "address": address,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION
+                    if connectable
+                    else BluetoothReachabilityIntent.PASSIVE_ADVERTISEMENT,
+                ),
+            },
         )
 
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)

@@ -25,6 +25,8 @@ async def async_setup_entry(
 
     async def async_discover_light(device_id):
         """Discover and add a discovered sensor."""
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveLight(client, device_id)])
 
@@ -53,12 +55,12 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
         self.schedule_update_ha_state()
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self.device.dim_level
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self.device.is_on
 

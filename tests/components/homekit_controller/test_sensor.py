@@ -70,6 +70,19 @@ def create_battery_level_sensor(accessory: Accessory) -> Service:
     return service
 
 
+def create_humidifier_with_water_level_sensor(accessory: Accessory) -> Service:
+    """Define a humidifier with a water level sensor."""
+    service = accessory.add_service(ServicesTypes.HUMIDIFIER_DEHUMIDIFIER)
+
+    water_level = service.add_char(CharacteristicsTypes.WATER_LEVEL)
+    water_level.value = 100
+
+    # The humidifier service needs other characteristics to be valid
+    service.add_char(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT).value = 30
+
+    return service
+
+
 async def test_temperature_sensor_read_state(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
@@ -101,7 +114,7 @@ async def test_temperature_sensor_read_state(
 async def test_temperature_sensor_not_added_twice(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
-    """A standalone temperature sensor should not get a characteristic AND a service entity."""
+    """Test standalone temperature sensor gets only one entity."""
     helper = await setup_test_component(
         hass, get_next_aid(), create_temperature_sensor_service, suffix="temperature"
     )
@@ -278,6 +291,43 @@ async def test_battery_low(
     assert state.attributes["icon"] == "mdi:battery-alert"
 
 
+async def test_water_level_sensor_read_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test reading the state of a HomeKit water level sensor accessory."""
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_humidifier_with_water_level_sensor
+    )
+
+    # Helper is for the primary entity, which is a humidifier.
+    # Make a helper for the sensor.
+    water_level_helper = Helper(
+        hass,
+        "sensor.testdevice_water_level",
+        helper.pairing,
+        helper.accessory,
+        helper.config_entry,
+    )
+
+    state = await water_level_helper.async_update(
+        ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
+        {
+            CharacteristicsTypes.WATER_LEVEL: 10,
+        },
+    )
+    assert state.state == "10"
+
+    state = await water_level_helper.async_update(
+        ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
+        {
+            CharacteristicsTypes.WATER_LEVEL: 20,
+        },
+    )
+    assert state.state == "20"
+
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+
 def create_switch_with_sensor(accessory: Accessory) -> Service:
     """Define battery level characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
@@ -301,7 +351,8 @@ async def test_switch_with_sensor(
     """Test a switch service that has a sensor characteristic is correctly handled."""
     helper = await setup_test_component(hass, get_next_aid(), create_switch_with_sensor)
 
-    # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the
+    # sensor.
     energy_helper = Helper(
         hass,
         "sensor.testdevice_power",
@@ -337,7 +388,8 @@ async def test_sensor_unavailable(
     on_char = outlet[CharacteristicsTypes.ON]
     realtime_energy = outlet[CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY]
 
-    # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the
+    # sensor.
     energy_helper = Helper(
         hass,
         "sensor.testdevice_power",

@@ -2,8 +2,10 @@
 
 from homeassistant.components.insteon.api import async_load_api
 from homeassistant.components.insteon.const import DOMAIN
+from homeassistant.components.usb import DOMAIN as USB_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
@@ -19,6 +21,8 @@ async def async_mock_setup(
     config_options: dict | None = None,
 ):
     """Set up for tests."""
+    assert await async_setup_component(hass, USB_DOMAIN, {"usb": {}})
+
     config_data = MOCK_USER_INPUT_PLM if config_data is None else config_data
     config_options = {} if config_options is None else config_options
     config_entry = MockConfigEntry(

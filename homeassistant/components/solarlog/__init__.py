@@ -1,13 +1,24 @@
 """Solar-Log integration."""
 
 import logging
+from urllib.parse import ParseResult, urlparse
 
-from homeassistant.const import Platform
+from aiohttp import CookieJar
+from solarlog_cli.solarlog_connector import SolarLogConnector
+
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_HAS_PWD
-from .coordinator import SolarlogConfigEntry, SolarLogCoordinator
+from .const import CONF_HAS_PWD, DEFAULT_TIMEOUT
+from .coordinator import (
+    SolarLogBasicDataCoordinator,
+    SolarlogConfigEntry,
+    SolarLogDeviceDataCoordinator,
+    SolarLogLongtimeDataCoordinator,
+)
+from .models import SolarlogIntegrationData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,10 +27,58 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
     """Set up a config entry for solarlog."""
-    coordinator = SolarLogCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+
+    host_entry = entry.data[CONF_HOST]
+    password = entry.data.get("password", "")
+
+    url = urlparse(host_entry, "http")
+    netloc = url.netloc or url.path
+    path = url.path if url.netloc else ""
+    url = ParseResult("http", netloc, path, *url[3:])
+
+    solarlog = SolarLogConnector(
+        url.geturl(),
+        tz=hass.config.time_zone,
+        password=password,
+        session=async_create_clientsession(
+            hass, cookie_jar=CookieJar(quote_cookie=False)
+        ),
+    )
+
+    basic_coordinator = SolarLogBasicDataCoordinator(hass, entry, solarlog)
+
+    solar_log_data = SolarlogIntegrationData(
+        api=solarlog,
+        basic_data_coordinator=basic_coordinator,
+    )
+
+    await basic_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = solar_log_data
+
+    _LOGGER.debug(
+        "Basic coordinator setup successful, extended data available: %s",
+        solar_log_data.api.extended_data,
+    )
+
+    if solar_log_data.api.extended_data:
+        timeout = entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+
+        _LOGGER.debug("Setup of LongtimeDataCoordinator, saved timeout is %s", timeout)
+
+        entry.runtime_data.longtime_data_coordinator = SolarLogLongtimeDataCoordinator(
+            hass, entry, solarlog, timeout
+        )
+        await entry.runtime_data.longtime_data_coordinator.async_config_entry_first_refresh()
+
+        _LOGGER.debug("Setup of DeviceDataCoordinator")
+
+        device_coordinator = SolarLogDeviceDataCoordinator(hass, entry, solarlog)
+        entry.runtime_data.device_data_coordinator = device_coordinator
+        await device_coordinator.async_config_entry_first_refresh()
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 

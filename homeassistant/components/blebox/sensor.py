@@ -28,7 +28,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
+from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
+
+PARALLEL_UPDATES = 0
+
 
 SENSOR_TYPES = (
     SensorEntityDescription(
@@ -53,9 +57,9 @@ SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="powerConsumption",
-        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
+        icon="mdi:lightning-bolt",
     ),
     SensorEntityDescription(
         key="humidity",
@@ -121,13 +125,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
+    coordinator = config_entry.runtime_data
     entities = [
-        BleBoxSensorEntity(feature, description)
-        for feature in config_entry.runtime_data.features.get("sensors", [])
+        BleBoxSensorEntity(coordinator, feature, description)
+        for feature in coordinator.box.features.get("sensors", [])
         for description in SENSOR_TYPES
         if description.key == feature.device_class
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEntity):
@@ -135,11 +140,12 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
 
     def __init__(
         self,
+        coordinator: BleBoxCoordinator,
         feature: blebox_uniapi.sensor.BaseSensor,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a BleBox sensor feature."""
-        super().__init__(feature)
+        super().__init__(coordinator, feature)
         self.entity_description = description
 
     @property
@@ -150,6 +156,7 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if implemented."""
+        if self.state_class != SensorStateClass.TOTAL:
+            return None
         native_implementation = getattr(self._feature, "last_reset", None)
-
         return native_implementation or super().last_reset

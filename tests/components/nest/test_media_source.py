@@ -783,8 +783,9 @@ async def test_resolve_invalid_event_id(
     assert device
     assert device.name == DEVICE_NAME
 
-    # Assume any event ID can be resolved to a media url. Fetching the actual media may fail
-    # if the ID is not valid. Content type is inferred based on the capabilities of the device.
+    # Assume any event ID can be resolved to a media url. Fetching
+    # the actual media may fail if the ID is not valid. Content type
+    # is inferred based on the capabilities of the device.
     media = await async_resolve_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{device.id}/GXXWRWVeHNUlUU3V3MGV3bUOYW...",
@@ -1253,7 +1254,8 @@ async def test_media_store_save_filesystem_error(
     assert media.url == f"/api/nest/event_media/{event.identifier}"
     assert media.mime_type == "video/mp4"
 
-    # We fail to retrieve the media from the server since the origin filesystem op failed
+    # We fail to retrieve the media from the server since the
+    # origin filesystem op failed
     client = await hass_client()
     response = await client.get(media.url)
     assert response.status == HTTPStatus.NOT_FOUND, f"Response not matched: {response}"
@@ -1620,6 +1622,7 @@ async def test_remove_stale_media(
     event_media = media_files[0]
     assert event_media.name.endswith(".mp4")
 
+    # pylint: disable-next=home-assistant-enforce-utcnow
     event_time1 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=8)
     extra_media1 = (
         device_path / f"{int(event_time1.timestamp())}-camera_motion-test.mp4"
@@ -1631,6 +1634,7 @@ async def test_remove_stale_media(
     )
     extra_media2.write_bytes(mp4.getvalue())
     # This event will not be garbage collected because it is too recent
+    # pylint: disable-next=home-assistant-enforce-utcnow
     event_time3 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=3)
     extra_media3 = (
         device_path / f"{int(event_time3.timestamp())}-camera_motion-test.mp4"
@@ -1641,6 +1645,7 @@ async def test_remove_stale_media(
 
     # Advance the clock to invoke the garbage collector. This will remove extra
     # files that are not valid events that are old enough.
+    # pylint: disable-next=home-assistant-enforce-utcnow
     point_in_time = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
@@ -1653,3 +1658,77 @@ async def test_remove_stale_media(
     assert not extra_media1.exists()
     assert not extra_media2.exists()
     assert extra_media3.exists()
+
+
+async def test_media_migration(
+    hass: HomeAssistant,
+    setup_platform,
+    legacy_media_path: str,
+    media_path: str,
+) -> None:
+    """Test migration of media files from legacy path to new path."""
+    legacy_path = pathlib.Path(legacy_media_path)
+    cache_path = pathlib.Path(media_path)
+
+    # Create some dummy files in the legacy path
+    device_id = "device-1"
+    legacy_device_path = legacy_path / device_id
+    legacy_device_path.mkdir(parents=True)
+
+    file1 = legacy_device_path / "event1.jpg"
+    file1.write_text("content1")
+
+    file2 = legacy_device_path / "event2.mp4"
+    file2.write_text("content2")
+
+    # Run setup (which triggers migration)
+    await setup_platform()
+
+    # Check if files are moved to cache path
+    cache_device_path = cache_path / device_id
+    assert (cache_device_path / "event1.jpg").exists()
+    assert (cache_device_path / "event1.jpg").read_text() == "content1"
+    assert (cache_device_path / "event2.mp4").exists()
+    assert (cache_device_path / "event2.mp4").read_text() == "content2"
+
+    # Check if files are removed from legacy path
+    assert not file1.exists()
+    assert not file2.exists()
+    assert not legacy_device_path.exists()
+    assert not legacy_path.exists()
+
+
+async def test_media_migration_failure(
+    hass: HomeAssistant,
+    setup_platform,
+    legacy_media_path: str,
+    media_path: str,
+) -> None:
+    """Test migration failure handles the error gracefully."""
+    legacy_path = pathlib.Path(legacy_media_path)
+    cache_path = pathlib.Path(media_path)
+
+    # Create some dummy files in the legacy path
+    device_id = "device-1"
+    legacy_device_path = legacy_path / device_id
+    legacy_device_path.mkdir(parents=True)
+    file1 = legacy_device_path / "event1.jpg"
+    file1.write_text("content1")
+
+    # Mock shutil.move to fail
+    with patch(
+        "homeassistant.components.nest.media_source.shutil.move",
+        side_effect=OSError("Storage full"),
+    ):
+        # Run setup (which triggers migration)
+        # Note: setup_platform handles the integration setup which
+        # calls async_get_media_event_store
+        await setup_platform()
+
+    # Verify that the legacy path still exists (migration was abandoned)
+    assert file1.exists()
+    assert legacy_path.exists()
+
+    # Verify that the cache path was still created (it should be empty)
+    assert cache_path.exists()
+    assert not (cache_path / device_id).exists()

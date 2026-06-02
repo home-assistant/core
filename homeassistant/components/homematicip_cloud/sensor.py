@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -30,6 +28,7 @@ from homematicip.device import (
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
     SmokeDetector,
+    SoilMoistureSensorInterface,
     SwitchMeasuring,
     TemperatureDifferenceSensor2,
     TemperatureHumiditySensorDisplay,
@@ -285,6 +284,10 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
         EnergySensorsInterface: lambda device: _handle_energy_sensor_interface(
             hap, device
         ),
+        SoilMoistureSensorInterface: lambda device: [
+            HomematicipSoilMoistureSensor(hap, device),
+            HomematicipSoilTemperatureSensor(hap, device),
+        ],
     }
 
 
@@ -378,7 +381,14 @@ class HomematicipWaterFlowSensor(HomematicipGenericEntity, SensorEntity):
         self, hap: HomematicipHAP, device: Device, channel: int, post: str
     ) -> None:
         """Initialize the watering flow sensor device."""
-        super().__init__(hap, device, post=post, channel=channel, is_multi_channel=True)
+        super().__init__(
+            hap,
+            device,
+            post=post,
+            channel=channel,
+            is_multi_channel=True,
+            feature_id="water_flow",
+        )
 
     @property
     def native_value(self) -> float | None:
@@ -400,9 +410,17 @@ class HomematicipWaterVolumeSensor(HomematicipGenericEntity, SensorEntity):
         channel: int,
         post: str,
         attribute: str,
+        feature_id: str = "water_volume",
     ) -> None:
         """Initialize the watering volume sensor device."""
-        super().__init__(hap, device, post=post, channel=channel, is_multi_channel=True)
+        super().__init__(
+            hap,
+            device,
+            post=post,
+            channel=channel,
+            is_multi_channel=True,
+            feature_id=feature_id,
+        )
         self._attribute_name = attribute
 
     @property
@@ -425,6 +443,7 @@ class HomematicipWaterVolumeSinceOpenSensor(HomematicipWaterVolumeSensor):
             channel=channel,
             post="waterVolumeSinceOpen",
             attribute="waterVolumeSinceOpen",
+            feature_id="water_volume_since_open",
         )
 
 
@@ -436,7 +455,7 @@ class HomematicipTiltAngleSensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the tilt angle sensor device."""
-        super().__init__(hap, device, post="Tilt Angle")
+        super().__init__(hap, device, post="Tilt Angle", feature_id="tilt_angle")
 
     @property
     def native_value(self) -> int | None:
@@ -453,7 +472,7 @@ class HomematicipTiltStateSensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the tilt sensor device."""
-        super().__init__(hap, device, post="Tilt State")
+        super().__init__(hap, device, post="Tilt State", feature_id="tilt_state")
 
     @property
     def native_value(self) -> str | None:
@@ -497,6 +516,7 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
             channel=channel,
             is_multi_channel=is_multi_channel,
             post="Valve Position",
+            feature_id="ftb_valve_position",
         )
 
     @property
@@ -515,7 +535,7 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
 
     @property
     def native_value(self) -> int | None:
-        """Return the state of the floor terminal block mechanical channel valve position."""
+        """Return the floor terminal block valve position."""
         channel = next(
             channel
             for channel in self._device.functionalChannels
@@ -535,7 +555,9 @@ class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize access point status entity."""
-        super().__init__(hap, device, post="Duty Cycle")
+        super().__init__(
+            hap, device, post="Duty Cycle", channel=0, feature_id="duty_cycle"
+        )
 
     @property
     def native_value(self) -> float:
@@ -550,7 +572,7 @@ class HomematicipHeatingThermostat(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize heating thermostat device."""
-        super().__init__(hap, device, post="Heating")
+        super().__init__(hap, device, post="Heating", feature_id="valve_position")
 
     @property
     def icon(self) -> str | None:
@@ -578,7 +600,7 @@ class HomematicipHumiditySensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the thermometer device."""
-        super().__init__(hap, device, post="Humidity")
+        super().__init__(hap, device, post="Humidity", feature_id="humidity")
 
     @property
     def native_value(self) -> int:
@@ -595,7 +617,7 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the thermometer device."""
-        super().__init__(hap, device, post="Temperature")
+        super().__init__(hap, device, post="Temperature", feature_id="temperature")
 
     @property
     def native_value(self) -> float:
@@ -622,29 +644,24 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ABSOLUTE_HUMIDITY
     _attr_native_unit_of_measurement = CONCENTRATION_GRAMS_PER_CUBIC_METER
+    _attr_suggested_display_precision = 1
     _attr_suggested_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the thermometer device."""
-        super().__init__(hap, device, post="Absolute Humidity")
+        super().__init__(
+            hap, device, post="Absolute Humidity", feature_id="absolute_humidity"
+        )
 
     @property
     def native_value(self) -> float | None:
         """Return the state."""
-        if self.functional_channel is None:
+        value = self._device.vaporAmount
+        if value is None or value == "":
             return None
 
-        value = self.functional_channel.vaporAmount
-
-        # Handle case where value might be None
-        if (
-            self.functional_channel.vaporAmount is None
-            or self.functional_channel.vaporAmount == ""
-        ):
-            return None
-
-        return round(value, 3)
+        return value
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
@@ -656,7 +673,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, post="Illuminance")
+        super().__init__(hap, device, post="Illuminance", feature_id="illuminance")
 
     @property
     def native_value(self) -> float:
@@ -687,7 +704,7 @@ class HomematicipPowerSensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, post="Power")
+        super().__init__(hap, device, post="Power", feature_id="power")
 
     @property
     def native_value(self) -> float:
@@ -704,7 +721,7 @@ class HomematicipEnergySensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the device."""
-        super().__init__(hap, device, post="Energy")
+        super().__init__(hap, device, post="Energy", feature_id="energy")
 
     @property
     def native_value(self) -> float:
@@ -721,7 +738,7 @@ class HomematicipWindspeedSensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the windspeed sensor."""
-        super().__init__(hap, device, post="Windspeed")
+        super().__init__(hap, device, post="Windspeed", feature_id="wind_speed")
 
     @property
     def native_value(self) -> float:
@@ -753,7 +770,7 @@ class HomematicipTodayRainSensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, post="Today Rain")
+        super().__init__(hap, device, post="Today Rain", feature_id="today_rain")
 
     @property
     def native_value(self) -> float:
@@ -770,7 +787,12 @@ class HomematicpTemperatureExternalSensorCh1(HomematicipGenericEntity, SensorEnt
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, post="Channel 1 Temperature")
+        super().__init__(
+            hap,
+            device,
+            post="Channel 1 Temperature",
+            feature_id="temperature_external_ch1",
+        )
 
     @property
     def native_value(self) -> float:
@@ -787,7 +809,12 @@ class HomematicpTemperatureExternalSensorCh2(HomematicipGenericEntity, SensorEnt
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, post="Channel 2 Temperature")
+        super().__init__(
+            hap,
+            device,
+            post="Channel 2 Temperature",
+            feature_id="temperature_external_ch2",
+        )
 
     @property
     def native_value(self) -> float:
@@ -804,7 +831,12 @@ class HomematicpTemperatureExternalSensorDelta(HomematicipGenericEntity, SensorE
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, post="Delta Temperature")
+        super().__init__(
+            hap,
+            device,
+            post="Delta Temperature",
+            feature_id="temperature_external_delta",
+        )
 
     @property
     def native_value(self) -> float:
@@ -822,6 +854,7 @@ class HmipEsiSensorEntity(HomematicipGenericEntity, SensorEntity):
         key: str,
         value_fn: Callable[[FunctionalChannel], StateType],
         type_fn: Callable[[FunctionalChannel], str],
+        feature_id: str,
     ) -> None:
         """Initialize Sensor Entity."""
         super().__init__(
@@ -830,6 +863,7 @@ class HmipEsiSensorEntity(HomematicipGenericEntity, SensorEntity):
             channel=1,
             post=key,
             is_multi_channel=False,
+            feature_id=feature_id,
         )
 
         self._value_fn = value_fn
@@ -864,6 +898,7 @@ class HmipEsiIecPowerConsumption(HmipEsiSensorEntity):
             key="CurrentPowerConsumption",
             value_fn=lambda channel: channel.currentPowerConsumption,
             type_fn=lambda channel: "CurrentPowerConsumption",
+            feature_id="esi_iec_power",
         )
 
 
@@ -882,6 +917,7 @@ class HmipEsiIecEnergyCounterHighTariff(HmipEsiSensorEntity):
             key=ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
             value_fn=lambda channel: channel.energyCounterOne,
             type_fn=lambda channel: channel.energyCounterOneType,
+            feature_id="esi_iec_energy_high",
         )
 
 
@@ -900,6 +936,7 @@ class HmipEsiIecEnergyCounterLowTariff(HmipEsiSensorEntity):
             key=ESI_TYPE_ENERGY_COUNTER_USAGE_LOW_TARIFF,
             value_fn=lambda channel: channel.energyCounterTwo,
             type_fn=lambda channel: channel.energyCounterTwoType,
+            feature_id="esi_iec_energy_low",
         )
 
 
@@ -918,6 +955,7 @@ class HmipEsiIecEnergyCounterInputSingleTariff(HmipEsiSensorEntity):
             key=ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF,
             value_fn=lambda channel: channel.energyCounterThree,
             type_fn=lambda channel: channel.energyCounterThreeType,
+            feature_id="esi_iec_energy_input",
         )
 
 
@@ -936,6 +974,7 @@ class HmipEsiGasCurrentGasFlow(HmipEsiSensorEntity):
             key="CurrentGasFlow",
             value_fn=lambda channel: channel.currentGasFlow,
             type_fn=lambda channel: "CurrentGasFlow",
+            feature_id="esi_gas_flow",
         )
 
 
@@ -954,6 +993,7 @@ class HmipEsiGasGasVolume(HmipEsiSensorEntity):
             key="GasVolume",
             value_fn=lambda channel: channel.gasVolume,
             type_fn=lambda channel: "GasVolume",
+            feature_id="esi_gas_volume",
         )
 
 
@@ -972,6 +1012,7 @@ class HmipEsiLedCurrentPowerConsumption(HmipEsiSensorEntity):
             key="CurrentPowerConsumption",
             value_fn=lambda channel: channel.currentPowerConsumption,
             type_fn=lambda channel: "CurrentPowerConsumption",
+            feature_id="esi_led_power",
         )
 
 
@@ -990,11 +1031,16 @@ class HmipEsiLedEnergyCounterHighTariff(HmipEsiSensorEntity):
             key=ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
             value_fn=lambda channel: channel.energyCounterOne,
             type_fn=lambda channel: ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
+            feature_id="esi_led_energy_high",
         )
 
 
 class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP passage detector delta counter."""
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the passage detector delta counter."""
+        super().__init__(hap, device, feature_id="passage_counter")
 
     @property
     def native_value(self) -> int:
@@ -1024,7 +1070,7 @@ class HmipSmokeDetectorSensor(HomematicipGenericEntity, SensorEntity):
         description: HmipSmokeDetectorSensorDescription,
     ) -> None:
         """Initialize the smoke detector sensor."""
-        super().__init__(hap, device, post=description.key)
+        super().__init__(hap, device, feature_id="smoke_detector_sensor")
         self.entity_description = description
         self._sensor_unique_id = f"{device.id}_{description.key}"
 
@@ -1037,6 +1083,58 @@ class HmipSmokeDetectorSensor(HomematicipGenericEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._device)
+
+
+class HomematicipSoilMoistureSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP soil moisture sensor."""
+
+    _attr_device_class = SensorDeviceClass.MOISTURE
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the soil moisture sensor device."""
+        super().__init__(
+            hap,
+            device,
+            post="Soil Moisture",
+            channel=1,
+            is_multi_channel=True,
+            feature_id="soil_moisture",
+        )
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state."""
+        if self.functional_channel is None:
+            return None
+        return self.functional_channel.soilMoisture
+
+
+class HomematicipSoilTemperatureSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP soil temperature sensor."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the soil temperature sensor device."""
+        super().__init__(
+            hap,
+            device,
+            post="Soil Temperature",
+            channel=1,
+            is_multi_channel=True,
+            feature_id="soil_temperature",
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state."""
+        if self.functional_channel is None:
+            return None
+        return self.functional_channel.soilTemperature
 
 
 def _get_wind_direction(wind_direction_degree: float) -> str:

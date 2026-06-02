@@ -1,11 +1,8 @@
 """Issues for OpenWeatherMap."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, cast
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_MODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -27,13 +24,13 @@ class DeprecatedV25RepairFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return self.async_show_form(step_id="migrate")
 
     async def async_step_migrate(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the migrate step of a fix flow."""
         errors, description_placeholders = {}, {}
         new_options = {**self.entry.options, CONF_MODE: OWM_MODE_V30}

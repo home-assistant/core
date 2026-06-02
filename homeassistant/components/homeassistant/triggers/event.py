@@ -1,7 +1,5 @@
 """Offer event listening automation rules."""
 
-from __future__ import annotations
-
 from collections.abc import ItemsView, Mapping
 from typing import Any
 

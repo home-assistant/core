@@ -36,6 +36,9 @@
       "carbon_monoxide": {
         "name": "Carbon monoxide"
       },
+      "coil_freeze": {
+        "name": "Coil freeze/defrost"
+      },
       "cover_off": {
         "name": "Cover off"
       },
@@ -48,11 +51,26 @@
       "feeding": {
         "name": "Feeding"
       },
+      "filter_cleaning": {
+        "name": "Filter cleaning"
+      },
       "formaldehyde": {
         "name": "Formaldehyde"
       },
+      "high_temp": {
+        "name": "High temperature"
+      },
+      "low_humidity": {
+        "name": "Low humidity"
+      },
+      "low_temp": {
+        "name": "Low temperature"
+      },
       "methane": {
         "name": "Methane"
+      },
+      "motor_fault": {
+        "name": "Motor fault"
       },
       "pm25": {
         "name": "PM2.5"
@@ -62,6 +80,9 @@
       },
       "tankfull": {
         "name": "Tank full"
+      },
+      "temp_error": {
+        "name": "Temperature error"
       },
       "tilt": {
         "name": "Tilt"
@@ -214,6 +235,9 @@
       "inverter_output_power_limit": {
         "name": "Inverter output power limit"
       },
+      "irrigation_duration": {
+        "name": "Irrigation duration"
+      },
       "maximum_brightness": {
         "name": "Maximum brightness"
       },
@@ -255,6 +279,15 @@
       },
       "time": {
         "name": "Time"
+      },
+      "video_brightness": {
+        "name": "Video brightness"
+      },
+      "video_contrast": {
+        "name": "Video contrast"
+      },
+      "video_sharpness": {
+        "name": "Video sharpness"
       },
       "voice_times": {
         "name": "Voice times"
@@ -445,6 +478,15 @@
           "1": "Continuous working mode"
         }
       },
+      "kettle_work_mode": {
+        "name": "Work mode",
+        "state": {
+          "boiling_quick": "Quick boil",
+          "setting_quick": "Quick heat",
+          "temp_boiling": "Boil and keep warm",
+          "temp_setting": "Heat and keep warm"
+        }
+      },
       "led_type": {
         "name": "Light source type",
         "state": {
@@ -482,6 +524,16 @@
           "smart": "Smart"
         }
       },
+      "quick_heat_temperature": {
+        "name": "Quick heat temperature",
+        "state": {
+          "80": "80 °C",
+          "85": "85 °C",
+          "90": "90 °C",
+          "95": "95 °C",
+          "100": "100 °C"
+        }
+      },
       "record_mode": {
         "name": "Record mode",
         "state": {
@@ -490,9 +542,9 @@
         }
       },
       "relay_status": {
-        "name": "Power on behavior",
+        "name": "Power-on behavior",
         "state": {
-          "last": "Remember last state",
+          "last": "Previous state",
           "memory": "[%key:component::tuya::entity::select::relay_status::state::last%]",
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
@@ -643,6 +695,12 @@
       "cleaning_time": {
         "name": "Cleaning time"
       },
+      "coil_temperature": {
+        "name": "Coil temperature"
+      },
+      "compressor_strength": {
+        "name": "Compressor strength"
+      },
       "concentration_carbon_dioxide": {
         "name": "Concentration of carbon dioxide"
       },
@@ -679,11 +737,17 @@
       "filter_utilization": {
         "name": "Filter utilization"
       },
+      "flow_temperature": {
+        "name": "Flow temperature"
+      },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
       },
       "gas": {
         "name": "Gas"
+      },
+      "heat_exchanger_temperature": {
+        "name": "Heat exchanger temperature"
       },
       "heat_index_temperature": {
         "name": "Heat index"
@@ -706,11 +770,22 @@
       "inverter_output_power": {
         "name": "Inverter output power"
       },
+      "irrigation_status": {
+        "name": "Status",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "idle": "[%key:common::state::idle%]",
+          "manual": "[%key:common::state::manual%]"
+        }
+      },
       "last_amount": {
         "name": "Last amount"
       },
       "last_operation_duration": {
         "name": "Last operation duration"
+      },
+      "last_watering_time": {
+        "name": "Last watering time"
       },
       "lifetime_battery_charge_energy": {
         "name": "Lifetime battery charge energy"
@@ -755,6 +830,12 @@
           "standby": "[%key:common::state::standby%]",
           "work": "Working"
         }
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "oxydo_reduction_potential": {
+        "name": "Oxydo reduction potential"
       },
       "phase_a_current": {
         "name": "Phase A current"
@@ -914,6 +995,11 @@
         "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
       }
     },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
+      }
+    },
     "switch": {
       "anion": {
         "name": "Anion"
@@ -923,6 +1009,9 @@
       },
       "auto_clean": {
         "name": "Auto clean"
+      },
+      "auto_siren": {
+        "name": "Auto-trigger siren"
       },
       "battery_lock": {
         "name": "Battery lock"
@@ -977,6 +1066,9 @@
       },
       "motion_alarm": {
         "name": "Motion alarm"
+      },
+      "motion_detection_zone": {
+        "name": "Use motion detection zone"
       },
       "motion_recording": {
         "name": "Motion recording"
@@ -1096,12 +1188,80 @@
   "exceptions": {
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
+    },
+    "device_not_found": {
+      "message": "Feeder with ID {device_id} could not be found."
+    },
+    "device_not_support_meal_plan_function": {
+      "message": "Feeder with ID {device_id} does not support meal plan functionality."
+    },
+    "device_not_support_meal_plan_status": {
+      "message": "Feeder with ID {device_id} does not support meal plan status."
+    },
+    "device_not_tuya_device": {
+      "message": "Device with ID {device_id} is not a Tuya feeder."
+    },
+    "invalid_meal_plan_data": {
+      "message": "Unable to parse meal plan data."
     }
   },
-  "issues": {
-    "deprecated_entity_new_valve": {
-      "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
-      "title": "{name} is deprecated"
+  "selector": {
+    "days_of_week": {
+      "options": {
+        "friday": "[%key:common::time::friday%]",
+        "monday": "[%key:common::time::monday%]",
+        "saturday": "[%key:common::time::saturday%]",
+        "sunday": "[%key:common::time::sunday%]",
+        "thursday": "[%key:common::time::thursday%]",
+        "tuesday": "[%key:common::time::tuesday%]",
+        "wednesday": "[%key:common::time::wednesday%]"
+      }
+    },
+    "set_feeder_meal_plan": {
+      "fields": {
+        "days": {
+          "description": "Days of the week for the meal plan.",
+          "name": "Days"
+        },
+        "enabled": {
+          "description": "Whether the meal plan is enabled.",
+          "name": "Enabled"
+        },
+        "portion": {
+          "description": "Amount in grams",
+          "name": "Portion"
+        },
+        "time": {
+          "description": "Time of the meal.",
+          "name": "Time"
+        }
+      }
+    }
+  },
+  "services": {
+    "get_feeder_meal_plan": {
+      "description": "Retrieves a meal plan from a Tuya feeder.",
+      "fields": {
+        "device_id": {
+          "description": "The Tuya feeder.",
+          "name": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "name": "Get feeder meal plan data"
+    },
+    "set_feeder_meal_plan": {
+      "description": "Sets a meal plan on a Tuya feeder.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::tuya::services::get_feeder_meal_plan::fields::device_id::description%]",
+          "name": "[%key:common::config_flow::data::device%]"
+        },
+        "meal_plan": {
+          "description": "The meal plan data to set.",
+          "name": "Meal plan"
+        }
+      },
+      "name": "Set feeder meal plan data"
     }
   }
 }

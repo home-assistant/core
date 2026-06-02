@@ -4,6 +4,9 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
+from homeassistant.components.homeassistant_hardware import (
+    DOMAIN as HOMEASSISTANT_HARDWARE_DOMAIN,
+)
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_register_firmware_info_callback,
 )
@@ -24,7 +27,10 @@ from . import TEST_COPROCESSOR_VERSION
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-DEVICE_PATH = "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9ab1da1ea4b3ed11956f4eaca7669f5d-if00-port0"
+DEVICE_PATH = (
+    "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1"
+    "_9ab1da1ea4b3ed11956f4eaca7669f5d-if00-port0"
+)
 
 
 async def test_get_firmware_info(hass: HomeAssistant) -> None:
@@ -174,7 +180,7 @@ async def test_hardware_firmware_info_provider_notification(
     )
     otbr.add_to_hass(hass)
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     callback = Mock()
     async_register_firmware_info_callback(hass, DEVICE_PATH, callback)
