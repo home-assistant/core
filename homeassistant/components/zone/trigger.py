@@ -225,7 +225,11 @@ class _ZoneOccupancyTriggerBase(EntityTriggerBase):
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
-        """Validate config and synthesize a target from the zone option."""
+        """Validate config and synthesize a target from the zone option.
+
+        We synthesize a target because we allow users to pick a single zone
+        to monitor, not a target.
+        """
         config = cast(ConfigType, cls._schema(config))
         config[CONF_TARGET] = {CONF_ENTITY_ID: [config[CONF_OPTIONS][CONF_ZONE]]}
         return config
