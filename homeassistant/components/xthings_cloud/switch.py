@@ -20,7 +20,7 @@ async def async_setup_entry(
     entities = [
         XthingsCloudSwitch(coordinator, device_id, device_data)
         for device_id, device_data in coordinator.data.items()
-        if device_data["type"] in ("switch", "plug")
+        if device_data["type"] == "plug"
     ]
     async_add_entities(entities)
 
