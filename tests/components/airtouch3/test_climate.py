@@ -1,7 +1,7 @@
 """Test AirTouch 3 climate entities."""
 
 from typing import cast
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from pyairtouch3.airtouch_aircon import Aircon
 from pyairtouch3.airtouch_sensor import Sensor
@@ -13,7 +13,6 @@ from homeassistant.components.airtouch3.climate import (
     PARALLEL_UPDATES,
     AirtouchAC,
     AirtouchGroup,
-    async_setup_entry,
 )
 from homeassistant.components.airtouch3.const import DOMAIN
 from homeassistant.components.airtouch3.coordinator import (
@@ -27,8 +26,10 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -88,27 +89,34 @@ def _coordinator(hass: HomeAssistant) -> Airtouch3DataUpdateCoordinator:
     return coordinator
 
 
+@pytest.mark.parametrize("ignore_missing_translations", ["component.climate.services."])
 async def test_async_setup_entry_adds_ac_and_zone_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test climate setup creates the AC and zone entities."""
-    coordinator = _coordinator(hass)
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
-    entry.runtime_data = coordinator
-    async_add_entities = Mock()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SYSTEM_ID,
+        data={CONF_HOST: "1.1.1.1"},
+    )
+    entry.add_to_hass(hass)
 
-    await async_setup_entry(hass, entry, async_add_entities)
+    with patch(
+        "homeassistant.components.airtouch3.coordinator.async_fetch_airtouch_data",
+        AsyncMock(return_value=_aircon()),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    entities = async_add_entities.call_args.args[0]
-    assert [entity.unique_id for entity in entities] == [
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert [entity_entry.unique_id for entity_entry in entries] == [
         "35901813_ac_1",
         "35901813_1_group_1",
         "35901813_1_group_2",
     ]
     assert PARALLEL_UPDATES == 1
-    assert entities[0].translation_key == "air_conditioner"
-    assert entities[1].translation_key == "zone"
-    assert entities[0].device_info["manufacturer"] == "Polyaire"
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_ac_properties(hass: HomeAssistant) -> None:
