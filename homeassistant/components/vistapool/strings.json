@@ -32,6 +32,38 @@
         "name": "LED next color"
       }
     },
+    "number": {
+      "electrolysis_setpoint": {
+        "name": "Electrolysis setpoint"
+      },
+      "heating_maximum_temperature": {
+        "name": "Heating maximum temperature"
+      },
+      "heating_minimum_temperature": {
+        "name": "Heating minimum temperature"
+      },
+      "hydrolysis_setpoint": {
+        "name": "Hydrolysis setpoint"
+      },
+      "intel_temperature": {
+        "name": "Intel temperature"
+      },
+      "ph_maximum": {
+        "name": "pH maximum"
+      },
+      "ph_minimum": {
+        "name": "pH minimum"
+      },
+      "redox_setpoint": {
+        "name": "Redox setpoint"
+      },
+      "smart_maximum_temperature": {
+        "name": "Smart maximum temperature"
+      },
+      "smart_minimum_temperature": {
+        "name": "Smart minimum temperature"
+      }
+    },
     "select": {
       "filtration_timer_speed": {
         "name": "Filtration timer speed {number}",
