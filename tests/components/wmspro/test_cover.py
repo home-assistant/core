@@ -103,12 +103,12 @@ async def test_cover_update(
         (
             "mock_hub_configuration_prod_slat_drive",
             "mock_hub_status_prod_slat_drive",
-            "cover.lamellen",
+            "cover.terrasse_lamellen",
         ),
         (
             "mock_hub_configuration_prod_slat_rotate",
             "mock_hub_status_prod_slat_rotate",
-            "cover.keuken_alle",
+            "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
 )
@@ -197,12 +197,12 @@ async def test_cover_open_and_close(
         (
             "mock_hub_configuration_prod_slat_drive",
             "mock_hub_status_prod_slat_drive",
-            "cover.lamellen",
+            "cover.terrasse_lamellen",
         ),
         (
             "mock_hub_configuration_prod_slat_rotate",
             "mock_hub_status_prod_slat_rotate",
-            "cover.keuken_alle",
+            "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
 )
@@ -271,12 +271,12 @@ async def test_cover_open_to_pos(
         (
             "mock_hub_configuration_prod_slat_drive",
             "mock_hub_status_prod_slat_drive",
-            "cover.lamellen",
+            "cover.terrasse_lamellen",
         ),
         (
             "mock_hub_configuration_prod_slat_rotate",
             "mock_hub_status_prod_slat_rotate",
-            "cover.keuken_alle",
+            "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
 )
@@ -349,7 +349,7 @@ async def test_cover_open_and_stop(
         (
             "mock_hub_configuration_prod_slat_rotate",
             "mock_hub_status_prod_slat_rotate",
-            "cover.keuken_alle",
+            "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
 )
@@ -422,7 +422,7 @@ async def test_cover_tilt_open_and_close(
         (
             "mock_hub_configuration_prod_slat_rotate",
             "mock_hub_status_prod_slat_rotate",
-            "cover.keuken_alle",
+            "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
 )
@@ -477,7 +477,7 @@ async def test_cover_tilt_to_pos(
         (
             "mock_hub_configuration_prod_slat_rotate",
             "mock_hub_status_prod_slat_rotate",
-            "cover.keuken_alle",
+            "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
 )

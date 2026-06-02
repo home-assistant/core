@@ -23,9 +23,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 @pytest.mark.parametrize(
     "entity_name",
     [
-        "number.keuken_alle_raw_rotation",
-        "number.keuken_alle_minimum_rotation",
-        "number.keuken_alle_maximum_rotation",
+        "number.zonwering_begane_grond_keuken_alle_raw_rotation",
+        "number.zonwering_begane_grond_keuken_alle_minimum_rotation",
+        "number.zonwering_begane_grond_keuken_alle_maximum_rotation",
     ],
 )
 async def test_number_update(
@@ -59,9 +59,9 @@ async def test_number_update(
 @pytest.mark.parametrize(
     ("entity_name", "initial_value", "target_value"),
     [
-        ("number.keuken_alle_raw_rotation", "0", "80"),
-        ("number.keuken_alle_minimum_rotation", "-75", "-50"),
-        ("number.keuken_alle_maximum_rotation", "75", "100"),
+        ("number.zonwering_begane_grond_keuken_alle_raw_rotation", "0", "80"),
+        ("number.zonwering_begane_grond_keuken_alle_minimum_rotation", "-75", "-50"),
+        ("number.zonwering_begane_grond_keuken_alle_maximum_rotation", "75", "100"),
     ],
 )
 async def test_number_set_value(
@@ -113,8 +113,8 @@ async def test_number_set_value(
 @pytest.mark.parametrize(
     ("entity_name", "initial_value", "target_value"),
     [
-        ("number.keuken_alle_minimum_rotation", "-75", "-50"),
-        ("number.keuken_alle_maximum_rotation", "75", "100"),
+        ("number.zonwering_begane_grond_keuken_alle_minimum_rotation", "-75", "-50"),
+        ("number.zonwering_begane_grond_keuken_alle_maximum_rotation", "75", "100"),
     ],
 )
 async def test_number_set_and_restore_value(
@@ -172,7 +172,9 @@ async def test_number_update_handles_zero_value(
     assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
     assert len(mock_hub_status_prod_slat_rotate.mock_calls) >= 1
 
-    entity = hass.states.get("number.keuken_alle_minimum_rotation")
+    entity = hass.states.get(
+        "number.zonwering_begane_grond_keuken_alle_minimum_rotation"
+    )
     assert entity is not None
 
     await hass.services.async_call(
@@ -186,6 +188,8 @@ async def test_number_update_handles_zero_value(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    entity = hass.states.get("number.keuken_alle_minimum_rotation")
+    entity = hass.states.get(
+        "number.zonwering_begane_grond_keuken_alle_minimum_rotation"
+    )
     assert entity is not None
     assert float(entity.state) == 0.0

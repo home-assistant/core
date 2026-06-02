@@ -79,7 +79,7 @@ async def test_button_rotation_reset_press(
     assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
     assert len(mock_hub_status_prod_slat_rotate.mock_calls) >= 1
 
-    entity_id = "button.keuken_alle_reset_rotation"
+    entity_id = "button.zonwering_begane_grond_keuken_alle_reset_rotation"
     assert entity_id in hass.states.async_entity_ids(BUTTON_DOMAIN)
 
     await hass.services.async_call(
