@@ -7,6 +7,8 @@ from energieleser import (
     EnergieleserClient,
     EnergieleserConnectionError,
     EnergieleserDevice,
+    EnergieleserError,
+    EnergieleserUnknownDeviceError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -49,9 +51,17 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
         """Fetch data from the energieleser device API."""
         try:
             device = await self.client.get_device()
+        except EnergieleserUnknownDeviceError as err:
+            raise UpdateFailed(
+                f"Unknown or unsupported device type for {self.device_id}: {err}"
+            ) from err
         except EnergieleserConnectionError as err:
             raise UpdateFailed(
                 f"Cannot connect to energieleser device {self.device_id}: {err}"
+            ) from err
+        except EnergieleserError as err:
+            raise UpdateFailed(
+                f"Error communicating with energieleser device {self.device_id}: {err}"
             ) from err
         self.device_type = device.device_type
         return device

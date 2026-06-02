@@ -44,7 +44,7 @@ class StromleserSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[StromleserOneDevice], StateType]
     unit_fn: Callable[[StromleserOneDevice], str | None] | None = None
-    available_fn: Callable[[StromleserOneDevice], bool] = lambda _: True
+    present_fn: Callable[[StromleserOneDevice], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -52,7 +52,7 @@ class GasleserSensorEntityDescription(SensorEntityDescription):
     """Describes a gasleser sensor."""
 
     value_fn: Callable[[GasleserDevice], StateType]
-    available_fn: Callable[[GasleserDevice], bool] = lambda _: True
+    present_fn: Callable[[GasleserDevice], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -60,7 +60,7 @@ class WasserleserSensorEntityDescription(SensorEntityDescription):
     """Describes a wasserleser sensor."""
 
     value_fn: Callable[[WasserleserDevice], StateType]
-    available_fn: Callable[[WasserleserDevice], bool] = lambda _: True
+    present_fn: Callable[[WasserleserDevice], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,7 +68,7 @@ class WaermeleserSensorEntityDescription(SensorEntityDescription):
     """Describes a wärmeleser sensor."""
 
     value_fn: Callable[[WaermeleserDevice], StateType]
-    available_fn: Callable[[WaermeleserDevice], bool] = lambda _: True
+    present_fn: Callable[[WaermeleserDevice], bool] = lambda _: True
 
 
 STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
@@ -79,7 +79,7 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.energy_import.value if d.energy_import else None,
         unit_fn=lambda d: d.energy_import.unit if d.energy_import else None,
-        available_fn=lambda d: d.energy_import is not None,
+        present_fn=lambda d: d.energy_import is not None,
     ),
     StromleserSensorEntityDescription(
         key="energy_export",
@@ -88,7 +88,7 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.energy_export.value if d.energy_export else None,
         unit_fn=lambda d: d.energy_export.unit if d.energy_export else None,
-        available_fn=lambda d: d.energy_export is not None,
+        present_fn=lambda d: d.energy_export is not None,
     ),
     StromleserSensorEntityDescription(
         key="power_active",
@@ -97,7 +97,7 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.power_active.value if d.power_active else None,
         unit_fn=lambda d: d.power_active.unit if d.power_active else None,
-        available_fn=lambda d: d.power_active is not None,
+        present_fn=lambda d: d.power_active is not None,
     ),
     StromleserSensorEntityDescription(
         key="power_l1",
@@ -106,7 +106,7 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.power_l1.value if d.power_l1 else None,
         unit_fn=lambda d: d.power_l1.unit if d.power_l1 else None,
-        available_fn=lambda d: d.power_l1 is not None,
+        present_fn=lambda d: d.power_l1 is not None,
     ),
     StromleserSensorEntityDescription(
         key="power_l2",
@@ -115,7 +115,7 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.power_l2.value if d.power_l2 else None,
         unit_fn=lambda d: d.power_l2.unit if d.power_l2 else None,
-        available_fn=lambda d: d.power_l2 is not None,
+        present_fn=lambda d: d.power_l2 is not None,
     ),
     StromleserSensorEntityDescription(
         key="power_l3",
@@ -124,7 +124,7 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.power_l3.value if d.power_l3 else None,
         unit_fn=lambda d: d.power_l3.unit if d.power_l3 else None,
-        available_fn=lambda d: d.power_l3 is not None,
+        present_fn=lambda d: d.power_l3 is not None,
     ),
     StromleserSensorEntityDescription(
         key="signal_strength_dbm",
@@ -135,7 +135,7 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda d: d.signal_strength_dbm,
-        available_fn=lambda d: d.signal_strength_dbm is not None,
+        present_fn=lambda d: d.signal_strength_dbm is not None,
     ),
 )
 
@@ -147,7 +147,7 @@ GASLESER_SENSORS: tuple[GasleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.total_consumption,
-        available_fn=lambda d: d.total_consumption is not None,
+        present_fn=lambda d: d.total_consumption is not None,
     ),
     GasleserSensorEntityDescription(
         key="current_flow_rate",
@@ -155,14 +155,15 @@ GASLESER_SENSORS: tuple[GasleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.current_flow_rate,
-        available_fn=lambda d: d.current_flow_rate is not None,
+        present_fn=lambda d: d.current_flow_rate is not None,
     ),
     GasleserSensorEntityDescription(
         key="count",
         translation_key="pulse_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.count,
-        available_fn=lambda d: d.count is not None,
+        present_fn=lambda d: d.count is not None,
     ),
     GasleserSensorEntityDescription(
         key="signal_strength_dbm",
@@ -173,7 +174,7 @@ GASLESER_SENSORS: tuple[GasleserSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda d: d.signal_strength_dbm,
-        available_fn=lambda d: d.signal_strength_dbm is not None,
+        present_fn=lambda d: d.signal_strength_dbm is not None,
     ),
 )
 
@@ -185,16 +186,17 @@ WASSERLESER_SENSORS: tuple[WasserleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.total_consumption.value if d.total_consumption else None,
-        available_fn=lambda d: d.total_consumption is not None,
+        present_fn=lambda d: d.total_consumption is not None,
     ),
     WasserleserSensorEntityDescription(
         key="today_consumption",
         translation_key="water_today_consumption",
         device_class=SensorDeviceClass.WATER,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.today_consumption.value if d.today_consumption else None,
-        available_fn=lambda d: d.today_consumption is not None,
+        present_fn=lambda d: d.today_consumption is not None,
     ),
     WasserleserSensorEntityDescription(
         key="current_flow_rate",
@@ -203,7 +205,7 @@ WASSERLESER_SENSORS: tuple[WasserleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.current_flow_rate.value if d.current_flow_rate else None,
-        available_fn=lambda d: d.current_flow_rate is not None,
+        present_fn=lambda d: d.current_flow_rate is not None,
     ),
     WasserleserSensorEntityDescription(
         key="current_flow_rate_m3",
@@ -214,7 +216,7 @@ WASSERLESER_SENSORS: tuple[WasserleserSensorEntityDescription, ...] = (
         value_fn=(
             lambda d: d.current_flow_rate_m3.value if d.current_flow_rate_m3 else None
         ),
-        available_fn=lambda d: d.current_flow_rate_m3 is not None,
+        present_fn=lambda d: d.current_flow_rate_m3 is not None,
     ),
     WasserleserSensorEntityDescription(
         key="signal_strength_dbm",
@@ -225,7 +227,7 @@ WASSERLESER_SENSORS: tuple[WasserleserSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda d: d.signal_strength_dbm,
-        available_fn=lambda d: d.signal_strength_dbm is not None,
+        present_fn=lambda d: d.signal_strength_dbm is not None,
     ),
 )
 
@@ -237,7 +239,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.total_energy_t1.value if d.total_energy_t1 else None,
-        available_fn=lambda d: d.total_energy_t1 is not None,
+        present_fn=lambda d: d.total_energy_t1 is not None,
     ),
     WaermeleserSensorEntityDescription(
         key="total_energy_t2",
@@ -246,7 +248,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.total_energy_t2.value if d.total_energy_t2 else None,
-        available_fn=lambda d: d.total_energy_t2 is not None,
+        present_fn=lambda d: d.total_energy_t2 is not None,
     ),
     WaermeleserSensorEntityDescription(
         key="total_energy_t3",
@@ -255,7 +257,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.total_energy_t3.value if d.total_energy_t3 else None,
-        available_fn=lambda d: d.total_energy_t3 is not None,
+        present_fn=lambda d: d.total_energy_t3 is not None,
     ),
     WaermeleserSensorEntityDescription(
         key="power",
@@ -264,7 +266,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.power.value if d.power else None,
-        available_fn=lambda d: d.power is not None,
+        present_fn=lambda d: d.power is not None,
     ),
     WaermeleserSensorEntityDescription(
         key="total_volume",
@@ -273,7 +275,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.total_volume.value if d.total_volume else None,
-        available_fn=lambda d: d.total_volume is not None,
+        present_fn=lambda d: d.total_volume is not None,
     ),
     WaermeleserSensorEntityDescription(
         key="volume_flow",
@@ -282,7 +284,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.volume_flow.value if d.volume_flow else None,
-        available_fn=lambda d: d.volume_flow is not None,
+        present_fn=lambda d: d.volume_flow is not None,
     ),
     WaermeleserSensorEntityDescription(
         key="flow_temperature",
@@ -291,7 +293,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.flow_temperature.value if d.flow_temperature else None,
-        available_fn=lambda d: d.flow_temperature is not None,
+        present_fn=lambda d: d.flow_temperature is not None,
     ),
     WaermeleserSensorEntityDescription(
         key="return_temperature",
@@ -300,7 +302,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.return_temperature.value if d.return_temperature else None,
-        available_fn=lambda d: d.return_temperature is not None,
+        present_fn=lambda d: d.return_temperature is not None,
     ),
     WaermeleserSensorEntityDescription(
         key="temperature_difference",
@@ -313,7 +315,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
                 d.temperature_difference.value if d.temperature_difference else None
             )
         ),
-        available_fn=lambda d: d.temperature_difference is not None,
+        present_fn=lambda d: d.temperature_difference is not None,
     ),
     WaermeleserSensorEntityDescription(
         key="signal_strength_dbm",
@@ -324,7 +326,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda d: d.signal_strength_dbm,
-        available_fn=lambda d: d.signal_strength_dbm is not None,
+        present_fn=lambda d: d.signal_strength_dbm is not None,
     ),
 )
 
@@ -342,25 +344,25 @@ async def async_setup_entry(
         async_add_entities(
             StromleserSensor(coordinator=coordinator, description=description)
             for description in STROMLESER_SENSORS
-            if description.available_fn(device)
+            if description.present_fn(device)
         )
     elif isinstance(device, GasleserDevice):
         async_add_entities(
             GasleserSensor(coordinator=coordinator, description=description)
             for description in GASLESER_SENSORS
-            if description.available_fn(device)
+            if description.present_fn(device)
         )
     elif isinstance(device, WasserleserDevice):
         async_add_entities(
             WasserleserSensor(coordinator=coordinator, description=description)
             for description in WASSERLESER_SENSORS
-            if description.available_fn(device)
+            if description.present_fn(device)
         )
     elif isinstance(device, WaermeleserDevice):
         async_add_entities(
             WaermeleserSensor(coordinator=coordinator, description=description)
             for description in WAERMELESER_SENSORS
-            if description.available_fn(device)
+            if description.present_fn(device)
         )
 
 
@@ -380,13 +382,17 @@ class _EnergieleserSensorBase(CoordinatorEntity[EnergieleserCoordinator], Sensor
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
         host = coordinator.config_entry.data[CONF_HOST]
+        serial_number = None
+        if isinstance(coordinator.data, WaermeleserDevice):
+            # Only wärmeleser devices report a fabrication number; others omit it.
+            serial_number = coordinator.data.fabrication_number
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.device_id)},
             name=coordinator.device_id,
             manufacturer="nineti GmbH",
             model=device_model_name(coordinator.device_type),
-            # Only wärmeleser devices report a fabrication number; others omit it.
-            serial_number=getattr(coordinator.data, "fabrication_number", None),
+            serial_number=serial_number,
             configuration_url=f"http://{host}/",
         )
 
