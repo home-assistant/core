@@ -15,14 +15,8 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_CODE,
-    CONF_NAME,
-    CONF_STATE,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import ATTR_CODE, CONF_NAME, CONF_STATE
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -204,17 +198,6 @@ class AbstractTemplateAlarmControlPanel(
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
 
-    async def _async_handle_restored_state(self) -> None:
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            and last_state.state in AlarmControlPanelState
-            # The trigger might have fired already while we waited for stored data,
-            # then we should not restore state
-            and self._attr_alarm_state is None
-        ):
-            self._attr_alarm_state = AlarmControlPanelState(last_state.state)
-
     async def _async_alarm_arm(self, state: Any, script: Script | None, code: Any):
         """Arm the panel to specified state with supplied script."""
 
@@ -283,6 +266,15 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    def additional_restore_state_conditions(self) -> bool:
+        """Check if additional restore state conditions are met."""
+        return self._attr_alarm_state is None
+
+    def restore_last_state_state(self, last_state: State) -> None:
+        """Restore the state from the last state."""
+        if last_state.state in AlarmControlPanelState:
+            self._attr_alarm_state = AlarmControlPanelState(last_state.state)
+
 
 class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlPanel):
     """Representation of a templated Alarm Control Panel."""
@@ -303,11 +295,6 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
 
         AbstractTemplateAlarmControlPanel.__init__(self, name)
 
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        await self._async_handle_restored_state()
-
 
 class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControlPanel):
     """Alarm Control Panel entity based on trigger data."""
@@ -324,8 +311,3 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         TriggerEntity.__init__(self, hass, coordinator, config)
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         AbstractTemplateAlarmControlPanel.__init__(self, name)
-
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        await self._async_handle_restored_state()

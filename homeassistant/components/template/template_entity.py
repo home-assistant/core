@@ -564,11 +564,18 @@ class TemplateEntity(AbstractTemplateEntity):
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
 
+    def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
+        """Restore an attribute from the last value."""
+        setattr(self, attr, restored_value)
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
         self._async_setup_templates()
 
         async_at_start(self.hass, self._async_template_startup)
+        await self.async_restore_last_state()
 
     async def async_update(self) -> None:
         """Call for forced update."""

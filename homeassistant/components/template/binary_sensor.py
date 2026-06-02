@@ -194,6 +194,7 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             self._attr_is_on = last_state.state == STATE_ON
+            self.restore_last_state_attributes(last_state)
         await super().async_added_to_hass()
 
     @callback
@@ -274,7 +275,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
             and self._attr_is_on is None
         ):
             self._attr_is_on = last_state.state == STATE_ON
-            self.restore_attributes(last_state)
+            self.restore_last_state_attributes(last_state)
 
             if CONF_AUTO_OFF not in self._config:
                 return

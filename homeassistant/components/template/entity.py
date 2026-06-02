@@ -5,15 +5,30 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIMISTIC
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    CONF_DEVICE_ID,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.script import Script, _VarsType
-from homeassistant.helpers.template import Template, TemplateStateFromEntityId
+from homeassistant.helpers.template import (
+    _SENTINEL,
+    Template,
+    TemplateStateFromEntityId,
+)
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_DEFAULT_ENTITY_ID
+from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
 
 
 @dataclass
@@ -34,6 +49,7 @@ class AbstractTemplateEntity(Entity):
     _optimistic_entity: bool = False
     _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
+    _extra_restore_data: bool = False
 
     def __init__(
         self,
@@ -46,6 +62,10 @@ class AbstractTemplateEntity(Entity):
         self._config = config
         self._templates: dict[str, EntityTemplate] = {}
         self._action_scripts: dict[str, Script] = {}
+        self._attr_extra_state_attributes = {}
+        self._attribute_templates: dict[str, Template] | None = config.get(
+            CONF_ATTRIBUTES
+        )
 
         if self._optimistic_entity:
             optimistic = config.get(CONF_OPTIMISTIC)
@@ -199,3 +219,72 @@ class AbstractTemplateEntity(Entity):
             },
             context=context,
         )
+
+    async def async_get_last_template_data(self) -> ExtraStoredData | None:
+        """Get the last template data."""
+
+    async def _async_get_last_template_data(self) -> ExtraStoredData | object | None:
+        """Get the last template data."""
+        if not self._extra_restore_data:
+            return _SENTINEL
+        return await self.async_get_last_template_data()
+
+    async def async_restore_last_state(self) -> None:
+        """Restore the state from the last state."""
+        if not hasattr(self, "async_get_last_state"):
+            return
+
+        last_state: State | None
+        if (
+            (last_state := await self.async_get_last_state()) is None
+            or (extra_data := await self._async_get_last_template_data()) is None
+            or last_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            or not self.additional_restore_state_conditions()
+        ):
+            return
+
+        self.restore_last_state_state(last_state)
+        self.restore_last_state_attributes(last_state)
+
+        # Extra data should be loaded last
+        if extra_data is not _SENTINEL:
+            self.restore_extra_data(extra_data)
+
+    def additional_restore_state_conditions(self) -> bool:
+        """Check if additional restore state conditions are met."""
+        return False
+
+    def restore_last_state_state(self, last_state: State) -> None:
+        """Restore the state from the last state."""
+
+    def restore_extra_data(self, extra_data: Any) -> None:
+        """Restore extra data from the last state."""
+
+    @abstractmethod
+    def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
+        """Restore an attribute from the last value."""
+
+    def restore_last_state_attributes(self, last_state: State) -> None:
+        """Restore attributes from the last state."""
+        self._attr_extra_state_attributes = {}
+        gathered_attributes = []
+        # Restore built-in attributes from templates
+        for conf_key, attr, _attr in (
+            (CONF_ICON, ATTR_ICON, "_attr_icon"),
+            (CONF_NAME, ATTR_FRIENDLY_NAME, "_attr_name"),
+            (CONF_PICTURE, ATTR_ENTITY_PICTURE, "_attr_entity_picture"),
+        ):
+            if conf_key not in self._config or attr not in last_state.attributes:
+                continue
+            gathered_attributes.append(attr)
+            value = last_state.attributes[attr]
+            self.restore_attribute(conf_key, _attr, value)
+            self._attr_extra_state_attributes[attr] = value
+
+        # Restore attributes from templates
+        if self._attribute_templates:
+            for attr in self._config[CONF_ATTRIBUTES]:
+                if attr not in last_state.attributes:
+                    continue
+                gathered_attributes.append(attr)
+                self._attr_extra_state_attributes[attr] = last_state.attributes[attr]

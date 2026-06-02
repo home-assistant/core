@@ -10,14 +10,8 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_STATE,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_NAME, CONF_STATE, STATE_ON
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -160,6 +154,14 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
             self._attr_is_on = False
             self.async_write_ha_state()
 
+    def restore_last_state_state(self, last_state: State) -> None:
+        """Restore the state from the last state."""
+        self._attr_is_on = last_state.state == STATE_ON
+
+    def additional_restore_state_conditions(self) -> bool:
+        """Check if additional restore state conditions are met."""
+        return self.is_on is None
+
 
 class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
     """Representation of a Template switch."""
@@ -179,15 +181,6 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
             assert name is not None
         AbstractTemplateSwitch.__init__(self, name, config)
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        if CONF_STATE not in self._templates:
-            # restore state after startup
-            await super().async_added_to_hass()
-            if state := await self.async_get_last_state():
-                self._attr_is_on = state.state == STATE_ON
-        await super().async_added_to_hass()
-
 
 class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
     """Switch entity based on trigger data."""
@@ -204,16 +197,3 @@ class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
         TriggerEntity.__init__(self, hass, coordinator, config)
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         AbstractTemplateSwitch.__init__(self, name, config)
-
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            # The trigger might have fired already while we waited for stored data,
-            # then we should not restore state
-            and self.is_on is None
-        ):
-            self._attr_is_on = last_state.state == STATE_ON
-            self.restore_attributes(last_state)

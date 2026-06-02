@@ -17,16 +17,11 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_STATE,
-    CONF_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -186,6 +181,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
+    _extra_restore_data = True
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -230,6 +226,18 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
 
         return validate_datetime(self, CONF_STATE, self.device_class)(result)
 
+    def restore_extra_data(self, extra_data: SensorExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_native_value = extra_data.native_value
+
+    def additional_restore_state_conditions(self) -> bool:
+        """Check if additional restore state conditions are met."""
+        return self._attr_native_value is None
+
+    async def async_get_last_template_data(self) -> SensorExtraStoredData | None:
+        """Get the last template data."""
+        return await self.async_get_last_sensor_data()
+
 
 class StateSensorEntity(TemplateEntity, AbstractTemplateSensor):
     """Representation of a Template Sensor."""
@@ -262,17 +270,3 @@ class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
         """Initialize."""
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateSensor.__init__(self, config)
-
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and (extra_data := await self.async_get_last_sensor_data()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            # The trigger might have fired already while we waited for stored data,
-            # then we should not restore state
-            and CONF_STATE not in self._rendered
-        ):
-            self._attr_native_value = extra_data.native_value
-            self.restore_attributes(last_state)
