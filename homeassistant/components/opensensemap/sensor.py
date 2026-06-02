@@ -18,7 +18,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -113,15 +113,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up openSenseMap sensors from a config entry."""
     coordinator = entry.runtime_data
-    data = coordinator.data
-    entities: list[OpenSenseMapSensor] = []
-    for description in SENSOR_DESCRIPTIONS:
-        measurement = description.value_fn(data)
-        if measurement.value is None:
-            continue
-        native_unit = measurement.unit or description.native_unit_of_measurement
-        entities.append(OpenSenseMapSensor(coordinator, description, native_unit))
-    async_add_entities(entities)
+    added_keys: set[str] = set()
+
+    @callback
+    def _add_entities() -> None:
+        """Add entities for measurements that have started reporting."""
+        # A station may only begin reporting a measurement after the first
+        # refresh, so re-check on every update and add any new entities.
+        entities: list[OpenSenseMapSensor] = []
+        for description in SENSOR_DESCRIPTIONS:
+            measurement = description.value_fn(coordinator.data)
+            if measurement.value is None or description.key in added_keys:
+                continue
+            added_keys.add(description.key)
+            native_unit = measurement.unit or description.native_unit_of_measurement
+            entities.append(OpenSenseMapSensor(coordinator, description, native_unit))
+        async_add_entities(entities)
+
+    _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
 class OpenSenseMapSensor(CoordinatorEntity[OpenSenseMapCoordinator], SensorEntity):

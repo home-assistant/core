@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import NamedTuple
 
-from opensensemap_api import _TITLES, OpenSenseMap
+from opensensemap_api import OpenSenseMap
 from opensensemap_api.exceptions import OpenSenseMapError
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +13,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
+
+# _TITLES maps localized sensor titles to phenomena. It is a private library
+# attribute, so guard the import: if a future version renames or removes it,
+# fall back to matching only the canonical English titles rather than failing
+# to load.
+try:
+    from opensensemap_api import _TITLES
+except ImportError:
+    _TITLES = {}
 
 SCAN_INTERVAL = timedelta(minutes=10)
 

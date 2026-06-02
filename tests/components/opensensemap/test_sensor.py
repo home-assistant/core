@@ -62,6 +62,26 @@ async def test_missing_measurements_omit_entities(
     assert keys == {"pm2_5", "pm10", "temperature", "humidity"}
 
 
+async def test_entity_added_when_measurement_appears(
+    hass: HomeAssistant,
+    mock_opensensemap_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entity is added when a station starts reporting a measurement."""
+    mock_opensensemap_api.illuminance = None
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_station_illuminance") is None
+
+    mock_opensensemap_api.illuminance = 123.0
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_station_illuminance") is not None
+
+
 @pytest.mark.parametrize(
     ("title", "entity_id", "station_unit", "expected_unit", "expected_state"),
     [
