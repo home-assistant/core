@@ -1,11 +1,25 @@
 """The tests for the location condition."""
 
+from typing import Any
+
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.zone import condition as zone_condition
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition, config_validation as cv
+
+from tests.components.common import (
+    ConditionStateDescription,
+    assert_condition_behavior_all,
+    assert_condition_behavior_any,
+    assert_condition_options_supported,
+    parametrize_condition_states_all,
+    parametrize_condition_states_any,
+    parametrize_target_entities,
+    target_entities,
+)
 
 
 async def test_zone_raises(hass: HomeAssistant) -> None:
@@ -206,3 +220,190 @@ async def test_multiple_zones(hass: HomeAssistant) -> None:
         {"friendly_name": "person", "latitude": 50.1, "longitude": 20.1},
     )
     assert not test.async_check()
+
+
+# --- New-style zone condition tests ---
+
+ZONE_HOME = "zone.home"
+ZONE_WORK = "zone.work"
+IN_ZONES_HOME = {"in_zones": [ZONE_HOME]}
+IN_ZONES_WORK = {"in_zones": [ZONE_WORK]}
+IN_ZONES_NONE: dict[str, list[str]] = {"in_zones": []}
+TARGET_ZONE = ZONE_HOME
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("zone.in_zone", {"zone": TARGET_ZONE}, True, True),
+        ("zone.not_in_zone", {"zone": TARGET_ZONE}, True, True),
+    ],
+)
+async def test_zone_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that zone conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.parametrize("condition_key", ["zone.in_zone", "zone.not_in_zone"])
+async def test_zone_condition_rejects_non_zone_entity_id(
+    hass: HomeAssistant, condition_key: str
+) -> None:
+    """Test that the zone option must reference entities in the zone domain."""
+    with pytest.raises(vol.Invalid):
+        await condition.async_validate_condition_config(
+            hass,
+            {
+                "condition": condition_key,
+                "target": {"entity_id": "person.alice"},
+                "options": {"zone": "person.alice"},
+            },
+        )
+
+
+@pytest.fixture
+async def target_zone_entities(
+    hass: HomeAssistant, domain: str
+) -> dict[str, list[str]]:
+    """Create multiple zone-trackable entities associated with different targets."""
+    return await target_entities(hass, domain, domain_excluded="sensor")
+
+
+# `in_zone` is True for states where the entity carries the target zone in
+# `in_zones`; `not_in_zone` flips the relation.
+_ZONE_CONDITION_STATES_ANY = [
+    *parametrize_condition_states_any(
+        condition="zone.in_zone",
+        condition_options={"zone": TARGET_ZONE},
+        target_states=[
+            ("home", IN_ZONES_HOME),
+        ],
+        other_states=[
+            ("not_home", IN_ZONES_NONE),
+            ("Work", IN_ZONES_WORK),
+        ],
+        excluded_entities_from_other_domain=True,
+    ),
+    *parametrize_condition_states_any(
+        condition="zone.not_in_zone",
+        condition_options={"zone": TARGET_ZONE},
+        target_states=[
+            ("not_home", IN_ZONES_NONE),
+            ("Work", IN_ZONES_WORK),
+        ],
+        other_states=[
+            ("home", IN_ZONES_HOME),
+        ],
+        excluded_entities_from_other_domain=True,
+    ),
+]
+
+
+_ZONE_CONDITION_STATES_ALL = [
+    *parametrize_condition_states_all(
+        condition="zone.in_zone",
+        condition_options={"zone": TARGET_ZONE},
+        target_states=[
+            ("home", IN_ZONES_HOME),
+        ],
+        other_states=[
+            ("not_home", IN_ZONES_NONE),
+            ("Work", IN_ZONES_WORK),
+        ],
+        excluded_entities_from_other_domain=True,
+    ),
+    *parametrize_condition_states_all(
+        condition="zone.not_in_zone",
+        condition_options={"zone": TARGET_ZONE},
+        target_states=[
+            ("not_home", IN_ZONES_NONE),
+            ("Work", IN_ZONES_WORK),
+        ],
+        other_states=[
+            ("home", IN_ZONES_HOME),
+        ],
+        excluded_entities_from_other_domain=True,
+    ),
+]
+
+
+def _parametrize_zone_target_entities() -> list[tuple[dict[str, Any], str, int, str]]:
+    """Parametrize target entities for all supported zone condition domains."""
+    return [
+        (*params, domain)
+        for domain in ("person", "device_tracker")
+        for params in parametrize_target_entities(domain)
+    ]
+
+
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target", "domain"),
+    _parametrize_zone_target_entities(),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    _ZONE_CONDITION_STATES_ANY,
+)
+async def test_zone_condition_behavior_any(
+    hass: HomeAssistant,
+    target_zone_entities: dict[str, list[str]],
+    condition_target_config: dict[str, Any],
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test zone conditions under behavior=any."""
+    await assert_condition_behavior_any(
+        hass,
+        target_entities=target_zone_entities,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target", "domain"),
+    _parametrize_zone_target_entities(),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    _ZONE_CONDITION_STATES_ALL,
+)
+async def test_zone_condition_behavior_all(
+    hass: HomeAssistant,
+    target_zone_entities: dict[str, list[str]],
+    condition_target_config: dict[str, Any],
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test zone conditions under behavior=all."""
+    await assert_condition_behavior_all(
+        hass,
+        target_entities=target_zone_entities,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
