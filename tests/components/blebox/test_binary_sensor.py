@@ -98,11 +98,7 @@ async def test_open_sensor_state(
 ) -> None:
     """Test open/window binary sensor reports open and closed states correctly."""
     feature_mock, entity_id = open_sensor
-
-    def set_state():
-        feature_mock.state = is_open
-
-    feature_mock.async_update = AsyncMock(side_effect=set_state)
+    feature_mock.state = is_open
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)

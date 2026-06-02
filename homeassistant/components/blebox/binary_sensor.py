@@ -1,7 +1,5 @@
 """BleBox binary sensor entities."""
 
-from datetime import timedelta
-
 from blebox_uniapi.binary_sensor import BinarySensor as BinarySensorFeature
 
 from homeassistant.components.binary_sensor import (
@@ -13,9 +11,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
+from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 0
 
 BINARY_SENSOR_TYPES = (
     BinarySensorEntityDescription(
@@ -35,23 +34,27 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
+    coordinator = config_entry.runtime_data
     entities = [
-        BleBoxBinarySensorEntity(feature, description)
-        for feature in config_entry.runtime_data.features.get("binary_sensors", [])
+        BleBoxBinarySensorEntity(coordinator, feature, description)
+        for feature in coordinator.box.features.get("binary_sensors", [])
         for description in BINARY_SENSOR_TYPES
         if description.key == feature.device_class
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class BleBoxBinarySensorEntity(BleBoxEntity[BinarySensorFeature], BinarySensorEntity):
     """Representation of a BleBox binary sensor feature."""
 
     def __init__(
-        self, feature: BinarySensorFeature, description: BinarySensorEntityDescription
+        self,
+        coordinator: BleBoxCoordinator,
+        feature: BinarySensorFeature,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize a BleBox binary sensor feature."""
-        super().__init__(feature)
+        super().__init__(coordinator, feature)
         self.entity_description = description
 
     @property
