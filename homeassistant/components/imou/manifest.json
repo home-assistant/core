@@ -3,7 +3,6 @@
   "name": "Imou",
   "codeowners": ["@Imou-OpenPlatform"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/imou",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
