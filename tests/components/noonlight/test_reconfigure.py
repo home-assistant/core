@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Coroutine
+from typing import Any
+
 from httpx import Response
 import respx
 
@@ -13,9 +16,13 @@ from homeassistant.components.noonlight.const import (
     CONF_ZIP,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.core import HomeAssistant
 
 
-def _start_reconfigure(hass, entry):
+def _start_reconfigure(
+    hass: HomeAssistant, entry
+) -> Coroutine[Any, Any, ConfigFlowResult]:
     return hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -26,7 +33,9 @@ def _start_reconfigure(hass, entry):
 
 
 @respx.mock
-async def test_reconfigure_updates_caller_and_site(hass, setup_entry):
+async def test_reconfigure_updates_caller_and_site(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """Reconfigure normalizes and stores new caller/site data, keeping secrets."""
     # The reconfigure reloads the entry, which re-runs the setup probe.
     respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
@@ -61,7 +70,7 @@ async def test_reconfigure_updates_caller_and_site(hass, setup_entry):
     assert setup_entry.data["api_token"] == "test-token"
 
 
-async def test_reconfigure_rejects_bad_input(hass, setup_entry):
+async def test_reconfigure_rejects_bad_input(hass: HomeAssistant, setup_entry) -> None:
     """Reconfigure with bad phone/state/ZIP reports errors and changes nothing."""
     result = await _start_reconfigure(hass, setup_entry)
     result = await hass.config_entries.flow.async_configure(

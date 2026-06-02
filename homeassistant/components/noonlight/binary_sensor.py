@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import STATE_DISPATCHED, STATE_PENDING
 from .coordinator import NoonlightConfigEntry, NoonlightCoordinator
@@ -16,7 +16,7 @@ from .entity import NoonlightEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NoonlightConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Noonlight binary sensors."""
     coordinator = entry.runtime_data

@@ -26,6 +26,8 @@ from homeassistant.components.noonlight.const import (
     SVC_DISPATCH_POLICE,
     SVC_TEST_DISPATCH,
 )
+from homeassistant.components.noonlight.coordinator import NoonlightCoordinator
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import SANDBOX
@@ -35,11 +37,11 @@ from tests.common import MockConfigEntry
 _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 
 
-def _coordinator(hass, entry):
+def _coordinator(hass: HomeAssistant, entry) -> NoonlightCoordinator:
     return entry.runtime_data
 
 
-async def test_services_registered(hass, setup_entry):
+async def test_services_registered(hass: HomeAssistant, setup_entry) -> None:
     """All Noonlight dispatch and cancel services are registered."""
     for service in (
         SVC_DISPATCH_POLICE,
@@ -52,7 +54,7 @@ async def test_services_registered(hass, setup_entry):
         assert hass.services.has_service(DOMAIN, service)
 
 
-async def test_services_persist_after_unload(hass, setup_entry):
+async def test_services_persist_after_unload(hass: HomeAssistant, setup_entry) -> None:
     """Services remain registered after a config entry unloads.
 
     Services are domain-level (registered in async_setup), so they survive an
@@ -73,7 +75,7 @@ async def test_services_persist_after_unload(hass, setup_entry):
 
 
 @respx.mock
-async def test_dispatch_police_service(hass, setup_entry):
+async def test_dispatch_police_service(hass: HomeAssistant, setup_entry) -> None:
     """The police dispatch service fires an alarm and goes to dispatched."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
@@ -92,7 +94,9 @@ async def test_dispatch_police_service(hass, setup_entry):
 
 
 @respx.mock
-async def test_dispatch_includes_site_owner_id_and_combined_instructions(hass):
+async def test_dispatch_includes_site_owner_id_and_combined_instructions(
+    hass: HomeAssistant,
+) -> None:
     """An entry with a location label sends owner_id and a combined site label.
 
     The site label is folded into the responder instructions alongside the
@@ -143,7 +147,9 @@ async def test_dispatch_includes_site_owner_id_and_combined_instructions(hass):
 
 
 @respx.mock
-async def test_dispatch_passes_instructions_to_noonlight(hass, setup_entry):
+async def test_dispatch_passes_instructions_to_noonlight(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """The instructions field reaches Noonlight's instructions.entry."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
@@ -161,7 +167,9 @@ async def test_dispatch_passes_instructions_to_noonlight(hass, setup_entry):
     assert payload["instructions"] == {"entry": "Front Door motion"}
 
 
-async def test_dispatch_ungranted_service_raises(hass, setup_entry):
+async def test_dispatch_ungranted_service_raises(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """Calling a dispatch service that isn't granted is rejected."""
     hass.config_entries.async_update_entry(
         setup_entry, options={CONF_SERVICES_GRANTED: ["fire"]}
@@ -178,7 +186,7 @@ async def test_dispatch_ungranted_service_raises(hass, setup_entry):
 
 
 @respx.mock
-async def test_cancel_service_cancels_pending(hass, setup_entry):
+async def test_cancel_service_cancels_pending(hass: HomeAssistant, setup_entry) -> None:
     """The HA cancel service reaches the coordinator and cancels a dispatch."""
     respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
@@ -196,7 +204,7 @@ async def test_cancel_service_cancels_pending(hass, setup_entry):
     assert coordinator.data["state"] == "canceled"
 
 
-async def test_unknown_account_raises(hass, setup_entry):
+async def test_unknown_account_raises(hass: HomeAssistant, setup_entry) -> None:
     """Targeting an unknown account raises a validation error."""
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -208,7 +216,7 @@ async def test_unknown_account_raises(hass, setup_entry):
 
 
 @respx.mock
-async def test_test_dispatch_hits_sandbox(hass, setup_entry):
+async def test_test_dispatch_hits_sandbox(hass: HomeAssistant, setup_entry) -> None:
     """test_dispatch creates and immediately cancels a sandbox alarm."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "sandbox-1", "status": "ACTIVE"})
@@ -227,7 +235,9 @@ async def test_test_dispatch_hits_sandbox(hass, setup_entry):
 
 
 @respx.mock
-async def test_test_dispatch_failure_raises_ha_error(hass, setup_entry):
+async def test_test_dispatch_failure_raises_ha_error(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """A failed sandbox round-trip surfaces as a HomeAssistantError."""
     respx.post(_ALARMS).mock(return_value=Response(500, text="boom"))
     with pytest.raises(HomeAssistantError):
@@ -235,7 +245,9 @@ async def test_test_dispatch_failure_raises_ha_error(hass, setup_entry):
 
 
 @respx.mock
-async def test_dispatch_all_limited_to_granted_services(hass, setup_entry):
+async def test_dispatch_all_limited_to_granted_services(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """dispatch_all with only police granted fires police alone."""
     respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
         return_value=Response(404)
@@ -286,7 +298,9 @@ def _second_entry() -> MockConfigEntry:
 
 
 @respx.mock
-async def test_multiple_accounts_require_account_arg(hass, setup_entry):
+async def test_multiple_accounts_require_account_arg(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """With >1 entry, omitting 'account' is rejected."""
     second = _second_entry()
     second.add_to_hass(hass)
@@ -306,7 +320,7 @@ async def test_multiple_accounts_require_account_arg(hass, setup_entry):
 
 
 @respx.mock
-async def test_account_selected_by_title(hass, setup_entry):
+async def test_account_selected_by_title(hass: HomeAssistant, setup_entry) -> None:
     """The 'account' arg resolves by human-readable title."""
     second = _second_entry()
     second.add_to_hass(hass)

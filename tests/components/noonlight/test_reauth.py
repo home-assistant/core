@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Coroutine
+from typing import Any
+
 from httpx import Response
 import respx
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.noonlight.const import CONF_API_TOKEN, DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.core import HomeAssistant
 
 
-def _start_reauth(hass, entry):
+def _start_reauth(hass: HomeAssistant, entry) -> Coroutine[Any, Any, ConfigFlowResult]:
     return hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -21,7 +26,7 @@ def _start_reauth(hass, entry):
 
 
 @respx.mock
-async def test_reauth_success_updates_token(hass, setup_entry):
+async def test_reauth_success_updates_token(hass: HomeAssistant, setup_entry) -> None:
     """A valid new token aborts as reauth_successful and is stored."""
     # 404 against the bogus probe id == reachable + authorised.
     respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(404))
@@ -39,7 +44,7 @@ async def test_reauth_success_updates_token(hass, setup_entry):
 
 
 @respx.mock
-async def test_reauth_bad_token_shows_error(hass, setup_entry):
+async def test_reauth_bad_token_shows_error(hass: HomeAssistant, setup_entry) -> None:
     """A still-invalid token shows invalid_auth and leaves the token unchanged."""
     respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(401))
     result = await _start_reauth(hass, setup_entry)
@@ -54,7 +59,9 @@ async def test_reauth_bad_token_shows_error(hass, setup_entry):
 
 
 @respx.mock
-async def test_reauth_cannot_connect_shows_error(hass, setup_entry):
+async def test_reauth_cannot_connect_shows_error(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """A connection failure during reauth shows a cannot_connect error."""
     respx.route(method="GET", url__regex=r".*/status").mock(
         side_effect=__import__("httpx").ConnectError("down")

@@ -10,6 +10,8 @@ from httpx import Response
 import respx
 
 from homeassistant.components.noonlight.const import DOMAIN, STATE_DISPATCHED
+from homeassistant.components.noonlight.coordinator import NoonlightCoordinator
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import SANDBOX
@@ -17,12 +19,12 @@ from .conftest import SANDBOX
 _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 
 
-def _coordinator(hass, entry):
+def _coordinator(hass: HomeAssistant, entry) -> NoonlightCoordinator:
     return entry.runtime_data
 
 
 @respx.mock
-async def test_sensor_automation_dispatches(hass, setup_entry):
+async def test_sensor_automation_dispatches(hass: HomeAssistant, setup_entry) -> None:
     """A binary_sensor turning 'on' drives an automation that dispatches."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "auto-1", "status": "ACTIVE"})
@@ -63,7 +65,7 @@ async def test_sensor_automation_dispatches(hass, setup_entry):
 
 
 @respx.mock
-async def test_script_can_cancel(hass, setup_entry):
+async def test_script_can_cancel(hass: HomeAssistant, setup_entry) -> None:
     """A script (another routine type) can call the cancel service."""
     respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "auto-2", "status": "ACTIVE"})

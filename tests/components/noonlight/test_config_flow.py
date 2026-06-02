@@ -26,6 +26,7 @@ from homeassistant.components.noonlight.const import (
     ENV_PRODUCTION,
     ENV_SANDBOX,
 )
+from homeassistant.core import HomeAssistant
 
 _CALLER = {
     CONF_NAME: "Main",
@@ -50,7 +51,7 @@ def _mock_token_probe(status: int = 404) -> None:
 
 
 @respx.mock
-async def test_sandbox_flow_skips_safety(hass):
+async def test_sandbox_flow_skips_safety(hass: HomeAssistant) -> None:
     """Sandbox setup completes without the production safety step."""
     _mock_token_probe()
 
@@ -76,7 +77,7 @@ async def test_sandbox_flow_skips_safety(hass):
 
 
 @respx.mock
-async def test_production_requires_safety_ack(hass):
+async def test_production_requires_safety_ack(hass: HomeAssistant) -> None:
     """Production setup must pass the safety step before creating the entry."""
     _mock_token_probe()
 
@@ -108,7 +109,7 @@ async def test_production_requires_safety_ack(hass):
 
 
 @respx.mock
-async def test_invalid_auth_surfaced(hass):
+async def test_invalid_auth_surfaced(hass: HomeAssistant) -> None:
     """A 401 during validation shows an invalid_auth error."""
     respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(401))
     result = await hass.config_entries.flow.async_init(
@@ -123,7 +124,7 @@ async def test_invalid_auth_surfaced(hass):
 
 
 @respx.mock
-async def test_cannot_connect_surfaced(hass):
+async def test_cannot_connect_surfaced(hass: HomeAssistant) -> None:
     """A transport failure during validation shows a cannot_connect error."""
     respx.route(method="GET", url__regex=r".*/status").mock(
         side_effect=__import__("httpx").ConnectError("down")
@@ -139,7 +140,7 @@ async def test_cannot_connect_surfaced(hass):
     assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_custom_requires_base_url(hass):
+async def test_custom_requires_base_url(hass: HomeAssistant) -> None:
     """Selecting the custom environment without a URL is rejected."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -153,7 +154,7 @@ async def test_custom_requires_base_url(hass):
 
 
 @respx.mock
-async def test_duplicate_address_aborts(hass, setup_entry):
+async def test_duplicate_address_aborts(hass: HomeAssistant, setup_entry) -> None:
     """Adding a second entry for the same environment+address+ZIP is rejected.
 
     ``setup_entry`` already configures the sandbox entry at '1 Test St' /
@@ -175,7 +176,7 @@ async def test_duplicate_address_aborts(hass, setup_entry):
 
 
 @respx.mock
-async def test_different_address_allowed(hass, setup_entry):
+async def test_different_address_allowed(hass: HomeAssistant, setup_entry) -> None:
     """A different street address is a distinct property and is allowed.
 
     Even when reusing the same environment + token, a distinct address is a
@@ -203,7 +204,7 @@ async def test_different_address_allowed(hass, setup_entry):
 
 
 @respx.mock
-async def test_options_flow(hass, setup_entry):
+async def test_options_flow(hass: HomeAssistant, setup_entry) -> None:
     """Options flow updates entry delay, dedupe, and granted services."""
     result = await hass.config_entries.options.async_init(setup_entry.entry_id)
     assert result["step_id"] == "init"

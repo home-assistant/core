@@ -11,22 +11,25 @@ import os
 from pathlib import Path
 
 from httpx import Response
+import pytest
 import respx
 
 from homeassistant.components.noonlight import coordinator as coord_mod
 from homeassistant.components.noonlight.const import EVENT_DISPATCH_FIRED
+from homeassistant.components.noonlight.coordinator import NoonlightCoordinator
+from homeassistant.core import HomeAssistant
 
 from .conftest import SANDBOX
 
 _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 
 
-def _coordinator(hass, entry):
+def _coordinator(hass: HomeAssistant, entry) -> NoonlightCoordinator:
     return entry.runtime_data
 
 
 @respx.mock
-async def test_dispatch_writes_audit_lines(hass, setup_entry):
+async def test_dispatch_writes_audit_lines(hass: HomeAssistant, setup_entry) -> None:
     """A dispatch appends a fired event tagged with the environment."""
     respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
@@ -35,9 +38,7 @@ async def test_dispatch_writes_audit_lines(hass, setup_entry):
     await coordinator.async_dispatch(["police"], 0)
     await hass.async_block_till_done()
 
-    content = await hass.async_add_executor_job(
-        Path(coordinator._audit_path).read_text
-    )
+    content = await hass.async_add_executor_job(Path(coordinator._audit_path).read_text)
     events = [json.loads(line) for line in content.splitlines() if line.strip()]
 
     types = [e["event"] for e in events]
@@ -47,7 +48,9 @@ async def test_dispatch_writes_audit_lines(hass, setup_entry):
 
 
 @respx.mock
-async def test_audit_log_rotates_when_oversized(hass, setup_entry, monkeypatch):
+async def test_audit_log_rotates_when_oversized(
+    hass: HomeAssistant, setup_entry, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """An oversized audit log is rotated to a .1 file on the next write."""
     monkeypatch.setattr(coord_mod, "AUDIT_MAX_BYTES", 50)
     respx.post(_ALARMS).mock(

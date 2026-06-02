@@ -14,6 +14,8 @@ from homeassistant.components.noonlight.const import (
     STATE_DISPATCHED,
     STATE_IDLE,
 )
+from homeassistant.components.noonlight.coordinator import NoonlightCoordinator
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import SANDBOX
@@ -24,11 +26,11 @@ _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 _STATUS_RE = r".*/dispatch/v1/alarms/.*/status"
 
 
-def _coordinator(hass, entry):
+def _coordinator(hass: HomeAssistant, entry) -> NoonlightCoordinator:
     return entry.runtime_data
 
 
-async def _dispatch_now(hass, coordinator):
+async def _dispatch_now(hass: HomeAssistant, coordinator) -> None:
     respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
     )
@@ -38,7 +40,9 @@ async def _dispatch_now(hass, coordinator):
 
 
 @respx.mock
-async def test_cancel_dispatched_calls_api_then_settles(hass, setup_entry):
+async def test_cancel_dispatched_calls_api_then_settles(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """Cancelling a live alarm calls the API, then settles to idle."""
     coordinator = _coordinator(hass, setup_entry)
     await _dispatch_now(hass, coordinator)
@@ -58,7 +62,9 @@ async def test_cancel_dispatched_calls_api_then_settles(hass, setup_entry):
 
 
 @respx.mock
-async def test_cancel_dispatched_api_failure_propagates(hass, setup_entry):
+async def test_cancel_dispatched_api_failure_propagates(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """If the cancel call to Noonlight fails, the error is surfaced."""
     coordinator = _coordinator(hass, setup_entry)
     await _dispatch_now(hass, coordinator)
@@ -70,7 +76,7 @@ async def test_cancel_dispatched_api_failure_propagates(hass, setup_entry):
         await coordinator.async_cancel("oops")
 
 
-async def test_cancel_when_idle_is_noop(hass, setup_entry):
+async def test_cancel_when_idle_is_noop(hass: HomeAssistant, setup_entry) -> None:
     """Cancelling while idle is a no-op and the state stays idle."""
     coordinator = _coordinator(hass, setup_entry)
     assert coordinator.data["state"] == STATE_IDLE

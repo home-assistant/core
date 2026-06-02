@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import httpx
 from httpx import Response
 import respx
@@ -18,6 +19,8 @@ from homeassistant.components.noonlight.const import (
     POLL_INTERVAL,
     STATE_IDLE,
 )
+from homeassistant.components.noonlight.coordinator import NoonlightCoordinator
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from tests.common import async_fire_time_changed
@@ -25,21 +28,23 @@ from tests.common import async_fire_time_changed
 _STATUS_RE = r".*/dispatch/v1/alarms/.*/status"
 
 
-def _coordinator(hass, entry):
+def _coordinator(hass: HomeAssistant, entry) -> NoonlightCoordinator:
     return entry.runtime_data
 
 
-def _force_due(coordinator):
+def _force_due(coordinator) -> None:
     """Make the next idle refresh run a heartbeat probe."""
     coordinator._last_heartbeat = 0.0
 
 
-def _has_issue(hass, key, entry_id) -> bool:
+def _has_issue(hass: HomeAssistant, key, entry_id) -> bool:
     return ir.async_get(hass).async_get_issue(DOMAIN, f"{key}_{entry_id}") is not None
 
 
 @respx.mock
-async def test_setup_does_not_probe_immediately(hass, setup_entry):
+async def test_setup_does_not_probe_immediately(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """Setup must not fire a heartbeat (clock starts at creation)."""
     probe = respx.get(url__regex=_STATUS_RE).mock(return_value=Response(404))
     coordinator = _coordinator(hass, setup_entry)
@@ -50,7 +55,7 @@ async def test_setup_does_not_probe_immediately(hass, setup_entry):
 
 
 @respx.mock
-async def test_heartbeat_disabled_when_zero(hass, setup_entry):
+async def test_heartbeat_disabled_when_zero(hass: HomeAssistant, setup_entry) -> None:
     """heartbeat_minutes == 0 disables the idle probe entirely."""
     respx.get(url__regex=_STATUS_RE).mock(return_value=Response(404))
     hass.config_entries.async_update_entry(
@@ -67,7 +72,9 @@ async def test_heartbeat_disabled_when_zero(hass, setup_entry):
 
 
 @respx.mock
-async def test_heartbeat_success_marks_healthy(hass, setup_entry):
+async def test_heartbeat_success_marks_healthy(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """A 404 probe response marks the API healthy and the sensor on."""
     # 404 on the bogus probe id == reachable + authorized.
     probe = respx.get(url__regex=_STATUS_RE).mock(return_value=Response(404))
@@ -86,7 +93,9 @@ async def test_heartbeat_success_marks_healthy(hass, setup_entry):
 
 
 @respx.mock
-async def test_heartbeat_5xx_outage_is_unhealthy(hass, setup_entry):
+async def test_heartbeat_5xx_outage_is_unhealthy(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """A 5xx outage must NOT be classified as reachable (only a 404 is)."""
     respx.get(url__regex=_STATUS_RE).mock(return_value=Response(503))
     coordinator = _coordinator(hass, setup_entry)
@@ -102,7 +111,9 @@ async def test_heartbeat_5xx_outage_is_unhealthy(hass, setup_entry):
 
 
 @respx.mock
-async def test_heartbeat_fires_on_real_update_timer(hass, setup_entry, freezer):
+async def test_heartbeat_fires_on_real_update_timer(
+    hass: HomeAssistant, setup_entry, freezer: FrozenDateTimeFactory
+) -> None:
     """The probe fires via the coordinator's real refresh timer.
 
     It uses the scheduled refresh (not a hand-forced async_refresh), proving the
@@ -124,7 +135,9 @@ async def test_heartbeat_fires_on_real_update_timer(hass, setup_entry, freezer):
 
 
 @respx.mock
-async def test_heartbeat_auth_failure_raises_issue_after_threshold(hass, setup_entry):
+async def test_heartbeat_auth_failure_raises_issue_after_threshold(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """Repeated auth failures past the threshold raise an issue and reauth."""
     respx.get(url__regex=_STATUS_RE).mock(return_value=Response(401))
     coordinator = _coordinator(hass, setup_entry)
@@ -150,7 +163,9 @@ async def test_heartbeat_auth_failure_raises_issue_after_threshold(hass, setup_e
 
 
 @respx.mock
-async def test_heartbeat_recovers_and_clears_issue(hass, setup_entry):
+async def test_heartbeat_recovers_and_clears_issue(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """A recovered probe marks healthy, clears the issue, and resets failures."""
     coordinator = _coordinator(hass, setup_entry)
     # Drive it unhealthy via connection failures past the threshold.

@@ -13,6 +13,8 @@ from homeassistant.components.noonlight.const import (
     STATE_IDLE,
     STATE_PENDING,
 )
+from homeassistant.components.noonlight.coordinator import NoonlightCoordinator
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import SANDBOX
@@ -22,12 +24,14 @@ from tests.common import async_fire_time_changed
 _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 
 
-def _coordinator(hass, entry):
+def _coordinator(hass: HomeAssistant, entry) -> NoonlightCoordinator:
     return entry.runtime_data
 
 
 @respx.mock
-async def test_dispatch_with_zero_delay_fires_immediately(hass, setup_entry):
+async def test_dispatch_with_zero_delay_fires_immediately(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """A zero-delay dispatch fires the alarm at once and goes to dispatched."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
@@ -44,7 +48,7 @@ async def test_dispatch_with_zero_delay_fires_immediately(hass, setup_entry):
 
 
 @respx.mock
-async def test_entry_delay_timer_then_fire(hass, setup_entry):
+async def test_entry_delay_timer_then_fire(hass: HomeAssistant, setup_entry) -> None:
     """A dispatch with an entry delay stays pending until the timer fires."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
@@ -64,7 +68,9 @@ async def test_entry_delay_timer_then_fire(hass, setup_entry):
 
 
 @respx.mock
-async def test_cancel_during_entry_delay_makes_no_call(hass, setup_entry):
+async def test_cancel_during_entry_delay_makes_no_call(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """Cancelling during the entry delay makes no API call and settles to idle."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
@@ -87,7 +93,9 @@ async def test_cancel_during_entry_delay_makes_no_call(hass, setup_entry):
 
 
 @respx.mock
-async def test_dedupe_suppresses_repeat_dispatch(hass, setup_entry):
+async def test_dedupe_suppresses_repeat_dispatch(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """A repeat dispatch inside the dedupe window is suppressed."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
@@ -105,7 +113,7 @@ async def test_dedupe_suppresses_repeat_dispatch(hass, setup_entry):
 
 
 @respx.mock
-async def test_dedupe_disabled_allows_repeat(hass, setup_entry):
+async def test_dedupe_disabled_allows_repeat(hass: HomeAssistant, setup_entry) -> None:
     """With the dedupe window set to 0, repeats always fire."""
     respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
         return_value=Response(404)

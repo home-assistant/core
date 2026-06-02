@@ -109,9 +109,7 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = NoonlightClient(
             get_async_client(hass),
             entry.data[CONF_API_TOKEN],
-            base_url=resolve_base_url(
-                self._environment, entry.data.get(CONF_BASE_URL)
-            ),
+            base_url=resolve_base_url(self._environment, entry.data.get(CONF_BASE_URL)),
         )
         # A separate sandbox-only client backs ``test_dispatch`` so the test
         # always hits sandbox even when the entry runs in production.

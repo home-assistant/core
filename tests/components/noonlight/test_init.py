@@ -8,10 +8,13 @@ from httpx import Response
 import respx
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 
 @respx.mock
-async def test_setup_retries_on_connection_error(hass, config_entry):
+async def test_setup_retries_on_connection_error(
+    hass: HomeAssistant, config_entry
+) -> None:
     """A transport failure on the probe leaves the entry in SETUP_RETRY."""
     respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
         side_effect=httpx.ConnectError("down")
@@ -25,7 +28,7 @@ async def test_setup_retries_on_connection_error(hass, config_entry):
 
 
 @respx.mock
-async def test_setup_auth_error_on_401(hass, config_entry):
+async def test_setup_auth_error_on_401(hass: HomeAssistant, config_entry) -> None:
     """A 401 on the probe surfaces as an auth failure (reauth)."""
     respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
         return_value=Response(401)
@@ -39,7 +42,9 @@ async def test_setup_auth_error_on_401(hass, config_entry):
 
 
 @respx.mock
-async def test_setup_retries_on_unexpected_response(hass, config_entry):
+async def test_setup_retries_on_unexpected_response(
+    hass: HomeAssistant, config_entry
+) -> None:
     """A non-404 error response (e.g. 500) is treated as not-ready."""
     respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
         return_value=Response(500)
@@ -53,7 +58,7 @@ async def test_setup_retries_on_unexpected_response(hass, config_entry):
 
 
 @respx.mock
-async def test_setup_succeeds_on_404_probe(hass, config_entry):
+async def test_setup_succeeds_on_404_probe(hass: HomeAssistant, config_entry) -> None:
     """A 404 means reachable + authorised, so setup completes."""
     respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
         return_value=Response(404)

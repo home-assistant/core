@@ -11,6 +11,8 @@ from httpx import Response
 import respx
 
 from homeassistant.components.noonlight.const import STATE_DISPATCHED, STATE_IDLE
+from homeassistant.components.noonlight.coordinator import NoonlightCoordinator
+from homeassistant.core import HomeAssistant
 
 from .conftest import SANDBOX
 
@@ -18,11 +20,11 @@ _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 _STATUS_RE = r".*/dispatch/v1/alarms/.*/status"
 
 
-def _coordinator(hass, entry):
+def _coordinator(hass: HomeAssistant, entry) -> NoonlightCoordinator:
     return entry.runtime_data
 
 
-async def _dispatch_now(hass, coordinator):
+async def _dispatch_now(hass: HomeAssistant, coordinator) -> None:
     """Drive the machine into DISPATCHED with a live alarm id."""
     respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
@@ -33,7 +35,9 @@ async def _dispatch_now(hass, coordinator):
 
 
 @respx.mock
-async def test_poll_terminal_status_clears_to_idle(hass, setup_entry):
+async def test_poll_terminal_status_clears_to_idle(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """A terminal poll status clears the active alarm back to idle."""
     coordinator = _coordinator(hass, setup_entry)
     await _dispatch_now(hass, coordinator)
@@ -49,7 +53,9 @@ async def test_poll_terminal_status_clears_to_idle(hass, setup_entry):
 
 
 @respx.mock
-async def test_poll_active_status_stays_dispatched(hass, setup_entry):
+async def test_poll_active_status_stays_dispatched(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """An active poll status keeps the alarm dispatched."""
     coordinator = _coordinator(hass, setup_entry)
     await _dispatch_now(hass, coordinator)
@@ -65,7 +71,9 @@ async def test_poll_active_status_stays_dispatched(hass, setup_entry):
 
 
 @respx.mock
-async def test_poll_failure_keeps_active_alarm(hass, setup_entry):
+async def test_poll_failure_keeps_active_alarm(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """A transient poll error must not silently clear an active alarm."""
     coordinator = _coordinator(hass, setup_entry)
     await _dispatch_now(hass, coordinator)
@@ -79,7 +87,7 @@ async def test_poll_failure_keeps_active_alarm(hass, setup_entry):
 
 
 @respx.mock
-async def test_idle_poll_makes_no_request(hass, setup_entry):
+async def test_idle_poll_makes_no_request(hass: HomeAssistant, setup_entry) -> None:
     """While idle the coordinator must not call Noonlight at all."""
     coordinator = _coordinator(hass, setup_entry)
     status = respx.get(url__regex=_STATUS_RE).mock(return_value=Response(200))

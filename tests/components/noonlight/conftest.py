@@ -22,6 +22,7 @@ from homeassistant.components.noonlight.const import (
     DOMAIN,
     ENV_SANDBOX,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -66,7 +67,9 @@ def config_entry(caller_data: dict) -> MockConfigEntry:
 
 
 @pytest.fixture
-async def setup_entry(hass, config_entry: MockConfigEntry):
+async def setup_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> MockConfigEntry:
     """Add the entry to hass and set up the integration.
 
     Setup now performs a connectivity probe (test-before-setup), so the GET

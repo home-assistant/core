@@ -1,5 +1,6 @@
 """Config, reauth, and options flows for the Noonlight integration."""
 
+from collections.abc import Mapping
 import logging
 import re
 from typing import Any
@@ -18,7 +19,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -235,7 +236,7 @@ def _caller_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
 
 
 async def _validate_credentials(
-    hass: Any, environment: str, base_url: str | None, token: str
+    hass: HomeAssistant, environment: str, base_url: str | None, token: str
 ) -> None:
     """Probe Noonlight to confirm token + reachability without dispatching.
 
@@ -417,7 +418,9 @@ class NoonlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     # -- reauth ---------------------------------------------------------------
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Triggered by a 401 — re-collect just the token."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -505,9 +508,9 @@ class NoonlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(entry: ConfigEntry) -> NoonlightOptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> NoonlightOptionsFlow:
         """Return the options flow handler."""
-        return NoonlightOptionsFlow(entry)
+        return NoonlightOptionsFlow(config_entry)
 
 
 class NoonlightOptionsFlow(OptionsFlow):

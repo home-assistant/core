@@ -32,9 +32,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: NoonlightConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NoonlightConfigEntry) -> bool:
     """Set up a Noonlight config entry."""
     coordinator = NoonlightCoordinator(hass, entry)
     await coordinator.async_load()
@@ -65,9 +63,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: NoonlightConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NoonlightConfigEntry) -> bool:
     """Unload a Noonlight config entry."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unloaded:

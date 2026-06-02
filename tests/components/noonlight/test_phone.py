@@ -22,6 +22,8 @@ from homeassistant.components.noonlight.const import (
     DOMAIN,
     ENV_SANDBOX,
 )
+from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize(
@@ -37,7 +39,7 @@ from homeassistant.components.noonlight.const import (
         ("+44 20 7946 0958", "+442079460958"),
     ],
 )
-def test_normalize_phone_valid(raw, expected):
+def test_normalize_phone_valid(raw, expected) -> None:
     """Valid phone numbers normalize to the expected E.164 form."""
     assert normalize_phone(raw) == expected
 
@@ -46,14 +48,14 @@ def test_normalize_phone_valid(raw, expected):
     "raw",
     ["", "123", "abcdefghij", "55512345", "+1", "00000000000000000000"],
 )
-def test_normalize_phone_invalid(raw):
+def test_normalize_phone_invalid(raw) -> None:
     """Invalid phone numbers raise ValueError."""
     with pytest.raises(ValueError):
         normalize_phone(raw)
 
 
 @respx.mock
-async def test_caller_step_normalizes_phone(hass):
+async def test_caller_step_normalizes_phone(hass: HomeAssistant) -> None:
     """A bare 10-digit number is stored as E.164 on the created entry."""
     respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(404))
     result = await hass.config_entries.flow.async_init(
@@ -91,13 +93,13 @@ async def test_caller_step_normalizes_phone(hass):
     ("raw", "expected"),
     [("va", "VA"), ("VA", "VA"), (" ca ", "CA"), ("Ny", "NY"), ("dc", "DC")],
 )
-def test_normalize_state_valid(raw, expected):
+def test_normalize_state_valid(raw, expected) -> None:
     """Valid states normalize to the expected uppercase abbreviation."""
     assert normalize_state(raw) == expected
 
 
 @pytest.mark.parametrize("raw", ["", "Virginia", "v", "XX", "USA", "123"])
-def test_normalize_state_invalid(raw):
+def test_normalize_state_invalid(raw) -> None:
     """Invalid states raise ValueError."""
     with pytest.raises(ValueError):
         normalize_state(raw)
@@ -107,19 +109,19 @@ def test_normalize_state_invalid(raw):
     ("raw", "expected"),
     [("62704", "62704"), ("62704-1234", "62704-1234"), (" 90001 ", "90001")],
 )
-def test_normalize_zip_valid(raw, expected):
+def test_normalize_zip_valid(raw, expected) -> None:
     """Valid ZIP codes normalize to the expected form."""
     assert normalize_zip(raw) == expected
 
 
 @pytest.mark.parametrize("raw", ["", "1234", "abcde", "627040", "2221-1234"])
-def test_normalize_zip_invalid(raw):
+def test_normalize_zip_invalid(raw) -> None:
     """Invalid ZIP codes raise ValueError."""
     with pytest.raises(ValueError):
         normalize_zip(raw)
 
 
-async def _submit_caller(hass, caller):
+async def _submit_caller(hass: HomeAssistant, caller) -> ConfigFlowResult:
     """Run the user step then submit the given caller dict; return the result."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -132,7 +134,7 @@ async def _submit_caller(hass, caller):
 
 
 @respx.mock
-async def test_caller_step_reports_all_errors_at_once(hass):
+async def test_caller_step_reports_all_errors_at_once(hass: HomeAssistant) -> None:
     """Bad phone + state + ZIP all surface together, not one at a time."""
     respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(404))
     result = await _submit_caller(
@@ -153,7 +155,7 @@ async def test_caller_step_reports_all_errors_at_once(hass):
 
 
 @respx.mock
-async def test_caller_step_rejects_bad_phone(hass):
+async def test_caller_step_rejects_bad_phone(hass: HomeAssistant) -> None:
     """An invalid phone in the caller step surfaces an invalid_phone error."""
     respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(404))
     result = await hass.config_entries.flow.async_init(

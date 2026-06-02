@@ -2,6 +2,14 @@
 
 from typing import Final
 
+from homeassistant.const import (  # noqa: F401
+    CONF_ADDRESS,
+    CONF_API_TOKEN,
+    CONF_NAME,
+    CONF_STATE,
+    STATE_IDLE,
+)
+
 DOMAIN: Final = "noonlight"
 
 PLATFORMS: Final = ["binary_sensor", "sensor"]
@@ -51,16 +59,12 @@ def resolve_base_url(environment: str, custom_base_url: str | None) -> str:
 
 # --- Config entry: data keys --------------------------------------------------
 
-CONF_API_TOKEN: Final = "api_token"
 CONF_ENVIRONMENT: Final = "environment"
 # Only consulted when ``environment == custom``; holds the override base URL.
 CONF_BASE_URL: Final = "base_url"
 
-CONF_NAME: Final = "name"
 CONF_PHONE: Final = "phone"
-CONF_ADDRESS: Final = "address"
 CONF_CITY: Final = "city"
-CONF_STATE: Final = "state"
 CONF_ZIP: Final = "zip"
 # Optional human label for this property/site. Sent to Noonlight as owner_id
 # and folded into the responder instructions so multi-property setups can tell
@@ -205,7 +209,6 @@ ATTR_INSTRUCTIONS: Final = "instructions"
 
 # --- Dispatch state machine ---------------------------------------------------
 
-STATE_IDLE: Final = "idle"
 STATE_PENDING: Final = "pending"
 STATE_DISPATCHED: Final = "dispatched"
 STATE_CANCELED: Final = "canceled"

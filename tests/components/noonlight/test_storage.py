@@ -6,6 +6,8 @@ never silently resumes.
 
 from __future__ import annotations
 
+from typing import Any
+
 from httpx import Response
 import respx
 
@@ -15,18 +17,22 @@ from homeassistant.components.noonlight.const import (
     STATE_IDLE,
     STORAGE_KEY_TEMPLATE,
 )
+from homeassistant.components.noonlight.coordinator import NoonlightCoordinator
+from homeassistant.core import HomeAssistant
 
 from .conftest import SANDBOX
 
 _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 
 
-def _coordinator(hass, entry):
+def _coordinator(hass: HomeAssistant, entry) -> NoonlightCoordinator:
     return entry.runtime_data
 
 
 @respx.mock
-async def test_restore_dedupe_and_last_event(hass, config_entry, hass_storage):
+async def test_restore_dedupe_and_last_event(
+    hass: HomeAssistant, config_entry, hass_storage: dict[str, Any]
+) -> None:
     """Restore a stored dedupe timestamp and last event but settle to idle.
 
     The stored dedupe timestamp and last event are restored on setup, but the
@@ -63,7 +69,9 @@ async def test_restore_dedupe_and_last_event(hass, config_entry, hass_storage):
 
 
 @respx.mock
-async def test_dispatch_persists_last_dispatch_ts(hass, setup_entry, hass_storage):
+async def test_dispatch_persists_last_dispatch_ts(
+    hass: HomeAssistant, setup_entry, hass_storage: dict[str, Any]
+) -> None:
     """A dispatch persists the dedupe timestamp and last event to storage."""
     respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
