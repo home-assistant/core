@@ -6,7 +6,7 @@
   "dependencies": ["network"],
   "dhcp": [
     {
-      "hostname": "*airtouch3*"
+      "hostname": "*aritouch3*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/airtouch3",
