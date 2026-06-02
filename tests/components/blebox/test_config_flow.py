@@ -10,7 +10,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.blebox import config_flow
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -251,14 +250,11 @@ async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:
     assert result2["data"] == {"host": "172.100.123.4", "port": 80}
 
 
-async def test_flow_with_zeroconf_when_already_configured(hass: HomeAssistant) -> None:
+async def test_flow_with_zeroconf_when_already_configured(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test behaviour if device already configured."""
-    entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
-        data={CONF_IP_ADDRESS: "172.100.123.4"},
-        unique_id="abcd0123ef5678",
-    )
-    entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
     feature: AsyncMock = mock_feature(
         "sensors",
         blebox_uniapi.sensor.Temperature,
@@ -341,16 +337,14 @@ def create_product_mock(unique_id: str = "abcd0123ef5678"):
     return product
 
 
-async def test_reconfigure_flow_works(hass: HomeAssistant, product_class_mock) -> None:
+async def test_reconfigure_flow_works(
+    hass: HomeAssistant, config_entry: MockConfigEntry, product_class_mock
+) -> None:
     """Test that reconfigure flow updates host and port."""
-    entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
-        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
-        unique_id="abcd0123ef5678",
-    )
-    entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -370,24 +364,20 @@ async def test_reconfigure_flow_works(hass: HomeAssistant, product_class_mock) -
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data[config_flow.CONF_HOST] == "172.2.3.5"
-    assert entry.data[config_flow.CONF_PORT] == 80
-    assert entry.data[config_flow.CONF_USERNAME] == "admin"
-    assert entry.data[config_flow.CONF_PASSWORD] == "secret"
+    assert config_entry.data[config_flow.CONF_HOST] == "172.2.3.5"
+    assert config_entry.data[config_flow.CONF_PORT] == 80
+    assert config_entry.data[config_flow.CONF_USERNAME] == "admin"
+    assert config_entry.data[config_flow.CONF_PASSWORD] == "secret"
 
 
 async def test_reconfigure_flow_unique_id_mismatch(
-    hass: HomeAssistant, product_class_mock
+    hass: HomeAssistant, config_entry: MockConfigEntry, product_class_mock
 ) -> None:
     """Test that reconfigure aborts when a different device is detected."""
-    entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
-        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
-        unique_id="abcd0123ef5678",
-    )
-    entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
 
     with product_class_mock as box_class:
         box_class.async_from_host = AsyncMock(
@@ -419,19 +409,15 @@ async def test_reconfigure_flow_unique_id_mismatch(
 )
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     product_class_mock,
     exception: type[Exception],
     expected_error: str,
 ) -> None:
     """Test that reconfigure shows the correct error for each exception type."""
-    entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
-        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
-        unique_id="abcd0123ef5678",
-    )
-    entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
 
     with product_class_mock as box_class:
         box_class.async_from_host = AsyncMock(side_effect=exception)
