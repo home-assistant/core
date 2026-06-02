@@ -39,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class RainBirdCalendarEntity(
+class RainBirdCalendarEntity(  # pylint: disable=home-assistant-missing-entity-unique-id
     CoordinatorEntity[RainbirdScheduleUpdateCoordinator], CalendarEntity
 ):
     """A calendar event entity."""

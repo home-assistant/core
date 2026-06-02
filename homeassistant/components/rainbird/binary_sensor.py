@@ -32,7 +32,7 @@ async def async_setup_entry(
     async_add_entities([RainBirdSensor(coordinator, RAIN_SENSOR_ENTITY_DESCRIPTION)])
 
 
-class RainBirdSensor(CoordinatorEntity[RainbirdUpdateCoordinator], BinarySensorEntity):
+class RainBirdSensor(CoordinatorEntity[RainbirdUpdateCoordinator], BinarySensorEntity):  # pylint: disable=home-assistant-missing-entity-unique-id
     """A sensor implementation for Rain Bird device."""
 
     _attr_has_entity_name = True
