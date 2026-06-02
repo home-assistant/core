@@ -9,6 +9,7 @@ from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT
 from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
     CONF_SERIAL,
+    CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -200,6 +201,34 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test Victron GX options flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 0.5},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 0.5}
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    assert entry.options == {CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 0.5}
 
 
 @pytest.mark.usefixtures("mock_victron_hub")

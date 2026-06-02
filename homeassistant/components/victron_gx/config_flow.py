@@ -8,7 +8,11 @@ from urllib.parse import urlparse
 from victron_mqtt import AuthenticationError, CannotConnectError, Hub as VictronVenusHub
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -17,11 +21,19 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
+from .const import (
+    CONF_INSTALLATION_ID,
+    CONF_SERIAL,
+    CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
+    DEFAULT_STATE_WRITE_DEBOUNCE_INTERVAL,
+    DOMAIN,
+)
+from .hub import VictronGxConfigEntry
 
 DEFAULT_HOST = "venus.local"
 DEFAULT_PORT = 1883
@@ -64,6 +76,22 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
     }
 )
 
+OPTIONS_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
+            default=DEFAULT_STATE_WRITE_DEBOUNCE_INTERVAL,
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0,
+                max=300,
+                step=1,
+                mode=selector.NumberSelectorMode.BOX,
+            )
+        )
+    }
+)
+
 
 async def validate_input(data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect.
@@ -102,6 +130,14 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Victron GX devices."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: VictronGxConfigEntry,
+    ) -> OptionsFlowWithReload:
+        """Return the options flow handler."""
+        return VictronGXOptionsFlow()
 
     def __init__(self) -> None:
         """Initialize."""
@@ -384,4 +420,22 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
             errors=errors,
+        )
+
+
+class VictronGXOptionsFlow(OptionsFlowWithReload):
+    """Handle Victron GX options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_DATA_SCHEMA, self.config_entry.options or {}
+            ),
         )

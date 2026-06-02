@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import DebouncedWriteEntity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import VictronBaseEntity
@@ -70,6 +71,7 @@ async def async_setup_entry(
                     metric,
                     device_info,
                     installation_id,
+                    hub.state_write_debounce_interval,
                 )
             ]
         )
@@ -77,7 +79,7 @@ async def async_setup_entry(
     hub.register_new_metric_callback(MetricKind.SENSOR, on_new_metric)
 
 
-class VictronSensor(VictronBaseEntity, SensorEntity):
+class VictronSensor(DebouncedWriteEntity, VictronBaseEntity, SensorEntity):
     """Implementation of a Victron GX sensor."""
 
     def __init__(
@@ -86,9 +88,11 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
         metric: VictronVenusMetric,
         device_info: DeviceInfo,
         installation_id: str,
+        state_write_debounce_interval: float,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, metric, device_info, installation_id)
+        self.state_write_debounce_interval = state_write_debounce_interval
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
         # Enum sensors must not have a state class
         if self._attr_device_class == SensorDeviceClass.ENUM:
@@ -104,6 +108,13 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
     def _on_update_cb(self, value: Any) -> None:
         self._attr_native_value = VictronSensor._normalize_value(value)
         self.async_write_ha_state()
+
+    def _should_debounce_state_write(self) -> bool:
+        """Return if the current sensor state should be debounced."""
+        # bool is a subclass of int, but we only want real numeric sensor values.
+        return isinstance(self._attr_native_value, (int, float)) and not isinstance(
+            self._attr_native_value, bool
+        )
 
     @staticmethod
     def _normalize_value(value: Any) -> Any:

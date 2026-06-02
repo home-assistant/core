@@ -2109,5 +2109,18 @@
     "cannot_connect": {
       "message": "Cannot connect to the GX device at {host}."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "state_write_debounce_interval": "State write debounce interval"
+        },
+        "data_description": {
+          "state_write_debounce_interval": "Minimum time between numeric sensor state writes in seconds. Set to 0 to disable debouncing."
+        },
+        "title": "Victron GX sensor debounce"
+      }
+    }
   }
 }

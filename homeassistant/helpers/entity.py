@@ -66,6 +66,7 @@ from .singleton import singleton
 from .typing import UNDEFINED, StateType, UndefinedType
 
 timer = time.time
+debounce_timer = time.monotonic
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform, PlatformData
@@ -1712,6 +1713,53 @@ class Entity(
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
         )
+
+
+class DebouncedWriteEntity(Entity):
+    """An entity mixin that debounces state writes."""
+
+    state_write_debounce_interval: float = 0.0
+    __last_state_write: float | None = None
+
+    def _should_debounce_state_write(self) -> bool:
+        """Return if state writes should be debounced."""
+        return True
+
+    @callback
+    def _async_should_write_ha_state(self) -> bool:
+        """Return if a state write should proceed."""
+        if not self._should_debounce_state_write():
+            return True
+
+        debounce_interval = self.state_write_debounce_interval
+        if debounce_interval <= 0:
+            return True
+
+        now = debounce_timer()
+        if self.__last_state_write is None:
+            self.__last_state_write = now
+            return True
+        if now - self.__last_state_write < debounce_interval:
+            return False
+
+        self.__last_state_write = now
+        return True
+
+    @callback
+    def _async_write_ha_state_from_call_soon_threadsafe(self) -> None:
+        """Write the state to the state machine from the event loop thread."""
+        if not self.hass or not self._verified_state_writable:
+            self._async_verify_state_writable()
+        if not self._async_should_write_ha_state():
+            return
+        super()._async_write_ha_state()
+
+    @callback
+    def _async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        if not self._async_should_write_ha_state():
+            return
+        super()._async_write_ha_state()
 
 
 class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):

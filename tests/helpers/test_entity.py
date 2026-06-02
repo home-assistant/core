@@ -219,6 +219,130 @@ async def test_warn_slow_device_update_disabled(
         assert update_call
 
 
+async def test_debounced_write_entity_debounces_state_writes(
+    hass: HomeAssistant,
+) -> None:
+    """Test debounced entity writes only once during the cooldown window."""
+
+    class DebouncedTestEntity(entity.DebouncedWriteEntity):
+        """Test entity with debounced writes enabled."""
+
+        entity_id = "sensor.test"
+        state_write_debounce_interval = 10.0
+        _attr_name = "Test"
+        _attr_state = 1
+
+        def _should_debounce_state_write(self) -> bool:
+            return True
+
+    ent = DebouncedTestEntity()
+    ent.hass = hass
+
+    base_time = entity.debounce_timer() + 1000
+    with (
+        patch(
+            "homeassistant.core.StateMachine.async_set_internal"
+        ) as mock_set_internal,
+        patch.object(
+            entity,
+            "debounce_timer",
+            side_effect=[base_time, base_time + 1, base_time + 11],
+        ),
+    ):
+        ent.async_write_ha_state()
+        ent.async_write_ha_state()
+        ent.async_write_ha_state()
+
+    assert mock_set_internal.call_count == 2
+
+
+async def test_debounced_write_entity_without_debounce_writes_every_time(
+    hass: HomeAssistant,
+) -> None:
+    """Test writes are never throttled when debounce is disabled by predicate."""
+
+    class NonDebouncedTestEntity(entity.DebouncedWriteEntity):
+        """Test entity with debounce predicate disabled."""
+
+        entity_id = "sensor.test"
+        state_write_debounce_interval = 10.0
+        _attr_name = "Test"
+        _attr_state = 1
+
+        def _should_debounce_state_write(self) -> bool:
+            return False
+
+    ent = NonDebouncedTestEntity()
+    ent.hass = hass
+
+    with patch(
+        "homeassistant.core.StateMachine.async_set_internal"
+    ) as mock_set_internal:
+        ent.async_write_ha_state()
+        ent.async_write_ha_state()
+
+    assert mock_set_internal.call_count == 2
+
+
+async def test_debounced_write_entity_zero_interval_writes_every_time(
+    hass: HomeAssistant,
+) -> None:
+    """Test writes are not throttled when the interval is zero."""
+
+    class ZeroIntervalDebounceTestEntity(entity.DebouncedWriteEntity):
+        """Test entity with zero debounce interval."""
+
+        entity_id = "sensor.test"
+        state_write_debounce_interval = 0.0
+        _attr_name = "Test"
+        _attr_state = 1
+
+    ent = ZeroIntervalDebounceTestEntity()
+    ent.hass = hass
+
+    with (
+        patch(
+            "homeassistant.core.StateMachine.async_set_internal"
+        ) as mock_set_internal,
+        patch.object(entity, "debounce_timer") as mock_debounce_timer,
+    ):
+        ent.async_write_ha_state()
+        ent.async_write_ha_state()
+
+    assert mock_set_internal.call_count == 2
+    mock_debounce_timer.assert_not_called()
+
+
+async def test_debounced_write_entity_threadsafe_write_respects_debounce(
+    hass: HomeAssistant,
+) -> None:
+    """Test thread-safe write path uses debounce gating."""
+
+    class DebouncedThreadsafeTestEntity(entity.DebouncedWriteEntity):
+        """Test entity for thread-safe write calls."""
+
+        entity_id = "sensor.test"
+        state_write_debounce_interval = 10.0
+        _attr_name = "Test"
+        _attr_state = 1
+
+    ent = DebouncedThreadsafeTestEntity()
+    ent.hass = hass
+
+    base_time = entity.debounce_timer() + 1000
+    with (
+        patch(
+            "homeassistant.core.StateMachine.async_set_internal"
+        ) as mock_set_internal,
+        patch.object(entity, "debounce_timer", side_effect=[base_time, base_time + 1]),
+    ):
+        ent._async_write_ha_state_from_call_soon_threadsafe()
+        ent._async_write_ha_state_from_call_soon_threadsafe()
+
+    assert ent._verified_state_writable is True
+    assert mock_set_internal.call_count == 1
+
+
 async def test_async_schedule_update_ha_state(hass: HomeAssistant) -> None:
     """Warn we log when entity update takes a long time and trow exception."""
     update_call = False

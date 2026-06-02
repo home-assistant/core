@@ -30,7 +30,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.redact import async_redact_data
 
-from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
+from .const import (
+    CONF_INSTALLATION_ID,
+    CONF_SERIAL,
+    CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
+    DEFAULT_STATE_WRITE_DEBOUNCE_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +71,12 @@ class Hub:
         config = {**entry.data, **entry.options}
         self.hass = hass
         self.host = config[CONF_HOST]
+        self.state_write_debounce_interval = float(
+            config.get(
+                CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
+                DEFAULT_STATE_WRITE_DEBOUNCE_INTERVAL,
+            )
+        )
 
         self._hub = VictronVenusHub(
             host=self.host,
@@ -76,7 +88,7 @@ class Hub:
             model_name=config.get(CONF_MODEL) or None,
             serial=config.get(CONF_SERIAL) or None,
             operation_mode=OperationMode.FULL,
-            update_frequency_seconds=UPDATE_INTERVAL_SECONDS,
+            update_frequency_seconds=0,
         )
         self._hub.on_new_metric = self._on_new_metric
         self.new_metric_callbacks: dict[MetricKind, NewMetricCallback] = {}
