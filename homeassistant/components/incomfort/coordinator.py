@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from incomfortclient import (
@@ -74,6 +74,7 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
         )
         self.incomfort_data = incomfort_data
 
+    @override
     async def _async_update_data(self) -> InComfortData:
         """Fetch data from API endpoint."""
         try:

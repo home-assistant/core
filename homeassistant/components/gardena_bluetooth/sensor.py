@@ -279,7 +279,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
             super()._handle_coordinator_update()
             return
 
-        time = datetime.now(UTC) + timedelta(seconds=value)
+        time = datetime.now(UTC) + timedelta(seconds=value)  # pylint: disable=home-assistant-enforce-utcnow
         if not self._attr_native_value:
             self._attr_native_value = time
             super()._handle_coordinator_update()

@@ -66,6 +66,14 @@ def _get_chime_duration(obj: Camera) -> int:
     return int(obj.chime_duration_seconds)
 
 
+async def _set_chime_volume(obj: Chime, value: float) -> None:
+    """Set chime volume per paired camera via the public API."""
+    level = int(value)
+    ring_settings = [setting.to_api_dict(volume=level) for setting in obj.ring_settings]
+    if ring_settings:
+        await obj.set_ring_settings_public(ring_settings)
+
+
 CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="wdr_value",
@@ -84,13 +92,13 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         translation_key="microphone_level",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
-        ufp_min=0,
+        ufp_min=1,
         ufp_max=100,
         ufp_step=1,
         ufp_required_field="has_mic",
         ufp_value="mic_volume",
         ufp_enabled="feature_flags.has_mic",
-        ufp_set_method="set_mic_volume",
+        ufp_set_method="set_mic_volume_public",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription(
@@ -221,7 +229,7 @@ DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 )
 
 CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
-    ProtectNumberEntityDescription(
+    ProtectNumberEntityDescription[Chime](
         key="volume",
         translation_key="volume",
         entity_category=EntityCategory.CONFIG,
@@ -230,7 +238,7 @@ CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_max=100,
         ufp_step=1,
         ufp_value="volume",
-        ufp_set_method="set_volume",
+        ufp_set_method_fn=_set_chime_volume,
         ufp_perm=PermRequired.WRITE,
     ),
 )

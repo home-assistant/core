@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, cast
 from bleak import BleakScanner
 from habluetooth import (
     BaseHaScanner,
+    BluetoothReachabilityIntent,
     BluetoothScannerDevice,
     BluetoothScanningMode,
     HaBleakScannerWrapper,
@@ -106,6 +107,14 @@ def async_ble_device_from_address(
 ) -> BLEDevice | None:
     """Return BLEDevice for an address if its present."""
     return _get_manager(hass).async_ble_device_from_address(address, connectable)
+
+
+@hass_callback
+def async_address_reachability_diagnostics(
+    hass: HomeAssistant, address: str, intent: BluetoothReachabilityIntent
+) -> str:
+    """Return a human readable explanation of why an address may be unreachable."""
+    return _get_manager(hass).async_address_reachability_diagnostics(address, intent)
 
 
 @hass_callback
