@@ -509,7 +509,7 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("stat_rate"): str,
         vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
         vol.Optional("stat_soc"): str,
-        vol.Optional("capacity"): vol.Coerce(float),
+        vol.Optional("capacity"): vol.All(vol.Coerce(float), vol.Range(min=0, min_included=False)),
         vol.Optional("name"): str,
     }
 )
