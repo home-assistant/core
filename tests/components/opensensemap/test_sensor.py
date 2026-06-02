@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -83,12 +83,22 @@ async def test_entity_added_when_measurement_appears(
 
 
 @pytest.mark.parametrize(
-    ("title", "entity_id", "station_unit", "expected_unit", "expected_state"),
+    (
+        "title",
+        "entity_id",
+        "coordinator_attr",
+        "station_unit",
+        "native_unit",
+        "display_unit",
+        "expected_state",
+    ),
     [
         pytest.param(
             "Temperature",
             "sensor.test_station_temperature",
+            "temperature",
             "°F",
+            UnitOfTemperature.FAHRENHEIT,
             "°C",
             (21.3 - 32) * 5 / 9,
             id="temperature_fahrenheit_to_celsius",
@@ -96,7 +106,9 @@ async def test_entity_added_when_measurement_appears(
         pytest.param(
             "Wind Speed",
             "sensor.test_station_wind_speed",
+            "wind_speed",
             "km/h",
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
             "km/h",
             2.5,
             id="wind_speed_kmh",
@@ -104,7 +116,9 @@ async def test_entity_added_when_measurement_appears(
         pytest.param(
             "Air Pressure",
             "sensor.test_station_atmospheric_pressure",
+            "air_pressure",
             "Pa",
+            UnitOfPressure.PA,
             "hPa",
             1013.2 / 100,
             id="air_pressure_pa_to_hpa",
@@ -117,8 +131,10 @@ async def test_unit_detection(
     mock_config_entry: MockConfigEntry,
     title: str,
     entity_id: str,
+    coordinator_attr: str,
     station_unit: str,
-    expected_unit: str,
+    native_unit: str,
+    display_unit: str,
     expected_state: float,
 ) -> None:
     """Test units are detected from the station and converted for the metric system."""
@@ -134,7 +150,33 @@ async def test_unit_detection(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # The detector picked up the station's unit (independent of HA's conversion).
+    measurement = getattr(mock_config_entry.runtime_data.data, coordinator_attr)
+    assert measurement.unit == native_unit
+
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes["unit_of_measurement"] == expected_unit
+    assert state.attributes["unit_of_measurement"] == display_unit
     assert float(state.state) == pytest.approx(expected_state, abs=0.01)
+
+
+async def test_unit_detection_ignores_value_less_sensors(
+    hass: HomeAssistant,
+    mock_opensensemap_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unit detection skips value-less sensors, like the library does."""
+    # A value-less duplicate would shadow the real °C sensor's unit (yielding °F)
+    # if detection didn't skip sensors without a measurement value.
+    mock_opensensemap_api.data["sensors"].insert(
+        0,
+        {"title": "Temperature", "unit": "°F", "lastMeasurement": {}},
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.runtime_data.data.temperature.unit == (
+        UnitOfTemperature.CELSIUS
+    )

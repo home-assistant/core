@@ -73,15 +73,18 @@ class OpenSenseMapStationData:
 def _detect_unit(
     api: OpenSenseMap, title_key: str, unit_map: dict[str, str]
 ) -> str | None:
-    """Return the Home Assistant unit for a phenomenon reported by the station.
+    """Return the Home Assistant unit for a phenomenon reported by the station."""
 
-    The library resolves a measurement by matching localized sensor titles
-    (opensensemap_api._TITLES) and exposes only its value. Walk the same titles
-    to find that sensor and map its reported unit.
-    """
+    # The library resolves a measurement by matching localized sensor titles
+    # (opensensemap_api._TITLES) and returns the first matching sensor that has a
+    # value. Mirror that approach to find the matching unit.
     for title in (*_TITLES.get(title_key, ()), title_key):
         for sensor in api.data.get("sensors", []):
-            if sensor.get("title", "").casefold() == title.casefold():
+            measurement = sensor.get("lastMeasurement") or {}
+            if (
+                sensor.get("title", "").casefold() == title.casefold()
+                and measurement.get("value") is not None
+            ):
                 return unit_map.get((sensor.get("unit") or "").strip().casefold())
     return None
 
