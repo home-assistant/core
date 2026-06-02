@@ -22,37 +22,37 @@ Bare ``raise`` (re-raising the currently caught exception) is always
 fine; this checker only flags raises that explicitly name a class.
 """
 
+import functools
 import sys
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from pylint_home_assistant.helpers.module_info import parse_module
+from pylint_home_assistant.helpers.module_info import is_integration_module
 
-_STDLIB_MODULES = frozenset(sys.stdlib_module_names)
+_STDLIB_MODULES = sys.stdlib_module_names
 
 # Top-level module names whose exception classes are allowed to be raised
 # directly because raising them is the documented framework pattern.
 _ALLOWED_TOP_LEVEL = frozenset({"voluptuous"})
 
-# Fully-qualified module prefixes that are allowed (more specific than
-# top-level matches above).  Anything imported from one of these modules
-# (or a sub-module) may be raised.
+# Fully-qualified module prefixes under ``aiohttp`` that are allowed in
+# addition to the top-level allowlist above.  Anything imported from one
+# of these modules (or a sub-module) may be raised.
 _ALLOWED_MODULE_PREFIXES = ("aiohttp.web", "aiohttp.web_exceptions")
 
 
+@functools.cache
 def _is_third_party(module_name: str) -> bool:
     """Return True if *module_name* is a third-party (non-stdlib, non-HA) module."""
     if not module_name:
         return False
-    top = module_name.split(".", 1)[0]
-    if top in _STDLIB_MODULES:
+    top = module_name.partition(".")[0]
+    if top in _STDLIB_MODULES or top == "homeassistant" or top in _ALLOWED_TOP_LEVEL:
         return False
-    if top == "homeassistant":
-        return False
-    if top in _ALLOWED_TOP_LEVEL:
-        return False
+    if top != "aiohttp":
+        return True
     return not any(
         module_name == prefix or module_name.startswith(f"{prefix}.")
         for prefix in _ALLOWED_MODULE_PREFIXES
@@ -102,7 +102,7 @@ class HassRaiseThirdPartyChecker(BaseChecker):
         """Reset state and collect third-party imports at module level."""
         self._from_imports = {}
         self._module_imports = {}
-        self._enabled = parse_module(node.name) is not None
+        self._enabled = is_integration_module(node.name)
         if not self._enabled:
             return
 
@@ -142,28 +142,27 @@ class HassRaiseThirdPartyChecker(BaseChecker):
                 top = _top_attribute_name(target)
                 if top is None or top not in self._module_imports:
                     return
-                # Reconstruct the dotted attribute path for the message and
-                # for matching the allowed-module prefix list (e.g.
-                # ``aiohttp.web_exceptions.HTTPMethodNotAllowed``).
-                parts: list[str] = []
+                # Walk the attribute chain; ``attrs`` ends up outer-to-inner,
+                # so the first element is the class name and the rest are
+                # intermediate sub-modules (e.g. for
+                # ``aiohttp.web_exceptions.HTTPMethodNotAllowed`` we get
+                # ``["HTTPMethodNotAllowed", "web_exceptions"]``).
+                attrs: list[str] = []
                 cur: nodes.NodeNG = target
                 while isinstance(cur, nodes.Attribute):
-                    parts.append(cur.attrname)
+                    attrs.append(cur.attrname)
                     cur = cur.expr
-                resolved = ".".join([self._module_imports[top], *reversed(parts)])
-                # The trailing segment is the class name; drop it for the
-                # module-prefix check.
-                module_path = resolved.rsplit(".", 1)[0]
-                if any(
-                    module_path == prefix or module_path.startswith(f"{prefix}.")
-                    for prefix in _ALLOWED_MODULE_PREFIXES
-                ):
+                top_module = self._module_imports[top]
+                resolved_module = ".".join([top_module, *reversed(attrs[1:])])
+                # Reuse the cached classifier so the allowed-prefix list
+                # only lives in one place.
+                if not _is_third_party(resolved_module):
                     return
-                dotted = ".".join([top, *reversed(parts)])
+                dotted = ".".join([top, *reversed(attrs)])
                 self.add_message(
                     "home-assistant-raise-third-party-exception",
                     node=node,
-                    args=(dotted, self._module_imports[top]),
+                    args=(dotted, top_module),
                 )
 
 
