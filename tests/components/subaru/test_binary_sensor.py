@@ -1,16 +1,17 @@
 """Test Subaru binary sensors."""
 
+from unittest.mock import patch
+
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.subaru.binary_sensor import (
-    DOOR_BINARY_SENSORS,
-    LOCK_BINARY_SENSORS,
+    BINARY_SENSORS,
     MIL_TRANSLATION_KEYS,
-    WINDOW_BINARY_SENSORS,
 )
 from homeassistant.components.subaru.const import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -23,70 +24,29 @@ from .api_responses import (
 )
 from .conftest import setup_subaru_config_entry
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _unique_id(vin: str, key: str) -> str:
     return f"{vin}_{key}"
 
 
-@pytest.mark.usefixtures("ev_entry")
-async def test_binary_sensors_present_for_ev(
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """All openings + read-only locks + overall health entity exist for EVs."""
-    for desc in DOOR_BINARY_SENSORS + WINDOW_BINARY_SENSORS + LOCK_BINARY_SENSORS:
-        entity = entity_registry.async_get_entity_id(
-            BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_2_EV, desc.key)
-        )
-        assert entity is not None, f"missing entity for {desc.key}"
-
-    overall = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_2_EV, "health_istrouble")
-    )
-    assert overall is not None
-
-
-@pytest.mark.parametrize(
-    ("entity_id", "expected_state"),
-    [
-        pytest.param(
-            "binary_sensor.test_vehicle_2_door_front_left",
-            STATE_OFF,
-            id="closed_door_is_off",
-        ),
-        pytest.param(
-            "binary_sensor.test_vehicle_2_window_front_left",
-            STATE_ON,
-            id="vented_window_is_on",
-        ),
-        pytest.param(
-            "binary_sensor.test_vehicle_2_window_rear_left",
-            STATE_UNKNOWN,
-            id="unknown_window_is_unknown",
-        ),
-        pytest.param(
-            "binary_sensor.test_vehicle_2_lock_status_front_left",
-            STATE_OFF,
-            id="locked_door_lock_is_off_per_LOCK_device_class",
-        ),
-        pytest.param(
-            "binary_sensor.test_vehicle_2_vehicle_health",
-            STATE_OFF,
-            id="overall_istrouble_false_is_off",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("ev_entry")
-async def test_binary_sensor_states_for_ev(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
     hass: HomeAssistant,
-    entity_id: str,
-    expected_state: str,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    subaru_config_entry: MockConfigEntry,
 ) -> None:
-    """Each opening/lock/health entity reports the state derived from the API value."""
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == expected_state
+    """Snapshot all binary sensors created for an EV vehicle."""
+    with patch(
+        "homeassistant.components.subaru.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        await setup_subaru_config_entry(hass, subaru_config_entry)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, subaru_config_entry.entry_id
+    )
 
 
 @pytest.mark.parametrize("feature", ["TPMS_MIL", "CEL_MIL"])
@@ -118,29 +78,13 @@ async def test_no_binary_sensors_for_g1(
         vehicle_list=[TEST_VIN_1_G1],
         vehicle_data=VEHICLE_DATA[TEST_VIN_1_G1],
     )
-    for desc in DOOR_BINARY_SENSORS:
+    for desc in BINARY_SENSORS:
         assert (
             entity_registry.async_get_entity_id(
                 BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_1_G1, desc.key)
             )
             is None
         )
-
-
-@pytest.mark.usefixtures("ev_entry")
-async def test_ev_plug_binary_sensor_for_ev(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """EV vehicles get an EV plug binary sensor; PLUG device class with UNLOCKED_CONNECTED → on."""
-    entity_id = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_2_EV, "EV_IS_PLUGGED_IN")
-    )
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    # Fixture has EV_IS_PLUGGED_IN = "UNLOCKED_CONNECTED" → plugged in → on
-    assert state.state == STATE_ON
 
 
 async def test_no_ev_plug_binary_sensor_for_g3(
@@ -164,12 +108,12 @@ async def test_no_ev_plug_binary_sensor_for_g3(
     )
 
 
-async def test_binary_sensors_for_g3(
+async def test_overall_health_unknown_without_vehicle_health(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     subaru_config_entry: MockConfigEntry,
 ) -> None:
-    """Gen3 vehicles get openings/locks/overall-health entities even without vehicle_features."""
+    """Overall vehicle health is `unknown` when the API has not yet returned health data."""
     await setup_subaru_config_entry(
         hass,
         subaru_config_entry,
@@ -183,5 +127,4 @@ async def test_binary_sensors_for_g3(
     assert overall is not None
     state = hass.states.get(overall)
     assert state is not None
-    # Without vehicle_health in the mock, the rollup reports unknown.
     assert state.state == STATE_UNKNOWN

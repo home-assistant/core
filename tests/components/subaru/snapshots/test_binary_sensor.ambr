@@ -1,0 +1,1021 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.test_vehicle_2_check_engine-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_vehicle_2_check_engine',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Check engine',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Check engine',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mil_cel',
+    'unique_id': 'JF2ABCDE6L0000002_CEL_MIL',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_check_engine-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'test_vehicle_2 Check engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_check_engine',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_door_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_door_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door front left',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door front left',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_left',
+    'unique_id': 'JF2ABCDE6L0000002_DOOR_FRONT_LEFT_POSITION',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_door_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'test_vehicle_2 Door front left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_door_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_door_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_door_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door front right',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door front right',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_right',
+    'unique_id': 'JF2ABCDE6L0000002_DOOR_FRONT_RIGHT_POSITION',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_door_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'test_vehicle_2 Door front right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_door_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_door_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_door_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door rear left',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door rear left',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_left',
+    'unique_id': 'JF2ABCDE6L0000002_DOOR_REAR_LEFT_POSITION',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_door_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'test_vehicle_2 Door rear left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_door_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_door_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_door_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door rear right',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door rear right',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_right',
+    'unique_id': 'JF2ABCDE6L0000002_DOOR_REAR_RIGHT_POSITION',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_door_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'test_vehicle_2 Door rear right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_door_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_ev_plug-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_ev_plug',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'EV plug',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_icon': None,
+    'original_name': 'EV plug',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ev_is_plugged_in',
+    'unique_id': 'JF2ABCDE6L0000002_EV_is_plugged_in',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_ev_plug-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'plug',
+      'friendly_name': 'test_vehicle_2 EV plug',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_ev_plug',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hood',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Hood',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_engine_hood',
+    'unique_id': 'JF2ABCDE6L0000002_DOOR_ENGINE_HOOD_POSITION',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'test_vehicle_2 Hood',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_lock_status_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_lock_status_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock status front left',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Lock status front left',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock_status_front_left',
+    'unique_id': 'JF2ABCDE6L0000002_LOCK_FRONT_LEFT_STATUS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_lock_status_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'friendly_name': 'test_vehicle_2 Lock status front left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_lock_status_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_lock_status_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_lock_status_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock status front right',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Lock status front right',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock_status_front_right',
+    'unique_id': 'JF2ABCDE6L0000002_LOCK_FRONT_RIGHT_STATUS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_lock_status_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'friendly_name': 'test_vehicle_2 Lock status front right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_lock_status_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_lock_status_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_lock_status_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock status rear left',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Lock status rear left',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock_status_rear_left',
+    'unique_id': 'JF2ABCDE6L0000002_LOCK_REAR_LEFT_STATUS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_lock_status_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'friendly_name': 'test_vehicle_2 Lock status rear left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_lock_status_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_lock_status_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_lock_status_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock status rear right',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Lock status rear right',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock_status_rear_right',
+    'unique_id': 'JF2ABCDE6L0000002_LOCK_REAR_RIGHT_STATUS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_lock_status_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'friendly_name': 'test_vehicle_2 Lock status rear right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_lock_status_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_lock_status_tailgate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_lock_status_tailgate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock status tailgate',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Lock status tailgate',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock_status_boot',
+    'unique_id': 'JF2ABCDE6L0000002_LOCK_BOOT_STATUS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_lock_status_tailgate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'friendly_name': 'test_vehicle_2 Lock status tailgate',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_lock_status_tailgate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_sunroof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_sunroof',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sunroof',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Sunroof',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_sunroof',
+    'unique_id': 'JF2ABCDE6L0000002_WINDOW_SUNROOF_STATUS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_sunroof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'test_vehicle_2 Sunroof',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_sunroof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_tailgate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_tailgate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tailgate',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Tailgate',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_boot',
+    'unique_id': 'JF2ABCDE6L0000002_DOOR_BOOT_POSITION',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_tailgate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'test_vehicle_2 Tailgate',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_tailgate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_tire_pressure_warning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_vehicle_2_tire_pressure_warning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tire pressure warning',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Tire pressure warning',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mil_tpms',
+    'unique_id': 'JF2ABCDE6L0000002_TPMS_MIL',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_tire_pressure_warning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'test_vehicle_2 Tire pressure warning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_tire_pressure_warning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_vehicle_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_vehicle_2_vehicle_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle health',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Vehicle health',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'health_istrouble',
+    'unique_id': 'JF2ABCDE6L0000002_health_istrouble',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_vehicle_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'test_vehicle_2 Vehicle health',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_vehicle_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_window_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_window_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Window front left',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Window front left',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_left',
+    'unique_id': 'JF2ABCDE6L0000002_WINDOW_FRONT_LEFT_STATUS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_window_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'test_vehicle_2 Window front left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_window_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_window_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_window_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Window front right',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Window front right',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_right',
+    'unique_id': 'JF2ABCDE6L0000002_WINDOW_FRONT_RIGHT_STATUS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_window_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'test_vehicle_2 Window front right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_window_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_window_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_window_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Window rear left',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Window rear left',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_left',
+    'unique_id': 'JF2ABCDE6L0000002_WINDOW_REAR_LEFT_STATUS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_window_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'test_vehicle_2 Window rear left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_window_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_window_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_vehicle_2_window_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Window rear right',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Window rear right',
+    'platform': 'subaru',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_right',
+    'unique_id': 'JF2ABCDE6L0000002_WINDOW_REAR_RIGHT_STATUS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_vehicle_2_window_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'test_vehicle_2 Window rear right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_vehicle_2_window_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

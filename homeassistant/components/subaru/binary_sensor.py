@@ -55,7 +55,7 @@ LOCK_STATUS_KEYS: dict[str, str] = {
 # EV_IS_PLUGGED_IN values from subarulink/const.py that indicate the plug is in.
 # Any other value (including UNPLUGGED / UNKNOWN / None) counts as not plugged in.
 EV_PLUGGED_IN_STATES = frozenset({"CHARGING", "LOCKED_CONNECTED", "UNLOCKED_CONNECTED"})
-API_KEY_EV_IS_PLUGGED_IN = "EV_IS_PLUGGED_IN"
+API_KEY_EV_IS_PLUGGED_IN = "EV_is_plugged_in"
 
 # vehicle_health response shape (see integration debug diagnostics)
 HEALTH_ISTROUBLE = "ISTROUBLE"
@@ -126,29 +126,22 @@ class SubaruBinarySensorEntityDescription(BinarySensorEntityDescription):
     is_on_fn: Callable[[dict[str, Any]], bool | None]
 
 
-def _opening_is_on(api_key: str) -> Callable[[dict[str, Any]], bool | None]:
-    """Door/window getter — anything other than CLOSED/CLOSE counts as on (open)."""
+def _vehicle_status_is_on(
+    api_key: str,
+    is_on: Callable[[str], bool],
+) -> Callable[[dict[str, Any]], bool | None]:
+    """Build an is_on getter for a single vehicle_status string field.
 
-    def getter(vehicle_data: dict[str, Any]) -> bool | None:
-        status = (vehicle_data.get(VEHICLE_STATUS) or {}).get(api_key)
-        if status is None or status == UNKNOWN_STATUS:
-            return None
-        return status not in OPENING_CLOSED_VALUES
-
-    return getter
-
-
-def _lock_status_is_on(api_key: str) -> Callable[[dict[str, Any]], bool | None]:
-    """Per-door lock getter — anything other than LOCKED counts as on (unlocked).
-
-    BinarySensorDeviceClass.LOCK uses on==unlocked / off==locked.
+    The predicate is applied to the raw API value (e.g. "CLOSED", "LOCKED",
+    "UNLOCKED_CONNECTED"). Missing or UNKNOWN values short-circuit to None
+    so the entity reports as `unknown` rather than off.
     """
 
     def getter(vehicle_data: dict[str, Any]) -> bool | None:
         status = (vehicle_data.get(VEHICLE_STATUS) or {}).get(api_key)
         if status is None or status == UNKNOWN_STATUS:
             return None
-        return status != "LOCKED"
+        return is_on(status)
 
     return getter
 
@@ -174,43 +167,53 @@ def _overall_trouble_is_on(vehicle_data: dict[str, Any]) -> bool | None:
     return bool(health[HEALTH_ISTROUBLE])
 
 
-def _ev_plug_is_on(vehicle_data: dict[str, Any]) -> bool | None:
-    """EV charging-cable connected state."""
-    status = (vehicle_data.get(VEHICLE_STATUS) or {}).get(API_KEY_EV_IS_PLUGGED_IN)
-    if status is None or status == UNKNOWN_STATUS:
-        return None
+# Predicates applied to the raw vehicle_status string for each entity group.
+def _is_open(status: str) -> bool:
+    """Door/window predicate — anything not in the closed set is open."""
+    return status not in OPENING_CLOSED_VALUES
+
+
+def _is_unlocked(status: str) -> bool:
+    """Per-door lock predicate — anything other than LOCKED is unlocked."""
+    return status != "LOCKED"
+
+
+def _is_plugged_in(status: str) -> bool:
+    """EV plug predicate — any documented connected state counts as plugged in."""
     return status in EV_PLUGGED_IN_STATES
 
 
-DOOR_BINARY_SENSORS: list[SubaruBinarySensorEntityDescription] = [
-    SubaruBinarySensorEntityDescription(
-        key=api_key,
-        translation_key=trans_key,
-        device_class=BinarySensorDeviceClass.DOOR,
-        is_on_fn=_opening_is_on(api_key),
-    )
-    for api_key, trans_key in DOOR_POSITION_KEYS.items()
-]
-
-WINDOW_BINARY_SENSORS: list[SubaruBinarySensorEntityDescription] = [
-    SubaruBinarySensorEntityDescription(
-        key=api_key,
-        translation_key=trans_key,
-        device_class=BinarySensorDeviceClass.WINDOW,
-        is_on_fn=_opening_is_on(api_key),
-    )
-    for api_key, trans_key in WINDOW_STATUS_KEYS.items()
-]
-
-LOCK_BINARY_SENSORS: list[SubaruBinarySensorEntityDescription] = [
-    SubaruBinarySensorEntityDescription(
-        key=api_key,
-        translation_key=trans_key,
-        device_class=BinarySensorDeviceClass.LOCK,
-        is_on_fn=_lock_status_is_on(api_key),
-    )
-    for api_key, trans_key in LOCK_STATUS_KEYS.items()
-]
+# Static descriptions for entities that are created for every Gen2+ vehicle.
+# MIL diagnostics are built dynamically below based on vehicle_features.
+BINARY_SENSORS: tuple[SubaruBinarySensorEntityDescription, ...] = (
+    *(
+        SubaruBinarySensorEntityDescription(
+            key=api_key,
+            translation_key=trans_key,
+            device_class=BinarySensorDeviceClass.DOOR,
+            is_on_fn=_vehicle_status_is_on(api_key, _is_open),
+        )
+        for api_key, trans_key in DOOR_POSITION_KEYS.items()
+    ),
+    *(
+        SubaruBinarySensorEntityDescription(
+            key=api_key,
+            translation_key=trans_key,
+            device_class=BinarySensorDeviceClass.WINDOW,
+            is_on_fn=_vehicle_status_is_on(api_key, _is_open),
+        )
+        for api_key, trans_key in WINDOW_STATUS_KEYS.items()
+    ),
+    *(
+        SubaruBinarySensorEntityDescription(
+            key=api_key,
+            translation_key=trans_key,
+            device_class=BinarySensorDeviceClass.LOCK,
+            is_on_fn=_vehicle_status_is_on(api_key, _is_unlocked),
+        )
+        for api_key, trans_key in LOCK_STATUS_KEYS.items()
+    ),
+)
 
 OVERALL_HEALTH_BINARY_SENSOR = SubaruBinarySensorEntityDescription(
     key="health_istrouble",
@@ -224,7 +227,7 @@ EV_PLUG_BINARY_SENSOR = SubaruBinarySensorEntityDescription(
     key=API_KEY_EV_IS_PLUGGED_IN,
     translation_key="ev_is_plugged_in",
     device_class=BinarySensorDeviceClass.PLUG,
-    is_on_fn=_ev_plug_is_on,
+    is_on_fn=_vehicle_status_is_on(API_KEY_EV_IS_PLUGGED_IN, _is_plugged_in),
 )
 
 
@@ -262,10 +265,7 @@ async def async_setup_entry(
         # Doors/windows/locks/health are only reported on Gen2+ vehicles.
         if info[VEHICLE_API_GEN] not in (API_GEN_2, API_GEN_3, API_GEN_4):
             continue
-        descriptions: list[SubaruBinarySensorEntityDescription] = []
-        descriptions.extend(DOOR_BINARY_SENSORS)
-        descriptions.extend(WINDOW_BINARY_SENSORS)
-        descriptions.extend(LOCK_BINARY_SENSORS)
+        descriptions: list[SubaruBinarySensorEntityDescription] = list(BINARY_SENSORS)
         descriptions.append(OVERALL_HEALTH_BINARY_SENSOR)
         if info[VEHICLE_HAS_EV]:
             descriptions.append(EV_PLUG_BINARY_SENSOR)
@@ -313,6 +313,4 @@ class SubaruBinarySensor(
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not super().available:
-            return False
-        return self.vin in self.coordinator.data
+        return super().available and self.vin in self.coordinator.data
