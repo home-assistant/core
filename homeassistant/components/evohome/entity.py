@@ -161,7 +161,7 @@ class EvoChild(EvoEntity):
             or self._schedule is None
             or (
                 (until := self._setpoints.get("next_sp_from")) is not None
-                and until < datetime.now(UTC)
+                and until < datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
             )
         ):  # must use self._setpoints, not self.setpoints
             await get_schedule()

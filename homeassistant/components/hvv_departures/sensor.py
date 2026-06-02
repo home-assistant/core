@@ -129,7 +129,7 @@ class HVVDepartureSensor(SensorEntity):
             data = await self.gti.departureList(request)
         except GTIUnauthorizedError as error:
             if self._last_error != GTIUnauthorizedError:
-                _LOGGER.error("Authentication error, check credentials: %r", error)
+                _LOGGER.error("Authentication failed: %r", error)
                 self._last_error = GTIUnauthorizedError
             self._attr_available = False
             return
