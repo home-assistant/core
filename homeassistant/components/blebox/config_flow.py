@@ -233,7 +233,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             return error
         assert product is not None
 
-        await self.async_set_unique_id(product.unique_id)
+        await self.async_set_unique_id(product.unique_id, raise_on_progress=False)
         self._abort_if_unique_id_mismatch()
 
         data_updates: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
