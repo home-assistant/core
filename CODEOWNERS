@@ -615,6 +615,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/gardena_bluetooth/ @elupus
 /homeassistant/components/gate/ @home-assistant/core
 /tests/components/gate/ @home-assistant/core
+/homeassistant/components/gc_bin_collection/ @poroping
+/tests/components/gc_bin_collection/ @poroping
 /homeassistant/components/gdacs/ @exxamalte
 /tests/components/gdacs/ @exxamalte
 /homeassistant/components/generic/ @davet2001

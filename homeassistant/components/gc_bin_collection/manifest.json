@@ -1,0 +1,12 @@
+{
+  "domain": "gc_bin_collection",
+  "name": "Gold Coast Bin Collection",
+  "codeowners": ["@poroping"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/gc_bin_collection",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["gcbinspy"],
+  "quality_scale": "silver",
+  "requirements": ["gcbinspy==0.0.4"]
+}

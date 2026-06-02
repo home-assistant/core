@@ -257,6 +257,7 @@ FLOWS = {
         "fyta",
         "garages_amsterdam",
         "gardena_bluetooth",
+        "gc_bin_collection",
         "gdacs",
         "generic",
         "geniushub",
