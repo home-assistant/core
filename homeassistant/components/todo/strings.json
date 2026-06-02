@@ -132,14 +132,14 @@
       "name": "Update to-do list item"
     },
     "update_list": {
-      "description": "Updates every item in to-do list.",
+      "description": "Updates every item in a to-do list, according to provided attributes.",
       "fields": {
         "status": {
-          "description": "A status for each to-do item in list.",
+          "description": "A status for each item in to-do list.",
           "name": "Set status"
         }
       },
-      "name": "Update to-do list items"
+      "name": "Update all items in to-do list"
     }
   },
   "title": "To-do list",
