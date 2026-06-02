@@ -104,7 +104,10 @@ def _convert_due_value(
 
 
 def _convert_item(item: TodoItem) -> Todo:
-    """Convert a HomeAssistant TodoItem to an ical Todo."""
+    """Convert a HomeAssistant TodoItem to an ical Todo.
+
+    For use with todo.create_item and todo.update_item actions.
+    """
     todo = Todo()
     if item.uid:
         todo.uid = item.uid
@@ -117,18 +120,27 @@ def _convert_item(item: TodoItem) -> Todo:
     return todo
 
 
-def _prepare_edit(info: dict[str, Any]) -> Todo:
+def _prepare_edit(info: dict[str, Any], /) -> dict[str, Any]:
     """Convert a HomeAssistant TodoItem patch to an ical Todo edit.
 
     For use with todo.update_list action.
 
     Preserves unset status so that "TodoStore.edit" modifies the right
-    fields, including any set to None.
+    fields only. Only propagates fields present in `info`. Unmatched fields
+    are ignored.
     """
-    todo = Todo()
+    item = {}
     if "status" in info:
-        todo.status = _convert_status(info["status"])
-    return todo
+        item["status"] = _convert_status(info["status"])
+    return item
+
+
+def _is_edit(todo: Todo, item: dict[str, Any], /) -> bool:
+    """Whether patch changes ical Todo.
+
+    `item` comes from _prepare_edit, so is guaranteed to have the right fields.
+    """
+    return any(getattr(todo, field) != value for field, value in item.items())
 
 
 class LocalTodoListEntity(TodoListEntity):
@@ -205,20 +217,21 @@ class LocalTodoListEntity(TodoListEntity):
 
     async def async_update_todo_list(self, info: dict[str, Any]) -> None:
         """Update all items in the To-do list."""
-        todo = _prepare_edit(info)
-        todo_store = self._new_todo_store()
+        item = _prepare_edit(info)
         async with self._calendar_lock:
-            uids = [t.uid for t in todo_store.todo_list()]
+            todo_store = self._new_todo_store()
+            # Only edit items that where something changes
+            uids_to_edit = [t.uid for t in todo_store.todo_list() if _is_edit(t, item)]
             await self.hass.async_add_executor_job(
-                _todo_store_edit_multiple, todo_store, uids, todo
+                _todo_store_bulk_edit, todo_store, uids_to_edit, item
             )
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
-        todo_store = self._new_todo_store()
         async with self._calendar_lock:
+            todo_store = self._new_todo_store()
             for uid in uids:
                 todo_store.delete(uid)
             await self.async_save()
@@ -256,8 +269,11 @@ class LocalTodoListEntity(TodoListEntity):
         await self._store.async_store(content)
 
 
-def _todo_store_edit_multiple(
-    todo_store: TodoStore, uids: list[str], item: Todo
+def _todo_store_bulk_edit(
+    todo_store: TodoStore, uids: list[str], item: dict[str, Any]
 ) -> None:
+    # Note that todo_store.edit is O(N), where N is the length of the store,
+    # so minimise the number of edits being made.
+    todo = Todo(**item)
     for uid in uids:
-        todo_store.edit(uid, item)
+        todo_store.edit(uid, todo)
