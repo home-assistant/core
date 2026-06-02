@@ -33,24 +33,8 @@
       }
     },
     "select": {
-      "filtration_timer_speed_1": {
-        "name": "Filtration timer speed 1",
-        "state": {
-          "high": "High",
-          "medium": "Medium",
-          "slow": "Slow"
-        }
-      },
-      "filtration_timer_speed_2": {
-        "name": "Filtration timer speed 2",
-        "state": {
-          "high": "High",
-          "medium": "Medium",
-          "slow": "Slow"
-        }
-      },
-      "filtration_timer_speed_3": {
-        "name": "Filtration timer speed 3",
+      "filtration_timer_speed": {
+        "name": "Filtration timer speed {number}",
         "state": {
           "high": "High",
           "medium": "Medium",
