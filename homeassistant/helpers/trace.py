@@ -22,6 +22,7 @@ class TraceElement:
         "_error",
         "_last_variables",
         "_result",
+        "_template_error",
         "_timestamp",
         "_variables",
         "path",
@@ -35,6 +36,7 @@ class TraceElement:
         self._error: BaseException | None = None
         self.path: str = path
         self._result: dict[str, Any] | None = None
+        self._template_error: str | None = None
         self.reuse_by_child = False
         self._timestamp = dt_util.utcnow()
 
@@ -53,6 +55,19 @@ class TraceElement:
     def set_error(self, ex: BaseException | None) -> None:
         """Set error."""
         self._error = ex
+
+    def set_template_error(self, msg: str) -> None:
+        """Set a template error message.
+
+        Used to record template variable errors which would otherwise be logged
+        directly, so they are surfaced in the trace instead of spamming the log.
+        """
+        self._template_error = msg
+
+    @property
+    def template_error(self) -> str | None:
+        """Return the recorded template error message, if any."""
+        return self._template_error
 
     def set_result(self, **kwargs: Any) -> None:
         """Set result."""
@@ -90,6 +105,8 @@ class TraceElement:
             result["changed_variables"] = self._variables
         if self._error is not None:
             result["error"] = str(self._error) or self._error.__class__.__name__
+        if self._template_error is not None:
+            result["template_error"] = self._template_error
         if self._result is not None:
             result["result"] = self._result
         return result
@@ -118,6 +135,26 @@ trace_id_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 script_execution_cv: ContextVar[StopReason | None] = ContextVar(
     "script_execution_cv", default=None
 )
+# When set, template errors are recorded on the active TraceElement instead of
+# being logged directly
+record_template_errors_cv: ContextVar[bool] = ContextVar(
+    "record_template_errors_cv", default=False
+)
+
+
+@contextmanager
+def record_template_errors() -> Generator[None]:
+    """Record template errors in the active trace instead of logging them.
+
+    Used by consumers such as the subscribe_condition websocket command, which
+    re-evaluate a condition repeatedly and forward template errors to the client
+    via the trace, so the errors don't spam the log.
+    """
+    token = record_template_errors_cv.set(True)
+    try:
+        yield
+    finally:
+        record_template_errors_cv.reset(token)
 
 
 def trace_id_set(trace_id: tuple[str, str]) -> None:

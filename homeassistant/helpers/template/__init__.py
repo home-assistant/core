@@ -24,6 +24,11 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.singleton import singleton
+from homeassistant.helpers.trace import (
+    record_template_errors_cv,
+    trace_stack_cv,
+    trace_stack_top,
+)
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
@@ -627,6 +632,15 @@ def make_logging_undefined(
         return jinja2.StrictUndefined
 
     def _log_with_logger(level: int, msg: str) -> None:
+        # When a consumer such as the subscribe_condition websocket command has
+        # opted in, record the error on the active trace element instead of
+        # logging it, so repeated evaluations don't spam the log.
+        if record_template_errors_cv.get() and (
+            node := trace_stack_top(trace_stack_cv)
+        ):
+            node.set_template_error(msg)
+            return
+
         template, action = template_cv.get() or ("", "rendering or compiling")
         _LOGGER.log(
             level,

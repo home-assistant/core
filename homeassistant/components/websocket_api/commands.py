@@ -39,6 +39,7 @@ from homeassistant.helpers import (
     entity,
     target as target_helpers,
     template,
+    trace,
 )
 from homeassistant.helpers.condition import (
     async_from_config as async_condition_from_config,
@@ -1061,10 +1062,25 @@ async def handle_subscribe_condition(
         nonlocal event_data
         new_event_data: dict[str, Any]
 
+        # Reset the trace so we only collect errors from this evaluation
+        trace.trace_clear()
         try:
-            new_event_data = {"result": condition.async_check()}
+            with trace.record_template_errors():
+                new_event_data = {"result": condition.async_check()}
         except HomeAssistantError as err:
             new_event_data = {"error": str(err)}
+
+        # Template errors (e.g. undefined variables) are recorded in the trace
+        # instead of being logged. Forward them to the client so they are not
+        # lost, even when the condition still evaluated to a result.
+        if errors := [
+            template_error
+            for elements in (trace.trace_get(clear=False) or {}).values()
+            for element in elements
+            if (template_error := element.template_error) is not None
+        ]:
+            new_event_data["errors"] = errors
+
         if new_event_data == event_data:
             return
         event_data = new_event_data

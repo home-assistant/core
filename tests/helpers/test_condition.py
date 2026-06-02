@@ -2205,6 +2205,84 @@ async def test_condition_template_error(hass: HomeAssistant) -> None:
         test.async_check()
 
 
+@pytest.mark.parametrize(
+    ("value_template", "expectation", "expected_template_error", "expected_result"),
+    [
+        # Undefined variable used in a way that raises (e.g. attribute access)
+        (
+            "{{ trigger.to_state.attributes.event_type == 'double_press' }}",
+            pytest.raises(ConditionError),
+            "'trigger' is undefined",
+            {},
+        ),
+        # Undefined variable used in a way that only warns
+        (
+            "{{ no_such_variable }}",
+            does_not_raise(),
+            "'no_such_variable' is undefined",
+            {"result": False, "entities": []},
+        ),
+    ],
+)
+async def test_condition_template_error_traced_not_logged(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    value_template: str,
+    expectation: AbstractContextManager,
+    expected_template_error: str,
+    expected_result: dict[str, Any],
+) -> None:
+    """Test template errors are added to the trace and not logged when opted in.
+
+    The subscribe_condition websocket command re-evaluates a condition every
+    second and opts in via trace.record_template_errors(). Template variable
+    errors must then be recorded in the trace instead of being logged repeatedly.
+    """
+    caplog.set_level(logging.WARNING)
+    config = {"condition": "template", "value_template": value_template}
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    with expectation, trace.record_template_errors():
+        test.async_check()
+
+    # The template error is recorded in the trace...
+    condition_trace = trace.trace_get(clear=False)
+    trace.trace_clear()
+    trace_element = condition_trace[""][0]
+    assert trace_element._template_error == expected_template_error
+    assert trace_element.as_dict()["template_error"] == expected_template_error
+    assert (trace_element._result or {}) == expected_result
+
+    # ...and not logged
+    assert "Template variable" not in caplog.text
+
+
+async def test_condition_template_error_logged_without_opt_in(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test template errors are logged when recording is not opted in.
+
+    An active trace is not enough to suppress logging; the consumer must opt in
+    via trace.record_template_errors(). Without it, the error is logged as usual
+    and not recorded in the trace.
+    """
+    caplog.set_level(logging.WARNING)
+    config = {"condition": "template", "value_template": "{{ no_such_variable }}"}
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert test.async_check() is False
+
+    assert "Template variable warning: 'no_such_variable' is undefined" in caplog.text
+    condition_trace = trace.trace_get(clear=False)
+    trace.trace_clear()
+    assert condition_trace[""][0]._template_error is None
+
+
 async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:
     """Test template condition render false with invalid results."""
     config = {"condition": "template", "value_template": "{{ 'string' }}"}
