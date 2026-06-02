@@ -60,7 +60,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         self.device_config: dict[str, Any] = {}
 
     def handle_step_exception(
-        self, exception, schema, host, port, message_id, log_fn, step_id="user"
+        self, exception, schema, host, port, message_id, log_fn, step_id
     ):
         """Handle step exceptions."""
         log_fn("%s at %s:%d (%s)", LOG_MSG[message_id], host, port, exception)
@@ -190,7 +190,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             host, port, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER
         )
         product, error = await self._async_from_host_or_form(
-            api_host, user_input, "user"
+            api_host, user_input, step_id="user"
         )
         if error is not None:
             return error
@@ -227,7 +227,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         product, error = await self._async_from_host_or_form(
-            api_host, user_input, "reconfigure"
+            api_host, user_input, step_id="reconfigure"
         )
         if error is not None:
             return error
