@@ -4,7 +4,6 @@ This module includes various unit tests to ensure that the configuration flow fo
 the power sensor component works correctly.
 """
 
-import asyncio
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
@@ -12,7 +11,6 @@ import pytest
 
 from homeassistant import config_entries
 import homeassistant.components.powersensor_au
-from homeassistant.components.powersensor_au import PowersensorConfigFlow
 from homeassistant.components.powersensor_au.const import (
     DOMAIN,
     ROLE_UNKNOWN,
@@ -152,78 +150,6 @@ async def test_zeroconf_two_plugs(hass: HomeAssistant) -> None:
 
     # # we expect the second plug config flow to get canceled if the integration has already been configured
     assert second_result["type"] == FlowResultType.ABORT
-
-
-async def test_zeroconf_two_plugs_race(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Simulate a race condition where two PowerSensor devices are discovered simultaneously, testing that the second device gets cancelled and the first one completes the config flow."""
-
-    # WIP: this may not yet really simulate the race condition previously observed in HA
-    call_count = 0
-    original_set_unique_id = PowersensorConfigFlow.async_set_unique_id
-
-    async def delayed_set_unique_id(self, *args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            await asyncio.sleep(1.0)
-        return await original_set_unique_id(self, *args, **kwargs)
-
-    monkeypatch.setattr(
-        PowersensorConfigFlow, "async_set_unique_id", delayed_set_unique_id
-    )
-    task1 = asyncio.create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=ZeroconfServiceInfo(
-                ip_address=ip_address("192.168.0.33"),
-                ip_addresses=[ip_address("192.168.0.33")],
-                hostname=f"Powersensor-gateway-{MAC}-civet.local",
-                name=f"Powersensor-gateway-{MAC}-civet._powersensor._udp.local",
-                port=49476,
-                type="_powersensor._udp.local.",
-                properties={
-                    "version": "1",
-                    "id": f"{MAC}",
-                },
-            ),
-        )
-    )
-    await asyncio.sleep(0.99)
-    task2 = asyncio.create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=ZeroconfServiceInfo(
-                ip_address=ip_address("192.168.0.37"),
-                ip_addresses=[ip_address("192.168.0.37")],
-                hostname=f"Powersensor-gateway-{SECOND_MAC}-civet.local",
-                name=f"Powersensor-gateway-{SECOND_MAC}-civet._powersensor._udp.local",
-                port=49476,
-                type="_powersensor._udp.local.",
-                properties={
-                    "version": "1",
-                    "id": f"{SECOND_MAC}",
-                },
-            ),
-        )
-    )
-    result, second_result = await asyncio.gather(task1, task2)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-
-    # # # we expect the plug arriving second in config flow to get canceled if the integration has already been configured
-    assert second_result["type"] == FlowResultType.ABORT
-
-    second_result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": result["step_id"]},
-    )
-    assert second_result["type"] == FlowResultType.CREATE_ENTRY
-    validate_config_data(second_result["data"])
 
 
 async def test_zeroconf_two_plugs_simultaneous_discovery(
