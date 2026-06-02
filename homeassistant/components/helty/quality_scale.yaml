@@ -68,12 +68,8 @@ rules:
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
-    comment: The only entity is the primary fan, which is enabled by default.
-  entity-translations:
-    status: exempt
-    comment: |
-      The only entity is the primary fan, which uses the device name and has
-      no name of its own to translate.
+    comment: All entities expose primary device data and are enabled by default.
+  entity-translations: done
   exception-translations: todo
   icon-translations:
     status: exempt
