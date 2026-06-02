@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.cover import ATTR_POSITION, CoverEntityFeature
 from homeassistant.components.ryse.const import DOMAIN
 from homeassistant.components.ryse.cover import RyseCoverEntity
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -94,6 +95,7 @@ async def test_current_cover_position_invalid(
     entity = RyseCoverEntity(mock_device, mock_config_entry)
     entity._current_position = 200
     mock_device.is_valid_position.return_value = False
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.ryse.cover")
 
     pos = entity.current_cover_position
     assert pos is None
@@ -133,6 +135,7 @@ async def test_async_update_timeout_error(
     mock_device.client.is_connected = True
 
     mock_device.send_get_position = AsyncMock(side_effect=TimeoutError())
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.ryse.cover")
 
     await entity.async_update()
 
@@ -153,6 +156,7 @@ async def test_async_update_generic_exception(
     mock_device.client.is_connected = True
 
     mock_device.send_get_position = AsyncMock(side_effect=Exception("boom"))
+    caplog.set_level(logging.ERROR, logger="homeassistant.components.ryse.cover")
 
     await entity.async_update()
 
@@ -174,10 +178,15 @@ async def test_current_cover_position_valid(
 
 
 async def test_entity_lifecycle(
-    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_added_to_hass, async_will_remove_from_hass and _clear_callback."""
     entity = RyseCoverEntity(mock_device, mock_config_entry)
+
+    # Attach hass so base-class async_added_to_hass() can run without errors
+    entity.hass = hass
 
     # Mock async_on_remove to check registration
     entity.async_on_remove = MagicMock()

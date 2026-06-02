@@ -1,6 +1,5 @@
 """Support for RYSE Smart Shades via BLE."""
 
-import contextlib
 import logging
 from typing import Any
 
@@ -104,9 +103,11 @@ class RyseCoverEntity(CoverEntity):
     # ------------------------------------------------------
 
     def _write_state(self) -> None:
-        """Write HA state if hass is available."""
-        with contextlib.suppress(RuntimeError):
-            self.async_write_ha_state()
+        """Write HA state safely across event loop boundaries."""
+        if not self.hass:
+            return
+
+        self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the shade."""
