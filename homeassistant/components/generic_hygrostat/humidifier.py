@@ -88,7 +88,7 @@ class GenericHygrostatExtraStoredData(ExtraStoredData):
     reported a value), which drops all state attributes.
     """
 
-    state: bool | None
+    is_on: bool | None
     target_humidity: float | None
     saved_target_humidity: float | None
     is_away: bool
@@ -96,7 +96,7 @@ class GenericHygrostatExtraStoredData(ExtraStoredData):
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {
-            "state": self.state,
+            "is_on": self.is_on,
             "target_humidity": self.target_humidity,
             "saved_target_humidity": self.saved_target_humidity,
             "is_away": self.is_away,
@@ -106,7 +106,7 @@ class GenericHygrostatExtraStoredData(ExtraStoredData):
     def from_dict(cls, restored: dict[str, Any]) -> Self:
         """Initialize a stored state from a dict."""
         return cls(
-            state=restored.get("state"),
+            is_on=restored.get("is_on"),
             target_humidity=restored.get("target_humidity"),
             saved_target_humidity=restored.get("saved_target_humidity"),
             is_away=restored.get("is_away", False),
@@ -309,8 +309,8 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 self._target_humidity = stored.target_humidity
             if stored.saved_target_humidity is not None:
                 self._saved_target_humidity = stored.saved_target_humidity
-            if stored.state is not None:
-                self._state = stored.state
+            if stored.is_on is not None:
+                self._state = stored.is_on
         elif (old_state := await self.async_get_last_state()) is not None:
             # Fall back to the legacy state-attribute restore for entities that
             # were last stored before extra stored data was introduced.
@@ -361,7 +361,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     def extra_restore_state_data(self) -> GenericHygrostatExtraStoredData:
         """Return hygrostat specific state data to be restored."""
         return GenericHygrostatExtraStoredData(
-            state=self._state,
+            is_on=self._state,
             target_humidity=self._target_humidity,
             saved_target_humidity=self._saved_target_humidity,
             is_away=self._is_away,

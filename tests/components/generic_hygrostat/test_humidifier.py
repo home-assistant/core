@@ -1641,7 +1641,7 @@ async def test_restore_state_from_extra_data_when_unavailable(
             (
                 State("humidifier.test_hygrostat", STATE_UNAVAILABLE),
                 {
-                    "state": True,
+                    "is_on": True,
                     "target_humidity": 40,
                     "saved_target_humidity": 50,
                     "is_away": True,
