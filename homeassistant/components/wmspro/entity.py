@@ -16,7 +16,6 @@ class WebControlProGenericEntity(Entity):
 
     def __init__(self, config_entry_id: str, dest: Destination) -> None:
         """Initialize the entity with destination channel."""
-        self._config_entry_id = config_entry_id
         dest_id_str = str(dest.id)
         self._dest = dest
         self._attr_unique_id = dest_id_str
