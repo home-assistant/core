@@ -32,7 +32,7 @@ jobs:
         with:
           client-id: ${{ secrets.ISSUE_TRIAGE_APP_ID }} # zizmor: ignore[secrets-outside-env]
           private-key: ${{ secrets.ISSUE_TRIAGE_APP_PEM }} # zizmor: ignore[secrets-outside-env]
-    
+
       # The 60 day stale policy for PRs
       # Used for:
       # - PRs
