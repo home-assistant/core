@@ -20,7 +20,11 @@
       "serviceId": 1482563187,
       "station": { "combinedName": "Wartenau", "id": "Master:10901" },
       "attributes": [
-        { "isPlanned": true, "value": "Unbekannte Ursache", "types": ["REALTIME", "ACCURATE"] }
+        {
+          "isPlanned": true,
+          "value": "Unbekannte Ursache",
+          "types": ["REALTIME", "ACCURATE"]
+        }
       ]
     },
     {
@@ -41,7 +45,11 @@
       "serviceId": 74567,
       "station": { "combinedName": "U Wartenau", "id": "Master:60015" },
       "attributes": [
-        { "isPlanned": true, "value": "Unbekannte Ursache", "types": ["REALTIME", "ACCURATE"] }
+        {
+          "isPlanned": true,
+          "value": "Unbekannte Ursache",
+          "types": ["REALTIME", "ACCURATE"]
+        }
       ]
     },
     {
@@ -62,7 +70,11 @@
       "serviceId": 74328,
       "station": { "combinedName": "U Wartenau", "id": "Master:60015" },
       "attributes": [
-        { "isPlanned": true, "value": "Unbekannte Ursache", "types": ["REALTIME", "ACCURATE"] }
+        {
+          "isPlanned": true,
+          "value": "Unbekannte Ursache",
+          "types": ["REALTIME", "ACCURATE"]
+        }
       ]
     },
     {
@@ -82,7 +94,11 @@
       "delay": 0,
       "station": { "combinedName": "Wartenau", "id": "Master:10901" },
       "attributes": [
-        { "isPlanned": true, "value": "Unbekannte Ursache", "types": ["REALTIME", "ACCURATE"] }
+        {
+          "isPlanned": true,
+          "value": "Unbekannte Ursache",
+          "types": ["REALTIME", "ACCURATE"]
+        }
       ]
     },
     {
@@ -102,7 +118,11 @@
       "delay": 0,
       "station": { "combinedName": "Wartenau", "id": "Master:10901" },
       "attributes": [
-        { "isPlanned": true, "value": "Unbekannte Ursache", "types": ["REALTIME", "ACCURATE"] }
+        {
+          "isPlanned": true,
+          "value": "Unbekannte Ursache",
+          "types": ["REALTIME", "ACCURATE"]
+        }
       ]
     }
   ],
