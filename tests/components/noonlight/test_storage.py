@@ -8,7 +8,6 @@ from httpx import Response
 import respx
 
 from homeassistant.components.noonlight.const import (
-    DOMAIN,
     EVENT_DISPATCH_FIRED,
     STATE_DISPATCHED,
     STATE_IDLE,
@@ -21,7 +20,7 @@ _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 
 
 def _coordinator(hass, entry):
-    return hass.data[DOMAIN][entry.entry_id]
+    return entry.runtime_data
 
 
 async def test_restore_dedupe_and_last_event(hass, config_entry, hass_storage):

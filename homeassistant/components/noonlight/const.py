@@ -32,11 +32,22 @@ NON_PRODUCTION_ENVIRONMENTS: Final = {ENV_SANDBOX}
 
 DEFAULT_ENVIRONMENT: Final = ENV_SANDBOX
 
-# Path templates (relative to the chosen base URL).
-PATH_ALARMS: Final = "/dispatch/v1/alarms"
-PATH_ALARM_STATUS: Final = "/dispatch/v1/alarms/{alarm_id}/status"
 
-DEFAULT_TIMEOUT: Final = 30  # seconds for any single HTTP request
+def resolve_base_url(environment: str, custom_base_url: str | None) -> str:
+    """Resolve a base URL from an environment label + optional override.
+
+    For ``custom`` the override is required; the named environments ignore it.
+    Any trailing slash is stripped so path concatenation stays clean.
+    """
+    if environment == ENV_CUSTOM:
+        if not custom_base_url:
+            raise ValueError("custom environment requires a base URL")
+        return custom_base_url.rstrip("/")
+    try:
+        return ENVIRONMENT_BASE_URLS[environment].rstrip("/")
+    except KeyError as err:
+        raise ValueError(f"unknown environment: {environment}") from err
+
 
 # --- Config entry: data keys --------------------------------------------------
 

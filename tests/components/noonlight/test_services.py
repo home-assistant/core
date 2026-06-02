@@ -36,7 +36,7 @@ _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 
 
 def _coordinator(hass, entry):
-    return hass.data[DOMAIN][entry.entry_id]
+    return entry.runtime_data
 
 
 async def test_services_registered(hass, setup_entry):
@@ -51,10 +51,21 @@ async def test_services_registered(hass, setup_entry):
         assert hass.services.has_service(DOMAIN, service)
 
 
-async def test_services_removed_on_unload(hass, setup_entry):
+async def test_services_persist_after_unload(hass, setup_entry):
+    """Services are domain-level (registered in async_setup) so they remain
+    registered after a config entry unloads.
+    """
     assert await hass.config_entries.async_unload(setup_entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.services.has_service(DOMAIN, SVC_DISPATCH_POLICE)
+    assert hass.services.has_service(DOMAIN, SVC_DISPATCH_POLICE)
+    # With no loaded entries, calling a service now raises a validation error.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SVC_DISPATCH_POLICE,
+            {"entry_delay_seconds": 0},
+            blocking=True,
+        )
 
 
 @respx.mock

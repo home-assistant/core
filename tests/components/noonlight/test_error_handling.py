@@ -25,7 +25,7 @@ _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 
 
 def _coordinator(hass, entry):
-    return hass.data[DOMAIN][entry.entry_id]
+    return entry.runtime_data
 
 
 def _has_issue(hass, key, entry_id) -> bool:

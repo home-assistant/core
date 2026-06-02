@@ -9,6 +9,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -27,7 +28,7 @@ from .const import (
     SVC_CANCEL,
     SVC_TEST_DISPATCH,
 )
-from .coordinator import NoonlightCoordinator
+from .coordinator import NoonlightConfigEntry, NoonlightCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,41 +51,50 @@ _CANCEL_SCHEMA = vol.Schema(
 
 _TEST_SCHEMA = vol.Schema({vol.Optional(ATTR_ACCOUNT): cv.string})
 
-_ALL_SERVICES = (*DISPATCH_SERVICE_MAP, SVC_CANCEL, SVC_TEST_DISPATCH)
-
 
 def _resolve_coordinator(
     hass: HomeAssistant, call: ServiceCall
 ) -> NoonlightCoordinator:
-    """Pick the coordinator targeted by a service call."""
-    coordinators: dict[str, NoonlightCoordinator] = hass.data.get(DOMAIN, {})
-    if not coordinators:
+    """Pick the coordinator targeted by a service call.
+
+    Services are domain-level, so the candidate coordinators are discovered by
+    iterating the loaded config entries and reading their ``runtime_data``.
+    """
+    entries: list[NoonlightConfigEntry] = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state is ConfigEntryState.LOADED
+    ]
+    if not entries:
         raise ServiceValidationError("No Noonlight accounts are configured")
 
     account = call.data.get(ATTR_ACCOUNT)
     if account is not None:
-        coordinator = coordinators.get(account)
-        if coordinator is None:
+        entry = next(
+            (e for e in entries if e.entry_id == account),
+            None,
+        )
+        if entry is None:
             # Allow matching by human title as a convenience.
-            coordinator = next(
-                (c for c in coordinators.values() if c.entry.title == account),
+            entry = next(
+                (e for e in entries if e.title == account),
                 None,
             )
-        if coordinator is None:
+        if entry is None:
             raise ServiceValidationError(f"No Noonlight account matches '{account}'")
-        return coordinator
+        return entry.runtime_data
 
-    if len(coordinators) > 1:
+    if len(entries) > 1:
         raise ServiceValidationError(
             "Multiple Noonlight accounts configured; specify 'account'"
         )
-    return next(iter(coordinators.values()))
+    return entries[0].runtime_data
 
 
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register all Noonlight services (idempotent)."""
     if hass.services.has_service(DOMAIN, SVC_CANCEL):
-        return  # already registered by an earlier entry
+        return  # already registered
 
     for service_name, noonlight_services in DISPATCH_SERVICE_MAP.items():
         hass.services.async_register(
@@ -103,13 +113,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _make_test_handler(hass),
         schema=_TEST_SCHEMA,
     )
-
-
-def async_unload_services(hass: HomeAssistant) -> None:
-    """Remove all Noonlight services (called when the last entry unloads)."""
-    for service_name in _ALL_SERVICES:
-        if hass.services.has_service(DOMAIN, service_name):
-            hass.services.async_remove(DOMAIN, service_name)
 
 
 def _make_dispatch_handler(hass: HomeAssistant, requested: list[str]):

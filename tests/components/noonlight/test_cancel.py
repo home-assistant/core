@@ -5,12 +5,11 @@ from __future__ import annotations
 from datetime import timedelta
 
 from httpx import Response
+from noonlight_dispatch import NoonlightConnectionError
 import pytest
 import respx
 
-from homeassistant.components.noonlight.api import NoonlightConnectionError
 from homeassistant.components.noonlight.const import (
-    DOMAIN,
     STATE_CANCELED,
     STATE_DISPATCHED,
     STATE_IDLE,
@@ -26,7 +25,7 @@ _STATUS_RE = r".*/dispatch/v1/alarms/.*/status"
 
 
 def _coordinator(hass, entry):
-    return hass.data[DOMAIN][entry.entry_id]
+    return entry.runtime_data
 
 
 async def _dispatch_now(hass, coordinator):

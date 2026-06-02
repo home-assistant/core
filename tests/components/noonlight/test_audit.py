@@ -11,7 +11,7 @@ from httpx import Response
 import respx
 
 from homeassistant.components.noonlight import coordinator as coord_mod
-from homeassistant.components.noonlight.const import DOMAIN, EVENT_DISPATCH_FIRED
+from homeassistant.components.noonlight.const import EVENT_DISPATCH_FIRED
 
 from .conftest import SANDBOX
 
@@ -19,7 +19,7 @@ _ALARMS = f"{SANDBOX}/dispatch/v1/alarms"
 
 
 def _coordinator(hass, entry):
-    return hass.data[DOMAIN][entry.entry_id]
+    return entry.runtime_data
 
 
 @respx.mock

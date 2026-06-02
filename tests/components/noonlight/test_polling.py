@@ -10,11 +10,7 @@ from __future__ import annotations
 from httpx import Response
 import respx
 
-from homeassistant.components.noonlight.const import (
-    DOMAIN,
-    STATE_DISPATCHED,
-    STATE_IDLE,
-)
+from homeassistant.components.noonlight.const import STATE_DISPATCHED, STATE_IDLE
 
 from .conftest import SANDBOX
 
@@ -23,7 +19,7 @@ _STATUS_RE = r".*/dispatch/v1/alarms/.*/status"
 
 
 def _coordinator(hass, entry):
-    return hass.data[DOMAIN][entry.entry_id]
+    return entry.runtime_data
 
 
 async def _dispatch_now(hass, coordinator):

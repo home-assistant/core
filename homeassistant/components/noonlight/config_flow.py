@@ -4,6 +4,12 @@ import logging
 import re
 from typing import Any
 
+from noonlight_dispatch import (
+    NoonlightAuthError,
+    NoonlightClient,
+    NoonlightConnectionError,
+    NoonlightError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -28,13 +34,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .api import (
-    NoonlightApi,
-    NoonlightAuthError,
-    NoonlightConnectionError,
-    NoonlightError,
-    resolve_base_url,
-)
 from .const import (
     ALL_NOONLIGHT_SERVICES,
     CONF_ADDRESS,
@@ -65,6 +64,7 @@ from .const import (
     MIN_HEARTBEAT_MINUTES,
     NON_PRODUCTION_ENVIRONMENTS,
     US_STATE_CODES,
+    resolve_base_url,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -231,11 +231,10 @@ async def _validate_credentials(
     A GET against a bogus alarm id has no side effects: a 401 means the token
     is bad, anything else (typically 404) means we are reachable and authorised.
     """
-    api = NoonlightApi(
+    api = NoonlightClient(
         get_async_client(hass),
         token,
         base_url=resolve_base_url(environment, base_url),
-        environment=environment,
     )
     try:
         await api.get_alarm_status("connection-test")

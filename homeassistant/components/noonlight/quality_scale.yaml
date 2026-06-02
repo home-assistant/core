@@ -1,11 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: >-
-      Services are registered in async_setup_entry; move registration to
-      async_setup so they exist (and raise cleanly) even when no entry is
-      loaded.
+  action-setup: done
   appropriate-polling: done
   brands:
     status: todo
@@ -13,12 +8,7 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: todo
-    comment: >-
-      API code is an inline httpx client; must move to a published, versioned
-      PyPI library (revive/fork noonlight-py or publish a new client) and be
-      listed in manifest requirements.
+  dependency-transparency: done
   docs-actions:
     status: todo
     comment: Pending the home-assistant.io documentation PR.
@@ -36,11 +26,7 @@ rules:
     comment: Entities are coordinator-driven; no explicit event subscriptions.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: todo
-    comment: >-
-      Coordinator is stored in hass.data[DOMAIN][entry_id]; migrate to
-      entry.runtime_data.
+  runtime-data: done
   test-before-configure: done
   test-before-setup:
     status: todo

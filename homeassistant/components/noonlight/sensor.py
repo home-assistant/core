@@ -3,24 +3,23 @@
 from datetime import datetime
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DISPATCH_STATES, DOMAIN
-from .coordinator import NoonlightCoordinator
+from .const import DISPATCH_STATES
+from .coordinator import NoonlightConfigEntry, NoonlightCoordinator
 from .entity import NoonlightEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NoonlightConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Noonlight sensors."""
-    coordinator: NoonlightCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [
             NoonlightDispatchState(coordinator),

@@ -25,7 +25,7 @@ _STATUS_RE = r".*/dispatch/v1/alarms/.*/status"
 
 
 def _coordinator(hass, entry):
-    return hass.data[DOMAIN][entry.entry_id]
+    return entry.runtime_data
 
 
 def _force_due(coordinator):

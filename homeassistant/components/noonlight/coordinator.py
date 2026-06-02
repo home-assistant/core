@@ -19,6 +19,15 @@ import logging
 import os
 from typing import Any
 
+from noonlight_dispatch import (
+    SANDBOX_BASE_URL,
+    NoonlightAuthError,
+    NoonlightClient,
+    NoonlightConnectionError,
+    NoonlightError,
+    NoonlightResponseError,
+)
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -28,16 +37,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util, slugify
 
-from .api import (
-    NoonlightApi,
-    NoonlightAuthError,
-    NoonlightConnectionError,
-    NoonlightError,
-    NoonlightResponseError,
-    resolve_base_url,
-)
 from .const import (
-    API_BASE_SANDBOX,
     AUDIT_FILE_TEMPLATE,
     AUDIT_MAX_BYTES,
     CANCEL_SETTLE_SECONDS,
@@ -59,7 +59,6 @@ from .const import (
     DEFAULT_ENVIRONMENT,
     DEFAULT_HEARTBEAT_MINUTES,
     DOMAIN,
-    ENV_SANDBOX,
     EVENT_CLEARED,
     EVENT_DISPATCH_CANCELED,
     EVENT_DISPATCH_DEDUPED,
@@ -81,6 +80,7 @@ from .const import (
     STATE_PENDING,
     STORAGE_KEY_TEMPLATE,
     STORAGE_VERSION,
+    resolve_base_url,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,11 +88,13 @@ _LOGGER = logging.getLogger(__name__)
 # Noonlight statuses that mean the alarm is no longer active.
 _TERMINAL_STATUSES = {"CANCELED", "RESOLVED", "COMPLETED", "FALSE"}
 
+type NoonlightConfigEntry = ConfigEntry[NoonlightCoordinator]
+
 
 class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinate dispatch state for one Noonlight config entry."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: NoonlightConfigEntry) -> None:
         """Initialise the coordinator for ``entry``."""
         super().__init__(
             hass,
@@ -103,20 +105,20 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.entry = entry
         self.account_slug = slugify(entry.title) or entry.entry_id[:8]
 
-        environment = entry.data.get(CONF_ENVIRONMENT, DEFAULT_ENVIRONMENT)
-        self.api = NoonlightApi(
+        self._environment = entry.data.get(CONF_ENVIRONMENT, DEFAULT_ENVIRONMENT)
+        self.api = NoonlightClient(
             get_async_client(hass),
             entry.data[CONF_API_TOKEN],
-            base_url=resolve_base_url(environment, entry.data.get(CONF_BASE_URL)),
-            environment=environment,
+            base_url=resolve_base_url(
+                self._environment, entry.data.get(CONF_BASE_URL)
+            ),
         )
         # A separate sandbox-only client backs ``test_dispatch`` so the test
         # always hits sandbox even when the entry runs in production.
-        self._sandbox_api = NoonlightApi(
+        self._sandbox_api = NoonlightClient(
             get_async_client(hass),
             entry.data[CONF_API_TOKEN],
-            base_url=API_BASE_SANDBOX,
-            environment=ENV_SANDBOX,
+            base_url=SANDBOX_BASE_URL,
         )
 
         self._store: Store[dict[str, Any]] = Store(
@@ -605,7 +607,7 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "ts": dt_util.utcnow().isoformat(),
             "event": event,
             "state": state,
-            "environment": self.api.environment,
+            "environment": self._environment,
             "detail": detail,
         }
         line = json.dumps(entry, default=str)
