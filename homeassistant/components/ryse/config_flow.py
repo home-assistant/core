@@ -1,5 +1,6 @@
 """Config flow for RYSE BLE integration."""
 
+import asyncio
 import logging
 from typing import Any
 
@@ -14,7 +15,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER_ID, SUUID, UPMFG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,17 +107,45 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._discovered_devices.clear()
 
+        candidates: list[BluetoothServiceInfoBleak] = []
         for info in async_discovered_service_info(self.hass, connectable=True):
             if info.address in current_ids:
                 continue
             if not info.name:  # Skip no-name devices
                 continue
 
-            if not await is_pairing_ryse_device(info.address):
+            # Pre-filter candidates by name, manufacturer id, or known service UUIDs
+            has_ryse_uuid = SUUID in info.service_uuids
+            has_ryse_mfg = MANUFACTURER_ID in info.manufacturer_data
+            has_ryse_name = UPMFG in info.name.upper()
+
+            if not (has_ryse_uuid or has_ryse_mfg or has_ryse_name):
                 continue
 
-            # Add device to selection list
-            self._discovered_devices[info.address] = info.name
+            candidates.append(info)
+
+        async def _check_pairing(
+            device_info: BluetoothServiceInfoBleak,
+        ) -> BluetoothServiceInfoBleak | None:
+            try:
+                async with asyncio.timeout(5.0):
+                    if await is_pairing_ryse_device(device_info.address):
+                        return device_info
+            except Exception as ex:  # noqa: BLE001
+                _LOGGER.debug(
+                    "Failed to check pairing status for %s: %s", device_info.address, ex
+                )
+                return None
+            return None
+
+        if candidates:
+            results = await asyncio.gather(
+                *(_check_pairing(info) for info in candidates)
+            )
+            for device in results:
+                if device is not None:
+                    # Add device to selection list
+                    self._discovered_devices[device.address] = device.name
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")

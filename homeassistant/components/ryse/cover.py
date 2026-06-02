@@ -50,6 +50,7 @@ class RyseCoverEntity(CoverEntity):
         self._attr_unique_id = f"{device.address}_cover"
         self._current_position: int | None = None
         self._attr_is_closed: bool | None = None
+        self._attr_available: bool = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.address)},
             name=config_entry.title,
@@ -92,7 +93,9 @@ class RyseCoverEntity(CoverEntity):
             real_position = self._device.get_real_position(position)
             self._current_position = real_position
             self._attr_is_closed = real_position == 0
-            _LOGGER.debug("Updated cover position: %02X", position)
+            _LOGGER.debug(
+                "Updated cover position: raw=%d mapped=%d", position, real_position
+            )
 
         self._write_state()
 
@@ -168,7 +171,7 @@ class RyseCoverEntity(CoverEntity):
             return None
         if not self._device.is_valid_position(self._current_position):
             _LOGGER.warning(
-                "Invalid position value detected: %02X",
+                "Invalid position value detected: %d",
                 self._current_position,
             )
             return None
