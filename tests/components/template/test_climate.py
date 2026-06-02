@@ -12,6 +12,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    PRECISION_WHOLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNKNOWN,
@@ -238,6 +239,58 @@ async def test_set_temperature_action(
         1,
         "set_temperature",
         temperature=20.5,
+        target_temp_low=18.0,
+        target_temp_high=22.5,
+        hvac_mode=HVACMode.HEAT_COOL,
+    )
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "hvac_modes": [HVACMode.OFF, HVACMode.HEAT, HVACMode.HEAT_COOL],
+                "temp_step": 0.5,
+                "precision": PRECISION_WHOLE,
+                **SET_TEMPERATURE_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_climate")
+async def test_set_temperature_action_with_explicit_precision(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test explicit precision affects displayed state temperature values."""
+    await hass.services.async_call(
+        climate.DOMAIN,
+        climate.SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: TEST_CLIMATE.entity_id,
+            ATTR_TARGET_TEMP_LOW: 18.2,
+            ATTR_TARGET_TEMP_HIGH: 22.6,
+            ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.HEAT_COOL
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 22
+
+    assert_action(
+        TEST_CLIMATE,
+        calls,
+        1,
+        "set_temperature",
         target_temp_low=18.0,
         target_temp_high=22.5,
         hvac_mode=HVACMode.HEAT_COOL,
