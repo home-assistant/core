@@ -33,10 +33,12 @@ class NoonlightDispatchPending(NoonlightEntity, BinarySensorEntity):
     """``on`` during the cancelable entry-delay grace window."""
 
     def __init__(self, coordinator: NoonlightCoordinator) -> None:
+        """Initialize the dispatch pending binary sensor."""
         super().__init__(coordinator, "dispatch_pending")
 
     @property
     def is_on(self) -> bool:
+        """Return True while the dispatch is in the pending grace window."""
         return self.coordinator.data["state"] == STATE_PENDING
 
 
@@ -46,10 +48,12 @@ class NoonlightDispatchActive(NoonlightEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
     def __init__(self, coordinator: NoonlightCoordinator) -> None:
+        """Initialize the dispatch active binary sensor."""
         super().__init__(coordinator, "dispatch_active")
 
     @property
     def is_on(self) -> bool:
+        """Return True while a dispatch is live with Noonlight."""
         # SAFETY device class: ``on`` == unsafe == help is actively dispatched.
         return self.coordinator.data["state"] == STATE_DISPATCHED
 
@@ -65,9 +69,11 @@ class NoonlightApiReachable(NoonlightEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: NoonlightCoordinator) -> None:
+        """Initialize the API reachable binary sensor."""
         super().__init__(coordinator, "api_reachable")
 
     @property
     def is_on(self) -> bool:
+        """Return True while the Noonlight API is reachable and authenticated."""
         # api_healthy is always present (set by _initial_state).
         return bool(self.coordinator.data["api_healthy"])

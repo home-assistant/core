@@ -38,6 +38,7 @@ from homeassistant.components.noonlight.const import (
     ],
 )
 def test_normalize_phone_valid(raw, expected):
+    """Valid phone numbers normalize to the expected E.164 form."""
     assert normalize_phone(raw) == expected
 
 
@@ -46,6 +47,7 @@ def test_normalize_phone_valid(raw, expected):
     ["", "123", "abcdefghij", "55512345", "+1", "00000000000000000000"],
 )
 def test_normalize_phone_invalid(raw):
+    """Invalid phone numbers raise ValueError."""
     with pytest.raises(ValueError):
         normalize_phone(raw)
 
@@ -90,11 +92,13 @@ async def test_caller_step_normalizes_phone(hass):
     [("va", "VA"), ("VA", "VA"), (" ca ", "CA"), ("Ny", "NY"), ("dc", "DC")],
 )
 def test_normalize_state_valid(raw, expected):
+    """Valid states normalize to the expected uppercase abbreviation."""
     assert normalize_state(raw) == expected
 
 
 @pytest.mark.parametrize("raw", ["", "Virginia", "v", "XX", "USA", "123"])
 def test_normalize_state_invalid(raw):
+    """Invalid states raise ValueError."""
     with pytest.raises(ValueError):
         normalize_state(raw)
 
@@ -104,11 +108,13 @@ def test_normalize_state_invalid(raw):
     [("62704", "62704"), ("62704-1234", "62704-1234"), (" 90001 ", "90001")],
 )
 def test_normalize_zip_valid(raw, expected):
+    """Valid ZIP codes normalize to the expected form."""
     assert normalize_zip(raw) == expected
 
 
 @pytest.mark.parametrize("raw", ["", "1234", "abcde", "627040", "2221-1234"])
 def test_normalize_zip_invalid(raw):
+    """Invalid ZIP codes raise ValueError."""
     with pytest.raises(ValueError):
         normalize_zip(raw)
 
@@ -148,6 +154,7 @@ async def test_caller_step_reports_all_errors_at_once(hass):
 
 @respx.mock
 async def test_caller_step_rejects_bad_phone(hass):
+    """An invalid phone in the caller step surfaces an invalid_phone error."""
     respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(404))
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

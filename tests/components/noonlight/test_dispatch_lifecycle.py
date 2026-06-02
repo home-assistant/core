@@ -28,6 +28,7 @@ def _coordinator(hass, entry):
 
 @respx.mock
 async def test_dispatch_with_zero_delay_fires_immediately(hass, setup_entry):
+    """A zero-delay dispatch fires the alarm at once and goes to dispatched."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
     )
@@ -44,6 +45,7 @@ async def test_dispatch_with_zero_delay_fires_immediately(hass, setup_entry):
 
 @respx.mock
 async def test_entry_delay_timer_then_fire(hass, setup_entry):
+    """A dispatch with an entry delay stays pending until the timer fires."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
     )
@@ -63,6 +65,7 @@ async def test_entry_delay_timer_then_fire(hass, setup_entry):
 
 @respx.mock
 async def test_cancel_during_entry_delay_makes_no_call(hass, setup_entry):
+    """Cancelling during the entry delay makes no API call and settles to idle."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
     )
@@ -85,6 +88,7 @@ async def test_cancel_during_entry_delay_makes_no_call(hass, setup_entry):
 
 @respx.mock
 async def test_dedupe_suppresses_repeat_dispatch(hass, setup_entry):
+    """A repeat dispatch inside the dedupe window is suppressed."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
     )

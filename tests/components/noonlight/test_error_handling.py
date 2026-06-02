@@ -35,6 +35,7 @@ def _has_issue(hass, key, entry_id) -> bool:
 
 @respx.mock
 async def test_dispatch_auth_failure_errors_and_creates_issue(hass, setup_entry):
+    """An auth failure on dispatch errors, raises an auth issue, and reauths."""
     respx.post(_ALARMS).mock(return_value=Response(401))
     coordinator = _coordinator(hass, setup_entry)
 
@@ -50,6 +51,7 @@ async def test_dispatch_auth_failure_errors_and_creates_issue(hass, setup_entry)
 
 @respx.mock
 async def test_dispatch_connection_failure_creates_network_issue(hass, setup_entry):
+    """A connection failure on dispatch errors and raises a network issue."""
     respx.post(_ALARMS).mock(side_effect=__import__("httpx").ConnectError("x"))
     coordinator = _coordinator(hass, setup_entry)
 
@@ -62,6 +64,7 @@ async def test_dispatch_connection_failure_creates_network_issue(hass, setup_ent
 
 @respx.mock
 async def test_dispatch_bad_response_creates_unexpected_issue(hass, setup_entry):
+    """A 5xx response on dispatch errors and raises an unexpected-response issue."""
     respx.post(_ALARMS).mock(return_value=Response(500, text="nope"))
     coordinator = _coordinator(hass, setup_entry)
 

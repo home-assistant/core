@@ -1,5 +1,7 @@
-"""Persistence tests: dedupe timestamps + last event survive restart, but an
-active dispatch never silently resumes.
+"""Persistence tests for the Noonlight integration.
+
+Dedupe timestamps and the last event survive restart, but an active dispatch
+never silently resumes.
 """
 
 from __future__ import annotations
@@ -25,7 +27,9 @@ def _coordinator(hass, entry):
 
 @respx.mock
 async def test_restore_dedupe_and_last_event(hass, config_entry, hass_storage):
-    """A stored dedupe timestamp + last event are restored on setup, but the
+    """Restore a stored dedupe timestamp and last event but settle to idle.
+
+    The stored dedupe timestamp and last event are restored on setup, but the
     machine settles to idle rather than resuming a 'dispatched' state.
     """
     respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
@@ -60,6 +64,7 @@ async def test_restore_dedupe_and_last_event(hass, config_entry, hass_storage):
 
 @respx.mock
 async def test_dispatch_persists_last_dispatch_ts(hass, setup_entry, hass_storage):
+    """A dispatch persists the dedupe timestamp and last event to storage."""
     respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
     )

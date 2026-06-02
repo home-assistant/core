@@ -34,6 +34,7 @@ async def _dispatch_now(hass, coordinator):
 
 @respx.mock
 async def test_poll_terminal_status_clears_to_idle(hass, setup_entry):
+    """A terminal poll status clears the active alarm back to idle."""
     coordinator = _coordinator(hass, setup_entry)
     await _dispatch_now(hass, coordinator)
 
@@ -49,6 +50,7 @@ async def test_poll_terminal_status_clears_to_idle(hass, setup_entry):
 
 @respx.mock
 async def test_poll_active_status_stays_dispatched(hass, setup_entry):
+    """An active poll status keeps the alarm dispatched."""
     coordinator = _coordinator(hass, setup_entry)
     await _dispatch_now(hass, coordinator)
 

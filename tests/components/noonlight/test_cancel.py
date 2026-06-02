@@ -39,6 +39,7 @@ async def _dispatch_now(hass, coordinator):
 
 @respx.mock
 async def test_cancel_dispatched_calls_api_then_settles(hass, setup_entry):
+    """Cancelling a live alarm calls the API, then settles to idle."""
     coordinator = _coordinator(hass, setup_entry)
     await _dispatch_now(hass, coordinator)
 
@@ -70,6 +71,7 @@ async def test_cancel_dispatched_api_failure_propagates(hass, setup_entry):
 
 
 async def test_cancel_when_idle_is_noop(hass, setup_entry):
+    """Cancelling while idle is a no-op and the state stays idle."""
     coordinator = _coordinator(hass, setup_entry)
     assert coordinator.data["state"] == STATE_IDLE
 

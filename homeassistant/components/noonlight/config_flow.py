@@ -272,6 +272,7 @@ class NoonlightConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
+        """Initialize the config flow."""
         self._data: dict[str, Any] = {}
         self._options: dict[str, Any] = {}
         self._reauth_entry: ConfigEntry | None = None
@@ -505,6 +506,7 @@ class NoonlightConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(entry: ConfigEntry) -> NoonlightOptionsFlow:
+        """Return the options flow handler."""
         return NoonlightOptionsFlow(entry)
 
 
@@ -512,11 +514,13 @@ class NoonlightOptionsFlow(OptionsFlow):
     """Adjust entry delay, dedupe window, and granted services post-setup."""
 
     def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize the options flow."""
         self._entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Manage the Noonlight options."""
         if user_input is not None:
             return self.async_create_entry(
                 title="",

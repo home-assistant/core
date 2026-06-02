@@ -27,6 +27,7 @@ def _start_reconfigure(hass, entry):
 
 @respx.mock
 async def test_reconfigure_updates_caller_and_site(hass, setup_entry):
+    """Reconfigure normalizes and stores new caller/site data, keeping secrets."""
     # The reconfigure reloads the entry, which re-runs the setup probe.
     respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
         return_value=Response(404)
@@ -61,6 +62,7 @@ async def test_reconfigure_updates_caller_and_site(hass, setup_entry):
 
 
 async def test_reconfigure_rejects_bad_input(hass, setup_entry):
+    """Reconfigure with bad phone/state/ZIP reports errors and changes nothing."""
     result = await _start_reconfigure(hass, setup_entry)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

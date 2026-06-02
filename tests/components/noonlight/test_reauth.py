@@ -22,6 +22,7 @@ def _start_reauth(hass, entry):
 
 @respx.mock
 async def test_reauth_success_updates_token(hass, setup_entry):
+    """A valid new token aborts as reauth_successful and is stored."""
     # 404 against the bogus probe id == reachable + authorised.
     respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(404))
     result = await _start_reauth(hass, setup_entry)
@@ -39,6 +40,7 @@ async def test_reauth_success_updates_token(hass, setup_entry):
 
 @respx.mock
 async def test_reauth_bad_token_shows_error(hass, setup_entry):
+    """A still-invalid token shows invalid_auth and leaves the token unchanged."""
     respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(401))
     result = await _start_reauth(hass, setup_entry)
     result = await hass.config_entries.flow.async_configure(
@@ -53,6 +55,7 @@ async def test_reauth_bad_token_shows_error(hass, setup_entry):
 
 @respx.mock
 async def test_reauth_cannot_connect_shows_error(hass, setup_entry):
+    """A connection failure during reauth shows a cannot_connect error."""
     respx.route(method="GET", url__regex=r".*/status").mock(
         side_effect=__import__("httpx").ConnectError("down")
     )

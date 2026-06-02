@@ -40,6 +40,7 @@ def _coordinator(hass, entry):
 
 
 async def test_services_registered(hass, setup_entry):
+    """All Noonlight dispatch and cancel services are registered."""
     for service in (
         SVC_DISPATCH_POLICE,
         SVC_DISPATCH_FIRE,
@@ -52,8 +53,11 @@ async def test_services_registered(hass, setup_entry):
 
 
 async def test_services_persist_after_unload(hass, setup_entry):
-    """Services are domain-level (registered in async_setup) so they remain
-    registered after a config entry unloads.
+    """Services remain registered after a config entry unloads.
+
+    Services are domain-level (registered in async_setup), so they survive an
+    entry unload, but calling one with no loaded entries raises a validation
+    error.
     """
     assert await hass.config_entries.async_unload(setup_entry.entry_id)
     await hass.async_block_till_done()
@@ -70,6 +74,7 @@ async def test_services_persist_after_unload(hass, setup_entry):
 
 @respx.mock
 async def test_dispatch_police_service(hass, setup_entry):
+    """The police dispatch service fires an alarm and goes to dispatched."""
     create = respx.post(_ALARMS).mock(
         return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
     )
@@ -88,8 +93,10 @@ async def test_dispatch_police_service(hass, setup_entry):
 
 @respx.mock
 async def test_dispatch_includes_site_owner_id_and_combined_instructions(hass):
-    """An entry with a location label sends owner_id and folds the site into
-    the responder instructions.
+    """An entry with a location label sends owner_id and a combined site label.
+
+    The site label is folded into the responder instructions alongside the
+    caller-supplied text.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -190,6 +197,7 @@ async def test_cancel_service_cancels_pending(hass, setup_entry):
 
 
 async def test_unknown_account_raises(hass, setup_entry):
+    """Targeting an unknown account raises a validation error."""
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,

@@ -274,9 +274,11 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _apply_refresh_interval(self, state: str) -> None:
-        """Tune the poll cadence to the state: fast while a dispatch is active,
-        slow (heartbeat cadence) while idle — but stay fast until the first
-        heartbeat has run so startup detection isn't delayed.
+        """Tune the poll cadence to the current dispatch state.
+
+        Fast while a dispatch is active, slow (heartbeat cadence) while idle —
+        but stay fast until the first heartbeat has run so startup detection
+        isn't delayed.
         """
         if state == STATE_DISPATCHED or not self._probed_once:
             seconds = POLL_INTERVAL
@@ -326,8 +328,9 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _mark_healthy(self, data: dict[str, Any]) -> None:
-        """Record a successful probe/poll: reset failures, clear issues, and
-        stamp the health fields on ``data``.
+        """Record a successful probe/poll.
+
+        Reset failures, clear issues, and stamp the health fields on ``data``.
         """
         self._heartbeat_failures = 0
         self._clear_health_issues()

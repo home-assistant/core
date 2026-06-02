@@ -36,14 +36,17 @@ class NoonlightDispatchState(NoonlightEntity, SensorEntity):
     _attr_options = DISPATCH_STATES
 
     def __init__(self, coordinator: NoonlightCoordinator) -> None:
+        """Initialize the dispatch state sensor."""
         super().__init__(coordinator, "dispatch_state")
 
     @property
     def native_value(self) -> str:
+        """Return the current dispatch state."""
         return self.coordinator.data["state"]
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
+        """Return the alarm ID and granted services as attributes."""
         data = self.coordinator.data
         return {
             "alarm_id": data.get("alarm_id"),
@@ -57,10 +60,12 @@ class NoonlightLastEvent(NoonlightEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, coordinator: NoonlightCoordinator) -> None:
+        """Initialize the last event sensor."""
         super().__init__(coordinator, "last_event")
 
     @property
     def native_value(self) -> datetime | None:
+        """Return the timestamp of the most recent state transition."""
         last_event = self.coordinator.data.get("last_event")
         if not last_event:
             return None
@@ -68,6 +73,7 @@ class NoonlightLastEvent(NoonlightEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
+        """Return the type and state of the most recent event as attributes."""
         last_event = self.coordinator.data.get("last_event") or {}
         return {
             "event_type": last_event.get("type"),
@@ -82,10 +88,12 @@ class NoonlightLastHealthCheck(NoonlightEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: NoonlightCoordinator) -> None:
+        """Initialize the last health check sensor."""
         super().__init__(coordinator, "last_health_check")
 
     @property
     def native_value(self) -> datetime | None:
+        """Return the timestamp of the last successful heartbeat probe."""
         checked = self.coordinator.data.get("last_health_check")
         if not checked:
             return None
