@@ -145,7 +145,7 @@ async def test_missing_emtpy_press_action_config(
     """Test: missing optional template is ok."""
     _verify(hass, STATE_UNKNOWN)
 
-    now = dt.datetime.now(dt.UTC)
+    now = dt.datetime.now(dt.UTC)  # pylint: disable=home-assistant-enforce-utcnow
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -196,7 +196,7 @@ async def test_device_class_option(
         TEST_BUTTON.entity_id,
     )
 
-    now = dt.datetime.now(dt.UTC)
+    now = dt.datetime.now(dt.UTC)  # pylint: disable=home-assistant-enforce-utcnow
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -252,7 +252,7 @@ async def test_options_that_are_templates(
 
     _verify(hass, STATE_UNKNOWN, expected_attributes)
 
-    now = dt.datetime.now(dt.UTC)
+    now = dt.datetime.now(dt.UTC)  # pylint: disable=home-assistant-enforce-utcnow
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
