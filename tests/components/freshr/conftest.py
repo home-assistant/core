@@ -40,6 +40,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_USERNAME: "test-user", CONF_PASSWORD: "test-pass"},
         unique_id="test-user",
+        entry_id="01JKRA6QKPBE00ZZ9BKWDB3CTB",
     )
 
 

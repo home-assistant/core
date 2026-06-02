@@ -1,9 +1,9 @@
 """Support for Tuya select."""
 
-from __future__ import annotations
-
-from tuya_device_handlers.device_wrapper.base import DeviceWrapper
-from tuya_device_handlers.device_wrapper.common import DPCodeEnumWrapper
+from tuya_device_handlers.definition.select import (
+    SelectDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -12,13 +12,25 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
 SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
+    DeviceCategory.BH: (
+        SelectEntityDescription(
+            key=DPCode.TEMP_SETTING_QUICK_C,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="quick_heat_temperature",
+        ),
+        SelectEntityDescription(
+            key=DPCode.WORK_TYPE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="kettle_work_mode",
+        ),
+    ),
     DeviceCategory.CL: (
         SelectEntityDescription(
             key=DPCode.CONTROL_BACK_MODE,
@@ -366,15 +378,9 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SELECTS.get(device.category):
                 entities.extend(
-                    TuyaSelectEntity(
-                        device, manager, description, dpcode_wrapper=dpcode_wrapper
-                    )
+                    TuyaSelectEntity(device, manager, description, definition)
                     for description in descriptions
-                    if (
-                        dpcode_wrapper := DPCodeEnumWrapper.find_dpcode(
-                            device, description.key, prefer_function=True
-                        )
-                    )
+                    if (definition := get_default_definition(device, description.key))
                 )
 
         async_add_entities(entities)
@@ -394,14 +400,12 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SelectEntityDescription,
-        dpcode_wrapper: DeviceWrapper[str],
+        definition: SelectDefinition,
     ) -> None:
-        """Init Tuya sensor."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._dpcode_wrapper = dpcode_wrapper
-        self._attr_options = dpcode_wrapper.options
+        """Initialize a Tuya select entity."""
+        super().__init__(device, device_manager, description)
+        self._dpcode_wrapper = definition.select_wrapper
+        self._attr_options = definition.select_wrapper.options
 
     @property
     def current_option(self) -> str | None:

@@ -225,8 +225,9 @@ turn_on:
         supported_features:
           - light.LightEntityFeature.EFFECT
       selector:
-        text:
-    advanced_fields:
+        state:
+          attribute: effect
+    additional_fields:
       collapsed: true
       fields:
         rgbw_color: &rgbw_color
@@ -297,7 +298,7 @@ turn_off:
       domain: light
   fields:
     transition: *transition
-    advanced_fields:
+    additional_fields:
       collapsed: true
       fields:
         flash: *flash
@@ -312,7 +313,7 @@ toggle:
     color_temp_kelvin: *color_temp_kelvin
     brightness_pct: *brightness_pct
     effect: *effect
-    advanced_fields:
+    additional_fields:
       collapsed: true
       fields:
         rgbw_color: *rgbw_color

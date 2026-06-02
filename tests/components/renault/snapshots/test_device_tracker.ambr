@@ -40,6 +40,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-ZOE-50 Location',
+      'in_zones': list([
+      ]),
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
@@ -142,6 +144,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-CAPTUR-FUEL Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
@@ -196,6 +200,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-CAPTUR_PHEV Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
@@ -250,6 +256,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-MEG-0 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
@@ -304,6 +312,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-TWINGO-III Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
@@ -358,6 +368,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-ZOE-50 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,

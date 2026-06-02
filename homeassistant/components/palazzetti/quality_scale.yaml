@@ -65,9 +65,8 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations: done
-  icon-translations:
-    status: done
+  exception-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt

@@ -10,7 +10,7 @@ from homeassistant.components.forked_daapd.browse_media import (
     is_owntone_media_content_id,
 )
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
-from homeassistant.components.spotify.const import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.spotify.const import (  # pylint: disable=home-assistant-component-root-import
     MEDIA_PLAYER_PREFIX as SPOTIFY_MEDIA_PLAYER_PREFIX,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
@@ -447,4 +447,4 @@ async def test_async_browse_image_missing(
         resp = await client.get(
             f"/api/media_player_proxy/{TEST_MASTER_ENTITY_NAME}/browse_media/{MediaType.TRACK}/{media_content_id}"
         )
-        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+        assert resp.status == HTTPStatus.NOT_FOUND

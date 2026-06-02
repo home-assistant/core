@@ -33,7 +33,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:radiator-off',
+    'original_icon': None,
     'original_name': None,
     'platform': 'huum',
     'previous_unique_id': None,
@@ -53,7 +53,6 @@
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'icon': 'mdi:radiator-off',
       'max_temp': 110,
       'min_temp': 40,
       'supported_features': <ClimateEntityFeature: 385>,

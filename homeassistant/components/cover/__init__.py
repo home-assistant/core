@@ -1,7 +1,5 @@
 """Support for Cover devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import functools as ft
@@ -29,9 +27,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
+from .condition import make_cover_is_closed_condition, make_cover_is_open_condition
 from .const import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
@@ -80,11 +78,12 @@ __all__ = [
     "CoverEntityFeature",
     "CoverState",
     "make_cover_closed_trigger",
+    "make_cover_is_closed_condition",
+    "make_cover_is_open_condition",
     "make_cover_opened_trigger",
 ]
 
 
-@bind_hass
 def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(entity_id, CoverState.CLOSED)
@@ -429,9 +428,13 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # * fully open but do not report `current_cover_position`
         # * stopped partially open
         # * either opening or closing, but do not report them
-        # If we previously reported opening/closing, we should move in the opposite direction.
-        # Otherwise, we must assume we are (partially) open and should always close.
-        # Note: _cover_is_last_toggle_direction_open will always remain True if we never report opening/closing.
+        # If we previously reported opening/closing, we should
+        # move in the opposite direction.
+        # Otherwise, we must assume we are (partially) open
+        # and should always close.
+        # Note: _cover_is_last_toggle_direction_open will
+        # always remain True if we never report
+        # opening/closing.
         return (
             fns["close"] if self._cover_is_last_toggle_direction_open else fns["open"]
         )

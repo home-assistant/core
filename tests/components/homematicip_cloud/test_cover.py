@@ -163,8 +163,8 @@ async def test_hmip_multi_cover_slats(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipCoverSlats."""
-    entity_id = "cover.wohnzimmer_fenster"
-    entity_name = "Wohnzimmer Fenster"
+    entity_id = "cover.jalousieaktor_1_fur_hutschienenmontage_4_fach_wohnzimmer_fenster"
+    entity_name = "Jalousieaktor 1 für Hutschienenmontage – 4-fach Wohnzimmer Fenster"
     device_model = "HmIP-DRBLI4"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Jalousieaktor 1 für Hutschienenmontage – 4-fach"]

@@ -790,14 +790,11 @@ async def test_flow_reauth(
             "user_id": "AAAAAAAAAAAAAAAAAAAAA",
         },
     )
-    with patch(
-        "homeassistant.components.xbox.async_setup_entry", return_value=True
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

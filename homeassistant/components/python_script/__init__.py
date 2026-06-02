@@ -35,7 +35,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, raise_if_invalid_filename
 from homeassistant.util.yaml.loader import load_yaml_dict
 
@@ -195,7 +194,6 @@ def guarded_inplacevar(op: str, target: Any, operand: Any) -> Any:
     return op_fun(target, operand)
 
 
-@bind_hass
 def execute_script(
     hass: HomeAssistant,
     name: str,
@@ -210,7 +208,6 @@ def execute_script(
     return execute(hass, filename, source, data, return_response=return_response)
 
 
-@bind_hass
 def execute(
     hass: HomeAssistant,
     filename: str,

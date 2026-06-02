@@ -1,7 +1,6 @@
 """Diagnostics support for Zinvolt."""
 
-from __future__ import annotations
-
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -16,7 +15,7 @@ async def async_get_config_entry_diagnostics(
     return {
         "coordinators": [
             {
-                coordinator.battery.identifier: coordinator.data.to_dict(),
+                coordinator.battery.identifier: asdict(coordinator.data),
             }
             for coordinator in entry.runtime_data.values()
         ],

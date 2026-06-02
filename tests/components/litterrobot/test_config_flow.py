@@ -10,10 +10,22 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
 
 from tests.common import MockConfigEntry
+
+DHCP_DISCOVERY_LR4 = DhcpServiceInfo(
+    ip="192.168.1.100",
+    macaddress="aabbccddeeff",
+    hostname="litter-robot4",
+)
+DHCP_DISCOVERY_LR5 = DhcpServiceInfo(
+    ip="192.168.1.101",
+    macaddress="aabbccddeef0",
+    hostname="whiskerrobots",
+)
 
 
 async def test_full_flow(hass: HomeAssistant, mock_account) -> None:
@@ -257,3 +269,58 @@ async def test_reconfigure(hass: HomeAssistant, mock_account: Account) -> None:
         assert entry.unique_id == ACCOUNT_USER_ID
         assert entry.data[CONF_PASSWORD] == new_password
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
+    """Test DHCP discovery aborts when already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DHCP_DISCOVERY_LR4,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_full_flow(
+    hass: HomeAssistant, mock_account: Account
+) -> None:
+    """Test DHCP discovery through to successful entry creation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DHCP_DISCOVERY_LR4,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with (
+        patch(
+            "homeassistant.components.litterrobot.config_flow.Account.connect",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.config_flow.Account.user_id",
+            new_callable=PropertyMock,
+            return_value=ACCOUNT_USER_ID,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], CONFIG[DOMAIN]
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == CONFIG[DOMAIN][CONF_USERNAME]
+    assert result["data"] == CONFIG[DOMAIN]
+    assert result["result"].unique_id == ACCOUNT_USER_ID
+    assert len(mock_setup_entry.mock_calls) == 1

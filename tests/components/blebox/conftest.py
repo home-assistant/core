@@ -48,7 +48,6 @@ def mock_only_feature(spec, set_spec: bool = True, **kwargs):
 def mock_feature(category, spec, set_spec: bool = True, **kwargs):
     """Mock a feature along with whole product setup."""
     feature_mock = mock_only_feature(spec, set_spec, **kwargs)
-    feature_mock.async_update = AsyncMock()
     product = setup_product_mock(category, [feature_mock])
 
     type(feature_mock.product).name = PropertyMock(return_value="Some name")
@@ -61,9 +60,17 @@ def mock_feature(category, spec, set_spec: bool = True, **kwargs):
     return feature_mock
 
 
-def mock_config(ip_address="172.100.123.4"):
+def mock_config(ip_address="172.100.123.4", unique_id="abcd0123ef5678"):
     """Return a Mock of the HA entity config."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80})
+    return MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80}, unique_id=unique_id
+    )
+
+
+@pytest.fixture(name="config_entry")
+def config_entry_fixture() -> MockConfigEntry:
+    """Return a MockConfigEntry for blebox."""
+    return mock_config()
 
 
 @pytest.fixture(name="config")
@@ -76,6 +83,20 @@ def config_fixture():
 def feature_fixture(request: pytest.FixtureRequest) -> Any:
     """Return an entity wrapper from given fixture name."""
     return request.getfixturevalue(request.param)
+
+
+async def async_setup_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    *,
+    assert_success: bool = False,
+) -> None:
+    """Add and set up the given config entry."""
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.async_setup(config_entry.entry_id)
+    if assert_success:
+        assert result
+    await hass.async_block_till_done()
 
 
 async def async_setup_entities(

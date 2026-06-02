@@ -1,53 +1,69 @@
 """PrusaLink binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import cast
 
-from pyprusalink.types import JobInfo, PrinterInfo, PrinterStatus
+from pyprusalink.types import JobInfo, PrinterInfo, PrinterStatus, StatusInfo
 from pyprusalink.types_legacy import LegacyPrinterStatus
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import PrusaLinkUpdateCoordinator
-from .entity import PrusaLinkEntity
-
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
+from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
+from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
 
-@dataclass(frozen=True)
-class PrusaLinkBinarySensorEntityDescriptionMixin(Generic[T]):
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PrusaLinkBinarySensorEntityDescription[
+    T: (PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
+](
+    BinarySensorEntityDescription,
+    PrusaLinkEntityDescription,
+):
+    """Describes PrusaLink sensor entity."""
 
     value_fn: Callable[[T], bool]
 
 
-@dataclass(frozen=True)
-class PrusaLinkBinarySensorEntityDescription(
-    BinarySensorEntityDescription,
-    PrusaLinkBinarySensorEntityDescriptionMixin[T],
-    Generic[T],
-):
-    """Describes PrusaLink sensor entity."""
-
-    available_fn: Callable[[T], bool] = lambda _: True
-
-
 BINARY_SENSORS: dict[str, tuple[PrusaLinkBinarySensorEntityDescription, ...]] = {
+    "status": (
+        PrusaLinkBinarySensorEntityDescription[PrinterStatus](
+            key="printer.status_connect",
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
+            value_fn=lambda data: cast(
+                bool, cast(StatusInfo, data["printer"]["status_connect"])["ok"]
+            ),
+            supported_fn=lambda data: (
+                data["printer"].get("status_connect") is not None
+                and data["printer"]["status_connect"].get("ok") is not None
+            ),
+        ),
+    ),
     "info": (
         PrusaLinkBinarySensorEntityDescription[PrinterInfo](
             key="info.mmu",
             translation_key="mmu",
             value_fn=lambda data: data["mmu"],
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkBinarySensorEntityDescription[PrinterInfo](
+            key="info.sd_ready",
+            translation_key="sd_ready",
+            value_fn=lambda data: data["sd_ready"],
+            supported_fn=lambda data: data.get("sd_ready") is not None,
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkBinarySensorEntityDescription[PrinterInfo](
+            key="info.farm_mode",
+            translation_key="farm_mode",
+            value_fn=lambda data: data["farm_mode"],
+            supported_fn=lambda data: data.get("farm_mode") is not None,
             entity_registry_enabled_default=False,
         ),
     ),
@@ -56,13 +72,11 @@ BINARY_SENSORS: dict[str, tuple[PrusaLinkBinarySensorEntityDescription, ...]] = 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PrusaLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PrusaLink sensor based on a config entry."""
-    coordinators: dict[str, PrusaLinkUpdateCoordinator] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinators = entry.runtime_data
 
     entities: list[PrusaLinkEntity] = []
     for coordinator_type, binary_sensors in BINARY_SENSORS.items():
@@ -70,6 +84,7 @@ async def async_setup_entry(
         entities.extend(
             PrusaLinkBinarySensorEntity(coordinator, sensor_description)
             for sensor_description in binary_sensors
+            if sensor_description.supported_fn(coordinator.data)
         )
 
     async_add_entities(entities)

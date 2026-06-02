@@ -1,7 +1,5 @@
 """Config flow to configure the OpenUV component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -10,7 +8,7 @@ from pyopenuv import Client
 from pyopenuv.errors import OpenUvError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
@@ -31,6 +29,7 @@ from .const import (
     DEFAULT_TO_WINDOW,
     DOMAIN,
 )
+from .coordinator import OpenUvConfigEntry
 
 STEP_REAUTH_SCHEMA = vol.Schema(
     {
@@ -133,7 +132,9 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: OpenUvConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
         """Define the config flow to handle options."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 

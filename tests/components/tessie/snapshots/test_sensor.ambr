@@ -2074,7 +2074,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24',
+    'state': '18',
   })
 # ---
 # name: test_sensors[sensor.test_battery_module_temperature_min-entry]
@@ -2132,7 +2132,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '22.5',
+    'state': '16.5',
   })
 # ---
 # name: test_sensors[sensor.test_battery_pack_current-entry]
@@ -2190,7 +2190,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-0.6',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_battery_pack_voltage-entry]
@@ -2248,7 +2248,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '390.1',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_battery_range-entry]
@@ -3247,7 +3247,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12345.6',
+    'state': '20505.629',
   })
 # ---
 # name: test_sensors[sensor.test_odometer-entry]
@@ -3481,7 +3481,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.5',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_power-entry]

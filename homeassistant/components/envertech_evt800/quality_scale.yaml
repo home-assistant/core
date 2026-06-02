@@ -39,8 +39,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: todo
+  parallel-updates: todo
   reauthentication-flow:
     status: todo
     comment: |
@@ -92,13 +91,9 @@ rules:
       This integration connects to a single device per configuration entry.
 
   # Platinum
-  async-dependency:
-    status: todo
-    comment: |
-      The dependency pyenvertechevt800 is not async.
+  async-dependency: todo
   inject-websession:
     status: exempt
     comment: |
       No websession is used
-  strict-typing:
-    status: todo
+  strict-typing: todo

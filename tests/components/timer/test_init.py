@@ -5,11 +5,13 @@ import logging
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.timer import (
     ATTR_DURATION,
     ATTR_FINISHES_AT,
+    ATTR_LAST_TRANSITION,
     ATTR_REMAINING,
     ATTR_RESTORE,
     CONF_DURATION,
@@ -33,7 +35,6 @@ from homeassistant.components.timer import (
     STATUS_IDLE,
     STATUS_PAUSED,
     Timer,
-    _format_timedelta,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -132,20 +133,30 @@ async def test_config_options(hass: HomeAssistant) -> None:
     assert state_3 is not None
 
     assert state_1.state == STATUS_IDLE
-    assert ATTR_ICON not in state_1.attributes
-    assert ATTR_FRIENDLY_NAME not in state_1.attributes
+    assert state_1.attributes == {
+        ATTR_DURATION: "0:00:00",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: None,
+    }
 
     assert state_2.state == STATUS_IDLE
-    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
-    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
-    assert state_2.attributes.get(ATTR_DURATION) == "0:00:10"
+    assert state_2.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_FRIENDLY_NAME: "Hello World",
+        ATTR_ICON: "mdi:work",
+        ATTR_LAST_TRANSITION: None,
+    }
 
     assert state_3.state == STATUS_IDLE
-    assert str(cv.time_period(DEFAULT_DURATION)) == state_3.attributes.get(
-        CONF_DURATION
-    )
+    assert state_3.attributes == {
+        ATTR_DURATION: str(cv.time_period(DEFAULT_DURATION)),
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: None,
+    }
 
 
+@pytest.mark.freeze_time("2023-06-05 17:47:50")
 async def test_methods_and_events(hass: HomeAssistant) -> None:
     """Test methods and events."""
     hass.set_state(CoreState.starting)
@@ -155,13 +166,18 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: None,
+    }
 
-    results: list[tuple[Event, str]] = []
+    results: list[tuple[Event, State | None]] = []
 
     @callback
     def fake_event_listener(event: Event):
         """Fake event listener for trigger."""
-        results.append((event, hass.states.get("timer.test1").state))
+        results.append((event, hass.states.get("timer.test1")))
 
     hass.bus.async_listen(EVENT_TIMER_STARTED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_RESTARTED, fake_event_listener)
@@ -170,102 +186,158 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
     hass.bus.async_listen(EVENT_TIMER_CANCELLED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_CHANGED, fake_event_listener)
 
+    finish_10 = (utcnow() + timedelta(seconds=10)).isoformat()
+    finish_5 = (utcnow() + timedelta(seconds=5)).isoformat()
+
     steps = [
         {
             "call": SERVICE_START,
-            "state": STATUS_ACTIVE,
-            "event": EVENT_TIMER_STARTED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_ACTIVE,
+            "expected_extra_attributes": {
+                ATTR_FINISHES_AT: finish_10,
+                ATTR_LAST_TRANSITION: "started",
+                ATTR_REMAINING: "0:00:10",
+            },
+            "expected_event": EVENT_TIMER_STARTED,
         },
         {
             "call": SERVICE_PAUSE,
-            "state": STATUS_PAUSED,
-            "event": EVENT_TIMER_PAUSED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_PAUSED,
+            "expected_extra_attributes": {
+                ATTR_LAST_TRANSITION: "paused",
+                ATTR_REMAINING: "0:00:10",
+            },
+            "expected_event": EVENT_TIMER_PAUSED,
         },
         {
             "call": SERVICE_START,
-            "state": STATUS_ACTIVE,
-            "event": EVENT_TIMER_RESTARTED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_ACTIVE,
+            "expected_extra_attributes": {
+                ATTR_FINISHES_AT: finish_10,
+                ATTR_LAST_TRANSITION: "restarted",
+                ATTR_REMAINING: "0:00:10",
+            },
+            "expected_event": EVENT_TIMER_RESTARTED,
         },
         {
             "call": SERVICE_CANCEL,
-            "state": STATUS_IDLE,
-            "event": EVENT_TIMER_CANCELLED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_IDLE,
+            "expected_extra_attributes": {ATTR_LAST_TRANSITION: "cancelled"},
+            "expected_event": EVENT_TIMER_CANCELLED,
         },
         {
             "call": SERVICE_CANCEL,
-            "state": STATUS_IDLE,
-            "event": None,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_IDLE,
+            "expected_extra_attributes": {ATTR_LAST_TRANSITION: "cancelled"},
+            "expected_event": None,
         },
         {
             "call": SERVICE_START,
-            "state": STATUS_ACTIVE,
-            "event": EVENT_TIMER_STARTED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_ACTIVE,
+            "expected_extra_attributes": {
+                ATTR_FINISHES_AT: finish_10,
+                ATTR_LAST_TRANSITION: "started",
+                ATTR_REMAINING: "0:00:10",
+            },
+            "expected_event": EVENT_TIMER_STARTED,
         },
         {
             "call": SERVICE_FINISH,
-            "state": STATUS_IDLE,
-            "event": EVENT_TIMER_FINISHED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_IDLE,
+            "expected_extra_attributes": {ATTR_LAST_TRANSITION: "finished"},
+            "expected_event": EVENT_TIMER_FINISHED,
         },
         {
             "call": SERVICE_FINISH,
-            "state": STATUS_IDLE,
-            "event": None,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_IDLE,
+            "expected_extra_attributes": {ATTR_LAST_TRANSITION: "finished"},
+            "expected_event": None,
         },
         {
             "call": SERVICE_START,
-            "state": STATUS_ACTIVE,
-            "event": EVENT_TIMER_STARTED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_ACTIVE,
+            "expected_extra_attributes": {
+                ATTR_FINISHES_AT: finish_10,
+                ATTR_LAST_TRANSITION: "started",
+                ATTR_REMAINING: "0:00:10",
+            },
+            "expected_event": EVENT_TIMER_STARTED,
         },
         {
             "call": SERVICE_PAUSE,
-            "state": STATUS_PAUSED,
-            "event": EVENT_TIMER_PAUSED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_PAUSED,
+            "expected_extra_attributes": {
+                ATTR_LAST_TRANSITION: "paused",
+                ATTR_REMAINING: "0:00:10",
+            },
+            "expected_event": EVENT_TIMER_PAUSED,
         },
         {
             "call": SERVICE_CANCEL,
-            "state": STATUS_IDLE,
-            "event": EVENT_TIMER_CANCELLED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_IDLE,
+            "expected_extra_attributes": {ATTR_LAST_TRANSITION: "cancelled"},
+            "expected_event": EVENT_TIMER_CANCELLED,
         },
         {
             "call": SERVICE_START,
-            "state": STATUS_ACTIVE,
-            "event": EVENT_TIMER_STARTED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_ACTIVE,
+            "expected_extra_attributes": {
+                ATTR_FINISHES_AT: finish_10,
+                ATTR_LAST_TRANSITION: "started",
+                ATTR_REMAINING: "0:00:10",
+            },
+            "expected_event": EVENT_TIMER_STARTED,
         },
         {
             "call": SERVICE_CHANGE,
-            "state": STATUS_ACTIVE,
-            "event": EVENT_TIMER_CHANGED,
-            "data": {CONF_DURATION: -5},
+            "call_data": {CONF_DURATION: -5},
+            "expected_state": STATUS_ACTIVE,
+            "expected_extra_attributes": {
+                ATTR_FINISHES_AT: finish_5,
+                ATTR_LAST_TRANSITION: "started",  # Change does not set last_transition
+                ATTR_REMAINING: "0:00:05",
+            },
+            "expected_event": EVENT_TIMER_CHANGED,
         },
         {
             "call": SERVICE_START,
-            "state": STATUS_ACTIVE,
-            "event": EVENT_TIMER_RESTARTED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_ACTIVE,
+            "expected_extra_attributes": {
+                ATTR_FINISHES_AT: finish_5,
+                ATTR_LAST_TRANSITION: "restarted",
+                ATTR_REMAINING: "0:00:05",
+            },
+            "expected_event": EVENT_TIMER_RESTARTED,
         },
         {
             "call": SERVICE_PAUSE,
-            "state": STATUS_PAUSED,
-            "event": EVENT_TIMER_PAUSED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_PAUSED,
+            "expected_extra_attributes": {
+                ATTR_LAST_TRANSITION: "paused",
+                ATTR_REMAINING: "0:00:05",
+            },
+            "expected_event": EVENT_TIMER_PAUSED,
         },
         {
             "call": SERVICE_FINISH,
-            "state": STATUS_IDLE,
-            "event": EVENT_TIMER_FINISHED,
-            "data": {},
+            "call_data": {},
+            "expected_state": STATUS_IDLE,
+            "expected_extra_attributes": {ATTR_LAST_TRANSITION: "finished"},
+            "expected_event": EVENT_TIMER_FINISHED,
         },
     ]
 
@@ -275,22 +347,38 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 DOMAIN,
                 step["call"],
-                {CONF_ENTITY_ID: "timer.test1", **step["data"]},
+                {CONF_ENTITY_ID: "timer.test1", **step["call_data"]},
                 blocking=True,
             )
             await hass.async_block_till_done()
 
         state = hass.states.get("timer.test1")
         assert state
-        if step["state"] is not None:
-            assert state.state == step["state"]
+        if step["expected_state"] is not None:
+            assert state.state == step["expected_state"]
+            assert (
+                state.attributes
+                == {
+                    ATTR_DURATION: "0:00:10",
+                    ATTR_EDITABLE: False,
+                }
+                | step["expected_extra_attributes"]
+            )
 
-        if step["event"] is not None:
+        if step["expected_event"] is not None:
             expected_events += 1
             last_result = results[-1]
             event, state = last_result
-            assert event.event_type == step["event"]
-            assert state == step["state"]
+            assert event.event_type == step["expected_event"]
+            assert state.state == step["expected_state"]
+            assert (
+                state.attributes
+                == {
+                    ATTR_DURATION: "0:00:10",
+                    ATTR_EDITABLE: False,
+                }
+                | step["expected_extra_attributes"]
+            )
             assert len(results) == expected_events
 
 
@@ -302,7 +390,11 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:10"
+    assert state.attributes == {
+        ATTR_EDITABLE: False,
+        ATTR_DURATION: "0:00:10",
+        ATTR_LAST_TRANSITION: None,
+    }
 
     await hass.services.async_call(
         DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
@@ -311,8 +403,13 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
-    assert state.attributes[ATTR_DURATION] == "0:00:10"
-    assert state.attributes[ATTR_REMAINING] == "0:00:10"
+    assert state.attributes == {
+        ATTR_EDITABLE: False,
+        ATTR_DURATION: "0:00:10",
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=10)).isoformat(),
+        ATTR_LAST_TRANSITION: "started",
+        ATTR_REMAINING: "0:00:10",
+    }
 
     await hass.services.async_call(
         DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
@@ -321,8 +418,11 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:10"
-    assert ATTR_REMAINING not in state.attributes
+    assert state.attributes == {
+        ATTR_EDITABLE: False,
+        ATTR_DURATION: "0:00:10",
+        ATTR_LAST_TRANSITION: "cancelled",
+    }
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -342,8 +442,13 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
-    assert state.attributes[ATTR_REMAINING] == "0:00:15"
+    assert state.attributes == {
+        ATTR_EDITABLE: False,
+        ATTR_DURATION: "0:00:15",
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=15)).isoformat(),
+        ATTR_LAST_TRANSITION: "started",
+        ATTR_REMAINING: "0:00:15",
+    }
 
     with pytest.raises(
         HomeAssistantError,
@@ -376,8 +481,13 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
-    assert state.attributes[ATTR_REMAINING] == "0:00:12"
+    assert state.attributes == {
+        ATTR_EDITABLE: False,
+        ATTR_DURATION: "0:00:15",
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=12)).isoformat(),
+        ATTR_LAST_TRANSITION: "started",  # Change does not set last_transition
+        ATTR_REMAINING: "0:00:12",
+    }
 
     await hass.services.async_call(
         DOMAIN,
@@ -388,8 +498,13 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
-    assert state.attributes[ATTR_REMAINING] == "0:00:14"
+    assert state.attributes == {
+        ATTR_EDITABLE: False,
+        ATTR_DURATION: "0:00:15",
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=14)).isoformat(),
+        ATTR_LAST_TRANSITION: "started",  # Change does not set last_transition
+        ATTR_REMAINING: "0:00:14",
+    }
 
     await hass.services.async_call(
         DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
@@ -398,8 +513,11 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:10"
-    assert ATTR_REMAINING not in state.attributes
+    assert state.attributes == {
+        ATTR_EDITABLE: False,
+        ATTR_DURATION: "0:00:10",
+        ATTR_LAST_TRANSITION: "cancelled",
+    }
 
     with pytest.raises(
         HomeAssistantError,
@@ -415,11 +533,17 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:10"
-    assert ATTR_REMAINING not in state.attributes
+    assert state.attributes == {
+        ATTR_EDITABLE: False,
+        ATTR_DURATION: "0:00:10",
+        ATTR_LAST_TRANSITION: "cancelled",  # Change does not set last_transition
+    }
 
 
-async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
+@pytest.mark.freeze_time("2023-06-05 17:47:50")
+async def test_wait_till_timer_expires(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test for a timer to end."""
     hass.set_state(CoreState.starting)
 
@@ -428,6 +552,11 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:20",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: None,
+    }
 
     results = []
 
@@ -450,6 +579,13 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:20",
+        ATTR_EDITABLE: False,
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=20)).isoformat(),
+        ATTR_LAST_TRANSITION: "started",
+        ATTR_REMAINING: "0:00:20",
+    }
 
     assert results[-1].event_type == EVENT_TIMER_STARTED
     assert len(results) == 1
@@ -465,23 +601,44 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:20",
+        ATTR_EDITABLE: False,
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=15)).isoformat(),
+        ATTR_LAST_TRANSITION: "started",
+        ATTR_REMAINING: "0:00:15",
+    }
 
     assert results[-1].event_type == EVENT_TIMER_CHANGED
     assert len(results) == 2
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    freezer.tick(10)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:20",
+        ATTR_EDITABLE: False,
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=5)).isoformat(),
+        ATTR_LAST_TRANSITION: "started",
+        ATTR_REMAINING: "0:00:15",
+    }
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=20))
+    freezer.tick(20)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:20",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: "finished",
+    }
 
     assert results[-1].event_type == EVENT_TIMER_FINISHED
     assert len(results) == 3
@@ -496,6 +653,11 @@ async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> Non
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: None,
+    }
 
 
 async def test_config_reload(
@@ -538,13 +700,20 @@ async def test_config_reload(
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
 
     assert state_1.state == STATUS_IDLE
-    assert ATTR_ICON not in state_1.attributes
-    assert ATTR_FRIENDLY_NAME not in state_1.attributes
+    assert state_1.attributes == {
+        ATTR_DURATION: "0:00:00",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: None,
+    }
 
     assert state_2.state == STATUS_IDLE
-    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
-    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
-    assert state_2.attributes.get(ATTR_DURATION) == "0:00:10"
+    assert state_2.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_FRIENDLY_NAME: "Hello World",
+        ATTR_ICON: "mdi:work",
+        ATTR_LAST_TRANSITION: None,
+    }
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -589,15 +758,23 @@ async def test_config_reload(
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
     assert state_2.state == STATUS_IDLE
-    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World reloaded"
-    assert state_2.attributes.get(ATTR_ICON) == "mdi:work-reloaded"
-    assert state_2.attributes.get(ATTR_DURATION) == "0:00:20"
+    assert state_2.attributes == {
+        ATTR_DURATION: "0:00:20",
+        ATTR_EDITABLE: False,
+        ATTR_FRIENDLY_NAME: "Hello World reloaded",
+        ATTR_ICON: "mdi:work-reloaded",
+        ATTR_LAST_TRANSITION: None,
+    }
 
     assert state_3.state == STATUS_IDLE
-    assert ATTR_ICON not in state_3.attributes
-    assert ATTR_FRIENDLY_NAME not in state_3.attributes
+    assert state_3.attributes == {
+        ATTR_DURATION: "0:00:00",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: None,
+    }
 
 
+@pytest.mark.freeze_time("2023-06-05 17:47:50")
 async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     """Ensure restarted event is called after starting a paused or running timer."""
     hass.set_state(CoreState.starting)
@@ -607,6 +784,11 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: None,
+    }
 
     results = []
 
@@ -628,6 +810,13 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=10)).isoformat(),
+        ATTR_LAST_TRANSITION: "started",
+        ATTR_REMAINING: "0:00:10",
+    }
 
     assert results[-1].event_type == EVENT_TIMER_STARTED
     assert len(results) == 1
@@ -639,6 +828,13 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=10)).isoformat(),
+        ATTR_LAST_TRANSITION: "restarted",
+        ATTR_REMAINING: "0:00:10",
+    }
 
     assert results[-1].event_type == EVENT_TIMER_RESTARTED
     assert len(results) == 2
@@ -650,6 +846,12 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_PAUSED
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: "paused",
+        ATTR_REMAINING: "0:00:10",
+    }
 
     assert results[-1].event_type == EVENT_TIMER_PAUSED
     assert len(results) == 3
@@ -661,11 +863,19 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=10)).isoformat(),
+        ATTR_LAST_TRANSITION: "restarted",
+        ATTR_REMAINING: "0:00:10",
+    }
 
     assert results[-1].event_type == EVENT_TIMER_RESTARTED
     assert len(results) == 4
 
 
+@pytest.mark.freeze_time("2023-06-05 17:47:50")
 async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     """Ensure timer's state changes when it restarted."""
     hass.set_state(CoreState.starting)
@@ -675,6 +885,11 @@ async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: None,
+    }
 
     results = []
 
@@ -692,6 +907,13 @@ async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=10)).isoformat(),
+        ATTR_LAST_TRANSITION: "started",
+        ATTR_REMAINING: "0:00:10",
+    }
 
     assert results[-1].event_type == EVENT_STATE_CHANGED
     assert len(results) == 1
@@ -703,9 +925,88 @@ async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:10",
+        ATTR_EDITABLE: False,
+        ATTR_FINISHES_AT: (utcnow() + timedelta(seconds=10)).isoformat(),
+        ATTR_LAST_TRANSITION: "restarted",
+        ATTR_REMAINING: "0:00:10",
+    }
 
     assert results[-1].event_type == EVENT_STATE_CHANGED
     assert len(results) == 2
+
+
+@pytest.mark.freeze_time("2023-06-05 17:47:50")
+async def test_last_transition_after_restarted_timer_expires(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test last_transition changes from restarted to finished on expiry."""
+    hass.set_state(CoreState.starting)
+
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
+
+    # Start the timer
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    # Restart the timer
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("timer.test1")
+    assert state.state == STATUS_ACTIVE
+    assert state.attributes[ATTR_LAST_TRANSITION] == "restarted"
+
+    # Let the timer expire
+    freezer.tick(15)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("timer.test1")
+    assert state.state == STATUS_IDLE
+    assert state.attributes[ATTR_LAST_TRANSITION] == "finished"
+
+
+@pytest.mark.freeze_time("2023-06-05 17:47:50")
+async def test_last_transition_persists_across_config_update(
+    hass: HomeAssistant,
+) -> None:
+    """Test that last_transition is preserved when the timer config is updated."""
+    hass.set_state(CoreState.starting)
+
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
+
+    # Start and cancel to set last_transition to "cancelled"
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+    )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("timer.test1")
+    assert state.state == STATUS_IDLE
+    assert state.attributes[ATTR_LAST_TRANSITION] == "cancelled"
+
+    # Reload with a new duration — last_transition should persist
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={DOMAIN: {"test1": {CONF_DURATION: 20}}},
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("timer.test1")
+    assert state.state == STATUS_IDLE
+    assert state.attributes[ATTR_DURATION] == "0:00:20"
+    assert state.attributes[ATTR_LAST_TRANSITION] == "cancelled"
 
 
 async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
@@ -713,8 +1014,12 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.timer_from_storage")
     assert state.state == STATUS_IDLE
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "timer from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:00",
+        ATTR_EDITABLE: True,
+        ATTR_FRIENDLY_NAME: "timer from storage",
+        ATTR_LAST_TRANSITION: None,
+    }
 
 
 async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
@@ -723,12 +1028,20 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
 
     state = hass.states.get(f"{DOMAIN}.{DOMAIN}_from_storage")
     assert state.state == STATUS_IDLE
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "timer from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:00",
+        ATTR_EDITABLE: True,
+        ATTR_FRIENDLY_NAME: "timer from storage",
+        ATTR_LAST_TRANSITION: None,
+    }
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
-    assert not state.attributes.get(ATTR_EDITABLE)
     assert state.state == STATUS_IDLE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:00",
+        ATTR_EDITABLE: False,
+        ATTR_LAST_TRANSITION: None,
+    }
 
 
 async def test_ws_list(
@@ -797,7 +1110,13 @@ async def test_update(
     timer_entity_id = f"{DOMAIN}.{DOMAIN}_{timer_id}"
 
     state = hass.states.get(timer_entity_id)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "timer from storage"
+    assert state.state == STATUS_IDLE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:00",
+        ATTR_EDITABLE: True,
+        ATTR_FRIENDLY_NAME: "timer from storage",
+        ATTR_LAST_TRANSITION: None,
+    }
     assert (
         entity_registry.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id
     )
@@ -827,8 +1146,14 @@ async def test_update(
     }
 
     state = hass.states.get(timer_entity_id)
-    assert state.attributes[ATTR_DURATION] == _format_timedelta(cv.time_period(33))
-    assert state.attributes[ATTR_RESTORE]
+    assert state.state == STATUS_IDLE
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:33",
+        ATTR_EDITABLE: True,
+        ATTR_FRIENDLY_NAME: "timer from storage",
+        ATTR_LAST_TRANSITION: None,
+        ATTR_RESTORE: True,
+    }
 
 
 async def test_ws_create(
@@ -862,7 +1187,12 @@ async def test_ws_create(
 
     state = hass.states.get(timer_entity_id)
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == _format_timedelta(cv.time_period(42))
+    assert state.attributes == {
+        ATTR_DURATION: "0:00:42",
+        ATTR_EDITABLE: True,
+        ATTR_FRIENDLY_NAME: "New Timer",
+        ATTR_LAST_TRANSITION: None,
+    }
     assert (
         entity_registry.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id
     )
@@ -887,6 +1217,46 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
     assert count_start == len(hass.states.async_entity_ids())
 
 
+@pytest.mark.parametrize("last_transition", [None, "cancelled", "finished"])
+async def test_restore_idle(hass: HomeAssistant, last_transition: str | None) -> None:
+    """Test entity restore logic when timer is idle."""
+    utc_now = utcnow()
+    attrs: dict[str, Any] = {ATTR_DURATION: "0:00:30"}
+    if last_transition is not None:
+        attrs[ATTR_LAST_TRANSITION] = last_transition
+    stored_state = StoredState(
+        State("timer.test", STATUS_IDLE, attrs),
+        None,
+        utc_now,
+    )
+
+    data = async_get(hass)
+    await data.store.async_save([stored_state.as_dict()])
+    await data.async_load()
+
+    entity = Timer.from_storage(
+        {
+            CONF_ID: "test",
+            CONF_NAME: "test",
+            CONF_DURATION: "0:01:00",
+            CONF_RESTORE: True,
+        }
+    )
+    entity.hass = hass
+    entity.entity_id = "timer.test"
+
+    await entity.async_added_to_hass()
+    await hass.async_block_till_done()
+    assert entity.state == STATUS_IDLE
+    assert entity.extra_state_attributes == {
+        # Idle timers reset to the configured duration, not the stored one
+        ATTR_DURATION: "0:01:00",
+        ATTR_EDITABLE: True,
+        ATTR_LAST_TRANSITION: last_transition,
+        ATTR_RESTORE: True,
+    }
+
+
 @pytest.mark.freeze_time("2023-06-05 17:47:50")
 async def test_restore_paused(hass: HomeAssistant) -> None:
     """Test entity restore logic when timer is paused."""
@@ -895,7 +1265,11 @@ async def test_restore_paused(hass: HomeAssistant) -> None:
         State(
             "timer.test",
             STATUS_PAUSED,
-            {ATTR_DURATION: "0:00:30", ATTR_REMAINING: "0:00:15"},
+            {
+                ATTR_DURATION: "0:00:30",
+                ATTR_LAST_TRANSITION: "paused",
+                ATTR_REMAINING: "0:00:15",
+            },
         ),
         None,
         utc_now,
@@ -919,14 +1293,20 @@ async def test_restore_paused(hass: HomeAssistant) -> None:
     await entity.async_added_to_hass()
     await hass.async_block_till_done()
     assert entity.state == STATUS_PAUSED
-    assert entity.extra_state_attributes[ATTR_DURATION] == "0:00:30"
-    assert entity.extra_state_attributes[ATTR_REMAINING] == "0:00:15"
-    assert ATTR_FINISHES_AT not in entity.extra_state_attributes
-    assert entity.extra_state_attributes[ATTR_RESTORE]
+    assert entity.extra_state_attributes == {
+        ATTR_DURATION: "0:00:30",
+        ATTR_EDITABLE: True,
+        ATTR_LAST_TRANSITION: "paused",
+        ATTR_REMAINING: "0:00:15",
+        ATTR_RESTORE: True,
+    }
 
 
 @pytest.mark.freeze_time("2023-06-05 17:47:50")
-async def test_restore_active_resume(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("last_transition", [None, "started", "restarted"])
+async def test_restore_active_resume(
+    hass: HomeAssistant, last_transition: str | None
+) -> None:
     """Test entity restore logic when timer is active and end time is after startup."""
     events = async_capture_events(hass, EVENT_TIMER_RESTARTED)
     assert not events
@@ -937,7 +1317,11 @@ async def test_restore_active_resume(hass: HomeAssistant) -> None:
         State(
             "timer.test",
             STATUS_ACTIVE,
-            {ATTR_DURATION: "0:00:30", ATTR_FINISHES_AT: finish.isoformat()},
+            {
+                ATTR_DURATION: "0:00:30",
+                ATTR_FINISHES_AT: finish.isoformat(),
+                ATTR_LAST_TRANSITION: last_transition,
+            },
         ),
         None,
         utc_now,
@@ -967,15 +1351,22 @@ async def test_restore_active_resume(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entity.state == STATUS_ACTIVE
-    assert entity.extra_state_attributes[ATTR_DURATION] == "0:00:30"
-    assert entity.extra_state_attributes[ATTR_REMAINING] == "0:00:15"
-    assert entity.extra_state_attributes[ATTR_FINISHES_AT] == finish.isoformat()
-    assert entity.extra_state_attributes[ATTR_RESTORE]
+    assert entity.extra_state_attributes == {
+        ATTR_DURATION: "0:00:30",
+        ATTR_EDITABLE: True,
+        ATTR_FINISHES_AT: finish.isoformat(),
+        ATTR_LAST_TRANSITION: "restarted",
+        ATTR_REMAINING: "0:00:15",
+        ATTR_RESTORE: True,
+    }
     assert len(events) == 1
 
 
-async def test_restore_active_finished_outside_grace(hass: HomeAssistant) -> None:
-    """Test entity restore logic: timer is active, ended while Home Assistant was stopped."""
+@pytest.mark.parametrize("last_transition", [None, "started", "restarted"])
+async def test_restore_active_finished_outside_grace(
+    hass: HomeAssistant, last_transition: str | None
+) -> None:
+    """Test entity restore: timer active, ended while HA was stopped."""
     events = async_capture_events(hass, EVENT_TIMER_FINISHED)
     assert not events
     utc_now = utcnow()
@@ -985,7 +1376,11 @@ async def test_restore_active_finished_outside_grace(hass: HomeAssistant) -> Non
         State(
             "timer.test",
             STATUS_ACTIVE,
-            {ATTR_DURATION: "0:00:30", ATTR_FINISHES_AT: finish.isoformat()},
+            {
+                ATTR_DURATION: "0:00:30",
+                ATTR_FINISHES_AT: finish.isoformat(),
+                ATTR_LAST_TRANSITION: last_transition,
+            },
         ),
         None,
         utc_now,
@@ -1013,8 +1408,10 @@ async def test_restore_active_finished_outside_grace(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     assert entity.state == STATUS_IDLE
-    assert entity.extra_state_attributes[ATTR_DURATION] == "0:01:00"
-    assert ATTR_REMAINING not in entity.extra_state_attributes
-    assert ATTR_FINISHES_AT not in entity.extra_state_attributes
-    assert entity.extra_state_attributes[ATTR_RESTORE]
+    assert entity.extra_state_attributes == {
+        ATTR_DURATION: "0:01:00",
+        ATTR_EDITABLE: True,
+        ATTR_LAST_TRANSITION: "finished",
+        ATTR_RESTORE: True,
+    }
     assert len(events) == 1
