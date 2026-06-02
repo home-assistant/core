@@ -492,7 +492,7 @@ def async_fire_time_changed_exact(
     approach, as this is only for testing.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(UTC)
+        utc_datetime = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
@@ -515,7 +515,7 @@ def async_fire_time_changed(
     for an exact microsecond, use async_fire_time_changed_exact.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(UTC)
+        utc_datetime = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
@@ -766,7 +766,6 @@ def mock_device_registry(
     registry.deleted_devices = dr.DeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
-    dr.async_get.cache_clear()
     return registry
 
 
@@ -1177,8 +1176,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
     async def start_reconfigure_flow(
         self,
         hass: HomeAssistant,
-        *,
-        show_advanced_options: bool = False,
     ) -> ConfigFlowResult:
         """Start a reconfiguration flow."""
         if self.entry_id not in hass.config_entries._entries:
@@ -1190,7 +1187,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
             context={
                 "source": config_entries.SOURCE_RECONFIGURE,
                 "entry_id": self.entry_id,
-                "show_advanced_options": show_advanced_options,
             },
         )
 
@@ -1198,8 +1194,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
         self,
         hass: HomeAssistant,
         subentry_id: str,
-        *,
-        show_advanced_options: bool = False,
     ) -> ConfigFlowResult:
         """Start a subentry reconfiguration flow."""
         if self.entry_id not in hass.config_entries._entries:
@@ -1213,7 +1207,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
             context={
                 "source": config_entries.SOURCE_RECONFIGURE,
                 "subentry_id": subentry_id,
-                "show_advanced_options": show_advanced_options,
             },
         )
 
@@ -1858,6 +1851,8 @@ def import_and_test_deprecated_alias(
     alias_name: str,
     replacement: Any,
     breaks_in_ha_version: str,
+    *,
+    replacement_name: str | None = None,
 ) -> None:
     """Import and test deprecated alias replaced by a value.
 
@@ -1867,7 +1862,9 @@ def import_and_test_deprecated_alias(
     - Assert the deprecated alias is included in the modules.__dir__()
     - Assert the deprecated alias is included in the modules.__all__()
     """
-    replacement_name = f"{replacement.__module__}.{replacement.__name__}"
+    replacement_name = (
+        replacement_name or f"{replacement.__module__}.{replacement.__name__}"
+    )
     value = import_deprecated_constant(module, alias_name)
     assert value == replacement
     assert (

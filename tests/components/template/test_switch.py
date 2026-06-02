@@ -48,7 +48,6 @@ TEST_SENSOR = "sensor.test_sensor"
 
 TEST_SWITCH = TemplatePlatformSetup(
     switch.DOMAIN,
-    "switches",
     "test_template_switch",
     make_test_trigger(TEST_STATE_ENTITY_ID, TEST_SENSOR),
 )

@@ -193,7 +193,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             return
 
         if event.type == assist_pipeline.PipelineEventType.RUN_START:
-            if event.data and (tts_output := event.data["tts_output"]):
+            if event.data and (tts_output := event.data.get("tts_output")):
                 # Get stream token early.
                 # If "tts_start_streaming" is True in INTENT_PROGRESS event, we
                 # can start streaming TTS before the TTS_END event.
@@ -468,7 +468,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
     async def on_restart(self) -> None:
         """Block until pipeline loop will be restarted."""
-        _LOGGER.warning(
+        _LOGGER.debug(
             "Satellite has been disconnected. Reconnecting in %s second(s)",
             _RECONNECT_SECONDS,
         )

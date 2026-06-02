@@ -8,7 +8,7 @@ import os
 import struct
 from typing import Any
 
-from aiohasupervisor import SupervisorError
+from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
     GreenOptions,
     HomeAssistantOptions,
@@ -25,6 +25,7 @@ from homeassistant.components.http import (
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
 )
+from homeassistant.components.onboarding import async_is_onboarded
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
@@ -300,6 +301,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_domain=DOMAIN,
             translation_key="supervisor_not_connected",
         ) from err
+
+    # During onboarding, Supervisor may be out of date. Attempt an update now
+    # so that core loads against an up-to-date Supervisor. A
+    # SupervisorBadRequestError means there is no update available, proceed
+    # normally. No exception means an update was triggered and we must wait for
+    # it to complete. Any other SupervisorError means something unexpected went
+    # wrong and we cannot proceed right now.
+    if not async_is_onboarded(hass):
+        try:
+            await supervisor_client.supervisor.update()
+        except SupervisorBadRequestError:
+            pass  # No update available, proceed normally.
+        except SupervisorError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="supervisor_not_connected",
+            ) from err
+        else:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="supervisor_update_pending",
+            )
 
     # Get or create a refresh token for the Supervisor user
     user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
