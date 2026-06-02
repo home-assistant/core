@@ -225,7 +225,7 @@ async def test_full_user_flow_multiple_installations_with_mfa(
     ("side_effect", "error"),
     [
         (VerisureLoginError("Login failed"), "invalid_auth"),
-        (VerisureError, "unknown"),
+        (VerisureError(), "unknown"),
     ],
 )
 async def test_verisure_errors(
@@ -434,7 +434,7 @@ async def test_reauth_flow_with_mfa(
     ("side_effect", "error"),
     [
         (VerisureLoginError("Login failed"), "invalid_auth"),
-        (VerisureError, "unknown"),
+        (VerisureError(), "unknown"),
     ],
 )
 async def test_reauth_flow_errors(
