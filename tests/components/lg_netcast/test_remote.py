@@ -161,7 +161,7 @@ async def test_send_multiple_commands_repeats_with_delay(
             blocking=True,
         )
 
-    # 2 commands × 3 repeats = 6 total sends
+    # 2 commands x 3 repeats = 6 total sends
     assert context_client.send_command.call_count == 6
     # 1 sleep between the 2 commands per repeat (3 repeats) + 1 sleep before each repeat after the first (2)
     # = 3 + 2 = 5 sleeps total

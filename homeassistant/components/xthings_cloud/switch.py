@@ -20,7 +20,7 @@ async def async_setup_entry(
     entities = [
         XthingsCloudSwitch(coordinator, device_id, device_data)
         for device_id, device_data in coordinator.data.items()
-        if device_data["type"] in ("switch", "plug")
+        if device_data["type"] == "plug"
     ]
     async_add_entities(entities)
 
@@ -35,14 +35,8 @@ class XthingsCloudSwitch(XthingsCloudEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        if self.device_data["type"] == "plug":
-            await self.coordinator.client.async_plug_on(self._device_id)
-        else:
-            await self.coordinator.client.async_switch_on(self._device_id)
+        await self.coordinator.client.async_plug_on(self._device_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        if self.device_data["type"] == "plug":
-            await self.coordinator.client.async_plug_off(self._device_id)
-        else:
-            await self.coordinator.client.async_switch_off(self._device_id)
+        await self.coordinator.client.async_plug_off(self._device_id)
