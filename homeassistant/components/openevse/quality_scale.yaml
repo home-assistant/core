@@ -36,7 +36,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -54,11 +54,11 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Integration supports a single device per config entry.
-  entity-category: todo
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
