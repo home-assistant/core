@@ -66,9 +66,7 @@ rules:
     comment: A config entry represents a single fixed device.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: All entities expose primary device data and are enabled by default.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations:
