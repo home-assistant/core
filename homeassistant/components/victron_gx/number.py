@@ -72,7 +72,7 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         """Initialize the number entity."""
         super().__init__(device, metric, device_info, installation_id)
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
-        self._set_translation()
+        self._set_unit_translation()
         self._attr_native_value = metric.value
         if metric.min_value is not None:
             self._attr_native_min_value = metric.min_value

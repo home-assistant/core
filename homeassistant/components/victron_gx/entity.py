@@ -61,7 +61,7 @@ class VictronBaseEntity(Entity):
             metric.generic_short_id not in ENTITIES_DISABLE_BY_DEFAULT
         )
 
-    def _set_translation(self) -> None:
+    def _set_unit_translation(self) -> None:
         unit_of_measurement = self._metric.unit_of_measurement
         # We need to set the _attr_native_unit_of_measurement in three cases:
         if (
