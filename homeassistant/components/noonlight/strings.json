@@ -56,11 +56,11 @@
         "data": {
           "api_token": "API token"
         },
-        "description": "Your Noonlight token was rejected. Paste a new token to restore service.",
-        "title": "Re-authenticate Noonlight",
         "data_description": {
           "api_token": "Long-lived token from your Noonlight account portal."
-        }
+        },
+        "description": "Your Noonlight token was rejected. Paste a new token to restore service.",
+        "title": "Re-authenticate Noonlight"
       },
       "reconfigure": {
         "data": {
@@ -88,11 +88,11 @@
         "data": {
           "safety_ack": "I understand this integration can summon real police, fire, and medical responders, and that false dispatches may incur fines from local authorities."
         },
-        "description": "You selected the production environment.",
-        "title": "Safety acknowledgment",
         "data_description": {
           "safety_ack": "You must acknowledge this to use the production environment."
-        }
+        },
+        "description": "You selected the production environment.",
+        "title": "Safety acknowledgment"
       },
       "user": {
         "data": {
@@ -165,9 +165,9 @@
           "services_granted": "Granted services"
         },
         "data_description": {
-          "heartbeat_minutes": "How often (minutes) to silently verify Noonlight is reachable and your token is valid, so a problem surfaces before an emergency rather than during one. Set to 0 to disable.",
-          "default_entry_delay_seconds": "Grace window before a dispatch fires; cancelable during this time.",
           "dedupe_seconds": "After a dispatch fires, repeat dispatches for the same service within this window are ignored.",
+          "default_entry_delay_seconds": "Grace window before a dispatch fires; cancelable during this time.",
+          "heartbeat_minutes": "How often (minutes) to silently verify Noonlight is reachable and your token is valid, so a problem surfaces before an emergency rather than during one. Set to 0 to disable.",
           "services_granted": "Only the selected dispatch services will be available."
         },
         "description": "Caller, address, and site changes are made with the Reconfigure action.",
