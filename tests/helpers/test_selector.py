@@ -1228,18 +1228,18 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
     [
         (
             {"mode": "trigger"},
-            ("first", "last", "any"),
-            ("all", "invalid", None),
+            ("first", "all", "each"),
+            ("last", "any", "invalid", None),
         ),
         (
             {"mode": "condition"},
             ("all", "any"),
-            ("first", "last", "invalid", None),
+            ("first", "each", "last", "invalid", None),
         ),
         (
             {"mode": "trigger", "translation_key": "trigger_behavior"},
-            ("first", "last", "any"),
-            ("all", "invalid", None),
+            ("first", "all", "each"),
+            ("last", "any", "invalid", None),
         ),
     ],
 )

@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +10,7 @@
       "no_pools": "No pools were found on this account.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "flow_title": "Vistapool pool controller",
     "step": {
       "user": {
         "data": {
@@ -87,6 +89,11 @@
         "name": "Redox pump"
       }
     },
+    "button": {
+      "led_pulse": {
+        "name": "LED next color"
+      }
+    },
     "sensor": {
       "chlorine": {
         "name": "Chlorine"
@@ -120,6 +127,9 @@
     },
     "no_pools": {
       "message": "No pools were found on this account."
+    },
+    "set_failed": {
+      "message": "Failed to set {entity}."
     },
     "update_failed": {
       "message": "Error fetching data from Vistapool."
