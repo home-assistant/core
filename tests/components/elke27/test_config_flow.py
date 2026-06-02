@@ -1,5 +1,6 @@
 """Test the Elke27 config flow."""
 
+import asyncio
 import builtins
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -168,6 +169,41 @@ async def test_link_and_create_entry_suppresses_disconnect_error(
         )
 
     assert result["errors"]["base"] == "cannot_connect"
+    client.async_disconnect.assert_awaited_once()
+
+
+async def test_link_and_create_entry_preserves_disconnect_cancellation(
+    hass: HomeAssistant,
+) -> None:
+    """Test disconnect cleanup preserves cancellation."""
+    client = AsyncMock()
+    client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
+    client.async_connect = AsyncMock(return_value=None)
+    client.wait_ready = AsyncMock(return_value=False)
+    client.async_disconnect = AsyncMock(side_effect=asyncio.CancelledError)
+
+    flow = config_flow.Elke27ConfigFlow()
+    flow.hass = hass
+    flow._context = {}
+    flow.flow_id = "flow123"
+    flow._selected_host = "1.2.3.4"
+    flow._selected_port = DEFAULT_PORT
+
+    with (
+        patch(
+            "homeassistant.components.elke27.config_flow._create_client",
+            side_effect=_client_factory([client]),
+        ),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await flow._async_link_and_create_entry(
+            access_code="1",
+            passphrase="2",
+            errors={},
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+        )
+
     client.async_disconnect.assert_awaited_once()
 
 

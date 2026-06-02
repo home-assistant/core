@@ -89,6 +89,7 @@ async def _async_disconnect_failed_setup(hub: Elke27Hub) -> None:
         await hub.async_disconnect()
     except asyncio.CancelledError:
         _LOGGER.debug("Cancelled while disconnecting after failed setup", exc_info=True)
+        raise
     except Exception:  # noqa: BLE001
         _LOGGER.debug("Error while disconnecting after failed setup", exc_info=True)
 
