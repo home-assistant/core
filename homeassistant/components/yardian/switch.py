@@ -46,17 +46,12 @@ async def async_setup_entry(
 class YardianSwitch(YardianZoneEntity, SwitchEntity):
     """Representation of a Yardian switch."""
 
-    _attr_translation_key = "switch"
+    _attr_name = None
 
     def __init__(self, coordinator: YardianUpdateCoordinator, zone_id: int) -> None:
         """Initialize a Yardian Switch Device."""
         super().__init__(coordinator, zone_id)
         self._attr_unique_id = f"{coordinator.yid}-{zone_id}"
-
-    @property
-    def name(self) -> str:
-        """Return the zone name."""
-        return self.coordinator.data.zones[self._zone_id].name
 
     @property
     def is_on(self) -> bool:
