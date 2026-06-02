@@ -24,6 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool
     entry.runtime_data = imou_coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # DataUpdateCoordinator schedules periodic refreshes only when it has
+    # listeners. With zero entities (e.g. an empty account at setup), register a
+    # no-op listener so polling continues and later devices are discovered via
+    # new_device_callbacks.
     @callback
     def _async_keep_polling() -> None:
         """Keep periodic polling when no entities are registered yet."""

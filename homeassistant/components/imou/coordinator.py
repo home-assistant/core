@@ -68,9 +68,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 try:
                     fresh_devices = await self._device_manager.async_get_devices()
                 except ImouException as err:
-                    raise UpdateFailed(
-                        f"Error fetching Imou devices: {err}"
-                    ) from err
+                    raise UpdateFailed(f"Error fetching Imou devices: {err}") from err
 
                 fresh_by_key = {
                     imou_device_identifier(device): device for device in fresh_devices

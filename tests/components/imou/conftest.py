@@ -34,7 +34,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_imou_openapi_client() -> Generator[AsyncMock]:
-    """Mock ImouOpenApiClient for config flow and setup entry (Mealie-style)."""
+    """Mock ImouOpenApiClient for config flow and setup entry."""
     with (
         patch(
             PATCH_IMOU_OPENAPI_CLIENT,
