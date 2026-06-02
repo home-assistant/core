@@ -45,14 +45,16 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             ),
         )
 
-    async def _async_get_status(self, device_id: str) -> dict[str, Any]:
+    async def _async_get_status(self, device_id: str) -> dict[str, Any] | None:
         """Return per-device status, or None if it cannot be fetched."""
         try:
             response = await self.api.async_get_device_status(device_id)
         except FlussDeviceOfflineError:
+            LOGGER.debug("Device %s is offline", device_id)
             return {"internetConnected": False}
         except FlussApiClientError as err:
-            raise UpdateFailed(f"Error fetching status for {device_id}: {err}") from err
+            LOGGER.warning("Error fetching status for %s: %s", device_id, err)
+            return None
         return response["status"]
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
