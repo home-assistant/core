@@ -29,6 +29,7 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import model_list
 
@@ -170,9 +171,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
             ):
                 container = Container(
                     id=kwargs.get("container_id", "container_1234567890ABCDEFGHIJKLMN"),
-                    # pylint: disable-next=home-assistant-enforce-utcnow
-                    expires_at=datetime.datetime.now(tz=datetime.UTC)
-                    + datetime.timedelta(minutes=5),
+                    expires_at=dt_util.utcnow() + datetime.timedelta(minutes=5),
                 )
 
             yield event
