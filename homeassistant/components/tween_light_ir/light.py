@@ -51,10 +51,10 @@ class TweenLightIrLightEntity(
         "green",
         "blue",
         "white",
-        "orange_red",
         "tomato",
         "light_green",
         "sky_blue",
+        "orange_red",
         "cyan",
         "rebecca_purple",
         "orange",
@@ -81,7 +81,6 @@ class TweenLightIrLightEntity(
         if ATTR_EFFECT in kwargs and kwargs[ATTR_EFFECT] in self._attr_effect_list:
             effect: str = kwargs[ATTR_EFFECT]
             command = TweenLightLEDStripCode[effect.upper()].to_command()
-            self._attr_effect = effect
 
         await self._send_command(command)
         self.async_write_ha_state()
