@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
 
@@ -26,24 +25,6 @@ AUTH_SCHEMA = vol.Schema(
 
 class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Vistapool config flow (one entry per Hayward account)."""
-
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle DHCP discovery of a Sugar Valley / Hayward Wi-Fi module.
-
-        The Wi-Fi module that ships with Hayward / Vistapool / Sugar Valley /
-        AquaRite / Poolwatch / Kripsol / Dagen controllers announces itself
-        on DHCP with the hostname ``SugarWIFI``. We can't auto-configure
-        because the cloud API still needs the user's account credentials, so
-        the discovery card simply routes the user into the credentials form.
-        One Hayward account covers every pool and controller, so we abort
-        if any entry already exists.
-        """
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
-        return await self.async_step_user()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
