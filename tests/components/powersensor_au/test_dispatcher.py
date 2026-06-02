@@ -527,23 +527,3 @@ async def test_device_found_sensor_colon_key_is_recognised(
     )
 
     d._send.assert_called_once_with(d._hass, CREATE_SENSOR_SIGNAL, MAC, "water")
-
-
-async def test_device_found_ignores_correct_key_without_colon(
-    patched_dispatcher,
-) -> None:
-    """Events using 'device_type' (no colon) are not acted on.
-
-    The library currently emits 'device_type:' (with trailing colon).  If a
-    future library version fixes the typo this test will catch the regression
-    and prompt updating the colon-accommodation logic in the dispatcher.
-    """
-    d = patched_dispatcher
-
-    # Correct key without the trailing colon — dispatcher must not act on it.
-    await d.on_device_event(
-        {"event": "device_found", "mac": MAC, "device_type": "plug"}
-    )
-
-    d._send.assert_not_called()
-    assert MAC not in d.plugs

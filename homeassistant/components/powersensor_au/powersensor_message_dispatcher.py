@@ -140,7 +140,8 @@ class PowersensorMessageDispatcher:
         discard all subsequent events.
         """
         mac = event.get("mac")
-        device_type = event.get("device_type:")  # note: library has trailing colon
+        # note: library has trailing colon, that may change in the future.
+        device_type = event.get("device_type:") or event.get("device_type")
         if mac is None:
             return
 
@@ -205,11 +206,10 @@ class PowersensorMessageDispatcher:
             async_dispatcher_send(self._hass, CREATE_SENSOR_SIGNAL, mac, role)
 
         persisted_role = _filter_unknown(self._entry.data.get(CFG_ROLES, {}).get(mac))
-        cached_role = self.sensors.get(mac)
 
         message["role"] = persisted_role if role is None else role
 
-        if role is not None and (role != persisted_role or role != cached_role):
+        if role is not None and role != persisted_role:
             self.sensors[mac] = role
             async_dispatcher_send(self._hass, ROLE_UPDATE_SIGNAL, mac, role)
 
