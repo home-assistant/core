@@ -35,7 +35,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
         | WaterHeaterEntityFeature.AWAY_MODE
-        | WaterHeaterEntityFeature.ON_OFF
     )
     _attr_operation_list = [
         STATE_ECO,
