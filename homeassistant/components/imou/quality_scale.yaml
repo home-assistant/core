@@ -1,10 +1,8 @@
 rules:
   # Bronze
   action-setup:
-    status: done
-    comment: >-
-      Button entities expose user-triggered actions via async_press (device control),
-      which is the primary interaction surface for this integration today.
+    status: exempt
+    comment: Integration does not register custom actions.
   appropriate-polling: done
   brands: done
   common-modules: done
