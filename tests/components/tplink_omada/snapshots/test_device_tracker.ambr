@@ -4,6 +4,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Banana',
       'host_name': 'testhost',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '192.168.1.102',
       'mac': '2C-71-FF-ED-34-83',
       'source_type': <SourceType.ROUTER: 'router'>,
@@ -20,6 +23,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Banana',
+      'in_zones': list([
+      ]),
       'mac': '2C-71-FF-ED-34-83',
       'source_type': <SourceType.ROUTER: 'router'>,
     }),

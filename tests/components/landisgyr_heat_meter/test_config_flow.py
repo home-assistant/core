@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from unittest.mock import patch
 
 import pytest
-import serial
+import serialx
 
 from homeassistant import config_entries
 from homeassistant.components.landisgyr_heat_meter import DOMAIN
@@ -14,7 +14,10 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-API_HEAT_METER_SERVICE = "homeassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
+API_HEAT_METER_SERVICE = (
+    "homeassistant.components.landisgyr_heat_meter"
+    ".config_flow.ultraheat_api.HeatMeterService"
+)
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -107,7 +110,7 @@ async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> No
 async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     """Test manual entry fails."""
 
-    mock_heat_meter().read.side_effect = serial.SerialException
+    mock_heat_meter().read.side_effect = OSError("device unavailable")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -141,7 +144,7 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
 async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) -> None:
     """Test select from list entry fails."""
 
-    mock_heat_meter().read.side_effect = serial.SerialException
+    mock_heat_meter().read.side_effect = serialx.SerialException("connection failed")
     port = mock_serial_port()
 
     result = await hass.config_entries.flow.async_init(

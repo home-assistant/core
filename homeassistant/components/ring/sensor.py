@@ -135,7 +135,9 @@ def _get_last_event_attrs(
 
 @dataclass(frozen=True, kw_only=True)
 class RingSensorEntityDescription(
-    SensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    SensorEntityDescription,
+    RingEntityDescription,
+    Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes Ring sensor entity."""
 

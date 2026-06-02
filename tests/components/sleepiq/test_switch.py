@@ -36,7 +36,9 @@ async def test_switch_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
         SWITCH_DOMAIN,
         "turn_off",
         {
-            ATTR_ENTITY_ID: f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+            ATTR_ENTITY_ID: (
+                f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+            )
         },
         blocking=True,
     )
@@ -47,7 +49,9 @@ async def test_switch_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
         SWITCH_DOMAIN,
         "turn_on",
         {
-            ATTR_ENTITY_ID: f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+            ATTR_ENTITY_ID: (
+                f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+            )
         },
         blocking=True,
     )

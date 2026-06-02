@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant import core as ha
 from homeassistant.components import logbook, recorder
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook.models import EventAsRow, LazyEventPartialState
@@ -668,8 +668,8 @@ async def test_logbook_entity_filter_with_automations(
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -752,7 +752,7 @@ async def test_logbook_entity_filter_with_automations(
 async def test_logbook_entity_no_longer_in_state_machine(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test the logbook view with an entity that hass been removed from the state machine."""
+    """Test logbook view with entity removed from state machine."""
     await async_setup_component(hass, "logbook", {})
     await async_setup_component(hass, "automation", {})
     await async_setup_component(hass, "script", {})
@@ -839,8 +839,8 @@ async def test_exclude_new_entities(
     """Test if events are excluded on first update."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -880,8 +880,8 @@ async def test_exclude_removed_entities(
     """Test if events are excluded on last update."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -928,8 +928,8 @@ async def test_exclude_attribute_changes(
     """Test if events of attribute changes are filtered."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -971,8 +971,8 @@ async def test_logbook_entity_context_id(
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1122,11 +1122,11 @@ async def test_logbook_entity_context_id(
 async def test_logbook_context_id_automation_script_started_manually(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test the logbook populates context_ids for scripts and automations started manually."""
+    """Test logbook context_ids for manually started scripts/automations."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1218,8 +1218,8 @@ async def test_logbook_entity_context_parent_id(
     """Test the logbook view links events via context parent_id."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1401,8 +1401,8 @@ async def test_logbook_context_from_template(
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
 
@@ -1817,8 +1817,8 @@ async def test_icon_and_state(
     """Test to ensure state and custom icons are returned."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
 
@@ -2410,8 +2410,8 @@ async def test_get_events(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -2634,8 +2634,8 @@ async def test_get_events_with_device_ids(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
 
@@ -2772,8 +2772,8 @@ async def test_logbook_select_entities_context_id(
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -2909,8 +2909,8 @@ async def test_get_events_with_context_state(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -3023,8 +3023,8 @@ async def test_logbook_user_id_from_parent_context(
     """
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
 
@@ -3067,8 +3067,8 @@ async def test_logbook_user_id_from_parent_context_state_changes_only(
     """
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
 
