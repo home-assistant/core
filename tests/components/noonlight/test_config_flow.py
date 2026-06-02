@@ -153,6 +153,56 @@ async def test_custom_requires_base_url(hass):
 
 
 @respx.mock
+async def test_duplicate_address_aborts(hass, setup_entry):
+    """Adding a second entry for the same environment+address+ZIP is rejected.
+
+    ``setup_entry`` already configures the sandbox entry at '1 Test St' /
+    '90001'; re-adding the same property must abort as already_configured.
+    """
+    _mock_token_probe()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "tok", CONF_ENVIRONMENT: ENV_SANDBOX},
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], _CALLER)
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@respx.mock
+async def test_different_address_allowed(hass, setup_entry):
+    """A different street address is a distinct property and is allowed.
+
+    Even when reusing the same environment + token, a distinct address is a
+    distinct property.
+    """
+    _mock_token_probe()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "tok", CONF_ENVIRONMENT: ENV_SANDBOX},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**_CALLER, CONF_ADDRESS: "2 Other Ave"}
+    )
+    # Distinct address -> not aborted; advances to the defaults step.
+    assert result["step_id"] == "defaults"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _DEFAULTS
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+@respx.mock
 async def test_options_flow(hass, setup_entry):
     """Options flow updates entry delay, dedupe, and granted services."""
     result = await hass.config_entries.options.async_init(setup_entry.entry_id)

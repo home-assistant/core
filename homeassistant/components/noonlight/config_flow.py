@@ -33,6 +33,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util import slugify
 
 from .const import (
     ALL_NOONLIGHT_SERVICES,
@@ -200,6 +201,16 @@ def _normalize_caller(user_input: dict[str, Any]) -> dict[str, str]:
     return errors
 
 
+def _location_unique_id(environment: str, address: str, zip_code: str) -> str:
+    """Build a stable per-property unique id.
+
+    Derived from environment + normalized street address + ZIP so the same
+    physical property cannot be added twice, while different properties (even
+    sharing one API token) remain distinct.
+    """
+    return "_".join([slugify(environment), slugify(address), slugify(zip_code)])
+
+
 def _caller_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     """Caller/location schema, optionally pre-filled with ``defaults``."""
     d = defaults or {}
@@ -330,6 +341,13 @@ class NoonlightConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = _normalize_caller(user_input)
             if not errors:
+                unique_id = _location_unique_id(
+                    self._data[CONF_ENVIRONMENT],
+                    user_input[CONF_ADDRESS],
+                    user_input[CONF_ZIP],
+                )
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
                 self._data.update(user_input)
                 return await self.async_step_defaults()
 
@@ -462,6 +480,13 @@ class NoonlightConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = _normalize_caller(user_input)
             if not errors:
+                unique_id = _location_unique_id(
+                    entry.data[CONF_ENVIRONMENT],
+                    user_input[CONF_ADDRESS],
+                    user_input[CONF_ZIP],
+                )
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     entry, data={**entry.data, **user_input}
                 )

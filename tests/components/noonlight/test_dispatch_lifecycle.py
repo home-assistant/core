@@ -103,6 +103,9 @@ async def test_dedupe_suppresses_repeat_dispatch(hass, setup_entry):
 @respx.mock
 async def test_dedupe_disabled_allows_repeat(hass, setup_entry):
     """With the dedupe window set to 0, repeats always fire."""
+    respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+        return_value=Response(404)
+    )
     hass.config_entries.async_update_entry(
         setup_entry, options={**setup_entry.options, "dedupe_seconds": 0}
     )

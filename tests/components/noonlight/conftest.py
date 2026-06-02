@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from httpx import Response
 import pytest
+import respx
 
 from homeassistant.components.noonlight.const import (
     ALL_NOONLIGHT_SERVICES,
@@ -47,6 +49,9 @@ def config_entry(caller_data: dict) -> MockConfigEntry:
         domain=DOMAIN,
         title="Main",
         entry_id="noonlighttest",
+        # Address-based unique id (environment + street + ZIP); see
+        # config_flow._location_unique_id.
+        unique_id="sandbox_1_test_st_90001",
         data={
             CONF_API_TOKEN: "test-token",
             CONF_ENVIRONMENT: ENV_SANDBOX,
@@ -62,8 +67,18 @@ def config_entry(caller_data: dict) -> MockConfigEntry:
 
 @pytest.fixture
 async def setup_entry(hass, config_entry: MockConfigEntry):
-    """Add the entry to hass and set up the integration."""
+    """Add the entry to hass and set up the integration.
+
+    Setup now performs a connectivity probe (test-before-setup), so the GET
+    status route must be mocked. This nested respx context is isolated from
+    any ``@respx.mock`` on the test body, which only activates after fixtures
+    resolve.
+    """
     config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with respx.mock:
+        respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+            return_value=Response(404)
+        )
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
     return config_entry

@@ -113,6 +113,9 @@ async def test_dispatch_includes_site_owner_id_and_combined_instructions(hass):
         },
     )
     entry.add_to_hass(hass)
+    respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+        return_value=Response(404)
+    )
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     create = respx.post(_ALARMS).mock(
@@ -226,6 +229,9 @@ async def test_test_dispatch_failure_raises_ha_error(hass, setup_entry):
 @respx.mock
 async def test_dispatch_all_limited_to_granted_services(hass, setup_entry):
     """dispatch_all with only police granted fires police alone."""
+    respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+        return_value=Response(404)
+    )
     hass.config_entries.async_update_entry(
         setup_entry, options={CONF_SERVICES_GRANTED: ["police"]}
     )
@@ -271,10 +277,14 @@ def _second_entry() -> MockConfigEntry:
     )
 
 
+@respx.mock
 async def test_multiple_accounts_require_account_arg(hass, setup_entry):
     """With >1 entry, omitting 'account' is rejected."""
     second = _second_entry()
     second.add_to_hass(hass)
+    respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+        return_value=Response(404)
+    )
     assert await hass.config_entries.async_setup(second.entry_id)
     await hass.async_block_till_done()
 
@@ -292,6 +302,9 @@ async def test_account_selected_by_title(hass, setup_entry):
     """The 'account' arg resolves by human-readable title."""
     second = _second_entry()
     second.add_to_hass(hass)
+    respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+        return_value=Response(404)
+    )
     assert await hass.config_entries.async_setup(second.entry_id)
     await hass.async_block_till_done()
     respx.post(_ALARMS).mock(

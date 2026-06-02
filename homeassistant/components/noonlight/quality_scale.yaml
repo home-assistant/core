@@ -28,16 +28,8 @@ rules:
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup:
-    status: todo
-    comment: >-
-      Setup does not raise ConfigEntryNotReady on an unreachable API; consider
-      a startup connectivity check (the heartbeat covers post-setup).
-  unique-config-entry:
-    status: todo
-    comment: >-
-      Entries have no unique_id and duplicates are not prevented; derive a
-      unique id (e.g. from the account/token) to guard duplicate setup.
+  test-before-setup: done
+  unique-config-entry: done
   # Silver
   action-exceptions: done
   config-entry-unloading: done

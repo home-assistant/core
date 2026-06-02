@@ -1,8 +1,10 @@
 {
   "config": {
     "abort": {
+      "already_configured": "This property (environment, address, and ZIP) is already configured.",
       "reauth_successful": "Re-authentication was successful.",
-      "reconfigure_successful": "Caller and location details updated."
+      "reconfigure_successful": "Caller and location details updated.",
+      "unique_id_mismatch": "The address and ZIP identify a different property. Add a new entry instead of changing this one's location."
     },
     "error": {
       "base_url_required": "A custom base URL is required for the 'custom' environment.",

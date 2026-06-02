@@ -23,10 +23,14 @@ def _coordinator(hass, entry):
     return entry.runtime_data
 
 
+@respx.mock
 async def test_restore_dedupe_and_last_event(hass, config_entry, hass_storage):
     """A stored dedupe timestamp + last event are restored on setup, but the
     machine settles to idle rather than resuming a 'dispatched' state.
     """
+    respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+        return_value=Response(404)
+    )
     key = STORAGE_KEY_TEMPLATE.format(entry_id=config_entry.entry_id)
     hass_storage[key] = {
         "version": 1,

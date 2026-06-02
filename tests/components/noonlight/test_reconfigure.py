@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from httpx import Response
+import respx
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.noonlight.const import (
     CONF_LOCATION_ID,
@@ -22,7 +25,12 @@ def _start_reconfigure(hass, entry):
     )
 
 
+@respx.mock
 async def test_reconfigure_updates_caller_and_site(hass, setup_entry):
+    # The reconfigure reloads the entry, which re-runs the setup probe.
+    respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+        return_value=Response(404)
+    )
     result = await _start_reconfigure(hass, setup_entry)
     assert result["step_id"] == "reconfigure"
 
@@ -32,10 +40,12 @@ async def test_reconfigure_updates_caller_and_site(hass, setup_entry):
             "name": "Brent",
             # Loose input is normalized on the way in.
             CONF_PHONE: "(202) 555-0142",
-            "address": "123 Main St",
+            # Address + ZIP are unchanged so the address-based unique id still
+            # matches this entry (reconfigure can't change an entry's identity).
+            "address": "1 Test St",
             "city": "Springfield",
             CONF_STATE: "va",
-            CONF_ZIP: "62704",
+            CONF_ZIP: "90001",
             CONF_LOCATION_ID: "Lake House",
         },
     )
