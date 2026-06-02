@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aioaquarite import AquariteError, AuthenticationError
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.vistapool.const import DOMAIN
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -50,7 +50,7 @@ async def _submit(hass: HomeAssistant, flow_id: str) -> dict:
 async def _configure(hass: HomeAssistant) -> dict:
     """Run the user step from start to finish with the standard credentials."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     return await _submit(hass, result["flow_id"])
 
@@ -65,7 +65,7 @@ async def test_user_step(
 ) -> None:
     """Test the user step shows a form and creates an entry on submission."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -93,7 +93,7 @@ async def test_invalid_auth(
     mock_vistapool_auth.authenticate.side_effect = AuthenticationError
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await _submit(hass, result["flow_id"])
 
@@ -118,7 +118,7 @@ async def test_cannot_connect(
     mock_vistapool_auth.authenticate.side_effect = AquariteError("network down")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await _submit(hass, result["flow_id"])
 
@@ -141,7 +141,7 @@ async def test_cannot_connect_during_pool_fetch(
     mock_vistapool_client.get_pools.side_effect = AquariteError("network down")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await _submit(hass, result["flow_id"])
 
@@ -165,7 +165,7 @@ async def test_unknown_exception(
     mock_vistapool_auth.authenticate.side_effect = RuntimeError("Connection refused")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await _submit(hass, result["flow_id"])
 
@@ -188,7 +188,7 @@ async def test_unknown_exception_during_pool_fetch(
     mock_vistapool_client.get_pools.side_effect = RuntimeError("boom")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await _submit(hass, result["flow_id"])
 
@@ -211,7 +211,7 @@ async def test_no_pools(
     mock_vistapool_client.get_pools.return_value = {}
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await _submit(hass, result["flow_id"])
 
@@ -251,7 +251,7 @@ async def test_dhcp_discovery_starts_user_flow(
     """Test DHCP discovery routes the user into the credentials step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
+        context={"source": SOURCE_DHCP},
         data=_DHCP_INFO,
     )
 
@@ -274,7 +274,7 @@ async def test_dhcp_discovery_aborts_when_configured(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
+        context={"source": SOURCE_DHCP},
         data=_DHCP_INFO,
     )
 
