@@ -26,6 +26,7 @@ class WizNumberEntityDescription(NumberEntityDescription):
     required_feature: str
     set_value_fn: Callable[[wizlight, int], Coroutine[None, None, None]]
     value_fn: Callable[[wizlight], int | None]
+    supported_fn: Callable[[wizlight], bool] | None = None
 
 
 async def _async_set_speed(device: wizlight, speed: int) -> None:
@@ -57,9 +58,22 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         value_fn=lambda device: cast(int | None, device.state.get_ratio()),
         set_value_fn=_async_set_ratio,
         required_feature="dual_head",
+        # Some ratio-based dual-head lights do not advertise this feature.
+        supported_fn=lambda device: (
+            device.state is not None and device.state.get_ratio() is not None
+        ),
         entity_category=EntityCategory.CONFIG,
     ),
 )
+
+
+def _supports_number_description(
+    device: wizlight, description: WizNumberEntityDescription
+) -> bool:
+    """Return whether the device supports a number description."""
+    return getattr(device.bulbtype.features, description.required_feature, False) or (
+        description.supported_fn is not None and description.supported_fn(device)
+    )
 
 
 async def async_setup_entry(
@@ -71,9 +85,7 @@ async def async_setup_entry(
     async_add_entities(
         WizSpeedNumber(entry.runtime_data, entry.title, description)
         for description in NUMBERS
-        if getattr(
-            entry.runtime_data.bulb.bulbtype.features, description.required_feature
-        )
+        if _supports_number_description(entry.runtime_data.bulb, description)
     )
 
 
