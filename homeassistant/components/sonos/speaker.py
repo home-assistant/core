@@ -450,8 +450,6 @@ class SonosSpeaker:
             self._poll_timer()
             self._poll_timer = None
 
-        await self.async_unsubscribe()
-
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
         """Handle a failed subscription renewal."""
