@@ -103,6 +103,8 @@ Every check has a code following the
 | `W7420` | [`home-assistant-tests-direct-platform-async-setup-entry`](#w7420-home-assistant-tests-direct-platform-async-setup-entry) | Tests should not call a platform's `async_setup_entry` directly |
 | `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
 | `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
+| `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
+| `W7424` | [`home-assistant-entity-unique-id-static`](#w7424-home-assistant-entity-unique-id-static) | Entity class sets `_attr_unique_id` to a static string at class level |
 
 
 ## `home_assistant_logger` checker
@@ -399,3 +401,46 @@ the setup through the normal pipeline:
   `homeassistant.setup`.
 
 See [epic #79](https://github.com/home-assistant/epics/issues/79).
+
+
+## `home_assistant_entity_unique_id` checker
+
+Quality-scale-gated checker for the [`entity-unique-id`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/entity-unique-id)
+Bronze rule. Only fires for entity-platform modules whose
+`quality_scale.yaml` marks `entity-unique-id` as `done`.
+
+### `W7423`: `home-assistant-missing-entity-unique-id`
+
+Entity class does not statically guarantee a non-`None` unique id.
+Accepted (in the class or any ancestor):
+
+1. Class body: `_attr_unique_id = <non-None value>`.
+2. A method body where every successful path executes
+   `self._attr_unique_id = <expr>` (top-level, or in both branches of an
+   `if/else`). Early-exit guards (`if cond: return` / `raise`) before
+   the assignment break the guarantee and are rejected.
+3. A `unique_id` property/method override on the class.
+
+Mixin/abstract bases that are subclassed by another class in the same
+module are exempted. Use
+`# pylint: disable=home-assistant-missing-entity-unique-id` on the
+class declaration as the escape hatch for dynamic patterns the static
+analysis cannot follow.
+
+### `W7424`: `home-assistant-entity-unique-id-static`
+
+Entity class sets `_attr_unique_id` to a literal string at class body.
+Entity unique IDs are scoped per `(domain, platform)` across **all**
+config entries of the integration, so a static value collides on the
+second config entry of a multi-entry integration.
+
+The rule fires when:
+
+- the class body assigns `_attr_unique_id = "..."` (or
+  `_attr_unique_id: str = "..."`) to a literal string, and
+- the integration's `manifest.json` does not declare
+  `single_config_entry: true`.
+
+Resolve by either computing the id per instance (config-entry id,
+serial, MAC, etc.) or declaring the integration as
+`single_config_entry: true` when there is genuinely only one instance.
