@@ -106,10 +106,10 @@ class GenericHygrostatExtraStoredData(ExtraStoredData):
     def from_dict(cls, restored: dict[str, Any]) -> Self:
         """Initialize a stored state from a dict."""
         return cls(
-            restored.get("state"),
-            restored.get("target_humidity"),
-            restored.get("saved_target_humidity"),
-            restored.get("is_away", False),
+            state=restored.get("state"),
+            target_humidity=restored.get("target_humidity"),
+            saved_target_humidity=restored.get("saved_target_humidity"),
+            is_away=restored.get("is_away", False),
         )
 
 

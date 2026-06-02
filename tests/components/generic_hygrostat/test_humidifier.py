@@ -1625,10 +1625,13 @@ async def test_restore_state_from_extra_data_when_unavailable(
 ) -> None:
     """Ensure settings are restored from extra data after an ungraceful reboot.
 
-    On a hard/VM reboot the sensor has not reported yet, so the hygrostat is
-    unavailable and the persisted state has no attributes. The settings must
-    still be restored from the entity specific extra stored data. Regression
-    test for https://github.com/home-assistant/core/issues/153788.
+    Simulates the scenario where, on the previous run, the sensor had not
+    reported yet so the hygrostat was persisted as ``unavailable`` with no
+    state attributes. The settings must still be restored from the entity
+    specific extra stored data. The sensor is set up here so that after
+    restore the entity becomes active and the restored values are exposed
+    as state attributes for verification. Regression test for
+    https://github.com/home-assistant/core/issues/153788.
     """
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
