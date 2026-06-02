@@ -69,6 +69,7 @@ class ShoppingTodoListEntity(TodoListEntity):
         data = {}
         if "status" in info:
             data["complete"] = info["status"] == TodoItemStatus.COMPLETED
+        # Note that any additional fields are ignored.
 
         if data:
             await self._data.async_update_list(info=data)

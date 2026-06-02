@@ -132,7 +132,7 @@
       "name": "Update to-do list item"
     },
     "update_list": {
-      "description": "Updates all to-do list items.",
+      "description": "Updates every item in to-do list.",
       "fields": {
         "status": {
           "description": "A status for each to-do item in list.",

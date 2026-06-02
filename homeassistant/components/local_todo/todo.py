@@ -220,7 +220,7 @@ class LocalTodoListEntity(TodoListEntity):
         item = _prepare_edit(info)
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
-            # Only edit items that where something changes
+            # Only edit items for which something changes
             uids_to_edit = [t.uid for t in todo_store.todo_list() if _is_edit(t, item)]
             await self.hass.async_add_executor_job(
                 _todo_store_bulk_edit, todo_store, uids_to_edit, item
