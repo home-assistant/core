@@ -1,7 +1,5 @@
 """Helper functions for Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import astuple, dataclass
@@ -151,13 +149,15 @@ def is_opening_state_notification_value(value: ZwaveValue) -> bool:
     )
 
 
-def get_opening_state_notification_value(node: ZwaveNode) -> ZwaveValue | None:
+def get_opening_state_notification_value(
+    node: ZwaveNode, endpoint: int | None = None
+) -> ZwaveValue | None:
     """Return the Access Control Opening state value for a node."""
     value_id = get_value_id_str(
         node,
         CommandClass.NOTIFICATION,
         NOTIFICATION_ACCESS_CONTROL_PROPERTY,
-        None,
+        endpoint,
         OPENING_STATE_PROPERTY_KEY,
     )
     return node.values.get(value_id)
@@ -305,7 +305,7 @@ def async_get_node_from_device_id(
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
-    if entry.state != ConfigEntryState.LOADED:
+    if entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client = entry.runtime_data.client
@@ -353,7 +353,7 @@ async def async_get_provisioning_entry_from_device_id(
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
-    if entry.state != ConfigEntryState.LOADED:
+    if entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client = entry.runtime_data.client
@@ -570,12 +570,12 @@ def get_value_state_schema(
             return vol.Coerce(bool)
 
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
-            return vol.In({int(k): v for k, v in value.metadata.states.items()})
+            return vol.In({str(int(k)): v for k, v in value.metadata.states.items()})
 
         return None
 
     if value.metadata.states:
-        return vol.In({int(k): v for k, v in value.metadata.states.items()})
+        return vol.In({str(int(k)): v for k, v in value.metadata.states.items()})
 
     return vol.All(
         vol.Coerce(int),

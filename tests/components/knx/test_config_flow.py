@@ -1,9 +1,10 @@
 """Test the KNX config flow."""
 
 from contextlib import contextmanager
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from xknx.exceptions import XKNXException
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor
@@ -58,6 +59,12 @@ FIXTURE_KEYRING = sync_load_keyring(
 )
 FIXTURE_UPLOAD_UUID = "0123456789abcdef0123456789abcdef"
 GATEWAY_INDIVIDUAL_ADDRESS = IndividualAddress("1.0.0")
+
+
+async def _mock_validate_ip_for_invalid_local(ip_address: str) -> str:
+    if ip_address in {"no_local_ip", "asdf"}:
+        raise XKNXException
+    return ip_address
 
 
 @pytest.fixture(name="knx_setup")
@@ -213,16 +220,13 @@ async def test_routing_setup(
     "homeassistant.components.knx.config_flow.GatewayScanner",
     return_value=GatewayScannerMock(),
 )
-async def test_routing_setup_advanced(
+async def test_routing_setup_with_local_ip(
     gateway_scanner_mock, hass: HomeAssistant, knx_setup
 ) -> None:
-    """Test routing setup with advanced options."""
+    """Test routing setup where user specifies a local IP."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": True,
-        },
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
@@ -238,15 +242,19 @@ async def test_routing_setup_advanced(
     assert result["errors"] == {"base": "no_router_discovered"}
 
     # invalid user input
-    result_invalid_input = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_KNX_MCAST_GRP: "10.1.2.3",  # no valid multicast group
-            CONF_KNX_MCAST_PORT: 3675,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "not_a_valid_address",
-            CONF_KNX_LOCAL_IP: "no_local_ip",
-        },
-    )
+    with patch(
+        "homeassistant.components.knx.config_flow.xknx_validate_ip",
+        new=AsyncMock(side_effect=_mock_validate_ip_for_invalid_local),
+    ):
+        result_invalid_input = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_MCAST_GRP: "10.1.2.3",  # no valid multicast group
+                CONF_KNX_MCAST_PORT: 3675,
+                CONF_KNX_INDIVIDUAL_ADDRESS: "not_a_valid_address",
+                CONF_KNX_LOCAL_IP: "no_local_ip",
+            },
+        )
     assert result_invalid_input["type"] is FlowResultType.FORM
     assert result_invalid_input["step_id"] == "routing"
     assert result_invalid_input["errors"] == {
@@ -330,7 +338,8 @@ async def test_routing_secure_manual_setup(
     result_invalid_key1 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_KNX_ROUTING_BACKBONE_KEY: "xxaacc44bbaacc44bbaacc44bbaaccyy",  # invalid hex string
+            # invalid hex string
+            CONF_KNX_ROUTING_BACKBONE_KEY: "xxaacc44bbaacc44bbaacc44bbaaccyy",
             CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
         },
     )
@@ -716,10 +725,7 @@ async def test_tunneling_setup_for_local_ip(
     """Test tunneling if only one gateway is found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": True,
-        },
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
@@ -751,15 +757,19 @@ async def test_tunneling_setup_for_local_ip(
         "base": "no_tunnel_discovered",
     }
     # invalid local ip address
-    result_invalid_local = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING,
-            CONF_HOST: "192.168.0.2",
-            CONF_PORT: 3675,
-            CONF_KNX_LOCAL_IP: "asdf",
-        },
-    )
+    with patch(
+        "homeassistant.components.knx.config_flow.xknx_validate_ip",
+        new=AsyncMock(side_effect=_mock_validate_ip_for_invalid_local),
+    ):
+        result_invalid_local = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING,
+                CONF_HOST: "192.168.0.2",
+                CONF_PORT: 3675,
+                CONF_KNX_LOCAL_IP: "asdf",
+            },
+        )
     assert result_invalid_local["type"] is FlowResultType.FORM
     assert result_invalid_local["step_id"] == "manual_tunnel"
     assert result_invalid_local["errors"] == {
@@ -1084,7 +1094,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
     request_description_mock: MagicMock,
     hass: HomeAssistant,
 ) -> None:
-    """Test flow reaches secure_tunnellinn menu step from manual tunneling configuration."""
+    """Test flow reaches secure_tunnelling menu from manual config."""
     gateway = _gateway_descriptor(
         "192.168.0.1",
         3675,
@@ -1496,7 +1506,7 @@ async def test_reconfigure_flow_routing(hass: HomeAssistant, knx_setup) -> None:
 
 
 async def test_reconfigure_update_keyfile(hass: HomeAssistant, knx_setup) -> None:
-    """Test reconfigure flow updating keyfile when tunnel endpoint is already configured."""
+    """Test reconfigure flow updating keyfile when tunnel is configured."""
     start_data = {
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,

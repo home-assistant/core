@@ -1,7 +1,5 @@
 """Support for KNX climate entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from xknx import XKNX
@@ -119,7 +117,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
+def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
     climate_mode = XknxClimateMode(
         xknx,
@@ -382,7 +380,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
                 self._attr_fan_modes = [fan_zero_mode, FAN_LOW, FAN_HIGH]
             elif fan_max_step == 1:
                 self._attr_fan_modes = [fan_zero_mode, FAN_ON]
-            elif device.fan_speed_mode == FanSpeedMode.STEP:
+            elif device.fan_speed_mode is FanSpeedMode.STEP:
                 self._attr_fan_modes = [fan_zero_mode] + [
                     str(i) for i in range(1, fan_max_step + 1)
                 ]
@@ -552,7 +550,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
         if not fan_speed or self._attr_fan_modes is None:
             return self.fan_zero_mode
 
-        if self._device.fan_speed_mode == FanSpeedMode.STEP:
+        if self._device.fan_speed_mode is FanSpeedMode.STEP:
             return self._attr_fan_modes[fan_speed]
 
         # Find the closest fan mode percentage
@@ -572,7 +570,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
 
         fan_mode_index = self._attr_fan_modes.index(fan_mode)
 
-        if self._device.fan_speed_mode == FanSpeedMode.STEP:
+        if self._device.fan_speed_mode is FanSpeedMode.STEP:
             await self._device.set_fan_speed(fan_mode_index)
             return
 
@@ -646,9 +644,17 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
+        self._device = _create_climate_yaml(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_climate(knx_module.xknx, config),
+            unique_id=(
+                f"{self._device.temperature.group_address_state}_"
+                f"{self._device.target_temperature.group_address_state}_"
+                f"{self._device.target_temperature.group_address}_"
+                f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
+            ),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         default_hvac_mode: HVACMode = config[ClimateConf.DEFAULT_CONTROLLER_MODE]
         fan_max_step = config[ClimateConf.FAN_MAX_STEP]
@@ -658,14 +664,6 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
             default_hvac_mode=default_hvac_mode,
             fan_max_step=fan_max_step,
             fan_zero_mode=fan_zero_mode,
-        )
-
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = (
-            f"{self._device.temperature.group_address_state}_"
-            f"{self._device.target_temperature.group_address_state}_"
-            f"{self._device.target_temperature.group_address}_"
-            f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
         )
 
 

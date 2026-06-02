@@ -1,8 +1,7 @@
 """Supervisor events monitor."""
 
-from __future__ import annotations
-
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 import logging
@@ -17,6 +16,7 @@ from aiohasupervisor.models import (
     UnsupportedReason,
 )
 
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_call_later
@@ -27,9 +27,9 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import (
-    ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_HEALTHY,
+    ATTR_SLUG,
     ATTR_STARTUP,
     ATTR_SUPPORTED,
     ATTR_UNHEALTHY_REASONS,
@@ -45,12 +45,14 @@ from .const import (
     EVENT_SUPPORTED_CHANGED,
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_MOUNT_MOUNT_FAILED,
+    MAIN_COORDINATOR,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
     PLACEHOLDER_KEY_FREE_SPACE,
@@ -59,8 +61,8 @@ from .const import (
     STARTUP_COMPLETE,
     UPDATE_KEY_SUPERVISOR,
 )
-from .coordinator import HassioDataUpdateCoordinator, get_addons_info, get_host_info
-from .handler import HassIO, get_supervisor_client
+from .coordinator import HassioMainDataUpdateCoordinator, get_addons_list, get_host_info
+from .handler import get_supervisor_client
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
 ISSUE_KEY_UNSUPPORTED = "unsupported"
@@ -88,6 +90,8 @@ ISSUE_KEYS_FOR_REPAIRS = {
     "issue_system_disk_lifetime",
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
+    "issue_system_ntp_sync_failed",
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -170,14 +174,15 @@ class Issue:
 class SupervisorIssues:
     """Create issues from supervisor events."""
 
-    def __init__(self, hass: HomeAssistant, client: HassIO) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize supervisor issues."""
         self._hass = hass
-        self._client = client
         self._unsupported_reasons: set[str] = set()
         self._unhealthy_reasons: set[str] = set()
         self._issues: dict[UUID, Issue] = {}
         self._supervisor_client = get_supervisor_client(hass)
+        self._disconnect: Callable[[], None] | None = None
+        self._cancel_update_retry: Callable[[], None] | None = None
 
     @property
     def unhealthy_reasons(self) -> set[str]:
@@ -249,11 +254,15 @@ class SupervisorIssues:
         return set(self._issues.values())
 
     def add_issue(self, issue: Issue) -> None:
-        """Add or update an issue in the list. Create or update a repair if necessary."""
+        """Add or update an issue in the list.
+
+        Create or update a repair if necessary.
+        """
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:
-            placeholders: dict[str, str] = {}
             if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
-                placeholders |= EXTRA_PLACEHOLDERS[issue.key]
+                placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
+            else:
+                placeholders = {}
 
             if issue.reference:
                 placeholders[PLACEHOLDER_KEY_REFERENCE] = issue.reference
@@ -265,23 +274,18 @@ class SupervisorIssues:
                     placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
                         f"/hassio/addon/{issue.reference}"
                     )
-                    addons = get_addons_info(self._hass)
-                    if addons and issue.reference in addons:
-                        placeholders[PLACEHOLDER_KEY_ADDON] = addons[issue.reference][
-                            "name"
-                        ]
-                    else:
-                        placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
+                    addons_list = get_addons_list(self._hass) or []
+                    placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
+                    for addon in addons_list:
+                        if addon[ATTR_SLUG] == issue.reference:
+                            placeholders[PLACEHOLDER_KEY_ADDON] = addon[ATTR_NAME]
+                            break
 
             elif issue.key == ISSUE_KEY_SYSTEM_FREE_SPACE:
                 host_info = get_host_info(self._hass)
-                if (
-                    host_info
-                    and "data" in host_info
-                    and "disk_free" in host_info["data"]
-                ):
+                if host_info and "disk_free" in host_info:
                     placeholders[PLACEHOLDER_KEY_FREE_SPACE] = str(
-                        host_info["data"]["disk_free"]
+                        host_info["disk_free"]
                     )
                 else:
                     placeholders[PLACEHOLDER_KEY_FREE_SPACE] = "<2"
@@ -352,24 +356,41 @@ class SupervisorIssues:
 
     async def setup(self) -> None:
         """Create supervisor events listener."""
-        await self._update()
+        await self.async_update()
 
-        async_dispatcher_connect(
+        self._disconnect = async_dispatcher_connect(
             self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
         )
 
-    async def _update(self, _: datetime | None = None) -> None:
+    def unload(self) -> None:
+        """Remove supervisor events listener."""
+        if self._disconnect is not None:
+            self._disconnect()
+            self._disconnect = None
+        if self._cancel_update_retry is not None:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
+
+    async def async_update(self) -> None:
         """Update issues from Supervisor resolution center."""
+        if self._cancel_update_retry:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
+        await self._update()
+
+    async def _update(self, _: datetime | None = None) -> None:
+        """Update issues from Supervisor resolution center with retry on failure."""
         try:
             data = await self._supervisor_client.resolution.info()
         except SupervisorError as err:
             _LOGGER.error("Failed to update supervisor issues: %r", err)
-            async_call_later(
+            self._cancel_update_retry = async_call_later(
                 self._hass,
                 REQUEST_REFRESH_DELAY,
                 HassJob(self._update, cancel_on_shutdown=True),
             )
             return
+        self._cancel_update_retry = None
         self.unhealthy_reasons = set(data.unhealthy)
         self.unsupported_reasons = set(data.unsupported)
 
@@ -393,7 +414,7 @@ class SupervisorIssues:
             and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
             and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
         ):
-            self._hass.async_create_task(self._update())
+            self._hass.async_create_task(self.async_update())
 
         elif event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
             self.unhealthy_reasons = (
@@ -417,8 +438,8 @@ class SupervisorIssues:
 
     def _async_coordinator_refresh(self) -> None:
         """Refresh coordinator to update latest data in entities."""
-        coordinator: HassioDataUpdateCoordinator | None
-        if coordinator := self._hass.data.get(ADDONS_COORDINATOR):
+        coordinator: HassioMainDataUpdateCoordinator | None
+        if coordinator := self._hass.data.get(MAIN_COORDINATOR):
             coordinator.config_entry.async_create_task(
                 self._hass, coordinator.async_refresh()
             )

@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'service_info': dict({
+      'address': '**REDACTED**',
+      'advertisement': list([
+        'Jar',
+        dict({
+        }),
+        dict({
+        }),
+        list([
+        ]),
+        -127,
+        -60,
+        list([
+          list([
+          ]),
+        ]),
+      ]),
+      'connectable': True,
+      'device': '**REDACTED**',
+      'manufacturer_data': dict({
+      }),
+      'name': '**REDACTED**',
+      'raw': None,
+      'rssi': -60,
+      'service_data': dict({
+      }),
+      'service_uuids': list([
+      ]),
+      'source': '**REDACTED**',
+      'tx_power': -127,
+    }),
+  })
+# ---

@@ -46,6 +46,7 @@ async def test_turn_on(hass: HomeAssistant, switch_entity_id: str) -> None:
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(switch_entity_id)
     assert state.state == STATE_OFF
@@ -56,6 +57,7 @@ async def test_turn_on(hass: HomeAssistant, switch_entity_id: str) -> None:
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(switch_entity_id)
     assert state.state == STATE_ON
@@ -70,6 +72,7 @@ async def test_turn_off(hass: HomeAssistant, switch_entity_id: str) -> None:
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(switch_entity_id)
     assert state.state == STATE_ON
@@ -80,6 +83,7 @@ async def test_turn_off(hass: HomeAssistant, switch_entity_id: str) -> None:
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(switch_entity_id)
     assert state.state == STATE_OFF
@@ -93,6 +97,7 @@ async def test_turn_off_without_entity_id(
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "all"}, blocking=True
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(switch_entity_id)
     assert state.state == STATE_ON
@@ -100,6 +105,7 @@ async def test_turn_off_without_entity_id(
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(switch_entity_id)
     assert state.state == STATE_OFF

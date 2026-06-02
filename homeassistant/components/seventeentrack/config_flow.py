@@ -1,7 +1,5 @@
 """Adds config flow for 17track.net."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -9,7 +7,7 @@ from pyseventeentrack import Client as SeventeenTrackClient
 from pyseventeentrack.errors import SeventeenTrackError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -25,6 +23,7 @@ from .const import (
     DEFAULT_SHOW_DELIVERED,
     DOMAIN,
 )
+from .coordinator import SeventeenTrackConfigEntry
 
 CONF_SHOW = {
     vol.Optional(CONF_SHOW_ARCHIVED, default=DEFAULT_SHOW_ARCHIVED): bool,
@@ -54,7 +53,7 @@ class SeventeenTrackConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SeventeenTrackConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
@@ -99,5 +98,5 @@ class SeventeenTrackConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _get_client(self):
-        session = aiohttp_client.async_get_clientsession(self.hass)
+        session = aiohttp_client.async_create_clientsession(self.hass)
         return SeventeenTrackClient(session=session)

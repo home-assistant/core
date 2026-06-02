@@ -148,7 +148,8 @@ async def test_access_from_banned_ip_with_invalid_ip_entry(
     manager = app[KEY_BAN_MANAGER]
     assert len(manager.ip_bans_lookup) == len(BANNED_IPS)
 
-    # Valid banned IPs should still be blocked (even though they came after invalid ones)
+    # Valid banned IPs should still be blocked (even though they came after invalid
+    # ones)
     for remote_addr in BANNED_IPS:
         set_real_ip(remote_addr)
         resp = await client.get("/")
@@ -245,14 +246,27 @@ async def test_ip_ban_manager_never_started(
         )
     ),
 )
+@pytest.mark.usefixtures(
+    "hassio_env",
+    "resolution_info",
+    "os_info",
+    "store_info",
+    "supervisor_info",
+    "homeassistant_info",
+    "host_info",
+    "network_info",
+    "addons_list",
+    "addon_info",
+    "homeassistant_stats",
+    "supervisor_stats",
+    "ingress_panels",
+)
 async def test_access_from_supervisor_ip(
     remote_addr,
     bans,
     status,
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
-    hassio_env,
-    resolution_info: AsyncMock,
 ) -> None:
     """Test accessing to server from supervisor IP."""
     app = web.Application()
@@ -360,12 +374,15 @@ async def test_ip_bans_file_creation(
         assert len(notifications) == 2
         assert (
             notifications["http-login"]["message"]
-            == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
+            == "Login attempt or request with invalid authentication"
+            " from example.com (200.201.202.204)."
+            " See the log for details."
         )
 
         assert (
-            "Login attempt or request with invalid authentication from example.com (200.201.202.204). Requested URL: '/example'."
-            in caplog.text
+            "Login attempt or request with invalid authentication"
+            " from example.com (200.201.202.204)."
+            " Requested URL: '/example'." in caplog.text
         )
 
 
@@ -465,3 +482,34 @@ async def test_single_ban_file_entry(
         await manager.async_add_ban(remote_ip)
 
     assert m_open.call_count == 1
+
+
+async def test_unix_socket_skips_ban_check(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test that Unix socket requests bypass ban middleware."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={
+            banned_ip: {"banned_at": "2016-11-16T19:20:03"} for banned_ip in BANNED_IPS
+        },
+    ):
+        client = await aiohttp_client(app)
+
+    # Verify the IP is actually banned for normal requests
+    set_real_ip(BANNED_IPS[0])
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.FORBIDDEN
+
+    # Unix socket requests should bypass ban checks
+    with patch(
+        "homeassistant.components.http.ban.is_supervisor_unix_socket_request",
+        return_value=True,
+    ):
+        resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND

@@ -1,7 +1,5 @@
 """Support for the NextDNS service."""
 
-from __future__ import annotations
-
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError

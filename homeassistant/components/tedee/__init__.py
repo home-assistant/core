@@ -7,7 +7,7 @@ from typing import Any
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
-from aiotedee.exception import TedeeDataUpdateException, TedeeWebhookException
+from aiotedee.exceptions import TedeeDataUpdateException, TedeeWebhookException
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (

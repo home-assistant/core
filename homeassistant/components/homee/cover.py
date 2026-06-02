@@ -1,7 +1,7 @@
 """The homee cover platform."""
 
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -30,6 +30,17 @@ OPEN_CLOSE_ATTRIBUTES = [
     AttributeType.UP_DOWN,
 ]
 POSITION_ATTRIBUTES = [AttributeType.POSITION, AttributeType.SHUTTER_SLAT_POSITION]
+COVER_DEVICE_PROFILES = {
+    NodeProfile.GARAGE_DOOR_OPERATOR: CoverDeviceClass.GARAGE,
+    NodeProfile.ENTRANCE_GATE_OPERATOR: CoverDeviceClass.GATE,
+    NodeProfile.SHUTTER_POSITION_SWITCH: CoverDeviceClass.SHUTTER,
+}
+IS_CLOSED_ATTRIBUTES = [
+    AttributeType.OPEN_CLOSE,
+    AttributeType.UP_DOWN,
+    AttributeType.POSITION,
+    AttributeType.SHUTTER_SLAT_POSITION,
+]
 
 
 def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute | None:
@@ -44,7 +55,7 @@ def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute | None:
 def get_cover_features(
     node: HomeeNode, open_close_attribute: HomeeAttribute | None
 ) -> CoverEntityFeature:
-    """Determine the supported cover features of a homee node based on the available attributes."""
+    """Determine the supported cover features of a homee node."""
     features = CoverEntityFeature(0)
 
     if (open_close_attribute is not None) and open_close_attribute.editable:
@@ -69,12 +80,6 @@ def get_cover_features(
 
 def get_device_class(node: HomeeNode) -> CoverDeviceClass | None:
     """Determine the device class a homee node based on the node profile."""
-    COVER_DEVICE_PROFILES = {
-        NodeProfile.GARAGE_DOOR_OPERATOR: CoverDeviceClass.GARAGE,
-        NodeProfile.ENTRANCE_GATE_OPERATOR: CoverDeviceClass.GATE,
-        NodeProfile.SHUTTER_POSITION_SWITCH: CoverDeviceClass.SHUTTER,
-    }
-
     return COVER_DEVICE_PROFILES.get(node.profile)
 
 
@@ -84,9 +89,23 @@ async def add_cover_entities(
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee cover entities."""
-    async_add_entities(
-        HomeeCover(node, config_entry) for node in nodes if is_cover_node(node)
-    )
+    entities: list[HomeeNode] = []
+    for node in nodes:
+        if is_cover_node(node):
+            if any(
+                node.get_attribute_by_type(attr) is not None
+                for attr in IS_CLOSED_ATTRIBUTES
+            ):
+                entities.append(node)
+            else:
+                _LOGGER.warning(
+                    "Cover %s could not be added, because it is missing an Attribute "
+                    "for closed indication. Please open an issue at "
+                    "https://github.com/home-assistant/core/issues",
+                    node.name,
+                )
+
+    async_add_entities(HomeeCover(cover, config_entry) for cover in entities)
 
 
 async def async_setup_entry(
@@ -100,7 +119,7 @@ async def async_setup_entry(
 
 
 def is_cover_node(node: HomeeNode) -> bool:
-    """Determine if a node is controllable as a homee cover based on its profile and attributes."""
+    """Determine if a node is controllable as a homee cover."""
     return node.profile in [
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH,
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH_WITHOUT_SLAT_POSITION,
@@ -188,7 +207,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         return None
 
     @property
-    def is_closed(self) -> bool | None:
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         if (
             attribute := self._node.get_attribute_by_type(AttributeType.POSITION)
@@ -201,15 +220,16 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
             return self._open_close_attribute.get_value() == 0
 
-        # If none of the above is present, it might be a slat only cover.
-        if (
-            attribute := self._node.get_attribute_by_type(
-                AttributeType.SHUTTER_SLAT_POSITION
-            )
-        ) is not None:
-            return attribute.get_value() == attribute.minimum
+        # If none of the above is present, it will be a slat only cover.
+        attribute = self._node.get_attribute_by_type(
+            AttributeType.SHUTTER_SLAT_POSITION
+        )
+        if TYPE_CHECKING:
+            # This case should not happen, because we check for
+            # the presence of an IS_CLOSED_ATTRIBUTE when adding entities.
+            assert attribute is not None
 
-        return None
+        return attribute.get_value() == attribute.minimum
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

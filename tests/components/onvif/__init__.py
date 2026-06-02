@@ -1,8 +1,8 @@
 """Tests for the ONVIF integration."""
 
-from __future__ import annotations
-
+import collections
 from collections import defaultdict
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from onvif.exceptions import ONVIFError
@@ -12,7 +12,7 @@ from zeep.exceptions import Fault
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
 from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
-from homeassistant.components.onvif.event import EventManager
+from homeassistant.components.onvif.event_manager import EventManager
 from homeassistant.components.onvif.models import (
     Capabilities,
     DeviceInfo,
@@ -54,8 +54,17 @@ def setup_mock_onvif_camera(
     no_profiles=False,
     auth_failure=False,
     wrong_port=False,
+    with_full_setup=False,
 ):
-    """Prepare mock onvif.ONVIFCamera."""
+    """Prepare mock onvif.ONVIFCamera.
+
+    When ``with_full_setup`` is set, the mock is additionally configured with
+    every service ``ONVIFDevice.async_setup`` invokes, so that a config entry
+    can be fully set up end-to-end. In this mode the profile and device
+    information responses are replaced, so the flags that control them
+    (``with_h264``, ``two_profiles``, ``no_profiles``, ``auth_fail`` and
+    ``profiles_transient_failure``) have no effect.
+    """
     devicemgmt = MagicMock()
 
     device_info = MagicMock()
@@ -111,6 +120,62 @@ def setup_mock_onvif_camera(
     mock_onvif_camera.close = AsyncMock(return_value=None)
     mock_onvif_camera.xaddrs = {}
     mock_onvif_camera.services = {}
+
+    if with_full_setup:
+        devicemgmt.GetSystemDateAndTime = AsyncMock(return_value=None)
+        devicemgmt.GetDeviceInformation = AsyncMock(
+            return_value=SimpleNamespace(
+                Manufacturer=MANUFACTURER,
+                Model=MODEL,
+                FirmwareVersion=FIRMWARE_VERSION,
+                SerialNumber=SERIAL_NUMBER if with_serial else None,
+            )
+        )
+
+        media_service.GetServiceCapabilities = AsyncMock(
+            return_value=SimpleNamespace(SnapshotUri=False)
+        )
+        media_service.GetProfiles = AsyncMock(
+            return_value=[
+                SimpleNamespace(
+                    token="profile_token",
+                    Name="MainStream",
+                    VideoEncoderConfiguration=SimpleNamespace(
+                        Resolution=SimpleNamespace(Width=1920, Height=1080),
+                        Encoding="H264",
+                    ),
+                    VideoSourceConfiguration=MagicMock(),
+                    PTZConfiguration=MagicMock(),
+                )
+            ]
+        )
+
+        ptz_service = MagicMock()
+        ptz_service.GetPresets = AsyncMock(return_value=[])
+        mock_onvif_camera.create_ptz_service = AsyncMock(return_value=ptz_service)
+        mock_onvif_camera.create_imaging_service = AsyncMock(return_value=MagicMock())
+        mock_onvif_camera.get_snapshot = AsyncMock(return_value=False)
+        mock_onvif_camera.get_capabilities = AsyncMock(
+            return_value={
+                "Media": {"XAddr": "http://media"},
+                "PTZ": {"XAddr": "http://ptz"},
+                "Imaging": {"XAddr": "http://imaging"},
+                "Events": {
+                    "XAddr": None,
+                    "WSPullPointSupport": False,
+                    "WSSubscriptionPolicySupport": False,
+                },
+            }
+        )
+        # Let the real event managers run but fail gracefully at the onvif
+        # library boundary, so async_start_events returns False and setup
+        # still reaches LOADED (models a camera without working events).
+        mock_onvif_camera.create_pullpoint_manager = AsyncMock(
+            side_effect=Fault("no pullpoint support")
+        )
+        mock_onvif_camera.create_notification_manager = AsyncMock(
+            side_effect=Fault("no notification support")
+        )
 
     def mock_constructor(
         host,
@@ -196,7 +261,7 @@ async def setup_onvif_integration(
     source=config_entries.SOURCE_USER,
     capabilities=None,
     events=None,
-    raw_events: list[tuple[str, EventEntity]] | None = None,
+    raw_events: list[tuple[str, list[EventEntity]]] | None = None,
 ) -> tuple[MockConfigEntry, MagicMock, MagicMock]:
     """Create an ONVIF config entry."""
     if not config:
@@ -239,18 +304,20 @@ async def setup_onvif_integration(
             # to test the full parsing pipeline including conversions
             event_manager = EventManager(hass, mock_onvif_camera, config_entry, NAME)
             mock_messages = []
-            event_by_topic: dict[str, EventEntity] = {}
-            for topic, raw_event in raw_events:
+            event_by_topic: collections.defaultdict[str, list[EventEntity]] = (
+                collections.defaultdict(list)
+            )
+            for topic, topic_events in raw_events:
                 mock_msg = MagicMock()
                 mock_msg.Topic._value_1 = topic
                 mock_messages.append(mock_msg)
-                event_by_topic[topic] = raw_event
+                event_by_topic[topic].extend(topic_events)
 
             async def mock_parse(topic, unique_id, msg):
                 return event_by_topic.get(topic)
 
             with patch(
-                "homeassistant.components.onvif.event.onvif_parsers"
+                "homeassistant.components.onvif.event_manager.onvif_parsers"
             ) as mock_parsers:
                 mock_parsers.parse = mock_parse
                 mock_parsers.errors.UnknownTopicError = type(

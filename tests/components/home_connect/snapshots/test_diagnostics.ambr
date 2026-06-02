@@ -68,14 +68,17 @@
       'ha_id': '8765432109876543210',
       'name': 'Air conditioner',
       'programs': list([
-        'HeatingVentilationAirConditioning.AirConditioner.Program.ActiveClean',
         'HeatingVentilationAirConditioning.AirConditioner.Program.Auto',
+        'HeatingVentilationAirConditioning.AirConditioner.Program.ActiveClean',
         'HeatingVentilationAirConditioning.AirConditioner.Program.Cool',
         'HeatingVentilationAirConditioning.AirConditioner.Program.Dry',
         'HeatingVentilationAirConditioning.AirConditioner.Program.Fan',
         'HeatingVentilationAirConditioning.AirConditioner.Program.Heat',
       ]),
       'settings': dict({
+        'BSH.Common.Setting.PowerState': dict({
+          'value': 'BSH.Common.EnumType.PowerState.On',
+        }),
       }),
       'status': dict({
         'BSH.Common.Status.DoorState': dict({

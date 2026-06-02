@@ -42,5 +42,17 @@
         }
       }
     }
+  },
+  "services": {
+    "play_media_shuffle": {
+      "description": "Starts playing specified media shuffled. Overwrites current play queue.",
+      "fields": {
+        "media": {
+          "description": "The media selected to play.",
+          "name": "Media"
+        }
+      },
+      "name": "Play media shuffled"
+    }
   }
 }

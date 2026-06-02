@@ -1,7 +1,5 @@
 """Entity for UPnP/IGD."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -38,7 +36,10 @@ class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device = coordinator.device
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.device.original_udn}_{entity_description.unique_id or entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.device.original_udn}"
+            f"_{entity_description.unique_id or entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             connections=coordinator.device_entry.connections,
             name=coordinator.device_entry.name,

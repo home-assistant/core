@@ -1,7 +1,5 @@
 """Support to send and receive Telegram messages."""
 
-from __future__ import annotations
-
 import logging
 from typing import Protocol, cast
 
@@ -62,6 +60,7 @@ from .const import (
     ATTR_DIRECTORY_PATH,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
+    ATTR_DRAFT_ID,
     ATTR_FILE,
     ATTR_FILE_ID,
     ATTR_FILE_NAME,
@@ -69,6 +68,7 @@ from .const import (
     ATTR_IS_BIG,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_ID,
@@ -79,6 +79,7 @@ from .const import (
     ATTR_OPTIONS,
     ATTR_PARSER,
     ATTR_PASSWORD,
+    ATTR_PROTECT_CONTENT,
     ATTR_QUESTION,
     ATTR_REACTION,
     ATTR_REPLY_TO_MSGID,
@@ -125,7 +126,9 @@ from .const import (
     SERVICE_SEND_CHAT_ACTION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
+    SERVICE_SEND_MEDIA_GROUP,
     SERVICE_SEND_MESSAGE,
+    SERVICE_SEND_MESSAGE_DRAFT,
     SERVICE_SEND_PHOTO,
     SERVICE_SEND_POLL,
     SERVICE_SEND_STICKER,
@@ -171,6 +174,19 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.All(
             vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
         }
     ),
+)
+
+SERVICE_SCHEMA_SEND_MESSAGE_DRAFT = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+        vol.Required(ATTR_DRAFT_ID): vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Required(ATTR_MESSAGE): cv.string,
+        vol.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
+    }
 )
 
 SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
@@ -219,6 +235,43 @@ SERVICE_SCHEMA_SEND_FILE = vol.All(
     SERVICE_SCHEMA_BASE_SEND_FILE,
 )
 
+SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Required(ATTR_MEDIA): vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(ATTR_MEDIA_TYPE): vol.In(
+                            (
+                                str(InputMediaType.AUDIO),
+                                str(InputMediaType.VIDEO),
+                                str(InputMediaType.DOCUMENT),
+                                str(InputMediaType.PHOTO),
+                            )
+                        ),
+                        vol.Optional(ATTR_URL): cv.string,
+                        vol.Optional(ATTR_FILE): cv.string,
+                        vol.Optional(ATTR_CAPTION): cv.string,
+                        vol.Optional(ATTR_USERNAME): cv.string,
+                        vol.Optional(ATTR_PASSWORD): cv.string,
+                        vol.Optional(ATTR_AUTHENTICATION): cv.string,
+                        vol.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
+                    }
+                )
+            ],
+            vol.Length(min=2, max=10),
+        ),
+        vol.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
+        vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
+        vol.Optional(ATTR_PROTECT_CONTENT): cv.boolean,
+        vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+    }
+)
 
 SERVICE_SCHEMA_SEND_STICKER = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
@@ -384,8 +437,10 @@ SERVICE_SCHEMA_DOWNLOAD_FILE = vol.Schema(
 
 SERVICE_MAP: dict[str, VolSchemaType] = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
+    SERVICE_SEND_MESSAGE_DRAFT: SERVICE_SCHEMA_SEND_MESSAGE_DRAFT,
     SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_MEDIA_GROUP: SERVICE_SCHEMA_SEND_MEDIA_GROUP,
     SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_STICKER,
     SERVICE_SEND_ANIMATION: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
@@ -434,6 +489,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_MESSAGE,
             SERVICE_SEND_CHAT_ACTION,
             SERVICE_SEND_PHOTO,
+            SERVICE_SEND_MEDIA_GROUP,
             SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
             SERVICE_SEND_VOICE,
@@ -539,6 +595,10 @@ async def _call_service(
     messages: dict[str, JsonValueType] | None = None
     if service_name == SERVICE_SEND_MESSAGE:
         messages = await notify_service.send_message(context=service.context, **kwargs)
+    elif service_name == SERVICE_SEND_MEDIA_GROUP:
+        messages = await notify_service.send_media_group(
+            context=service.context, **kwargs
+        )
     elif service_name == SERVICE_SEND_CHAT_ACTION:
         messages = await notify_service.send_chat_action(
             context=service.context, **kwargs
@@ -569,6 +629,8 @@ async def _call_service(
         await notify_service.set_message_reaction(context=service.context, **kwargs)
     elif service_name == SERVICE_EDIT_MESSAGE_MEDIA:
         await notify_service.edit_message_media(context=service.context, **kwargs)
+    elif service_name == SERVICE_SEND_MESSAGE_DRAFT:
+        await notify_service.send_message_draft(context=service.context, **kwargs)
     elif service_name == SERVICE_DOWNLOAD_FILE:
         return await notify_service.download_file(context=service.context, **kwargs)
     else:
@@ -586,7 +648,8 @@ def _deprecate_timeout(service: ServiceCall) -> None:
     if ATTR_TIMEOUT not in service.data:
         return
 
-    # default: service was called using frontend such as developer tools or automation editor
+    # default: service was called using frontend such as
+    # developer tools or automation editor
     service_call_origin = "call_service"
 
     origin = service.context.origin_event
@@ -723,7 +786,8 @@ def _build_targets(
             )
 
         if not chat_ids and not targets:
-            # no targets from service data, so we default to the first allowed chat IDs of the config entry
+            # no targets from service data, so we default
+            # to the first allowed chat IDs of the config entry
             subentries = list(config_entry.subentries.values())
             if not subentries:
                 raise ServiceValidationError(
@@ -795,7 +859,8 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
         else service.data[ATTR_TARGET]
     )
 
-    # default: service was called using frontend such as developer tools or automation editor
+    # default: service was called using frontend such as
+    # developer tools or automation editor
     service_call_origin = "call_service"
 
     origin = service.context.origin_event
@@ -821,9 +886,23 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
             "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
             "action_origin": service_call_origin,
             "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
-            "example_old": f"```yaml\naction: {service.service}\ndata:\n  target:  # to be updated\n    - 1234567890\n...\n```",
-            "example_new_entity_id": f"```yaml\naction: {service.service}\ndata:\n  entity_id:\n    - notify.telegram_bot_1234567890_1234567890  # replace with your notify entity\n...\n```",
-            "example_new_chat_id": f"```yaml\naction: {service.service}\ndata:\n  chat_id:\n    - 1234567890  # replace with your chat_id\n...\n```",
+            "example_old": (
+                f"```yaml\naction: {service.service}\ndata:\n"
+                "  target:  # to be updated\n"
+                "    - 1234567890\n...\n```"
+            ),
+            "example_new_entity_id": (
+                f"```yaml\naction: {service.service}\ndata:\n"
+                "  entity_id:\n"
+                "    - notify.telegram_bot_1234567890_1234567890"
+                "  # replace with your notify entity\n...\n```"
+            ),
+            "example_new_chat_id": (
+                f"```yaml\naction: {service.service}\ndata:\n"
+                "  chat_id:\n"
+                "    - 1234567890"
+                "  # replace with your chat_id\n...\n```"
+            ),
         },
         learn_more_url="https://github.com/home-assistant/core/pull/154868",
     )
@@ -837,6 +916,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     try:
         await bot.get_me()
     except InvalidToken as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
     except TelegramError as err:
         raise ConfigEntryNotReady from err
@@ -867,6 +947,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
     """Handle config changes."""
     entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
+    if entry.runtime_data.old_config_data != entry.data:
+        # Reload if config data has changed
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+        return
 
     # reload entities
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

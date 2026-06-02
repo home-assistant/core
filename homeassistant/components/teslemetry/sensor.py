@@ -1,7 +1,5 @@
 """Sensor platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -510,6 +508,14 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="drive_state_active_route_destination",
+        polling=True,
+        streaming_listener=lambda vehicle, callback: vehicle.listen_DestinationName(
+            callback
+        ),
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(

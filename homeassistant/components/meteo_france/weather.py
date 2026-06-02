@@ -3,8 +3,6 @@
 import logging
 import time
 
-from meteofrance_api.model.forecast import Forecast as MeteoFranceForecast
-
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -13,6 +11,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
@@ -20,7 +19,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
     UnitOfPrecipitationDepth,
@@ -31,22 +29,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
     CONDITION_MAP,
-    COORDINATOR_FORECAST,
     DOMAIN,
     FORECAST_MODE_DAILY,
     FORECAST_MODE_HOURLY,
     MANUFACTURER,
     MODEL,
 )
+from .coordinator import MeteoFranceConfigEntry, MeteoFranceForecastUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,20 +50,19 @@ def format_condition(condition: str, force_day: bool = False) -> str:
     """Return condition from dict CONDITION_MAP."""
     mapped_condition = CONDITION_MAP.get(condition, condition)
     if force_day and mapped_condition == ATTR_CONDITION_CLEAR_NIGHT:
-        # Meteo-France can return clear night condition instead of sunny for daily weather, so we map it to sunny
+        # Meteo-France can return clear night condition instead
+        # of sunny for daily weather, so we map it to sunny
         return ATTR_CONDITION_SUNNY
     return mapped_condition
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MeteoFranceConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meteo-France weather platform."""
-    coordinator: DataUpdateCoordinator[MeteoFranceForecast] = hass.data[DOMAIN][
-        entry.entry_id
-    ][COORDINATOR_FORECAST]
+    coordinator = entry.runtime_data.forecast_coordinator
 
     async_add_entities(
         [
@@ -87,7 +81,7 @@ async def async_setup_entry(
 
 
 class MeteoFranceWeather(
-    CoordinatorEntity[DataUpdateCoordinator[MeteoFranceForecast]], WeatherEntity
+    CoordinatorEntity[MeteoFranceForecastUpdateCoordinator], WeatherEntity
 ):
     """Representation of a weather condition."""
 
@@ -101,13 +95,14 @@ class MeteoFranceWeather(
     )
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[MeteoFranceForecast], mode: str
+        self, coordinator: MeteoFranceForecastUpdateCoordinator, mode: str
     ) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
         self._attr_name = self.coordinator.data.position["name"]
         self._mode = mode
-        self._attr_unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
+        pos = self.coordinator.data.position
+        self._attr_unique_id = f"{pos['lat']},{pos['lon']}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -192,6 +187,9 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["value"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["rain"].get("1h"),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind"]["speed"],
+                        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast["wind"].get(
+                            "gust"
+                        ),
                         ATTR_FORECAST_WIND_BEARING: forecast["wind"]["direction"]
                         if forecast["wind"]["direction"] != -1
                         else None,
@@ -199,7 +197,8 @@ class MeteoFranceWeather(
                 )
         else:
             for forecast in self.coordinator.data.daily_forecast:
-                # stop when we don't have a weather condition (can happen around last days of forecast, max 14)
+                # stop when we don't have a weather condition
+                # (can happen around last days of forecast, max 14)
                 if not forecast.get("weather12H"):
                     break
                 forecast_data.append(

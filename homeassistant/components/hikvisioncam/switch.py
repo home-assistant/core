@@ -1,7 +1,5 @@
 """Support turning on/off motion detection on Hikvision cameras."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

@@ -21,7 +21,12 @@ from homeassistant.components.aws_s3.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DATA_MANAGER,
+    DOMAIN as BACKUP_DOMAIN,
+    AgentBackup,
+    UploadBackupEvent,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -179,9 +184,8 @@ async def test_agents_get_backup_does_not_throw_on_not_found(
     mock_client: MagicMock,
 ) -> None:
     """Test agent get backup does not throw on a backup not found."""
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": "random"})
@@ -204,7 +208,8 @@ async def test_agents_list_backups_with_corrupted_metadata(
     agent = S3BackupAgent(hass, mock_config_entry)
 
     # Set up mock responses for both valid and corrupted metadata files
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         {
             "Contents": [
                 {
@@ -271,9 +276,8 @@ async def test_agents_delete_not_throwing_on_not_found(
     mock_client: MagicMock,
 ) -> None:
     """Test agent delete backup does not throw on a backup not found."""
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
 
     client = await hass_ws_client(hass)
 
@@ -332,6 +336,65 @@ async def test_agents_upload_network_failure(
     assert "Upload failed for aws_s3" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "backup_size", [MULTIPART_MIN_PART_SIZE_BYTES * 2], ids=["large"]
+)
+async def test_agents_upload_on_progress(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_agent_backup: AgentBackup,
+) -> None:
+    """Test agent upload backup emits UploadBackupEvent via on_progress."""
+    client = await hass_client()
+
+    manager = hass.data[DATA_MANAGER]
+    events: list[UploadBackupEvent] = []
+
+    def _collect(event: UploadBackupEvent) -> None:
+        if isinstance(event, UploadBackupEvent):
+            events.append(event)
+
+    unsub = manager.async_subscribe_events(_collect)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=mock_agent_backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=mock_agent_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(
+            side_effect=[
+                b"a" * mock_agent_backup.size,
+                b"",
+            ]
+        )
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    unsub()
+
+    assert resp.status == 201
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
+    agent_events = [e for e in events if e.agent_id == agent_id]
+    assert len(agent_events) >= 2
+    assert all(e.total_bytes == mock_agent_backup.size for e in agent_events)
+    # Verify events report distinct increasing byte counts
+    uploaded_bytes = [e.uploaded_bytes for e in agent_events]
+    assert uploaded_bytes == sorted(uploaded_bytes)
+    assert len(set(uploaded_bytes)) == len(uploaded_bytes)
+    # Verify at least one intermediate event (uploaded_bytes < total_bytes)
+    assert agent_events[0].uploaded_bytes < agent_events[0].total_bytes
+
+
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     mock_client: MagicMock,
@@ -346,7 +409,8 @@ async def test_agents_download(
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
-    # Coordinator first refresh reads metadata (1) + download reads metadata (1) + tar (1)
+    # Coordinator first refresh reads metadata (1) +
+    # download reads metadata (1) + tar (1)
     assert mock_client.get_object.call_count == 3
 
 
@@ -373,7 +437,9 @@ async def test_error_during_delete(
     assert response["success"]
     assert response["result"] == {
         "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.entry_id}": "Failed during async_delete_backup"
+            f"{DOMAIN}.{mock_config_entry.entry_id}": (
+                "Failed during async_delete_backup"
+            )
         }
     }
 
@@ -403,7 +469,8 @@ async def test_cache_expiration(
     metadata_content = json.dumps(mock_agent_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         {
             "Contents": [
                 {
@@ -506,7 +573,8 @@ async def test_list_backups_with_pagination(
 
     # Setup mock client
     mock_client = mock_config_entry.runtime_data.client
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         page1,
         page2,
     ]

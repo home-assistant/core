@@ -1,7 +1,5 @@
 """Tool to check the licenses."""
 
-from __future__ import annotations
-
 from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
 from dataclasses import dataclass
