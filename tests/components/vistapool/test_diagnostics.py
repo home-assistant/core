@@ -20,6 +20,7 @@ async def test_entry_diagnostics(
     mock_pool_data: dict[str, Any],
 ) -> None:
     """Test diagnostics redact credentials and pool location data."""
+    mock_pool_data["wifi"] = "gateway-serial-id"
     mock_vistapool_client.fetch_pool_data.return_value = mock_pool_data
     mock_config_entry.add_to_hass(hass)
 
@@ -33,10 +34,12 @@ async def test_entry_diagnostics(
     assert result["entry"]["data"][CONF_USERNAME] == REDACTED
     assert result["entry"]["data"][CONF_PASSWORD] == REDACTED
 
+    assert len(result["pools"]) == 1
     for pool in result["pools"]:
         assert pool["form"]["lat"] == REDACTED
         assert pool["form"]["lng"] == REDACTED
         assert pool["form"]["city"] == REDACTED
         assert pool["form"]["street"] == REDACTED
         assert pool["form"]["zipcode"] == REDACTED
+        assert pool["wifi"] == REDACTED
         assert pool["main"]["temperature"] == mock_pool_data["main"]["temperature"]
