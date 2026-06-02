@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.subaru.binary_sensor import (
     BINARY_SENSORS,
+    EV_PLUG_BINARY_SENSOR,
     MIL_TRANSLATION_KEYS,
 )
 from homeassistant.components.subaru.const import DOMAIN
@@ -102,7 +103,9 @@ async def test_no_ev_plug_binary_sensor_for_g3(
     )
     assert (
         entity_registry.async_get_entity_id(
-            BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_3_G3, "EV_IS_PLUGGED_IN")
+            BINARY_SENSOR_DOMAIN,
+            DOMAIN,
+            _unique_id(TEST_VIN_3_G3, EV_PLUG_BINARY_SENSOR.key),
         )
         is None
     )

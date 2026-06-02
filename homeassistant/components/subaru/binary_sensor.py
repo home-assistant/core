@@ -55,7 +55,7 @@ LOCK_STATUS_KEYS: dict[str, str] = {
 # EV_IS_PLUGGED_IN values from subarulink/const.py that indicate the plug is in.
 # Any other value (including UNPLUGGED / UNKNOWN / None) counts as not plugged in.
 EV_PLUGGED_IN_STATES = frozenset({"CHARGING", "LOCKED_CONNECTED", "UNLOCKED_CONNECTED"})
-API_KEY_EV_IS_PLUGGED_IN = "EV_is_plugged_in"
+API_KEY_EV_IS_PLUGGED_IN = "EV_IS_PLUGGED_IN"
 
 # vehicle_health response shape (see integration debug diagnostics)
 HEALTH_ISTROUBLE = "ISTROUBLE"

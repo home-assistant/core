@@ -287,7 +287,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ev_is_plugged_in',
-    'unique_id': 'JF2ABCDE6L0000002_EV_is_plugged_in',
+    'unique_id': 'JF2ABCDE6L0000002_EV_IS_PLUGGED_IN',
     'unit_of_measurement': None,
   })
 # ---
@@ -302,7 +302,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[binary_sensor.test_vehicle_2_hood-entry]
