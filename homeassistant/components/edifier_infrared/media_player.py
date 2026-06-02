@@ -1,6 +1,6 @@
 """Media player platform for Edifier infrared integration."""
 
-from infrared_protocols.codes.edifier.models import EdifierCommandSets, EdifierModel
+from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 from infrared_protocols.codes.edifier.r1280db import EdifierR1280DBCode
 from infrared_protocols.codes.edifier.r1280t import EdifierR1280TCode
 from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
@@ -26,13 +26,13 @@ PARALLEL_UPDATES = 1
 
 
 COMMAND_SET_COMMANDS: dict[
-    EdifierCommandSets,
+    EdifierCommandSet,
     dict[
         MediaPlayerEntityFeature,
         tuple[EdifierCode | tuple[EdifierCode, ...], ...],
     ],
 ] = {
-    EdifierCommandSets.R1700BT: {
+    EdifierCommandSet.R1700BT: {
         MediaPlayerEntityFeature.TURN_ON: (EdifierR1700BTCode.POWER,),
         MediaPlayerEntityFeature.TURN_OFF: (EdifierR1700BTCode.POWER,),
         MediaPlayerEntityFeature.VOLUME_STEP: (
@@ -45,7 +45,7 @@ COMMAND_SET_COMMANDS: dict[
         MediaPlayerEntityFeature.NEXT_TRACK: (EdifierR1700BTCode.FORWARD,),
         MediaPlayerEntityFeature.PREVIOUS_TRACK: (EdifierR1700BTCode.BACK,),
     },
-    EdifierCommandSets.R1280DB: {
+    EdifierCommandSet.R1280DB: {
         MediaPlayerEntityFeature.TURN_ON: (EdifierR1280DBCode.POWER,),
         MediaPlayerEntityFeature.TURN_OFF: (EdifierR1280DBCode.POWER,),
         MediaPlayerEntityFeature.VOLUME_STEP: (
@@ -58,14 +58,14 @@ COMMAND_SET_COMMANDS: dict[
         MediaPlayerEntityFeature.NEXT_TRACK: (EdifierR1280DBCode.FORWARD,),
         MediaPlayerEntityFeature.PREVIOUS_TRACK: (EdifierR1280DBCode.BACK,),
     },
-    EdifierCommandSets.R1280T: {
+    EdifierCommandSet.R1280T: {
         MediaPlayerEntityFeature.VOLUME_STEP: (
             (EdifierR1280TCode.VOLUME_UP,),
             (EdifierR1280TCode.VOLUME_DOWN,),
         ),
         MediaPlayerEntityFeature.VOLUME_MUTE: (EdifierR1280TCode.MUTE,),
     },
-    EdifierCommandSets.S360DB: {
+    EdifierCommandSet.S360DB: {
         MediaPlayerEntityFeature.TURN_ON: (EdifierS360DBCode.POWER,),
         MediaPlayerEntityFeature.TURN_OFF: (EdifierS360DBCode.POWER,),
         MediaPlayerEntityFeature.VOLUME_STEP: (
@@ -77,7 +77,7 @@ COMMAND_SET_COMMANDS: dict[
         MediaPlayerEntityFeature.NEXT_TRACK: (EdifierS360DBCode.NEXT,),
         MediaPlayerEntityFeature.PREVIOUS_TRACK: (EdifierS360DBCode.PREVIOUS,),
     },
-    EdifierCommandSets.RC20G: {
+    EdifierCommandSet.RC20G: {
         MediaPlayerEntityFeature.TURN_ON: (EdifierRC20GCode.POWER,),
         MediaPlayerEntityFeature.TURN_OFF: (EdifierRC20GCode.POWER,),
         MediaPlayerEntityFeature.VOLUME_STEP: (
@@ -100,7 +100,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Edifier IR media player."""
     infrared_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
-    command_set = EdifierCommandSets(entry.data[CONF_COMMAND_SET])
+    command_set = EdifierCommandSet(entry.data[CONF_COMMAND_SET])
     model = EdifierModel(entry.data[CONF_MODEL])
     async_add_entities(
         [EdifierIrMediaPlayer(entry, model, infrared_entity_id, command_set)]
@@ -121,7 +121,7 @@ class EdifierIrMediaPlayer(
         entry: ConfigEntry,
         model: EdifierModel,
         infrared_entity_id: str,
-        command_set: EdifierCommandSets,
+        command_set: EdifierCommandSet,
     ) -> None:
         """Initialize Edifier IR media player."""
         super().__init__(entry, model, unique_id_suffix="media_player")
