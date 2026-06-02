@@ -151,9 +151,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
     # AbstractTemplateEntity.__init__. This ensures that
     # the __init__ on AbstractTemplateEntity is not
     # called twice.
-    def __init__(
-        self, name: str, config: dict[str, Any]
-    ) -> None:  # pylint: disable=super-init-not-called
+    def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
