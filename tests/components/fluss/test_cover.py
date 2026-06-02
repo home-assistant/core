@@ -103,7 +103,7 @@ async def test_cover_unavailable_on_transient_status_error(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A failed per-device status fetch raises UpdateFailed and marks the cover unavailable."""
+    """A failed per-device status fetch skips the device and marks the cover unavailable."""
     mock_api_client.async_get_device_status.return_value = {
         "status": {"internetConnected": True, "openCloseStatus": "Closed"}
     }

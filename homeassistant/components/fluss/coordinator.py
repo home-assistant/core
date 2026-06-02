@@ -7,6 +7,7 @@ from fluss_api import (
     FlussApiClient,
     FlussApiClientAuthenticationError,
     FlussApiClientError,
+    FlussDeviceOfflineError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,12 +45,16 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             ),
         )
 
-    async def _async_get_status(self, device_id: str) -> dict[str, Any]:
-        """Return per-device status."""
+    async def _async_get_status(self, device_id: str) -> dict[str, Any] | None:
+        """Return per-device status, or None if it cannot be fetched."""
         try:
             response = await self.api.async_get_device_status(device_id)
+        except FlussDeviceOfflineError:
+            LOGGER.debug("Device %s is offline, skipping", device_id)
+            return None
         except FlussApiClientError as err:
-            raise UpdateFailed(f"Error fetching status for {device_id}: {err}") from err
+            LOGGER.warning("Error fetching status for %s: %s", device_id, err)
+            return None
         return response["status"]
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
@@ -73,4 +78,5 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         return {
             device["deviceId"]: {**device, **status}
             for device, status in zip(device_list, statuses, strict=False)
+            if status is not None
         }
