@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Callable
-from enum import Enum
 import logging
 from types import SimpleNamespace
 from typing import Any
@@ -20,7 +19,6 @@ from homeassistant.components.elke27.const import READY_TIMEOUT
 from homeassistant.components.elke27.hub import (
     Elke27Hub,
     _connection_state,
-    _event_type,
     _set_client_identity,
 )
 from homeassistant.core import HomeAssistant
@@ -575,7 +573,7 @@ async def test_handle_connection_event_no_client(hass: HomeAssistant) -> None:
         None,
     )
     hub._client = None
-    hub._handle_connection_event({"event_type": "disconnected"})
+    hub._handle_connection_event(SimpleNamespace(connected=False))
 
 
 async def test_schedule_reconnect_creates_task(hass: HomeAssistant) -> None:
@@ -693,21 +691,11 @@ async def test_reconnect_loop_success_resets_attempts(hass: HomeAssistant) -> No
 
 
 def test_event_type_and_connection_state_extra() -> None:
-    """Verify additional event parsing paths."""
-    assert _connection_state({"event_type": "disconnected"}) is False
-    assert _connection_state({"event_type": "ready"}) is True
-    event = SimpleNamespace(event_type="connection", data={"connected": True})
-    assert _connection_state(event) is True
-    event = SimpleNamespace(event_type="other")
-    assert _connection_state(event) is None
+    """Verify connection state parsing ignores non-boolean values."""
     event = SimpleNamespace(connected=True)
     assert _connection_state(event) is True
     event = SimpleNamespace(connected="no")
     assert _connection_state(event) is None
-    event = SimpleNamespace(event_type="disconnected")
-    assert _connection_state(event) is False
-    event = SimpleNamespace()
-    assert _event_type(event) is None
 
 
 async def test_zone_bypass_validation_and_errors(
@@ -918,27 +906,10 @@ async def test_reconnect_loop_stopping_resets_attempts(hass: HomeAssistant) -> N
 
 
 def test_event_type_and_connection_state() -> None:
-    """Verify event helpers handle dict and object values."""
-    assert _event_type({"type": "ready"}) == "READY"
-    assert _event_type(SimpleNamespace(event_type="disconnected")) == "DISCONNECTED"
-    assert (
-        _connection_state({"event_type": "connection", "data": {"connected": True}})
-        is True
-    )
-    assert _connection_state(SimpleNamespace(event_type="ready")) is True
-    assert _connection_state(SimpleNamespace(type="ready")) is True
-    assert _connection_state(SimpleNamespace(type="disconnected")) is False
-    assert (
-        _connection_state(SimpleNamespace(type="connection", data={"connected": True}))
-        is True
-    )
-    enum_val = Enum("E", {"READY": "ready"})
-    assert _event_type({"type": enum_val.READY}) == "READY"
-    assert _connection_state({"event_type": None}) is None
-    event = SimpleNamespace(type=enum_val.READY)
-    assert _event_type(event) == "READY"
-    event = SimpleNamespace(type="ready")
-    assert _event_type(event) == "READY"
+    """Verify connection state helper handles client event values."""
+    assert _connection_state(SimpleNamespace(connected=True)) is True
+    assert _connection_state(SimpleNamespace(connected=False)) is False
+    assert _connection_state(SimpleNamespace()) is None
 
 
 async def test_disconnect_clears_typed_subscriptions(hass: HomeAssistant) -> None:
@@ -1197,11 +1168,11 @@ async def test_handle_connection_event_triggers_reconnect(
     hub._schedule_reconnect = Mock()
     hub._cancel_reconnect = Mock()
 
-    hub._handle_connection_event({"event_type": "disconnected"})
+    hub._handle_connection_event(SimpleNamespace(connected=False))
     await hass.async_block_till_done()
     hub._schedule_reconnect.assert_called_once()
 
-    hub._handle_connection_event({"event_type": "ready"})
+    hub._handle_connection_event(SimpleNamespace(connected=True))
     await hass.async_block_till_done()
     hub._cancel_reconnect.assert_called_once()
 

@@ -100,6 +100,7 @@ async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
         "name": "Area 1",
         "via_device": (DOMAIN, "entryclientid"),
     }
+    assert area_1.name is None
     assert area_1.state == "disarmed"
     assert area_2.state == "armed_away"
 

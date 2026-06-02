@@ -59,17 +59,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
 
     coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
     try:
+        await coordinator.async_start()
         await coordinator.async_config_entry_first_refresh()
     except Exception:
         await _async_cleanup_failed_setup(coordinator, hub)
         raise
 
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
-    try:
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except Exception:
-        await _async_cleanup_failed_setup(coordinator, hub)
-        raise
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

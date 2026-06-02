@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Callable
 import contextlib
-from enum import Enum
 import logging
 from typing import Any
 
@@ -383,11 +382,10 @@ class Elke27Hub:
         if self._client is None:
             return
         connection_state = _connection_state(event)
-        event_type = _event_type(event)
-        if connection_state is False or event_type == "DISCONNECTED":
+        if connection_state is False:
             _LOGGER.debug("Panel disconnect event received; scheduling reconnect")
             self._hass.loop.call_soon_threadsafe(self._handle_disconnected)
-        elif connection_state is True or event_type == "READY":
+        elif connection_state is True:
             self._hass.loop.call_soon_threadsafe(self._cancel_reconnect)
 
     @callback
@@ -475,21 +473,6 @@ class Elke27Hub:
         self._reconnect_attempts = 0
 
 
-def _event_type(event: Any) -> str | None:
-    if isinstance(event, dict):
-        value = event.get("type") or event.get("event_type") or event.get("domain")
-        if isinstance(value, Enum):
-            return str(value.value).upper()
-        return str(value).upper() if value else None
-    for attr in ("type", "event_type", "domain", "kind", "category"):
-        value = getattr(event, attr, None)
-        if value:
-            if isinstance(value, Enum):
-                return str(value.value).upper()
-            return str(value).upper()
-    return None
-
-
 def _set_client_identity(client: Elke27Client, client_identity: dict[str, str]) -> None:
     """Set the client identity used for future connects."""
     client.set_client_identity(client_identity)
@@ -524,43 +507,5 @@ def _normalize_arm_mode(mode: Any) -> ArmMode:
 
 
 def _connection_state(event: Any) -> bool | None:
-    if isinstance(event, dict):
-        event_type = event.get("event_type") or event.get("type")
-        value = (
-            event_type.value
-            if isinstance(event_type, Enum)
-            else str(event_type).lower()
-            if event_type is not None
-            else None
-        )
-        if value == "connection":
-            data = event.get("data")
-            if isinstance(data, dict):
-                connected = data.get("connected")
-                if isinstance(connected, bool):
-                    return connected
-        if value == "disconnected":
-            return False
-        if value == "ready":
-            return True
-        return None
-    event_type = getattr(event, "event_type", None) or getattr(event, "type", None)
-    if event_type is not None:
-        value = (
-            event_type.value
-            if isinstance(event_type, Enum)
-            else str(event_type).lower()
-        )
-        if value == "connection":
-            data = getattr(event, "data", None)
-            if isinstance(data, dict):
-                connected = data.get("connected")
-                if isinstance(connected, bool):
-                    return connected
-        if value == "disconnected":
-            return False
-        if value == "ready":
-            return True
-        return None
     connected = getattr(event, "connected", None)
     return connected if isinstance(connected, bool) else None

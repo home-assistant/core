@@ -46,11 +46,6 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the flow."""
-        self._selected_host: str | None = None
-        self._selected_port: int | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -59,15 +54,13 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = DEFAULT_PORT
-            self._selected_host = host
-            self._selected_port = port
             self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
             return await self._async_link_and_create_entry(
+                host=host,
+                port=port,
                 access_code=user_input[CONF_ACCESS_CODE],
                 passphrase=user_input[CONF_PASSPHRASE],
                 errors=errors,
-                step_id="user",
-                data_schema=STEP_USER_DATA_SCHEMA,
             )
 
         return self.async_show_form(
@@ -78,23 +71,13 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_link_and_create_entry(
         self,
+        host: str,
+        port: int,
         access_code: str,
         passphrase: str,
         errors: dict[str, str],
-        step_id: str,
-        data_schema: vol.Schema,
     ) -> ConfigFlowResult:
         """Link, connect, fetch snapshots, and create the entry."""
-        host = self._selected_host
-        port = self._selected_port
-        if host is None or port is None:
-            errors["base"] = "unknown"
-            return self.async_show_form(
-                step_id=step_id,
-                data_schema=data_schema,
-                errors=errors,
-            )
-
         client_id = derive_client_id(self.flow_id)
         client_identity = build_client_identity(client_id)
         client = _create_client()
@@ -114,8 +97,8 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             if not ready:
                 errors["base"] = "cannot_connect"
                 return self.async_show_form(
-                    step_id=step_id,
-                    data_schema=data_schema,
+                    step_id="user",
+                    data_schema=STEP_USER_DATA_SCHEMA,
                     errors=errors,
                 )
 
@@ -142,16 +125,15 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if errors or link_keys is None:
             return self.async_show_form(
-                step_id=step_id,
-                data_schema=data_schema,
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
                 errors=errors,
             )
 
         link_keys_json = link_keys.to_json()
         panel_unique_id = _panel_unique_id(panel_info)
-        if panel_unique_id is not None:
-            await self.async_set_unique_id(panel_unique_id)
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(panel_unique_id)
+        self._abort_if_unique_id_configured()
         data: dict[str, Any] = {
             CONF_HOST: host,
             CONF_PORT: port,
@@ -195,26 +177,19 @@ def _panel_name(panel_info: dict[str, Any]) -> str | None:
     )
 
 
-def _panel_unique_id(panel_info: dict[str, Any]) -> str | None:
+def _panel_unique_id(panel_info: dict[str, Any]) -> str:
     """Return the stable panel identifier from panel info."""
     unique_id = (
         panel_info.get("serial")
         or panel_info.get("panel_serial")
         or panel_info.get("mac")
-        or panel_info.get("panel_mac")
+        or panel_info["panel_mac"]
     )
-    if unique_id is None:
-        return None
-    normalized = normalize_identifier(str(unique_id))
-    return normalized or None
+    return normalize_identifier(str(unique_id))
 
 
 def _snapshot_to_dict(snapshot: Any) -> dict[str, Any]:
     """Serialize a snapshot to a dict."""
-    if snapshot is None:
-        return {}
     if is_dataclass(snapshot) and not isinstance(snapshot, type):
         return asdict(snapshot)
-    if isinstance(snapshot, Mapping):
-        return dict(snapshot)
-    return {}
+    return dict(snapshot)
