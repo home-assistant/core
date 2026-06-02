@@ -42,7 +42,7 @@ async def test_all_entities(
     mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test the LED-pulse button when hasLED is set."""
-    mock_vistapool_client.fetch_pool_data.return_value = _LED_DATA
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LED_DATA)
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -73,7 +73,7 @@ async def test_button_press_when_light_off(
     mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test pressing the button when the light is off just turns it on."""
-    mock_vistapool_client.fetch_pool_data.return_value = _LED_DATA
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LED_DATA)
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -137,7 +137,7 @@ async def test_button_press_rapid_repeat_after_off(
     off-state (the Firestore push hasn't round-tripped yet) and send another
     bare light.status=1 — a no-op on the wire that doesn't advance the color.
     """
-    mock_vistapool_client.fetch_pool_data.return_value = _LED_DATA
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LED_DATA)
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -180,7 +180,7 @@ async def test_button_press_raises_on_api_error(
     mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test the button re-raises HomeAssistantError when the library fails."""
-    mock_vistapool_client.fetch_pool_data.return_value = _LED_DATA
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LED_DATA)
     mock_vistapool_client.set_value.side_effect = AquariteError("boom")
     mock_config_entry.add_to_hass(hass)
 
