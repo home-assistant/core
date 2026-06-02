@@ -328,11 +328,13 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == _NEW_PASSWORD
+    assert mock_setup_entry.call_count == 1
 
 
 async def test_reconfigure_invalid_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
     mock_vistapool_client: AsyncMock,
     mock_vistapool_auth: MagicMock,
 ) -> None:
@@ -356,11 +358,13 @@ async def test_reconfigure_invalid_auth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == _NEW_PASSWORD
+    assert mock_setup_entry.call_count == 1
 
 
 async def test_reconfigure_account_mismatch(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
     mock_vistapool_client: AsyncMock,
     mock_vistapool_auth: MagicMock,
 ) -> None:
@@ -375,3 +379,4 @@ async def test_reconfigure_account_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "account_mismatch"
+    assert mock_setup_entry.call_count == 0
