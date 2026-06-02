@@ -2,25 +2,15 @@ rules:
   # Bronze
   action-setup: done
   appropriate-polling: done
-  brands:
-    status: todo
-    comment: Pending the home-assistant/brands PR (logo + icon).
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: todo
-    comment: Pending the home-assistant.io documentation PR.
-  docs-high-level-description:
-    status: todo
-    comment: Pending the documentation PR.
-  docs-installation-instructions:
-    status: todo
-    comment: Pending the documentation PR.
-  docs-removal-instructions:
-    status: todo
-    comment: Pending the documentation PR.
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: Entities are coordinator-driven; no explicit event subscriptions.
