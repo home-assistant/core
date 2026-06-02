@@ -1,6 +1,7 @@
 """Tests for the Vistapool button platform."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
