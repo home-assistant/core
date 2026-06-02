@@ -190,15 +190,22 @@ async def test_press_unavailable_offline_device_via_service(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_press_button_fails_when_device_removed_from_account(
+async def test_entities_removed_when_device_leaves_account(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Pressing a button whose device left the account raises HomeAssistantError."""
-    assert hass.states.get("button.device_1_mute").state != STATE_UNAVAILABLE
+    """Button entities are removed when the device is no longer on the account."""
+    mute_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id == "d1$mute"
+    )
+    assert hass.states.get(mute_entry.entity_id).state != STATE_UNAVAILABLE
 
     mock_imou_ha_device_manager.async_get_devices.return_value = []
 
@@ -206,4 +213,8 @@ async def test_press_button_fails_when_device_removed_from_account(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("button.device_1_mute").state == STATE_UNAVAILABLE
+    assert (
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+        == []
+    )
+    assert hass.states.get(mute_entry.entity_id) is None
