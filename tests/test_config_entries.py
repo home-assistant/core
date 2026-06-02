@@ -1702,6 +1702,44 @@ async def test_setup_raise_not_ready(
     assert entry.reason is None
 
 
+async def test_setup_not_ready_exponential_backoff(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test setup retry uses exponential backoff capped at 10 minutes."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    attempts = 0
+
+    async def _mock_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        nonlocal attempts
+        attempts += 1
+        raise ConfigEntryNotReady
+
+    mock_integration(hass, MockModule("test", async_setup_entry=_mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    await manager.async_setup(entry.entry_id)
+    assert attempts == 1
+
+    expected_waits = [5, 10, 20, 40, 80, 160, 320, 600, 600]
+    for i, wait in enumerate(expected_waits):
+        # Advance to just before the retry should fire
+        freezer.tick(wait - 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert attempts == i + 1, f"Retry {i + 1} fired too early"
+
+        # Advance past the retry point (+ 1s for jitter)
+        freezer.tick(2)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert attempts == i + 2, f"Retry {i + 1} did not fire"
+        assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
 async def test_setup_raise_not_ready_from_exception(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -5753,6 +5791,36 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
     assert entry.state is config_entries.ConfigEntryState.LOADED
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
+
+
+async def test_setup_raise_auth_failed_without_reauth_flow(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ConfigEntryAuthFailed when the integration has no reauth flow."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(
+        side_effect=ConfigEntryAuthFailed("The password is no longer valid")
+    )
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    class NoReauthFlow(config_entries.ConfigFlow):
+        """Config flow without reauth support."""
+
+        VERSION = 1
+
+    with mock_config_flow("test", NoReauthFlow):
+        await manager.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert "could not authenticate: The password is no longer valid" in caplog.text
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "The password is no longer valid"
+    assert len(hass.config_entries.flow.async_progress()) == 0
 
 
 async def test_initialize_and_shutdown(hass: HomeAssistant) -> None:
