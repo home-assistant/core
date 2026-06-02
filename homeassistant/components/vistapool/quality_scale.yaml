@@ -55,9 +55,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: No reconfigurable options; credentials are handled by the reauthentication flow.
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: No known repair scenarios
