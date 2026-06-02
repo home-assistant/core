@@ -407,14 +407,14 @@ async def test_reconfigure_flow_unique_id_mismatch(
         pytest.param(RuntimeError, "unknown", id="runtime_error"),
     ],
 )
-async def test_reconfigure_flow_errors(
+async def test_reconfigure_flow_recovers_after_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     product_class_mock,
     exception: type[Exception],
     expected_error: str,
 ) -> None:
-    """Test that reconfigure shows the correct error for each exception type."""
+    """Test that reconfigure shows the correct error for each exception type and allows a successful retry."""
     config_entry.add_to_hass(hass)
 
     result = await config_entry.start_reconfigure_flow(hass)
@@ -429,3 +429,15 @@ async def test_reconfigure_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": expected_error}
+
+    with product_class_mock as box_class:
+        box_class.async_from_host = AsyncMock(
+            return_value=create_product_mock("abcd0123ef5678")
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {config_flow.CONF_HOST: "172.2.3.5", config_flow.CONF_PORT: 80},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
