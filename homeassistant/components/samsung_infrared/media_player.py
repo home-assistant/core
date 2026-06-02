@@ -66,14 +66,14 @@ class SamsungIrTvMediaPlayer(
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
     _attr_source_list = list(SOURCE_MAP.keys())
+    _attr_source = None
+    _attr_state = MediaPlayerState.ON
     _attr_translation_key = "samsung_ir_tv"
 
     def __init__(self, entry: ConfigEntry, infrared_emitter_entity_id: str) -> None:
         """Initialize Samsung IR media player."""
         super().__init__(entry, unique_id_suffix="media_player")
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
-        self._attr_state = MediaPlayerState.ON
-        self._attr_source = None
 
     async def async_turn_on(self) -> None:
         """Turn on the TV."""
