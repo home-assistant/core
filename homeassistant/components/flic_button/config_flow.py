@@ -212,7 +212,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": discovery_info.name or discovery_info.address
         }
 
-        return await self.async_step_bluetooth_confirm({})
+        return await self.async_step_bluetooth_confirm()
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -224,6 +224,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         if user_input is None:
+            self._set_confirm_only()
             name = self._discovery_info.name or self._discovery_info.address
             return self.async_show_form(
                 step_id="bluetooth_confirm",

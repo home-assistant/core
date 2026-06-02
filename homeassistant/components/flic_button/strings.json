@@ -2,8 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "This Flic device is already configured.",
-      "cannot_connect": "Failed to connect to device at address {address}.",
-      "device_not_found": "Device not found. Make sure it is in range and powered on.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
@@ -123,9 +121,6 @@
     }
   },
   "options": {
-    "abort": {
-      "not_twist_device": "Options are only available for Flic Twist devices."
-    },
     "step": {
       "init": {
         "data": {

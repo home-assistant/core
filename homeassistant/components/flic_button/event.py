@@ -193,6 +193,13 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
     @callback
     def _async_handle_event(self, event_type: str, event_data: dict[str, Any]) -> None:
         """Handle button event from client."""
+        # Only trigger if the event type is in this entity's allowed event types
+        if (
+            self.entity_description.event_types is not None
+            and event_type not in self.entity_description.event_types
+        ):
+            return
+
         # For Duo buttons, filter events by button_index
         if self._button_index is not None:
             event_button_index = event_data.get("button_index")

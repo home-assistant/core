@@ -56,12 +56,17 @@ def mock_discovered_service_info(
 
 
 async def _init_bt_flow(hass: HomeAssistant, device_type: DeviceType) -> dict:
-    """Start a bluetooth flow with the device present in HA's discovered cache."""
+    """Start a bluetooth flow and advance past the discovery confirmation."""
     service_info = service_info_for_device_type(device_type)
-    return await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
         data=service_info,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
     )
 
 
@@ -156,7 +161,12 @@ async def test_bluetooth_discovery_already_configured(
     """Test Bluetooth discovery when device is already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await _init_bt_flow(hass, DeviceType.FLIC2)
+    # Aborts on the unique-id check before the confirmation form is shown
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=service_info_for_device_type(DeviceType.FLIC2),
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -242,17 +252,25 @@ async def test_options_flow_not_supported_for_non_twist(
 async def test_bluetooth_confirm_device_no_longer_advertising(
     hass: HomeAssistant,
 ) -> None:
-    """Test Bluetooth discovery falls back to scanner when the device disappears."""
+    """Test Bluetooth confirmation falls back to scanner when the device disappears."""
     service_info = create_flic2_service_info()
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=service_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Confirm while the device is no longer advertising — fall back to the scanner
     with patch(
         "homeassistant.components.flic_button.config_flow.async_discovered_service_info",
         return_value=[],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_BLUETOOTH},
-            data=service_info,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
