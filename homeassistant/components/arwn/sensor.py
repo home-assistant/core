@@ -103,16 +103,10 @@ async def async_setup_entry(
                     event=event,
                 )
                 store[unique_id] = sensor
-                _LOGGER.debug(
-                    "Registering sensor %(name)s => %(event)s",
-                    {"name": reading.sensor_name, "event": event},
-                )
+                _LOGGER.debug("Registering sensor %s => %s", reading.sensor_name, event)
                 new_sensors.append(sensor)
             else:
-                _LOGGER.debug(
-                    "Recording sensor %(name)s => %(event)s",
-                    {"name": reading.sensor_name, "event": event},
-                )
+                _LOGGER.debug("Recording sensor %s => %s", reading.sensor_name, event)
                 store[unique_id].set_event(event)
 
         if new_sensors:

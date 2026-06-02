@@ -51,6 +51,12 @@ async def test_mqtt_step(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
+    config_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert config_result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_result["title"] == "Ambient Radio Weather Network"
+
 
 async def test_single_instance_allowed(
     hass: HomeAssistant,
@@ -61,6 +67,7 @@ async def test_single_instance_allowed(
         DOMAIN, context={"source": SOURCE_USER}
     )
     await hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
+    await hass.async_block_till_done()
 
     duplicate = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

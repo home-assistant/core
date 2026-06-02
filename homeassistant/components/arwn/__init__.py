@@ -2,7 +2,6 @@
 
 from typing import TYPE_CHECKING
 
-from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -17,8 +16,6 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ArwnConfigEntry) -> bool:
     """Set up ARWN from a config entry."""
-    if not await mqtt.async_wait_for_mqtt_client(hass):
-        return False
     entry.runtime_data = {}
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
