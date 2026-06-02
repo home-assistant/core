@@ -20,6 +20,11 @@
     }
   },
   "entity": {
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
+    },
     "sensor": {
       "indoor_humidity": {
         "name": "Indoor humidity"
