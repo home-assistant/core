@@ -119,6 +119,7 @@ class VistapoolSelect(VistapoolEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Send the index of the chosen option to the controller."""
+        assert self.entity_description.options is not None
         index = self.entity_description.options.index(option)
         try:
             await self.coordinator.api.set_value(
