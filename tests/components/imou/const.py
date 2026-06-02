@@ -2,13 +2,15 @@
 
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
+from homeassistant.components.imou.button import (
+    PARAM_MUTE,
+    PARAM_PTZ_UP,
+    PARAM_RESTART_DEVICE,
+)
 from homeassistant.components.imou.const import (
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
-    PARAM_MUTE,
-    PARAM_PTZ_UP,
-    PARAM_RESTART_DEVICE,
     PARAM_STATE,
     PARAM_STATUS,
 )
