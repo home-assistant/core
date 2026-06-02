@@ -27,10 +27,10 @@ from homeassistant.components.climate.const import (
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
     FAN_LOW,
-    HVACAction,
-    HVACMode,
     PRESET_COMFORT,
     SWING_OFF,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -256,7 +256,7 @@ async def async_setup_entry(
 @callback
 def async_create_preview_climate(
     hass: HomeAssistant, name: str, config: dict[str, Any]
-) -> "StateClimateEntity":
+) -> StateClimateEntity:
     """Create a preview."""
     return async_setup_template_preview(
         hass,
