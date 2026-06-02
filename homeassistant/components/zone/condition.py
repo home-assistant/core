@@ -156,8 +156,8 @@ class ZoneCondition(Condition):
 
 
 _DOMAIN_SPECS: dict[str, DomainSpec] = {
-    "person": DomainSpec(),
-    "device_tracker": DomainSpec(),
+    "person": DomainSpec(value_source=ATTR_IN_ZONES),
+    "device_tracker": DomainSpec(value_source=ATTR_IN_ZONES),
 }
 
 _ZONE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(

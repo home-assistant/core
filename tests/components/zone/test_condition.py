@@ -1,7 +1,9 @@
 """The tests for the location condition."""
 
+from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -407,3 +409,55 @@ async def test_zone_condition_behavior_all(
         condition_options=condition_options,
         states=states,
     )
+
+
+async def test_in_zone_condition_for_attribute_only_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test `for:` anchors to in_zones updates, not state.state changes.
+
+    A person already "home" who enters an overlapping zone (e.g. zone.coffee)
+    keeps state.state == "home" while in_zones grows. `for: 5m` on
+    in_zone(zone.coffee) must start counting from when in_zones changed, not
+    from the (older) last state.state transition.
+    """
+    coffee_zone = "zone.coffee"
+
+    # Person at home but not yet in the coffee zone.
+    hass.states.async_set(
+        "person.alice",
+        "home",
+        {"in_zones": [ZONE_HOME]},
+    )
+    await hass.async_block_till_done()
+
+    # Time passes — state.state's last_changed sits 10 minutes in the past.
+    freezer.tick(timedelta(minutes=10))
+
+    config = await condition.async_validate_condition_config(
+        hass,
+        {
+            "condition": "zone.in_zone",
+            "target": {"entity_id": "person.alice"},
+            "options": {"zone": coffee_zone, "for": {"minutes": 5}},
+        },
+    )
+    test = await condition.async_from_config(hass, config)
+
+    # in_zones gains the coffee zone; state.state stays "home", so last_changed
+    # is untouched and only last_updated advances.
+    hass.states.async_set(
+        "person.alice",
+        "home",
+        {"in_zones": [ZONE_HOME, coffee_zone]},
+    )
+    await hass.async_block_till_done()
+
+    # Just entered; `for: 5m` must not be satisfied yet. (Without value_source
+    # set on the DomainSpec, the anchor would be last_changed from 10 minutes
+    # ago and this would incorrectly evaluate to True.)
+    assert test.async_check() is False
+
+    # After the duration elapses, the condition is satisfied.
+    freezer.tick(timedelta(minutes=6))
+    assert test.async_check() is True
