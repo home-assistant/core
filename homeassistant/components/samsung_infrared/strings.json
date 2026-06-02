@@ -1,0 +1,135 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device has already been configured with this transmitter.",
+      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device_type": "Device type",
+          "infrared_emitter_entity_id": "Infrared transmitter"
+        },
+        "data_description": {
+          "device_type": "The type of device to control.",
+          "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands."
+        },
+        "description": "Select the device type and the infrared transmitter entity to use for controlling your device.",
+        "title": "Set up Infrared Remote"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "ad_subtitle": {
+        "name": "AD/Subtitle"
+      },
+      "blue": {
+        "name": "Blue"
+      },
+      "browser": {
+        "name": "Browser"
+      },
+      "down": {
+        "name": "[%key:common::entity::button::down::name%]"
+      },
+      "e_manual": {
+        "name": "E-Manual"
+      },
+      "exit": {
+        "name": "[%key:common::entity::button::exit::name%]"
+      },
+      "fast_forward": {
+        "name": "Fast forward"
+      },
+      "green": {
+        "name": "Green"
+      },
+      "home": {
+        "name": "[%key:common::entity::button::home::name%]"
+      },
+      "info": {
+        "name": "[%key:common::entity::button::info::name%]"
+      },
+      "left": {
+        "name": "[%key:common::entity::button::left::name%]"
+      },
+      "num_0": {
+        "name": "[%key:common::entity::button::num_0::name%]"
+      },
+      "num_1": {
+        "name": "[%key:common::entity::button::num_1::name%]"
+      },
+      "num_2": {
+        "name": "[%key:common::entity::button::num_2::name%]"
+      },
+      "num_3": {
+        "name": "[%key:common::entity::button::num_3::name%]"
+      },
+      "num_4": {
+        "name": "[%key:common::entity::button::num_4::name%]"
+      },
+      "num_5": {
+        "name": "[%key:common::entity::button::num_5::name%]"
+      },
+      "num_6": {
+        "name": "[%key:common::entity::button::num_6::name%]"
+      },
+      "num_7": {
+        "name": "[%key:common::entity::button::num_7::name%]"
+      },
+      "num_8": {
+        "name": "[%key:common::entity::button::num_8::name%]"
+      },
+      "num_9": {
+        "name": "[%key:common::entity::button::num_9::name%]"
+      },
+      "ok": {
+        "name": "[%key:common::entity::button::ok::name%]"
+      },
+      "power": {
+        "name": "[%key:common::entity::button::power::name%]"
+      },
+      "previous_channel": {
+        "name": "Previous channel"
+      },
+      "record": {
+        "name": "Record"
+      },
+      "red": {
+        "name": "Red"
+      },
+      "return": {
+        "name": "Return"
+      },
+      "rewind": {
+        "name": "Rewind"
+      },
+      "right": {
+        "name": "[%key:common::entity::button::right::name%]"
+      },
+      "settings": {
+        "name": "Settings"
+      },
+      "source": {
+        "name": "Source"
+      },
+      "tools": {
+        "name": "Tools"
+      },
+      "up": {
+        "name": "[%key:common::entity::button::up::name%]"
+      },
+      "yellow": {
+        "name": "Yellow"
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "tv": "TV"
+      }
+    }
+  }
+}

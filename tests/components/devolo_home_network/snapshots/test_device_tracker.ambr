@@ -3,13 +3,16 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'band': '5 GHz',
-      'friendly_name': 'Mock Title AA:BB:CC:DD:EE:FF',
-      'mac': 'AA:BB:CC:DD:EE:FF',
+      'friendly_name': '00:00:5E:00:53:01',
+      'in_zones': list([
+        'zone.home',
+      ]),
+      'mac': '00:00:5E:00:53:01',
       'source_type': <SourceType.ROUTER: 'router'>,
       'wifi': 'Main',
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.aa_bb_cc_dd_ee_ff',
+    'entity_id': 'device_tracker.00_00_5e_00_53_01',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

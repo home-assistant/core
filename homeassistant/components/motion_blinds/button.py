@@ -1,7 +1,5 @@
 """Support for Motionblinds button entity using their WLAN API."""
 
-from __future__ import annotations
-
 from motionblinds.motion_blinds import LimitStatus, MotionBlind
 
 from homeassistant.components.button import ButtonEntity

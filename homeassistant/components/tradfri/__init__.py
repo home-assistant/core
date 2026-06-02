@@ -1,9 +1,6 @@
 """Support for IKEA Tradfri."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
-from typing import Any
 
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
@@ -21,18 +18,12 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    CONF_GATEWAY_ID,
-    CONF_IDENTITY,
-    CONF_KEY,
-    COORDINATOR,
-    COORDINATOR_LIST,
-    DOMAIN,
-    FACTORY,
-    KEY_API,
-    LOGGER,
+from .const import CONF_GATEWAY_ID, CONF_IDENTITY, CONF_KEY, DOMAIN, LOGGER
+from .coordinator import (
+    TradfriConfigEntry,
+    TradfriData,
+    TradfriDeviceDataUpdateCoordinator,
 )
-from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 PLATFORMS = [
     Platform.COVER,
@@ -47,18 +38,14 @@ TIMEOUT_API = 30
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TradfriConfigEntry,
 ) -> bool:
     """Create a gateway."""
-    tradfri_data: dict[str, Any] = {}
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data
-
     factory = await APIFactory.init(
         entry.data[CONF_HOST],
         psk_id=entry.data[CONF_IDENTITY],
         psk=entry.data[CONF_KEY],
     )
-    tradfri_data[FACTORY] = factory  # Used for async_unload_entry
 
     async def on_hass_stop(event: Event) -> None:
         """Close connection when hass stops."""
@@ -98,11 +85,7 @@ async def async_setup_entry(
     remove_stale_devices(hass, entry, devices)
 
     # Setup the device coordinators
-    coordinator_data = {
-        CONF_GATEWAY_ID: gateway,
-        KEY_API: api,
-        COORDINATOR_LIST: [],
-    }
+    tradfri_data = TradfriData(factory=factory, gateway=gateway, api=api)
 
     for device in devices:
         coordinator = TradfriDeviceDataUpdateCoordinator(
@@ -113,9 +96,9 @@ async def async_setup_entry(
         entry.async_on_unload(
             async_dispatcher_connect(hass, SIGNAL_GW, coordinator.set_hub_available)
         )
-        coordinator_data[COORDINATOR_LIST].append(coordinator)
+        tradfri_data.coordinator_list.append(coordinator)
 
-    tradfri_data[COORDINATOR] = coordinator_data
+    entry.runtime_data = tradfri_data
 
     async def async_keep_alive(now: datetime) -> None:
         if hass.is_stopping:
@@ -139,13 +122,11 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TradfriConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        tradfri_data = hass.data[DOMAIN].pop(entry.entry_id)
-        factory = tradfri_data[FACTORY]
-        await factory.shutdown()
+        await entry.runtime_data.factory.shutdown()
 
     return unload_ok
 
@@ -184,7 +165,8 @@ def remove_stale_devices(
             continue
 
         if device_id is None or device_id not in all_device_ids:
-            # If device_id is None an invalid device entry was found for this config entry.
+            # If device_id is None an invalid device entry
+            # was found for this config entry.
             # If the device_id is not in existing device ids it's a stale device entry.
             # Remove config entry from this device entry in either case.
             device_registry.async_update_device(
@@ -256,7 +238,8 @@ def migrate_config_entry_and_identifiers(
         # Loop through list of config_entry_ids for device
         config_entry_ids = device.config_entries
         for config_entry_id in config_entry_ids:
-            # Check that the config entry in list is not the device's primary config entry
+            # Check that the config entry in list is not
+            # the device's primary config entry
             if config_entry_id == device.primary_config_entry:
                 continue
 

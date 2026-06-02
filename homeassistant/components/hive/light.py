@@ -1,7 +1,5 @@
 """Support for Hive light devices."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 
@@ -14,12 +12,12 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from . import HiveConfigEntry, refresh_system
-from .const import ATTR_MODE
 from .entity import HiveEntity
 
 PARALLEL_UPDATES = 0

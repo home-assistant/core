@@ -1,13 +1,10 @@
 """Workday Calendar."""
 
-from __future__ import annotations
-
 from datetime import date, datetime, timedelta
 
 from holidays import HolidayBase
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -25,7 +22,6 @@ async def async_setup_entry(
     """Set up the Holiday Calendar config entry."""
     days_offset: int = int(entry.options[CONF_OFFSET])
     excludes: list[str] = entry.options[CONF_EXCLUDES]
-    sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
     obj_holidays = entry.runtime_data
 
@@ -36,7 +32,7 @@ async def async_setup_entry(
                 workdays,
                 excludes,
                 days_offset,
-                sensor_name,
+                entry.title,
                 entry.entry_id,
             )
         ],

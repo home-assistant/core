@@ -1,7 +1,5 @@
 """Config flow for oralb ble integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from oralb_ble import OralBBluetoothDeviceData as DeviceData

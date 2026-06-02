@@ -4,32 +4,34 @@ from dataclasses import dataclass
 from unittest.mock import patch
 
 import pytest
-import serial
-import serial.tools.list_ports
+import serialx
 
 from homeassistant import config_entries
 from homeassistant.components.landisgyr_heat_meter import DOMAIN
+from homeassistant.components.usb import USBDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-API_HEAT_METER_SERVICE = "homeassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
+API_HEAT_METER_SERVICE = (
+    "homeassistant.components.landisgyr_heat_meter"
+    ".config_flow.ultraheat_api.HeatMeterService"
+)
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-def mock_serial_port():
+def mock_serial_port() -> USBDevice:
     """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = "/dev/ttyUSB1234"
-    port.description = "Some serial port"
-    port.pid = 9876
-    port.vid = 5678
-
-    return port
+    return USBDevice(
+        device="/dev/ttyUSB1234",
+        vid="162E",
+        pid="269C",
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        description="Some serial port",
+    )
 
 
 @dataclass
@@ -75,7 +77,10 @@ async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
 
 
 @patch(API_HEAT_METER_SERVICE)
-@patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
+@patch(
+    "homeassistant.components.landisgyr_heat_meter.config_flow.usb.async_scan_serial_ports",
+    return_value=[mock_serial_port()],
+)
 async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> None:
     """Test select from list entry."""
 
@@ -105,7 +110,7 @@ async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> No
 async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     """Test manual entry fails."""
 
-    mock_heat_meter().read.side_effect = serial.SerialException
+    mock_heat_meter().read.side_effect = OSError("device unavailable")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -132,11 +137,14 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
 
 
 @patch(API_HEAT_METER_SERVICE)
-@patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
+@patch(
+    "homeassistant.components.landisgyr_heat_meter.config_flow.usb.async_scan_serial_ports",
+    return_value=[mock_serial_port()],
+)
 async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) -> None:
     """Test select from list entry fails."""
 
-    mock_heat_meter().read.side_effect = serial.SerialException
+    mock_heat_meter().read.side_effect = serialx.SerialException("connection failed")
     port = mock_serial_port()
 
     result = await hass.config_entries.flow.async_init(
@@ -155,7 +163,10 @@ async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) 
 
 
 @patch(API_HEAT_METER_SERVICE)
-@patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
+@patch(
+    "homeassistant.components.landisgyr_heat_meter.config_flow.usb.async_scan_serial_ports",
+    return_value=[mock_serial_port()],
+)
 async def test_already_configured(
     mock_port, mock_heat_meter, hass: HomeAssistant
 ) -> None:

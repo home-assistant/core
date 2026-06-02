@@ -1,7 +1,5 @@
 """Support for setting the level of logging for components."""
 
-from __future__ import annotations
-
 import logging
 import re
 
@@ -10,6 +8,7 @@ import voluptuous as vol
 from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
@@ -74,7 +73,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for key, value in log_filters.items():
             _add_log_filter(logging.getLogger(key), value)
 
-    # Combine log levels configured in configuration.yaml with log levels set by frontend
+    # Combine log levels configured in configuration.yaml
+    # with log levels set by frontend
     combined_logs = await settings.async_get_levels(hass)
     set_log_levels(hass, combined_logs)
 
@@ -86,14 +86,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             set_log_levels(hass, service.data)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SET_DEFAULT_LEVEL,
         async_service_handler,
         schema=SERVICE_SET_DEFAULT_LEVEL_SCHEMA,
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SET_LEVEL,
         async_service_handler,

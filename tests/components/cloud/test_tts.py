@@ -13,7 +13,7 @@ from hass_nabucasa.voice_data import TTS_VOICES
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     STORAGE_KEY,
 )
 from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
@@ -274,6 +274,7 @@ async def test_get_tts_audio(
 
         # Force streaming
         await client.get(response["path"])
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     if data.get("engine_id", "").startswith("tts."):
         # Streaming
