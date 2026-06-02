@@ -2,7 +2,7 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: No service actions in initial sensor-only platform
+    comment: No integration-specific service actions; entities use platform-standard actions only
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -11,7 +11,7 @@ rules:
   dependency-transparency: done
   docs-actions:
     status: exempt
-    comment: No service actions in initial sensor-only platform
+    comment: No integration-specific service actions to document
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -24,9 +24,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: No user actions (sensor-only platform)
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -43,7 +41,7 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery: todo
+  discovery: done
   discovery-update-info: todo
   docs-data-update: todo
   docs-examples: todo

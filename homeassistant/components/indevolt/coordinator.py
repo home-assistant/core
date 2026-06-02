@@ -1,6 +1,7 @@
 """Home Assistant integration for Indevolt device."""
 
 from datetime import timedelta
+import itertools
 import logging
 from typing import Any, Final
 
@@ -29,6 +30,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_BATCH_SIZE: Final = 50
 SCAN_INTERVAL: Final = 30
 
 type IndevoltConfigEntry = ConfigEntry[IndevoltCoordinator]
@@ -86,16 +88,22 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw JSON data from the device."""
+        data: dict[str, Any] = {}
         sensor_keys = SENSOR_KEYS[self.generation]
 
         try:
-            return await self.api.fetch_data(sensor_keys)
+            for chunk in itertools.batched(sensor_keys, SCAN_BATCH_SIZE, strict=False):
+                data.update(await self.api.fetch_data(list(chunk)))
+
         except (ClientError, OSError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+        else:
+            return data
 
     async def async_push_data(self, sensor_key: str, value: Any) -> bool:
         """Push/write data values to given key on the device."""

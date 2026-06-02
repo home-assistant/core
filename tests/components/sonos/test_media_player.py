@@ -88,6 +88,7 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
@@ -1533,7 +1534,7 @@ async def test_position_updates(
     assert state.attributes[ATTR_MEDIA_POSITION] == 42
     # updated_at should be recent
     updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-    assert updated_at == datetime.now(UTC)
+    assert updated_at == dt_util.utcnow()
 
     # Position only updated by 1 second; should not update attributes
     new_track_info = current_track_info.copy()
@@ -1563,7 +1564,7 @@ async def test_position_updates(
         await hass.async_block_till_done(wait_background_tasks=True)
         state = hass.states.get(entity_id)
         assert state.attributes[ATTR_MEDIA_POSITION] == 70
-        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == datetime.now(UTC)
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
 
 
 @pytest.mark.parametrize(
