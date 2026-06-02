@@ -170,9 +170,6 @@ class ConversationFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Reconfigure a conversation agent (prompt + LLM APIs; model is fixed)."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
-            return self.async_abort(reason="entry_not_loaded")
-
         subentry = self._get_reconfigure_subentry()
         existing = subentry.data
 

@@ -501,19 +501,3 @@ async def test_reconfigure_conversation_agent_clears_llm_api(
     assert subentry.data[CONF_PROMPT] == "updated prompt"
     assert CONF_LLM_HASS_API not in subentry.data
     assert subentry.data[CONF_MODEL] == "Meta-Llama-3_3-70B-Instruct"
-
-
-async def test_reconfigure_conversation_agent_entry_not_loaded(
-    hass: HomeAssistant,
-    mock_openai_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the subentry reconfigure aborts when the parent entry is not loaded."""
-    mock_config_entry.add_to_hass(hass)
-
-    subentry_id = next(iter(mock_config_entry.subentries))
-
-    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "entry_not_loaded"
