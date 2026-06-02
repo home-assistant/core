@@ -1056,6 +1056,35 @@ async def test_disconnect_reraises_unsubscribe_cancel_after_cleanup(
     assert hub._client is None
 
 
+async def test_disconnect_reraises_typed_unsubscribe_cancel_after_cleanup(
+    hass: HomeAssistant,
+) -> None:
+    """Verify typed unsubscribe cancellation propagates after cleanup."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.80",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    callback = Mock()
+    unsubscribe = Mock(side_effect=asyncio.CancelledError)
+    hub._typed_callbacks = {callback: unsubscribe}
+    hub._client = SimpleNamespace(async_disconnect=AsyncMock(return_value=None))
+
+    with (
+        patch.object(hub, "_log_unavailable") as log_unavailable,
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await hub._async_disconnect()
+
+    assert hub._typed_callbacks[callback] is None
+    assert hub._client is None
+    unsubscribe.assert_called_once()
+    log_unavailable.assert_called_once()
+
+
 async def test_subscribe_typed_and_unsubscribe(hass: HomeAssistant) -> None:
     """Verify typed subscriptions register and unregister callbacks."""
     hub = Elke27Hub(
@@ -1129,7 +1158,7 @@ async def test_unsubscribe_typed_preserves_cancelled_error(
 async def test_clear_typed_subscriptions_preserves_cancelled_error(
     hass: HomeAssistant,
 ) -> None:
-    """Verify typed subscription cleanup preserves cancellation."""
+    """Verify typed subscription cleanup preserves cancellation after cleanup."""
     hub = Elke27Hub(
         hass,
         "192.168.1.77",
@@ -1140,12 +1169,16 @@ async def test_clear_typed_subscriptions_preserves_cancelled_error(
     )
     callback = Mock()
     unsubscribe = Mock(side_effect=asyncio.CancelledError)
-    hub._typed_callbacks = {callback: unsubscribe}
+    callback_2 = Mock()
+    unsubscribe_2 = Mock()
+    hub._typed_callbacks = {callback: unsubscribe, callback_2: unsubscribe_2}
 
     with pytest.raises(asyncio.CancelledError):
         hub._clear_typed_subscriptions()
 
     unsubscribe.assert_called_once()
+    unsubscribe_2.assert_called_once()
+    assert hub._typed_callbacks == {callback: None, callback_2: None}
 
 
 async def test_handle_connection_event_triggers_reconnect(

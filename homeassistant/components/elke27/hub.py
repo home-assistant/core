@@ -183,7 +183,10 @@ class Elke27Hub:
             except Exception:  # noqa: BLE001
                 _LOGGER.debug("Error while disconnecting client", exc_info=True)
         self._client = None
-        self._clear_typed_subscriptions()
+        try:
+            self._clear_typed_subscriptions()
+        except asyncio.CancelledError as err:
+            cancel_error = err
         if was_connected and not self._stopping and log_unavailable:
             self._log_unavailable()
         if cancel_error is not None:
@@ -311,10 +314,16 @@ class Elke27Hub:
 
     def _clear_typed_subscriptions(self) -> None:
         """Clear typed subscriptions when the client disconnects."""
+        cancel_error: asyncio.CancelledError | None = None
         for cb, unsubscribe in list(self._typed_callbacks.items()):
             if unsubscribe is not None:
-                _unsubscribe_callback(unsubscribe)
+                try:
+                    _unsubscribe_callback(unsubscribe)
+                except asyncio.CancelledError as err:
+                    cancel_error = err
             self._typed_callbacks[cb] = None
+        if cancel_error is not None:
+            raise cancel_error
 
     async def _async_cleanup_connecting_client(
         self,
