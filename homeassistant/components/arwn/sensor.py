@@ -15,12 +15,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads_object
 
+from .const import TOPIC
+
 if TYPE_CHECKING:
     from . import ArwnConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-TOPIC = "arwn/#"
 
 
 async def async_setup_entry(
@@ -116,7 +116,7 @@ async def async_setup_entry(
                 store[unique_id].set_event(event)
 
         if new_sensors:
-            async_add_entities(new_sensors, True)
+            async_add_entities(new_sensors)
 
     entry.async_on_unload(
         await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
