@@ -2251,8 +2251,7 @@ async def test_condition_template_error_traced_not_logged(
     condition_trace = trace.trace_get(clear=False)
     trace.trace_clear()
     trace_element = condition_trace[""][0]
-    assert trace_element._template_error == expected_template_error
-    assert trace_element.as_dict()["template_error"] == expected_template_error
+    assert trace_element.template_error == expected_template_error
     assert (trace_element._result or {}) == expected_result
 
     # ...and not logged
@@ -2280,7 +2279,7 @@ async def test_condition_template_error_logged_without_opt_in(
     assert "Template variable warning: 'no_such_variable' is undefined" in caplog.text
     condition_trace = trace.trace_get(clear=False)
     trace.trace_clear()
-    assert condition_trace[""][0]._template_error is None
+    assert condition_trace[""][0].template_error is None
 
 
 async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:
