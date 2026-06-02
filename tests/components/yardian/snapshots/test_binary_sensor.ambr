@@ -151,7 +151,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.yardian_smart_sprinkler_zone_1_enabled-entry]
+# name: test_all_entities[binary_sensor.zone_1_zone_1_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -165,7 +165,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.yardian_smart_sprinkler_zone_1_enabled',
+    'entity_id': 'binary_sensor.zone_1_zone_1_enabled',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -188,20 +188,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.yardian_smart_sprinkler_zone_1_enabled-state]
+# name: test_all_entities[binary_sensor.zone_1_zone_1_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Yardian Smart Sprinkler Zone 1 enabled',
+      'friendly_name': 'Zone 1 Zone 1 enabled',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.yardian_smart_sprinkler_zone_1_enabled',
+    'entity_id': 'binary_sensor.zone_1_zone_1_enabled',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.yardian_smart_sprinkler_zone_2_enabled-entry]
+# name: test_all_entities[binary_sensor.zone_2_zone_2_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -215,7 +215,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.yardian_smart_sprinkler_zone_2_enabled',
+    'entity_id': 'binary_sensor.zone_2_zone_2_enabled',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -238,13 +238,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.yardian_smart_sprinkler_zone_2_enabled-state]
+# name: test_all_entities[binary_sensor.zone_2_zone_2_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Yardian Smart Sprinkler Zone 2 enabled',
+      'friendly_name': 'Zone 2 Zone 2 enabled',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.yardian_smart_sprinkler_zone_2_enabled',
+    'entity_id': 'binary_sensor.zone_2_zone_2_enabled',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

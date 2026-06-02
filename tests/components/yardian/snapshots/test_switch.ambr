@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[switch.yardian_smart_sprinkler_zone_1-entry]
+# name: test_all_entities[switch.zone_1_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.yardian_smart_sprinkler_zone_1',
+    'entity_id': 'switch.zone_1_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.yardian_smart_sprinkler_zone_1-state]
+# name: test_all_entities[switch.zone_1_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Yardian Smart Sprinkler Zone 1',
+      'friendly_name': 'Zone 1 Zone 1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.yardian_smart_sprinkler_zone_1',
+    'entity_id': 'switch.zone_1_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[switch.yardian_smart_sprinkler_zone_2-entry]
+# name: test_all_entities[switch.zone_2_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.yardian_smart_sprinkler_zone_2',
+    'entity_id': 'switch.zone_2_zone_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,13 +86,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.yardian_smart_sprinkler_zone_2-state]
+# name: test_all_entities[switch.zone_2_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Yardian Smart Sprinkler Zone 2',
+      'friendly_name': 'Zone 2 Zone 2',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.yardian_smart_sprinkler_zone_2',
+    'entity_id': 'switch.zone_2_zone_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
