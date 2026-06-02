@@ -97,7 +97,7 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
             self._attr_state_class = METRIC_NATURE_TO_STATE_CLASS.get(
                 metric.metric_nature
             )
-        self._set_unit_translation()
+        self._attr_native_unit_of_measurement = self._native_unit_of_measurement()
         self._attr_native_value = VictronSensor._normalize_value(metric.value)
 
     @callback
