@@ -1,0 +1,145 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Flic device is already configured.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device. Make sure it is in range and try again.",
+      "invalid_signature": "Invalid device signature during pairing.",
+      "pairing_failed": "Pairing failed. Please ensure the device is in pairing mode (LED flashing) and try again.",
+      "unknown": "An unexpected error occurred during pairing."
+    },
+    "progress": {
+      "wait_for_discovery": "Push and hold your Flic until it connects. This should take no longer than 10 seconds\u2026"
+    },
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Set up {name}?",
+        "title": "Discovered Flic device"
+      },
+      "pair": {
+        "description": "Push and hold your Flic until it connects. This should take no longer than 10 seconds. Then submit this form to complete pairing with {name}.",
+        "title": "Pair with Flic device"
+      },
+      "user": {
+        "title": "Pair with Flic device"
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "button": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
+              "hold": "Hold",
+              "up": "Up"
+            }
+          }
+        }
+      },
+      "button_big": {
+        "name": "Big button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::click%]",
+              "double_click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::double_click%]",
+              "down": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::down%]",
+              "hold": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::hold%]",
+              "rotate_clockwise": "Rotated clockwise",
+              "rotate_counter_clockwise": "Rotated counter-clockwise",
+              "swipe_down": "Swipe down",
+              "swipe_left": "Swipe left",
+              "swipe_right": "Swipe right",
+              "swipe_up": "Swipe up",
+              "up": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::up%]"
+            }
+          }
+        }
+      },
+      "button_small": {
+        "name": "Small button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::click%]",
+              "double_click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::double_click%]",
+              "down": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::down%]",
+              "hold": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::hold%]",
+              "rotate_clockwise": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::rotate_clockwise%]",
+              "rotate_counter_clockwise": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::rotate_counter_clockwise%]",
+              "swipe_down": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::swipe_down%]",
+              "swipe_left": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::swipe_left%]",
+              "swipe_right": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::swipe_right%]",
+              "swipe_up": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::swipe_up%]",
+              "up": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::up%]"
+            }
+          }
+        }
+      },
+      "button_twist": {
+        "name": "[%key:component::flic_button::entity::event::button::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::click%]",
+              "double_click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::double_click%]",
+              "down": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::down%]",
+              "hold": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::hold%]",
+              "rotate_clockwise": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::rotate_clockwise%]",
+              "rotate_counter_clockwise": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::rotate_counter_clockwise%]",
+              "selector_changed": "Selector changed",
+              "up": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::up%]"
+            }
+          }
+        }
+      },
+      "button_twist_default": {
+        "name": "[%key:component::flic_button::entity::event::button::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::click%]",
+              "double_click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::double_click%]",
+              "down": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::down%]",
+              "hold": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::hold%]",
+              "push_twist_decrement": "Push-twist decremented",
+              "push_twist_increment": "Push-twist incremented",
+              "twist_decrement": "Twist decremented",
+              "twist_increment": "Twist incremented",
+              "up": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::up%]"
+            }
+          }
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "push_twist_mode": "Push twist mode"
+        },
+        "data_description": {
+          "push_twist_mode": "Controls the behavior when holding the button and twisting. Default mode fires increment and decrement events that clamp at boundaries. Continuous mode is like default but wraps around instead of clamping. Selector mode fires rotation and selector changed events."
+        },
+        "title": "Flic Twist options"
+      }
+    }
+  },
+  "selector": {
+    "push_twist_mode": {
+      "options": {
+        "continuous": "Continuous",
+        "default": "Default",
+        "selector": "Selector mode"
+      }
+    }
+  }
+}
