@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from serial_asyncio_fast import SerialTransport
+from serialx import SerialTransport
 
 from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.components.tonewinner.const import (
@@ -154,7 +154,7 @@ async def test_media_player_connect(
     entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_config_entry.data)
 
     # Mock the connection
-    with patch("serial_asyncio_fast.create_serial_connection") as mock_connect:
+    with patch("serialx.create_serial_connection") as mock_connect:
         mock_connect.return_value = (mock_serial_connection, MagicMock())
 
         await entity.connect()
@@ -174,7 +174,7 @@ async def test_media_player_connection_failure(
 
     # Mock connection failure
     with patch(
-        "serial_asyncio_fast.create_serial_connection",
+        "serialx.create_serial_connection",
         side_effect=OSError("Connection failed"),
     ):
         await entity.connect()

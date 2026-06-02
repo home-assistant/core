@@ -4,8 +4,7 @@ import asyncio
 import contextlib
 import logging
 
-import serial
-import serial_asyncio_fast
+import serialx
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -66,10 +65,10 @@ SERVICE_SEND_RAW_SCHEMA = vol.Schema(
 
 SERIAL_CONFIG = {
     "baudrate": 9600,
-    "bytesize": serial.EIGHTBITS,  # 8-bit data
-    "parity": serial.PARITY_NONE,  # -parenb: no parity
-    "stopbits": serial.STOPBITS_ONE,  # -cstopb: 1 stop bit
-    "timeout": 1.0,
+    "byte_size": 8,
+    "parity": serialx.Parity.NONE,
+    "stopbits": serialx.StopBits.ONE,
+    "read_timeout": 1.0,
 }
 
 
@@ -165,7 +164,7 @@ class TonewinnerSerialProtocol(asyncio.Protocol):
 class TonewinnerMediaPlayer(MediaPlayerEntity):
     """Tonewinner AT-500 media player."""
 
-    _transport: None | serial_asyncio_fast.SerialTransport
+    _transport: None | serialx.SerialTransport
     _protocol: None | asyncio.Protocol
     _source_check_task: None | asyncio.Task[None]
 
@@ -304,29 +303,29 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         """Establish serial connection."""
         _LOGGER.debug("Attempting connection to %s at %d baud", self.port, self.baud)
         _LOGGER.debug(
-            "Serial config: bytesize=%d, parity=%s, stopbits=%d, timeout=%d",
-            SERIAL_CONFIG["bytesize"],
+            "Serial config: byte_size=%d, parity=%s, stopbits=%s, read_timeout=%d",
+            SERIAL_CONFIG["byte_size"],
             SERIAL_CONFIG["parity"],
             SERIAL_CONFIG["stopbits"],
-            SERIAL_CONFIG["timeout"],
+            SERIAL_CONFIG["read_timeout"],
         )
         try:
             loop = asyncio.get_event_loop()
-            connection = serial_asyncio_fast.create_serial_connection(
+            connection = serialx.create_serial_connection(
                 loop,
                 lambda: TonewinnerSerialProtocol(self),
                 self.port,
                 baudrate=self.baud,
-                bytesize=SERIAL_CONFIG["bytesize"],
+                byte_size=SERIAL_CONFIG["byte_size"],
                 parity=SERIAL_CONFIG["parity"],
                 stopbits=SERIAL_CONFIG["stopbits"],
-                timeout=SERIAL_CONFIG["timeout"],
+                read_timeout=SERIAL_CONFIG["read_timeout"],
             )
             self._transport, self._protocol = await asyncio.wait_for(
                 connection, timeout=5
             )
             _LOGGER.info("Successfully connected to %s", self.port)
-        except (TimeoutError, OSError, serial.SerialException) as ex:
+        except (TimeoutError, OSError) as ex:
             _LOGGER.error("Connection failed: %s", ex)
             self._attr_available = False
 

@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from serial_asyncio_fast import SerialTransport
+from serialx import SerialTransport
 import voluptuous as vol
 
 from homeassistant.components.tonewinner.media_player import (

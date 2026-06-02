@@ -47,11 +47,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Unregister the service if it exists
     service_key = f"{entry.entry_id}_service"
-    if service_key in hass.data[DOMAIN]:
+    if DOMAIN in hass.data and service_key in hass.data[DOMAIN]:
         _LOGGER.debug("Unregistering service")
         hass.services.async_remove(DOMAIN, "send_raw")
         del hass.data[DOMAIN][service_key]
 
-    hass.data[DOMAIN].pop(entry.entry_id)
+    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
+        hass.data[DOMAIN].pop(entry.entry_id)
     _LOGGER.info("Tonewinner integration unloaded")
     return True

@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from serial_asyncio_fast import SerialTransport
+from serialx import SerialTransport
 
 from homeassistant.components.tonewinner.const import (
     CONF_BAUD_RATE,
@@ -38,7 +38,7 @@ def mock_serial_connection():
     transport.protocol = MagicMock()
 
     with patch(
-        "serial_asyncio_fast.create_serial_connection",
+        "serialx.create_serial_connection",
         return_value=(transport, MagicMock()),
     ):
         yield transport

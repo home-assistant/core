@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import serial
-
 from homeassistant import config_entries
 from homeassistant.components.tonewinner.const import (
     CONF_BAUD_RATE,
@@ -28,7 +26,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     mock_serial = MagicMock()
     mock_serial.close = MagicMock()
 
-    with patch("serial.Serial", return_value=mock_serial):
+    with patch("serialx.serial_for_url", return_value=mock_serial):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -59,7 +57,7 @@ async def test_form_with_custom_baudrate(
     mock_serial = MagicMock()
     mock_serial.close = MagicMock()
 
-    with patch("serial.Serial", return_value=mock_serial):
+    with patch("serialx.serial_for_url", return_value=mock_serial):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -84,8 +82,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     # Mock serial port failure
     with patch(
-        "serial.Serial",
-        side_effect=serial.SerialException("Permission denied"),
+        "serialx.serial_for_url",
+        side_effect=OSError("Permission denied"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -102,7 +100,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     mock_serial = MagicMock()
     mock_serial.close = MagicMock()
 
-    with patch("serial.Serial", return_value=mock_serial):
+    with patch("serialx.serial_for_url", return_value=mock_serial):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -123,7 +121,7 @@ async def test_form_os_error(hass: HomeAssistant) -> None:
 
     # Mock OS error
     with patch(
-        "serial.Serial",
+        "serialx.serial_for_url",
         side_effect=OSError("Port not found"),
     ):
         result = await hass.config_entries.flow.async_configure(

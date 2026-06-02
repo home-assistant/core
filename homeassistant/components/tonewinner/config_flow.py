@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-import serial
+import serialx
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -43,12 +43,12 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
                     user_input[CONF_SERIAL_PORT],
                     user_input[CONF_BAUD_RATE],
                 )
-                s = serial.Serial(
-                    user_input[CONF_SERIAL_PORT], user_input[CONF_BAUD_RATE], timeout=1
+                s = serialx.serial_for_url(
+                    user_input[CONF_SERIAL_PORT], baudrate=user_input[CONF_BAUD_RATE], read_timeout=1
                 )
                 s.close()
                 _LOGGER.debug("Serial port test successful")
-            except (serial.SerialException, OSError) as e:
+            except OSError as e:
                 _LOGGER.error("Serial port test failed: %s", e)
                 errors["base"] = "cannot_connect"
             if not errors:
