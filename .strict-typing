@@ -286,6 +286,7 @@ homeassistant.components.huawei_lte.*
 homeassistant.components.humidifier.*
 homeassistant.components.husqvarna_automower.*
 homeassistant.components.huum.*
+homeassistant.components.hvv_departures.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
 homeassistant.components.hypontech.*
