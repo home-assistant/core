@@ -3270,7 +3270,8 @@ async def _setup_numerical_condition(
         ({"threshold": {"type": "below", "value": {"number": 50}}}, "25", True),
         ({"threshold": {"type": "below", "value": {"number": 50}}}, "50", False),
         ({"threshold": {"type": "below", "value": {"number": 50}}}, "75", False),
-        # above and below (range)
+        # between (range) — limits are inclusive, so a value exactly equal
+        # to either bound is treated as "inside" and matches
         (
             {
                 "threshold": {
@@ -3291,7 +3292,7 @@ async def _setup_numerical_condition(
                 }
             },
             "20",
-            False,
+            True,
         ),
         (
             {
@@ -3302,7 +3303,7 @@ async def _setup_numerical_condition(
                 }
             },
             "80",
-            False,
+            True,
         ),
         (
             {
@@ -3325,6 +3326,64 @@ async def _setup_numerical_condition(
             },
             "90",
             False,
+        ),
+        # outside (inverse of between) — limits are inclusive on the between
+        # side, so a value exactly equal to either bound is "inside" and
+        # does NOT match outside
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "50",
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "20",
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "80",
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "10",
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "90",
+            True,
         ),
     ],
 )

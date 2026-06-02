@@ -718,6 +718,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/heatmiser/ @andylockran
 /homeassistant/components/hegel/ @boazca
 /tests/components/hegel/ @boazca
+/homeassistant/components/helty/ @ebaschiera
+/tests/components/helty/ @ebaschiera
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
@@ -987,6 +989,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
 /tests/components/lg_thinq/ @LG-ThinQ-Integration
+/homeassistant/components/lg_tv_rs232/ @balloob
+/tests/components/lg_tv_rs232/ @balloob
 /homeassistant/components/libre_hardware_monitor/ @Sab44
 /tests/components/libre_hardware_monitor/ @Sab44
 /homeassistant/components/lichess/ @aryanhasgithub
@@ -1290,6 +1294,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/openhome/ @bazwilliams
 /homeassistant/components/openrgb/ @felipecrs
 /tests/components/openrgb/ @felipecrs
+/homeassistant/components/opensensemap/ @AlCalzone
+/tests/components/opensensemap/ @AlCalzone
 /homeassistant/components/opensky/ @joostlek
 /tests/components/opensky/ @joostlek
 /homeassistant/components/opentherm_gw/ @mvn23
@@ -1317,6 +1323,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/overkiz/ @imicknl
 /homeassistant/components/overseerr/ @joostlek @AmGarera
 /tests/components/overseerr/ @joostlek @AmGarera
+/homeassistant/components/ovhcloud_ai_endpoints/ @Crocmagnon
+/tests/components/ovhcloud_ai_endpoints/ @Crocmagnon
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
@@ -2048,8 +2056,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/yamaha_musiccast/ @vigonotion @micha91
 /homeassistant/components/yandex_transport/ @rishatik92 @devbis
 /tests/components/yandex_transport/ @rishatik92 @devbis
-/homeassistant/components/yardian/ @h3l1o5
-/tests/components/yardian/ @h3l1o5
+/homeassistant/components/yardian/ @aeon-matrix
+/tests/components/yardian/ @aeon-matrix
 /homeassistant/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
 /tests/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
 /homeassistant/components/yeelightsunflower/ @lindsaymarkward

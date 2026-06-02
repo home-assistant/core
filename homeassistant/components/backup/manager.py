@@ -1978,7 +1978,13 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
         try:
             backup = await async_add_executor_job(read_backup, temp_file)
-        except (OSError, tarfile.TarError, json.JSONDecodeError, KeyError) as err:
+        except (
+            OSError,
+            tarfile.TarError,
+            json.JSONDecodeError,
+            KeyError,
+            InvalidBackupFilename,
+        ) as err:
             LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
             raise
 
