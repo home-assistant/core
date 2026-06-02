@@ -528,7 +528,7 @@ anyio==4.13.0
 apple_weatherkit==1.1.3
 
 # homeassistant.components.apprise
-apprise==1.9.1
+apprise==1.11.0
 
 # homeassistant.components.aprs
 aprslib==0.7.2
