@@ -59,7 +59,6 @@ class SonosHouseholdCoordinator:
         if self._poll_debouncer is not None:
             self._poll_debouncer.async_shutdown()
             self._poll_debouncer = None
-        self.async_poll = None
 
     @property
     def class_type(self) -> str:
