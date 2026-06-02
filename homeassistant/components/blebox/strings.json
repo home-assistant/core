@@ -22,5 +22,10 @@
         "title": "Set up your BleBox device"
       }
     }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "An error occurred while communicating with the BleBox device: {error}"
+    }
   }
 }

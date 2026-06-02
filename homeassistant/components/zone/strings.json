@@ -43,6 +43,32 @@
         }
       },
       "name": "Left zone"
+    },
+    "occupancy_cleared": {
+      "description": "Triggers when a zone transitions from occupied to unoccupied.",
+      "fields": {
+        "for": {
+          "name": "[%key:component::zone::common::trigger_for_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::zone::triggers::occupancy_detected::fields::zone::description%]",
+          "name": "[%key:component::zone::triggers::occupancy_detected::fields::zone::name%]"
+        }
+      },
+      "name": "Zone occupancy cleared"
+    },
+    "occupancy_detected": {
+      "description": "Triggers when a zone transitions to an occupied state.",
+      "fields": {
+        "for": {
+          "name": "[%key:component::zone::common::trigger_for_name%]"
+        },
+        "zone": {
+          "description": "The zone to monitor.",
+          "name": "Zone"
+        }
+      },
+      "name": "Zone occupancy detected"
     }
   }
 }

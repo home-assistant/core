@@ -4,6 +4,7 @@ import asyncio
 import logging
 from typing import TypedDict
 
+import aiohttp
 from aiohttp.web import Request
 from loqedAPI import loqed
 
@@ -160,14 +161,20 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
 
         _LOGGER.debug("Webhook URL: %s", webhook_url)
 
-        webhooks = await self.lock.getWebhooks()
+        try:
+            webhooks = await self.lock.getWebhooks()
 
-        webhook_index = next(
-            (x["id"] for x in webhooks if x["url"] == webhook_url), None
-        )
+            webhook_index = next(
+                (x["id"] for x in webhooks if x["url"] == webhook_url), None
+            )
 
-        if webhook_index:
-            await self.lock.deleteWebhook(webhook_index)
+            if webhook_index:
+                await self.lock.deleteWebhook(webhook_index)
+        except (TimeoutError, aiohttp.ClientError) as err:
+            _LOGGER.warning(
+                "Could not remove webhook from LOQED bridge; the bridge may be offline. Continuing to unload the entry anyway: %s",
+                err,
+            )
 
 
 async def async_cloudhook_generate_url(
