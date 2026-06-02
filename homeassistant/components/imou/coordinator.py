@@ -63,39 +63,48 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Update coordinator data."""
-        async with asyncio.timeout(UPDATE_TIMEOUT):
-            try:
-                fresh_devices = await self._device_manager.async_get_devices()
+        try:
+            async with asyncio.timeout(UPDATE_TIMEOUT):
+                try:
+                    fresh_devices = await self._device_manager.async_get_devices()
+                except ImouException as err:
+                    raise UpdateFailed(
+                        f"Error fetching Imou devices: {err}"
+                    ) from err
+
                 fresh_by_key = {
                     imou_device_identifier(device): device for device in fresh_devices
                 }
                 self._async_add_remove_devices(fresh_by_key)
                 devices = list(self._devices_by_key.values())
-                if devices:
-                    results = await asyncio.gather(
-                        *(
-                            self._device_manager.async_update_device_status(device)
-                            for device in devices
-                        ),
-                        return_exceptions=True,
-                    )
-                    failures: list[Exception] = []
-                    for device, result in zip(devices, results, strict=True):
-                        if not isinstance(result, Exception):
-                            continue
-                        device_key = imou_device_identifier(device)
-                        _LOGGER.warning(
-                            "Error updating status for Imou device %s: %s",
-                            device_key,
-                            result,
-                        )
-                        failures.append(result)
-                    if failures and len(failures) == len(devices):
-                        raise failures[0]
-            except TimeoutError as err:
-                raise UpdateFailed(f"Timeout while fetching data: {err}") from err
-            except ImouException as err:
-                raise UpdateFailed(f"Error updating Imou devices: {err}") from err
+                if not devices:
+                    return
+
+                results = await asyncio.gather(
+                    *(
+                        self._device_manager.async_update_device_status(device)
+                        for device in devices
+                    ),
+                    return_exceptions=True,
+                )
+        except TimeoutError as err:
+            raise UpdateFailed(f"Timeout while fetching data: {err}") from err
+
+        failures: list[Exception] = []
+        for device, result in zip(devices, results, strict=True):
+            if not isinstance(result, Exception):
+                continue
+            device_key = imou_device_identifier(device)
+            _LOGGER.warning(
+                "Error updating status for Imou device %s: %s",
+                device_key,
+                result,
+            )
+            failures.append(result)
+        if failures and len(failures) == len(devices):
+            raise UpdateFailed(
+                f"Error updating Imou devices: {failures[0]}"
+            ) from failures[0]
 
     def _async_add_remove_devices(self, fresh_by_key: dict[str, ImouHaDevice]) -> None:
         """Add new devices, remove devices no longer in the account."""

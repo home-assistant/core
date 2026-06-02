@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 
@@ -296,6 +297,35 @@ async def test_offline_device_marked_unavailable_after_refresh(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_update_fails_when_all_devices_fail(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """When every device status update fails, the coordinator update fails."""
+    entity_registry = er.async_get(hass)
+    mute_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id == "d1$mute"
+    )
+    assert hass.states.get(mute_entry.entity_id).state != STATE_UNAVAILABLE
+
+    mock_imou_ha_device_manager.async_update_device_status.side_effect = ImouException(
+        "cloud failure"
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.runtime_data.last_update_success is False
     assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
 
 
