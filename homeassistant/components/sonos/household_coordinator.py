@@ -1,9 +1,9 @@
 """Class representing a Sonos household storage helper."""
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from soco import SoCo
 
@@ -29,8 +29,8 @@ class SonosHouseholdCoordinator:
         """Initialize the data."""
         self.hass = hass
         self.household_id = household_id
-        self._poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
-        self.async_poll: Callable[[], Coroutine[None, None, None]] | None = None
+        self._poll_debouncer: Debouncer[Awaitable[None]] | None = None
+        self.async_poll: Callable[[], Awaitable[None]] | None = None
         self.last_processed_event_id: int | None = None
         self.config_entry = config_entry
 
@@ -43,7 +43,7 @@ class SonosHouseholdCoordinator:
     def _async_setup(self) -> None:
         """Finish setup in async context."""
         self.cache_update_lock = asyncio.Lock()
-        self._poll_debouncer = Debouncer[Coroutine[Any, Any, None]](
+        self._poll_debouncer = Debouncer[Awaitable[None]](
             self.hass,
             _LOGGER,
             cooldown=3,
