@@ -9,6 +9,7 @@ from httpx import Response
 import respx
 
 from homeassistant.components.noonlight.const import (
+    CONF_HEARTBEAT_MINUTES,
     DOMAIN,
     HEARTBEAT_FAILURE_THRESHOLD,
     ISSUE_AUTH_FAILED,
@@ -46,6 +47,23 @@ async def test_setup_does_not_probe_immediately(hass, setup_entry):
     await hass.async_block_till_done()
     assert not probe.called
     assert coordinator.data["api_healthy"] is True
+
+
+@respx.mock
+async def test_heartbeat_disabled_when_zero(hass, setup_entry):
+    """heartbeat_minutes == 0 disables the idle probe entirely."""
+    respx.get(url__regex=_STATUS_RE).mock(return_value=Response(404))
+    hass.config_entries.async_update_entry(
+        setup_entry, options={**setup_entry.options, CONF_HEARTBEAT_MINUTES: 0}
+    )
+    await hass.async_block_till_done()
+    coordinator = _coordinator(hass, setup_entry)
+
+    assert coordinator._heartbeat_interval == 0
+    _force_due(coordinator)
+    assert coordinator._heartbeat_due() is False
+    coordinator._apply_refresh_interval(STATE_IDLE)
+    assert coordinator.update_interval is None
 
 
 @respx.mock

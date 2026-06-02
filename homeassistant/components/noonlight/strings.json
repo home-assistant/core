@@ -149,7 +149,7 @@
           "services_granted": "Granted services"
         },
         "data_description": {
-          "heartbeat_minutes": "How often to silently check that Noonlight is reachable and your token is valid, so failures are caught before an emergency. Lower = faster detection, more API calls."
+          "heartbeat_minutes": "How often (minutes) to silently verify Noonlight is reachable and your token is valid, so a problem surfaces before an emergency rather than during one. Set to 0 to disable."
         },
         "description": "Caller, address, and site changes are made with the Reconfigure action.",
         "title": "Noonlight options"

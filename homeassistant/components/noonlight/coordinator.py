@@ -269,22 +269,30 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return data
 
     def _heartbeat_due(self) -> bool:
+        interval = self._heartbeat_interval
+        if interval <= 0:
+            return False  # heartbeat disabled (heartbeat_minutes == 0)
         now = dt_util.utcnow().timestamp()
-        return now - self._last_heartbeat >= self._heartbeat_interval
+        return now - self._last_heartbeat >= interval
 
     @callback
     def _apply_refresh_interval(self, state: str) -> None:
         """Tune the poll cadence to the current dispatch state.
 
-        Fast while a dispatch is active, slow (heartbeat cadence) while idle —
-        but stay fast until the first heartbeat has run so startup detection
-        isn't delayed.
+        Fast while a dispatch is active, the heartbeat cadence while idle, and
+        no idle polling at all when the heartbeat is disabled. Stay fast until
+        the first heartbeat runs so startup detection isn't delayed.
         """
-        if state == STATE_DISPATCHED or not self._probed_once:
-            seconds = POLL_INTERVAL
+        interval = self._heartbeat_interval
+        if state == STATE_DISPATCHED:
+            self.update_interval = timedelta(seconds=POLL_INTERVAL)
+        elif interval <= 0:
+            # Heartbeat disabled — don't wake the coordinator while idle.
+            self.update_interval = None
+        elif not self._probed_once:
+            self.update_interval = timedelta(seconds=POLL_INTERVAL)
         else:
-            seconds = self._heartbeat_interval
-        self.update_interval = timedelta(seconds=seconds)
+            self.update_interval = timedelta(seconds=interval)
 
     async def _run_heartbeat(self) -> dict[str, Any]:
         """Probe Noonlight (side-effect-free) and update health state.

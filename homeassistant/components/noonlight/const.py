@@ -89,8 +89,10 @@ POLL_INTERVAL: Final = 30  # seconds
 
 # Idle heartbeat: how often (minutes) to probe Noonlight for reachability +
 # valid credentials so failures surface BEFORE an emergency, not during one.
-DEFAULT_HEARTBEAT_MINUTES: Final = 15
-MIN_HEARTBEAT_MINUTES: Final = 5
+# Default idle-heartbeat cadence. The probe is a harmless read that returns a
+# 404 (which is the *healthy* signal: reachable + authorized). 0 disables it.
+DEFAULT_HEARTBEAT_MINUTES: Final = 60
+MIN_HEARTBEAT_MINUTES: Final = 0  # 0 = disabled
 MAX_HEARTBEAT_MINUTES: Final = 1440
 # Consecutive heartbeat failures before raising a Repair issue (avoids
 # alerting on a single transient blip).
