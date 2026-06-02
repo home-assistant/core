@@ -139,7 +139,7 @@
       "device_tracker": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "in_zones": "In zones",
+          "in_zones": "Zones",
           "latitude": "Latitude",
           "longitude": "Longitude",
           "name": "[%key:common::config_flow::data::name%]"
