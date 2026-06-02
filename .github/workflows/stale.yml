@@ -24,7 +24,6 @@ jobs:
     steps:
       # Generate a token for the GitHub App, we use this method to avoid
       # hitting API limits for our GitHub actions + have a higher rate limit.
-      # This is only used for issues.
       - name: Generate app token
         id: token
         # Pinned to a specific version of the action for security reasons
