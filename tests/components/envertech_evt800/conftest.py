@@ -38,12 +38,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_evt800_client() -> Generator[MagicMock]:
     """Mock the EVT800 client."""
-    with patch(
-        "homeassistant.components.envertech_evt800.pyenvertechevt800.EnvertechEVT800",
-        autospec=True,
-    ) as client:
+    with (
+        patch(
+            "homeassistant.components.envertech_evt800.config_flow.EnvertechEVT800",
+            autospec=True,
+        ) as client,
+        patch("homeassistant.components.envertech_evt800.EnvertechEVT800", new=client),
+    ):
         mock_instance = client.return_value
-        mock_instance.test_connection = AsyncMock(return_value=True)
+        mock_instance.test_connection.return_value = True
+        mock_instance.online = True
         mock_instance.start = MagicMock()
         mock_instance.set_data_listener = MagicMock()
         mock_instance.data = {

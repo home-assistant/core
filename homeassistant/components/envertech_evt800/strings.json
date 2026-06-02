@@ -3,17 +3,18 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "step": {
       "user": {
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "type": "EVT800 local server mode"
+          "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
           "ip_address": "The IP address of your Envertech EVT800 device.",
-          "port": "The Port of your Envertech EVT800 device.",
-          "type": "The server mode should match the selected server mode on the Envertech EVT800 device."
+          "port": "The Port of your Envertech EVT800 device."
         },
         "description": "Enter your EVT800 device information.",
         "title": "Setup EVT800 device"

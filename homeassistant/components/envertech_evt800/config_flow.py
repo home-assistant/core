@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import pyenvertechevt800
+from pyenvertechevt800 import EnvertechEVT800
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -40,7 +40,7 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: port,
                 }
             )
-            evt800 = pyenvertechevt800.EnvertechEVT800(ip_address, port)
+            evt800 = EnvertechEVT800(ip_address, port)
 
             can_connect = await evt800.test_connection()
 

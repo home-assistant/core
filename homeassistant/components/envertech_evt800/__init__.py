@@ -1,6 +1,6 @@
 """Envertech EVT800 integration."""
 
-import pyenvertechevt800
+from pyenvertechevt800 import EnvertechEVT800
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
@@ -16,16 +16,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: EnvertechEVT800ConfigEntry
 ) -> bool:
     """Set up Envertech EVT800 from a config entry."""
-    evt800 = pyenvertechevt800.EnvertechEVT800(
-        entry.data[CONF_IP_ADDRESS], entry.data[CONF_PORT]
-    )
+    evt800 = EnvertechEVT800(entry.data[CONF_IP_ADDRESS], entry.data[CONF_PORT])
     evt800.start()
 
-    coordinator = EnvertechEVT800Coordinator(
-        hass,
-        evt800,
-        entry,
-    )
+    coordinator = EnvertechEVT800Coordinator(hass, evt800, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
