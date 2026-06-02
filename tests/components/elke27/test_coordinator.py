@@ -358,6 +358,25 @@ async def test_queue_domain_refresh_handles_exception(hass: HomeAssistant) -> No
     await hass.async_block_till_done()
 
 
+async def test_queue_domain_refresh_preserves_cancelled_error(
+    hass: HomeAssistant,
+) -> None:
+    """Verify refresh cancellation is preserved."""
+
+    class CancelHub(_FakeHub):
+        async def refresh_domain_config(self, domain: str) -> None:
+            raise asyncio.CancelledError
+
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    hub = CancelHub(SimpleNamespace(version=1))
+    coordinator = _coordinator(hass, hub, entry)
+    await coordinator.async_start()
+    coordinator._pending_domains.add("zone")
+
+    with pytest.raises(asyncio.CancelledError):
+        await coordinator._async_debounced_refresh()
+
+
 async def test_connection_state_event_triggers_refresh(
     hass: HomeAssistant,
 ) -> None:

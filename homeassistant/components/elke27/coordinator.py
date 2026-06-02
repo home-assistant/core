@@ -157,6 +157,8 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
                     return_exceptions=True,
                 )
                 for domain, result in zip(domains, results, strict=True):
+                    if isinstance(result, asyncio.CancelledError):
+                        raise result
                     if isinstance(result, Exception):
                         _LOGGER.debug(
                             "Domain refresh failed for %s: %s", domain, result
