@@ -434,16 +434,21 @@ class APIDomainServicesView(HomeAssistantView):
         )
 
         try:
-            # shield the service call from cancellation on connection drop
-            response = await shield(
-                hass.services.async_call(
-                    domain,
-                    service,
-                    data,  # type: ignore[arg-type]
-                    blocking=True,
-                    context=context,
-                    return_response=response_requested,
+            # Shield the service call from cancellation on connection drop
+            async with timeout(SERVICE_WAIT_TIMEOUT):
+                response = await shield(
+                    hass.services.async_call(
+                        domain,
+                        service,
+                        data,  # type: ignore[arg-type]
+                        blocking=True,
+                        context=context,
+                        return_response=response_requested,
+                    )
                 )
+        except TimeoutError:
+            return self.json_message(
+                "Service call timeout.", HTTPStatus.GATEWAY_TIMEOUT
             )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest from ex
