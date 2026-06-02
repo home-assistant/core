@@ -25,6 +25,7 @@ class VistapoolSwitchEntityDescription(SwitchEntityDescription):
     value_path: str
     is_relay: bool = False
     exists_path: str | tuple[str, ...] | None = None
+    translation_placeholders: dict[str, str] | None = None
 
 
 SWITCH_DESCRIPTIONS: tuple[VistapoolSwitchEntityDescription, ...] = (
@@ -33,29 +34,15 @@ SWITCH_DESCRIPTIONS: tuple[VistapoolSwitchEntityDescription, ...] = (
         translation_key="filtration",
         value_path="filtration.status",
     ),
-    VistapoolSwitchEntityDescription(
-        key="relay_1",
-        translation_key="relay_1",
-        value_path="relays.relay1.info.onoff",
-        is_relay=True,
-    ),
-    VistapoolSwitchEntityDescription(
-        key="relay_2",
-        translation_key="relay_2",
-        value_path="relays.relay2.info.onoff",
-        is_relay=True,
-    ),
-    VistapoolSwitchEntityDescription(
-        key="relay_3",
-        translation_key="relay_3",
-        value_path="relays.relay3.info.onoff",
-        is_relay=True,
-    ),
-    VistapoolSwitchEntityDescription(
-        key="relay_4",
-        translation_key="relay_4",
-        value_path="relays.relay4.info.onoff",
-        is_relay=True,
+    *(
+        VistapoolSwitchEntityDescription(
+            key=f"relay_{i}",
+            translation_key="relay",
+            translation_placeholders={"number": str(i)},
+            value_path=f"relays.relay{i}.info.onoff",
+            is_relay=True,
+        )
+        for i in (1, 2, 3, 4)
     ),
     VistapoolSwitchEntityDescription(
         key="electrolysis_cover",
@@ -133,6 +120,8 @@ class VistapoolSwitch(VistapoolEntity, SwitchEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = self.build_unique_id(description.key)
+        if description.translation_placeholders is not None:
+            self._attr_translation_placeholders = description.translation_placeholders
 
     @property
     def is_on(self) -> bool | None:

@@ -181,7 +181,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'relay_1',
+    'translation_key': 'relay',
     'unique_id': 'ABCDEF1234567890-relay_1',
     'unit_of_measurement': None,
   })
@@ -231,7 +231,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'relay_2',
+    'translation_key': 'relay',
     'unique_id': 'ABCDEF1234567890-relay_2',
     'unit_of_measurement': None,
   })
@@ -281,7 +281,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'relay_3',
+    'translation_key': 'relay',
     'unique_id': 'ABCDEF1234567890-relay_3',
     'unit_of_measurement': None,
   })
@@ -331,7 +331,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'relay_4',
+    'translation_key': 'relay',
     'unique_id': 'ABCDEF1234567890-relay_4',
     'unit_of_measurement': None,
   })

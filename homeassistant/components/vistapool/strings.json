@@ -71,17 +71,8 @@
       "heating_climate": {
         "name": "Heating climate"
       },
-      "relay_1": {
-        "name": "Relay 1"
-      },
-      "relay_2": {
-        "name": "Relay 2"
-      },
-      "relay_3": {
-        "name": "Relay 3"
-      },
-      "relay_4": {
-        "name": "Relay 4"
+      "relay": {
+        "name": "Relay {number}"
       },
       "smart_mode_freeze": {
         "name": "Smart mode freeze"
