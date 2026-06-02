@@ -160,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         )
         for device, close_result in zip(disabled_devices, close_results, strict=True):
             if isinstance(close_result, Exception):
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Failed to close disabled Roborock device %s: %s",
                     device.duid,
                     close_result,
