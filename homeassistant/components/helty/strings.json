@@ -21,14 +21,14 @@
   },
   "entity": {
     "sensor": {
+      "indoor_humidity": {
+        "name": "Indoor humidity"
+      },
       "indoor_temperature": {
         "name": "Indoor temperature"
       },
       "outdoor_temperature": {
         "name": "Outdoor temperature"
-      },
-      "indoor_humidity": {
-        "name": "Indoor humidity"
       }
     }
   }
