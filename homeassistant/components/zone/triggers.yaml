@@ -24,3 +24,19 @@
 
 entered: *trigger_zone
 left: *trigger_zone
+
+.trigger_occupancy: &trigger_occupancy
+  fields:
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+    zone:
+      required: true
+      selector:
+        entity:
+          domain: zone
+
+occupancy_detected: *trigger_occupancy
+occupancy_cleared: *trigger_occupancy
