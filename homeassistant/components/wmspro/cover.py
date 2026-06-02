@@ -179,9 +179,16 @@ class WebControlProSlatRotate(WebControlProSlat):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=0)  # do NOT use minValue here!
+        # 0 is the open position for the tilt in WMS WebControl pro,
+        # with the open position the slat is parallel to the ground.
+        # This position will let the most light through and
+        # is required to fully store the cover in the box.
+        await action(rotation=0)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
+        # maxValue is the close position for the tilt in WMS WebControl pro,
+        # with the close position the slat is perpendicular to the ground.
+        # This position will block the light best.
         await action(rotation=action.maxValue)
