@@ -33,11 +33,10 @@ async def test_entry_diagnostics(
     assert result["entry"]["data"][CONF_USERNAME] == REDACTED
     assert result["entry"]["data"][CONF_PASSWORD] == REDACTED
 
-    pool = result["pools"][0]
-    assert pool["form"]["lat"] == REDACTED
-    assert pool["form"]["lng"] == REDACTED
-    assert pool["form"]["city"] == REDACTED
-    assert pool["form"]["street"] == REDACTED
-    assert pool["form"]["zipcode"] == REDACTED
-
-    assert pool["main"]["temperature"] == mock_pool_data["main"]["temperature"]
+    for pool in result["pools"]:
+        assert pool["form"]["lat"] == REDACTED
+        assert pool["form"]["lng"] == REDACTED
+        assert pool["form"]["city"] == REDACTED
+        assert pool["form"]["street"] == REDACTED
+        assert pool["form"]["zipcode"] == REDACTED
+        assert pool["main"]["temperature"] == mock_pool_data["main"]["temperature"]
