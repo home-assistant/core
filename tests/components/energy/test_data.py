@@ -201,6 +201,7 @@ async def test_battery_capacity_round_trip(
     with pytest.raises(vol.Invalid):
         ENERGY_SOURCE_SCHEMA([{**battery_source, "capacity": -1}])
 
+
 async def test_grid_power_config_inverted_sets_stat_rate(
     hass: HomeAssistant,
 ) -> None:
