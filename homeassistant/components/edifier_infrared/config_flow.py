@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from infrared_protocols.codes.edifier.models import MODEL_TO_COMMAND_SET, EdifierModel
 import voluptuous as vol
 
 from homeassistant.components.infrared import (
@@ -18,13 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import (
-    CONF_COMMAND_SET,
-    CONF_INFRARED_ENTITY_ID,
-    DOMAIN,
-    MODEL_TO_COMMAND_SET,
-    EdifierModel,
-)
+from .const import CONF_COMMAND_SET, CONF_INFRARED_ENTITY_ID, DOMAIN
 
 
 class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):

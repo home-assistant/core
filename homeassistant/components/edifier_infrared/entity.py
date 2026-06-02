@@ -1,10 +1,12 @@
 """Common entity for Edifier infrared integration."""
 
+from infrared_protocols.codes.edifier.models import EdifierModel
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, EdifierModel
+from .const import DOMAIN
 
 
 class EdifierIrEntity(Entity):

@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+from infrared_protocols.codes.edifier.models import EdifierCommandSets, EdifierModel
 import pytest
 
 from homeassistant.components.edifier_infrared import PLATFORMS
@@ -10,8 +11,6 @@ from homeassistant.components.edifier_infrared.const import (
     CONF_COMMAND_SET,
     CONF_INFRARED_ENTITY_ID,
     DOMAIN,
-    EdifierCommandSets,
-    EdifierModel,
 )
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant

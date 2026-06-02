@@ -1,5 +1,6 @@
 """Tests for the Edifier Infrared media player platform."""
 
+from infrared_protocols.codes.edifier.models import EdifierCommandSets, EdifierModel
 from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
 import pytest
@@ -9,8 +10,6 @@ from homeassistant.components.edifier_infrared.const import (
     CONF_COMMAND_SET,
     CONF_INFRARED_ENTITY_ID,
     DOMAIN,
-    EdifierCommandSets,
-    EdifierModel,
 )
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,

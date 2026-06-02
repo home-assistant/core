@@ -1,5 +1,6 @@
 """Media player platform for Edifier infrared integration."""
 
+from infrared_protocols.codes.edifier.models import EdifierCommandSets, EdifierModel
 from infrared_protocols.codes.edifier.r1280db import EdifierR1280DBCode
 from infrared_protocols.codes.edifier.r1280t import EdifierR1280TCode
 from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
@@ -18,13 +19,7 @@ from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_COMMAND_SET,
-    CONF_INFRARED_ENTITY_ID,
-    EdifierCode,
-    EdifierCommandSets,
-    EdifierModel,
-)
+from .const import CONF_COMMAND_SET, CONF_INFRARED_ENTITY_ID, EdifierCode
 from .entity import EdifierIrEntity
 
 PARALLEL_UPDATES = 1
