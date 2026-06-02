@@ -22,11 +22,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.template import TemplateStateFromEntityId
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -172,11 +174,6 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             self._update_in_progress,
         )
         self.setup_template(
-            CONF_RELEASE_SUMMARY,
-            "_attr_release_summary",
-            template_validators.string(self, CONF_RELEASE_SUMMARY),
-        )
-        self.setup_template(
             CONF_RELEASE_URL,
             "_attr_release_url",
             template_validators.url(self, CONF_RELEASE_URL),
@@ -203,6 +200,8 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             or CONF_UPDATE_PERCENTAGE in self._templates
         ):
             self._attr_supported_features |= UpdateEntityFeature.PROGRESS
+        if CONF_RELEASE_SUMMARY in config:
+            self._attr_supported_features |= UpdateEntityFeature.RELEASE_NOTES
 
         self._optimistic_in_process = (
             CONF_IN_PROGRESS not in self._templates
@@ -243,6 +242,28 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             run_variables={ATTR_SPECIFIC_VERSION: version, ATTR_BACKUP: backup},
             context=self._context,
         )
+
+    async def async_release_notes(self) -> str | None:
+        """Return release notes rendered on demand."""
+        if (release_summary_template := self._config.get(CONF_RELEASE_SUMMARY)) is None:
+            return None
+
+        try:
+            return release_summary_template.async_render(
+                variables={
+                    "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+                    **self._render_script_variables(),
+                },
+                parse_result=False,
+            )
+        except TemplateError as err:
+            _LOGGER.error(
+                "TemplateError('%s') while rendering release notes for entity '%s'",
+                err,
+                self.entity_id,
+            )
+
+        return None
 
 
 class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
