@@ -3,7 +3,11 @@
 from abc import abstractmethod
 from typing import Any
 
-from victron_mqtt import Device as VictronVenusDevice, Metric as VictronVenusMetric
+from victron_mqtt import (
+    Device as VictronVenusDevice,
+    Metric as VictronVenusMetric,
+    MetricType,
+)
 
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
@@ -14,6 +18,8 @@ from homeassistant.helpers.entity import Entity
 ENTITIES_CATEGORY_DIAGNOSTIC = ["system_heartbeat", "platform_device_reboot"]
 # Entities that should be disabled by default
 ENTITIES_DISABLE_BY_DEFAULT = ["system_heartbeat", "platform_device_reboot"]
+# Units that must be provided directly instead of via localization.
+SPECIAL_NATIVE_UNITS = {"%", "Ah"}
 
 
 class VictronBaseEntity(Entity):
@@ -46,10 +52,6 @@ class VictronBaseEntity(Entity):
         if metric.main_topic:
             self._attr_name = None
 
-        # Special case for "%" as it should not be coming from the localization file
-        self._attr_native_unit_of_measurement = (
-            "%" if metric.unit_of_measurement == "%" else None
-        )
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC
             if metric.generic_short_id in ENTITIES_CATEGORY_DIAGNOSTIC
@@ -58,6 +60,24 @@ class VictronBaseEntity(Entity):
         self._attr_entity_registry_enabled_default = (
             metric.generic_short_id not in ENTITIES_DISABLE_BY_DEFAULT
         )
+
+    def _set_translation(self) -> None:
+        unit_of_measurement = self._metric.unit_of_measurement
+        # We need to set the _attr_native_unit_of_measurement in three cases:
+        if (
+            # 1. Special units which will never need a translation and therefore will not be included in the translation file.
+            unit_of_measurement in SPECIAL_NATIVE_UNITS
+            # 2. When there is known device class which support multiple units. In this case
+            # we publish what we have and HA will allow conversion to other supported units.
+            # We specifically don't put those cases in the translation file by the merge script
+            # not to waste translation resources so it has to come from here.
+            or self._attr_device_class is not None
+            # 3. Dynamic units come from user-configured MQTT topics (e.g.
+            # SwitchableOutput Settings/Unit) and have no translation file
+            # entry, so we must set the unit programmatically.
+            or self._metric.metric_type == MetricType.DYNAMIC
+        ):
+            self._attr_native_unit_of_measurement = unit_of_measurement
 
     @callback
     @abstractmethod
