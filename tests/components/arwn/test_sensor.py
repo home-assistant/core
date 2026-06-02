@@ -5,24 +5,29 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.arwn.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from tests.common import async_fire_mqtt_message
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
+
+
+@pytest.fixture
+def config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a loaded arwn config entry."""
+    entry = MockConfigEntry(domain=DOMAIN, title="Ambient Radio Weather Network")
+    entry.add_to_hass(hass)
+    return entry
 
 
 async def test_temperature_sensor_created(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that a temperature MQTT message creates a sensor entity."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": "arwn"}},
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -42,13 +47,10 @@ async def test_temperature_sensor_created(
 async def test_temperature_sensor_updates(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that a second MQTT message updates an existing sensor."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": "arwn"}},
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -73,13 +75,10 @@ async def test_temperature_sensor_updates(
 async def test_rain_rate_exposed_total_suppressed(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test rain/rate is created but rain/total is suppressed (expose=False)."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": "arwn"}},
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -122,17 +121,14 @@ async def test_rain_rate_exposed_total_suppressed(
 async def test_single_reading_sensor_created(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    config_entry: MockConfigEntry,
     topic: str,
     payload: dict[str, Any],
     entity_id: str,
     expected_state: str,
 ) -> None:
     """Test single-reading sensor types are discovered and populated."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": "arwn"}},
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, topic, json.dumps(payload))
@@ -146,13 +142,10 @@ async def test_single_reading_sensor_created(
 async def test_wind_sensors_created(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test wind message creates speed, gust, and direction sensors."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": "arwn"}},
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -171,31 +164,25 @@ async def test_wind_sensors_created(
 async def test_unknown_topic_ignored(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that messages on unknown topics do not create sensors."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": "arwn"}},
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "arwn/unknown_domain", json.dumps({"value": 1.0}))
     await hass.async_block_till_done()
 
-    assert hass.data.get("arwn") is None
+    assert config_entry.runtime_data == {}
 
 
 async def test_wind_direction_state_class(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test wind direction sensor has measurement_angle state class."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": "arwn"}},
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -214,16 +201,39 @@ async def test_wind_direction_state_class(
 async def test_malformed_json_ignored(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that a malformed JSON payload does not raise and is silently ignored."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": "arwn"}},
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "arwn/temperature/BackYard", "not valid json{{")
     await hass.async_block_till_done()
 
-    assert hass.data.get("arwn") is None
+    assert config_entry.runtime_data == {}
+
+
+async def test_entry_unload(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that unloading the config entry makes sensors unavailable."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(
+        hass,
+        "arwn/temperature/BackYard",
+        json.dumps({"temp": 22.5, "units": "C"}),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.backyard_temperature") is not None
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.backyard_temperature")
+    assert state is not None
+    assert state.state == "unavailable"
