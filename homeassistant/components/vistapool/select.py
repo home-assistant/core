@@ -119,15 +119,7 @@ class VistapoolSelect(VistapoolEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Send the index of the chosen option to the controller."""
-        options = self.entity_description.options or []
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_failed",
-                translation_placeholders={"entity": self.entity_id},
-            ) from err
+        index = self.entity_description.options.index(option)
         try:
             await self.coordinator.api.set_value(
                 self.coordinator.pool_id,
