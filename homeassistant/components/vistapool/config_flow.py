@@ -40,8 +40,8 @@ class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             session = async_get_clientsession(self.hass)
+            auth = AquariteAuth(session, username, password)
             try:
-                auth = AquariteAuth(session, username, password)
                 await auth.authenticate()
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
@@ -95,8 +95,8 @@ class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             password = user_input[CONF_PASSWORD]
             session = async_get_clientsession(self.hass)
+            auth = AquariteAuth(session, username, password)
             try:
-                auth = AquariteAuth(session, username, password)
                 await auth.authenticate()
             except AuthenticationError:
                 errors["base"] = "invalid_auth"

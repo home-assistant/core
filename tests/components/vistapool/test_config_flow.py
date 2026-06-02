@@ -305,9 +305,6 @@ async def test_dhcp_discovery_aborts_when_in_progress(
     assert second["reason"] == "already_in_progress"
 
 
-# ── Reauth flow ──────────────────────────────────────────────────
-
-
 _NEW_PASSWORD = "new-password"
 
 
