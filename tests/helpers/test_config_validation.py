@@ -2087,7 +2087,9 @@ def test_base_schemas_reject_invalid_note(
 
 
 _CHOOSE_OPTION_BASE_CONFIG = {
-    "conditions": [{"condition": "state", "entity_id": "sun.sun", "state": "above_horizon"}],
+    "conditions": [
+        {"condition": "state", "entity_id": "sun.sun", "state": "above_horizon"}
+    ],
     "sequence": [{"action": "test.foo"}],
 }
 
