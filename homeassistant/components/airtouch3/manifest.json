@@ -7,16 +7,12 @@
   "dhcp": [
     {
       "hostname": "*airtouch3*"
-    },
-    {
-      "hostname": "*aritouch3*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/airtouch3",
-  "homekit": {},
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyairtouch3"],
-  "quality_scale": "gold",
-  "requirements": ["pyairtouch3==0.1.1"]
+  "quality_scale": "silver",
+  "requirements": ["pyairtouch3==0.1.2"]
 }

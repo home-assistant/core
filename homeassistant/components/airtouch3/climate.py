@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from pyairtouch3 import AcMode, AirtouchZone, ZoneStatus
+from pyairtouch3 import AcMode, Aircon, AirtouchZone, ZoneStatus
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -58,28 +58,35 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirTouch 3 climate entities."""
     coordinator = config_entry.runtime_data
+    aircon = coordinator.data.aircon
 
-    if not coordinator.data or getattr(coordinator.data, "ac_id", None) is None:
-        _LOGGER.error(
-            "Failed to fetch AirTouch 3 data - coordinator data is empty or missing 'ac_id'"
-        )
-        return
-
-    entities: list[ClimateEntity] = [AirtouchAC(coordinator, coordinator.data.ac_id)]
+    entities: list[ClimateEntity] = [AirtouchAC(coordinator, aircon.ac_id)]
 
     entities.extend(
-        AirtouchGroup(coordinator, zone.id, coordinator.data.ac_id, zone.name)
-        for zone in coordinator.data.zones
+        AirtouchGroup(coordinator, zone.id, aircon.ac_id, zone.name)
+        for zone in coordinator.data.zones.values()
     )
 
     _LOGGER.debug("Adding entities %s", entities)
     async_add_entities(entities)
 
 
-class AirtouchAC(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEntity):
-    """Representation of an AirTouch 3 AC unit."""
+class AirtouchClimateEntity(
+    CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEntity
+):
+    """Base class for AirTouch 3 climate entities."""
 
     _attr_has_entity_name = True
+
+    @property
+    def aircon(self) -> Aircon:
+        """Return the current AirTouch air conditioner data."""
+        return self.coordinator.data.aircon
+
+
+class AirtouchAC(AirtouchClimateEntity):
+    """Representation of an AirTouch 3 AC unit."""
+
     _attr_name = None
     _attr_translation_key = "air_conditioner"
     _attr_supported_features = (
@@ -91,12 +98,13 @@ class AirtouchAC(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEntit
     _attr_target_temperature_step = 1  # Only allow whole degree increments
 
     _attr_hvac_modes = [HVACMode.OFF, *HA_STATE_TO_AT]
+    _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
     def __init__(self, coordinator: Airtouch3DataUpdateCoordinator, ac_id: int) -> None:
         """Initialize the AirTouch AC unit."""
         super().__init__(coordinator)
         self.ac_id = ac_id
-        self._attr_unique_id = f"{coordinator.system_id}_airtouch_ac_{ac_id}"
+        self._attr_unique_id = f"{coordinator.system_id}_ac_{ac_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.system_id}_ac_{ac_id}")},
             name="AirTouch 3",
@@ -105,27 +113,22 @@ class AirtouchAC(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEntit
         )
 
     @property
-    def fan_modes(self) -> list[str]:
-        """Return the list of available fan modes."""
-        return [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-
-    @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
-        fan_speed = self.coordinator.data.fan_speed
+        fan_speed = self.aircon.fan_speed
         return AT_TO_HA_FAN_SPEED.get(fan_speed, FAN_AUTO)
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self.coordinator.data.room_temperature
+        return self.aircon.room_temperature
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
-        if not self.coordinator.data.status:
+        if not self.aircon.status:
             return HVACMode.OFF
-        mode = self.coordinator.data.mode
+        mode = self.aircon.mode
         return AT_TO_HA_STATE.get(mode, HVACMode.AUTO)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -140,7 +143,7 @@ class AirtouchAC(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEntit
             _LOGGER.debug("Setting HVAC mode of AC %s to %s", self.ac_id, hvac_mode)
             await self.coordinator.send_command("turn_on", self.ac_id)
             _LOGGER.debug("Turning on AC %s after setting mode", self.ac_id)
-            self.coordinator.data.mode = at_mode
+            self.aircon.mode = at_mode
         else:
             _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
             return
@@ -155,16 +158,20 @@ class AirtouchAC(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEntit
                 "set_fan_speed", self.ac_id, at_fan_mode
             )
             _LOGGER.debug("Setting fan mode of AC %s to %s", self.ac_id, fan_mode)
-            self.coordinator.data.fan_speed = at_fan_mode
+            self.aircon.fan_speed = at_fan_mode
             self.async_write_ha_state()
         else:
             _LOGGER.warning("Unsupported fan mode: %s", fan_mode)
 
 
-class AirtouchGroup(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEntity):
-    """Representation of an AirTouch 3 group (zone) with fan-only mode to toggle power."""
+class AirtouchGroup(AirtouchClimateEntity):
+    """Representation of an AirTouch 3 zone group.
 
-    _attr_has_entity_name = True
+    AirTouch exposes duct zones as groups, not independent AC units. The controller
+    only supports zone on/off and target temperature commands, so Home Assistant
+    represents an enabled zone as fan-only rather than a full HVAC unit.
+    """
+
     _attr_name = None
     _attr_translation_key = "zone"
     _attr_supported_features = (
@@ -187,9 +194,7 @@ class AirtouchGroup(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEn
         super().__init__(coordinator)
         self.group_id = group_id
         self.ac_id = ac_id
-        self._attr_unique_id = (
-            f"{coordinator.system_id}_airtouch_{ac_id}_group_{group_id}"
-        )
+        self._attr_unique_id = f"{coordinator.system_id}_{ac_id}_group_{group_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.system_id}_group_{group_id}")},
             manufacturer="Polyaire",
@@ -199,9 +204,7 @@ class AirtouchGroup(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEn
 
     def _get_zone(self) -> AirtouchZone | None:
         """Fetch the zone data object for this group."""
-        return next(
-            (z for z in self.coordinator.data.zones if z.id == self.group_id), None
-        )
+        return self.coordinator.data.zones.get(self.group_id)
 
     @property
     def current_temperature(self) -> float | None:
@@ -209,7 +212,7 @@ class AirtouchGroup(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEn
         zone = self._get_zone()
         if zone and zone.sensor and zone.sensor.is_available:
             return zone.sensor.current_temperature
-        return self.coordinator.data.room_temperature or None
+        return self.aircon.room_temperature or None
 
     @property
     def target_temperature(self) -> float | None:
@@ -289,8 +292,3 @@ class AirtouchGroup(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEn
             )
 
         self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Fetch the latest state from the coordinator and update HVAC mode."""
-        await self.coordinator.async_request_refresh()
-        self._attr_hvac_mode = self.hvac_mode

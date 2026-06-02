@@ -1,22 +1,19 @@
 """Test AirTouch 3 integration setup."""
 
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from pyairtouch3.airtouch_aircon import Aircon
 
 from homeassistant.components.airtouch3 import (
     PLATFORMS,
-    _async_migrate_entity_unique_ids,
     async_setup,
     async_setup_entry,
     async_unload_entry,
 )
 from homeassistant.components.airtouch3.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -58,41 +55,9 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     ):
         assert await async_setup_entry(hass, entry)
 
-    assert entry.runtime_data.data is aircon
+    assert entry.runtime_data.data.aircon is aircon
     assert entry.unique_id == SYSTEM_ID
     forward_entry_setups.assert_awaited_once_with(entry, PLATFORMS)
-
-
-async def test_migrate_entity_unique_ids_no_data(hass: HomeAssistant) -> None:
-    """Test migration does nothing when the entry has no runtime data."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
-    entry.add_to_hass(hass)
-    entry.runtime_data = SimpleNamespace(data=None)
-
-    _async_migrate_entity_unique_ids(hass, entry, "1.1.1.1", SYSTEM_ID)
-
-
-async def test_migrate_entity_unique_ids(hass: HomeAssistant) -> None:
-    """Test host-based entity unique IDs migrate to the stable system id."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
-    entry.add_to_hass(hass)
-    aircon = Aircon(1)
-    entry.runtime_data = SimpleNamespace(data=aircon)
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get_or_create(
-        Platform.CLIMATE,
-        DOMAIN,
-        "1.1.1.1_airtouch_ac_1",
-        suggested_object_id="airtouch_3",
-        config_entry=entry,
-    )
-
-    _async_migrate_entity_unique_ids(hass, entry, "1.1.1.1", SYSTEM_ID)
-
-    assert (
-        ent_reg.async_get(entity_entry.entity_id).unique_id
-        == f"{SYSTEM_ID}_airtouch_ac_1"
-    )
 
 
 async def test_async_unload_entry(hass: HomeAssistant) -> None:

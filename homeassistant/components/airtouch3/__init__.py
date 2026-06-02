@@ -6,7 +6,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -46,44 +46,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@callback
-def _async_migrate_entity_unique_ids(
-    hass: HomeAssistant, entry: AirTouch3ConfigEntry, host: str, system_id: str
-) -> None:
-    """Migrate host-based entity unique IDs to the stable system id."""
-    ent_reg = er.async_get(hass)
-    if not (aircon := entry.runtime_data.data):
-        return
-
-    replacements = {
-        f"{host}_airtouch_ac_{aircon.ac_id}": f"{system_id}_airtouch_ac_{aircon.ac_id}"
-    }
-    replacements.update(
-        {
-            f"{host}_airtouch_{aircon.ac_id}_group_{zone.id}": (
-                f"{system_id}_airtouch_{aircon.ac_id}_group_{zone.id}"
-            )
-            for zone in aircon.zones
-        }
-    )
-
-    for old_unique_id, new_unique_id in replacements.items():
-        if entity_id := ent_reg.async_get_entity_id(
-            Platform.CLIMATE, DOMAIN, old_unique_id
-        ):
-            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: AirTouch3ConfigEntry) -> bool:
     """Set up AirTouch 3 Air Conditioner from a config entry."""
     host = entry.data[CONF_HOST]
     coordinator = Airtouch3DataUpdateCoordinator(hass, entry, host)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
-    if not entry.unique_id and coordinator.data.system_id:
-        _async_migrate_entity_unique_ids(hass, entry, host, coordinator.data.system_id)
+    if not entry.unique_id and coordinator.data.aircon.system_id:
         hass.config_entries.async_update_entry(
-            entry, unique_id=coordinator.data.system_id
+            entry, unique_id=coordinator.data.aircon.system_id
         )
 
     _LOGGER.debug("Setting up AirTouch 3 at %s", host)

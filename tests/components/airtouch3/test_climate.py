@@ -17,6 +17,7 @@ from homeassistant.components.airtouch3.climate import (
 )
 from homeassistant.components.airtouch3.const import DOMAIN
 from homeassistant.components.airtouch3.coordinator import (
+    AirTouch3Data,
     Airtouch3DataUpdateCoordinator,
 )
 from homeassistant.components.climate import (
@@ -83,7 +84,7 @@ def _coordinator(hass: HomeAssistant) -> Airtouch3DataUpdateCoordinator:
     )
     entry.add_to_hass(hass)
     coordinator = Airtouch3DataUpdateCoordinator(hass, entry, "1.1.1.1")
-    coordinator.data = _aircon()
+    coordinator.data = AirTouch3Data.from_aircon(_aircon())
     return coordinator
 
 
@@ -100,27 +101,14 @@ async def test_async_setup_entry_adds_ac_and_zone_entities(
 
     entities = async_add_entities.call_args.args[0]
     assert [entity.unique_id for entity in entities] == [
-        "35901813_airtouch_ac_1",
-        "35901813_airtouch_1_group_1",
-        "35901813_airtouch_1_group_2",
+        "35901813_ac_1",
+        "35901813_1_group_1",
+        "35901813_1_group_2",
     ]
     assert PARALLEL_UPDATES == 1
     assert entities[0].translation_key == "air_conditioner"
     assert entities[1].translation_key == "zone"
     assert entities[0].device_info["manufacturer"] == "Polyaire"
-
-
-async def test_async_setup_entry_skips_missing_data(hass: HomeAssistant) -> None:
-    """Test climate setup does not add entities without coordinator data."""
-    coordinator = _coordinator(hass)
-    coordinator.data = cast(Aircon, None)
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
-    entry.runtime_data = coordinator
-    async_add_entities = Mock()
-
-    await async_setup_entry(hass, entry, async_add_entities)
-
-    async_add_entities.assert_not_called()
 
 
 async def test_ac_properties(hass: HomeAssistant) -> None:
@@ -137,7 +125,7 @@ async def test_ac_properties(hass: HomeAssistant) -> None:
 def test_ac_hvac_mode_off(hass: HomeAssistant) -> None:
     """Test AC entity is off when AirTouch reports power off."""
     coordinator = _coordinator(hass)
-    coordinator.data.status = False
+    coordinator.data.aircon.status = False
     entity = AirtouchAC(coordinator, 1)
 
     assert entity.hvac_mode == HVACMode.OFF
@@ -162,7 +150,7 @@ async def test_ac_hvac_mode_commands(
         call("turn_on", 1),
         call("turn_off", 1),
     ]
-    assert coordinator.data.mode == AcMode.HEAT
+    assert coordinator.data.aircon.mode == AcMode.HEAT
     assert write_state.call_count == 2
 
 
@@ -198,7 +186,7 @@ async def test_ac_fan_mode_commands(
     await entity.async_set_fan_mode("turbo")
 
     send_command.assert_awaited_once_with("set_fan_speed", 1, 3)
-    assert coordinator.data.fan_speed == 3
+    assert coordinator.data.aircon.fan_speed == 3
     write_state.assert_called_once()
 
 
@@ -234,7 +222,7 @@ async def test_group_set_temperature_steps_to_target(
         call("set_group_temperature", 1, 1),
         call("set_group_temperature", 1, 1),
     ]
-    assert coordinator.data.zones[0].desired_temperature == 22
+    assert coordinator.data.zones[1].desired_temperature == 22
     write_state.assert_called_once()
 
 

@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
-from homeassistant.config_entries import ConfigFlow as ConfigFlowBase, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
@@ -69,7 +69,7 @@ class AirTouch3ValidatedDevice:
     mac: str | None = None
 
 
-class AirTouch3ConfigFlow(ConfigFlowBase, domain=DOMAIN):
+class AirTouch3ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for AirTouch 3 Air Conditioner."""
 
     VERSION = 1
@@ -311,43 +311,6 @@ class AirTouch3ConfigFlow(ConfigFlowBase, domain=DOMAIN):
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration."""
-        reconfigure_entry = self._get_reconfigure_entry()
-        default_host = reconfigure_entry.data[CONF_HOST]
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            user_input = {**user_input, CONF_HOST: user_input[CONF_HOST].strip()}
-            default_host = user_input[CONF_HOST]
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            try:
-                info = await validate_input(self.hass, user_input)
-                if reconfigure_entry.unique_id:
-                    await self.async_set_unique_id(info["unique_id"])
-                    self._abort_if_unique_id_mismatch(reason="wrong_device")
-            except AbortFlow:
-                raise
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    unique_id=info["unique_id"],
-                    data_updates={CONF_HOST: user_input[CONF_HOST]},
-                )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=_host_schema(default_host),
-            errors=errors,
         )
 
 
