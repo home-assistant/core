@@ -1,0 +1,15 @@
+{
+  "domain": "thebenconexasmgw",
+  "name": "Theben Conexa Smartmeter gateway",
+  "codeowners": ["@none"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/thebenconexasmgw",
+  "homekit": {},
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
