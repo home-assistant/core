@@ -548,6 +548,9 @@ arcam-fmj==1.8.3
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==2.2.0
 
+# homeassistant.components.arwn
+arwn-client==0.2.1
+
 # homeassistant.components.ampio
 asmog==0.0.6
 
@@ -1359,7 +1362,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==5.6.1
+infrared-protocols==5.8.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1423,7 +1426,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.4.30.60856
+knx-frontend==2026.6.1.213802
 
 # homeassistant.components.kraken
 krakenex==2.2.2

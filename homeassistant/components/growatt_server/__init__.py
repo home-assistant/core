@@ -10,8 +10,8 @@ Classic API (username/password):
 
 Open API V1 (API token):
 - Stateless — no login call, token is sent as a Bearer header on every request.
-- Auth failure is signalled by raising GrowattV1ApiError with error_code=10011
-  (V1_API_ERROR_NO_PRIVILEGE). The library NEVER returns a failure silently;
+- Auth failure is signalled by raising GrowattV1ApiError with
+  error_code=GrowattV1ApiErrorCode.NO_PRIVILEGE. The library NEVER returns a failure silently;
   any non-zero error_code raises an exception via _process_response().
 - Because the library always raises on error, return-value validation after a
   successful V1 API call is unnecessary — if it returned, the token was valid.
@@ -19,7 +19,7 @@ Open API V1 (API token):
 Error handling pattern for reauth:
 - Classic API: check NOT login_response["success"] and msg == LOGIN_INVALID_AUTH_CODE
   → raise ConfigEntryAuthFailed
-- V1 API: catch GrowattV1ApiError with error_code == V1_API_ERROR_NO_PRIVILEGE
+- V1 API: catch GrowattV1ApiError with error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE
   → raise ConfigEntryAuthFailed
 - All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
 """
@@ -30,6 +30,7 @@ from json import JSONDecodeError
 import logging
 
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
 from requests import RequestException
 
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
@@ -58,8 +59,6 @@ from .const import (
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
     SUPPORTED_DEVICE_TYPES,
-    V1_API_ERROR_NO_PRIVILEGE,
-    V1_API_ERROR_RATE_LIMITED,
     V1_DEVICE_TYPES,
 )
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
@@ -265,11 +264,11 @@ def get_device_list_v1(
     try:
         devices_dict = api.device_list(plant_id)
     except growattServer.GrowattV1ApiError as e:
-        if e.error_code == V1_API_ERROR_NO_PRIVILEGE:
+        if e.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
             raise ConfigEntryAuthFailed(
                 f"Authentication failed for Growatt API: {e.error_msg or str(e)}"
             ) from e
-        if e.error_code == V1_API_ERROR_RATE_LIMITED:
+        if e.error_code == GrowattV1ApiErrorCode.RATE_LIMITED:
             raise ConfigEntryNotReady(
                 f"Growatt API rate limited, will retry: {e.error_msg or str(e)}"
             ) from e
