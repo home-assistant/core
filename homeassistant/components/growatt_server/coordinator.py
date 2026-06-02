@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
 from requests import RequestException
 
 from homeassistant.components.sensor import SensorStateClass
@@ -27,7 +28,6 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
-    V1_API_ERROR_NO_PRIVILEGE,
     V1_DEVICE_TYPES,
 )
 from .models import GrowattRuntimeData
@@ -113,7 +113,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     if device.get("type") in V1_DEVICE_TYPES
                 ]
             except growattServer.GrowattV1ApiError as err:
-                if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
                         f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
                     ) from err
@@ -179,7 +179,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 try:
                     total_info = self.api.plant_energy_overview(self.plant_id)
                 except growattServer.GrowattV1ApiError as err:
-                    if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                    if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                         raise ConfigEntryAuthFailed(
                             "Authentication failed for Growatt API:"
                             f" {err.error_msg or str(err)}"
@@ -212,7 +212,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 min_settings = self.api.min_settings(self.device_id)
                 min_energy = self.api.min_energy(self.device_id)
             except growattServer.GrowattV1ApiError as err:
-                if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
                         "Authentication failed for Growatt API:"
                         f" {err.error_msg or str(err)}"
@@ -240,7 +240,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 sph_detail = self.api.sph_detail(self.device_id)
                 sph_energy = self.api.sph_energy(self.device_id)
             except growattServer.GrowattV1ApiError as err:
-                if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
                         "Authentication failed for Growatt API:"
                         f" {err.error_msg or str(err)}"
