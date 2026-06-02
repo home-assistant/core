@@ -37,7 +37,11 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
 
     @property
     def device(self) -> ImouHaDevice:
-        """Return the live device from the coordinator, or None if removed."""
+        """Return the live device from the coordinator.
+
+        Callers must guard with `available` first; accessing this for a device
+        that has left the account raises `KeyError`.
+        """
         return self.coordinator.devices_by_key[self._device_key]
 
     @property

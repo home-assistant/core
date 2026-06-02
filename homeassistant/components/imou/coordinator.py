@@ -108,7 +108,12 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ) from failures[0]
 
     def _async_add_remove_devices(self, fresh_by_key: dict[str, ImouHaDevice]) -> None:
-        """Add new devices, remove devices no longer in the account."""
+        """Add new devices, remove devices no longer in the account.
+
+        This only tracks which devices exist on the account; per-device state
+        is updated in place by `async_update_device_status`, so devices that
+        remain on the account keep their existing object and are not replaced.
+        """
         if not self._devices_initialized:
             self.devices_by_key = fresh_by_key
             self._devices_initialized = True
