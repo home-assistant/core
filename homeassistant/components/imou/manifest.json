@@ -1,6 +1,6 @@
 {
   "domain": "imou",
-  "name": "Imou Official",
+  "name": "Imou",
   "codeowners": ["@Imou-OpenPlatform"],
   "config_flow": true,
   "dependencies": [],

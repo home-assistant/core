@@ -54,7 +54,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=DOMAIN,
+                    title="Imou",
                     data={
                         CONF_APP_ID: user_input[CONF_APP_ID],
                         CONF_APP_SECRET: user_input[CONF_APP_SECRET],

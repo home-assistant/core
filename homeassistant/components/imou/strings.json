@@ -17,10 +17,10 @@
         },
         "data_description": {
           "api_url": "Select the server region closest to your location",
-          "app_id": "The App ID obtained from IMOU Cloud platform",
-          "app_secret": "The App Secret obtained from IMOU Cloud platform"
+          "app_id": "The app ID obtained from the Imou cloud platform",
+          "app_secret": "The app secret obtained from the Imou cloud platform"
         },
-        "title": "Login to IMOU Cloud"
+        "title": "Log in to Imou cloud"
       }
     }
   },

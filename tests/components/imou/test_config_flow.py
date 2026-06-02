@@ -45,7 +45,7 @@ async def test_user_flow_success(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DOMAIN
+    assert result["title"] == "Imou"
     assert result["data"] == USER_INPUT
     assert result["result"].unique_id == USER_INPUT[CONF_APP_ID]
     assert len(mock_setup_entry.mock_calls) == 1
@@ -116,7 +116,7 @@ async def test_user_flow_exception_then_recover(
     )
 
     assert recover["type"] is FlowResultType.CREATE_ENTRY
-    assert recover["title"] == DOMAIN
+    assert recover["title"] == "Imou"
     assert recover["data"] == USER_INPUT
     assert recover["result"].unique_id == USER_INPUT[CONF_APP_ID]
     assert len(mock_setup_entry.mock_calls) == 1
@@ -147,6 +147,6 @@ async def test_user_flow_success_per_region(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DOMAIN
+    assert result["title"] == "Imou"
     assert result["data"] == user_input
     assert result["result"].unique_id == user_input[CONF_APP_ID]

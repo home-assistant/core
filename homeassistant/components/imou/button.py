@@ -4,7 +4,7 @@ from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -54,6 +54,13 @@ async def async_setup_entry(
         )
 
     coordinator.new_device_callbacks.append(_add_buttons)
+
+    @callback
+    def _remove_new_device_callback() -> None:
+        if _add_buttons in coordinator.new_device_callbacks:
+            coordinator.new_device_callbacks.remove(_add_buttons)
+
+    entry.async_on_unload(_remove_new_device_callback)
     _add_buttons(coordinator.devices)
 
 
