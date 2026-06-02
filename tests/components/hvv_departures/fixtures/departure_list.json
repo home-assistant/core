@@ -19,7 +19,13 @@
       "delay": 0,
       "serviceId": 1482563187,
       "station": { "combinedName": "Wartenau", "id": "Master:10901" },
-      "attributes": [{ "isPlanned": true, "types": ["REALTIME", "ACCURATE"] }]
+      "attributes": [
+        {
+          "isPlanned": true,
+          "value": "Unbekannte Ursache",
+          "types": ["REALTIME", "ACCURATE"]
+        }
+      ]
     },
     {
       "line": {
@@ -38,7 +44,13 @@
       "delay": 0,
       "serviceId": 74567,
       "station": { "combinedName": "U Wartenau", "id": "Master:60015" },
-      "attributes": [{ "isPlanned": true, "types": ["REALTIME", "ACCURATE"] }]
+      "attributes": [
+        {
+          "isPlanned": true,
+          "value": "Unbekannte Ursache",
+          "types": ["REALTIME", "ACCURATE"]
+        }
+      ]
     },
     {
       "line": {
@@ -57,7 +69,13 @@
       "delay": 0,
       "serviceId": 74328,
       "station": { "combinedName": "U Wartenau", "id": "Master:60015" },
-      "attributes": [{ "isPlanned": true, "types": ["REALTIME", "ACCURATE"] }]
+      "attributes": [
+        {
+          "isPlanned": true,
+          "value": "Unbekannte Ursache",
+          "types": ["REALTIME", "ACCURATE"]
+        }
+      ]
     },
     {
       "line": {
@@ -75,7 +93,13 @@
       "timeOffset": 8,
       "delay": 0,
       "station": { "combinedName": "Wartenau", "id": "Master:10901" },
-      "attributes": [{ "isPlanned": true, "types": ["REALTIME", "ACCURATE"] }]
+      "attributes": [
+        {
+          "isPlanned": true,
+          "value": "Unbekannte Ursache",
+          "types": ["REALTIME", "ACCURATE"]
+        }
+      ]
     },
     {
       "line": {
@@ -93,7 +117,13 @@
       "timeOffset": 10,
       "delay": 0,
       "station": { "combinedName": "Wartenau", "id": "Master:10901" },
-      "attributes": [{ "isPlanned": true, "types": ["REALTIME", "ACCURATE"] }]
+      "attributes": [
+        {
+          "isPlanned": true,
+          "value": "Unbekannte Ursache",
+          "types": ["REALTIME", "ACCURATE"]
+        }
+      ]
     }
   ],
   "filter": [

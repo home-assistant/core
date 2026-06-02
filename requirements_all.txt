@@ -2199,7 +2199,7 @@ pygatt[GATTTOOL]==4.0.5
 pygtfs==0.1.9
 
 # homeassistant.components.hvv_departures
-pygti==0.9.4
+pygti==1.1.1
 
 # homeassistant.components.version
 pyhaversion==22.8.0

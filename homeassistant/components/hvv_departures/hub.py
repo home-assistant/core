@@ -1,6 +1,7 @@
 """Hub."""
 
 from pygti.gti import GTI, Auth
+from pygti.models import InitRequest
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -21,4 +22,4 @@ class GTIHub:
     async def authenticate(self):
         """Test if we can authenticate with the host."""
 
-        return await self.gti.init()
+        return await self.gti.init(InitRequest())
