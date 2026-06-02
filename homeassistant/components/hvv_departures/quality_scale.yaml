@@ -17,7 +17,12 @@ rules:
       A test verifying that the config flow prevents duplicate entries is
       missing. This is related to the missing unique-config-entry
       implementation.
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: >-
+      The config flow is functional but does not use data_description in
+      strings.json to give users context for the input fields (host,
+      username, password).
   dependency-transparency: done
   docs-actions:
     status: exempt
