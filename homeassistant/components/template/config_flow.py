@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.event import EventDeviceClass
+from homeassistant.components.climate.const import HVACMode
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -59,6 +60,39 @@ from .alarm_control_panel import (
     async_create_preview_alarm_control_panel,
 )
 from .binary_sensor import async_create_preview_binary_sensor
+from .climate import (
+    CONF_CURRENT_HUMIDITY_TEMPLATE,
+    CONF_CURRENT_TEMPERATURE_TEMPLATE,
+    CONF_FAN_MODE_LIST,
+    CONF_FAN_MODE_TEMPLATE,
+    CONF_HUMIDITY_MAX,
+    CONF_HUMIDITY_MIN,
+    CONF_HVAC_ACTION_TEMPLATE,
+    CONF_HVAC_MODE_LIST,
+    CONF_HVAC_MODE_TEMPLATE,
+    CONF_MAX_ACTION,
+    CONF_MODE_ACTION,
+    CONF_PRESET_MODE_LIST,
+    CONF_PRESET_MODE_TEMPLATE,
+    CONF_PRESETS_FEATURES,
+    CONF_PRESETS_TEMPLATE,
+    CONF_SET_FAN_MODE_ACTION,
+    CONF_SET_HUMIDITY_ACTION,
+    CONF_SET_HVAC_MODE_ACTION,
+    CONF_SET_PRESET_MODE_ACTION,
+    CONF_SET_SWING_MODE_ACTION,
+    CONF_SET_TEMPERATURE_ACTION,
+    CONF_SWING_MODE_LIST,
+    CONF_SWING_MODE_TEMPLATE,
+    CONF_TARGET_HUMIDITY_TEMPLATE,
+    CONF_TARGET_TEMPERATURE_HIGH_TEMPLATE,
+    CONF_TARGET_TEMPERATURE_LOW_TEMPLATE,
+    CONF_TARGET_TEMPERATURE_TEMPLATE,
+    CONF_TEMPERATURE_MAX,
+    CONF_TEMPERATURE_MIN,
+    CONF_TEMP_STEP,
+    async_create_preview_climate,
+)
 from .const import (
     CONF_ADVANCED_OPTIONS,
     CONF_AVAILABILITY,
@@ -213,6 +247,96 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 )
             }
+
+    if domain == Platform.CLIMATE:
+        schema |= {
+            vol.Optional(CONF_HVAC_MODE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_CURRENT_TEMPERATURE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_CURRENT_HUMIDITY_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_TARGET_TEMPERATURE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_TARGET_TEMPERATURE_LOW_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_TARGET_TEMPERATURE_HIGH_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_TARGET_HUMIDITY_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_FAN_MODE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_PRESET_MODE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_SWING_MODE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_HVAC_ACTION_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_PRESETS_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_SET_HVAC_MODE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SET_TEMPERATURE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SET_HUMIDITY_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SET_FAN_MODE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SET_PRESET_MODE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SET_SWING_MODE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_HVAC_MODE_LIST, default=[HVACMode.OFF, HVACMode.HEAT]): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[mode.value for mode in HVACMode],
+                    multiple=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Optional(CONF_PRESET_MODE_LIST): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[],
+                    multiple=True,
+                    custom_value=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Optional(CONF_FAN_MODE_LIST): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[],
+                    multiple=True,
+                    custom_value=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Optional(CONF_SWING_MODE_LIST): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[],
+                    multiple=True,
+                    custom_value=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+        }
+        advanced_options |= {
+            vol.Optional(CONF_TEMPERATURE_MIN): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX)
+            ),
+            vol.Optional(CONF_TEMPERATURE_MAX): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX)
+            ),
+            vol.Optional(CONF_HUMIDITY_MIN): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=100, step=1, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+            vol.Optional(CONF_HUMIDITY_MAX): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=100, step=1, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+            vol.Optional(CONF_TEMP_STEP): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX)
+            ),
+            vol.Optional(CONF_PRESETS_FEATURES): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, step=1, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+            vol.Optional(CONF_MAX_ACTION): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, step=1, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+            vol.Optional(CONF_MODE_ACTION): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=["parallel", "queued", "restart", "single"],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+        }
 
     if domain == Platform.COVER:
         schema |= _SCHEMA_STATE | {
@@ -558,6 +682,7 @@ TEMPLATE_TYPES = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
     Platform.EVENT,
@@ -589,6 +714,11 @@ CONFIG_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.CLIMATE: SchemaFlowFormStep(
+        config_schema(Platform.CLIMATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.CLIMATE),
     ),
     Platform.COVER: SchemaFlowFormStep(
         config_schema(Platform.COVER),
@@ -680,6 +810,11 @@ OPTIONS_FLOW = {
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.CLIMATE: SchemaFlowFormStep(
+        options_schema(Platform.CLIMATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.CLIMATE),
+    ),
     Platform.COVER: SchemaFlowFormStep(
         options_schema(Platform.COVER),
         preview="template",
@@ -759,6 +894,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.CLIMATE: async_create_preview_climate,
     Platform.COVER: async_create_preview_cover,
     Platform.DEVICE_TRACKER: async_create_preview_tracker,
     Platform.EVENT: async_create_preview_event,
