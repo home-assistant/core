@@ -23,6 +23,7 @@ from matter_ble_proxy import (
 )
 
 from homeassistant.components.bluetooth import (
+    MONOTONIC_TIME,
     BluetoothScanningMode,
     async_ble_device_from_address,
     async_register_callback,
@@ -51,11 +52,18 @@ class HaBluetoothScanSource(BleScanSource):
         if self._cancel is not None:
             return
 
+        # Drop HA's synchronous replay of stale history on register; otherwise a
+        # rotating peripheral's old addresses each become a parallel connect candidate.
+        # `MONOTONIC_TIME` is the clock that stamps `service_info.time`.
+        scan_start = MONOTONIC_TIME()
+
         @callback
         def _on_advertisement(
             service_info: BluetoothServiceInfoBleak,
             _change: object,
         ) -> None:
+            if service_info.time < scan_start:
+                return
             try:
                 callback_fn(_to_advertisement_data(service_info))
             except Exception:
@@ -108,5 +116,7 @@ def create_matter_ble_proxy(hass: HomeAssistant, ws_url: str) -> MatterBleProxy:
         ws_url=ws_url,
         scan_source=HaBluetoothScanSource(hass),
         device_resolver=HaBluetoothDeviceResolver(hass),
-        task_factory=hass.async_create_task,
+        task_factory=lambda coro: hass.async_create_background_task(
+            coro, name="matter_ble_proxy"
+        ),
     )
