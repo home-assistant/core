@@ -51,7 +51,7 @@ async def test_binary_sensor_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "binary_sensor.test_occupancy_occupancy"
+    entity_id = "binary_sensor.test_area_test_occupancy_occupancy"
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # Simulate update

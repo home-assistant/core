@@ -301,7 +301,7 @@ class _Trait(ABC):
         """Return the attributes of this trait for this entity."""
         raise NotImplementedError
 
-    def query_notifications(self) -> dict[str, Any] | None:
+    def query_notifications(self) -> dict[str, Any] | None:  # noqa: B027
         """Return notifications payload."""
 
     def can_execute(self, command, params):
@@ -1201,6 +1201,17 @@ class TemperatureSettingTrait(_Trait):
     preset_to_google = {climate.PRESET_ECO: "eco"}
     google_to_preset = {value: key for key, value in preset_to_google.items()}
 
+    action_to_google = {
+        climate.HVACAction.OFF: "off",
+        climate.HVACAction.HEATING: "heat",
+        climate.HVACAction.DEFROSTING: "heat",
+        climate.HVACAction.PREHEATING: "heat",
+        climate.HVACAction.COOLING: "cool",
+        climate.HVACAction.DRYING: "dry",
+        climate.HVACAction.FAN: "fan-only",
+        climate.HVACAction.IDLE: "none",
+    }
+
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
@@ -1283,6 +1294,11 @@ class TemperatureSettingTrait(_Trait):
             response["thermostatMode"] = self.preset_to_google[preset]
         else:
             response["thermostatMode"] = self.hvac_to_google.get(operation, "none")
+
+        if (
+            action := self.action_to_google.get(attrs.get(climate.ATTR_HVAC_ACTION))
+        ) is not None:
+            response["activeThermostatMode"] = action
 
         current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
@@ -1621,7 +1637,9 @@ class ArmDisArmTrait(_Trait):
         AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
         AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
         AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+            AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+        ),
         AlarmControlPanelState.TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
     }
     """The list of states to support in increasing security state."""
@@ -2710,7 +2728,11 @@ class ChannelTrait(_Trait):
         if (
             domain == media_player.DOMAIN
             and (features & MediaPlayerEntityFeature.PLAY_MEDIA)
-            and device_class == media_player.MediaPlayerDeviceClass.TV
+            and device_class
+            in (
+                media_player.MediaPlayerDeviceClass.TV,
+                media_player.MediaPlayerDeviceClass.PROJECTOR,
+            )
         ):
             return True
 

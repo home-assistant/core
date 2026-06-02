@@ -301,11 +301,13 @@ async def test_data_migrator_logic(
     for migrator, mock in migrator_mocks.items():
         needs_migrate_calls, migrate_data_calls = expected_migrator_calls[migrator]
         assert len(mock["needs_migrate"].mock_calls) == needs_migrate_calls, (
-            f"Expected {migrator} needs_migrate to be called {needs_migrate_calls} times,"
+            f"Expected {migrator} needs_migrate to be called"
+            f" {needs_migrate_calls} times,"
             f" got {len(mock['needs_migrate'].mock_calls)}"
         )
         assert len(mock["migrate_data"].mock_calls) == migrate_data_calls, (
-            f"Expected {migrator} migrate_data to be called {migrate_data_calls} times, "
+            f"Expected {migrator} migrate_data to be called"
+            f" {migrate_data_calls} times, "
             f"got {len(mock['migrate_data'].mock_calls)}"
         )
 
@@ -316,13 +318,14 @@ async def test_data_migrator_logic(
 async def test_migration_changes_prevent_trying_to_migrate_again(
     async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
-    """Test that we do not try to migrate when migration_changes indicate its already migrated.
+    """Test we skip migration when migration_changes says done.
 
     This test will start Home Assistant 3 times:
 
     1. With schema 32 to populate the data
     2. With current schema so the migration happens
-    3. With current schema to verify we do not have to query to see if the migration is done
+    3. With current schema to verify we do not have to query to see
+       if the migration is done
     """
 
     config = {recorder.CONF_COMMIT_INTERVAL: 1}
