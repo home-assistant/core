@@ -1,6 +1,7 @@
 """The Wolf SmartSet Service integration."""
 
 import asyncio
+import logging
 from types import MappingProxyType
 
 from httpx import RequestError
@@ -16,6 +17,8 @@ from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 from .const import DEVICE_ID, DOMAIN, SUBENTRY_TYPE_DEVICE
 from .coordinator import WolflinkConfigEntry, WolfLinkCoordinator, fetch_parameters
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -45,13 +48,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> 
         device = devices_by_id.get(device_id)
         if device is None:
             return None
-        parameters = await _fetch_parameters_init(
-            wolf_client, device.gateway, device.id
-        )
-        coordinator = WolfLinkCoordinator(
-            hass, entry, subentry, wolf_client, parameters, device.gateway
-        )
-        await coordinator.async_config_entry_first_refresh()
+        try:
+            parameters = await _fetch_parameters_init(
+                wolf_client, device.gateway, device.id
+            )
+            coordinator = WolfLinkCoordinator(
+                hass, entry, subentry, wolf_client, parameters, device.gateway
+            )
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady:
+            _LOGGER.warning(
+                "Skipping device %s (%s): could not fetch parameters",
+                subentry.title,
+                device_id,
+            )
+            return None
         return subentry.subentry_id, coordinator
 
     results = await asyncio.gather(
@@ -163,7 +174,7 @@ def _migrate_v1_to_v2_2(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 def _migrate_v2_1_to_v2_2(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate a v2.1 hub entry (DEVICE_ID list in data) to v2.2 subentries."""
-    device_ids: list[int] = list(entry.data.get(DEVICE_ID, []))
+    device_ids = [int(d) for d in entry.data.get(DEVICE_ID, []) if d is not None]
     new_data = {k: v for k, v in entry.data.items() if k != DEVICE_ID}
     hass.config_entries.async_update_entry(
         entry, data=new_data, version=2, minor_version=2

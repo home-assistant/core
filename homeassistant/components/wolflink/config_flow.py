@@ -1,6 +1,7 @@
 """Config flow for Wolf SmartSet Service integration."""
 
 import logging
+from typing import Any
 
 from httpcore import ConnectError
 import voluptuous as vol
@@ -104,7 +105,7 @@ class DeviceSubentryFlow(ConfigSubentryFlow):
     _fetched_systems: list[Device]
 
     async def async_step_user(
-        self, user_input: dict[str, list[str]] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Fetch devices available on the account that are not yet configured."""
         entry = self._get_entry()

@@ -434,7 +434,7 @@ async def test_setup_fetch_parameters_fails(
     mock_config_entry: MockConfigEntry,
     mock_wolflink: MagicMock,
 ) -> None:
-    """Test setup raises ConfigEntryNotReady if fetching parameters fails."""
+    """Test a subentry whose parameter fetch fails is skipped, not the whole entry."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -444,7 +444,8 @@ async def test_setup_fetch_parameters_fails(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data == {}
 
 
 async def test_setup_skips_subentries_with_missing_device(
