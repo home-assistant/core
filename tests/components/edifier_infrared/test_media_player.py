@@ -1,6 +1,6 @@
 """Tests for the Edifier Infrared media player platform."""
 
-from infrared_protocols.codes.edifier.models import EdifierCommandSets, EdifierModel
+from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
 import pytest
@@ -96,7 +96,7 @@ async def test_media_player_action_sends_correct_code(
             data={
                 CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
                 CONF_MODEL: EdifierModel.RC20G.value,
-                CONF_COMMAND_SET: EdifierCommandSets.RC20G.value,
+                CONF_COMMAND_SET: EdifierCommandSet.RC20G.value,
             },
             unique_id=f"rc20g_{EMITTER_ENTITY_ID}",
         )

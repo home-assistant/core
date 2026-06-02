@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from infrared_protocols.codes.edifier.models import EdifierCommandSets, EdifierModel
+from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 import pytest
 
 from homeassistant.components.edifier_infrared import PLATFORMS
@@ -32,7 +32,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
             CONF_MODEL: EdifierModel.R1700BT.value,
-            CONF_COMMAND_SET: EdifierCommandSets.R1700BT.value,
+            CONF_COMMAND_SET: EdifierCommandSet.R1700BT.value,
         },
         unique_id=f"r1700bt_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
     )

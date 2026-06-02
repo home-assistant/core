@@ -1,6 +1,6 @@
 """Tests for the Edifier Infrared config flow."""
 
-from infrared_protocols.codes.edifier.models import EdifierCommandSets, EdifierModel
+from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 import pytest
 
 from homeassistant.components.edifier_infrared.const import (
@@ -21,18 +21,18 @@ from tests.components.infrared import EMITTER_ENTITY_ID
 @pytest.mark.parametrize(
     ("model", "expected_command_set"),
     [
-        (EdifierModel.R1700BT, EdifierCommandSets.R1700BT),
-        (EdifierModel.R1280DB, EdifierCommandSets.R1280DB),
-        (EdifierModel.R1280T, EdifierCommandSets.R1280T),
-        (EdifierModel.S360DB, EdifierCommandSets.S360DB),
-        (EdifierModel.RC20G, EdifierCommandSets.RC20G),
+        (EdifierModel.R1700BT, EdifierCommandSet.R1700BT),
+        (EdifierModel.R1280DB, EdifierCommandSet.R1280DB),
+        (EdifierModel.R1280T, EdifierCommandSet.R1280T),
+        (EdifierModel.S360DB, EdifierCommandSet.S360DB),
+        (EdifierModel.RC20G, EdifierCommandSet.RC20G),
     ],
 )
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_user_flow_success(
     hass: HomeAssistant,
     model: EdifierModel,
-    expected_command_set: EdifierCommandSets,
+    expected_command_set: EdifierCommandSet,
 ) -> None:
     """Test successful user config flow for each command set."""
     result = await hass.config_entries.flow.async_init(
