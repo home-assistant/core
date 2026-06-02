@@ -29,7 +29,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No options flow
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   entity-category: done
   entity-disabled-by-default: done
   integration-owner: done
@@ -43,12 +43,12 @@ rules:
   diagnostics: todo
   discovery: done
   discovery-update-info: todo
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-use-cases: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-use-cases: done
   dynamic-devices: todo
   entity-translations: done
   exception-translations: done
