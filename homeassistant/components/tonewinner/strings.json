@@ -1,0 +1,67 @@
+{
+  "common": {
+    "baud_rate": "Baud Rate",
+    "serial_port": "Serial Port"
+  },
+  "config": {
+    "error": {
+      "cannot_connect": "Cannot connect to the serial port. Please check the port and permissions.",
+      "unknown": "An unknown error occurred"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "baud_rate": "[%key:component::tonewinner::common::baud_rate%]",
+          "serial_port": "[%key:component::tonewinner::common::serial_port%]"
+        },
+        "description": "Enter the serial port connection details for your ToneWinner AT-500 AV receiver.",
+        "title": "Setup ToneWinner AT-500"
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "tonewinner": {
+        "name": "Tonewinner AT-500"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "AN1_enabled": "[%key:common::action::enable%] Analog",
+          "AN1_name": "Custom name for Analog",
+          "ARC_enabled": "[%key:common::action::enable%] HDMI eARC",
+          "ARC_name": "Custom name for HDMI eARC",
+          "BT_enabled": "[%key:common::action::enable%] Bluetooth",
+          "BT_name": "Custom name for Bluetooth",
+          "CO1_enabled": "[%key:common::action::enable%] Coaxial 1",
+          "CO1_name": "Custom name for Coaxial 1",
+          "CO2_enabled": "[%key:common::action::enable%] Coaxial 2",
+          "CO2_name": "Custom name for Coaxial 2",
+          "HD1_enabled": "[%key:common::action::enable%] HDMI 1",
+          "HD1_name": "Custom name for HDMI 1",
+          "HD2_enabled": "[%key:common::action::enable%] HDMI 2",
+          "HD2_name": "Custom name for HDMI 2",
+          "HD3_enabled": "[%key:common::action::enable%] HDMI 3",
+          "HD3_name": "Custom name for HDMI 3",
+          "HD4_enabled": "[%key:common::action::enable%] HDMI 4",
+          "HD4_name": "Custom name for HDMI 4",
+          "OP1_enabled": "[%key:common::action::enable%] Optical 1",
+          "OP1_name": "Custom name for Optical 1",
+          "OP2_enabled": "[%key:common::action::enable%] Optical 2",
+          "OP2_name": "Custom name for Optical 2",
+          "PC_enabled": "[%key:common::action::enable%] PC",
+          "PC_name": "Custom name for PC",
+          "USB_enabled": "[%key:common::action::enable%] USB",
+          "USB_name": "Custom name for USB",
+          "baud_rate": "[%key:component::tonewinner::common::baud_rate%]",
+          "serial_port": "[%key:component::tonewinner::common::serial_port%]"
+        },
+        "description": "Update serial port settings and customize the names and visibility of your input sources.",
+        "title": "Configure Device"
+      }
+    }
+  }
+}
