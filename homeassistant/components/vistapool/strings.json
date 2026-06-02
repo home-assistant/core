@@ -34,7 +34,7 @@
     },
     "light": {
       "pool_light": {
-        "name": "Light"
+        "name": "[%key:component::light::title%]"
       }
     },
     "sensor": {
