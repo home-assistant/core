@@ -175,7 +175,6 @@ class ConfigManagerFlowIndexView(
         vol.Schema(
             {
                 vol.Required("handler"): vol.Any(str, list),
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
                 vol.Optional("entry_id"): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
@@ -302,7 +301,6 @@ class SubentryManagerFlowIndexView(
         vol.Schema(
             {
                 vol.Required("handler"): vol.All(vol.Coerce(tuple), (str, str)),
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
             },
             extra=vol.ALLOW_EXTRA,
         )
