@@ -10,6 +10,12 @@
     },
     "left": {
       "trigger": "mdi:map-marker-minus"
+    },
+    "occupancy_cleared": {
+      "trigger": "mdi:account-off"
+    },
+    "occupancy_detected": {
+      "trigger": "mdi:account-group"
     }
   }
 }
