@@ -155,23 +155,9 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             twice_daily_forecast_valid=FORECAST_VALID_TIME,
         )
         self._nws_data = nws_data
-        self._last_api = nws_data.api
 
         self._attr_unique_id = _calculate_unique_id(entry_data, DAYNIGHT)
         self._attr_device_info = device_info(entry_data, nws_data)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle observation coordinator update and push forecasts if API changed."""
-        super()._handle_coordinator_update()
-        nws = self._nws_data.api
-        if nws is not self._last_api:
-            self._last_api = nws
-            assert self.coordinator.config_entry is not None
-            self.coordinator.config_entry.async_create_task(
-                self.hass,
-                self.async_update_listeners(("twice_daily", "hourly")),
-            )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

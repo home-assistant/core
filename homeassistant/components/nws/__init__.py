@@ -18,6 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import debounce, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -73,30 +74,32 @@ class NWSData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     """Set up a National Weather Service entry."""
-    latitude = entry.data[CONF_LATITUDE]
-    longitude = entry.data[CONF_LONGITUDE]
     api_key = entry.data[CONF_API_KEY]
-    station = entry.data.get(CONF_STATION)
     location_entity_id: str | None = None
+
     if location_registry_id := entry.data.get(CONF_LOCATION_ENTITY):
         registry = er.async_get(hass)
         entity_entry = registry.async_get(location_registry_id)
-        if entity_entry is not None:
-            location_entity_id = entity_entry.entity_id
-            state = hass.states.get(location_entity_id)
-            if state is not None and has_location(state):
-                latitude = state.attributes[ATTR_LATITUDE]
-                longitude = state.attributes[ATTR_LONGITUDE]
-            else:
-                _LOGGER.warning(
-                    "Location entity %s is not available, using stored coordinates",
-                    location_entity_id,
-                )
-        else:
-            _LOGGER.warning(
-                "Location entity registry ID %s not found, using stored coordinates",
-                location_registry_id,
+        if entity_entry is None:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="entity_not_found",
             )
+        location_entity_id = entity_entry.entity_id
+        state = hass.states.get(location_entity_id)
+        if state is None or not has_location(state):
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="entity_unavailable",
+                translation_placeholders={"entity_id": location_entity_id},
+            )
+        latitude = state.attributes[ATTR_LATITUDE]
+        longitude = state.attributes[ATTR_LONGITUDE]
+        station = None
+    else:
+        latitude = entry.data[CONF_LATITUDE]
+        longitude = entry.data[CONF_LONGITUDE]
+        station = entry.data.get(CONF_STATION)
 
     client_session = async_get_clientsession(hass)
 

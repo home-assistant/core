@@ -59,47 +59,33 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the initial step with menu selection."""
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["location", "entity"],
+        )
+
+    async def async_step_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the specific location configuration step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            location_entity = user_input.get(CONF_LOCATION_ENTITY)
-
-            if location_entity:
-                registry = er.async_get(self.hass)
-                entity_entry = registry.async_get(location_entity)
-                if entity_entry is None:
-                    errors["base"] = "entity_not_found"
-                else:
-                    state = self.hass.states.get(location_entity)
-                    if state is None or not has_location(state):
-                        errors["base"] = "entity_no_coordinates"
-                    else:
-                        user_input[CONF_LATITUDE] = state.attributes[ATTR_LATITUDE]
-                        user_input[CONF_LONGITUDE] = state.attributes[ATTR_LONGITUDE]
-                        user_input[CONF_LOCATION_ENTITY] = entity_entry.id
-
-            if not errors:
-                await self.async_set_unique_id(get_base_unique_id(user_input))
-                self._abort_if_unique_id_configured()
-                try:
-                    info = await validate_input(self.hass, user_input)
-                    if not location_entity:
-                        user_input[CONF_STATION] = info["title"]
-                    return self.async_create_entry(title=info["title"], data=user_input)
-                except CannotConnect:
-                    errors["base"] = "cannot_connect"
-                except Exception:
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
+            await self.async_set_unique_id(get_base_unique_id(user_input))
+            self._abort_if_unique_id_configured()
+            try:
+                info = await validate_input(self.hass, user_input)
+                user_input[CONF_STATION] = info["title"]
+                return self.async_create_entry(title=info["title"], data=user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): str,
-                vol.Optional(CONF_LOCATION_ENTITY): EntitySelector(
-                    EntitySelectorConfig(
-                        domain=["person", "device_tracker", "zone"],
-                    )
-                ),
                 vol.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
@@ -111,7 +97,61 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="location", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_entity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the entity-based configuration step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            location_entity = user_input[CONF_LOCATION_ENTITY]
+
+            registry = er.async_get(self.hass)
+            entity_entry = registry.async_get(location_entity)
+            if entity_entry is None:
+                errors["base"] = "entity_not_found"
+            else:
+                state = self.hass.states.get(location_entity)
+                if state is None or not has_location(state):
+                    errors["base"] = "entity_no_coordinates"
+                else:
+                    data = {
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                        CONF_LOCATION_ENTITY: entity_entry.id,
+                    }
+                    await self.async_set_unique_id(get_base_unique_id(data))
+                    self._abort_if_unique_id_configured()
+                    try:
+                        info = await validate_input(
+                            self.hass,
+                            {
+                                CONF_API_KEY: user_input[CONF_API_KEY],
+                                CONF_LATITUDE: state.attributes[ATTR_LATITUDE],
+                                CONF_LONGITUDE: state.attributes[ATTR_LONGITUDE],
+                            },
+                        )
+                        return self.async_create_entry(title=info["title"], data=data)
+                    except CannotConnect:
+                        errors["base"] = "cannot_connect"
+                    except Exception:
+                        _LOGGER.exception("Unexpected exception")
+                        errors["base"] = "unknown"
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): str,
+                vol.Required(CONF_LOCATION_ENTITY): EntitySelector(
+                    EntitySelectorConfig(
+                        domain=["person", "device_tracker", "zone"],
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="entity", data_schema=data_schema, errors=errors
         )
 
 

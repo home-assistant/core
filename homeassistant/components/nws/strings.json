@@ -10,20 +10,41 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
+      "entity": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location_entity": "Location entity"
+        },
+        "data_description": {
+          "location_entity": "Select a person, device tracker, or zone to dynamically track weather for its location."
+        },
+        "description": "Track weather for a person, device, or zone. The weather station will update automatically as the entity moves. For now, the API key can be anything. It is recommended to use a valid email address.",
+        "title": "Follow a person or device"
+      },
+      "location": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
-          "location_entity": "Location entity",
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "station": "METAR station code"
         },
-        "data_description": {
-          "location_entity": "Select a person, device tracker, or zone to dynamically track weather for its location. When set, coordinates update automatically as the entity moves."
-        },
         "description": "If a METAR station code is not specified, the latitude and longitude will be used to find the closest station. For now, the API key can be anything. It is recommended to use a valid email address.",
-        "title": "Connect to the National Weather Service"
+        "title": "Set up a specific location"
+      },
+      "user": {
+        "menu_options": {
+          "entity": "Follow a person or device",
+          "location": "Specific location"
+        }
       }
+    }
+  },
+  "exceptions": {
+    "entity_not_found": {
+      "message": "The location entity was not found in the entity registry. Please reconfigure the integration."
+    },
+    "entity_unavailable": {
+      "message": "The location entity {entity_id} is not available or does not have location coordinates. Setup will be retried."
     }
   },
   "selector": {

@@ -118,7 +118,13 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Update data via library."""
         if self._location_entity_id:
-            await self._async_check_location_change()
+            try:
+                await self._async_check_location_change()
+            except Exception:
+                _LOGGER.exception(
+                    "Failed to update location for %s, continuing with previous station",
+                    self._location_entity_id,
+                )
         if not self.initialized:
             await self._async_first_update_data()
         else:
