@@ -61,7 +61,11 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
         Platform.SELECT,
     ],
-    SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.CONTACT.value: [
+        Platform.BINARY_SENSOR,
+        Platform.EVENT,
+        Platform.SENSOR,
+    ],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.PRESENCE_SENSOR.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
