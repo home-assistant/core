@@ -574,23 +574,49 @@ class ResultStream:
         """Override the TTS stream with a different media path."""
         self._override_media_path = Path(media_path)
 
+    @property
+    def _needs_conversion(self) -> bool:
+        """Return if the result requires conversion to a preferred format."""
+        return any(
+            self.options.get(option) is not None
+            for option in (
+                ATTR_PREFERRED_FORMAT,
+                ATTR_PREFERRED_SAMPLE_RATE,
+                ATTR_PREFERRED_SAMPLE_CHANNELS,
+                ATTR_PREFERRED_SAMPLE_BYTES,
+            )
+        )
+
+    @callback
+    def async_get_media_path(self) -> Path | None:
+        """Return the path to the result on disk, if available.
+
+        Returns the local file path when the rendered audio is already
+        available on disk and matches the streamed output, so consumers can
+        read the file directly instead of going through the HTTP proxy.
+        Returns None otherwise.
+        """
+        if self._override_media_path is not None:
+            # An override that needs conversion no longer matches the file on
+            # disk, so the result is only available through the stream.
+            if self._needs_conversion:
+                return None
+            return self._override_media_path
+
+        if not self.use_file_cache or not self._result_cache.done():
+            return None
+
+        return self._manager.async_get_cache_file_path(
+            self._result_cache.result().cache_key
+        )
+
     async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of the overridden result."""
         assert self._override_media_path is not None
 
         preferred_format = self.options.get(ATTR_PREFERRED_FORMAT)
-        to_sample_rate = self.options.get(ATTR_PREFERRED_SAMPLE_RATE)
-        to_sample_channels = self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
-        to_sample_bytes = self.options.get(ATTR_PREFERRED_SAMPLE_BYTES)
 
-        needs_conversion = (
-            (preferred_format is not None)
-            or (to_sample_rate is not None)
-            or (to_sample_channels is not None)
-            or (to_sample_bytes is not None)
-        )
-
-        if not needs_conversion:
+        if not self._needs_conversion:
             # Read file directly (no conversion)
             yield await self.hass.async_add_executor_job(
                 self._override_media_path.read_bytes
@@ -744,6 +770,13 @@ class SpeechManager:
         )
         self.file_cache.clear()
         await task
+
+    @callback
+    def async_get_cache_file_path(self, cache_key: str) -> Path | None:
+        """Return the path to a cached TTS file on disk, if it exists."""
+        if not (filename := self.file_cache.get(cache_key)):
+            return None
+        return Path(self.cache_dir) / filename
 
     @callback
     def async_register_legacy_engine(
