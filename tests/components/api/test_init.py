@@ -124,6 +124,17 @@ async def test_api_state_change_with_bad_state(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
+async def test_api_state_change_internal_error(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test 500 is returned when state cannot be read back after being set."""
+    with patch.object(ha.StateMachine, "async_set"):
+        resp = await mock_api_client.post(
+            "/api/states/test.entity", json={"state": "on"}
+        )
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
 async def test_api_state_change_with_bad_data(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:

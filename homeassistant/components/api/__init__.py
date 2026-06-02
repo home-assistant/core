@@ -222,7 +222,7 @@ class APIStatesView(HomeAssistantView):
             states = (
                 state.as_dict_json
                 for state in hass.states.async_all()
-                if entity_perm(state.entity_id, "read")
+                if entity_perm(state.entity_id, POLICY_READ)
             )
         response = web.Response(
             body=b"".join((b"[", b",".join(states), b"]")),
@@ -295,7 +295,10 @@ class APIEntityStateView(HomeAssistantView):
         # Read the state back for our response
         status_code = HTTPStatus.CREATED if is_new_state else HTTPStatus.OK
         state = hass.states.get(entity_id)
-        assert state
+        if (state := hass.states.get(entity_id)) is None:
+            return self.json_message(
+                "Error storing state.", HTTPStatus.INTERNAL_SERVER_ERROR
+            )
         resp = self.json(state.as_dict(), status_code)
 
         resp.headers.add("Location", f"/api/states/{entity_id}")
