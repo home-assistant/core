@@ -54,6 +54,11 @@
         "name": "IR emitter"
       }
     },
+    "radio_frequency": {
+      "rf_transmitter": {
+        "name": "RF transmitter"
+      }
+    },
     "select": {
       "day_of_week": {
         "name": "Day of week",

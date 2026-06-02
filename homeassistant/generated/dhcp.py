@@ -1464,4 +1464,8 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "yeelight",
         "hostname": "yeelink-*",
     },
+    {
+        "domain": "yoto",
+        "hostname": "yoto-*",
+    },
 ]

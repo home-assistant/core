@@ -1,25 +1,22 @@
 """Base entity for the BleBox devices integration."""
 
-import logging
-
-from blebox_uniapi.error import Error
 from blebox_uniapi.feature import Feature
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import BleBoxCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 
-
-class BleBoxEntity[_FeatureT: Feature](Entity):
+class BleBoxEntity[_FeatureT: Feature](CoordinatorEntity[BleBoxCoordinator]):
     """Implements a common class for entities representing a BleBox feature."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, feature: _FeatureT) -> None:
+    def __init__(self, coordinator: BleBoxCoordinator, feature: _FeatureT) -> None:
         """Initialize a BleBox entity."""
+        super().__init__(coordinator)
         self._feature = feature
         self._attr_unique_id = feature.unique_id
         product = feature.product
@@ -31,10 +28,3 @@ class BleBoxEntity[_FeatureT: Feature](Entity):
             sw_version=product.firmware_version,
             configuration_url=f"http://{product.address}",
         )
-
-    async def async_update(self) -> None:
-        """Update the entity state."""
-        try:
-            await self._feature.async_update()
-        except Error as ex:
-            _LOGGER.error("Updating '%s' failed: %s", self._feature.full_name, ex)

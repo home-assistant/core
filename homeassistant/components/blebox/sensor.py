@@ -2,7 +2,7 @@
 
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import blebox_uniapi.sensor
 
@@ -30,9 +30,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
+from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 0
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -141,10 +142,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
-    features = config_entry.runtime_data.features.get("sensors", [])
+
+    coordinator = config_entry.runtime_data
+    features = coordinator.box.features.get("sensors", [])
     counts = Counter(f.device_class for f in features)
     entities = [
         BleBoxSensorEntity(
+            coordinator,
             feature,
             description,
             feature.index
@@ -155,7 +159,7 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
         if description.key == feature.device_class
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEntity):
@@ -163,12 +167,13 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
 
     def __init__(
         self,
+        coordinator: BleBoxCoordinator,
         feature: blebox_uniapi.sensor.BaseSensor,
         description: BleBoxSensorEntityDescription,
         index: int | None = None,
     ) -> None:
         """Initialize a BleBox sensor feature."""
-        super().__init__(feature)
+        super().__init__(coordinator, feature)
         self.entity_description = description
         if feature.name:
             self._attr_name = feature.name

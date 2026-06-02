@@ -728,6 +728,33 @@ async def test_rpc_restored_sleeping_sensor(
     assert state.state == "22.9"
 
 
+async def test_rpc_restored_sensor_when_not_initialized(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test restored mains-powered RPC sensor when device is not initialized."""
+    entry = await init_integration(hass, 2, skip_setup=True)
+    device = register_device(device_registry, entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_tc",
+        entry,
+        device_id=device.id,
+    )
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_rpc_restored_sleeping_sensor_no_last_state(
     hass: HomeAssistant,
     mock_rpc_device: Mock,

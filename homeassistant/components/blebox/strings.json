@@ -30,9 +30,7 @@
     }
   },
   "entity": {
-    "light": {
-      "channel": { "name": "Channel {index}" }
-    },
+    "light": { "channel": { "name": "Channel {index}" } },
     "sensor": {
       "active_power": { "name": "Active power" },
       "active_power_n": { "name": "Active power {index}" },
@@ -53,6 +51,11 @@
       "temperature_n": { "name": "Temperature {index}" },
       "voltage": { "name": "Voltage" },
       "voltage_n": { "name": "Voltage {index}" }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "An error occurred while communicating with the BleBox device: {error}"
     }
   }
 }

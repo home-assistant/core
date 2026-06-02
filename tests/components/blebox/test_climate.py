@@ -19,6 +19,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -29,7 +30,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import async_setup_entity, mock_feature
+from .conftest import async_setup_config_entry, async_setup_entity, mock_feature
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="saunabox")
@@ -120,12 +123,9 @@ async def test_update(saunabox, hass: HomeAssistant, config) -> None:
 
     feature_mock, entity_id = saunabox
 
-    def initial_update():
-        feature_mock.is_on = False
-        feature_mock.desired = 64.3
-        feature_mock.current = 40.9
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.is_on = False
+    feature_mock.desired = 64.3
+    feature_mock.current = 40.9
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -140,12 +140,8 @@ async def test_on_when_below_desired(saunabox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = saunabox
 
-    def initial_update():
-        feature_mock.is_on = False
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.is_on = False
     await async_setup_entity(hass, entity_id)
-    feature_mock.async_update = AsyncMock()
 
     def turn_on():
         feature_mock.is_on = True
@@ -175,12 +171,8 @@ async def test_on_when_above_desired(saunabox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = saunabox
 
-    def initial_update():
-        feature_mock.is_on = False
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.is_on = False
     await async_setup_entity(hass, entity_id)
-    feature_mock.async_update = AsyncMock()
 
     def turn_on():
         feature_mock.is_on = True
@@ -211,13 +203,9 @@ async def test_off(saunabox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = saunabox
 
-    def initial_update():
-        feature_mock.is_on = True
-        feature_mock.is_heating = False
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.is_on = True
+    feature_mock.is_heating = False
     await async_setup_entity(hass, entity_id)
-    feature_mock.async_update = AsyncMock()
 
     def turn_off():
         feature_mock.is_on = False
@@ -246,13 +234,9 @@ async def test_set_thermo(saunabox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = saunabox
 
-    def update():
-        feature_mock.is_on = False
-        feature_mock.is_heating = False
-
-    feature_mock.async_update = AsyncMock(side_effect=update)
+    feature_mock.is_on = False
+    feature_mock.is_heating = False
     await async_setup_entity(hass, entity_id)
-    feature_mock.async_update = AsyncMock()
 
     def set_temp(temp):
         feature_mock.is_on = True
@@ -276,17 +260,24 @@ async def test_set_thermo(saunabox, hass: HomeAssistant) -> None:
 
 
 async def test_update_failure(
-    saunabox, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    saunabox,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that update failures are logged."""
+    """Test that update failures cause config entry setup retry."""
 
     caplog.set_level(logging.ERROR)
 
-    feature_mock, entity_id = saunabox
-    feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    await async_setup_entity(hass, entity_id)
+    feature_mock, _entity_id = saunabox
+    feature_mock.product.async_update_data = AsyncMock(
+        side_effect=blebox_uniapi.error.ClientError
+    )
 
-    assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
+    await async_setup_config_entry(hass, config_entry)
+
+    feature_mock.product.async_update_data.assert_called()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_reding_hvac_actions(
@@ -299,12 +290,12 @@ async def test_reding_hvac_actions(
     feature_mock, entity_id = saunabox
     await async_setup_entity(hass, entity_id)
 
-    def set_heating():
+    def set_temperature(temp):
         feature_mock.is_on = True
         feature_mock.hvac_action = 1
         feature_mock.mode = 1
 
-    feature_mock.async_update = AsyncMock(side_effect=set_heating)
+    feature_mock.async_set_temperature = AsyncMock(side_effect=set_temperature)
 
     await hass.services.async_call(
         "climate",
@@ -330,7 +321,7 @@ async def test_thermo_off(
         feature_mock.is_on = False
         feature_mock.hvac_action = 0
 
-    feature_mock.async_update = AsyncMock(side_effect=set_off)
+    feature_mock.async_off = AsyncMock(side_effect=set_off)
 
     await hass.services.async_call(
         "climate",

@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from reolink_aio.enums import SubType
+from reolink_aio.enums import ConnectionEnum, SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
+from homeassistant.components.reolink.const import CONF_BC_CONNECT, DOMAIN
 from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.reolink.host import (
     FIRST_ONVIF_LONG_POLL_TIMEOUT,
@@ -21,14 +22,39 @@ from homeassistant.components.reolink.host import (
 )
 from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.util.aiohttp import MockRequest
 
-from .conftest import TEST_CAM_NAME
+from .conftest import (
+    CONF_BC_ONLY,
+    CONF_BC_PORT,
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DEFAULT_PROTOCOL,
+    TEST_BC_PORT,
+    TEST_CAM_NAME,
+    TEST_HOST,
+    TEST_MAC,
+    TEST_NVR_NAME,
+    TEST_PASSWORD,
+    TEST_PORT,
+    TEST_PRIVACY,
+    TEST_USE_HTTPS,
+    TEST_USERNAME,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -82,7 +108,6 @@ async def test_webhook_callback(
     freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
     reolink_host: MagicMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test webhook callback with motion sensor."""
     reolink_host.motion_detected.return_value = False
@@ -176,6 +201,37 @@ async def test_no_mac(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     reolink_host.mac_address = original
+
+
+async def test_invalid_bc_connection(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+) -> None:
+    """Test setup of host with an outdated, invalid bc_connection."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
+            CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_ONLY: False,
+            CONF_BC_CONNECT: "invalid_test",
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.data[CONF_BC_CONNECT] == ConnectionEnum.tcp.value
 
 
 async def test_subscribe_error(

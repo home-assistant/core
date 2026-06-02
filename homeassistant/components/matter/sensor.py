@@ -27,6 +27,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     Platform,
     UnitOfApparentPower,
@@ -135,6 +136,28 @@ RVC_OPERATIONAL_STATE_ERROR_MAP = {
     _rvc_err.kWheelsJammed: "wheels_jammed",
     _rvc_err.kBrushJammed: "brush_jammed",
     _rvc_err.kNavigationSensorObscured: ("navigation_sensor_obscured"),
+}
+
+THREAD_ROUTING_ROLE_MAP = {
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnspecified: "unspecified",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnassigned: "unassigned",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kSleepyEndDevice: "sleepy_end_device",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kEndDevice: "end_device",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kReed: "reed",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kRouter: "router",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kLeader: "leader",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnknownEnumValue: "unknown",
+}
+
+BOOT_REASON_MAP = {
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kUnspecified: "unspecified",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kPowerOnReboot: "power_on_reboot",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kBrownOutReset: "brown_out_reset",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kSoftwareWatchdogReset: "software_watchdog_reset",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kHardwareWatchdogReset: "hardware_watchdog_reset",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kSoftwareUpdateCompleted: "software_update_completed",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kSoftwareReset: "software_reset",
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kUnknownEnumValue: None,
 }
 
 BOOST_STATE_MAP = {
@@ -427,6 +450,19 @@ DISCOVERY_SCHEMAS = [
             clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
         ),
         allow_multi=True,  # also used for climate entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SoilMoistureSensor",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.MOISTURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.SoilMeasurement.Attributes.SoilMoistureMeasuredValue,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1574,5 +1610,99 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorClosedEvents,),
         featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
+    ),
+    # WiFiNetworkDiagnostics cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WiFiDiagnosticsRssi",
+            translation_key="wifi_rssi",
+            native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+            device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WiFiNetworkDiagnostics.Attributes.Rssi,),
+    ),
+    # ThreadNetworkDiagnostics cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThreadDiagnosticsChannel",
+            translation_key="thread_channel",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.Channel,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThreadDiagnosticsRoutingRole",
+            translation_key="thread_routing_role",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            options=list(THREAD_ROUTING_ROLE_MAP.values()),
+            device_to_ha=lambda value: THREAD_ROUTING_ROLE_MAP.get(value, "unknown"),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.RoutingRole,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThreadDiagnosticsNetworkName",
+            translation_key="thread_network_name",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.NetworkName,),
+    ),
+    # GeneralDiagnostics cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="GeneralDiagnosticsRebootCount",
+            translation_key="reboot_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.GeneralDiagnostics.Attributes.RebootCount,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="GeneralDiagnosticsUpTime",
+            translation_key="uptime",
+            device_class=SensorDeviceClass.UPTIME,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            device_to_ha=lambda uptime: dt_util.utcnow() - timedelta(seconds=uptime),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.GeneralDiagnostics.Attributes.UpTime,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="GeneralDiagnosticsBootReason",
+            translation_key="boot_reason",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            options=[
+                reason for reason in BOOT_REASON_MAP.values() if reason is not None
+            ],
+            device_to_ha=BOOT_REASON_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.GeneralDiagnostics.Attributes.BootReason,),
     ),
 ]

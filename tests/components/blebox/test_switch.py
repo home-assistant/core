@@ -7,6 +7,7 @@ import blebox_uniapi
 import pytest
 
 from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     SERVICE_TURN_OFF,
@@ -19,12 +20,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import (
+    async_setup_config_entry,
     async_setup_entities,
     async_setup_entity,
     mock_feature,
     mock_only_feature,
     setup_product_mock,
 )
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="switchbox")
@@ -52,9 +56,8 @@ async def test_switchbox_init(
 ) -> None:
     """Test switch default state."""
 
-    feature_mock, entity_id = switchbox
+    _feature_mock, entity_id = switchbox
 
-    feature_mock.async_update = AsyncMock()
     entry = await async_setup_entity(hass, entity_id)
     assert entry.unique_id == "BleBox-switchBox-1afe34e750b8-0.relay"
 
@@ -79,10 +82,7 @@ async def test_switchbox_update_when_off(switchbox, hass: HomeAssistant) -> None
 
     feature_mock, entity_id = switchbox
 
-    def initial_update():
-        feature_mock.is_on = False
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.is_on = False
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -94,10 +94,7 @@ async def test_switchbox_update_when_on(switchbox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = switchbox
 
-    def initial_update():
-        feature_mock.is_on = True
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.is_on = True
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -109,12 +106,8 @@ async def test_switchbox_on(switchbox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = switchbox
 
-    def initial_update():
-        feature_mock.is_on = False
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.is_on = False
     await async_setup_entity(hass, entity_id)
-    feature_mock.async_update = AsyncMock()
 
     def turn_on():
         feature_mock.is_on = True
@@ -137,12 +130,8 @@ async def test_switchbox_off(switchbox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = switchbox
 
-    def initial_update():
-        feature_mock.is_on = True
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.is_on = True
     await async_setup_entity(hass, entity_id)
-    feature_mock.async_update = AsyncMock()
 
     def turn_off():
         feature_mock.is_on = False
@@ -204,10 +193,8 @@ async def test_switchbox_d_init(
 ) -> None:
     """Test switch default state."""
 
-    feature_mocks, entity_ids = switchbox_d
+    _feature_mocks, entity_ids = switchbox_d
 
-    feature_mocks[0].async_update = AsyncMock()
-    feature_mocks[1].async_update = AsyncMock()
     entries = await async_setup_entities(hass, entity_ids)
 
     entry = entries[0]
@@ -248,12 +235,8 @@ async def test_switchbox_d_update_when_off(switchbox_d, hass: HomeAssistant) -> 
 
     feature_mocks, entity_ids = switchbox_d
 
-    def initial_update0():
-        feature_mocks[0].is_on = False
-        feature_mocks[1].is_on = False
-
-    feature_mocks[0].async_update = AsyncMock(side_effect=initial_update0)
-    feature_mocks[1].async_update = AsyncMock()
+    feature_mocks[0].is_on = False
+    feature_mocks[1].is_on = False
     await async_setup_entities(hass, entity_ids)
 
     assert hass.states.get(entity_ids[0]).state == STATE_OFF
@@ -267,12 +250,8 @@ async def test_switchbox_d_update_when_second_off(
 
     feature_mocks, entity_ids = switchbox_d
 
-    def initial_update0():
-        feature_mocks[0].is_on = True
-        feature_mocks[1].is_on = False
-
-    feature_mocks[0].async_update = AsyncMock(side_effect=initial_update0)
-    feature_mocks[1].async_update = AsyncMock()
+    feature_mocks[0].is_on = True
+    feature_mocks[1].is_on = False
     await async_setup_entities(hass, entity_ids)
 
     assert hass.states.get(entity_ids[0]).state == STATE_ON
@@ -284,14 +263,9 @@ async def test_switchbox_d_turn_first_on(switchbox_d, hass: HomeAssistant) -> No
 
     feature_mocks, entity_ids = switchbox_d
 
-    def initial_update0():
-        feature_mocks[0].is_on = False
-        feature_mocks[1].is_on = False
-
-    feature_mocks[0].async_update = AsyncMock(side_effect=initial_update0)
-    feature_mocks[1].async_update = AsyncMock()
+    feature_mocks[0].is_on = False
+    feature_mocks[1].is_on = False
     await async_setup_entities(hass, entity_ids)
-    feature_mocks[0].async_update = AsyncMock()
 
     def turn_on0():
         feature_mocks[0].is_on = True
@@ -313,14 +287,9 @@ async def test_switchbox_d_second_on(switchbox_d, hass: HomeAssistant) -> None:
 
     feature_mocks, entity_ids = switchbox_d
 
-    def initial_update0():
-        feature_mocks[0].is_on = False
-        feature_mocks[1].is_on = False
-
-    feature_mocks[0].async_update = AsyncMock(side_effect=initial_update0)
-    feature_mocks[1].async_update = AsyncMock()
+    feature_mocks[0].is_on = False
+    feature_mocks[1].is_on = False
     await async_setup_entities(hass, entity_ids)
-    feature_mocks[0].async_update = AsyncMock()
 
     def turn_on1():
         feature_mocks[1].is_on = True
@@ -342,14 +311,9 @@ async def test_switchbox_d_first_off(switchbox_d, hass: HomeAssistant) -> None:
 
     feature_mocks, entity_ids = switchbox_d
 
-    def initial_update_any():
-        feature_mocks[0].is_on = True
-        feature_mocks[1].is_on = True
-
-    feature_mocks[0].async_update = AsyncMock(side_effect=initial_update_any)
-    feature_mocks[1].async_update = AsyncMock()
+    feature_mocks[0].is_on = True
+    feature_mocks[1].is_on = True
     await async_setup_entities(hass, entity_ids)
-    feature_mocks[0].async_update = AsyncMock()
 
     def turn_off0():
         feature_mocks[0].is_on = False
@@ -371,14 +335,9 @@ async def test_switchbox_d_second_off(switchbox_d, hass: HomeAssistant) -> None:
 
     feature_mocks, entity_ids = switchbox_d
 
-    def initial_update_any():
-        feature_mocks[0].is_on = True
-        feature_mocks[1].is_on = True
-
-    feature_mocks[0].async_update = AsyncMock(side_effect=initial_update_any)
-    feature_mocks[1].async_update = AsyncMock()
+    feature_mocks[0].is_on = True
+    feature_mocks[1].is_on = True
     await async_setup_entities(hass, entity_ids)
-    feature_mocks[0].async_update = AsyncMock()
 
     def turn_off1():
         feature_mocks[1].is_on = False
@@ -421,21 +380,26 @@ ALL_SWITCH_FIXTURES = ["switchbox", "switchbox_d"]
 
 @pytest.mark.parametrize("feature", ALL_SWITCH_FIXTURES, indirect=["feature"])
 async def test_update_failure(
-    feature, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    feature,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that update failures are logged."""
+    """Test that update failures cause config entry setup retry."""
 
     caplog.set_level(logging.ERROR)
 
     feature_mock, entity_id = feature
 
     if isinstance(feature_mock, list):
-        feature_mock[0].async_update = AsyncMock()
-        feature_mock[1].async_update = AsyncMock()
         feature_mock = feature_mock[0]
         entity_id = entity_id[0]
 
-    feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    await async_setup_entity(hass, entity_id)
+    feature_mock.product.async_update_data = AsyncMock(
+        side_effect=blebox_uniapi.error.ClientError
+    )
 
-    assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
+    await async_setup_config_entry(hass, config_entry)
+
+    feature_mock.product.async_update_data.assert_called()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

@@ -1,5 +1,6 @@
 """Tests for the Cast config flow."""
 
+from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
@@ -11,6 +12,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, get_schema_suggested_value
+
+
+def _get_schema_suggested_values(data_schema, keys: list[str]) -> dict[str, Any]:
+    """Get suggested values from a data schema."""
+    suggested_values = {}
+    for key in keys:
+        if (
+            suggested_value := get_schema_suggested_value(data_schema, key)
+        ) is not None:
+            suggested_values[key] = suggested_value
+    return suggested_values
 
 
 async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
@@ -142,50 +154,89 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("parameter", "initial", "suggested", "user_input", "updated"),
+    ("initial", "expected_suggested_values", "user_input", "updated"),
     [
         (
-            "known_hosts",
-            ["192.168.0.10", "192.168.0.11"],
-            ["192.168.0.10", "192.168.0.11"],
-            ["192.168.0.1", " ", "  192.168.0.2 "],
-            ["192.168.0.1", "192.168.0.2"],
+            {},
+            {},
+            {"more_options": {}},
+            {"ignore_cec": [], "known_hosts": [], "user_id": ANY, "uuid": []},
         ),
         (
-            "uuid",
-            ["bla", "blu"],
-            "bla,blu",
-            "foo,  ,  bar ",
-            ["foo", "bar"],
+            {"ignore_cec": [], "known_hosts": [], "uuid": []},
+            {"ignore_cec": [], "known_hosts": [], "uuid": []},
+            {"more_options": {}},
+            {"ignore_cec": [], "known_hosts": [], "user_id": ANY, "uuid": []},
         ),
         (
-            "ignore_cec",
-            ["cast1", "cast2"],
-            "cast1,cast2",
-            "other_cast,  ,  some_cast ",
-            ["other_cast", "some_cast"],
+            {
+                "ignore_cec": ["cast1", "cast2"],
+                "known_hosts": ["192.168.0.10", "192.168.0.11"],
+                "uuid": ["bla", "blu"],
+            },
+            {
+                "ignore_cec": ["cast1", "cast2"],
+                "known_hosts": ["192.168.0.10", "192.168.0.11"],
+                "uuid": ["bla", "blu"],
+            },
+            {
+                "known_hosts": ["192.168.0.1", " ", "  192.168.0.2 "],
+                "more_options": {
+                    "ignore_cec": ["other_cast", " ", "  some_cast "],
+                    "uuid": ["foo", " ", "  bar "],
+                },
+            },
+            {
+                "ignore_cec": ["other_cast", "some_cast"],
+                "known_hosts": ["192.168.0.1", "192.168.0.2"],
+                "user_id": ANY,
+                "uuid": ["foo", "bar"],
+            },
+        ),
+        # Implicit clearing of the lists when not passing values
+        (
+            {
+                "ignore_cec": ["cast1", "cast2"],
+                "known_hosts": ["192.168.0.10", "192.168.0.11"],
+                "uuid": ["bla", "blu"],
+            },
+            {
+                "ignore_cec": ["cast1", "cast2"],
+                "known_hosts": ["192.168.0.10", "192.168.0.11"],
+                "uuid": ["bla", "blu"],
+            },
+            {"more_options": {}},
+            {"ignore_cec": [], "known_hosts": [], "user_id": ANY, "uuid": []},
+        ),
+        # Explicit clearing of the lists
+        (
+            {
+                "ignore_cec": ["cast1", "cast2"],
+                "known_hosts": ["192.168.0.10", "192.168.0.11"],
+                "uuid": ["bla", "blu"],
+            },
+            {
+                "ignore_cec": ["cast1", "cast2"],
+                "known_hosts": ["192.168.0.10", "192.168.0.11"],
+                "uuid": ["bla", "blu"],
+            },
+            {"known_hosts": [], "more_options": {"ignore_cec": [], "uuid": []}},
+            {"ignore_cec": [], "known_hosts": [], "user_id": ANY, "uuid": []},
         ),
     ],
 )
 async def test_option_flow(
     hass: HomeAssistant,
-    parameter: str,
-    initial: list[str],
-    suggested: str | list[str],
-    user_input: str | list[str],
-    updated: list[str],
+    initial: dict[str, Any],
+    expected_suggested_values: dict[str, Any],
+    user_input: dict[str, Any],
+    updated: dict[str, Any],
 ) -> None:
     """Test config flow options."""
     basic_parameters = ["known_hosts"]
     extra_parameters = ["ignore_cec", "uuid"]
 
-    data = {
-        "ignore_cec": [],
-        "known_hosts": [],
-        "uuid": [],
-    }
-    data[parameter] = initial
-    config_entry = MockConfigEntry(domain="cast", data=data)
+    config_entry = MockConfigEntry(domain="cast", data=initial)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -199,54 +250,21 @@ async def test_option_flow(
     more_options_schema = data_schema["more_options"].schema.schema
     assert set(more_options_schema) == {"ignore_cec", "uuid"}
 
-    orig_data = dict(config_entry.data)
-
     # Check suggested values
-    for other_param in basic_parameters:
-        if other_param == parameter:
-            continue
-        assert get_schema_suggested_value(data_schema, other_param) == []
-    if parameter in basic_parameters:
-        assert get_schema_suggested_value(data_schema, parameter) == suggested
-    for other_param in extra_parameters:
-        if other_param == parameter:
-            continue
-        assert get_schema_suggested_value(more_options_schema, other_param) == ""
-    if parameter in extra_parameters:
-        assert get_schema_suggested_value(more_options_schema, parameter) == suggested
+    suggested_values = _get_schema_suggested_values(data_schema, basic_parameters)
+    suggested_values |= _get_schema_suggested_values(
+        more_options_schema, extra_parameters
+    )
+    assert suggested_values == expected_suggested_values
 
     # Reconfigure
-    user_input_dict = {"more_options": {}}
-    if parameter in basic_parameters:
-        user_input_dict[parameter] = user_input
-    if parameter in extra_parameters:
-        user_input_dict["more_options"][parameter] = user_input
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=user_input_dict,
+        user_input=user_input,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
-    for other_param in basic_parameters:
-        if other_param == parameter:
-            continue
-        assert config_entry.data[other_param] == []
-    for other_param in extra_parameters:
-        if other_param == parameter:
-            continue
-        assert config_entry.data[other_param] == []
-    assert config_entry.data[parameter] == updated
-
-    # Clear lists
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"more_options": {}},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {}
-    expected_data = {**orig_data, "ignore_cec": [], "known_hosts": [], "uuid": []}
-    assert dict(config_entry.data) == expected_data
+    assert config_entry.data == updated
 
 
 async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
