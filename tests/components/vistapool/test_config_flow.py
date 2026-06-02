@@ -24,7 +24,7 @@ from .conftest import MOCK_PASSWORD, MOCK_POOLS, MOCK_USERNAME
 from tests.common import MockConfigEntry
 
 _DHCP_INFO = DhcpServiceInfo(
-    ip="192.168.2.70",
+    ip="1.2.3.4",
     hostname="sugarwifi",
     macaddress="aabbccddeeff",
 )
