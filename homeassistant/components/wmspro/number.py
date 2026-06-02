@@ -61,28 +61,32 @@ class WebControlProSlatRange(WebControlProGenericEntity, NumberEntity):
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        # Use wms__ prefix to get the raw value from the hub without overwrite
         action = self._dest.action(ACTION_DESC.SlatRotate)
+        # Use wms__ prefix to get the raw value from the hub without overwrite
         return self._value_func(action.wms__minValue, 0)
 
     @property
     def native_max_value(self) -> float:
         """Return the maximum value."""
-        # Use wms__ prefix to get the raw value from the hub without overwrite
         action = self._dest.action(ACTION_DESC.SlatRotate)
+        # Use wms__ prefix to get the raw value from the hub without overwrite
         return self._value_func(0, action.wms__maxValue)
 
     @property
     def native_value(self) -> float:
         """Return the current min/max value."""
-        # -75 and 75 are community-provided sane defaults for various devices
         action = self._dest.action(ACTION_DESC.SlatRotate)
-        return action[self._value_name] or self._value_func(-75, 75)
+        # Pull the current min/max rotation from the custom overwrite if set
+        value = action[self._value_name]
+        # -75 and 75 are community-provided sane defaults for various devices
+        if value is None:
+            value = self._value_func(-75, 75)
+        return value
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current min/max value."""
-        # Push the new min/max rotation to the hub as custom overwrite
         action = self._dest.action(ACTION_DESC.SlatRotate)
+        # Push the new min/max rotation to the hub as custom overwrite
         action[self._value_name] = value
 
 
