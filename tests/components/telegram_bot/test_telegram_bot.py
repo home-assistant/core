@@ -149,7 +149,7 @@ async def test_polling_platform_init_failed(
         await hass.async_block_till_done()
 
     mock_get_me.assert_called_once()
-    assert mock_polling_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_polling_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
@@ -1378,6 +1378,7 @@ async def test_async_setup_entry_failed(
         mock_bot.side_effect = InvalidToken("mock invalid token error")
 
         with pytest.raises(ConfigEntryAuthFailed) as err:
+            # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
             await async_setup_entry(hass, mock_broadcast_config_entry)
 
     await hass.async_block_till_done()

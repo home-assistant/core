@@ -69,8 +69,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="domestic_home_water_temperature",
-        translation_key="domestic_home_water_temperature",
+        key="domestic_hot_water_0_temperature",
+        translation_key="domestic_hot_water_0_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

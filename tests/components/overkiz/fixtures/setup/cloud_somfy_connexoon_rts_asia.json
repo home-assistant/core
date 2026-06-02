@@ -46,7 +46,7 @@
     {
       "creationTime": 1613675393000,
       "lastUpdateTime": 1613675393000,
-      "label": "*",
+      "label": "Connexoon",
       "deviceURL": "internal://1234-1234-6362/pod/0",
       "shortcut": false,
       "controllableName": "internal:PodMiniComponent",
@@ -142,7 +142,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "*"
+          "value": "Connexoon"
         },
         {
           "name": "internal:LightingLedPodModeState",
