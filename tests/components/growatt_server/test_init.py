@@ -5,6 +5,7 @@ import json
 
 from freezegun.api import FrozenDateTimeFactory
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
 import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
@@ -19,8 +20,6 @@ from homeassistant.components.growatt_server.const import (
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
-    V1_API_ERROR_RATE_LIMITED,
-    V1_API_ERROR_WRONG_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -70,7 +69,7 @@ async def test_device_info(
         (
             growattServer.GrowattV1ApiError(
                 message="API Error",
-                error_code=V1_API_ERROR_WRONG_DOMAIN,
+                error_code=GrowattV1ApiErrorCode.WRONG_DOMAIN,
                 error_msg="Invalid JSON",
             ),
             ConfigEntryState.SETUP_ERROR,
@@ -82,7 +81,7 @@ async def test_device_info(
         (
             growattServer.GrowattV1ApiError(
                 message="Rate limited",
-                error_code=V1_API_ERROR_RATE_LIMITED,
+                error_code=GrowattV1ApiErrorCode.RATE_LIMITED,
                 error_msg="Access frequency limit",
             ),
             ConfigEntryState.SETUP_RETRY,
