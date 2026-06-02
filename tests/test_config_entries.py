@@ -5793,6 +5793,36 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
     assert len(flows) == 1
 
 
+async def test_setup_raise_auth_failed_without_reauth_flow(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ConfigEntryAuthFailed when the integration has no reauth flow."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(
+        side_effect=ConfigEntryAuthFailed("The password is no longer valid")
+    )
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    class NoReauthFlow(config_entries.ConfigFlow):
+        """Config flow without reauth support."""
+
+        VERSION = 1
+
+    with mock_config_flow("test", NoReauthFlow):
+        await manager.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert "could not authenticate: The password is no longer valid" in caplog.text
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "The password is no longer valid"
+    assert len(hass.config_entries.flow.async_progress()) == 0
+
+
 async def test_initialize_and_shutdown(hass: HomeAssistant) -> None:
     """Test we call the shutdown function at stop."""
     manager = config_entries.ConfigEntries(hass, {})
