@@ -133,6 +133,7 @@ async def test_api_state_change_internal_error(
             "/api/states/test.entity", json={"state": "on"}
         )
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert await resp.json() == {"message": "Error storing state."}
 
 
 async def test_api_state_change_with_bad_data(
