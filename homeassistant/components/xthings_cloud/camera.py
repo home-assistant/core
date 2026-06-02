@@ -1,8 +1,9 @@
 """Camera platform for Xthings Cloud."""
 
-from __future__ import annotations
-
+import contextlib
 from typing import Any
+
+from ha_xthings_cloud import KvsSignalingClient
 
 from homeassistant.components.camera import (
     Camera,
@@ -14,6 +15,7 @@ from homeassistant.components.camera import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -50,6 +52,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         device_id: str,
         device_data: dict[str, Any],
     ) -> None:
+        """Initialize the camera."""
         CoordinatorEntity.__init__(self, coordinator)
         Camera.__init__(self)
         self._device_id = device_id
@@ -64,21 +67,25 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self._attr_supported_features = CameraEntityFeature.STREAM
         self._cached_image: bytes | None = None
         self._cached_snapshot_url: str | None = None
+        self._snapshot_task: Any | None = None
         self._kvs_sessions: dict[str, Any] = {}
         self._pending_candidates: dict[str, list[tuple[str, str | None, int | None]]] = {}
 
     @property
     def device_data(self) -> dict[str, Any]:
+        """Return current device data."""
         if self.coordinator.data and self._device_id in self.coordinator.data:
             return self.coordinator.data[self._device_id]
         return {}
 
     @property
     def is_on(self) -> bool:
+        """Return true if on."""
         return self.device_data.get("online", False)
 
     @property
     def available(self) -> bool:
+        """Return true if device is available."""
         return self.coordinator.last_update_success and self.device_data.get("online", False)
 
     async def async_camera_image(
@@ -100,7 +107,11 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         """Check for new snapshot on coordinator update."""
         snapshot_url = self.device_data.get("status", {}).get("snapshot_url")
         if snapshot_url and snapshot_url != self._cached_snapshot_url:
-            self.hass.async_create_task(self._async_update_snapshot(snapshot_url))
+            if self._snapshot_task and not self._snapshot_task.done():
+                self._snapshot_task.cancel()
+            self._snapshot_task = self.hass.async_create_task(
+                self._async_update_snapshot(snapshot_url)
+            )
         super()._handle_coordinator_update()
 
     async def _async_update_snapshot(self, snapshot_url: str) -> None:
@@ -119,9 +130,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
         """Handle WebRTC offer via KVS signaling."""
-        from homeassistant.helpers.aiohttp_client import async_get_clientsession
-        from ha_xthings_cloud import KvsSignalingClient
-
         try:
             kvs_data = await self.coordinator.client.async_get_camera_webrtc(self._device_id)
             region = kvs_data.get("region")
@@ -141,7 +149,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
 
             # Bridge: convert dict ICE candidates to HA WebRTCCandidate objects
             def _on_ice(cand: dict) -> None:
-                try:
+                with contextlib.suppress(Exception):
                     send_message(WebRTCCandidate(
                         candidate=RTCIceCandidateInit(
                             candidate=cand.get("candidate", ""),
@@ -149,8 +157,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                             sdp_m_line_index=cand.get("sdpMLineIndex", 0),
                         )
                     ))
-                except Exception:  # noqa: BLE001
-                    pass
 
             answer_sdp = await kvs_client.async_get_answer_sdp(
                 offer_sdp, on_ice_candidate=_on_ice,
@@ -164,11 +170,13 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             else:
                 send_message(WebRTCError(code="kvs_error", message="No answer SDP from KVS"))
 
-        except Exception as err:  # noqa: BLE001
-            LOGGER.error("KVS WebRTC failed: %s", err)
-            send_message(WebRTCError(code="kvs_error", message=str(err)))
+        except Exception as err:
+            LOGGER.exception("KVS WebRTC failed: %s", err)
+            send_message(WebRTCError(code="kvs_error", message="WebRTC negotiation failed"))
 
-    async def async_on_webrtc_candidate(self, session_id: str, candidate: RTCIceCandidateInit) -> None:
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidateInit
+    ) -> None:
         """Forward ICE candidate to KVS signaling channel."""
         kvs_client = self._kvs_sessions.get(session_id)
         if kvs_client:

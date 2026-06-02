@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.camera import async_get_image
 from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
@@ -59,12 +60,9 @@ async def test_camera_image(
     state = hass.states.get("camera.front_door_camera")
     assert state is not None
 
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("camera.front_door_camera")
-    assert entry is not None
-
-    # Getting the entity directly might be hard without `hass.data[DOMAIN].get_entity`,
-    # but let's test what we can. We'll leave `test_camera_image` simple for now.
+    image = await async_get_image(hass, "camera.front_door_camera")
+    assert image.content == b"image_data"
+    mock_api_client.async_get_snapshot.assert_called_once_with("https://example.com/snapshot.jpg")
 
 async def test_updating_state(
     hass: HomeAssistant,
@@ -77,14 +75,18 @@ async def test_updating_state(
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
         await setup_integration(hass, mock_config_entry)
 
+    assert mock_websocket.call_args is not None
+
     mock_websocket.call_args[1]["on_device_status"](
         "dev_camera_001",
         {
             "snapshot_url": "https://example.com/new_snapshot.jpg",
         },
     )
-    # The entity should call async_get_snapshot
-    # mock_api_client.async_get_snapshot.assert_called_with("https://example.com/new_snapshot.jpg")
+    
+    await hass.async_block_till_done()
+    
+    mock_api_client.async_get_snapshot.assert_called_with("https://example.com/new_snapshot.jpg")
 
 async def test_webrtc_offer(
     hass: HomeAssistant,
