@@ -1,18 +1,26 @@
 """The tests for the location automation."""
 
+from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import automation, zone
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component
+from tests.common import async_fire_time_changed, mock_component
 from tests.components.common import (
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -556,3 +564,162 @@ async def test_zone_trigger_behavior_all(
         trigger_options=trigger_options,
         states=states,
     )
+
+
+# --- Zone occupancy trigger tests ---
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key"),
+    ["zone.occupancy_detected", "zone.occupancy_cleared"],
+)
+async def test_zone_occupancy_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+) -> None:
+    """Test that occupancy triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        {"zone": ZONE_HOME},
+        supports_behavior=False,
+        supports_duration=True,
+        supports_target=False,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "from_state", "to_state", "should_fire"),
+    [
+        # occupancy_detected
+        pytest.param("zone.occupancy_detected", "0", "1", True, id="detected_0_to_1"),
+        pytest.param("zone.occupancy_detected", "0", "3", True, id="detected_0_to_3"),
+        pytest.param("zone.occupancy_detected", "1", "2", False, id="detected_1_to_2"),
+        pytest.param("zone.occupancy_detected", "2", "0", False, id="detected_2_to_0"),
+        pytest.param(
+            "zone.occupancy_detected",
+            STATE_UNKNOWN,
+            "1",
+            False,
+            id="detected_unknown_to_1",
+        ),
+        pytest.param(
+            "zone.occupancy_detected",
+            STATE_UNAVAILABLE,
+            "1",
+            False,
+            id="detected_unavailable_to_1",
+        ),
+        pytest.param(
+            "zone.occupancy_detected",
+            "0",
+            STATE_UNAVAILABLE,
+            False,
+            id="detected_0_to_unavailable",
+        ),
+        # occupancy_cleared
+        pytest.param("zone.occupancy_cleared", "1", "0", True, id="cleared_1_to_0"),
+        pytest.param("zone.occupancy_cleared", "3", "0", True, id="cleared_3_to_0"),
+        pytest.param("zone.occupancy_cleared", "2", "1", False, id="cleared_2_to_1"),
+        pytest.param("zone.occupancy_cleared", "0", "1", False, id="cleared_0_to_1"),
+        pytest.param(
+            "zone.occupancy_cleared",
+            "1",
+            STATE_UNAVAILABLE,
+            False,
+            id="cleared_1_to_unavailable",
+        ),
+        pytest.param(
+            "zone.occupancy_cleared",
+            "1",
+            STATE_UNKNOWN,
+            False,
+            id="cleared_1_to_unknown",
+        ),
+    ],
+)
+async def test_zone_occupancy_trigger_transitions(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    from_state: str,
+    to_state: str,
+    should_fire: bool,
+) -> None:
+    """Test occupancy triggers fire on the expected numeric-state transitions."""
+    hass.states.async_set(ZONE_HOME, from_state)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "trigger": trigger_key,
+                    "options": {"zone": ZONE_HOME},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set(ZONE_HOME, to_state)
+    await hass.async_block_till_done()
+    assert (len(service_calls) == 1) is should_fire
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "from_value", "to_value", "revert_value"),
+    [
+        ("zone.occupancy_detected", "0", "1", "0"),
+        ("zone.occupancy_cleared", "1", "0", "1"),
+    ],
+)
+async def test_zone_occupancy_trigger_for_duration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    from_value: str,
+    to_value: str,
+    revert_value: str,
+) -> None:
+    """Test that `for` delays the firing and an early revert cancels it."""
+    hass.states.async_set(ZONE_HOME, from_value)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "trigger": trigger_key,
+                    "options": {"zone": ZONE_HOME, "for": {"seconds": 5}},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Transition, then revert before the duration elapses -> no fire.
+    hass.states.async_set(ZONE_HOME, to_value)
+    await hass.async_block_till_done()
+    hass.states.async_set(ZONE_HOME, revert_value)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Transition and hold past the duration -> fire once.
+    hass.states.async_set(ZONE_HOME, to_value)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
