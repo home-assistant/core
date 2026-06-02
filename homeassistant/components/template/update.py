@@ -174,6 +174,11 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             self._update_in_progress,
         )
         self.setup_template(
+            CONF_RELEASE_SUMMARY,
+            "_attr_release_summary",
+            template_validators.string(self, CONF_RELEASE_SUMMARY),
+        )
+        self.setup_template(
             CONF_RELEASE_URL,
             "_attr_release_url",
             template_validators.url(self, CONF_RELEASE_URL),
@@ -245,11 +250,11 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
 
     async def async_release_notes(self) -> str | None:
         """Return release notes rendered on demand."""
-        if (release_summary_template := self._config.get(CONF_RELEASE_SUMMARY)) is None:
+        if (release_summary_template := self._templates.get(CONF_RELEASE_SUMMARY)) is None:
             return None
 
         try:
-            return release_summary_template.async_render(
+            return release_summary_template.template.async_render(
                 variables={
                     "this": TemplateStateFromEntityId(self.hass, self.entity_id),
                     **self._render_script_variables(),
@@ -264,6 +269,10 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             )
 
         return None
+
+    def release_notes(self) -> str | None:
+        """Return the stored release summary."""
+        return self._attr_release_summary
 
 
 class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
