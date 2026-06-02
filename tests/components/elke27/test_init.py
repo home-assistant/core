@@ -135,6 +135,41 @@ async def test_setup_transient_error_returns_not_ready(
     hub.async_disconnect.assert_awaited_once()
 
 
+async def test_setup_transient_error_suppresses_disconnect_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test connection cleanup errors do not mask transient setup errors."""
+    hub = SimpleNamespace(
+        panel_name=None,
+        async_connect=AsyncMock(side_effect=Elke27TimeoutError()),
+        async_disconnect=AsyncMock(side_effect=RuntimeError("disconnect failed")),
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.12",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
+            CONF_CLIENT_ID: "112233445566",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch(
+            "homeassistant.components.elke27.Elke27DataUpdateCoordinator"
+        ) as coordinator_cls,
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator_cls.assert_not_called()
+    hub.async_disconnect.assert_awaited_once()
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_setup_initial_refresh_error_cleans_up_and_returns_not_ready(
     hass: HomeAssistant,
 ) -> None:

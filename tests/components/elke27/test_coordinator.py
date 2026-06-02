@@ -285,7 +285,7 @@ async def test_update_data_maps_transient_errors_to_update_failed(
 
     class ErrorHub(_FakeHub):
         async def refresh_csm(self) -> None:
-            raise Elke27TimeoutError()
+            raise Elke27TimeoutError
 
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = ErrorHub(SimpleNamespace(version=1))

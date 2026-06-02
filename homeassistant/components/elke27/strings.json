@@ -22,7 +22,7 @@
           "passphrase": "The passphrase used during linking."
         },
         "description": "Enter the host and linking credentials.",
-        "title": "Set up Elk E27 Alarm Panel"
+        "title": "Set up Elk E27 Alarm Engine"
       }
     }
   }

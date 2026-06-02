@@ -1,5 +1,6 @@
 """Set up the Elke27 integration."""
 
+import asyncio
 import contextlib
 import logging
 
@@ -52,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
         OSError,
     ) as err:
         _LOGGER.warning("Failed to set up connection to %s:%s: %s", host, port, err)
-        await hub.async_disconnect()
+        await _async_disconnect_failed_setup(hub)
         msg = "Unable to connect to the panel; check host and port"
         raise ConfigEntryNotReady(msg) from err
 
@@ -80,6 +81,16 @@ async def _async_cleanup_failed_setup(
         await coordinator.async_stop()
     with contextlib.suppress(Exception):
         await hub.async_disconnect()
+
+
+async def _async_disconnect_failed_setup(hub: Elke27Hub) -> None:
+    """Disconnect after failed setup without masking the original failure."""
+    try:
+        await hub.async_disconnect()
+    except asyncio.CancelledError:
+        _LOGGER.debug("Cancelled while disconnecting after failed setup", exc_info=True)
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("Error while disconnecting after failed setup", exc_info=True)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bool:
