@@ -575,7 +575,7 @@
     "arwn": {
       "name": "Ambient Radio Weather Network",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "aseko_pool_live": {
