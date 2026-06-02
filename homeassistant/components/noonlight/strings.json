@@ -199,7 +199,7 @@
           "name": "Entry delay (seconds)"
         },
         "instructions": {
-          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. Tip: use a template like 'Triggered by {{ trigger.to_state.name }}'.",
+          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. You can use a template to include the triggering entity name.",
           "name": "Instructions"
         }
       },
@@ -217,7 +217,7 @@
           "name": "Entry delay (seconds)"
         },
         "instructions": {
-          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. Tip: use a template like 'Triggered by {{ trigger.to_state.name }}'.",
+          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. You can use a template to include the triggering entity name.",
           "name": "Instructions"
         }
       },
@@ -235,7 +235,7 @@
           "name": "Entry delay (seconds)"
         },
         "instructions": {
-          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. Tip: use a template like 'Triggered by {{ trigger.to_state.name }}'.",
+          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. You can use a template to include the triggering entity name.",
           "name": "Instructions"
         }
       },
@@ -253,7 +253,7 @@
           "name": "Entry delay (seconds)"
         },
         "instructions": {
-          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. Tip: use a template like 'Triggered by {{ trigger.to_state.name }}'.",
+          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. You can use a template to include the triggering entity name.",
           "name": "Instructions"
         }
       },
