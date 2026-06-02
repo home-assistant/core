@@ -31,13 +31,11 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "id_1": SensorEntityDescription(
         key="id_1",
         entity_registry_enabled_default=False,
-        entity_registry_visible_default=True,
         translation_key="mppt_id_1",
     ),
     "id_2": SensorEntityDescription(
         key="id_2",
         entity_registry_enabled_default=False,
-        entity_registry_visible_default=True,
         translation_key="mppt_id_2",
     ),
     "input_voltage_1": SensorEntityDescription(
@@ -178,7 +176,7 @@ async def async_setup_entry(
 
 
 class EnvertechEVT800Sensor(EnvertechEVT800Entity, SensorEntity):
-    """Representation of a Envertech EVT800 sensor."""
+    """Representation of an Envertech EVT800 sensor."""
 
     def __init__(
         self,
@@ -201,6 +199,4 @@ class EnvertechEVT800Sensor(EnvertechEVT800Entity, SensorEntity):
     @property
     def available(self) -> bool:
         """Unavailable if evt800 isn't connected."""
-        return (
-            self.evt800.online and self.native_value is not None and super().available
-        )
+        return super().available and self.native_value is not None

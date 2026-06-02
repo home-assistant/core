@@ -25,14 +25,6 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize."""
-        self._data: dict[str, Any] = {
-            CONF_IP_ADDRESS: vol.UNDEFINED,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_TYPE: TYPE_TCP_SERVER_MODE,
-        }
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -48,9 +40,6 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: port,
                 }
             )
-
-            self._data[CONF_IP_ADDRESS] = ip_address
-            self._data[CONF_PORT] = port
             evt800 = pyenvertechevt800.EnvertechEVT800(ip_address, port)
 
             can_connect = await evt800.test_connection()
@@ -60,7 +49,8 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title="Envertech EVT800", data=self._data
+                    title="Envertech EVT800",
+                    data={CONF_TYPE: TYPE_TCP_SERVER_MODE, **user_input},
                 )
 
         return self.async_show_form(

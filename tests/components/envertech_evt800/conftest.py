@@ -66,4 +66,4 @@ def mock_evt800_client() -> Generator[MagicMock]:
             "current_2": 0.024557765826475734,
         }
 
-        yield client
+        yield mock_instance

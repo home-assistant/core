@@ -47,18 +47,9 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: |
-      This integration dont have any diagnostics.
-  discovery-update-info:
-    status: todo
-    comment: |
-      The dependency does not support discovery update infos.
-  discovery:
-    status: todo
-    comment: |
-      The dependency does not support discovery.
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
