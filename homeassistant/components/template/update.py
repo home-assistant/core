@@ -151,7 +151,9 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
     # AbstractTemplateEntity.__init__. This ensures that
     # the __init__ on AbstractTemplateEntity is not
     # called twice.
-    def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+    def __init__(
+        self, name: str, config: dict[str, Any]
+    ) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
@@ -250,7 +252,9 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
 
     async def async_release_notes(self) -> str | None:
         """Return release notes rendered on demand."""
-        if (release_summary_template := self._templates.get(CONF_RELEASE_SUMMARY)) is None:
+        if (
+            release_summary_template := self._templates.get(CONF_RELEASE_SUMMARY)
+        ) is None:
             return None
 
         try:
