@@ -42,7 +42,9 @@ rules:
   devices: done
   diagnostics: todo
   discovery: done
-  discovery-update-info: todo
+  discovery-update-info:
+    status: exempt
+    comment: Integration is cloud-only; no local host info is stored on the config entry.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -53,7 +55,9 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: No reconfigurable options; credentials are handled by the reauthentication flow.
   repair-issues:
     status: exempt
     comment: No known repair scenarios
