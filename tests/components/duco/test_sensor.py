@@ -94,7 +94,7 @@ async def test_coordinator_update_failure_marks_unavailable(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
-    exception_type: type[Exception],
+    exception_type: type[DucoError],
     exception_message: str,
 ) -> None:
     """Test sensor entities become unavailable when the coordinator update fails."""
