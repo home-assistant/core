@@ -154,7 +154,7 @@ async def test_unknown_topic_ignored(
     async_fire_mqtt_message(hass, "arwn/unknown_domain", json.dumps({"value": 1.0}))
     await hass.async_block_till_done()
 
-    assert config_entry.runtime_data == {}
+    assert len(hass.states.async_entity_ids("sensor")) == 0
 
 
 async def test_wind_direction_state_class(
@@ -183,7 +183,7 @@ async def test_malformed_json_ignored(
     async_fire_mqtt_message(hass, "arwn/temperature/BackYard", "not valid json{{")
     await hass.async_block_till_done()
 
-    assert config_entry.runtime_data == {}
+    assert len(hass.states.async_entity_ids("sensor")) == 0
 
 
 async def test_entry_unload(
