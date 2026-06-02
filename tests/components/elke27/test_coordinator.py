@@ -3,7 +3,7 @@
 import asyncio
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from elke27_lib import PanelSnapshot
 from elke27_lib.errors import Elke27Error, Elke27TimeoutError
@@ -387,6 +387,37 @@ async def test_connection_state_event_triggers_refresh(
     assert coordinator.data is hub.get_snapshot()
     await hass.async_block_till_done()
     coordinator.async_refresh_now.assert_awaited_once()
+
+
+async def test_disconnected_connection_state_event_notifies_listeners(
+    hass: HomeAssistant,
+) -> None:
+    """Verify disconnected connection state events notify listeners."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    hub = _FakeHub(SimpleNamespace(version=1))
+    coordinator = _coordinator(hass, hub, entry)
+
+    await coordinator.async_start()
+    listener = Mock()
+    remove_listener = coordinator.async_add_listener(listener)
+    coordinator.async_refresh_now = AsyncMock()
+    hub._snapshot = SimpleNamespace(version=2)
+
+    event = ConnectionStateChanged(
+        kind=ConnectionStateChanged.KIND,
+        at=UNSET_AT,
+        seq=UNSET_SEQ,
+        classification=UNSET_CLASSIFICATION,
+        route=UNSET_ROUTE,
+        session_id=UNSET_SESSION_ID,
+        connected=False,
+    )
+    coordinator._process_event(event)
+
+    assert coordinator.data is hub.get_snapshot()
+    listener.assert_called_once_with()
+    coordinator.async_refresh_now.assert_not_awaited()
+    remove_listener()
 
 
 def test_normalize_domains() -> None:

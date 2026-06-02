@@ -119,6 +119,8 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
         if _is_event(event, ConnectionStateChanged):
             if event.connected:
                 self.hass.async_create_task(self.async_refresh_now())
+            else:
+                self._set_snapshot(self._hub.get_snapshot())
             return
         if _is_event(event, CsmSnapshotUpdated):
             self._set_snapshot(self._hub.get_snapshot())
