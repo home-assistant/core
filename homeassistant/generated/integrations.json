@@ -665,6 +665,11 @@
       "config_flow": false,
       "iot_class": "assumed_state"
     },
+    "avosdim": {
+      "name": "Avosdim",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "awair": {
       "name": "Awair",
       "integration_type": "hub",
