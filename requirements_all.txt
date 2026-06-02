@@ -2199,7 +2199,7 @@ pygatt[GATTTOOL]==4.0.5
 pygtfs==0.1.9
 
 # homeassistant.components.hvv_departures
-pygti==0.9.4
+pygti==1.1.1
 
 # homeassistant.components.version
 pyhaversion==22.8.0
@@ -3293,7 +3293,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.7.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.5.4
+victron-mqtt==2026.6.1
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
