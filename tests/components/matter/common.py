@@ -78,6 +78,7 @@ FIXTURES = [
     "mock_pressure_sensor",
     "mock_pump",
     "mock_room_airconditioner",
+    "mock_smart_tcl_portable_ac",
     "mock_soil_sensor",
     "mock_solar_inverter",
     "mock_speaker",

@@ -129,6 +129,7 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8027),
     (0x1209, 0x8028),
     (0x1209, 0x8029),
+    (0x1334, 0x0A84),
     (0x138C, 0x0101),
 }
 
@@ -170,7 +171,16 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8028),
     (0x1209, 0x8029),
     (0x131A, 0x1000),
+    (0x1334, 0x0A84),
     (0x138C, 0x0101),
+}
+
+SUPPORT_HEAT_COOL_MODE_DEVICES: set[tuple[int, int]] = {
+    # The Matter spec is missing the AutoMode feature flag for these devices even
+    # though they physically support heat_cool (auto) mode via SystemMode = kAuto.
+    # In the list below specify tuples of (vendorid, productid) of devices that
+    # support heat_cool mode.
+    (0x1334, 0x0A84),
 }
 
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
@@ -549,6 +559,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.DRY)
         if (vendor_id, product_id) in SUPPORT_FAN_MODE_DEVICES:
             self._attr_hvac_modes.append(HVACMode.FAN_ONLY)
+        if (vendor_id, product_id) in SUPPORT_HEAT_COOL_MODE_DEVICES:
+            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
         if feature_map & ThermostatFeature.kAutoMode:
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
             # only enable temperature_range feature if the device actually supports that
