@@ -440,8 +440,9 @@ class SonosSpeaker:
             self.log_subscription_result(result, "Unsubscribe")
         self._subscriptions = []
 
-    async def async_shutdown(self) -> None:
-        """Cancel speaker-owned timers and subscriptions during unload."""
+    @callback
+    def async_shutdown(self) -> None:
+        """Cancel speaker-owned timers during unload."""
         if self._battery_poll_timer:
             self._battery_poll_timer()
             self._battery_poll_timer = None
