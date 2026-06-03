@@ -21,8 +21,11 @@ _DOMAIN_CONSTANTS: set[str] = {"DOMAIN", "domain"}
 _DOMAIN_SUFFIXES: tuple[str, ...] = ("_DOMAIN", "_domain")
 
 
-def _check_call_node(node: nodes.Call) -> nodes.NodeNG | None:
-    """Visit Call node."""
+def _check_call_node_domain_arguments(node: nodes.Call) -> nodes.NodeNG | None:
+    """Ensure the call node arguments are valid domain constant or variable.
+
+    Return None if the argument node is valid, or the argument node if it is invalid.
+    """
     match node.func:
         case nodes.Attribute():
             for (
@@ -35,19 +38,19 @@ def _check_call_node(node: nodes.Call) -> nodes.NodeNG | None:
                     node.func.attrname == method_name
                     and node.func.expr.as_string() == method_source
                 ):
-                    return _check_call_node_arguments(
+                    return _check_call_node_domain_argument(
                         node, arg_position=arg_position, kwarg_name=kwarg_name
                     )
         case nodes.Name():
             for func_name, arg_position, kwarg_name in _FUNCTION_CHECKS:
                 if node.func.name == func_name:
-                    return _check_call_node_arguments(
+                    return _check_call_node_domain_argument(
                         node, arg_position=arg_position, kwarg_name=kwarg_name
                     )
     return None
 
 
-def _check_call_node_arguments(
+def _check_call_node_domain_argument(
     call_node: nodes.Call,
     *,
     arg_position: int | None,
@@ -69,13 +72,13 @@ def _check_call_node_arguments(
             None,
         )
 
-    if argument_node and not _is_argument_valid(argument_node):
+    if argument_node and not _check_domain_argument(argument_node):
         return argument_node
 
     return None
 
 
-def _is_argument_valid(arg_node: nodes.NodeNG) -> bool:
+def _check_domain_argument(arg_node: nodes.NodeNG) -> bool:
     """Ensure the argument node is a domain constant or variable.
 
     We allow:
@@ -133,11 +136,11 @@ class DomainConstantChecker(BaseChecker):
         if not self._in_test_module:
             return
 
-        if arg_node := _check_call_node(node):
+        if invalid_arg_node := _check_call_node_domain_arguments(node):
             self.add_message(
                 "home-assistant-domain-argument",
-                node=arg_node,
-                args=(arg_node.as_string(), node.func.as_string()),
+                node=invalid_arg_node,
+                args=(invalid_arg_node.as_string(), node.func.as_string()),
             )
 
 
