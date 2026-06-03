@@ -1,7 +1,5 @@
 """Support for interacting with Spotify Connect."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 import datetime as dt

@@ -3,8 +3,7 @@ rules:
   action-setup: done
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: done
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -41,8 +40,7 @@ rules:
   test-coverage: done
 
   # Gold
-  devices:
-    status: done
+  devices: done
   diagnostics: todo
   discovery-update-info:
     status: exempt

@@ -1,7 +1,5 @@
 """The imap integration."""
 
-from __future__ import annotations
-
 import asyncio
 from email.message import Message
 import logging

@@ -1,17 +1,18 @@
 """Repairs for MQTT."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
+
+URL_MQTT_BROKER_CONFIGURATION = (
+    "https://www.home-assistant.io/integrations/mqtt/#broker-configuration"
+)
 
 
 class MQTTDeviceEntryMigration(RepairsFlow):
@@ -25,13 +26,13 @@ class MQTTDeviceEntryMigration(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             device_registry = dr.async_get(self.hass)
@@ -60,13 +61,9 @@ async def async_create_fix_flow(
     """Create flow."""
     if TYPE_CHECKING:
         assert data is not None
-    entry_id = data["entry_id"]
-    subentry_id = data["subentry_id"]
-    name = data["name"]
-    if TYPE_CHECKING:
-        assert isinstance(entry_id, str)
-        assert isinstance(subentry_id, str)
-        assert isinstance(name, str)
+    entry_id: str = data["entry_id"]  # type: ignore[assignment]
+    subentry_id: str = data["subentry_id"]  # type: ignore[assignment]
+    name: str = data["name"]  # type: ignore[assignment]
     return MQTTDeviceEntryMigration(
         entry_id=entry_id,
         subentry_id=subentry_id,

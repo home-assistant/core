@@ -2,11 +2,20 @@
 
 from unittest.mock import AsyncMock
 
+from aioamazondevices.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+)
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
+from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
@@ -50,3 +59,115 @@ async def test_coordinator_stale_device(
 
     # Entity is removed
     assert not hass.states.get(entity_id_1)
+
+
+async def test_coordinator_load_previous_devices_from_registry(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test coordinator preloads previous devices from registry excluding services."""
+    mock_config_entry.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
+        name="Echo Test",
+        manufacturer="Amazon",
+        model="Echo Dot",
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="Amazon",
+        model="Echo Dot",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.previous_devices == {TEST_DEVICE_1_SN}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            CannotAuthenticate,
+            ConfigEntryState.SETUP_ERROR,
+            id="cannot_authenticate",
+        ),
+        pytest.param(
+            CannotConnect,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_connect",
+        ),
+        pytest.param(
+            CannotRetrieveData,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_retrieve_data",
+        ),
+    ],
+)
+async def test_sync_history_state_error(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test sync_history_state error handling."""
+    mock_amazon_devices_client.sync_history_state.side_effect = side_effect
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is expected_state
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            CannotAuthenticate,
+            ConfigEntryState.SETUP_ERROR,
+            id="cannot_authenticate",
+        ),
+        pytest.param(
+            CannotConnect,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_connect",
+        ),
+        pytest.param(
+            TimeoutError,
+            ConfigEntryState.SETUP_RETRY,
+            id="timeout_error",
+        ),
+        pytest.param(
+            CannotRetrieveData,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_retrieve_data",
+        ),
+        pytest.param(
+            ValueError,
+            ConfigEntryState.SETUP_RETRY,
+            id="value_error",
+        ),
+    ],
+)
+async def test_sync_media_state_auth_failed(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test setup fails with ConfigEntryAuthFailed when sync_media_state raises CannotAuthenticate."""
+    mock_amazon_devices_client.sync_media_state.side_effect = side_effect
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is expected_state

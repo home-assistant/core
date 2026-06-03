@@ -76,7 +76,9 @@
     "RemoteManagers": [],
     "Nodes": 4,
     "Managers": 3,
-    "Cluster": {}
+    "Cluster": {
+      "ID": "swarm-cluster-id"
+    }
   },
   "LiveRestoreEnabled": false,
   "Isolation": "default",
