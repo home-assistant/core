@@ -173,8 +173,10 @@ def _async_get_v6_session(
     return session
 
 
-async def _async_is_v6_api(hass: HomeAssistant, entry: dict[str, Any]) -> bool:
-    """Check if the Pi-hole instance exposes the v6 API."""
+async def _async_v6_api_authentication_required(
+    hass: HomeAssistant, entry: dict[str, Any]
+) -> bool | None:
+    """Return if the v6 API requires auth, or None when v6 is not detected."""
     protocol = "https" if entry.get(CONF_SSL) else "http"
     session = _async_get_v6_session(hass, entry[CONF_VERIFY_SSL])
     url = f"{protocol}://{entry[CONF_HOST]}/api/info/version"
@@ -184,19 +186,27 @@ async def _async_is_v6_api(hass: HomeAssistant, entry: dict[str, Any]) -> bool:
             try:
                 data: Any = await response.json()
             except aiohttp.ContentTypeError, ValueError:
-                return False
+                return None
 
             if not isinstance(data, dict):
-                return False
+                return None
 
             if response.status == 200:
-                return isinstance(data.get("version"), dict)
+                if isinstance(data.get("version"), dict):
+                    return False
+                return None
 
             if response.status == 401:
                 error = data.get("error")
-                return isinstance(error, dict) and error.get("key") == "unauthorized"
+                if isinstance(error, dict) and error.get("key") == "unauthorized":
+                    return True
 
-    return False
+    return None
+
+
+async def _async_is_v6_api(hass: HomeAssistant, entry: dict[str, Any]) -> bool:
+    """Check if the Pi-hole instance exposes the v6 API."""
+    return (await _async_v6_api_authentication_required(hass, entry)) is not None
 
 
 async def determine_api_version(

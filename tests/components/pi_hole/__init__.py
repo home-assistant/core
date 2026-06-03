@@ -179,6 +179,16 @@ CONFIG_FLOW_USER = {
     CONF_VERIFY_SSL: VERIFY_SSL,
 }
 
+CONFIG_FLOW_USER_WITHOUT_API_KEY = {
+    CONF_HOST: HOST,
+    CONF_PORT: PORT,
+    CONF_LOCATION: LOCATION,
+    CONF_API_KEY: "",
+    CONF_NAME: NAME,
+    CONF_SSL: SSL,
+    CONF_VERIFY_SSL: VERIFY_SSL,
+}
+
 CONFIG_FLOW_API_KEY = {
     CONF_API_KEY: API_KEY,
 }
@@ -212,6 +222,7 @@ def _create_mocked_hole(
     wrong_host: bool = False,
     ftl_error: bool = False,
     require_cookie_free_app_password: bool = False,
+    v6_authentication_required: bool = True,
 ) -> MagicMock:
     """Return a mocked Hole API object with side effects based on constructor args."""
 
@@ -226,6 +237,8 @@ def _create_mocked_hole(
         async def authenticate_side_effect(*_args, **_kwargs):
             if wrong_host:
                 raise HoleConnectionError("Cannot authenticate with Pi-hole: err")
+            if api_version == 6 and not v6_authentication_required:
+                return
             password = getattr(mocked_hole, "password", None)
             cookie_jar = getattr(
                 getattr(mocked_hole, "session", None), "cookie_jar", None
@@ -251,7 +264,9 @@ def _create_mocked_hole(
                 raise HoleConnectionError("Cannot fetch data from Pi-hole: err")
             password = getattr(mocked_hole, "password", None)
             api_token = getattr(mocked_hole, "api_token", None)
-            if (
+            if api_version == 6 and not v6_authentication_required:
+                mocked_hole.data = ZERO_DATA_V6
+            elif (
                 raise_exception
                 or incorrect_app_password
                 or (api_version == 5 and (not api_token or api_token == "wrong_token"))
@@ -305,6 +320,7 @@ def _create_mocked_hole(
     make_mock.api_version = api_version
     make_mock.instances = instances
     make_mock.wrong_host = wrong_host
+    make_mock.v6_authentication_required = v6_authentication_required
     return make_mock
 
 
@@ -320,12 +336,31 @@ def _patch_hole(mocked_hole: MagicMock, patch_target: str) -> Generator[MagicMoc
             raise HoleConnectionError("Cannot fetch data from Pi-hole: err")
         return mocked_hole.api_version == 6
 
+    async def v6_api_authentication_required_side_effect(*_args, **_kwargs):
+        if mocked_hole.wrong_host:
+            raise HoleConnectionError("Cannot fetch data from Pi-hole: err")
+        if mocked_hole.api_version != 6:
+            return None
+        return mocked_hole.v6_authentication_required
+
     with ExitStack() as stack:
         patched_hole = stack.enter_context(patch(patch_target, side_effect=side_effect))
         stack.enter_context(
             patch(
                 "homeassistant.components.pi_hole._async_is_v6_api",
                 side_effect=is_v6_api_side_effect,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.pi_hole._async_v6_api_authentication_required",
+                side_effect=v6_api_authentication_required_side_effect,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.pi_hole.config_flow._async_v6_api_authentication_required",
+                side_effect=v6_api_authentication_required_side_effect,
             )
         )
         yield patched_hole

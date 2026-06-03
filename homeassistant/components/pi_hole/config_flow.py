@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+import aiohttp
 from hole.exceptions import HoleError
 import voluptuous as vol
 
@@ -18,7 +19,12 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from . import Hole, api_by_version, determine_api_version
+from . import (
+    Hole,
+    _async_v6_api_authentication_required,
+    api_by_version,
+    determine_api_version,
+)
 from .const import (
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -37,7 +43,14 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._config: dict = {}
+        self._config: dict[str, Any] = {}
+
+    def _update_api_key(self, api_key: str | None) -> None:
+        """Update the stored API key config from user input."""
+        if api_key:
+            self._config[CONF_API_KEY] = api_key
+        else:
+            self._config.pop(CONF_API_KEY, None)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -52,8 +65,8 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_LOCATION: user_input[CONF_LOCATION],
                 CONF_SSL: user_input[CONF_SSL],
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                CONF_API_KEY: user_input[CONF_API_KEY],
             }
+            self._update_api_key(user_input.get(CONF_API_KEY))
 
             self._async_abort_entries_match(
                 {
@@ -85,9 +98,9 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_LOCATION,
                         default=user_input.get(CONF_LOCATION, DEFAULT_LOCATION),
                     ): str,
-                    vol.Required(
+                    vol.Optional(
                         CONF_API_KEY,
-                        default=user_input.get(CONF_API_KEY),
+                        default=user_input.get(CONF_API_KEY, ""),
                     ): str,
                     vol.Required(
                         CONF_SSL,
@@ -116,7 +129,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         """Perform reauth confirm upon an API authentication error."""
         errors = {}
         if user_input is not None:
-            self._config = {**self._config, CONF_API_KEY: user_input[CONF_API_KEY]}
+            self._update_api_key(user_input.get(CONF_API_KEY))
             if not (errors := await self._async_try_connect()):
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(), data=self._config
@@ -128,7 +141,14 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self._config[CONF_HOST],
                 CONF_LOCATION: self._config[CONF_LOCATION],
             },
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_API_KEY,
+                        default=self._config.get(CONF_API_KEY, ""),
+                    ): str
+                }
+            ),
             errors=errors,
         )
 
@@ -138,9 +158,28 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             version = await determine_api_version(hass=self.hass, entry=self._config)
         except HoleError:
             return {"base": "cannot_connect"}
-        pi_hole: Hole = api_by_version(self.hass, self._config, version)
 
         if version == 6:
+            try:
+                authentication_required = await _async_v6_api_authentication_required(
+                    self.hass, self._config
+                )
+            except TimeoutError, aiohttp.ClientError:
+                return {"base": "cannot_connect"}
+
+            if authentication_required is False:
+                self._config.pop(CONF_API_KEY, None)
+                _LOGGER.debug(
+                    "Success connecting to Pi-hole API version %s without"
+                    " authentication",
+                    6,
+                )
+                return {}
+
+            if not self._config.get(CONF_API_KEY):
+                return {CONF_API_KEY: "invalid_auth"}
+
+            pi_hole: Hole = api_by_version(self.hass, self._config, version)
             try:
                 await pi_hole.authenticate()
                 _LOGGER.debug("Success authenticating with pihole API version: %s", 6)
@@ -149,6 +188,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 return {CONF_API_KEY: "invalid_auth"}
 
         elif version == 5:
+            pi_hole = api_by_version(self.hass, self._config, version)
             try:
                 await pi_hole.get_data()
                 if pi_hole.data is not None and "error" in pi_hole.data:
