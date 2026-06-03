@@ -314,6 +314,46 @@ SUPERSEDED design record for the eventual re-introduction.
 
 ---
 
+## plan-auth-context — drop the unused token + system user, restore context
+
+**Why.** Two design-review simplifications. (1) The manager minted a
+per-group system-user access token and passed it on `--token`; the
+runtime stored it (`SandboxRuntime.token`) and **never used it** — the
+sandbox is not an authenticated principal inside main and never connects
+back, so the credential was dead weight (same reasoning as
+`plan-strip-auth-scopes`). (2) Main's handling of an inbound `context_id`
+was incomplete: it minted a fresh `Context` per echo (adopting the
+sandbox's id and attributing it to the per-group system user), dropping
+the original attribution of a user-initiated action that flowed
+main → sandbox → back.
+
+**What landed (Parts A/B/C).**
+- **A — token gone end-to-end.** No `--token` argv (`manager._default_command`),
+  no `SandboxRuntime.token` field/param, no `SANDBOX_TOKEN` in the Docker
+  entrypoint / compose / docs, no `async_issue_sandbox_access_token`.
+- **C — system user gone.** `auth.py` deleted entirely;
+  `bridge._async_system_user_id` / `_system_user_id` removed. Genuinely
+  sandbox-originated contexts are now `user_id=None` — the honest shape,
+  since no user authored them.
+- **B — context restoration.** The bridge seeds a `context_id → Context`
+  cache at every main→sandbox **call-down** site (the service forwarder
+  `_forward`, and the proxy entity's `async_call_service`, which now
+  threads the entity's live `Context`). A 15-minute TTL bounds it (volume
+  is tiny — a forwarded context is echoed back within the same operation).
+  `_resolve_context` returns a cached Context verbatim for a known id
+  (restoring `parent_id` / `user_id`), and for an unknown/expired id mints
+  a **brand-new** `Context(user_id=None)` with main's **own** trusted id —
+  never the sandbox-supplied ULID, whose embedded timestamp main can't
+  trust (recorder/logbook order by it). A miss is always safe.
+
+**Outcome.** The sandbox provably cannot fabricate attribution: the wire
+carries only a `context_id` string, and main owns every `Context` it
+produces. The v2 core-HA touch list is unchanged (this is all inside the
+integration + runtime). A richer audit answer — a `Context` group
+attribute — is left as a follow-up below.
+
+---
+
 ## Still open
 
 These are the items that survived Phase 17 — see
@@ -328,14 +368,26 @@ for the per-failure-category remediation table.
   entity_id alignment constraint, the `share/subscribe_*` protocol,
   the main-side filter, and the open questions. The actual consumer
   is owed in a future phase against that design.
-- **Re-introduce scope enforcement on the sandbox token.**
+- **Re-introduce a sandbox credential (with scopes) when the WS lands.**
   `plan-strip-auth-scopes` reverted the Phase-7 `RefreshToken.scopes`
-  mechanism because no consumer shipped. When the WS transport
+  mechanism, and `plan-auth-context` then dropped the unused token and
+  system user entirely — the sandbox currently holds **no** credential.
+  When the WS transport
   ([`../plans/plan-transport.md`](../plans/plan-transport.md) T4) ships
-  the share-states subscription, the sandbox token needs scope
-  enforcement again — reuse [`auth-scoping-decision.md`](auth-scoping-decision.md)'s
+  the share-states subscription, the sandbox will authenticate to main
+  for the first time and the credential is designed **fresh** then —
+  scopes included; reuse [`auth-scoping-decision.md`](auth-scoping-decision.md)'s
   design (prefix-grant + exact-match grammar) as the starting point,
   this time with a real consumer forcing the shape.
+- **`Context` group attribute for sandbox-originated actions.**
+  `plan-auth-context` makes a genuinely sandbox-originated `Context`
+  `user_id=None` (no user authored it). A richer audit answer would be a
+  new optional `Context` field naming **which sandbox group** originated
+  the action ("this came from the `custom` sandbox") — better for
+  logbook/audit than a null user, without pretending a sandbox is a user.
+  It needs a core `Context` change and is its own design; capture it when
+  audit attribution actually needs it. **Do not** adopt the sandbox's
+  `context_id` to carry this — that id is untrusted (see `_resolve_context`).
 - **v1 removal. DONE (2026-05-28).** The numeric gate (Phase 11) was
   cleared by Phase 17; v1 was removed ahead of the "shipped a stable
   release" condition, relying on git history for rollback.

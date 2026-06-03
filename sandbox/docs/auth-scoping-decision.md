@@ -3,10 +3,16 @@
 > **SUPERSEDED 2026-06-03 by `plans/plan-strip-auth-scopes.md`.** No
 > consumer of this mechanism ever shipped (the sandbox→main WebSocket was
 > not wired up). The `RefreshToken.scopes` field and dispatcher
-> enforcement were reverted from core HA; the sandbox now uses a plain
+> enforcement were reverted from core HA; the sandbox then used a plain
 > system-user token. The design below is preserved as a historical record
 > so the next attempt (when the WS transport actually lands) has prior
 > thinking to reuse.
+>
+> **Further superseded 2026-06-03 by `plans/plan-auth-context.md`.** The
+> plain system-user token *and* the per-group system user are now gone
+> too — the sandbox holds no credential at all, because it is not an
+> authenticated principal inside main. The credential is designed fresh
+> (scopes included) only when the WS transport actually lands.
 
 > **Decision:** sandbox tokens are scoped `RefreshToken`s. The
 > `scopes` set lives on `RefreshToken` itself (no subclass, no new

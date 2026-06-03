@@ -44,7 +44,7 @@ inside the sandbox.
 | Transport | Live websocket connection back to main | Protobuf `Channel` over a pluggable transport (stdio by default, unix socket opt-in; websocket later) |
 | Entity bridge | Bespoke `sandbox/update_state` + `sandbox/entity_command_result` (Option A) | Shared `sandbox/call_service` (Option B) — see [`docs/entity-bridge-decision.md`](docs/entity-bridge-decision.md) |
 | Config flow | Forwarded through host integration | Runs inside the sandbox; main owns the canonical `ConfigEntry` store |
-| Auth | System-user token, full HA scope | System-user token (scope enforcement deferred until the sandbox→main connection lands) |
+| Auth | System-user token, full HA scope | None — the sandbox is not an authenticated principal inside main; no token, no system user. A credential is redesigned (scopes included) when the sandbox→main connection lands |
 | Data sharing | Sandbox sees all of main's state | Default locked-down; opt-in state/registry/area sharing per group is a future feature ([`docs/design-share-states.md`](docs/design-share-states.md)) |
 | Store routing | None — sandbox writes to its own tempdir | The `current_sandbox` contextvar makes `Store` IO proxy to main; main writes to `<config>/.storage/sandbox/<group>/<key>` |
 | Shutdown | Best-effort | Graceful `sandbox/shutdown` round-trip; sandbox unloads entries + dumps `RestoreEntity` state; main persists it for next boot |
@@ -77,7 +77,7 @@ The design choices and the failure modes of v1 they fix are recorded in
                           │                                         │
                           │  subprocess.Popen                       │  Channel
                           │  python -m hass_client.sandbox       │  (protobuf frames over
-                          │  --name … --url … --token …             │   stdio / unix socket)
+                          │  --name … --url …                       │   stdio / unix socket)
                           ▼                                         │
 ┌──────────────────────────── Sandbox subprocess ──────────────────────────────────────┐
 │  sandbox/hass_client/hass_client/sandbox/__init__.py                                  │
@@ -147,8 +147,7 @@ is:
 ```
 python -m hass_client.sandbox \
     --name <name> \
-    --url stdio:// \
-    --token <sandbox access token>
+    --url stdio://
 ```
 
 `--url` selects the control-channel transport: `stdio://` (the default —
@@ -408,32 +407,53 @@ domain by virtue of registering light entities). `ServiceMirror` and
   (e.g. `zha_event`, `mqtt_message_received`) via
   `sandbox/fire_event`. Main re-fires each on its own bus so
   `automation` listeners react as if the integration ran locally.
-  The sandbox's `context_id` is on the wire but main does **not**
-  honour it on the re-fire (a fresh local `Context` is used) —
-  carrying a richer `Context` shape across the bridge is post-v2
-  work.
+  The sandbox sends only a `context_id` string; main resolves it
+  against the `Context` cache it seeds on every call-down (see
+  *Context restoration* below), restoring the original
+  `parent_id` / `user_id` for an id it issued or minting a fresh
+  `user_id=None` `Context` (with main's own id) otherwise.
 
 ## Sandbox auth & opt-in data sharing
 
-The sandbox issuance helper
-([`auth.py`](../homeassistant/components/sandbox/auth.py)) creates a
-dedicated system user per group and hands the subprocess a plain
-system-user access token, freshly minted from that user's refresh
-token on each spawn. There is **no scope restriction** on the token.
-
-Scope enforcement is **deferred until the sandbox→main websocket
-connection actually lands.** Phase 7 originally shipped a
-`RefreshToken.scopes` field plus a websocket-dispatcher `_scope_allows`
-check, but no consumer ever exercised it (the sandbox never opened a
-connection back to main), so `plan-strip-auth-scopes.md` reverted the
-whole mechanism from core HA. The posture is unchanged in practice —
-with no WS path open in either direction, the sandbox token's reach is
-the same as v1's. When the WS transport ships
-([`plans/plan-transport.md`](plans/plan-transport.md) T4), scope
-enforcement is a green-field redesign with a real consumer in hand;
-the prior thinking is preserved in
+The sandbox is **not an authenticated principal inside main.** It never
+opens a connection back to main and never acts on main's behalf, so it
+needs no credential — and the `--token` the manager once minted was
+**never read** by the runtime. `plan-auth-context.md` dropped it
+end-to-end (no `--token` argv, no `SandboxRuntime.token`, no
+`SANDBOX_TOKEN` env) and **removed the per-group system user**
+(`auth.py` is gone). When the sandbox→main websocket actually lands
+([`plans/plan-transport.md`](plans/plan-transport.md) T4), the
+credential is a green-field redesign with a real consumer in hand —
+scopes included; the prior thinking is preserved in
 [`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md)
 (marked SUPERSEDED).
+
+### Context restoration
+
+Only a `context_id` string ever crosses the wire — the protobuf
+messages carry no `parent_id` / `user_id` field, so the sandbox can
+never author a `Context`. Main **remembers every `Context` it hands
+down** to a sandbox, keyed by id, at the two call-down sites: the
+service forwarder (`_forward`) and the proxy entity's service call
+(`async_call_service`). The store is a 15-minute-TTL cache on the
+bridge — volume is tiny (a forwarded context is echoed back within the
+same operation), so the TTL keeps it small and a miss is always safe.
+
+On an inbound `state_changed` / `fire_event`, `_resolve_context`:
+
+- **known id** (cached, not expired) → returns the original main-owned
+  `Context` verbatim, so a user-initiated action's `parent_id` /
+  `user_id` survive the main → sandbox → main round-trip;
+- **unknown / expired id** → mints a **brand-new** `Context(user_id=None)`
+  with main's **own** id, cached under the sandbox-supplied string.
+  Main never adopts that string as the `Context`'s identity:
+  `context_id`s are ULIDs with an embedded timestamp, and a sandbox
+  could craft one to back-/forward-date an event (recorder / logbook
+  order by it) — so the untrusted string is a cache **key** only.
+
+A richer future answer (a `Context` group attribute naming the
+originating sandbox) is noted in
+[`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) but not built.
 
 Opt-in data sharing (state stream, entity registry, area registry)
 into the sandbox is a future feature. Phase 7 added unwired
@@ -595,7 +615,7 @@ deferred, and what it flagged for the next phase. For a quick map:
 | Config flow | [`router.py`](../homeassistant/components/sandbox/router.py), [`proxy_flow.py`](../homeassistant/components/sandbox/proxy_flow.py) | [`flow_runner.py`](hass_client/hass_client/flow_runner.py) |
 | Entity bridge | [`bridge.py`](../homeassistant/components/sandbox/bridge.py), [`entity/`](../homeassistant/components/sandbox/entity/) | [`entry_runner.py`](hass_client/hass_client/entry_runner.py), [`entity_bridge.py`](hass_client/hass_client/entity_bridge.py) |
 | Service/event mirror | [`bridge.py`](../homeassistant/components/sandbox/bridge.py) | [`service_mirror.py`](hass_client/hass_client/service_mirror.py), [`event_mirror.py`](hass_client/hass_client/event_mirror.py), [`approved_domains.py`](hass_client/hass_client/approved_domains.py) |
-| Auth | [`auth.py`](../homeassistant/components/sandbox/auth.py) (plain system-user token) | — |
+| Context restoration | [`bridge.py`](../homeassistant/components/sandbox/bridge.py) (`_remember_context` / `_resolve_context`, TTL cache) | — |
 | Store routing | [`bridge.py`](../homeassistant/components/sandbox/bridge.py) (`_SandboxStoreServer`), `homeassistant/helpers/sandbox_context.py`, `homeassistant/helpers/storage.py` | [`sandbox_bridge.py`](hass_client/hass_client/sandbox_bridge.py) |
 | Shutdown | [`__init__.py`](../homeassistant/components/sandbox/__init__.py) (`_on_stop`), `manager.py` | [`sandbox.py`](hass_client/hass_client/sandbox/__init__.py) (`_run_graceful_shutdown`) |
 | Test infra | — | [`testing/`](hass_client/hass_client/testing/), [`run_compat.py`](run_compat.py) |

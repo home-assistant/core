@@ -32,7 +32,6 @@ code only ever executing inside the sandbox.
 | `SandboxManager` | `dict[group → SandboxProcess]`; lazily spawns one subprocess per group, supervises it, restarts on crash. |
 | `SandboxBridge` (per group) | Owns the proxy-entity registry, forwards entity service calls, re-fires sandbox events, and runs the per-group store server. |
 | `classifier.py` | Pure function `Integration → SandboxAssignment` deciding which group (or main) an integration belongs to. |
-| `auth.py` | Issues the per-group system-user token. |
 | `sources.py` | The integration-source resolver registry (how custom code is located). |
 
 ### Sandbox side — `sandbox/hass_client/`
@@ -118,7 +117,7 @@ semaphore, so a slow handler can't head-of-line-block the channel.
 subprocess only when the first flow or entry routes to it:
 
 ```
-python -m hass_client.sandbox --name <group> --url stdio:// --token <token>
+python -m hass_client.sandbox --name <group> --url stdio://
 ```
 
 **Crash recovery** is bounded: `SandboxProcess` restarts on unexpected exit up
@@ -229,15 +228,21 @@ via `sandbox/fire_event`; main re-fires them so automations react as if the
 integration ran locally.
 
 **Context: the sandbox echoes ids, it never authors `Context`.** Only a
-`context_id` (a string) crosses the wire — never `parent_id` or `user_id`. The
-intended model (see [follow-up](#13-out-of-scope--future-work)) is that main
-keeps a cache of the context ids it has issued; when a sandbox event/state
-arrives carrying an id main recognises, main restores the *original* `Context`
-(with its real `parent_id` / `user_id`) from that cache, so a user-initiated
-action's attribution survives the round-trip. An unrecognised id gets a fresh
-main-owned `Context` with no fabricated parentage. Either way the sandbox cannot
-invent a `parent_id` or impersonate a `user_id` — it can only hand back an id
-main already minted.
+`context_id` (a string) crosses the wire — never `parent_id` or `user_id`. Main
+**remembers every `Context` it hands down** to a sandbox (keyed by id, in a
+15-minute-TTL cache on the bridge) at the call-down sites: the service
+forwarder and the proxy-entity service call. When a sandbox event/state arrives
+carrying an id main recognises, main restores the *original* `Context` (with
+its real `parent_id` / `user_id`) verbatim, so a user-initiated action's
+attribution survives the round-trip. An id main never issued (or one whose
+entry has expired) gets a **brand-new** main-owned `Context(user_id=None)` — a
+fresh id main generated with its own trusted clock, no fabricated parentage.
+Main never adopts the sandbox-supplied id: `context_id`s are ULIDs carrying an
+embedded millisecond timestamp, and a sandbox could craft one to back-/forward-
+date an event (recorder / logbook order by it), so the sandbox string is used
+only as the cache **key**, never as the resulting `Context`'s identity. A cache
+miss is always safe — it degrades to a fresh context, never an error. Either
+way the sandbox cannot invent a `parent_id` or impersonate a `user_id`.
 
 ## 9. Store routing
 
@@ -263,19 +268,25 @@ isolation-by-construction (one channel per group).
 
 The sandbox is **not an authenticated principal inside HA** — it never opens a
 connection back to main and never acts on main's behalf, so it needs no
-credential to call into HA. The `--token` the manager passes today is therefore
-**unused** (it rides the CLI only as forward-compat for a future websocket) and
-is slated to be dropped until that consumer exists, by the same reasoning that
-reverted the speculative scope mechanism (preserved SUPERSEDED in
-[`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md)).
+credential to call into HA. The `--token` the manager once passed was **never
+used** (the runtime stored it and nothing read it), so it has been **dropped
+end-to-end** (`plans/plan-auth-context.md`): no `--token` argv, no
+`SandboxRuntime.token`, no `SANDBOX_TOKEN` env. When a real websocket consumer
+lands, the credential is redesigned then — fresh, scopes included — per the
+SUPERSEDED [`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md).
 
-The per-group **system user** has one live use: it is the `user_id` main
-attributes a sandbox-originated `Context` to when minting a fresh one. Under the
-context model in §8 (restore from a seen id; otherwise a fresh main-owned
-context with no fabricated parentage), even that attribution may not need a
-dedicated per-group user. Both — dropping the unused token and reconsidering the
-per-group system user — are tracked in
-[`plans/plan-auth-context.md`](plans/plan-auth-context.md).
+The per-group **system user is gone too.** Its only live use was the `user_id`
+main stamped on a freshly-minted sandbox `Context`; under the §8 model a
+sandbox-originated context with no recognised id is `user_id=None` — the honest
+shape, since no user authored it — so there is no reason to fabricate a user.
+`auth.py` is removed entirely.
+
+**Future work (not built):** a richer answer than `user_id=None` would be a
+`Context` carrying a **group attribute** identifying which sandbox group
+originated an action — useful for audit/logbook ("this came from the `custom`
+sandbox") without pretending a sandbox is a user. That needs a core `Context`
+field change and waits until audit attribution needs it; see
+[`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 Opt-in data sharing (state stream, entity/area registry) into the sandbox is a
 future feature; the locked-down default (everything off) stands, with the
@@ -311,7 +322,7 @@ waits on the websocket transport). See
 - **WebSocket transport** — the seam is ready; lands with the share-states connection work.
 - **State-sharing opt-in consumer** + main-side filtering ([`docs/design-share-states.md`](docs/design-share-states.md)); would let the lockdown helpers (§3) return to sandboxes.
 - **Cross-sandbox in-process dependencies** — ESPHome serial / BLE proxy, and IR/RF command flows, where one integration depends on another's in-process surface across a sandbox boundary.
-- **Context restoration from seen ids** (§8) + **dropping the unused sandbox token / reconsidering the per-group system user** (§10) — both in [`plans/plan-auth-context.md`](plans/plan-auth-context.md). The wire deliberately carries `context_id` only, never `parent_id` / `user_id`, so the sandbox can never fabricate attribution.
+- **`Context` group attribute** (§10) — a core `Context` field naming which sandbox group originated an action, a richer audit answer than today's `user_id=None`. Context restoration from seen ids, dropping the unused token, and removing the per-group system user all **shipped** (`plans/plan-auth-context.md`); the wire still carries `context_id` only, so the sandbox can never fabricate attribution.
 - **Query-shaped RPCs** for `calendar` / `todo` / `weather` server-side queries.
 - **pip/egress validation** for custom-integration dependencies in the container (§7).
 
@@ -334,6 +345,7 @@ statelessness story. The closing batch, in landing order:
 | **Stateless sandboxes** | `entry_setup` carries a typed `IntegrationSource`; custom (HACS) code is fetched at startup as a sha-pinned tarball via a HACS-agnostic resolver hook, with a process-lifetime cache. (`plan-ephemeral-sources`) |
 | **Docker test image** | Multi-stage `python:3.14-slim` runtime image (non-root, no volumes, on-demand pip) + a unix-socket compose harness template. (`plan-docker`) |
 | **Rename `sandbox_v2` → `sandbox`** | Dropped the now-meaningless `_v2` suffix across directories, the integration domain, wire strings, storage namespace, protobuf, and the CLI module, now that v1 is gone; removed the hassfest ignore that masked v1's errors. (`plan-rename-sandbox`) |
+| **Drop token + system user, restore context** | Removed the unused `--token` / `SANDBOX_TOKEN` / `SandboxRuntime.token` end-to-end and deleted `auth.py` (per-group system user gone). Main now remembers every `Context` it hands down (15-min-TTL bridge cache, seeded at the service forwarder + proxy-entity call) and restores it verbatim on an echoed id; unknown/expired ids get a fresh main-owned `Context(user_id=None)` with main's own trusted id (never the untrusted sandbox ULID). (`plan-auth-context`, A/B/C) |
 
 v1 (the original `sandbox` implementation) was removed 2026-05-28 — recover it
 from git history if ever needed.

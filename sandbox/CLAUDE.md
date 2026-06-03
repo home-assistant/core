@@ -37,9 +37,11 @@ second condition), as a deliberate call relying on git history for rollback.
   the protocol every entity proxy uses.
 - [`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md) —
   **SUPERSEDED.** The Phase-7 `RefreshToken.scopes` mechanism it
-  describes was reverted from core HA (`plans/plan-strip-auth-scopes.md`);
-  the sandbox now uses a plain system-user token. Kept as the design
-  record for whenever the sandbox→main websocket actually lands.
+  describes was reverted from core HA (`plans/plan-strip-auth-scopes.md`),
+  and `plans/plan-auth-context.md` then dropped the sandbox token + the
+  per-group system user entirely — the sandbox now holds **no** credential.
+  Kept as the design record for whenever the sandbox→main websocket
+  actually lands (the credential is redesigned fresh then).
 - [`docs/design-share-states.md`](docs/design-share-states.md) —
   design for the post-v2 state-sharing consumer that replaces the
   Phase 7 `share_*` flags Phase 20 deleted. Covers entity_id
