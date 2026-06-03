@@ -8,5 +8,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["homelink-integration-api==0.0.4"]
+  "requirements": ["homelink-integration-api==0.0.5"]
 }
