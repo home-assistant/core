@@ -212,7 +212,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.5
+aioautomower==2.7.6
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -285,7 +285,7 @@ aioharmony==1.0.8
 aiohasupervisor==0.4.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.36.0
+aiohomeconnect==0.36.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
