@@ -22,7 +22,11 @@ from opendisplay import (
 from PIL import Image as PILImage, ImageOps
 import voluptuous as vol
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_ble_device_from_address,
+)
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_source import async_resolve_media
 from homeassistant.config_entries import ConfigEntryState
@@ -170,8 +174,15 @@ async def _async_upload_image(call: ServiceCall) -> None:
     if ble_device is None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="config_entry_not_found",
-            translation_placeholders={"address": address},
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": async_address_reachability_diagnostics(
+                    call.hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
 
     current = asyncio.current_task()
