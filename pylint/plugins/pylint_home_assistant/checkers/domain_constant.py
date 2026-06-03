@@ -6,16 +6,16 @@ from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.module_info import is_test_module
 
-_FUNCTION_CHECKS: list[tuple[str, int | None, str]] = [
-    ("async_setup_component", 1, "domain"),
-    ("async_mock_service", 1, "domain"),
-    ("MockConfigEntry", None, "domain"),
+_FUNCTION_CHECKS: list[tuple[str, int | None, str, bool]] = [
+    ("MockConfigEntry", None, "domain", False),
+    ("async_mock_service", 1, "domain", False),
+    ("async_setup_component", 1, "domain", False),
 ]
-_METHOD_CHECKS: list[tuple[str, str, int | None, str]] = [
-    ("hass.services", "async_call", 0, "domain"),
-    ("hass.services", "call", 0, "domain"),
-    ("hass.config_entries.flow", "async_init", 0, "handler"),
-    ("hass.states", "async_entity_ids", 0, "domain"),
+_METHOD_CHECKS: list[tuple[str, str, int | None, str, bool]] = [
+    ("hass.config_entries.flow", "async_init", 0, "handler", False),
+    ("hass.services", "async_call", 0, "domain", False),
+    ("hass.services", "call", 0, "domain", False),
+    ("hass.states", "async_entity_ids", 0, "domain", True),
 ]
 
 _DOMAIN_CONSTANTS: set[str] = {"DOMAIN", "domain"}
@@ -34,19 +34,26 @@ def _check_call_node_domain_arguments(node: nodes.Call) -> nodes.NodeNG | None:
                 method_name,
                 arg_position,
                 kwarg_name,
+                allow_iterable,
             ) in _METHOD_CHECKS:
                 if (
                     node.func.attrname == method_name
                     and node.func.expr.as_string() == method_source
                 ):
                     return _check_call_node_domain_argument(
-                        node, arg_position=arg_position, kwarg_name=kwarg_name
+                        node,
+                        arg_position=arg_position,
+                        kwarg_name=kwarg_name,
+                        allow_iterable=allow_iterable,
                     )
         case nodes.Name():
-            for func_name, arg_position, kwarg_name in _FUNCTION_CHECKS:
+            for func_name, arg_position, kwarg_name, allow_iterable in _FUNCTION_CHECKS:
                 if node.func.name == func_name:
                     return _check_call_node_domain_argument(
-                        node, arg_position=arg_position, kwarg_name=kwarg_name
+                        node,
+                        arg_position=arg_position,
+                        kwarg_name=kwarg_name,
+                        allow_iterable=allow_iterable,
                     )
     return None
 
@@ -54,6 +61,7 @@ def _check_call_node_domain_arguments(node: nodes.Call) -> nodes.NodeNG | None:
 def _check_call_node_domain_argument(
     call_node: nodes.Call,
     *,
+    allow_iterable: bool,
     arg_position: int | None,
     kwarg_name: str,
 ) -> nodes.NodeNG | None:
@@ -73,13 +81,13 @@ def _check_call_node_domain_argument(
             None,
         )
 
-    if argument_node and not _check_domain_argument(argument_node):
+    if argument_node and not _check_domain_argument(argument_node, allow_iterable):
         return argument_node
 
     return None
 
 
-def _check_domain_argument(arg_node: nodes.NodeNG) -> bool:
+def _check_domain_argument(arg_node: nodes.NodeNG, allow_iterable: bool) -> bool:
     """Ensure the argument node is a domain constant or variable.
 
     We allow:
@@ -107,6 +115,12 @@ def _check_domain_argument(arg_node: nodes.NodeNG) -> bool:
         case nodes.Subscript():
             # Ignore subscripts like dict["key"]
             return True
+        case nodes.Tuple():
+            if allow_iterable:
+                return all(
+                    _check_domain_argument(element, allow_iterable=False)
+                    for element in arg_node.elts
+                )
 
     return False
 
