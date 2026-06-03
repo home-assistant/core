@@ -8,6 +8,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.zone import condition as zone_condition
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition, config_validation as cv
@@ -235,10 +236,18 @@ TARGET_ZONE = ZONE_HOME
 
 
 @pytest.mark.parametrize(
-    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    (
+        "condition_key",
+        "base_options",
+        "supports_behavior",
+        "supports_duration",
+        "supports_target",
+    ),
     [
-        ("zone.in_zone", {"zone": TARGET_ZONE}, True, True),
-        ("zone.not_in_zone", {"zone": TARGET_ZONE}, True, True),
+        ("zone.in_zone", {"zone": TARGET_ZONE}, True, True, True),
+        ("zone.not_in_zone", {"zone": TARGET_ZONE}, True, True, True),
+        ("zone.occupancy_is_detected", {"zone": ZONE_HOME}, False, True, False),
+        ("zone.occupancy_is_not_detected", {"zone": ZONE_HOME}, False, True, False),
     ],
 )
 async def test_zone_condition_options_validation(
@@ -247,6 +256,7 @@ async def test_zone_condition_options_validation(
     base_options: dict[str, Any] | None,
     supports_behavior: bool,
     supports_duration: bool,
+    supports_target: bool,
 ) -> None:
     """Test that zone conditions support the expected options."""
     await assert_condition_options_supported(
@@ -255,22 +265,39 @@ async def test_zone_condition_options_validation(
         base_options,
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
+        supports_target=supports_target,
     )
 
 
-@pytest.mark.parametrize("condition_key", ["zone.in_zone", "zone.not_in_zone"])
+@pytest.mark.parametrize(
+    ("condition_key", "config"),
+    [
+        (
+            "zone.in_zone",
+            {"target": {"entity_id": "person.alice"}, "options": {"zone": "light.x"}},
+        ),
+        (
+            "zone.not_in_zone",
+            {"target": {"entity_id": "person.alice"}, "options": {"zone": "light.x"}},
+        ),
+        (
+            "zone.occupancy_is_detected",
+            {"options": {"zone": "light.x"}},
+        ),
+        (
+            "zone.occupancy_is_not_detected",
+            {"options": {"zone": "light.x"}},
+        ),
+    ],
+)
 async def test_zone_condition_rejects_non_zone_entity_id(
-    hass: HomeAssistant, condition_key: str
+    hass: HomeAssistant, condition_key: str, config: dict[str, Any]
 ) -> None:
     """Test that the zone option must reference entities in the zone domain."""
     with pytest.raises(vol.Invalid):
         await condition.async_validate_condition_config(
             hass,
-            {
-                "condition": condition_key,
-                "target": {"entity_id": "person.alice"},
-                "options": {"zone": "person.alice"},
-            },
+            {"condition": condition_key, **config},
         )
 
 
@@ -461,3 +488,58 @@ async def test_in_zone_condition_for_attribute_only_change(
     # After the duration elapses, the condition is satisfied.
     freezer.tick(timedelta(minutes=6))
     assert test.async_check() is True
+
+
+# --- Zone occupancy condition tests ---
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "zone_state", "expected"),
+    [
+        # occupancy_is_detected — true when count >= 1
+        pytest.param("zone.occupancy_is_detected", "1", True, id="detected_1"),
+        pytest.param("zone.occupancy_is_detected", "3", True, id="detected_3"),
+        pytest.param("zone.occupancy_is_detected", "0", False, id="detected_0"),
+        pytest.param(
+            "zone.occupancy_is_detected",
+            STATE_UNAVAILABLE,
+            False,
+            id="detected_unavailable",
+        ),
+        pytest.param(
+            "zone.occupancy_is_detected", STATE_UNKNOWN, False, id="detected_unknown"
+        ),
+        # occupancy_is_not_detected — true only when count == 0
+        pytest.param("zone.occupancy_is_not_detected", "0", True, id="empty_0"),
+        pytest.param("zone.occupancy_is_not_detected", "1", False, id="empty_1"),
+        pytest.param("zone.occupancy_is_not_detected", "3", False, id="empty_3"),
+        # Unavailable / unknown are not "empty" — they're indeterminate.
+        pytest.param(
+            "zone.occupancy_is_not_detected",
+            STATE_UNAVAILABLE,
+            False,
+            id="empty_unavailable",
+        ),
+        pytest.param(
+            "zone.occupancy_is_not_detected",
+            STATE_UNKNOWN,
+            False,
+            id="empty_unknown",
+        ),
+    ],
+)
+async def test_zone_occupancy_condition_evaluates(
+    hass: HomeAssistant,
+    condition_key: str,
+    zone_state: str,
+    expected: bool,
+) -> None:
+    """Test occupancy conditions evaluate against the zone's integer state."""
+    hass.states.async_set(ZONE_HOME, zone_state)
+    await hass.async_block_till_done()
+
+    config = await condition.async_validate_condition_config(
+        hass, {"condition": condition_key, "options": {"zone": ZONE_HOME}}
+    )
+    test = await condition.async_from_config(hass, config)
+    assert test.async_check() is expected
