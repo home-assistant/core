@@ -177,7 +177,7 @@ async def _async_reconcile_pools(
                 names = await entry.runtime_data.api.get_pools()
             except AquariteError as err:
                 _LOGGER.debug("Pool name lookup failed during reconcile: %s", err)
-                return
+                new_ids = set()
 
         for pool_id in new_ids:
             if pool_id not in names:
