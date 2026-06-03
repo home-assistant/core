@@ -2206,20 +2206,27 @@ async def test_condition_template_error(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("value_template", "expectation", "expected_template_error", "expected_result"),
+    ("value_template", "expectation", "expected_template_errors", "expected_result"),
     [
         # Undefined variable used in a way that raises (e.g. attribute access)
         (
             "{{ trigger.to_state.attributes.event_type == 'double_press' }}",
             pytest.raises(ConditionError),
-            "'trigger' is undefined",
+            ["'trigger' is undefined"],
             {},
         ),
         # Undefined variable used in a way that only warns
         (
             "{{ no_such_variable }}",
             does_not_raise(),
-            "'no_such_variable' is undefined",
+            ["'no_such_variable' is undefined"],
+            {"result": False, "entities": []},
+        ),
+        # A single render can emit more than one message
+        (
+            "{{ foo }}{{ bar }}",
+            does_not_raise(),
+            ["'foo' is undefined", "'bar' is undefined"],
             {"result": False, "entities": []},
         ),
     ],
@@ -2229,7 +2236,7 @@ async def test_condition_template_error_traced_not_logged(
     caplog: pytest.LogCaptureFixture,
     value_template: str,
     expectation: AbstractContextManager,
-    expected_template_error: str,
+    expected_template_errors: list[str],
     expected_result: dict[str, Any],
 ) -> None:
     """Test template errors are added to the trace and not logged when opted in.
@@ -2247,11 +2254,11 @@ async def test_condition_template_error_traced_not_logged(
     with expectation, trace.record_template_errors():
         test.async_check()
 
-    # The template error is recorded in the trace...
+    # The template errors are recorded in the trace...
     condition_trace = trace.trace_get(clear=False)
     trace.trace_clear()
     trace_element = condition_trace[""][0]
-    assert trace_element.template_error == expected_template_error
+    assert trace_element.template_errors == expected_template_errors
     assert (trace_element._result or {}) == expected_result
 
     # ...and not logged
@@ -2279,7 +2286,7 @@ async def test_condition_template_error_logged_without_opt_in(
     assert "Template variable warning: 'no_such_variable' is undefined" in caplog.text
     condition_trace = trace.trace_get(clear=False)
     trace.trace_clear()
-    assert condition_trace[""][0].template_error is None
+    assert condition_trace[""][0].template_errors == ["'no_such_variable' is undefined"]
 
 
 async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:

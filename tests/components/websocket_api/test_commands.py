@@ -2886,6 +2886,14 @@ async def test_subscribe_condition(
             "{{ no_such_variable }}",
             {"result": False, "errors": ["'no_such_variable' is undefined"]},
         ),
+        # A single render emitting multiple errors forwards all of them.
+        (
+            "{{ foo }}{{ bar }}",
+            {
+                "result": False,
+                "errors": ["'foo' is undefined", "'bar' is undefined"],
+            },
+        ),
     ],
 )
 async def test_subscribe_condition_template_error(

@@ -1077,7 +1077,7 @@ async def handle_subscribe_condition(
             template_error
             for elements in (trace.trace_get(clear=False) or {}).values()
             for element in elements
-            if (template_error := element.template_error) is not None
+            for template_error in element.template_errors
         ]:
             new_event_data["errors"] = errors
 

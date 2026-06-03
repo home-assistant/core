@@ -638,7 +638,7 @@ def make_logging_undefined(
         if record_template_errors_cv.get() and (
             node := trace_stack_top(trace_stack_cv)
         ):
-            node.set_template_error(msg)
+            node.add_template_error(msg)
             return
 
         template, action = template_cv.get() or ("", "rendering or compiling")

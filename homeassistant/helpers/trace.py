@@ -22,7 +22,7 @@ class TraceElement:
         "_error",
         "_last_variables",
         "_result",
-        "_template_error",
+        "_template_errors",
         "_timestamp",
         "_variables",
         "path",
@@ -36,7 +36,7 @@ class TraceElement:
         self._error: BaseException | None = None
         self.path: str = path
         self._result: dict[str, Any] | None = None
-        self._template_error: str | None = None
+        self._template_errors: list[str] | None = None
         self.reuse_by_child = False
         self._timestamp = dt_util.utcnow()
 
@@ -56,18 +56,22 @@ class TraceElement:
         """Set error."""
         self._error = ex
 
-    def set_template_error(self, msg: str) -> None:
-        """Set a template error message.
+    def add_template_error(self, msg: str) -> None:
+        """Record a template error message.
 
         Used to record template variable errors which would otherwise be logged
         directly, so they are surfaced in the trace instead of spamming the log.
+        A single template render can emit more than one message, so they are
+        accumulated in a list.
         """
-        self._template_error = msg
+        if self._template_errors is None:
+            self._template_errors = []
+        self._template_errors.append(msg)
 
     @property
-    def template_error(self) -> str | None:
-        """Return the recorded template error message, if any."""
-        return self._template_error
+    def template_errors(self) -> list[str]:
+        """Return the recorded template error messages."""
+        return self._template_errors or []
 
     def set_result(self, **kwargs: Any) -> None:
         """Set result."""
@@ -105,8 +109,8 @@ class TraceElement:
             result["changed_variables"] = self._variables
         if self._error is not None:
             result["error"] = str(self._error) or self._error.__class__.__name__
-        if self._template_error is not None:
-            result["template_error"] = self._template_error
+        if self._template_errors:
+            result["template_errors"] = self._template_errors
         if self._result is not None:
             result["result"] = self._result
         return result
