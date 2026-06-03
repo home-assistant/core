@@ -17,6 +17,7 @@ from datetime import timedelta
 import json
 import logging
 import os
+import threading
 from typing import Any
 
 from noonlight_dispatch import (
@@ -151,6 +152,9 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._probed_once: bool = False
         # Lazily ensure the audit dir exists exactly once (in the executor).
         self._audit_dir_ready: bool = False
+        # Audit writes are dispatched as independent executor jobs; serialize
+        # them so rotation and appends from rapid events can't interleave.
+        self._audit_lock = threading.Lock()
 
         self.data = self._initial_state()
 
@@ -633,19 +637,20 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # The .storage dir normally exists (HA's Store creates it), but don't
         # depend on ordering: ensure it's there once so the first audit line on
         # a fresh install is never lost (runs in the executor).
-        if not self._audit_dir_ready:
-            os.makedirs(os.path.dirname(self._audit_path), exist_ok=True)
-            self._audit_dir_ready = True
-        try:
-            if (
-                os.path.exists(self._audit_path)
-                and os.path.getsize(self._audit_path) >= AUDIT_MAX_BYTES
-            ):
-                os.replace(self._audit_path, f"{self._audit_path}.1")
-        except OSError:
-            pass
-        with open(self._audit_path, "a", encoding="utf-8") as handle:
-            handle.write(f"{line}\n")
+        with self._audit_lock:
+            if not self._audit_dir_ready:
+                os.makedirs(os.path.dirname(self._audit_path), exist_ok=True)
+                self._audit_dir_ready = True
+            try:
+                if (
+                    os.path.exists(self._audit_path)
+                    and os.path.getsize(self._audit_path) >= AUDIT_MAX_BYTES
+                ):
+                    os.replace(self._audit_path, f"{self._audit_path}.1")
+            except OSError:
+                pass
+            with open(self._audit_path, "a", encoding="utf-8") as handle:
+                handle.write(f"{line}\n")
 
     # -- internal: error handling --------------------------------------------
 
