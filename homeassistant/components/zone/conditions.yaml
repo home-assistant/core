@@ -24,3 +24,19 @@
 
 in_zone: *condition_zone
 not_in_zone: *condition_zone
+
+.condition_occupancy: &condition_occupancy
+  fields:
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+    zone:
+      required: true
+      selector:
+        entity:
+          domain: zone
+
+occupancy_is_detected: *condition_occupancy
+occupancy_is_not_detected: *condition_occupancy

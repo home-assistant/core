@@ -5,6 +5,12 @@
     },
     "not_in_zone": {
       "condition": "mdi:map-marker-remove"
+    },
+    "occupancy_is_detected": {
+      "condition": "mdi:account-group"
+    },
+    "occupancy_is_not_detected": {
+      "condition": "mdi:account-off"
     }
   },
   "services": {
