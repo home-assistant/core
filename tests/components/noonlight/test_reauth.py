@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Coroutine
 from typing import Any
 
+import httpx
 from httpx import Response
 import respx
 
@@ -64,7 +65,7 @@ async def test_reauth_cannot_connect_shows_error(
 ) -> None:
     """A connection failure during reauth shows a cannot_connect error."""
     respx.route(method="GET", url__regex=r".*/status").mock(
-        side_effect=__import__("httpx").ConnectError("down")
+        side_effect=httpx.ConnectError("down")
     )
     result = await _start_reauth(hass, setup_entry)
     result = await hass.config_entries.flow.async_configure(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import httpx
 from httpx import Response
 from noonlight_dispatch import NoonlightConnectionError
 import pytest
@@ -69,9 +70,7 @@ async def test_cancel_dispatched_api_failure_propagates(
     coordinator = _coordinator(hass, setup_entry)
     await _dispatch_now(hass, coordinator)
 
-    respx.post(url__regex=_STATUS_RE).mock(
-        side_effect=__import__("httpx").ConnectError("down")
-    )
+    respx.post(url__regex=_STATUS_RE).mock(side_effect=httpx.ConnectError("down"))
     with pytest.raises(NoonlightConnectionError):
         await coordinator.async_cancel("oops")
 

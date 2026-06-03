@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import httpx
 from httpx import Response
 from noonlight_dispatch import NoonlightError
 import respx
@@ -130,7 +131,7 @@ async def test_invalid_auth_surfaced(hass: HomeAssistant) -> None:
 async def test_cannot_connect_surfaced(hass: HomeAssistant) -> None:
     """A transport failure during validation shows a cannot_connect error."""
     respx.route(method="GET", url__regex=r".*/status").mock(
-        side_effect=__import__("httpx").ConnectError("down")
+        side_effect=httpx.ConnectError("down")
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

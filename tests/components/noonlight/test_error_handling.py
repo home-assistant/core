@@ -7,6 +7,7 @@ the ERROR transition when a dispatch POST fails.
 
 from __future__ import annotations
 
+import httpx
 from httpx import Response
 import respx
 
@@ -58,7 +59,7 @@ async def test_dispatch_connection_failure_creates_network_issue(
     hass: HomeAssistant, setup_entry
 ) -> None:
     """A connection failure on dispatch errors and raises a network issue."""
-    respx.post(_ALARMS).mock(side_effect=__import__("httpx").ConnectError("x"))
+    respx.post(_ALARMS).mock(side_effect=httpx.ConnectError("x"))
     coordinator = _coordinator(hass, setup_entry)
 
     await coordinator.async_dispatch(["police"], 0)
