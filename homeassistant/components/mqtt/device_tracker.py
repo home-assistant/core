@@ -83,9 +83,9 @@ PLATFORM_SCHEMA_MODERN_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
+        vol.Optional(CONF_PAYLOAD_HOME): cv.string,
+        vol.Optional(CONF_PAYLOAD_NOT_HOME): cv.string,
+        vol.Optional(CONF_PAYLOAD_RESET): cv.string,
         vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.Coerce(
             SourceType
         ),
@@ -140,6 +140,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     _default_name = None
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
     _location_name: str | None = None
+    _payloads: dict[str, str]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
@@ -149,10 +150,15 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._payloads = {
+            CONF_PAYLOAD_HOME: config.get(CONF_PAYLOAD_HOME, STATE_HOME),
+            CONF_PAYLOAD_NOT_HOME: config.get(CONF_PAYLOAD_NOT_HOME, STATE_NOT_HOME),
+            CONF_PAYLOAD_RESET: config.get(CONF_PAYLOAD_RESET, DEFAULT_PAYLOAD_RESET),
+        }
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
-        self._attr_source_type = self._config[CONF_SOURCE_TYPE]
+        self._attr_source_type = config[CONF_SOURCE_TYPE]
 
     @callback
     def _tracker_message_received(self, msg: ReceiveMessage) -> None:
@@ -165,11 +171,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 msg.topic,
             )
             return
-        if payload == self._config[CONF_PAYLOAD_HOME]:
+        if payload == self._payloads[CONF_PAYLOAD_HOME]:
             self._attr_location_name = STATE_HOME
-        elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:
+        elif payload == self._payloads[CONF_PAYLOAD_NOT_HOME]:
             self._attr_location_name = STATE_NOT_HOME
-        elif payload == self._config[CONF_PAYLOAD_RESET]:
+        elif payload == self._payloads[CONF_PAYLOAD_RESET]:
             self._attr_location_name = None
         else:
             if TYPE_CHECKING:

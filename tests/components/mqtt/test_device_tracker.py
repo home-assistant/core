@@ -646,7 +646,7 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     assert state.attributes.get("gps_accuracy") is None
     assert state.state == STATE_NOT_HOME
 
-    # Test in_zones with an known zone display name as a list
+    # Test in_zones with a known zone display name as a list
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
@@ -661,7 +661,7 @@ async def test_setting_device_tracker_location_via_in_zones_message(
     assert state.attributes.get("gps_accuracy") is None
     assert state.state == STATE_HOME
 
-    # Test in_zones with an known zone entity_id as a list
+    # Test in_zones with a known zone entity_id as a list
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
