@@ -589,13 +589,7 @@ class ResultStream:
 
     @callback
     def async_get_media_path(self) -> Path | None:
-        """Return the path to the result on disk, if available.
-
-        Returns the local file path when the rendered audio is already
-        available on disk and matches the streamed output, so consumers can
-        read the file directly instead of going through the HTTP proxy.
-        Returns None otherwise.
-        """
+        """Return the path to the result on disk, if available."""
         if self._override_media_path is not None:
             # An override that needs conversion no longer matches the file on
             # disk, so the result is only available through the stream.
@@ -773,11 +767,7 @@ class SpeechManager:
 
     @callback
     def async_get_cache_file_path(self, cache_key: str) -> Path | None:
-        """Return the path to a cached TTS file, if it is in the file cache.
-
-        The file cache is the authoritative in-memory index of files on disk;
-        the path is not stat'd here to avoid blocking I/O in the event loop.
-        """
+        """Return the path to a cached TTS file, if it is in the file cache."""
         if not (filename := self.file_cache.get(cache_key)):
             return None
         return Path(self.cache_dir) / filename
