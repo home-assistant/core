@@ -311,7 +311,7 @@ class _HTTPStore(Store[_HTTPStoreData]):
                     "Discarding invalid v1 HTTP config during migration; "
                     "falling back to defaults"
                 )
-                stable = HTTP_STORAGE_SCHEMA({})
+                stable = _DEFAULT_CONFIG
             return {
                 KEY_STABLE: stable,
                 KEY_PENDING: None,
