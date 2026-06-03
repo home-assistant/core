@@ -4,6 +4,7 @@ from typing import Any, Unpack, cast
 
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import ATTR_IN_ZONES
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -17,15 +18,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ConditionErrorContainer, ConditionErrorMessage
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
+from homeassistant.helpers.automation import (
+    DomainSpec,
+    move_top_level_schema_fields_to_options,
+)
 from homeassistant.helpers.condition import (
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
     Condition,
     ConditionCheckParams,
     ConditionConfig,
+    EntityConditionBase,
 )
 from homeassistant.helpers.typing import ConfigType
 
 from . import in_zone
+from .const import DOMAIN
 
 _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
@@ -149,11 +156,61 @@ class ZoneCondition(Condition):
         return all_ok
 
 
+_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    "person": DomainSpec(value_source=ATTR_IN_ZONES),
+    "device_tracker": DomainSpec(value_source=ATTR_IN_ZONES),
+}
+
+_ZONE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+    {
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
+        },
+    }
+)
+
+
+class _ZoneTargetConditionBase(EntityConditionBase):
+    """Base for zone-target conditions on person and device_tracker entities."""
+
+    _domain_specs = _DOMAIN_SPECS
+    _schema = _ZONE_CONDITION_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the condition."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._zone: str = config.options[CONF_ZONE]
+
+    def _in_target_zone(self, entity_state: State) -> bool:
+        """Check if the entity is currently in the selected zone."""
+        in_zones = entity_state.attributes.get(ATTR_IN_ZONES) or ()
+        return self._zone in in_zones
+
+
+class InZoneCondition(_ZoneTargetConditionBase):
+    """Condition: targeted entity is in the selected zone."""
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check that the entity is in the selected zone."""
+        return self._in_target_zone(entity_state)
+
+
+class NotInZoneCondition(_ZoneTargetConditionBase):
+    """Condition: targeted entity is not in the selected zone."""
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check that the entity is not in the selected zone."""
+        return not self._in_target_zone(entity_state)
+
+
 CONDITIONS: dict[str, type[Condition]] = {
     "_": ZoneCondition,
+    "in_zone": InZoneCondition,
+    "not_in_zone": NotInZoneCondition,
 }
 
 
 async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
-    """Return the sun conditions."""
+    """Return the zone conditions."""
     return CONDITIONS
