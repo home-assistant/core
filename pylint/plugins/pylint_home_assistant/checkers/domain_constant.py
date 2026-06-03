@@ -17,6 +17,9 @@ _METHOD_CHECKS: list[tuple[str, str, int | None, str]] = [
     ("hass.config_entries.flow", "async_init", 0, "handler"),
 ]
 
+_DOMAIN_CONSTANTS: set[str] = {"DOMAIN", "domain"}
+_DOMAIN_SUFFIXES: tuple[str, ...] = ("_DOMAIN", "_domain")
+
 
 class DomainConstantChecker(BaseChecker):
     """Checker for correct use of DOMAIN constants in tests."""
@@ -92,19 +95,17 @@ class DomainConstantChecker(BaseChecker):
         """
         match arg_node:
             case nodes.Attribute():
-                if (attrname := arg_node.attrname) in {
-                    "DOMAIN",
-                    "domain",
-                } or attrname.endswith(("_DOMAIN", "_domain")):
+                if (
+                    attrname := arg_node.attrname
+                ) in _DOMAIN_CONSTANTS or attrname.endswith(_DOMAIN_SUFFIXES):
                     return
             case nodes.Const():
                 if isinstance(arg_node.value, str):
                     return
             case nodes.Name():
-                if (node_name := arg_node.name) in {
-                    "DOMAIN",
-                    "domain",
-                } or node_name.endswith(("_DOMAIN", "_domain")):
+                if (
+                    node_name := arg_node.name
+                ) in _DOMAIN_CONSTANTS or node_name.endswith(_DOMAIN_SUFFIXES):
                     return
             case nodes.Subscript():
                 # Ignore subscripts like dict["key"]
