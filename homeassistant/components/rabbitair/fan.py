@@ -23,9 +23,9 @@ SPEED_LIST = [
     Speed.Turbo,
 ]
 
-PRESET_MODE_AUTO = "Auto"
-PRESET_MODE_MANUAL = "Manual"
-PRESET_MODE_POLLEN = "Pollen"
+PRESET_MODE_AUTO = "auto"
+PRESET_MODE_MANUAL = "manual"
+PRESET_MODE_POLLEN = "pollen"
 
 PRESET_MODES = {
     PRESET_MODE_AUTO: Mode.Auto,
@@ -46,6 +46,7 @@ async def async_setup_entry(
 class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     """Fan control functions of the Rabbit Air air purifier."""
 
+    _attr_translation_key = "rabbitair"
     _attr_supported_features = (
         FanEntityFeature.PRESET_MODE
         | FanEntityFeature.SET_SPEED
