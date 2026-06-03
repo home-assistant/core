@@ -20,10 +20,11 @@ from collections.abc import AsyncGenerator, Generator
 import tempfile
 from typing import Any
 
-from hass_client.channel import Channel
+from hass_client.channel import Channel, ChannelRemoteError
 from hass_client.flow_runner import FlowRunner
 from hass_client.sandbox_bridge import ChannelSandboxBridge
 import pytest
+import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import HomeAssistant
@@ -320,6 +321,35 @@ async def test_channel_bridge_maps_store_rpcs() -> None:
 
         await bridge.async_store_remove("wire")
         assert removed == ["wire"]
+    finally:
+        await main.close()
+        await sandbox.close()
+
+
+async def test_client_channel_serializes_vol_invalid() -> None:
+    """A sandbox handler raising ``vol.Invalid`` ships its path on the wire.
+
+    Mirror of the main-side channel test — confirms the client channel's
+    ``error_data_for`` serialization feeds the error frame.
+    """
+    main, sandbox = _make_channel_pair()
+
+    async def _bad(_payload: Any) -> None:
+        raise vol.Invalid("expected int", path=["options", "count"])
+
+    sandbox.register("test/bad", _bad)
+    main.start()
+    sandbox.start()
+
+    try:
+        with pytest.raises(ChannelRemoteError) as exc:
+            await main.call("test/bad", None)
+        assert exc.value.error_type == "Invalid"
+        assert exc.value.error_data == {
+            "kind": "invalid",
+            "msg": "expected int",
+            "path": ["options", "count"],
+        }
     finally:
         await main.close()
         await sandbox.close()

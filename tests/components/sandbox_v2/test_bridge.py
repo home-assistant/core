@@ -4,10 +4,12 @@ import asyncio
 from typing import Any
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.sandbox_v2.bridge import (
     SandboxBridge,
     SandboxEntityDescription,
+    _translate_remote_error,
 )
 from homeassistant.components.sandbox_v2.channel import Channel, ChannelRemoteError
 from homeassistant.config_entries import ConfigEntry
@@ -294,6 +296,59 @@ async def test_unknown_service_translated_to_home_assistant_error(
     finally:
         await main_channel.close()
         await sandbox_channel.close()
+
+
+def test_translate_remote_error_rebuilds_vol_invalid() -> None:
+    """``error_data`` rebuilds a real ``vol.Invalid`` with its path intact."""
+    err = ChannelRemoteError(
+        "expected int",
+        error_type="Invalid",
+        error_data={
+            "kind": "invalid",
+            "msg": "expected int",
+            "path": ["options", "count"],
+        },
+    )
+
+    result = _translate_remote_error(err)
+
+    assert isinstance(result, vol.Invalid)
+    assert not isinstance(result, vol.MultipleInvalid)
+    assert result.error_message == "expected int"
+    assert result.path == ["options", "count"]
+
+
+def test_translate_remote_error_rebuilds_multiple_invalid() -> None:
+    """``error_data`` rebuilds a ``vol.MultipleInvalid`` with its children."""
+    err = ChannelRemoteError(
+        "two problems",
+        error_type="MultipleInvalid",
+        error_data={
+            "kind": "multiple",
+            "errors": [
+                {"kind": "invalid", "msg": "expected int", "path": ["count"]},
+                {"kind": "invalid", "msg": "required key", "path": ["name"]},
+            ],
+        },
+    )
+
+    result = _translate_remote_error(err)
+
+    assert isinstance(result, vol.MultipleInvalid)
+    assert [(child.error_message, child.path) for child in result.errors] == [
+        ("expected int", ["count"]),
+        ("required key", ["name"]),
+    ]
+
+
+def test_translate_remote_error_falls_back_without_error_data() -> None:
+    """Frames without ``error_data`` keep the legacy class-name mapping."""
+    err = ChannelRemoteError("bad kwarg", error_type="Invalid")
+
+    result = _translate_remote_error(err)
+
+    assert isinstance(result, TypeError)
+    assert str(result) == "bad kwarg"
 
 
 async def test_register_entity_for_unknown_entry_raises(

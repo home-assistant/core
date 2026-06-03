@@ -20,11 +20,42 @@ import json
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 _LOGGER = logging.getLogger(__name__)
 
 Handler = Callable[[Any], Awaitable[Any]]
 
 DEFAULT_MAX_INFLIGHT = 16
+
+
+def _serialize_invalid(err: vol.Invalid) -> dict[str, Any]:
+    """Capture a ``vol.Invalid``'s message + path so main can rebuild it.
+
+    Path parts may be ``vol.Marker``s or other non-JSON objects, so each
+    part is stringified.
+    """
+    return {
+        "kind": "invalid",
+        "msg": err.error_message,
+        "path": [str(part) for part in (err.path or [])],
+    }
+
+
+def error_data_for(err: BaseException) -> dict[str, Any] | None:
+    """Structured payload that lets main reconstruct a voluptuous error.
+
+    ``MultipleInvalid`` is a subclass of ``Invalid``, so it is checked first.
+    Returns ``None`` for anything that is not a voluptuous error.
+    """
+    if isinstance(err, vol.MultipleInvalid):
+        return {
+            "kind": "multiple",
+            "errors": [_serialize_invalid(child) for child in err.errors],
+        }
+    if isinstance(err, vol.Invalid):
+        return _serialize_invalid(err)
+    return None
 
 
 class ChannelClosedError(Exception):
@@ -34,11 +65,21 @@ class ChannelClosedError(Exception):
 class ChannelRemoteError(Exception):
     """Raised when the remote side returns an error response."""
 
-    def __init__(self, error: str, error_type: str | None = None) -> None:
-        """Initialise with the remote error message and exception class name."""
+    def __init__(
+        self,
+        error: str,
+        error_type: str | None = None,
+        error_data: dict[str, Any] | None = None,
+    ) -> None:
+        """Initialise with the remote error message and exception class name.
+
+        ``error_data`` carries a structured payload (set for voluptuous
+        errors) so the receiver can rebuild the original exception shape.
+        """
         super().__init__(error)
         self.error = error
         self.error_type = error_type
+        self.error_data = error_data
 
 
 class Channel:
@@ -191,6 +232,7 @@ class Channel:
                     ChannelRemoteError(
                         message.get("error", "unknown error"),
                         message.get("error_type"),
+                        message.get("error_data"),
                     )
                 )
             return
@@ -266,15 +308,16 @@ class Channel:
             except Exception as err:  # noqa: BLE001
                 if self._closed:
                     return
+                frame: dict[str, Any] = {
+                    "id": call_id,
+                    "ok": False,
+                    "error": str(err) or err.__class__.__name__,
+                    "error_type": err.__class__.__name__,
+                }
+                if (error_data := error_data_for(err)) is not None:
+                    frame["error_data"] = error_data
                 with contextlib.suppress(Exception):
-                    await self._write(
-                        {
-                            "id": call_id,
-                            "ok": False,
-                            "error": str(err) or err.__class__.__name__,
-                            "error_type": err.__class__.__name__,
-                        }
-                    )
+                    await self._write(frame)
                 return
             if self._closed:
                 return
@@ -289,4 +332,5 @@ __all__ = [
     "ChannelClosedError",
     "ChannelRemoteError",
     "Handler",
+    "error_data_for",
 ]

@@ -3,6 +3,7 @@
 import asyncio
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.sandbox_v2.channel import (
     ChannelClosedError,
@@ -47,6 +48,49 @@ async def test_remote_error_surfaces_as_exception(channels: tuple) -> None:
         await channel_a.call("test/boom", None)
     assert "kaboom" in str(exc.value)
     assert exc.value.error_type == "ValueError"
+
+
+async def test_vol_invalid_carries_error_data(channels: tuple) -> None:
+    """A handler raising ``vol.Invalid`` ships its path in ``error_data``."""
+    channel_a, channel_b = channels
+
+    async def bad(_payload: object) -> None:
+        raise vol.Invalid("expected int", path=["options", "count"])
+
+    channel_b.register("test/bad", bad)
+    with pytest.raises(ChannelRemoteError) as exc:
+        await channel_a.call("test/bad", None)
+    assert exc.value.error_type == "Invalid"
+    assert exc.value.error_data == {
+        "kind": "invalid",
+        "msg": "expected int",
+        "path": ["options", "count"],
+    }
+
+
+async def test_vol_multiple_invalid_round_trips_children(channels: tuple) -> None:
+    """A ``vol.MultipleInvalid`` ships each child error in ``error_data``."""
+    channel_a, channel_b = channels
+
+    async def bad(_payload: object) -> None:
+        raise vol.MultipleInvalid(
+            [
+                vol.Invalid("expected int", path=["count"]),
+                vol.Invalid("required key", path=["name"]),
+            ]
+        )
+
+    channel_b.register("test/multi", bad)
+    with pytest.raises(ChannelRemoteError) as exc:
+        await channel_a.call("test/multi", None)
+    assert exc.value.error_type == "MultipleInvalid"
+    assert exc.value.error_data == {
+        "kind": "multiple",
+        "errors": [
+            {"kind": "invalid", "msg": "expected int", "path": ["count"]},
+            {"kind": "invalid", "msg": "required key", "path": ["name"]},
+        ],
+    }
 
 
 async def test_unknown_handler_returns_error(channels: tuple) -> None:
