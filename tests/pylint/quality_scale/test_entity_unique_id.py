@@ -215,6 +215,18 @@ class MyEntity(Entity):
 from homeassistant.helpers.entity import Entity
 
 class MyEntity(Entity):
+    def __init__(self, valid, key):
+        if not valid:
+            raise ValueError
+        self._attr_unique_id = key
+""",
+            id="self_assign_after_guard_raise",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyEntity(Entity):
     @property
     def unique_id(self) -> str:
         return "x"
@@ -399,19 +411,6 @@ class MyEntity(Entity):
 """,
             "MyEntity",
             id="self_assign_inside_try",
-        ),
-        pytest.param(
-            """
-from homeassistant.helpers.entity import Entity
-
-class MyEntity(Entity):
-    def __init__(self, valid, key):
-        if not valid:
-            raise ValueError
-        self._attr_unique_id = key
-""",
-            "MyEntity",
-            id="self_assign_after_guard_raise",
         ),
         pytest.param(
             """

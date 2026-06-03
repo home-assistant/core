@@ -22,8 +22,8 @@ Accepted paths (any one, in the class or any ancestor):
    through the method reaches it: either it sits at the top level of
    the body (possibly after side-effect statements or non-terminating
    control flow), or it appears in both branches of an ``if/else``.
-   Early-exit guards (``if cond: return`` / ``raise``) before the
-   assignment break the guarantee and are rejected.
+   Early-return guards (``if cond: return``) before the assignment
+   break the guarantee and are rejected.
 3. Class body defines a ``unique_id`` function (typically decorated
    ``@property`` or ``@cached_property``), overriding the default that
    reads ``self._attr_unique_id``.
@@ -157,16 +157,10 @@ def _is_self_attr_target(target: nodes.NodeNG) -> bool:
 
 
 def _stmts_contain_terminator(stmts: list[nodes.NodeNG]) -> bool:
-    """Return True if any top-level or nested-If statement is a terminator.
-
-    Recurses into ``If`` branches because an early-return guard
-    (``if cond: return``) makes the assignment after it conditional.
-    Does not recurse into loops, ``try``, ``with``, or nested function
-    definitions: those are assumed to fall through.
-    """
+    """Return True if any top-level or nested-If statement is a terminator."""
     for stmt in stmts:
         match stmt:
-            case nodes.Return() | nodes.Raise() | nodes.Break() | nodes.Continue():
+            case nodes.Return() | nodes.Break() | nodes.Continue():
                 return True
             case nodes.If(body=body, orelse=orelse) if _stmts_contain_terminator(
                 body
@@ -180,11 +174,11 @@ def _body_guarantees_target_assign(stmts: list[nodes.NodeNG]) -> bool:
 
     Walks the statement list in order. Side-effect statements
     (``Assign``, ``Expr``, ``AugAssign``, ``Pass``, etc.) are skipped.
-    Terminators (``return``/``raise``/``break``/``continue``) end the
-    scan with False. For an ``If``, the target is reached if both
-    branches reach it; otherwise, if either branch may terminate, the
-    scan stops; otherwise the ``If`` is treated as a side-effect block
-    and scanning continues.
+    Terminators (``return``/``break``/``continue``) end the scan with
+    False. For an ``If``, the target is reached if both branches reach
+    it; otherwise, if either branch may terminate, the scan stops;
+    otherwise the ``If`` is treated as a side-effect block and scanning
+    continues.
 
     Loops, ``try``, ``with``, etc. are treated as fall-through (we do
     not recurse into them): a conservative direction that may miss
@@ -195,7 +189,7 @@ def _body_guarantees_target_assign(stmts: list[nodes.NodeNG]) -> bool:
         if _stmt_is_target_assign(stmt):
             return True
         match stmt:
-            case nodes.Return() | nodes.Raise() | nodes.Break() | nodes.Continue():
+            case nodes.Return() | nodes.Break() | nodes.Continue():
                 return False
             case nodes.If(body=body, orelse=orelse):
                 if (
