@@ -2764,6 +2764,14 @@ async def test_subscribe_trigger(
                 "message": "required key not provided @ data['entity_id']",
             },
         ),
+        # Unknown device, raised as a HomeAssistantError by the platform validator
+        (
+            {"platform": "device", "domain": "light", "device_id": "nonexistent"},
+            {
+                "code": "home_assistant_error",
+                "message": "Unknown device 'nonexistent'",
+            },
+        ),
     ],
 )
 async def test_subscribe_trigger_config_error(
