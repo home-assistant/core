@@ -19,7 +19,7 @@ from homeassistant.components.sandbox.messages import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -572,6 +572,82 @@ async def test_register_service_installs_forwarder(hass: HomeAssistant) -> None:
     assert seen_calls[0].domain == "phase6_demo"
     assert seen_calls[0].service == "do_thing"
     assert struct_to_dict(seen_calls[0].service_data) == {"foo": "bar"}
+
+
+async def test_forwarded_context_restores_on_echoed_state(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """A user's Context flows main → sandbox → back and is restored verbatim.
+
+    Main forwards a service call carrying a real user Context into the
+    sandbox; the bridge remembers it. When the sandbox emits a state change
+    echoing that same context_id, main restores the *original*
+    ``user_id`` / ``parent_id`` instead of minting a fresh attribution.
+    """
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+    forwarded_ids: list[str] = []
+
+    async def _on_call_service(payload: pb.CallService) -> Any:
+        # Capture the context_id main handed down so we can echo it back.
+        forwarded_ids.append(payload.context_id)
+        return None
+
+    sandbox_channel.register("sandbox/call_service", _on_call_service)
+
+    try:
+        # A proxy entity the echoed state change targets.
+        register = await sandbox_channel.call(
+            "sandbox/register_entity",
+            make_entity_description(
+                entry_id=entry.entry_id,
+                domain="light",
+                sandbox_entity_id="light.lamp",
+                unique_id="sandbox-lamp",
+                supported_features=0,
+                capabilities={"supported_color_modes": ["onoff"]},
+                initial_state="off",
+                initial_attributes={"color_mode": "onoff"},
+            ),
+        )
+        entity_id = register.entity_id
+        # A mirrored service whose forwarder seeds the context cache.
+        await sandbox_channel.call(
+            "sandbox/register_service",
+            pb.RegisterService(
+                domain="phase6_demo", service="do_thing", supports_response="none"
+            ),
+        )
+
+        # The user who pressed the button that triggered the sandboxed action.
+        user_context = Context(user_id="user-1", parent_id="parent-1")
+        await hass.services.async_call(
+            "phase6_demo", "do_thing", {}, blocking=True, context=user_context
+        )
+        assert forwarded_ids == [user_context.id]
+
+        # The sandboxed action emits a state change echoing that context_id.
+        changed = pb.StateChanged(
+            sandbox_entity_id="light.lamp", state="on", context_id=user_context.id
+        )
+        changed.attributes.update({"color_mode": "onoff"})
+        await sandbox_channel.push("sandbox/state_changed", changed)
+
+        for _ in range(200):
+            state = hass.states.get(entity_id)
+            if state is not None and state.state == "on":
+                break
+            await asyncio.sleep(0.01)
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+    # The original attribution survived the round-trip — not a fresh context.
+    assert state.context is user_context
+    assert state.context.user_id == "user-1"
+    assert state.context.parent_id == "parent-1"
 
 
 async def test_register_service_skips_existing_handler(

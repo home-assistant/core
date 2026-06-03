@@ -32,13 +32,14 @@ one group, so a sandbox can't reach another sandbox's files.
 """
 
 import asyncio
+from collections import OrderedDict
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import voluptuous as vol
 
@@ -56,11 +57,10 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES, EntityCompone
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.setup import async_setup_component
-from homeassistant.util import json as json_util
+from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import write_utf8_file_atomic
 
 from ._proto import sandbox_pb2 as pb
-from .auth import async_get_or_create_sandbox_user
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
 from .const import UNIQUE_ID_SEPARATOR
 from .messages import dict_to_struct, listvalue_to_list, struct_to_dict
@@ -81,6 +81,23 @@ from .schema_bridge import reconstruct_schema
 _LOGGER = logging.getLogger(__name__)
 
 _REMOTE_PLATFORM_NAME = "sandbox"
+
+# Lifetime of a remembered context_id → Context mapping. Only contexts main
+# hands *down* to the sandbox (service calls) are cached, and the sandbox
+# echoes them back within the same operation (seconds), so a 15-minute TTL is
+# generous headroom while keeping the cache naturally tiny. A miss is always
+# safe — it degrades to a fresh ``user_id=None`` Context — so expiry only ever
+# loses attribution on a pathologically delayed echo, never correctness.
+_CONTEXT_TTL = timedelta(minutes=15)
+# Sanity backstop only; the TTL does the real bounding given the low volume.
+_CONTEXT_CACHE_MAX = 2048
+
+
+class _CachedContext(NamedTuple):
+    """A remembered Context plus the instant its TTL lapses."""
+
+    context: Context
+    expires_at: datetime
 
 
 @dataclass
@@ -272,12 +289,19 @@ class SandboxBridge:
 
         self._store_server = _SandboxStoreServer(hass, group)
 
-        # Context security: the sandbox only ever sends a context_id (a
-        # string). Main resolves it to its own authoritative Context, never
-        # honouring a sandbox-supplied parent_id / user_id. Resolved contexts
-        # are cached so a repeated id maps to one stable Context.
-        self._system_user_id: str | None = None
-        self._contexts: dict[str, Context] = {}
+        # Context security + restoration: the sandbox only ever sends a
+        # context_id (a string) — it can never set parent_id / user_id on the
+        # wire. Main records every Context it hands *down* to the sandbox
+        # (service forwards, entity service calls) keyed by id; when the
+        # sandbox echoes that id back (state_changed / fire_event), main
+        # restores the original Context verbatim, so a user-initiated action's
+        # attribution survives the round-trip. An id main never issued (or one
+        # whose entry has expired) resolves to a brand-new main-owned Context
+        # with no fabricated parentage — main never adopts the sandbox's id
+        # (it is an untrusted ULID; see ``_resolve_context``). The cache is
+        # TTL-bounded (``_CONTEXT_TTL``) and ordered by insertion so expiry
+        # pruning is a cheap front-to-back walk; a miss is always safe.
+        self._contexts: OrderedDict[str, _CachedContext] = OrderedDict()
 
         channel.register(MSG_REGISTER_ENTITY, self._handle_register_entity)
         channel.register(MSG_UNREGISTER_ENTITY, self._handle_unregister_entity)
@@ -296,7 +320,7 @@ class SandboxBridge:
         service: str,
         sandbox_entity_id: str,
         service_data: dict[str, Any],
-        context_id: str | None = None,
+        context: Context | None = None,
         return_response: bool = False,
     ) -> Any:
         """Forward one entity service call to the sandbox.
@@ -304,13 +328,20 @@ class SandboxBridge:
         Calls made in the same tick with matching ``(domain, service,
         service_data)`` coalesce into a single RPC with a multi-entity
         target.
+
+        ``context`` is the main-side Context driving the entity call. It is
+        remembered here (before the batcher reduces it to a bare id) so that
+        when the sandbox echoes the same id back on a resulting state change
+        or event, :meth:`_resolve_context` restores the original
+        ``parent_id`` / ``user_id`` instead of minting a fresh attribution.
         """
+        self._remember_context(context)
         return await self._batcher.enqueue(
             domain=domain,
             service=service,
             sandbox_entity_id=sandbox_entity_id,
             service_data=service_data,
-            context_id=context_id,
+            context_id=context.id if context is not None else None,
             return_response=return_response,
         )
 
@@ -343,29 +374,73 @@ class SandboxBridge:
                 f"Sandbox {self.group!r} channel closed mid-call"
             ) from err
 
-    async def _async_system_user_id(self) -> str:
-        """Return (and cache) the sandbox group's system-user id."""
-        if self._system_user_id is None:
-            user = await async_get_or_create_sandbox_user(self.hass, self.group)
-            self._system_user_id = user.id
-        return self._system_user_id
+    def _prune_contexts(self, now: datetime) -> None:
+        """Drop expired entries from the front of the context cache.
 
-    async def _resolve_context(self, context_id: str | None) -> Context:
+        The cache is kept ordered by insertion (every write moves its key to
+        the end), and the TTL is constant, so insertion order *is* expiry
+        order — expired entries always cluster at the front and a single walk
+        that stops at the first live entry prunes everything stale.
+        """
+        contexts = self._contexts
+        while contexts:
+            key = next(iter(contexts))
+            if contexts[key].expires_at > now:
+                break
+            del contexts[key]
+
+    @callback
+    def _remember_context(self, context: Context | None) -> None:
+        """Record a Context main is handing down to the sandbox.
+
+        Keyed by its (trusted, main-issued) id so an echoed id resolves back
+        to the original Context, restoring ``parent_id`` / ``user_id``. The
+        entry lives for ``_CONTEXT_TTL``; re-recording refreshes it and moves
+        it to the end so the cache stays ordered by expiry. Expiry only loses
+        attribution on a later echo (it degrades to a fresh Context), never
+        correctness.
+        """
+        if context is None:
+            return
+        now = dt_util.utcnow()
+        self._prune_contexts(now)
+        contexts = self._contexts
+        contexts[context.id] = _CachedContext(context, now + _CONTEXT_TTL)
+        contexts.move_to_end(context.id)
+        # TTL + low volume keep this tiny; the cap is only a sanity backstop.
+        while len(contexts) > _CONTEXT_CACHE_MAX:
+            contexts.popitem(last=False)
+
+    @callback
+    def _resolve_context(self, context_id: str | None) -> Context:
         """Resolve a sandbox-supplied context_id to an authoritative Context.
 
         The sandbox can never set ``parent_id`` / ``user_id`` on the wire —
-        main owns that. A context_id main has already resolved reuses the same
-        Context; an unseen id (or no id) mints a fresh Context attributed to
-        the sandbox's system user, with no ``parent_id``.
+        main owns that. A context_id main handed down (and still remembers)
+        resolves back to the original Context verbatim, so a user-initiated
+        action's attribution survives the round-trip.
+
+        An id main never issued — or whose entry has expired — yields a
+        **brand-new** main-owned ``Context(user_id=None)``: a fresh
+        main-generated id, no fabricated parentage. Main never adopts the
+        sandbox-supplied id: context ids are ULIDs carrying an embedded
+        millisecond timestamp, and main cannot trust the sandbox's clock (a
+        crafted id could back- or forward-date the event for recorder /
+        logbook ordering). The sandbox string is used only as the cache
+        **key**, never as the resulting Context's identity. Caching the fresh
+        context under that key lets repeated echoes within one operation map
+        to the same stable Context.
         """
-        user_id = await self._async_system_user_id()
+        now = dt_util.utcnow()
+        self._prune_contexts(now)
         if context_id is None:
-            return Context(user_id=user_id)
-        existing = self._contexts.get(context_id)
-        if existing is not None:
-            return existing
-        context = Context(id=context_id, user_id=user_id)
-        self._contexts[context_id] = context
+            return Context(user_id=None)
+        cached = self._contexts.get(context_id)
+        if cached is not None:
+            return cached.context
+        context = Context(user_id=None)
+        self._contexts[context_id] = _CachedContext(context, now + _CONTEXT_TTL)
+        self._contexts.move_to_end(context_id)
         return context
 
     async def _handle_register_entity(
@@ -454,7 +529,7 @@ class SandboxBridge:
         state_str = msg.state if msg.HasField("state") else None
         attributes = struct_to_dict(msg.attributes)
         context = (
-            await self._resolve_context(msg.context_id)
+            self._resolve_context(msg.context_id)
             if msg.HasField("context_id")
             else None
         )
@@ -538,13 +613,14 @@ class SandboxBridge:
         """Re-fire a sandbox-side event on main's bus.
 
         The sandbox tags every push with ``event_type`` + ``event_data`` and,
-        optionally, a ``context_id``. Main resolves that id to an
-        authoritative Context attributed to the sandbox's system user — the
-        sandbox can never inject a ``parent_id`` / ``user_id``.
+        optionally, a ``context_id``. Main resolves that id to an authoritative
+        Context — restoring the original attribution for an id it handed down,
+        or a fresh ``user_id=None`` Context otherwise. The sandbox can never
+        inject a ``parent_id`` / ``user_id``.
         """
         event_data = struct_to_dict(msg.event_data)
         context = (
-            await self._resolve_context(msg.context_id)
+            self._resolve_context(msg.context_id)
             if msg.HasField("context_id")
             else None
         )
@@ -776,6 +852,9 @@ def _build_service_forwarder(
             return_response=call.return_response,
         )
         if call.context is not None:
+            # Remember the real (main-issued) Context so the sandbox echoing
+            # this id back on a derived state/event restores it verbatim.
+            bridge._remember_context(call.context)  # noqa: SLF001
             request.context_id = call.context.id
         try:
             response = await bridge.channel.call(MSG_CALL_SERVICE, request)

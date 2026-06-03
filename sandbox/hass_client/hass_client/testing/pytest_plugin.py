@@ -165,7 +165,6 @@ async def async_setup_inprocess_sandbox(
 
     runtime = SandboxRuntime(
         url="ws://inprocess.invalid/api/websocket",
-        token="inprocess-test-token",
         group=group,
         config_dir=config_dir,
         channel_factory=_one_shot_channel_factory(rt_channel),

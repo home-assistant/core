@@ -40,8 +40,6 @@ async def _manager_fixture(hass: HomeAssistant):
             group,
             "--url",
             url,
-            "--token",
-            "phase4-test-token",
         ]
 
     mgr = SandboxManager(hass, command_factory=_factory, config=FAST_CONFIG)

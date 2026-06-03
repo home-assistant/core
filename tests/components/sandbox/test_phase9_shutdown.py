@@ -46,8 +46,6 @@ async def _manager_fixture(hass: HomeAssistant) -> AsyncIterator[SandboxManager]
             group,
             "--url",
             url,
-            "--token",
-            "phase9-test-token",
         ]
 
     mgr = SandboxManager(hass, command_factory=_factory, config=FAST_CONFIG)
@@ -188,8 +186,6 @@ async def test_on_shutdown_reply_callback_is_invoked(
             group,
             "--url",
             url,
-            "--token",
-            "phase9-reply-test",
         ]
 
     mgr = SandboxManager(

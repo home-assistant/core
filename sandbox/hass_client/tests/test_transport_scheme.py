@@ -42,13 +42,13 @@ def test_transport_scheme_rejects_unknown() -> None:
 
 def test_cli_url_defaults_to_stdio() -> None:
     """Omitting ``--url`` selects the stdio transport."""
-    args = _build_parser().parse_args(["--name", "built-in", "--token", "t"])
+    args = _build_parser().parse_args(["--name", "built-in"])
     assert args.url == "stdio://"
 
 
 async def test_websocket_transport_rejected() -> None:
     """A ``ws://`` URL is rejected with a clear not-implemented error."""
-    runtime = SandboxRuntime(url="ws://localhost:8123/api/websocket", token="t", group="g")
+    runtime = SandboxRuntime(url="ws://localhost:8123/api/websocket", group="g")
     with pytest.raises(NotImplementedError, match="not implemented in this build"):
         await runtime._default_channel_factory()  # noqa: SLF001
 

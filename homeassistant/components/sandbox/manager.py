@@ -54,7 +54,6 @@ DEFAULT_SHUTDOWN_GRACE = 10.0
 # control-channel URL from its transport and hands it to the factory so the
 # spawned argv carries the right ``--url``.
 CommandFactory = Callable[[str, str], list[str]]
-TokenFactory = Callable[[str], Awaitable[str]]
 
 # Supported control-channel transports.
 TRANSPORT_STDIO = "stdio"
@@ -537,7 +536,6 @@ class SandboxManager:
         on_failed: Callable[[str], None] | None = None,
         on_channel_ready: Callable[[str, Channel], None] | None = None,
         on_shutdown_reply: ShutdownReplyCallback | None = None,
-        token_factory: TokenFactory | None = None,
         transport: str = TRANSPORT_STDIO,
     ) -> None:
         """Initialise the manager.
@@ -555,12 +553,6 @@ class SandboxManager:
         ``on_channel_ready`` is invoked once a sandbox's control channel is
         live; Phase 4's router uses it to register inbound flow handlers
         (e.g., ``sandbox/notify_flow_changed``).
-
-        ``token_factory`` returns the scoped access token the manager
-        passes to the subprocess (Phase 7). Awaited once per group and
-        cached on :attr:`_tokens`. Without one, ``_default_command``
-        falls back to a placeholder so tests that don't care about auth
-        still work.
         """
         self._hass = hass
         self._command_factory = command_factory or self._default_command
@@ -568,14 +560,12 @@ class SandboxManager:
         self._on_failed = on_failed
         self._on_channel_ready = on_channel_ready
         self._on_shutdown_reply = on_shutdown_reply
-        self._token_factory = token_factory
         if transport not in _TRANSPORTS:
             raise ValueError(
                 f"unknown sandbox transport {transport!r}; expected one of "
                 f"{_TRANSPORTS}"
             )
         self._transport = transport
-        self._tokens: dict[str, str] = {}
         self._sandboxes: dict[str, SandboxProcess] = {}
         self._locks: dict[str, asyncio.Lock] = {}
 
@@ -610,9 +600,6 @@ class SandboxManager:
                     raise SandboxFailedError(f"Sandbox {group!r} is in a failed state")
                 # Was stopped — drop the stale process and re-spawn.
                 del self._sandboxes[group]
-
-            if self._token_factory is not None and group not in self._tokens:
-                self._tokens[group] = await self._token_factory(group)
 
             # Keeping the SandboxProcess in the map after a failed start lets
             # callers observe its state — ensure_started won't try to
@@ -672,11 +659,8 @@ class SandboxManager:
 
         ``url`` is the control-channel URL the manager's transport requires
         (``stdio://`` or ``unix://<path>``) — the runtime reads its scheme
-        to pick the transport. Phase 7's scoped sandbox access token is
-        still passed for the deferred websocket transport, which is the only
-        path that consumes it.
+        to pick the transport.
         """
-        token = self._tokens.get(group, "sandbox_placeholder")
         return [
             sys.executable,
             "-m",
@@ -685,8 +669,6 @@ class SandboxManager:
             group,
             "--url",
             url,
-            "--token",
-            token,
         ]
 
 
@@ -701,5 +683,4 @@ __all__ = [
     "SandboxStartError",
     "SandboxV2Error",
     "ShutdownReplyCallback",
-    "TokenFactory",
 ]

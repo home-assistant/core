@@ -126,9 +126,10 @@ class SandboxProxyEntity(Entity):
         """Update the cache from a sandbox push, and notify HA.
 
         ``context`` is the main-side authoritative Context the bridge resolved
-        from the sandbox's ``context_id`` (attributed to the sandbox system
-        user, never carrying a sandbox-supplied parent_id / user_id). When
-        absent the entity writes with its own context as before.
+        from the sandbox's ``context_id`` — the original Context for an id main
+        handed down, or a fresh ``user_id=None`` one otherwise, never carrying
+        a sandbox-supplied parent_id / user_id. When absent the entity writes
+        with its own context as before.
         """
         self._state_cache = dict(attributes)
         if state is not None:
@@ -152,12 +153,18 @@ class SandboxProxyEntity(Entity):
         Domain proxies translate each entity method into one of these
         calls (the spike's Option B). The bridge coalesces calls made in
         the same tick into a single multi-entity RPC.
+
+        ``self._context`` is the main-side Context the service framework set
+        for this call. Passing it lets the bridge remember it, so a state
+        change the sandbox derives from this call resolves back to the
+        original attribution instead of a fresh context.
         """
         return await self._bridge.async_call_service(
             domain=self.description.domain,
             service=service,
             sandbox_entity_id=self.description.sandbox_entity_id,
             service_data=service_data,
+            context=self._context,
         )
 
 

@@ -8,10 +8,8 @@
 set -eu
 
 : "${SANDBOX_NAME:?SANDBOX_NAME is required (the sandbox group, e.g. built-in / custom)}"
-: "${SANDBOX_TOKEN:?SANDBOX_TOKEN is required (the scoped sandbox access token)}"
 
 exec python -m hass_client.sandbox \
   --name "${SANDBOX_NAME}" \
   --url "${SANDBOX_URL:-stdio://}" \
-  --token "${SANDBOX_TOKEN}" \
   --log-level "${SANDBOX_LOG_LEVEL:-INFO}"

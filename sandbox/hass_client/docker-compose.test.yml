@@ -68,8 +68,6 @@ services:
       SANDBOX_NAME: built-in
       # Must match the path main writes its socket to on the shared volume.
       SANDBOX_URL: unix:///shared/sandbox.sock
-      # A real scoped sandbox token from main; placeholder here.
-      SANDBOX_TOKEN: replace-with-a-real-scoped-token
       SANDBOX_LOG_LEVEL: INFO
 
 # Shared volume carrying the unix socket between the two services. (No volume

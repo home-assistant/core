@@ -61,7 +61,6 @@ compose file so it is hard to miss.
 | Var                 | Required | Default     | Maps to       |
 | ------------------- | -------- | ----------- | ------------- |
 | `SANDBOX_NAME`      | yes      | —           | `--name`      |
-| `SANDBOX_TOKEN`     | yes      | —           | `--token`     |
 | `SANDBOX_URL`       | no       | `stdio://`  | `--url`       |
 | `SANDBOX_LOG_LEVEL` | no       | `INFO`      | `--log-level` |
 

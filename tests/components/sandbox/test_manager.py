@@ -110,8 +110,6 @@ async def test_multiple_groups_independent(hass: HomeAssistant) -> None:
             group,
             "--url",
             url,
-            "--token",
-            "test-token",
         ]
 
     mgr = SandboxManager(hass, command_factory=mixed_factory, config=FAST_CONFIG)
@@ -148,47 +146,19 @@ async def test_multiple_groups_independent(hass: HomeAssistant) -> None:
     assert mgr.get("broken").state == "failed"  # type: ignore[union-attr]
 
 
-async def test_default_command_includes_token(
+async def test_default_command_carries_name_and_url_only(
     hass: HomeAssistant,
 ) -> None:
-    """The default command embeds the cached scoped token in argv."""
+    """The spawn argv carries name + url and no longer mints a ``--token``.
 
-    async def fake_token(group: str) -> str:
-        return f"token-{group}"
-
-    mgr = SandboxManager(hass, token_factory=fake_token)
-    # Prime the token cache without actually launching a subprocess.
-    mgr._tokens["built-in"] = "token-built-in"
+    The sandbox is not an authenticated principal inside main — the runtime
+    stored a token it never used — so the credential was dropped end-to-end.
+    """
+    mgr = SandboxManager(hass)
 
     builtin_argv = mgr._default_command("built-in", "stdio://")
-    assert "token-built-in" in builtin_argv
     assert "--name" in builtin_argv
     assert "built-in" in builtin_argv
+    assert "--url" in builtin_argv
     assert "stdio://" in builtin_argv
-
-
-async def test_ensure_started_awaits_token_factory(hass: HomeAssistant) -> None:
-    """The token factory is invoked once per group when starting."""
-    calls: list[str] = []
-
-    async def fake_token(group: str) -> str:
-        calls.append(group)
-        return f"token-{group}"
-
-    def quick_command(group: str, url: str) -> list[str]:
-        return _FAILING_CMD  # Force a fast failure so the test runs fast.
-
-    mgr = SandboxManager(
-        hass,
-        command_factory=quick_command,
-        token_factory=fake_token,
-        config=FAST_CONFIG,
-    )
-
-    with pytest.raises(SandboxStartError):
-        await mgr.ensure_started("built-in")
-    await mgr.async_stop_all()
-
-    # The token factory was awaited (and cached) before the failing spawn.
-    assert calls == ["built-in"]
-    assert mgr._tokens["built-in"] == "token-built-in"
+    assert "--token" not in builtin_argv

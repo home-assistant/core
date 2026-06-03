@@ -25,17 +25,24 @@ def test_ready_msg_type_is_stable() -> None:
     assert MSG_READY == "sandbox/ready"
 
 
-def test_cli_parser_requires_name_url_and_token() -> None:
-    """The CLI parser accepts the manager's argv and defaults log-level."""
+def test_cli_parser_accepts_name_and_url() -> None:
+    """The CLI parser accepts the manager's argv and defaults log-level.
+
+    The sandbox is not an authenticated principal inside main, so there is no
+    ``--token`` argument any more (the runtime never used the credential).
+    """
     parser = _build_parser()
-    args = parser.parse_args(["--name", "built-in", "--url", "ws://x", "--token", "t"])
+    args = parser.parse_args(["--name", "built-in", "--url", "ws://x"])
     assert args.name == "built-in"
     assert args.url == "ws://x"
-    assert args.token == "t"
     assert args.log_level == "INFO"
 
     with pytest.raises(SystemExit):
         parser.parse_args([])
+
+    # ``--token`` is gone: passing it is now an error.
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--name", "built-in", "--token", "t"])
 
 
 async def test_runtime_starts_in_locked_down_sharing_posture(
@@ -50,7 +57,6 @@ async def test_runtime_starts_in_locked_down_sharing_posture(
     """
     runtime = SandboxRuntime(
         url="ws://x",
-        token="t",
         group="custom",
         channel_factory=_noop_channel_factory,
     )
@@ -79,7 +85,6 @@ async def test_runtime_shuts_down_on_request(
     """``run()`` returns 0 when ``request_shutdown`` is called from outside."""
     runtime = SandboxRuntime(
         url="ws://x",
-        token="t",
         group="built-in",
         # Pytest captures stdin/stdout; skip channel setup for this
         # in-process shutdown test (Phase 4 covers the real stdio path

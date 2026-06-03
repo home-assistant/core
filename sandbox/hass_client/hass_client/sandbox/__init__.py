@@ -59,8 +59,7 @@ class SandboxRuntime:
     ``stdio://`` (default — frames over the process's stdin/stdout) or
     ``unix://<path>`` (dial back to the manager's unix socket). ``ws://`` /
     ``wss://`` are reserved for the deferred websocket transport and
-    rejected for now; the token still travels the CLI for forward-compat
-    with it. The handshake is a :data:`MSG_READY` frame sent as the
+    rejected for now. The handshake is a :data:`MSG_READY` frame sent as the
     channel's first message — there is no stdout text marker.
     """
 
@@ -68,7 +67,6 @@ class SandboxRuntime:
         self,
         *,
         url: str,
-        token: str,
         group: str,
         config_dir: str | None = None,
         channel_factory: ChannelFactory | None = None,
@@ -80,7 +78,6 @@ class SandboxRuntime:
         that returns ``None`` (no channel) or an in-memory pair.
         """
         self.url = url
-        self.token = token
         self.group = group
         self._config_dir = config_dir
         self._channel_factory = channel_factory or self._default_channel_factory

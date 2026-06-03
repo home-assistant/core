@@ -33,11 +33,6 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "--token",
-        required=True,
-        help="Scoped sandbox access token for authenticating with main.",
-    )
-    parser.add_argument(
         "--log-level",
         default="INFO",
         help="Python logging level for the runtime (default: INFO).",
@@ -55,7 +50,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     runtime = SandboxRuntime(
         url=args.url,
-        token=args.token,
         group=args.name,
     )
     try:

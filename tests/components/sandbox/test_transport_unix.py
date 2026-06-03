@@ -42,8 +42,6 @@ def _runtime_factory(seen: dict[str, str]) -> object:
             group,
             "--url",
             url,
-            "--token",
-            "t3-unix-token",
         ]
 
     return _factory

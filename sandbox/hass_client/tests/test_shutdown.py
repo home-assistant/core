@@ -76,7 +76,6 @@ async def _runtime_pair_fixture():
 
     runtime = SandboxRuntime(
         url="ws://x",
-        token="t",
         group="custom",
         channel_factory=_channel_factory,
     )
@@ -248,7 +247,6 @@ async def test_run_warm_loads_restore_state_on_startup(
 
     runtime = SandboxRuntime(
         url="ws://x",
-        token="t",
         group="custom",
         channel_factory=_channel_factory,
     )

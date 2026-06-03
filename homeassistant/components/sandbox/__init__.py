@@ -24,7 +24,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from ._proto import sandbox_pb2 as pb
-from .auth import async_issue_sandbox_access_token
 from .bridge import SandboxBridge, async_create_bridge
 from .channel import Channel
 from .const import DATA_SANDBOX_V2, DOMAIN
@@ -56,9 +55,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # a fresh channel — the previous bridge owned the dead one).
         data.channels[group] = channel
         data.bridges[group] = async_create_bridge(hass, group=group, channel=channel)
-
-    async def _issue_token(group: str) -> str:
-        return await async_issue_sandbox_access_token(hass, group)
 
     async def _on_shutdown_reply(group: str, reply: Any) -> None:
         """Persist the sandbox's restore-state snapshot (Phase 9).
@@ -94,7 +90,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         on_channel_ready=_on_channel_ready,
         on_shutdown_reply=_on_shutdown_reply,
-        token_factory=_issue_token,
     )
     router = SandboxFlowRouter(hass, manager, data=data)
     data.manager = manager

@@ -1,23 +1,28 @@
 """T2 transport tests: ProtobufCodec round-trips + the Context security model.
 
-Covers the three guarantees the protobuf wire adds on top of T1:
+Covers the guarantees the protobuf wire adds on top of T1:
 
 * a frame survives an encode → decode → re-encode cycle byte-identically (no
   field drops), including fidelity #7's structured voluptuous error data;
-* :meth:`SandboxBridge._resolve_context` reuses a known Context and mints a
-  fresh one — attributed to the sandbox system user, never carrying a
-  sandbox-supplied ``parent_id`` — for an unseen id;
-* a sandbox-emitted ``state_changed`` carrying a ``context_id`` lands on main
-  with a Context owned by the sandbox system user and no ``parent_id``.
+* :meth:`SandboxBridge._resolve_context` restores a remembered Context
+  verbatim (the original ``parent_id`` / ``user_id`` survive the round-trip)
+  and mints a **brand-new** main-owned ``Context(user_id=None)`` — with its
+  own trusted id, never adopting the sandbox-supplied ULID — for an id main
+  never issued;
+* the wire carries only a ``context_id`` string — no ``parent_id`` /
+  ``user_id`` field exists for the sandbox to forge;
+* a sandbox-emitted ``state_changed`` whose ``context_id`` main never issued
+  lands on main with a fresh ``user_id=None`` Context and no ``parent_id``.
 """
 
 import asyncio
+from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
-from homeassistant.components.sandbox.auth import async_get_or_create_sandbox_user
-from homeassistant.components.sandbox.bridge import SandboxBridge
+from homeassistant.components.sandbox.bridge import _CONTEXT_TTL, SandboxBridge
 from homeassistant.components.sandbox.channel import Frame
 from homeassistant.components.sandbox.codec_protobuf import ProtobufCodec
 from homeassistant.components.sandbox.messages import (
@@ -128,42 +133,96 @@ def test_protobuf_codec_round_trips_multiple_invalid_error_data() -> None:
     assert decoded.error_data == error_data
 
 
-async def test_resolve_context_caches_known_and_mints_unknown(
+def test_wire_messages_carry_only_context_id_no_attribution() -> None:
+    """The sandbox can only ever send a ``context_id`` string — no forgery.
+
+    There is no ``parent_id`` / ``user_id`` field on any inbound message for
+    the sandbox to set, so main never reads sandbox-supplied attribution off
+    the wire; it derives the Context entirely on its own side.
+    """
+    for message in (pb.StateChanged, pb.FireEvent, pb.CallService):
+        fields = set(message.DESCRIPTOR.fields_by_name)
+        assert "context_id" in fields
+        assert "parent_id" not in fields
+        assert "user_id" not in fields
+
+
+async def test_resolve_context_restores_known_and_mints_fresh_unknown(
     hass: HomeAssistant,
 ) -> None:
-    """A known context_id reuses its Context; an unseen one is minted safely."""
+    """A remembered id restores verbatim; an unknown id gets a fresh main id."""
     main_channel, sandbox_channel = make_channel_pair(name_a="main", name_b="sandbox")
     bridge = SandboxBridge(hass, group="built-in", channel=main_channel)
-    user = await async_get_or_create_sandbox_user(hass, "built-in")
 
     try:
-        known = Context(user_id=user.id, id="known-id")
-        bridge._contexts["known-id"] = known
-        # A known id returns the exact cached Context.
-        assert await bridge._resolve_context("known-id") is known
+        # Main remembers a Context it handed down (e.g. the user who pressed a
+        # button that triggered a sandboxed automation).
+        known = Context(user_id="user-1", parent_id="parent-1")
+        bridge._remember_context(known)
 
-        # An unseen id mints a fresh Context: the sandbox-supplied id is kept,
-        # but it is attributed to the sandbox system user with no parent_id.
-        minted = await bridge._resolve_context("fresh-id")
-        assert minted.id == "fresh-id"
+        # Echoing that id back restores the *original* Context verbatim.
+        restored = bridge._resolve_context(known.id)
+        assert restored is known
+        assert restored.user_id == "user-1"
+        assert restored.parent_id == "parent-1"
+
+        # An id main never issued mints a BRAND-NEW main-owned Context: no
+        # fabricated parentage, and crucially its id is main-generated — the
+        # untrusted sandbox ULID is NOT adopted (only used as the cache key).
+        sandbox_id = "01J0SANDBOXCRAFTEDULID00000"
+        minted = bridge._resolve_context(sandbox_id)
+        assert minted.user_id is None
         assert minted.parent_id is None
-        assert minted.user_id == user.id
-        # And caching makes a second resolve return the same object.
-        assert await bridge._resolve_context("fresh-id") is minted
+        assert minted.id != sandbox_id
+        # Repeated echoes within one operation map to the same stable Context.
+        assert bridge._resolve_context(sandbox_id) is minted
 
-        # No id at all → a system-user Context, still no parent_id.
-        anon = await bridge._resolve_context(None)
+        # No id at all → a fresh ``user_id=None`` Context, no parent_id.
+        anon = bridge._resolve_context(None)
+        assert anon.user_id is None
         assert anon.parent_id is None
-        assert anon.user_id == user.id
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
 
-async def test_state_changed_context_attributed_to_sandbox_system_user(
+async def test_resolve_context_entry_expires_after_ttl(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """An expired entry degrades to a fresh context — safely, never an error."""
+    main_channel, sandbox_channel = make_channel_pair(name_a="main", name_b="sandbox")
+    bridge = SandboxBridge(hass, group="built-in", channel=main_channel)
+
+    try:
+        known = Context(user_id="user-1", parent_id="parent-1")
+        bridge._remember_context(known)
+        assert bridge._resolve_context(known.id) is known
+
+        # Past the TTL the entry is pruned; the same id now resolves to a
+        # brand-new ``user_id=None`` Context with no parentage — no crash.
+        freezer.tick(_CONTEXT_TTL + timedelta(seconds=1))
+        fresh = bridge._resolve_context(known.id)
+        assert fresh is not known
+        assert fresh.user_id is None
+        assert fresh.parent_id is None
+        # And the expired entry was actually evicted, not just shadowed.
+        assert known.id not in bridge._contexts or (
+            bridge._contexts[known.id].context is fresh
+        )
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+
+async def test_state_changed_unknown_context_gets_fresh_no_user(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
-    """A sandbox state_changed with a context_id lands owned by the system user."""
+    """A state_changed with an unknown context_id lands with no forged user.
+
+    Main never issued ``sandbox-ctx-1``, so it mints its own trusted Context:
+    ``user_id=None``, no ``parent_id``, and an id main generated itself rather
+    than the untrusted sandbox-supplied string.
+    """
     main_channel, sandbox_channel = make_channel_pair(name_a="main", name_b="sandbox")
     # Constructing the bridge registers the inbound handlers on main_channel.
     SandboxBridge(hass, group="built-in", channel=main_channel)
@@ -199,11 +258,11 @@ async def test_state_changed_context_attributed_to_sandbox_system_user(
         await main_channel.close()
         await sandbox_channel.close()
 
-    user = await async_get_or_create_sandbox_user(hass, "built-in")
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "on"
-    # The sandbox only sent a context_id; main owns the authoritative Context.
-    assert state.context.id == "sandbox-ctx-1"
-    assert state.context.user_id == user.id
+    # Main minted its own Context — no forged attribution, and the untrusted
+    # sandbox id was NOT adopted as the Context's identity.
+    assert state.context.user_id is None
     assert state.context.parent_id is None
+    assert state.context.id != "sandbox-ctx-1"
