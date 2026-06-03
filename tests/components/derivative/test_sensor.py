@@ -1329,7 +1329,7 @@ async def test_replace_unavailable_at_startup_unknown(
     replace_unavailable: bool,
 ) -> None:
     """Test STATE_UNKNOWN handling at startup is independent of replace_unavailable.
-    
+
     When the source is STATE_UNKNOWN during startup, the derivative sensor should
     always output STATE_UNKNOWN, regardless of the replace_unavailable setting.
     The replace_unavailable option only affects STATE_UNAVAILABLE.
