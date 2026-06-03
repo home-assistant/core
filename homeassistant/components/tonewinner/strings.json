@@ -12,7 +12,7 @@
       "user": {
         "data": {
           "baud_rate": "[%key:component::tonewinner::common::baud_rate%]",
-          "serial_port": "[%key:component::tonewinner::common::serial_port%]"
+          "serial_port": "[%key:common::config_flow::data::port%]"
         },
         "description": "Enter the serial port connection details for your ToneWinner AT-500 AV receiver.",
         "title": "Setup ToneWinner AT-500"

@@ -4,55 +4,51 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from tonewinner_rs232 import TonewinnerReceiver
 
-from .const import DOMAIN
+from .const import CONF_BAUD_RATE, CONF_SERIAL_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.info("Tonewinner integration module loaded!")
+
+type TonewinnerConfigEntry = ConfigEntry[TonewinnerReceiver]
 
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
-    _LOGGER.debug("Options updated for entry %s, reloading integration", entry.entry_id)
-    _LOGGER.debug("Current entry data: %s", entry.data)
-    _LOGGER.debug("Current entry options: %s", entry.options)
+    _LOGGER.debug("Options updated, reloading integration")
     await hass.config_entries.async_reload(entry.entry_id)
-    _LOGGER.debug("Integration reload initiated for entry %s", entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: TonewinnerConfigEntry
+) -> bool:
     """Set up Tonewinner from a config entry."""
-    _LOGGER.debug("Setting up Tonewinner integration for entry: %s", entry.entry_id)
-    _LOGGER.debug("Entry data: %s", entry.data)
+    port = entry.data[CONF_SERIAL_PORT]
+    baud = entry.data.get(CONF_BAUD_RATE, 9600)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry.data
+    receiver = TonewinnerReceiver(port, baudrate=baud)
+    await receiver.connect()
+    await receiver.query_state()
 
-    # Pass a LIST of platforms
-    _LOGGER.debug("Forwarding entry setup to media_player platform")
+    entry.runtime_data = receiver
+
     await hass.config_entries.async_forward_entry_setups(entry, ["media_player"])
-
-    # Register options update listener
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     _LOGGER.info("Tonewinner integration setup complete")
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: TonewinnerConfigEntry
+) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("Unloading Tonewinner integration for entry: %s", entry.entry_id)
+    _LOGGER.debug("Unloading Tonewinner integration")
 
     await hass.config_entries.async_forward_entry_unload(entry, "media_player")
 
-    # Unregister the service if it exists
-    service_key = f"{entry.entry_id}_service"
-    if DOMAIN in hass.data and service_key in hass.data[DOMAIN]:
-        _LOGGER.debug("Unregistering service")
-        hass.services.async_remove(DOMAIN, "send_raw")
-        del hass.data[DOMAIN][service_key]
+    if entry.runtime_data:
+        await entry.runtime_data.disconnect()
 
-    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
-        hass.data[DOMAIN].pop(entry.entry_id)
     _LOGGER.info("Tonewinner integration unloaded")
     return True

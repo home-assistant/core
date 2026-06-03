@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/tonewinner",
   "iot_class": "local_push",
   "loggers": ["custom_components.tonewinner"],
+  "requirements": ["tonewinner-rs232==0.1.0"],
   "version": "0.1.0"
 }
