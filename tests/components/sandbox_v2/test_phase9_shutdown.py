@@ -37,7 +37,7 @@ FAST_CONFIG = SandboxConfig(
 async def _manager_fixture(hass: HomeAssistant) -> AsyncIterator[SandboxManager]:
     """Manager that spawns the real runtime; cleans up on teardown."""
 
-    def _factory(group: str) -> list[str]:
+    def _factory(group: str, url: str) -> list[str]:
         return [
             sys.executable,
             "-m",
@@ -45,7 +45,7 @@ async def _manager_fixture(hass: HomeAssistant) -> AsyncIterator[SandboxManager]
             "--name",
             group,
             "--url",
-            "ws://localhost:8123/api/websocket",
+            url,
             "--token",
             "phase9-test-token",
         ]
@@ -89,7 +89,7 @@ async def test_graceful_shutdown_falls_through_to_sigterm_on_timeout(
     SIGTERM / SIGKILL.
     """
 
-    def _hung_factory(group: str) -> list[str]:
+    def _hung_factory(group: str, url: str) -> list[str]:
         return [
             sys.executable,
             "-c",
@@ -137,7 +137,7 @@ async def test_graceful_shutdown_on_no_channel_is_noop(
 ) -> None:
     """A sandbox without a live channel reports failure and stays up."""
 
-    def _factory(group: str) -> list[str]:
+    def _factory(group: str, url: str) -> list[str]:
         # Failing argv — supervisor records a failed attempt then dies.
         return [sys.executable, "-c", "import sys; sys.exit(1)"]
 
@@ -179,7 +179,7 @@ async def test_on_shutdown_reply_callback_is_invoked(
     async def _on_shutdown_reply(group: str, reply: pb.ShutdownResult) -> None:
         replies.append((group, reply))
 
-    def _factory(group: str) -> list[str]:
+    def _factory(group: str, url: str) -> list[str]:
         return [
             sys.executable,
             "-m",
@@ -187,7 +187,7 @@ async def test_on_shutdown_reply_callback_is_invoked(
             "--name",
             group,
             "--url",
-            "ws://localhost:8123/api/websocket",
+            url,
             "--token",
             "phase9-reply-test",
         ]

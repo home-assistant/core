@@ -25,8 +25,12 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--url",
-        required=True,
-        help="Websocket URL of the main Home Assistant instance.",
+        default="stdio://",
+        help=(
+            "Control-channel URL selecting the transport: stdio:// (default), "
+            "unix://<path>, or ws://… (reserved — not implemented in this "
+            "build)."
+        ),
     )
     parser.add_argument(
         "--token",

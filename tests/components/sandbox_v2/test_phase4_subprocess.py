@@ -31,7 +31,7 @@ FAST_CONFIG = SandboxConfig(
 async def _manager_fixture(hass: HomeAssistant):
     """Manager + tighter timings; tears every sandbox down on exit."""
 
-    def _factory(group: str) -> list[str]:
+    def _factory(group: str, url: str) -> list[str]:
         return [
             sys.executable,
             "-m",
@@ -39,7 +39,7 @@ async def _manager_fixture(hass: HomeAssistant):
             "--name",
             group,
             "--url",
-            "ws://localhost:8123/api/websocket",
+            url,
             "--token",
             "phase4-test-token",
         ]

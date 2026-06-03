@@ -68,7 +68,7 @@ async def test_crash_restart_budget(hass: HomeAssistant) -> None:
     """A sandbox that crashes 3 times in the window is marked failed."""
     spawn_times: list[float] = []
 
-    def failing_factory(group: str) -> list[str]:
+    def failing_factory(group: str, url: str) -> list[str]:
         spawn_times.append(time.monotonic())
         return _FAILING_CMD
 
@@ -99,7 +99,7 @@ async def test_crash_restart_budget(hass: HomeAssistant) -> None:
 async def test_multiple_groups_independent(hass: HomeAssistant) -> None:
     """A failed group does not stop a healthy group from running."""
 
-    def mixed_factory(group: str) -> list[str]:
+    def mixed_factory(group: str, url: str) -> list[str]:
         if group == "broken":
             return _FAILING_CMD
         return [
@@ -109,7 +109,7 @@ async def test_multiple_groups_independent(hass: HomeAssistant) -> None:
             "--name",
             group,
             "--url",
-            "ws://localhost:8123/api/websocket",
+            url,
             "--token",
             "test-token",
         ]
@@ -160,10 +160,11 @@ async def test_default_command_includes_token(
     # Prime the token cache without actually launching a subprocess.
     mgr._tokens["built-in"] = "token-built-in"
 
-    builtin_argv = mgr._default_command("built-in")
+    builtin_argv = mgr._default_command("built-in", "stdio://")
     assert "token-built-in" in builtin_argv
     assert "--name" in builtin_argv
     assert "built-in" in builtin_argv
+    assert "stdio://" in builtin_argv
 
 
 async def test_ensure_started_awaits_token_factory(hass: HomeAssistant) -> None:
@@ -174,7 +175,7 @@ async def test_ensure_started_awaits_token_factory(hass: HomeAssistant) -> None:
         calls.append(group)
         return f"token-{group}"
 
-    def quick_command(group: str) -> list[str]:
+    def quick_command(group: str, url: str) -> list[str]:
         return _FAILING_CMD  # Force a fast failure so the test runs fast.
 
     mgr = SandboxManager(

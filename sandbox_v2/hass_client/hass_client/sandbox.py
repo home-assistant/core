@@ -221,7 +221,24 @@ class SandboxRuntime:
         return 0
 
     async def _default_channel_factory(self) -> Channel:
-        """Open a :class:`Channel` over stdin/stdout for the manager."""
+        """Open the control channel selected by the runtime's ``--url`` scheme.
+
+        * ``stdio://`` (or empty) — frames ride the process's stdin/stdout.
+        * ``unix://<path>`` — dial back to the manager's unix socket.
+        * ``ws://`` / ``wss://`` — reserved for the deferred websocket
+          transport; rejected here with a clear error (this build ships
+          stdio + unix only).
+        """
+        kind = _transport_scheme(self.url)
+        if kind == "unix":
+            return await _open_unix_channel(
+                self.url.removeprefix("unix://"), name=self.group
+            )
+        if kind == "ws":
+            raise NotImplementedError(
+                "websocket transport is not implemented in this build; it is "
+                "reserved for the share-states work — use stdio:// or unix://"
+            )
         return await _open_stdio_channel(name=self.group)
 
     async def _handle_shutdown(self, _payload: object) -> pb.ShutdownResult:
@@ -331,6 +348,38 @@ async def _load_restore_state(hass: Any) -> None:
         await data.async_load()
     except Exception:
         _LOGGER.exception("sandbox: failed to pre-load core.restore_state")
+
+
+def _transport_scheme(url: str) -> str:
+    """Map a ``--url`` to its transport kind.
+
+    Returns ``"stdio"`` (empty / ``stdio://``), ``"unix"``
+    (``unix://<path>``) or ``"ws"`` (``ws://`` / ``wss://``, reserved for
+    the deferred websocket transport). Raises :class:`ValueError` for any
+    other scheme.
+    """
+    if not url:
+        return "stdio"
+    scheme = url.split("://", 1)[0] if "://" in url else url
+    if scheme in ("", "stdio"):
+        return "stdio"
+    if scheme == "unix":
+        return "unix"
+    if scheme in ("ws", "wss"):
+        return "ws"
+    raise ValueError(f"unsupported sandbox transport url: {url!r}")
+
+
+async def _open_unix_channel(path: str, *, name: str) -> Channel:
+    """Connect to the manager's unix socket and wrap it in a :class:`Channel`.
+
+    The manager is the unix server; the runtime dials back here. Framing is
+    the same length-prefixed :class:`~.channel.StreamTransport` the stdio
+    path uses — a unix socket is just a different byte pipe under it, so no
+    dedicated transport class is needed.
+    """
+    reader, writer = await asyncio.open_unix_connection(path)
+    return Channel(reader, writer, name=name, codec=ProtobufCodec())
 
 
 async def _open_stdio_channel(*, name: str) -> Channel:
