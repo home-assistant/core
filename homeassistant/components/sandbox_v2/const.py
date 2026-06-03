@@ -11,6 +11,15 @@ DOMAIN = "sandbox_v2"
 
 DATA_SANDBOX_V2: HassKey[SandboxV2Data] = HassKey(DOMAIN)
 
+# Proxy entities all register under the shared ``sandbox_v2`` platform_name,
+# so the entity-registry uniqueness key ``(domain, "sandbox_v2", unique_id)``
+# would collide when two integrations in one group reuse a unique_id. The
+# proxy unique_id is therefore namespaced as
+# ``f"{source_domain}{UNIQUE_ID_SEPARATOR}{unique_id}"``. ``:`` is chosen
+# because HA's default slug logic never produces it, so it cannot clash with
+# a real unique_id segment.
+UNIQUE_ID_SEPARATOR = ":"
+
 # Platforms that the sandbox cannot host today. Any integration that ships a
 # platform file in this set is forced onto `main`. Each entry needs a one-line
 # "why" so the deny-list is reviewable.

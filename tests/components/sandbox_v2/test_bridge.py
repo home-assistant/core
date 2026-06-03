@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from ._helpers import make_channel_pair
 
@@ -81,6 +82,56 @@ async def test_register_entity_creates_proxy_and_returns_entity_id(
     assert state.state == STATE_ON
     # The bridge tracks the proxy by its sandbox-side entity_id.
     assert "light.kitchen" in bridge._entities
+
+
+async def test_register_entity_prefixes_unique_id_with_source_domain(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Two integrations reusing unique_id ``"1"`` land without colliding.
+
+    All proxies share ``platform_name="sandbox_v2"``, so the registry key
+    ``("light", "sandbox_v2", unique_id)`` would clash if the unique_id
+    weren't namespaced with the source integration domain.
+    """
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    entry_a = MockConfigEntry(domain="demo_a", title="A")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="demo_b", title="B")
+    entry_b.add_to_hass(hass)
+
+    def _payload(entry_id: str, sandbox_entity_id: str) -> dict[str, Any]:
+        return {
+            "entry_id": entry_id,
+            "domain": "light",
+            "sandbox_entity_id": sandbox_entity_id,
+            "unique_id": "1",
+            "supported_features": 0,
+            "capabilities": {"supported_color_modes": ["onoff"]},
+            "initial_state": STATE_ON,
+            "initial_attributes": {"color_mode": "onoff"},
+        }
+
+    try:
+        result_a = await sandbox_channel.call(
+            "sandbox_v2/register_entity", _payload(entry_a.entry_id, "light.a")
+        )
+        result_b = await sandbox_channel.call(
+            "sandbox_v2/register_entity", _payload(entry_b.entry_id, "light.b")
+        )
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    # Both proxies landed as distinct entities.
+    assert result_a["entity_id"] != result_b["entity_id"]
+    assert hass.states.get(result_a["entity_id"]) is not None
+    assert hass.states.get(result_b["entity_id"]) is not None
+
+    # Registry rows carry the domain-prefixed unique_ids, not a bare "1".
+    assert entity_registry.async_get(result_a["entity_id"]).unique_id == "demo_a:1"
+    assert entity_registry.async_get(result_b["entity_id"]).unique_id == "demo_b:1"
 
 
 async def test_state_changed_push_updates_proxy(

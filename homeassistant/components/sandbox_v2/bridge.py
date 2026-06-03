@@ -54,6 +54,7 @@ from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file_atomic
 
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
+from .const import UNIQUE_ID_SEPARATOR
 from .protocol import (
     MSG_CALL_SERVICE,
     MSG_FIRE_EVENT,
@@ -315,6 +316,14 @@ class SandboxBridge:
         if entry is None:
             raise HomeAssistantError(
                 f"register_entity: unknown entry_id {description.entry_id!r}"
+            )
+        # Namespace the proxy unique_id with the source integration domain so
+        # two integrations in one group reusing the same unique_id don't
+        # collide on the shared sandbox_v2 platform_name. A None unique_id
+        # stays None (the entity opts out of the registry).
+        if description.unique_id is not None:
+            description.unique_id = (
+                f"{entry.domain}{UNIQUE_ID_SEPARATOR}{description.unique_id}"
             )
         # The proxy entity subclasses the domain's *EntityBase* (LightEntity,
         # SwitchEntity, …); for the framework to host it the domain
