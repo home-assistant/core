@@ -1,7 +1,9 @@
 """Tests for the OpenEVSE binary sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -9,7 +11,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -93,6 +95,7 @@ async def test_missing_sensor_graceful_handling(
 
 async def test_binary_sensor_unavailable_on_coordinator_timeout(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
 ) -> None:
@@ -107,7 +110,8 @@ async def test_binary_sensor_unavailable_on_coordinator_timeout(
     assert state.state != STATE_UNAVAILABLE
 
     mock_charger.update.side_effect = TimeoutError("Connection timed out")
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.openevse_mock_config_vehicle_connected")

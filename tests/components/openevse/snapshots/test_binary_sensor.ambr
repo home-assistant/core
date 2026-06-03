@@ -74,7 +74,7 @@
     'object_id_base': 'Ethernet connected',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ethernet connected',
     'platform': 'openevse',
@@ -89,7 +89,6 @@
 # name: test_entities[binary_sensor.openevse_mock_config_ethernet_connected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
       'friendly_name': 'openevse_mock_config Ethernet connected',
     }),
     'context': <ANY>,

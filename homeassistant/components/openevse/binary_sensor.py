@@ -47,7 +47,6 @@ BINARY_SENSOR_TYPES: tuple[OpenEVSEBinarySensorDescription, ...] = (
     OpenEVSEBinarySensorDescription(
         key="using_ethernet",
         translation_key="using_ethernet",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda ev: ev.using_ethernet,
