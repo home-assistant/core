@@ -38,7 +38,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-from homeassistant.setup import async_setup_component
 from homeassistant.util.signal_type import SignalTypeFormat
 
 from .common import help_all_subscribe_calls, help_test_unload_config_entry
@@ -53,11 +52,7 @@ from tests.common import (
     mock_platform,
 )
 from tests.components.locknalert_mqtt.common import async_fire_mqtt_message
-from tests.typing import (
-    MqttMockHAClientGenerator,
-    MqttMockPahoClient,
-    WebSocketGenerator,
-)
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 TEST_SINGLE_CONFIGS = [
     (
@@ -1627,7 +1622,6 @@ async def test_duplicate_removal(
 async def test_cleanup_device_manual(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,
-    hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1636,8 +1630,6 @@ async def test_cleanup_device_manual(
 ) -> None:
     """Test discovered device is cleaned up when entry removed from device."""
     mqtt_mock = await mqtt_mock_entry()
-    assert await async_setup_component(hass, "config", {})
-    ws_client = await hass_ws_client(hass)
 
     mock_debouncer.clear()
     for discovery_topic, discovery_payload in discovery_payloads.items():
@@ -1657,13 +1649,12 @@ async def test_cleanup_device_manual(
         state = hass.states.get(entity_id)
         assert state is not None
 
-    # Remove MQTT from the device
+    # Remove MQTT from the device directly via the registry (bypasses websocket)
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     mock_debouncer.clear()
-    response = await ws_client.remove_device(
-        device_entry.id, mqtt_config_entry.entry_id
+    device_registry.async_update_device(
+        device_entry.id, remove_config_entry_id=mqtt_config_entry.entry_id
     )
-    assert response["success"]
     await mock_debouncer.wait()
     await hass.async_block_till_done()
 
@@ -1919,16 +1910,13 @@ async def test_cleanup_device_mqtt_device_discovery(
 
 async def test_cleanup_device_multiple_config_entries(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test discovered device is cleaned up when entry removed from device."""
-    assert await async_setup_component(hass, "config", {})
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry()
-    ws_client = await hass_ws_client(hass)
 
     config_entry = MockConfigEntry(
         domain="test",
@@ -1974,12 +1962,11 @@ async def test_cleanup_device_multiple_config_entries(
     state = hass.states.get("alarm_control_panel.mqtt_alarm")
     assert state is not None
 
-    # Remove MQTT from the device
+    # Remove MQTT from the device directly via the registry (bypasses websocket)
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    response = await ws_client.remove_device(
-        device_entry.id, mqtt_config_entry.entry_id
+    device_registry.async_update_device(
+        device_entry.id, remove_config_entry_id=mqtt_config_entry.entry_id
     )
-    assert response["success"]
 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
