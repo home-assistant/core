@@ -44,7 +44,6 @@ class RyseCoverEntity(CoverEntity):
     def __init__(self, device: RyseBLEDevice, config_entry: ConfigEntry) -> None:
         """Initialize the Smart Shade cover entity."""
         self._device = device
-        self._config_entry = config_entry
 
         self._attr_unique_id = f"{device.address}_cover"
         self._current_position: int | None = None
@@ -91,7 +90,7 @@ class RyseCoverEntity(CoverEntity):
         if self._device.is_valid_position(position):
             real_position = self._device.get_real_position(position)
             self._current_position = real_position
-            self._attr_is_closed = real_position == 0
+            self._attr_is_closed = self._device.is_closed(position)
             _LOGGER.debug(
                 "Updated cover position: raw=%d mapped=%d", position, real_position
             )
@@ -117,11 +116,12 @@ class RyseCoverEntity(CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the shade to a specific position."""
-        position = self._device.get_real_position(kwargs[ATTR_POSITION])
-        await self._device.send_set_position(position)
+        ha_position = kwargs[ATTR_POSITION]
+        device_position = self._device.get_real_position(ha_position)
+        await self._device.send_set_position(device_position)
         _LOGGER.debug("Change position to a specific position")
-        self._attr_is_closed = self._device.is_closed(position)
-        self._current_position = position
+        self._attr_is_closed = self._device.is_closed(device_position)
+        self._current_position = ha_position
         self.async_write_ha_state()
 
     # ------------------------------------------------------

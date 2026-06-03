@@ -27,8 +27,8 @@ def mock_device() -> MagicMock:
     device = MagicMock()
     device.address = "AA:BB:CC:DD:EE:FF"
     device.is_valid_position.return_value = True
-    device.get_real_position.side_effect = lambda x: x
-    device.is_closed.side_effect = lambda x: x == 0
+    device.get_real_position.side_effect = lambda x: 100 - x
+    device.is_closed.side_effect = lambda x: x == 100
     return device
 
 
@@ -47,12 +47,18 @@ async def test_cover_properties(
 async def test_update_position_valid(
     mock_device: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test updating position calls HA state write."""
+    """Test updating position calls HA state write and stores correct values."""
     entity = RyseCoverEntity(mock_device, mock_config_entry)
     entity.async_write_ha_state = MagicMock()
 
-    await entity._update_position(50)
-    mock_device.is_valid_position.assert_called_with(50)
+    # Simulate device reporting raw position 100 (fully closed)
+    await entity._update_position(100)
+    mock_device.is_valid_position.assert_called_with(100)
+    # _current_position must be the mapped HA display position (100 - 100 = 0)
+    assert entity._current_position == 0
+    # is_closed must receive the raw device position (100), not the HA position
+    mock_device.is_closed.assert_called_with(100)
+    assert entity._attr_is_closed is True
     entity.async_write_ha_state.assert_called()
 
 
@@ -69,11 +75,16 @@ async def test_async_open_close_and_set_cover(
 
     await entity.async_open_cover()
     await entity.async_close_cover()
-    await entity.async_set_cover_position(**{ATTR_POSITION: 75})
+
+    ha_position = 75
+    await entity.async_set_cover_position(**{ATTR_POSITION: ha_position})
 
     mock_device.send_open.assert_awaited()
     mock_device.send_close.assert_awaited()
-    mock_device.send_set_position.assert_awaited()
+    # Device receives the inverted (raw) position, not the HA display value
+    mock_device.send_set_position.assert_awaited_once_with(100 - ha_position)
+    # Entity remembers the HA display position so current_cover_position reports correctly
+    assert entity._current_position == ha_position
 
 
 async def test_async_update_handles_exceptions(
