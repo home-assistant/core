@@ -1,5 +1,6 @@
 """The homee cover platform."""
 
+from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -36,14 +37,22 @@ IS_CLOSED_ATTRIBUTES = [
     AttributeType.SHUTTER_SLAT_POSITION,
 ]
 
-COVER_OPEN = 0.0
-COVER_CLOSED = 1.0
-COVER_STOPPED = 2.0
-COVER_OPENING = 3.0
-COVER_CLOSING = 4.0
 
-CLOSE_TILT = 1.0
-OPEN_TILT = 2.0
+class HomeeCoverState(float, Enum):
+    """Open/closed states for covers in homee."""
+
+    OPEN = 0.0
+    CLOSED = 1.0
+    STOPPED = 2.0
+    OPENING = 3.0
+    CLOSING = 4.0
+
+
+class HomeeSlatState(float, Enum):
+    """Slat states for covers in homee."""
+
+    CLOSED = 1.0
+    OPEN = 2.0
 
 
 def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute | None:
@@ -190,9 +199,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         """Return the opening status of the cover."""
         if self._open_close_attribute is not None:
             return (
-                self._open_close_attribute.get_value() == COVER_OPENING
+                self._open_close_attribute.get_value() == HomeeCoverState.OPENING
                 if not self._open_close_attribute.is_reversed
-                else self._open_close_attribute.get_value() == COVER_CLOSING
+                else self._open_close_attribute.get_value() == HomeeCoverState.CLOSING
             )
 
         return None
@@ -202,9 +211,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         """Return the closing status of the cover."""
         if self._open_close_attribute is not None:
             return (
-                self._open_close_attribute.get_value() == COVER_CLOSING
+                self._open_close_attribute.get_value() == HomeeCoverState.CLOSING
                 if not self._open_close_attribute.is_reversed
-                else self._open_close_attribute.get_value() == COVER_OPENING
+                else self._open_close_attribute.get_value() == HomeeCoverState.OPENING
             )
 
         return None
@@ -219,9 +228,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
         if self._open_close_attribute is not None:
             if not self._open_close_attribute.is_reversed:
-                return self._open_close_attribute.get_value() == COVER_CLOSED
+                return self._open_close_attribute.get_value() == HomeeCoverState.CLOSED
 
-            return self._open_close_attribute.get_value() == COVER_OPEN
+            return self._open_close_attribute.get_value() == HomeeCoverState.OPEN
 
         # If none of the above is present, it will be a slat only cover.
         attribute = self._node.get_attribute_by_type(
@@ -238,17 +247,25 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         """Open the cover."""
         assert self._open_close_attribute is not None
         if not self._open_close_attribute.is_reversed:
-            await self.async_set_homee_value(self._open_close_attribute, COVER_OPEN)
+            await self.async_set_homee_value(
+                self._open_close_attribute, HomeeCoverState.OPEN
+            )
         else:
-            await self.async_set_homee_value(self._open_close_attribute, COVER_CLOSED)
+            await self.async_set_homee_value(
+                self._open_close_attribute, HomeeCoverState.CLOSED
+            )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         assert self._open_close_attribute is not None
         if not self._open_close_attribute.is_reversed:
-            await self.async_set_homee_value(self._open_close_attribute, COVER_CLOSED)
+            await self.async_set_homee_value(
+                self._open_close_attribute, HomeeCoverState.CLOSED
+            )
         else:
-            await self.async_set_homee_value(self._open_close_attribute, COVER_OPEN)
+            await self.async_set_homee_value(
+                self._open_close_attribute, HomeeCoverState.OPEN
+            )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -268,7 +285,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if self._open_close_attribute is not None:
-            await self.async_set_homee_value(self._open_close_attribute, COVER_STOPPED)
+            await self.async_set_homee_value(
+                self._open_close_attribute, HomeeCoverState.STOPPED
+            )
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
@@ -278,9 +297,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             )
         ) is not None:
             if not slat_attribute.is_reversed:
-                await self.async_set_homee_value(slat_attribute, OPEN_TILT)
+                await self.async_set_homee_value(slat_attribute, HomeeSlatState.OPEN)
             else:
-                await self.async_set_homee_value(slat_attribute, CLOSE_TILT)
+                await self.async_set_homee_value(slat_attribute, HomeeSlatState.CLOSED)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
@@ -290,9 +309,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             )
         ) is not None:
             if not slat_attribute.is_reversed:
-                await self.async_set_homee_value(slat_attribute, CLOSE_TILT)
+                await self.async_set_homee_value(slat_attribute, HomeeSlatState.CLOSED)
             else:
-                await self.async_set_homee_value(slat_attribute, OPEN_TILT)
+                await self.async_set_homee_value(slat_attribute, HomeeSlatState.OPEN)
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
