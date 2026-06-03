@@ -57,6 +57,12 @@ API_KEY_RECOMMENDED_TIRE_PRESSURE = "RECOMMENDED_TIRE_PRESSURE"
 API_KEY_FRONT_TIRES = "FRONT_TIRES"
 API_KEY_REAR_TIRES = "REAR_TIRES"
 
+# Synthetic keys for sensors that don't read a single field directly; used as
+# both unique_id suffix and translation_key, so they must stay stable across
+# releases (changing them would orphan existing entity registry entries).
+KEY_RECOMMENDED_TIRE_PRESSURE_FRONT = "recommended_tire_pressure_front"
+KEY_RECOMMENDED_TIRE_PRESSURE_REAR = "recommended_tire_pressure_rear"
+
 
 @dataclass(frozen=True, kw_only=True)
 class SubaruSensorEntityDescription(SensorEntityDescription):
@@ -148,15 +154,15 @@ API_GEN_2_SENSORS = [
         translation_key="vehicle_state",
     ),
     SubaruSensorEntityDescription(
-        key="recommended_tire_pressure_front",
-        translation_key="recommended_tire_pressure_front",
+        key=KEY_RECOMMENDED_TIRE_PRESSURE_FRONT,
+        translation_key=KEY_RECOMMENDED_TIRE_PRESSURE_FRONT,
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
         value_fn=_recommended_tire_pressure(API_KEY_FRONT_TIRES),
     ),
     SubaruSensorEntityDescription(
-        key="recommended_tire_pressure_rear",
-        translation_key="recommended_tire_pressure_rear",
+        key=KEY_RECOMMENDED_TIRE_PRESSURE_REAR,
+        translation_key=KEY_RECOMMENDED_TIRE_PRESSURE_REAR,
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
         value_fn=_recommended_tire_pressure(API_KEY_REAR_TIRES),
