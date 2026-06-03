@@ -431,9 +431,15 @@ Accepted (in the class or any ancestor):
 1. Class body: `_attr_unique_id = <non-None value>`.
 2. A method body where every successful path executes
    `self._attr_unique_id = <expr>` (top-level, or in both branches of an
-   `if/else`). Early-exit guards (`if cond: return` / `raise`) before
-   the assignment break the guarantee and are rejected.
+   `if/else`). An early-return guard (`if cond: return`) before the
+   assignment breaks the guarantee and is rejected; an
+   `if cond: raise ...` guard is accepted since no object is constructed
+   when the exception fires.
 3. A `unique_id` property/method override on the class.
+
+A subclass that explicitly assigns `_attr_unique_id = None` overrides
+any non-`None` value set by an ancestor and is flagged regardless of
+what the ancestors do.
 
 Mixin/abstract bases that are subclassed by another class in the same
 module are exempted. Use
