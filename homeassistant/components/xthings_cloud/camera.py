@@ -143,6 +143,9 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
         """Handle WebRTC offer via KVS signaling."""
+        if session_id in self._kvs_sessions:
+            self.close_webrtc_session(session_id)
+
         try:
             kvs_data = await self.coordinator.client.async_get_camera_webrtc(
                 self._device_id
@@ -151,9 +154,21 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             channel_arn = kvs_data.get("channel_arn")
             viewer = kvs_data.get("viewer")
 
-            if not all([region, channel_arn, viewer]):
+            if not all([region, channel_arn, isinstance(viewer, dict)]):
                 send_message(
                     WebRTCError(code="kvs_error", message="Invalid KVS credentials")
+                )
+                return
+
+            if not all(
+                key in viewer
+                for key in ("AccessKeyId", "SecretAccessKey", "SessionToken")
+            ):
+                send_message(
+                    WebRTCError(
+                        code="kvs_error",
+                        message="Missing required AWS credentials in viewer data",
+                    )
                 )
                 return
 
@@ -190,12 +205,19 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 on_ice_candidate=_on_ice,
             )
 
-            for cand in self._pending_candidates.pop(session_id, []):
-                await kvs_client.async_send_ice_candidate(
-                    candidate=cand.candidate,
-                    sdp_mid=cand.sdp_mid,
-                    sdp_m_line_index=cand.sdp_m_line_index,
-                )
+            pending_candidates = self._pending_candidates.get(session_id, [])
+            for cand in pending_candidates:
+                try:
+                    await kvs_client.async_send_ice_candidate(
+                        candidate=cand.candidate,
+                        sdp_mid=cand.sdp_mid,
+                        sdp_m_line_index=cand.sdp_m_line_index,
+                    )
+                except Exception as err:  # noqa: BLE001
+                    LOGGER.warning("Failed to send cached ICE candidate: %s", err)
+
+            # Clear candidates only after attempting to send them all
+            self._pending_candidates.pop(session_id, None)
 
             if answer_sdp:
                 send_message(WebRTCAnswer(answer=answer_sdp))
@@ -203,12 +225,14 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 send_message(
                     WebRTCError(code="kvs_error", message="No answer SDP from KVS")
                 )
+                self.close_webrtc_session(session_id)
 
         except Exception as err:  # noqa: BLE001
             LOGGER.exception("KVS WebRTC failed: %s", err)
             send_message(
                 WebRTCError(code="kvs_error", message="WebRTC negotiation failed")
             )
+            self.close_webrtc_session(session_id)
 
     async def async_on_webrtc_candidate(
         self, session_id: str, candidate: RTCIceCandidateInit

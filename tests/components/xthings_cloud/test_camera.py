@@ -183,9 +183,6 @@ async def test_webrtc_candidate_caching_and_flush(
     # Call async_on_webrtc_candidate before session exists
     await camera_entity.async_on_webrtc_candidate(session_id, candidate)
 
-    assert session_id in camera_entity._pending_candidates
-    assert len(camera_entity._pending_candidates[session_id]) == 1
-
     with patch(
         "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
     ) as mock_kvs_client_class:
@@ -205,7 +202,10 @@ async def test_webrtc_candidate_caching_and_flush(
             sdp_mid="mock_sdp_mid",
             sdp_m_line_index=0,
         )
-        assert session_id not in camera_entity._pending_candidates
+
+        # Re-send candidate after session is established to verify direct send
+        await camera_entity.async_on_webrtc_candidate(session_id, candidate)
+        assert mock_kvs_client.async_send_ice_candidate.call_count == 2
 
 
 async def test_webrtc_session_cleanup(
@@ -255,16 +255,16 @@ async def test_webrtc_session_cleanup(
             send_message=MagicMock(),
         )
 
-        assert session_id in camera_entity._kvs_sessions
-
         # Test close_webrtc_session
         camera_entity.close_webrtc_session(session_id)
 
-        assert session_id not in camera_entity._kvs_sessions
-        assert session_id not in camera_entity._pending_candidates
-
         await hass.async_block_till_done()
         mock_kvs_client.async_close.assert_called_once()
+
+        # Verify that candidate is not flushed after session is closed
+        mock_kvs_client.async_send_ice_candidate = AsyncMock()
+        await camera_entity.async_on_webrtc_candidate(session_id, candidate)
+        mock_kvs_client.async_send_ice_candidate.assert_not_called()
 
 
 async def test_webrtc_offer_kvs_error(
