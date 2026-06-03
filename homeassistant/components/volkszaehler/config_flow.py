@@ -34,13 +34,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
     api = Volkszaehler(
-        async_get_clientsession(hass),
-        data[CONF_UUID],
+        session=async_get_clientsession(hass),
+        uuid=data[CONF_UUID],
         host=data[CONF_HOST],
         port=data[CONF_PORT],
     )
