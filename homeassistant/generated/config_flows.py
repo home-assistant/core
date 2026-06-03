@@ -653,6 +653,7 @@ FLOWS = {
         "satel_integra",
         "saunum",
         "schlage",
+        "schluter",
         "scrape",
         "screenlogic",
         "season",

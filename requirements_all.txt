@@ -1935,9 +1935,6 @@ py-nymta==0.4.0
 # homeassistant.components.opendisplay
 py-opendisplay==7.2.3
 
-# homeassistant.components.schluter
-py-schluter==0.1.7
-
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
 

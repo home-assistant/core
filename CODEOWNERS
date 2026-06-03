@@ -1558,7 +1558,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/schedule/ @home-assistant/core
 /homeassistant/components/schlage/ @dknowles2
 /tests/components/schlage/ @dknowles2
-/homeassistant/components/schluter/ @prairieapps
 /homeassistant/components/scrape/ @fabaff @gjohansson-ST
 /tests/components/scrape/ @fabaff @gjohansson-ST
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco
