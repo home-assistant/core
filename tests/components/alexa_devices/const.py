@@ -113,7 +113,7 @@ TEST_DEVICE_2 = AmazonDevice(
 
 TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(
     timestamp=1000,
-    utterance_type="WAKE_WORD_UTTERANCE",
+    history_type="WAKE_WORD_UTTERANCE",
     intent="PlayMusicIntent",
     title="Play some music",
     sub_title="Echo Test",
@@ -121,7 +121,7 @@ TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(
 
 TEST_VOCAL_RECORD_EVENT = AmazonVocalRecord(
     timestamp=1234567890,
-    utterance_type="WAKE_WORD_UTTERANCE",
+    history_type="WAKE_WORD_UTTERANCE",
     intent="PlayMusicIntent",
     title="Play some music",
     sub_title="Echo Test",
