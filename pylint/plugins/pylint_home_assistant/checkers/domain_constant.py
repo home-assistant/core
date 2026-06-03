@@ -7,11 +7,20 @@ from pylint.lint import PyLinter
 from pylint_home_assistant.helpers.module_info import is_test_module
 
 _FUNCTION_CHECKS: list[tuple[str, int | None, str, bool]] = [
+    # - class/function name
+    # - position of domain argument
+    # - kwarg name for domain argument
+    # - allow iterable
     ("MockConfigEntry", None, "domain", False),
     ("async_mock_service", 1, "domain", False),
     ("async_setup_component", 1, "domain", False),
 ]
 _METHOD_CHECKS: list[tuple[str, str, int | None, str, bool]] = [
+    # - method source
+    # - method name
+    # - position of domain argument
+    # - kwarg name for domain argument
+    # - allow iterable
     ("hass.config_entries.flow", "async_init", 0, "handler", False),
     ("hass.services", "async_call", 0, "domain", False),
     ("hass.services", "call", 0, "domain", False),
