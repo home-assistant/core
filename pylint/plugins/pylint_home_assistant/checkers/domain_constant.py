@@ -42,23 +42,29 @@ class DomainConstantChecker(BaseChecker):
         if not self._in_test_module:
             return
 
-        if isinstance(node.func, nodes.Attribute):
-            for method_source, method_name, arg_position, kwarg_name in _METHOD_CHECKS:
-                if (
-                    node.func.attrname == method_name
-                    and node.func.expr.as_string() == method_source
-                ):
-                    self._ensure_domain_argument(
-                        node, arg_position=arg_position, kwarg_name=kwarg_name
-                    )
-                    return
-        if isinstance(node.func, nodes.Name):
-            for func_name, arg_position, kwarg_name in _FUNCTION_CHECKS:
-                if node.func.name == func_name:
-                    self._ensure_domain_argument(
-                        node, arg_position=arg_position, kwarg_name=kwarg_name
-                    )
-                    return
+        match node.func:
+            case nodes.Attribute():
+                for (
+                    method_source,
+                    method_name,
+                    arg_position,
+                    kwarg_name,
+                ) in _METHOD_CHECKS:
+                    if (
+                        node.func.attrname == method_name
+                        and node.func.expr.as_string() == method_source
+                    ):
+                        self._ensure_domain_argument(
+                            node, arg_position=arg_position, kwarg_name=kwarg_name
+                        )
+                        return
+            case nodes.Name():
+                for func_name, arg_position, kwarg_name in _FUNCTION_CHECKS:
+                    if node.func.name == func_name:
+                        self._ensure_domain_argument(
+                            node, arg_position=arg_position, kwarg_name=kwarg_name
+                        )
+                        return
 
     def _ensure_domain_argument(
         self, call_node: nodes.Call, *, arg_position: int | None, kwarg_name: str
