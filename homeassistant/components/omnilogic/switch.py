@@ -228,11 +228,13 @@ class OmniLogicPumpControl(OmniLogicSwitch):
                     self.async_write_ha_state()
 
             else:
+                # pylint: disable-next=home-assistant-raise-third-party-exception
                 raise OmniLogicException(
                     "Cannot set speed. Speed is outside pump range."
                 )
 
         else:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise OmniLogicException("Cannot set speed on a non-variable speed pump.")
 
 

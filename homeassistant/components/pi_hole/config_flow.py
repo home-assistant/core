@@ -157,6 +157,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                         5,
                         str(pi_hole.data),
                     )
+                    # pylint: disable-next=home-assistant-raise-third-party-exception
                     raise HoleError(pi_hole.data)  # noqa: TRY301
             except HoleError as ex_v5:
                 _LOGGER.error(

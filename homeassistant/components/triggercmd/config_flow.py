@@ -36,6 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> str:
     try:
         await client.async_connection_test(data[CONF_TOKEN], hass_client)
     except Exception as e:
+        # pylint: disable-next=home-assistant-raise-third-party-exception
         raise TRIGGERcmdConnectionError from e
     else:
         return token_data["id"]

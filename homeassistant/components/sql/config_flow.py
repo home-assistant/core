@@ -149,6 +149,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
             if sess:
                 sess.close()
                 engine.dispose()
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise NoSuchColumnError(f"Column {column} is not returned by the query.")
 
         data = res[column]

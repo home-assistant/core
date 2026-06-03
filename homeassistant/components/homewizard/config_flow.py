@@ -345,6 +345,7 @@ async def async_try_connect(ip_address: str, token: str | None = None) -> Device
         ) from ex
 
     except UnauthorizedError as ex:
+        # pylint: disable-next=home-assistant-raise-third-party-exception
         raise UnauthorizedError("Unauthorized") from ex
 
     except Exception as ex:

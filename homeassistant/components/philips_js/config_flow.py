@@ -83,6 +83,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         await hub.setTransport(hub.secured_transport, hub.api_version_detected)
 
         if not hub.system or not hub.name:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise ConnectionFailure("System data or name is empty")
 
         self._hub = hub

@@ -165,6 +165,7 @@ class MutexPool(StaticPool):
         # pylint: disable-next=consider-using-with
         got_lock = MutexPool.pool_lock.acquire(timeout=10)
         if not got_lock:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise SQLAlchemyError
         conn = super()._do_get()
         if DEBUG_MUTEX_POOL:

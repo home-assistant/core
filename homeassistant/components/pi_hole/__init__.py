@@ -205,4 +205,5 @@ async def determine_api_version(
         "Could not determine pi-hole API version at: %s",
         hole_v6.base_url,
     )
+    # pylint: disable-next=home-assistant-raise-third-party-exception
     raise HoleError("Could not determine Pi-hole API version")

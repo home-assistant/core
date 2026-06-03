@@ -258,6 +258,7 @@ async def async_send_message(  # noqa: C901
 
             if url is None:
                 _LOGGER.error("No path or URL found for file")
+                # pylint: disable-next=home-assistant-raise-third-party-exception
                 raise FileUploadError("Could not upload file")
 
             return url

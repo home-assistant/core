@@ -44,6 +44,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Connect to the device and verify it responds."""
         ble_device = async_ble_device_from_address(self.hass, address, connectable=True)
         if ble_device is None:
+            # pylint: disable-next=home-assistant-raise-third-party-exception
             raise BLEConnectionError(f"Could not find connectable device for {address}")
 
         async with OpenDisplayDevice(
