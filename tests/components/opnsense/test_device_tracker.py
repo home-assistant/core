@@ -8,7 +8,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import device_tracker
-from homeassistant.components.opnsense import OPNsenseRuntimeData
 from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -90,7 +89,6 @@ async def test_device_tracker_states(
     assert state_1.state == "home"  # Should be connected since it's in ARP table
     assert state_1.attributes.get("ip") == "192.168.0.123"
     assert state_1.attributes.get("mac") == "ff:ff:ff:ff:ff:ff"
-    assert state_1.attributes.get("interface") == "LAN"
 
     # Test second device (with hostname and manufacturer)
     entity_id_2 = entity_ids_by_unique_id["ff:ff:ff:ff:ff:fe"]
@@ -99,8 +97,6 @@ async def test_device_tracker_states(
     assert state_2.state == "home"  # Should be connected since it's in ARP table
     assert state_2.attributes.get("ip") == "192.168.0.167"
     assert state_2.attributes.get("mac") == "ff:ff:ff:ff:ff:fe"
-    assert state_2.attributes.get("interface") == "LAN"
-    assert state_2.attributes.get("manufacturer") == "OEM"
 
 
 async def test_device_tracker_with_interfaces_filter(
@@ -119,10 +115,6 @@ async def test_device_tracker_with_interfaces_filter(
             "verify_ssl": False,
             "tracker_interfaces": ["WAN"],  # Filter to only WAN interface
         },
-    )
-    mock_config_entry.runtime_data = OPNsenseRuntimeData(
-        client=mock_opnsense_client.return_value,
-        tracker_interfaces=["WAN"],
     )
     mock_config_entry.add_to_hass(hass)
 

@@ -1,7 +1,5 @@
 """Device tracker support for OPNsense routers."""
 
-from typing import Any
-
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,10 +15,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for OPNsense component."""
-    client = entry.runtime_data.client
-    interfaces = entry.runtime_data.tracker_interfaces
-
-    coordinator = OPNsenseDeviceTrackerCoordinator(hass, entry, client, interfaces)
+    coordinator = entry.runtime_data.coordinator
 
     def _async_add_new_entities() -> None:
         """Add entities for newly discovered devices."""
@@ -40,8 +35,6 @@ async def async_setup_entry(
 
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
-    # Initial data fetch
-    await coordinator.async_config_entry_first_refresh()
     _async_add_new_entities()
 
 
@@ -98,20 +91,3 @@ class OPNsenseDeviceTrackerEntity(
             hostname = device_data.get("hostname")
             return hostname or None
         return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        device_data = self.device_data
-        if not device_data:
-            return {}
-
-        attrs = {}
-        if manufacturer := device_data.get("manufacturer"):
-            attrs["manufacturer"] = manufacturer
-        if interface := device_data.get("intf_description"):
-            attrs["interface"] = interface
-        if expires := device_data.get("expires"):
-            attrs["expires"] = expires
-
-        return attrs

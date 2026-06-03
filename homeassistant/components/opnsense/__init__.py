@@ -22,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
+from .coordinator import OPNsenseDeviceTrackerCoordinator
 from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
 
 CONFIG_SCHEMA = vol.Schema(
@@ -41,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -148,9 +149,18 @@ async def async_setup_entry(
                     },
                 )
 
+    coordinator = OPNsenseDeviceTrackerCoordinator(
+        hass,
+        config_entry,
+        client,
+        tracker_interfaces,
+    )
+    await coordinator.async_config_entry_first_refresh()
+
     config_entry.runtime_data = OPNsenseRuntimeData(
         client=client,
         tracker_interfaces=tracker_interfaces,
+        coordinator=coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
