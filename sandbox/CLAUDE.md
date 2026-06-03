@@ -1,12 +1,14 @@
 # Home Assistant Sandbox
 
-This directory is the home for the v2 sandbox rewrite. v2 runs Home
-Assistant integrations in isolated subprocesses while main keeps a
-single unified view of devices, entities, services, and events.
+This directory is the home for the sandbox rewrite (formerly `sandbox_v2`,
+renamed once v1 was gone). The sandbox runs Home Assistant integrations in
+isolated subprocesses while main keeps a single unified view of devices,
+entities, services, and events.
 
-v1 has been **removed** (2026-05-28) — it lived at `../sandbox/` and
-`../homeassistant/components/sandbox/`; recover it from git history if ever
-needed. This happened before v2 shipped a stable release (the documented gate's
+v1 has been **removed** (2026-05-28) — it previously occupied these same
+paths (`../sandbox/` and `../homeassistant/components/sandbox/`) that the
+rewrite now lives at; recover it from git history if ever needed. This
+happened before the rewrite shipped a stable release (the documented gate's
 second condition), as a deliberate call relying on git history for rollback.
 
 ## Read these first

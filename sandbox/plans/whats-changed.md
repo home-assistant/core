@@ -27,6 +27,10 @@
 - Config-flow forms, entity updates, and validation errors now round-trip
   faithfully across the sandbox boundary.
 - **Sandbox v1 has been removed.**
+- **`sandbox_v2` was renamed to `sandbox`** everywhere (directory, integration
+  domain, channel message strings, CLI module, storage-key namespace,
+  client_id / system-user-name prefixes). v1 is gone, so the `_v2` suffix is
+  pure debt.
 
 ## ⚠️ Breaking changes
 - [x] **v1 removed** — `homeassistant/components/sandbox/` + the v1 client are
@@ -51,6 +55,14 @@
 - [x] **Proxy entity unique_ids are now prefixed with the source integration
   domain** (`<domain>:<unique_id>`) to avoid collisions across integrations in a
   group. Pre-release → no migration. (`plan-fidelity-batch.md` #5 `3833290b165`)
+- [x] **`sandbox_v2` → `sandbox` rename.** Directory (`components/sandbox`,
+  top-level `sandbox/`, client subpackage), integration domain, channel
+  message strings (`sandbox/call_service` etc.), CLI module
+  (`python -m hass_client.sandbox`), storage-key namespace
+  (`<config>/.storage/sandbox/…`), and the `sandbox/` client_id +
+  `Sandbox: ` system-user-name prefixes all dropped the `_v2`. Pre-release →
+  no migration (old dev `.storage/sandbox_v2/` + `Sandbox v2:` users orphan;
+  wipe-and-restart). (`plan-rename-sandbox.md`)
 
 ## For integration authors
 - [x] **Custom (HACS) integrations are fetched at startup.** Main pushes the git
