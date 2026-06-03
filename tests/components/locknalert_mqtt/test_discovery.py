@@ -1217,9 +1217,7 @@ async def test_discover_alarm_control_panel(
 
     assert state is not None
     assert state.name == "AlarmControlPanelTest"
-    assert ("alarm_control_panel", "bla") in hass.data[
-        "mqtt"
-    ].discovery_already_discovered
+    assert ("alarm_control_panel", "bla") in hass.data[DATA_MQTT].discovery_already_discovered
 
 
 async def test_discovery_with_default_entity_id_for_previous_deleted_entity(
@@ -1296,9 +1294,7 @@ async def test_discovery_incl_nodeid(
 
     assert state is not None
     assert state.name == "Beer"
-    assert ("alarm_control_panel", "my_node_id bla") in hass.data[
-        "mqtt"
-    ].discovery_already_discovered
+    assert ("alarm_control_panel", "my_node_id bla") in hass.data[DATA_MQTT].discovery_already_discovered
 
 
 async def test_non_duplicate_discovery(
@@ -2134,9 +2130,7 @@ async def test_discovery_expansion(
     state = hass.states.get("alarm_control_panel.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("alarm_control_panel", "bla") in hass.data[
-        "mqtt"
-    ].discovery_already_discovered
+    assert ("alarm_control_panel", "bla") in hass.data[DATA_MQTT].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test_topic/some/base/topic", "disarmed")
@@ -2190,9 +2184,7 @@ async def test_discovery_expansion_2(
     state = hass.states.get("alarm_control_panel.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("alarm_control_panel", "bla") in hass.data[
-        "mqtt"
-    ].discovery_already_discovered
+    assert ("alarm_control_panel", "bla") in hass.data[DATA_MQTT].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
 
@@ -2270,9 +2262,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
     state = hass.states.get("alarm_control_panel.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("alarm_control_panel", "bla") in hass.data[
-        "mqtt"
-    ].discovery_already_discovered
+    assert ("alarm_control_panel", "bla") in hass.data[DATA_MQTT].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
@@ -2320,9 +2310,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
     state = hass.states.get("alarm_control_panel.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("alarm_control_panel", "bla") in hass.data[
-        "mqtt"
-    ].discovery_already_discovered
+    assert ("alarm_control_panel", "bla") in hass.data[DATA_MQTT].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
@@ -2429,9 +2417,7 @@ async def test_complex_discovery_topic_prefix(
 
     assert state is not None
     assert state.name == "Beer"
-    assert ("alarm_control_panel", "node1 object1") in hass.data[
-        "mqtt"
-    ].discovery_already_discovered
+    assert ("alarm_control_panel", "node1 object1") in hass.data[DATA_MQTT].discovery_already_discovered
 
 
 @patch("aiolocknalert.client.DISCOVERY_COOLDOWN", 0.0)
