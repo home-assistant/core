@@ -390,7 +390,7 @@ async def test_watchdog_unavailable_logs_only_once(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that unavailability is logged only once, not on every watchdog tick."""
-    coordinator.data.timestamp = (
+    coordinator.data.last_sample_timestamp = (
         dt_util.utcnow() - WATCHDOG_INTERVAL - timedelta(seconds=1)
     )
     coordinator.last_update_success = False
