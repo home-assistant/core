@@ -413,5 +413,14 @@
     "doorState": 1,
     "online": true,
     "version": "V3.1-6.3"
+  },
+  {
+    "deviceId": "B0E9FEA5D7F0",
+    "deviceType": "AI Art Frame",
+    "hubDeviceId": "B0E9FEA5D7F0",
+    "battery": 99,
+    "displayMode": 1,
+    "imageUrl": "https://p3.itc.cn/images01/20231215/2f2db37e221c4ad3af575254c7769ca1.jpeg",
+    "version": "V0.0-0.5"
   }
 ]

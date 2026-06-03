@@ -85,7 +85,6 @@ async def test_upload_image_wrong_model_skips(
     device_registry: dr.DeviceRegistry,
     mock_list_devices,
     mock_get_status,
-    mock_setup_webhook,
 ) -> None:
     """Test service skips devices that are not AI Art Frame."""
     hub = Device(
@@ -95,9 +94,7 @@ async def test_upload_image_wrong_model_skips(
         deviceType="Hub Mini",
         hubDeviceId="test-hub-id",
     )
-    entry = await _setup(
-        hass, mock_list_devices, mock_get_status, mock_setup_webhook, device=hub
-    )
+    entry = await _setup(hass, mock_list_devices, mock_get_status, device=hub)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "FFEEDDCCBBAA")},
