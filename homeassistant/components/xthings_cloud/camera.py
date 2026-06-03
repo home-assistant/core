@@ -1,6 +1,7 @@
 """Camera platform for Xthings Cloud."""
 
 import asyncio
+from collections import OrderedDict
 from typing import Any
 
 from ha_xthings_cloud import KvsSignalingClient, XthingsCloudApiError
@@ -23,7 +24,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER
 from .coordinator import XthingsCloudCoordinator
-
 
 # Bound WebRTC caches to avoid unbounded memory growth from delayed candidates.
 MAX_PENDING_ICE_CANDIDATES = 50
@@ -75,7 +75,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self._snapshot_task: asyncio.Task[None] | None = None
         self._kvs_sessions: dict[str, KvsSignalingClient] = {}
         self._pending_candidates: dict[str, list[RTCIceCandidateInit]] = {}
-        self._closed_sessions: set[str] = set()
+        self._closed_sessions: OrderedDict[str, None] = OrderedDict()
 
     @property
     def device_data(self) -> dict[str, Any]:
@@ -155,7 +155,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         """Handle WebRTC offer via KVS signaling."""
         if session_id in self._kvs_sessions:
             self.close_webrtc_session(session_id)
-        self._closed_sessions.discard(session_id)
+        self._closed_sessions.pop(session_id, None)
 
         try:
             kvs_data = await self.coordinator.client.async_get_camera_webrtc(
@@ -283,11 +283,11 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         kvs_client = self._kvs_sessions.pop(session_id, None)
 
         # Track closed sessions to prevent late candidates from leaking memory
-        self._closed_sessions.add(session_id)
+        self._closed_sessions.pop(session_id, None)
+        self._closed_sessions[session_id] = None
         # Prevent closed sessions set from growing indefinitely
         if len(self._closed_sessions) > MAX_CLOSED_WEBRTC_SESSIONS:
-            # Remove an arbitrary element if limit is exceeded
-            self._closed_sessions.pop()
+            self._closed_sessions.popitem(last=False)
 
         if kvs_client:
             self.hass.async_create_task(kvs_client.async_close())

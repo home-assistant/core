@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import WebRTCAnswer, WebRTCError, async_get_image
+from homeassistant.components.xthings_cloud.camera import MAX_CLOSED_WEBRTC_SESSIONS
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -88,9 +89,9 @@ async def test_camera_image_fetch_error_keeps_cached_image(
     image = await async_get_image(hass, "camera.front_door_camera")
     assert image.content == b"image_data"
 
-    get_device_by_id(mock_api_client, "dev_camera_001")["status"][
-        "snapshot_url"
-    ] = "https://example.com/new_snapshot.jpg"
+    get_device_by_id(mock_api_client, "dev_camera_001")["status"]["snapshot_url"] = (
+        "https://example.com/new_snapshot.jpg"
+    )
     mock_api_client.async_get_snapshot.side_effect = XthingsCloudApiError(
         "Request failed"
     )
@@ -307,6 +308,28 @@ async def test_webrtc_session_cleanup(
             sdp_mid="mock_sdp_mid",
             sdp_m_line_index=0,
         )
+
+
+async def test_webrtc_closed_session_eviction_keeps_recent_sessions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test closed WebRTC sessions evict the oldest entry first."""
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
+        await setup_integration(hass, mock_config_entry)
+
+    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
+    assert camera_entity is not None
+
+    for index in range(MAX_CLOSED_WEBRTC_SESSIONS + 1):
+        camera_entity.close_webrtc_session(f"mock_session_id_{index}")
+
+    assert "mock_session_id_0" not in camera_entity._closed_sessions
+    assert (
+        f"mock_session_id_{MAX_CLOSED_WEBRTC_SESSIONS}"
+        in camera_entity._closed_sessions
+    )
 
 
 async def test_webrtc_offer_kvs_error(
