@@ -24,13 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_test_port(hass: HomeAssistant, port: int) -> None:
-    """Verify the UDP port can be bound.
+    """Verify the UDP port can be bound."""
 
-    Skips the check when HA already owns a shared listener on this port (a
-    second device on the same port is valid — it will share the existing socket).
-    Raises OSError if the port is unavailable (e.g. already in use by another
-    process) or invalid.
-    """
     if async_get_listener_registry(hass).has_listener(port):
         return
 
@@ -51,8 +46,6 @@ def _resolve_host(host: str) -> str:
 
 class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bitvis Power Hub."""
-
-    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""

@@ -29,7 +29,7 @@ def _uptime_to_boot_time(uptime_s: int) -> datetime:
     return dt_util.utcnow().replace(microsecond=0) - timedelta(seconds=uptime_s)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BitvisData:
     """Data structure for Bitvis measurements."""
 

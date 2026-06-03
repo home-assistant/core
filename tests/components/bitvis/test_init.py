@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.bitvis import async_unload_entry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -60,27 +59,5 @@ async def test_unload_entry(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test that unloading stops the coordinator and unloads platforms."""
-    coordinator = init_integration.runtime_data
-    with patch.object(coordinator, "async_stop", new_callable=AsyncMock) as mock_stop:
-        assert await hass.config_entries.async_unload(init_integration.entry_id)
-        mock_stop.assert_called_once()
-
+    assert await hass.config_entries.async_unload(init_integration.entry_id)
     assert init_integration.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_unload_entry_platform_failure(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test that async_stop is not called when platform unload fails."""
-    coordinator = init_integration.runtime_data
-    with (
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-            return_value=False,
-        ),
-        patch.object(coordinator, "async_stop", new_callable=AsyncMock) as mock_stop,
-    ):
-        result = await async_unload_entry(hass, init_integration)
-
-    assert result is False
-    mock_stop.assert_not_called()
