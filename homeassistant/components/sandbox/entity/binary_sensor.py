@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``binary_sensor`` entities."""
+"""Sandbox proxy for ``binary_sensor`` entities."""
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import STATE_ON

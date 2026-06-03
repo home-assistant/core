@@ -2,7 +2,7 @@
 
 A stateless sandbox starts with only the bundled ``homeassistant`` package on
 disk. Built-in integrations are already present (no-op); custom (HACS)
-integrations carry a git :class:`~._proto.sandbox_v2_pb2.IntegrationSource`
+integrations carry a git :class:`~._proto.sandbox_pb2.IntegrationSource`
 descriptor on ``entry_setup`` that the sandbox fetches into
 ``<config>/custom_components/<domain>`` *before* ``async_setup`` runs (see
 :meth:`hass_client.entry_runner.EntryRunner._handle_entry_setup`).
@@ -22,7 +22,7 @@ import logging
 from pathlib import Path
 import tarfile
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 
 _LOGGER = logging.getLogger(__name__)
 

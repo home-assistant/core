@@ -1,6 +1,6 @@
 """Context-local routing primitive for sandboxed integrations.
 
-A sandbox runtime (``sandbox_v2``) runs integrations in an isolated
+A sandbox runtime (``sandbox``) runs integrations in an isolated
 subprocess. Core HA primitives such as :class:`homeassistant.helpers.storage.Store`
 must, inside that subprocess, route their IO to main instead of touching
 the sandbox's local disk. Rather than monkey-patching the ``Store`` class

@@ -209,7 +209,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
     ) -> None:
         """Register a pre-built EntityPlatform for a remote integration.
 
-        Used by ``sandbox_v2`` to attach a proxy ``EntityPlatform`` whose
+        Used by ``sandbox`` to attach a proxy ``EntityPlatform`` whose
         entities live on this Home Assistant instance but whose owning
         integration runs in a child process. The platform is keyed by the
         config entry just like ``async_setup_entry`` keys its own; a later

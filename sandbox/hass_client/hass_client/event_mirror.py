@@ -1,7 +1,7 @@
 """Sandbox-side event mirror (Phase 6).
 
 Forwards every event whose ``event_type`` matches ``<approved_domain>_*``
-up to main via ``sandbox_v2/fire_event``. Canonical examples: ``zha_event``,
+up to main via ``sandbox/fire_event``. Canonical examples: ``zha_event``,
 ``mqtt_message_received``, ``hue_event``, ``device_tracker_see``.
 
 The bus listener is installed via ``MATCH_ALL`` so we don't need to know
@@ -40,7 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
 from .protocol import MSG_FIRE_EVENT
@@ -109,7 +109,7 @@ class EventMirror:
             msg.context_id = event.context.id
         asyncio.create_task(  # noqa: RUF006
             self._push(msg),
-            name=f"sandbox_v2:fire_event:{event_type}",
+            name=f"sandbox:fire_event:{event_type}",
         )
 
     async def _push(self, msg: pb.FireEvent) -> None:

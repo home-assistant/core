@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``switch`` entities."""
+"""Sandbox proxy for ``switch`` entities."""
 
 from typing import Any
 

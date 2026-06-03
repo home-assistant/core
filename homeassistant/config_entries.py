@@ -562,7 +562,7 @@ class ConfigEntry[_DataT = Any]:
         _setter(self, "discovery_keys", discovery_keys)
 
         # Sandbox group this entry belongs to, or None for non-sandboxed
-        # entries. Set by sandbox_v2 at flow completion (CREATE_ENTRY) and
+        # entries. Set by sandbox at flow completion (CREATE_ENTRY) and
         # consulted by ConfigEntries.router on every setup/unload.
         _setter(self, "sandbox", sandbox)
 
@@ -2106,7 +2106,7 @@ class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
 class ConfigEntryRouter(Protocol):
     """Hook protocol for routing config flows and entry setup elsewhere.
 
-    Currently used by `sandbox_v2` to divert flows and config-entry setup to
+    Currently used by `sandbox` to divert flows and config-entry setup to
     a sandbox subprocess. Each method returns ``None`` to fall through to
     the default behaviour and a concrete value to take over.
     """
@@ -2142,7 +2142,7 @@ class ConfigEntries:
         self._hass_config = hass_config
         self._entries = ConfigEntryItems(hass)
         self._store = ConfigEntryStore(hass)
-        # Optional hook for diverting flows and entry setup (used by sandbox_v2).
+        # Optional hook for diverting flows and entry setup (used by sandbox).
         self.router: ConfigEntryRouter | None = None
         EntityRegistryDisabledHandler(hass).async_setup()
 

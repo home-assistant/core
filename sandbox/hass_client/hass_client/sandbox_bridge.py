@@ -3,7 +3,7 @@
 Implements ``homeassistant.helpers.sandbox_context.SandboxBridge`` over the
 control channel: the three ``Store`` IO methods delegate to main via the
 ``MSG_STORE_LOAD`` / ``MSG_STORE_SAVE`` / ``MSG_STORE_REMOVE`` RPCs. Main
-namespaces every key as ``<config>/.storage/sandbox_v2/<group>/<key>`` so
+namespaces every key as ``<config>/.storage/sandbox/<group>/<key>`` so
 two sandbox processes — or main itself — can't read each other's data.
 
 The bodies are lifted from the pre-contextvar Phase 8 store subclass that
@@ -20,7 +20,7 @@ from typing import Any
 from homeassistant.helpers import json as json_helper
 from homeassistant.util.json import SerializationError
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
 from .messages import dict_to_struct, struct_to_dict
 from .protocol import MSG_STORE_LOAD, MSG_STORE_REMOVE, MSG_STORE_SAVE

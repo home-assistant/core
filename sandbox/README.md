@@ -1,4 +1,4 @@
-# Home Assistant Sandbox v2
+# Home Assistant Sandbox
 
 A fresh rewrite of the sandbox system that runs Home Assistant
 integrations in isolated subprocesses while the main instance keeps a
@@ -28,18 +28,18 @@ numbers and shipped at least one stable release. See
 - `run_compat.py` + `COMPAT.md` — compat-lane runner and report.
 
 The HA Core side of the integration lives at
-[`../homeassistant/components/sandbox_v2/`](../homeassistant/components/sandbox_v2/).
+[`../homeassistant/components/sandbox/`](../homeassistant/components/sandbox/).
 
 ## Quick start
 
 ```bash
-cd sandbox_v2/hass_client
+cd sandbox/hass_client
 uv sync
 uv run pytest
 
 # Run the runtime by hand against a local HA (debugging only — the
 # manager normally spawns the subprocess for you).
-uv run python -m hass_client.sandbox_v2 \
+uv run python -m hass_client.sandbox \
     --name built-in \
     --url ws://localhost:8123/api/websocket \
     --token <scoped sandbox token>
@@ -48,14 +48,14 @@ uv run python -m hass_client.sandbox_v2 \
 In production, the integration creates the system user, issues the
 scoped token, and spawns the subprocess automatically once the first
 flow or entry routes to a given group. The `<scoped sandbox token>`
-above is the credential `sandbox_v2/auth.py` mints; running the
+above is the credential `sandbox/auth.py` mints; running the
 runtime by hand requires creating one yourself.
 
 ## Running HA Core's tests through the sandbox
 
 ```bash
 # In-process plugin (fast, freezer-safe)
-cd sandbox_v2/hass_client
+cd sandbox/hass_client
 uv run python -m pytest -p hass_client.testing.pytest_plugin \
     ../../tests/components/input_boolean/test_init.py -v
 
@@ -64,12 +64,12 @@ uv run python -m pytest -p hass_client.testing.conftest_sandbox \
     ../../tests/components/input_boolean/test_init.py -v
 
 # Or drive the compat lane runner
-cd sandbox_v2
+cd sandbox
 python run_compat.py input_boolean light switch
 ```
 
 [`COMPAT.md`](COMPAT.md) is the compat-lane report; per-failure
-output lands in `${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_v2_errors}`.
+output lands in `${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}`.
 
 ## Status
 
@@ -94,10 +94,10 @@ Phases 0–17 landed:
   main, gated by a refcounted `ApprovedDomains` set.
 - **Phase 7** — scoped auth (`RefreshToken.scopes`) + opt-in data
   sharing (`SandboxGroupConfig`). Sandbox tokens reject every
-  non-`sandbox_v2/*` command at the dispatcher.
+  non-`sandbox/*` command at the dispatcher.
 - **Phase 8** — `Store` routing. `RemoteStore` proxies every
   `Store(...)` in the sandbox to
-  `<config>/.storage/sandbox_v2/<group>/<key>` on main.
+  `<config>/.storage/sandbox/<group>/<key>` on main.
 - **Phase 9** — graceful shutdown + restore-state hand-off. Sandboxes
   unload entries and dump `RestoreEntity` state into the shutdown
   reply; main persists it for the next boot's warm-load.

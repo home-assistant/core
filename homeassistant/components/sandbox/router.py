@@ -8,7 +8,7 @@ manager:
   control :class:`Channel`.
 * Existing config-entry setup is intercepted when ``entry.sandbox`` is
   set — the entry is handed to the sandbox manager and pushed into the
-  sandbox runtime via ``sandbox_v2/entry_setup``.
+  sandbox runtime via ``sandbox/entry_setup``.
 
 The router treats classifier output as the source of truth for which
 sandbox a new entry should go into. Once an entry exists, the
@@ -28,7 +28,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
 from .classifier import SandboxAssignment, classify
 from .manager import SandboxManager
@@ -203,7 +203,7 @@ class SandboxFlowRouter:
 async def _entry_setup_payload(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> pb.EntrySetup:
-    """Build the typed ``EntrySetup`` message for ``sandbox_v2/entry_setup``.
+    """Build the typed ``EntrySetup`` message for ``sandbox/entry_setup``.
 
     Surfaces the small subset of entry fields the integration's
     ``async_setup_entry`` reads, plus the ``integration_source`` descriptor

@@ -1,4 +1,4 @@
-"""Bucket sandbox_v2 compat-sweep failures into named categories.
+"""Bucket sandbox compat-sweep failures into named categories.
 
 Pairs with ``run_compat_full.py``. The runner dumps a per-test traceback
 into ``$SANDBOX_V2_ERRORS_DIR/<integration>/<path>__<name>.txt``; this
@@ -17,12 +17,12 @@ add more rules and re-run.
 
 Usage::
 
-    cd sandbox_v2
+    cd sandbox
     # After run_compat_full.py finishes:
     uv run python categorize_failures.py
 
     # Or against a custom errors dir:
-    uv run python categorize_failures.py --errors-dir /tmp/sandbox_v2_errors
+    uv run python categorize_failures.py --errors-dir /tmp/sandbox_errors
 
 The rules are intentionally regex-based on the per-test traceback excerpt
 (JUnit's ``<failure>`` text + the ``--tb=short`` body). They're meant to
@@ -43,7 +43,7 @@ import re
 
 _HERE = Path(__file__).resolve().parent
 DEFAULT_ERRORS_DIR = Path(
-    os.environ.get("SANDBOX_V2_ERRORS_DIR", "/tmp/sandbox_v2_errors")
+    os.environ.get("SANDBOX_V2_ERRORS_DIR", "/tmp/sandbox_errors")
 )
 DEFAULT_BACKLOG_JSON = _HERE / "BACKLOG_FAILURES.json"
 
@@ -178,16 +178,16 @@ RULES: tuple[Rule, ...] = (
     # ---- channel / re-entrancy ------------------------------------------
     Rule(
         "re-entrant-channel",
-        _compile(r"sandbox_v2.*?channel\.call.*?(deadlock|timeout|never returned)"),
+        _compile(r"sandbox.*?channel\.call.*?(deadlock|timeout|never returned)"),
     ),
     Rule(
         "re-entrant-channel",
-        _compile(r"TimeoutError.*?sandbox_v2.*?call"),
+        _compile(r"TimeoutError.*?sandbox.*?call"),
     ),
 
     # ---- store ----------------------------------------------------------
     Rule("store-key-rejected", _compile(r"_require_key.*?invalid")),
-    Rule("store-key-rejected", _compile(r"sandbox_v2.*?store.*?(rejected|invalid key)")),
+    Rule("store-key-rejected", _compile(r"sandbox.*?store.*?(rejected|invalid key)")),
 
     # ---- flow / async ---------------------------------------------------
     Rule(
@@ -367,7 +367,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--errors-dir", type=Path, default=DEFAULT_ERRORS_DIR,
         help=("Per-test error dump root "
-              "(default: $SANDBOX_V2_ERRORS_DIR or /tmp/sandbox_v2_errors)."),
+              "(default: $SANDBOX_V2_ERRORS_DIR or /tmp/sandbox_errors)."),
     )
     parser.add_argument(
         "--out", type=Path, default=DEFAULT_BACKLOG_JSON,

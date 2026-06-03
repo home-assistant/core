@@ -3,7 +3,7 @@
 The bridge listens for ``EVENT_STATE_CHANGED`` on the sandbox-private
 :class:`HomeAssistant`. We drive it by registering a fake entity into a
 :class:`EntityComponent` and firing the matching events; the channel
-should see ``sandbox_v2/register_entity`` then ``sandbox_v2/state_changed``.
+should see ``sandbox/register_entity`` then ``sandbox/state_changed``.
 
 To stay independent of the entity_registry / device_registry machinery,
 we put the entity into the component's ``_entities`` dict manually and
@@ -17,7 +17,7 @@ import tempfile
 from typing import Any
 from unittest.mock import MagicMock
 
-from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.entity_bridge import EntityBridge
@@ -101,7 +101,7 @@ async def _channels_fixture() -> tuple[Channel, Channel]:
 @pytest.fixture(name="hass_with_demo_component")
 async def _hass_with_demo_component_fixture():
     """Yield an HA instance with a ``demo`` EntityComponent ready."""
-    with tempfile.TemporaryDirectory(prefix="sandbox_v2_entity_bridge_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="sandbox_entity_bridge_") as tmp:
         flow_runner = await FlowRunner.create(config_dir=tmp)
         hass = flow_runner.hass
         component: EntityComponent[Entity] = EntityComponent(
@@ -164,7 +164,7 @@ async def test_bridge_includes_device_info_in_register_payload(
         register_calls.append(msg)
         return pb.RegisterEntityResult(entity_id="demo.with_device_main")
 
-    main.register("sandbox_v2/register_entity", _on_register)
+    main.register("sandbox/register_entity", _on_register)
     main.start()
     sandbox.start()
 
@@ -227,8 +227,8 @@ async def test_bridge_emits_register_and_state_pushes(
     async def _on_state(msg: pb.StateChanged) -> None:
         state_calls.append(msg)
 
-    main.register("sandbox_v2/register_entity", _on_register)
-    main.register("sandbox_v2/state_changed", _on_state)
+    main.register("sandbox/register_entity", _on_register)
+    main.register("sandbox/state_changed", _on_state)
     main.start()
     sandbox.start()
 
@@ -330,7 +330,7 @@ async def test_entity_registry_update_resends_registration(
         register_calls.append(msg)
         return pb.RegisterEntityResult(entity_id="demo.lamp_main")
 
-    main.register("sandbox_v2/register_entity", _on_register)
+    main.register("sandbox/register_entity", _on_register)
     main.start()
     sandbox.start()
 
@@ -387,7 +387,7 @@ async def test_device_registry_update_resends_linked_entities(
         register_calls.append(msg)
         return pb.RegisterEntityResult(entity_id="demo.lamp_main")
 
-    main.register("sandbox_v2/register_entity", _on_register)
+    main.register("sandbox/register_entity", _on_register)
     main.start()
     sandbox.start()
 

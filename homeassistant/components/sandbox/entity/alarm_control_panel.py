@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``alarm_control_panel`` entities."""
+"""Sandbox proxy for ``alarm_control_panel`` entities."""
 
 from typing import TYPE_CHECKING
 

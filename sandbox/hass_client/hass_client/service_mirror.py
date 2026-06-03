@@ -2,13 +2,13 @@
 
 Watches ``EVENT_SERVICE_REGISTERED`` / ``EVENT_SERVICE_REMOVED`` on the
 sandbox bus. For each registration whose domain is in
-:class:`ApprovedDomains`, it pushes ``sandbox_v2/register_service`` to
+:class:`ApprovedDomains`, it pushes ``sandbox/register_service`` to
 main with the metadata main needs to install a forwarding handler. Same
-shape for removals via ``sandbox_v2/unregister_service``.
+shape for removals via ``sandbox/unregister_service``.
 
 Schemas are intentionally not serialised in Phase 6 — the sandbox is the
 authoritative validator (the call comes back over
-``sandbox_v2/call_service`` and is run through ``services.async_call``
+``sandbox/call_service`` and is run through ``services.async_call``
 on the sandbox side, where the real schema lives). Main only needs
 ``supports_response`` so it can register the proxy with the right return
 shape; the proxy handler forwards everything else verbatim.
@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
 from .protocol import MSG_REGISTER_SERVICE, MSG_UNREGISTER_SERVICE
@@ -104,7 +104,7 @@ class ServiceMirror:
         self._mirrored.add(key)
         asyncio.create_task(  # noqa: RUF006
             self._push_register(msg, key),
-            name=f"sandbox_v2:register_service:{domain}.{service}",
+            name=f"sandbox:register_service:{domain}.{service}",
         )
 
     @callback
@@ -120,7 +120,7 @@ class ServiceMirror:
         msg = pb.UnregisterService(domain=domain, service=service)
         asyncio.create_task(  # noqa: RUF006
             self._push_unregister(msg),
-            name=f"sandbox_v2:unregister_service:{domain}.{service}",
+            name=f"sandbox:unregister_service:{domain}.{service}",
         )
 
     async def _push_register(

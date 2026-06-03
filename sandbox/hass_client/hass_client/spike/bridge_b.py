@@ -2,7 +2,7 @@
 
 The main proxy translates each entity method into a standard
 ``services.async_call("light", "turn_on", target={...})`` round-trip via the
-existing ``sandbox_v2/call_service`` transport. The sandbox runs HA's own
+existing ``sandbox/call_service`` transport. The sandbox runs HA's own
 service dispatcher, which resolves the target and invokes ``async_turn_on``
 on the real entity. No bespoke entity-method RPC on the wire.
 """
@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .transport import InProcessTransport
 
-COMMAND_CALL_SERVICE = "sandbox_v2/call_service"
+COMMAND_CALL_SERVICE = "sandbox/call_service"
 
 
 class OptionBMainBridge:

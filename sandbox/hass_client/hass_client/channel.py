@@ -1,4 +1,4 @@
-"""Sandbox-side mirror of ``homeassistant.components.sandbox_v2.channel``.
+"""Sandbox-side mirror of ``homeassistant.components.sandbox.channel``.
 
 Kept as a stand-alone module to honour the project boundary: the HA Core
 integration must not import from ``hass_client`` at integration-load time,
@@ -358,7 +358,7 @@ class Channel:
         if self._reader_task is not None:
             return
         self._reader_task = asyncio.create_task(
-            self._read_loop(), name=f"sandbox_v2[{self._name}]:reader"
+            self._read_loop(), name=f"sandbox[{self._name}]:reader"
         )
 
     async def call(
@@ -498,7 +498,7 @@ class Channel:
 
     def _spawn_handler(self, coro: Coroutine[Any, Any, Any]) -> None:
         """Start a handler task and track it for cancellation on close."""
-        task = asyncio.create_task(coro, name=f"sandbox_v2[{self._name}]:dispatch")
+        task = asyncio.create_task(coro, name=f"sandbox[{self._name}]:dispatch")
         self._inflight.add(task)
         task.add_done_callback(self._inflight.discard)
 

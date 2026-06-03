@@ -1,4 +1,4 @@
-# Sandbox v2 — same-host unix-socket test harness (FORWARD-LOOKING).
+# Sandbox — same-host unix-socket test harness (FORWARD-LOOKING).
 #
 # ┌───────────────────────────────────────────────────────────────────────┐
 # │ THIS HARNESS DOES NOT RUN AGAINST TODAY'S MANAGER. It captures the      │
@@ -12,7 +12,7 @@
 #
 #   (a) Configurable socket path. The manager puts its unix socket in a private
 #       per-attempt tempdir (`tempfile.mkdtemp(...control.sock)` in
-#       homeassistant/components/sandbox_v2/manager.py), not on a shared path.
+#       homeassistant/components/sandbox/manager.py), not on a shared path.
 #       For a cross-container harness the socket must live on the shared volume
 #       (`/shared/sandbox.sock`). There is no option to point it there today.
 #
@@ -32,7 +32,7 @@
 # spawned *inside its own container* (single-container model).
 
 services:
-  # Home Assistant core (main). Would run the sandbox_v2 integration with the
+  # Home Assistant core (main). Would run the sandbox integration with the
   # manager configured for the unix transport, pointing its control socket at
   # the shared volume — see gap (a). Image/build left to the deployment; this is
   # a placeholder showing the wiring, not a runnable service today.
@@ -51,7 +51,7 @@ services:
     depends_on:
       - sandbox
 
-  # The Sandbox v2 runtime image built from ./Dockerfile. Dials the shared
+  # The Sandbox runtime image built from ./Dockerfile. Dials the shared
   # unix socket that main would expose. Stateless: no volumes of its own beyond
   # the shared socket dir.
   sandbox:
@@ -60,7 +60,7 @@ services:
       # the local `homeassistant` checkout; the repo-root .dockerignore trims
       # the context.
       context: ../..
-      dockerfile: sandbox_v2/hass_client/Dockerfile
+      dockerfile: sandbox/hass_client/Dockerfile
     init: true # tini is baked in, but `init: true` is a harmless belt-and-braces.
     volumes:
       - sandbox_sock:/shared

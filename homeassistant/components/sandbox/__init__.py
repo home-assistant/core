@@ -1,4 +1,4 @@
-"""Sandbox v2 — run integrations in isolated subprocesses.
+"""Sandbox — run integrations in isolated subprocesses.
 
 The integration owns three runtime objects, all hung off
 :class:`SandboxV2Data`:
@@ -11,7 +11,7 @@ The integration owns three runtime objects, all hung off
 * :class:`SandboxBridge` (one per running sandbox) — owns the entity-side
   protocol: receives ``register_entity`` + ``state_changed`` pushes from
   the sandbox, instantiates proxy entities, and forwards entity service
-  calls back via the shared ``sandbox_v2/call_service`` channel.
+  calls back via the shared ``sandbox/call_service`` channel.
 """
 
 from dataclasses import dataclass, field
@@ -23,7 +23,7 @@ from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .auth import async_issue_sandbox_access_token
 from .bridge import SandboxBridge, async_create_bridge
 from .channel import Channel
@@ -38,7 +38,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 @dataclass
 class SandboxV2Data:
-    """Global Sandbox v2 runtime data."""
+    """Global Sandbox runtime data."""
 
     manager: SandboxManager | None = None
     router: SandboxFlowRouter | None = None
@@ -47,7 +47,7 @@ class SandboxV2Data:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Sandbox v2 integration."""
+    """Set up the Sandbox integration."""
     data = SandboxV2Data()
     hass.data[DATA_SANDBOX_V2] = data
 
@@ -75,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         bridge = data.bridges.get(group)
         if bridge is None:
             _LOGGER.debug(
-                "sandbox_v2[%s]: shutdown reply carried restore_state but"
+                "sandbox[%s]: shutdown reply carried restore_state but"
                 " no bridge is registered; dropping",
                 group,
             )

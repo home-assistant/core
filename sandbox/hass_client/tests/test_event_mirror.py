@@ -4,7 +4,7 @@ import asyncio
 import tempfile
 from typing import Any
 
-from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client._proto import sandbox_pb2 as pb
 from hass_client.approved_domains import ApprovedDomains
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
@@ -54,7 +54,7 @@ async def _channels_fixture() -> tuple[Channel, Channel]:
 
 @pytest.fixture(name="hass_runtime")
 async def _hass_runtime_fixture():
-    with tempfile.TemporaryDirectory(prefix="sandbox_v2_event_mirror_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="sandbox_event_mirror_") as tmp:
         flow_runner = await FlowRunner.create(config_dir=tmp)
         try:
             yield flow_runner.hass
@@ -79,7 +79,7 @@ async def test_owned_domain_event_is_forwarded(
     async def _on_fire(msg: pb.FireEvent) -> None:
         forwarded.append(msg)
 
-    main.register("sandbox_v2/fire_event", _on_fire)
+    main.register("sandbox/fire_event", _on_fire)
     main.start()
     sandbox.start()
 
@@ -109,7 +109,7 @@ async def test_unapproved_event_is_dropped(
     async def _on_fire(msg: pb.FireEvent) -> None:
         forwarded.append(msg)
 
-    main.register("sandbox_v2/fire_event", _on_fire)
+    main.register("sandbox/fire_event", _on_fire)
     main.start()
     sandbox.start()
 
@@ -140,7 +140,7 @@ async def test_internal_events_are_skipped(
     async def _on_fire(msg: pb.FireEvent) -> None:
         forwarded.append(msg)
 
-    main.register("sandbox_v2/fire_event", _on_fire)
+    main.register("sandbox/fire_event", _on_fire)
     main.start()
     sandbox.start()
 

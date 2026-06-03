@@ -1,7 +1,7 @@
-# Sandbox v2 runtime — Docker image
+# Sandbox runtime — Docker image
 
 A container image that runs the `hass_client` sandbox runtime
-(`python -m hass_client.sandbox_v2`). Files:
+(`python -m hass_client.sandbox`). Files:
 
 - [`../Dockerfile`](../Dockerfile) — the image.
 - [`../.dockerignore`](../.dockerignore) — local build-context excludes (see
@@ -76,7 +76,7 @@ installs the local `homeassistant` checkout:
 
 ```bash
 # from the repo root
-docker build -f sandbox_v2/hass_client/Dockerfile -t sandbox_v2_test .
+docker build -f sandbox/hass_client/Dockerfile -t sandbox_test .
 ```
 
 ### Build-context / `.dockerignore` note
@@ -84,7 +84,7 @@ docker build -f sandbox_v2/hass_client/Dockerfile -t sandbox_v2_test .
 Because the context is the repo root, Docker reads the **repo-root**
 `.dockerignore` (which already excludes `.git`, `tests`, `.venv`, `docs`,
 `config`, `__pycache__`). The `.dockerignore` next to the Dockerfile applies
-only when the build context is `sandbox_v2/hass_client/` itself; it is kept for
+only when the build context is `sandbox/hass_client/` itself; it is kept for
 that case and to document intent.
 
 ## Compose harness gap
@@ -114,5 +114,5 @@ over stdio/unix inside one container).
 Validate the compose file parses without running it:
 
 ```bash
-docker compose -f sandbox_v2/hass_client/docker-compose.test.yml config
+docker compose -f sandbox/hass_client/docker-compose.test.yml config
 ```

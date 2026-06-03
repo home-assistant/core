@@ -15,12 +15,12 @@ import asyncio
 
 import pytest
 
-from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
-from homeassistant.components.sandbox_v2.auth import async_get_or_create_sandbox_user
-from homeassistant.components.sandbox_v2.bridge import SandboxBridge
-from homeassistant.components.sandbox_v2.channel import Frame
-from homeassistant.components.sandbox_v2.codec_protobuf import ProtobufCodec
-from homeassistant.components.sandbox_v2.messages import (
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.auth import async_get_or_create_sandbox_user
+from homeassistant.components.sandbox.bridge import SandboxBridge
+from homeassistant.components.sandbox.channel import Frame
+from homeassistant.components.sandbox.codec_protobuf import ProtobufCodec
+from homeassistant.components.sandbox.messages import (
     make_entity_description,
     struct_to_dict,
 )
@@ -62,7 +62,7 @@ def test_protobuf_codec_round_trip_is_byte_identical() -> None:
             "sw_version": "1.0",
         },
     )
-    frame = Frame.call(7, "sandbox_v2/register_entity", desc)
+    frame = Frame.call(7, "sandbox/register_entity", desc)
     wire1 = codec.encode(frame)
     decoded = codec.decode(wire1)
     wire2 = codec.encode(decoded)
@@ -82,7 +82,7 @@ def test_protobuf_codec_round_trips_response_result() -> None:
     frame = Frame.ok_response(
         9,
         pb.RegisterEntityResult(entity_id="light.kitchen_2"),
-        "sandbox_v2/register_entity",
+        "sandbox/register_entity",
     )
     decoded = codec.decode(codec.encode(frame))
     assert decoded.ok is True
@@ -97,7 +97,7 @@ def test_protobuf_codec_round_trips_invalid_error_data() -> None:
         "expected int",
         "Invalid",
         {"kind": "invalid", "msg": "expected int", "path": ["options", "count"]},
-        "sandbox_v2/call_service",
+        "sandbox/call_service",
     )
     decoded = codec.decode(codec.encode(frame))
     assert decoded.ok is False
@@ -121,7 +121,7 @@ def test_protobuf_codec_round_trips_multiple_invalid_error_data() -> None:
         ],
     }
     frame = Frame.error_response(
-        4, "two errors", "MultipleInvalid", error_data, "sandbox_v2/call_service"
+        4, "two errors", "MultipleInvalid", error_data, "sandbox/call_service"
     )
     decoded = codec.decode(codec.encode(frame))
     assert decoded.error_type == "MultipleInvalid"
@@ -181,14 +181,14 @@ async def test_state_changed_context_attributed_to_sandbox_system_user(
         initial_attributes={"color_mode": "onoff"},
     )
     try:
-        result = await sandbox_channel.call("sandbox_v2/register_entity", desc)
+        result = await sandbox_channel.call("sandbox/register_entity", desc)
         entity_id = result.entity_id
 
         changed = pb.StateChanged(
             sandbox_entity_id="light.lamp", state="on", context_id="sandbox-ctx-1"
         )
         changed.attributes.update({"color_mode": "onoff"})
-        await sandbox_channel.push("sandbox_v2/state_changed", changed)
+        await sandbox_channel.push("sandbox/state_changed", changed)
 
         for _ in range(200):
             state = hass.states.get(entity_id)

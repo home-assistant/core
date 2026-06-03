@@ -1,4 +1,4 @@
-"""Sandbox-side mirror of ``homeassistant.components.sandbox_v2.protocol``.
+"""Sandbox-side mirror of ``homeassistant.components.sandbox.protocol``.
 
 Kept as a stand-alone module to honour the project boundary: the HA Core
 integration must not import from ``hass_client`` at integration-load time,
@@ -12,24 +12,24 @@ from typing import Final
 # Handshake: the runtime's first frame on the channel. Replaces the old
 # stdout text marker — the manager waits for this push instead of scanning
 # stdout, so stdout carries nothing but channel frames.
-MSG_READY: Final = "sandbox_v2/ready"
+MSG_READY: Final = "sandbox/ready"
 
 # Main → Sandbox
-MSG_ENTRY_SETUP: Final = "sandbox_v2/entry_setup"
-MSG_ENTRY_UNLOAD: Final = "sandbox_v2/entry_unload"
-MSG_CALL_SERVICE: Final = "sandbox_v2/call_service"
-MSG_SHUTDOWN: Final = "sandbox_v2/shutdown"
+MSG_ENTRY_SETUP: Final = "sandbox/entry_setup"
+MSG_ENTRY_UNLOAD: Final = "sandbox/entry_unload"
+MSG_CALL_SERVICE: Final = "sandbox/call_service"
+MSG_SHUTDOWN: Final = "sandbox/shutdown"
 
 # Sandbox → Main
-MSG_REGISTER_ENTITY: Final = "sandbox_v2/register_entity"
-MSG_UNREGISTER_ENTITY: Final = "sandbox_v2/unregister_entity"
-MSG_STATE_CHANGED: Final = "sandbox_v2/state_changed"
-MSG_REGISTER_SERVICE: Final = "sandbox_v2/register_service"
-MSG_UNREGISTER_SERVICE: Final = "sandbox_v2/unregister_service"
-MSG_FIRE_EVENT: Final = "sandbox_v2/fire_event"
-MSG_STORE_LOAD: Final = "sandbox_v2/store_load"
-MSG_STORE_SAVE: Final = "sandbox_v2/store_save"
-MSG_STORE_REMOVE: Final = "sandbox_v2/store_remove"
+MSG_REGISTER_ENTITY: Final = "sandbox/register_entity"
+MSG_UNREGISTER_ENTITY: Final = "sandbox/unregister_entity"
+MSG_STATE_CHANGED: Final = "sandbox/state_changed"
+MSG_REGISTER_SERVICE: Final = "sandbox/register_service"
+MSG_UNREGISTER_SERVICE: Final = "sandbox/unregister_service"
+MSG_FIRE_EVENT: Final = "sandbox/fire_event"
+MSG_STORE_LOAD: Final = "sandbox/store_load"
+MSG_STORE_SAVE: Final = "sandbox/store_save"
+MSG_STORE_REMOVE: Final = "sandbox/store_remove"
 
 
 __all__ = [

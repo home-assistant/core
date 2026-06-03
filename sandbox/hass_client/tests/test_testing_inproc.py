@@ -1,8 +1,8 @@
 """Smoke tests for the in-process channel pair used by the testing plugin.
 
 The real plugin path exercises the manager-side ``SandboxBridge`` and
-needs the HA Core ``sandbox_v2`` integration loaded — covered by
-``tests/components/sandbox_v2/test_testing_plugins.py`` on the core
+needs the HA Core ``sandbox`` integration loaded — covered by
+``tests/components/sandbox/test_testing_plugins.py`` on the core
 side. These tests pin the lower-level pieces that live in
 ``hass_client`` and don't pull the integration: the loopback writer's
 shape and the channel pair's call/response round-trip.
@@ -10,7 +10,7 @@ shape and the channel pair's call/response round-trip.
 
 import asyncio
 
-from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client._proto import sandbox_pb2 as pb
 from hass_client.messages import struct_to_dict
 from hass_client.testing._inproc import _LoopbackWriter, make_inproc_channel_pair
 
@@ -55,12 +55,12 @@ async def test_make_inproc_channel_pair_round_trips_a_call() -> None:
         result.data.update({"echo": "ok", "saw": payload.key})
         return result
 
-    rt_channel.register("sandbox_v2/store_load", handler)
+    rt_channel.register("sandbox/store_load", handler)
     rt_channel.start()
     mgr_channel.start()
     try:
         result = await asyncio.wait_for(
-            mgr_channel.call("sandbox_v2/store_load", pb.StoreLoad(key="hi")),
+            mgr_channel.call("sandbox/store_load", pb.StoreLoad(key="hi")),
             timeout=2.0,
         )
         assert struct_to_dict(result.data) == {"echo": "ok", "saw": "hi"}

@@ -5,13 +5,13 @@ Behaviour:
 1. The framework dispatches a flow step by name (``async_step_user``,
    ``async_step_reauth``, …) on the flow object. We catch *any* such
    call via ``__getattr__``.
-2. On the **first** call we issue ``sandbox_v2/flow_init`` with the
+2. On the **first** call we issue ``sandbox/flow_init`` with the
    integration domain plus the initial context/user input; the sandbox
    returns its own ``flow_id`` and the initial step's result.
-3. **Subsequent** calls go out as ``sandbox_v2/flow_step`` carrying the
+3. **Subsequent** calls go out as ``sandbox/flow_step`` carrying the
    sandbox's ``flow_id`` and the user input from the framework.
 4. On ``async_remove`` (framework cleanup) we fire
-   ``sandbox_v2/flow_abort`` so the sandbox tears its flow down too.
+   ``sandbox/flow_abort`` so the sandbox tears its flow down too.
 5. On the CREATE_ENTRY step we attach ``sandbox=<group>`` to the
    ``ConfigFlowResult`` so the framework's entry constructor sets
    :attr:`ConfigEntry.sandbox` before ``async_setup`` runs — that's
@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.data_entry_flow import FlowResultType
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
 from .messages import dict_to_struct, listvalue_to_list, struct_to_dict
 from .schema_bridge import reconstruct_schema
@@ -113,7 +113,7 @@ class SandboxFlowProxy(ConfigFlow):
                 )
                 if user_input is not None:
                     request.data.CopyFrom(dict_to_struct(user_input))
-                result = await channel.call("sandbox_v2/flow_init", request)
+                result = await channel.call("sandbox/flow_init", request)
                 self._sandbox_flow_id = (
                     result.flow_id if result.HasField("flow_id") else None
                 )
@@ -121,7 +121,7 @@ class SandboxFlowProxy(ConfigFlow):
                 step = pb.FlowStep(flow_id=self._sandbox_flow_id)
                 if user_input is not None:
                     step.user_input.CopyFrom(dict_to_struct(user_input))
-                result = await channel.call("sandbox_v2/flow_step", step)
+                result = await channel.call("sandbox/flow_step", step)
         except ChannelClosedError:
             self._terminated = True
             _LOGGER.warning(
@@ -276,7 +276,7 @@ class SandboxFlowProxy(ConfigFlow):
 async def _safe_abort(channel: Any, flow_id: str, group: str, handler: str) -> None:
     """Fire ``flow_abort`` on the sandbox and swallow errors."""
     try:
-        await channel.call("sandbox_v2/flow_abort", pb.FlowAbort(flow_id=flow_id))
+        await channel.call("sandbox/flow_abort", pb.FlowAbort(flow_id=flow_id))
     except (ChannelClosedError, ChannelRemoteError) as err:
         _LOGGER.debug("Sandbox %r flow_abort for %s failed: %s", group, handler, err)
 

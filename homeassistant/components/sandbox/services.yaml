@@ -1,10 +1,10 @@
-# Sandbox v2 does not declare any user-facing services.
+# Sandbox does not declare any user-facing services.
 #
 # The integration calls hass.services.async_register dynamically (see
 # bridge.py::SandboxBridge._handle_register_service) to install forwarders
 # that route each sandboxed integration's service back to the sandbox
-# subprocess over the sandbox_v2/call_service channel. Those services are
-# owned by the sandboxed integrations themselves, not by sandbox_v2, and
+# subprocess over the sandbox/call_service channel. Those services are
+# owned by the sandboxed integrations themselves, not by sandbox, and
 # their schemas + descriptions live with those integrations.
 #
 # This file exists to satisfy hassfest's "Registers services but has no

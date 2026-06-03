@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``media_player`` entities."""
+"""Sandbox proxy for ``media_player`` entities."""
 
 from typing import TYPE_CHECKING, Any
 

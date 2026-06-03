@@ -1,7 +1,7 @@
-"""Real-subprocess pytest plugin for sandbox_v2 compat tests.
+"""Real-subprocess pytest plugin for sandbox compat tests.
 
 Exercises the production code path end-to-end: the test HA's
-``sandbox_v2`` integration spawns ``python -m hass_client.sandbox_v2``
+``sandbox`` integration spawns ``python -m hass_client.sandbox``
 as a real subprocess and talks to it over the JSON-line stdio
 :class:`Channel`. Slower than the in-process plugin (per-sandbox
 subprocess startup) but pins the subprocess boundary.
@@ -25,7 +25,7 @@ Usage::
 
     pytest -p hass_client.testing.conftest_sandbox <test path>
 
-The plugin exposes the ``sandbox_v2_subprocess`` fixture, which yields
+The plugin exposes the ``sandbox_subprocess`` fixture, which yields
 a :class:`SubprocessSandbox` handle once the subprocess is running.
 """
 
@@ -120,7 +120,7 @@ class SubprocessSandbox:
         # the right place. ``async_stop_all`` is idempotent.
         # Lazy import: testing package must not pull the HA integration
         # tree at import time.
-        from homeassistant.components.sandbox_v2.manager import (  # noqa: PLC0415
+        from homeassistant.components.sandbox.manager import (  # noqa: PLC0415
             SandboxManager,
         )
 
@@ -136,7 +136,7 @@ async def async_setup_subprocess_sandbox(
     *,
     group: str = DEFAULT_GROUP,
 ) -> SubprocessSandbox:
-    """Set up ``sandbox_v2`` and spawn a real subprocess for ``group``.
+    """Set up ``sandbox`` and spawn a real subprocess for ``group``.
 
     Unlike :func:`hass_client.testing.pytest_plugin.async_setup_inprocess_sandbox`,
     this hands control to the integration's default
@@ -145,25 +145,23 @@ async def async_setup_subprocess_sandbox(
     """
     # Lazy import: testing package must not pull the HA integration
     # tree at import time.
-    from homeassistant.components.sandbox_v2.const import (  # noqa: PLC0415
-        DATA_SANDBOX_V2,
-    )
+    from homeassistant.components.sandbox.const import DATA_SANDBOX_V2  # noqa: PLC0415
     from homeassistant.setup import async_setup_component  # noqa: PLC0415
 
-    assert await async_setup_component(hass, "sandbox_v2", {})
+    assert await async_setup_component(hass, "sandbox", {})
     data = hass.data[DATA_SANDBOX_V2]
     manager = data.manager
     if manager is None:  # pragma: no cover — defensive only
-        raise RuntimeError("sandbox_v2 setup did not install a manager")
+        raise RuntimeError("sandbox setup did not install a manager")
     await manager.ensure_started(group)
     return SubprocessSandbox(group=group, manager=manager)
 
 
 @pytest_asyncio.fixture
-async def sandbox_v2_subprocess(
+async def sandbox_subprocess(
     hass: HomeAssistant,
 ) -> AsyncIterator[SubprocessSandbox]:
-    """Set up the ``sandbox_v2`` integration and spawn a real built-in sandbox."""
+    """Set up the ``sandbox`` integration and spawn a real built-in sandbox."""
     sandbox = await async_setup_subprocess_sandbox(hass, group=DEFAULT_GROUP)
     try:
         yield sandbox
@@ -175,5 +173,5 @@ __all__ = [
     "DEFAULT_GROUP",
     "SubprocessSandbox",
     "async_setup_subprocess_sandbox",
-    "sandbox_v2_subprocess",
+    "sandbox_subprocess",
 ]

@@ -7,12 +7,12 @@ Responsibilities (Phase 5):
   registered with it.
 * Handle inbound sandbox→main calls:
 
-  - ``sandbox_v2/register_entity`` — instantiate a proxy entity, add it to
+  - ``sandbox/register_entity`` — instantiate a proxy entity, add it to
     the matching :class:`EntityComponent` via
     :meth:`async_register_remote_platform`, and reply with the assigned
     main-side ``entity_id``.
-  - ``sandbox_v2/unregister_entity`` — drop the proxy.
-  - ``sandbox_v2/state_changed`` — push state/attributes into the cached
+  - ``sandbox/unregister_entity`` — drop the proxy.
+  - ``sandbox/state_changed`` — push state/attributes into the cached
     state of the matching proxy entity.
 
 * Expose :meth:`SandboxBridge.async_call_service` for proxy entities to
@@ -24,9 +24,9 @@ Responsibilities (Phase 5):
   callers would have raised locally (``vol.Invalid`` → ``TypeError``,
   unknown service / entity → ``HomeAssistantError``).
 
-Phase 8 adds the Store routing handlers (``sandbox_v2/store_load`` /
+Phase 8 adds the Store routing handlers (``sandbox/store_load`` /
 ``store_save`` / ``store_remove``). A per-group :class:`_SandboxStoreServer`
-backs them, writing each key to ``<config>/.storage/sandbox_v2/<group>/<key>``.
+backs them, writing each key to ``<config>/.storage/sandbox/<group>/<key>``.
 Scope isolation is by construction — each bridge owns one channel for
 one group, so a sandbox can't reach another sandbox's files.
 """
@@ -59,7 +59,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file_atomic
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .auth import async_get_or_create_sandbox_user
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
 from .const import UNIQUE_ID_SEPARATOR
@@ -80,7 +80,7 @@ from .schema_bridge import reconstruct_schema
 
 _LOGGER = logging.getLogger(__name__)
 
-_REMOTE_PLATFORM_NAME = "sandbox_v2"
+_REMOTE_PLATFORM_NAME = "sandbox"
 
 
 @dataclass
@@ -148,7 +148,7 @@ class _CallServiceBatcher:
 
     Proxy entities call :meth:`enqueue` for every method invocation. The
     batcher gathers everything that arrived this tick, fires one
-    ``sandbox_v2/call_service`` per (domain, service, kwargs-shape) bucket
+    ``sandbox/call_service`` per (domain, service, kwargs-shape) bucket
     with a multi-entity ``target.entity_id`` list, and resolves all the
     waiting futures with the same response.
 
@@ -210,7 +210,7 @@ class _CallServiceBatcher:
         self._buckets = {}
         for bucket in buckets.values():
             asyncio.create_task(  # noqa: RUF006 — fire-and-forget; bucket.future is the join point
-                self._dispatch(bucket), name="sandbox_v2:call_service:flush"
+                self._dispatch(bucket), name="sandbox:call_service:flush"
             )
 
     async def _dispatch(self, bucket: _BatchBucket) -> None:
@@ -233,7 +233,7 @@ class _CallServiceBatcher:
 
 @dataclass
 class _BatchBucket:
-    """One coalesced ``sandbox_v2/call_service`` invocation in flight."""
+    """One coalesced ``sandbox/call_service`` invocation in flight."""
 
     domain: str
     service: str
@@ -324,7 +324,7 @@ class SandboxBridge:
         context_id: str | None,
         return_response: bool,
     ) -> Any:
-        """Send one ``sandbox_v2/call_service`` RPC and translate errors."""
+        """Send one ``sandbox/call_service`` RPC and translate errors."""
         request = pb.CallService(
             domain=domain,
             service=service,
@@ -379,7 +379,7 @@ class SandboxBridge:
             )
         # Namespace the proxy unique_id with the source integration domain so
         # two integrations in one group reusing the same unique_id don't
-        # collide on the shared sandbox_v2 platform_name. A None unique_id
+        # collide on the shared sandbox platform_name. A None unique_id
         # stays None (the entity opts out of the registry).
         if description.unique_id is not None:
             description.unique_id = (
@@ -466,7 +466,7 @@ class SandboxBridge:
         """Mirror a sandbox-registered service onto main's service registry.
 
         The handler that gets installed forwards every call back over
-        the shared ``sandbox_v2/call_service`` channel, so the
+        the shared ``sandbox/call_service`` channel, so the
         integration's real handler (and its real schema) runs on the
         sandbox side. Exception translation reuses
         :func:`_translate_remote_error`.
@@ -633,16 +633,16 @@ class _SandboxStoreServer:
     Each :class:`SandboxBridge` owns one of these. The bridge's channel
     is dedicated to one sandbox group, so scope isolation is enforced by
     construction: sandbox "built-in" only ever talks to its own bridge,
-    which only ever reads/writes ``<config>/.storage/sandbox_v2/built-in/``.
+    which only ever reads/writes ``<config>/.storage/sandbox/built-in/``.
     Cross-group access requires forging a channel, which the sandbox
     cannot do.
     """
 
     def __init__(self, hass: HomeAssistant, group: str) -> None:
-        """Pin the storage directory to ``<config>/.storage/sandbox_v2/<group>``."""
+        """Pin the storage directory to ``<config>/.storage/sandbox/<group>``."""
         self.hass = hass
         self.group = group
-        self._dir = Path(hass.config.path(STORAGE_DIR, "sandbox_v2", group))
+        self._dir = Path(hass.config.path(STORAGE_DIR, "sandbox", group))
 
     def _path_for(self, key: str) -> Path:
         # ``_require_key`` has already rejected slashes / ``..`` / NUL.
@@ -761,7 +761,7 @@ def _build_service_forwarder(
     """Return a callable suitable for :meth:`ServiceRegistry.async_register`.
 
     The forwarder rebuilds the original service-call payload and ships it
-    back over the sandbox's shared ``sandbox_v2/call_service`` channel.
+    back over the sandbox's shared ``sandbox/call_service`` channel.
     Schema validation already ran on the way in (main's registry runs
     ``schema=None`` because the sandbox owns the schema); the sandbox
     runs the real handler against its own entities and registry.

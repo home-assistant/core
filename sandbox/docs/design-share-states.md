@@ -50,9 +50,9 @@ Mechanism:
 
 1. The sandbox opens a websocket back to main. The auth token is the
    scoped `RefreshToken` from Phase 7 — same scope set
-   (`{"sandbox_v2/", "auth/current_user"}`) plus a single new exact
+   (`{"sandbox/", "auth/current_user"}`) plus a single new exact
    entry `share/subscribe` (added to
-   `homeassistant/components/sandbox_v2/auth.py::SANDBOX_TOKEN_SCOPES`).
+   `homeassistant/components/sandbox/auth.py::SANDBOX_TOKEN_SCOPES`).
 2. The sandbox calls three subscribe commands, one per data class:
    - `share/subscribe_states` — initial snapshot of every state main
      wants this sandbox to see + `state_changed` deltas.
@@ -157,11 +157,11 @@ default behaviour does not regress.
 ## Files this design will touch
 
 ```
-homeassistant/components/sandbox_v2/auth.py           (extend SANDBOX_TOKEN_SCOPES)
-homeassistant/components/sandbox_v2/share.py          (new — main-side share/subscribe_* handlers, send-side filter)
-homeassistant/components/sandbox_v2/manager.py        (re-introduce a per-sandbox allow-list)
-sandbox_v2/hass_client/hass_client/share.py           (new — sandbox-side subscription consumer)
-sandbox_v2/hass_client/hass_client/sandbox.py         (open the websocket back to main; wire the consumer)
+homeassistant/components/sandbox/auth.py           (extend SANDBOX_TOKEN_SCOPES)
+homeassistant/components/sandbox/share.py          (new — main-side share/subscribe_* handlers, send-side filter)
+homeassistant/components/sandbox/manager.py        (re-introduce a per-sandbox allow-list)
+sandbox/hass_client/hass_client/share.py           (new — sandbox-side subscription consumer)
+sandbox/hass_client/hass_client/sandbox.py         (open the websocket back to main; wire the consumer)
 ```
 
 Core HA: no further changes expected — Phase 7's `RefreshToken.scopes`

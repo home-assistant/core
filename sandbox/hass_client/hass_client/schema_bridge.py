@@ -10,7 +10,7 @@ in the exact shape the frontend already understands.
 
 The reverse path (build a usable :class:`vol.Schema` on main from a
 serialised list) lives in
-``homeassistant/components/sandbox_v2/schema_bridge.py``.
+``homeassistant/components/sandbox/schema_bridge.py``.
 """
 
 from typing import Any

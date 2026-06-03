@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``date`` entities."""
+"""Sandbox proxy for ``date`` entities."""
 
 from datetime import date
 

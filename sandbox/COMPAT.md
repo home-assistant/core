@@ -1,4 +1,4 @@
-# Sandbox v2 compat report
+# Sandbox compat report
 
 Phase 17 baseline. This file is the **curated** reviewer-facing report
 — `run_compat.py` writes its raw per-run summary to `COMPAT_LATEST.md`
@@ -53,7 +53,7 @@ at the top level. The bridge half is unchanged from a successful pass;
 only the snapshot needs a refresh.
 
 Per-failure pytest output for each `issues` row lives under
-`${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_v2_errors}/<integration>.txt`.
+`${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}/<integration>.txt`.
 
 ## Recommendation
 
@@ -63,7 +63,7 @@ test-noise bucket Phase 15 / Phase 16 surfaced; the residual diff is
 two diagnostic snapshots that would update with one
 `pytest --snapshot-update tests/components/{proximity,utility_meter}/`.
 That update is out of v2's scope — the snapshots live in the
-respective integrations' test trees, not under `sandbox_v2/`.
+respective integrations' test trees, not under `sandbox/`.
 
 The bridge code paths the compat lane exercises — router setup,
 entity proxies (all 32 domains), service mirror, event mirror,
@@ -85,7 +85,7 @@ run with the sandbox plugin active. Statuses:
 
 - **`pass`** — every collected test passed.
 - **`issues`** — at least one failure or error. The pytest output is
-  written to `${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_v2_errors}/<integration>.txt`
+  written to `${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}/<integration>.txt`
   so reviewers can dig in.
 - **`timeout`** — the integration hit the per-run timeout (default 5 min).
   Often signals an integration that needs deny-listing (e.g. it spawns
@@ -142,7 +142,7 @@ Plugin: `hass_client.testing.pytest_plugin`
 ## Reproducing this report
 
 ```bash
-cd sandbox_v2
+cd sandbox
 
 # Phase 15 baseline (v1's 37-integration list, in-process plugin)
 uv run python run_compat.py \
@@ -181,4 +181,4 @@ entries the integration test itself creates. Phase 17 moved the tag
 from a synthetic key in `entry.data` to the first-class
 `ConfigEntry.sandbox` field, so the patch is now invisible to tests
 that assert on `entry.data` shape. See
-`sandbox_v2/hass_client/hass_client/testing/_autotag.py`.
+`sandbox/hass_client/hass_client/testing/_autotag.py`.

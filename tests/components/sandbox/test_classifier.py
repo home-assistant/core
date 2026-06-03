@@ -1,14 +1,14 @@
-"""Tests for the sandbox_v2 integration classifier."""
+"""Tests for the sandbox integration classifier."""
 
 import pytest
 
-from homeassistant.components.sandbox_v2.classifier import (
+from homeassistant.components.sandbox.classifier import (
     GROUP_BUILT_IN,
     GROUP_CUSTOM,
     SandboxAssignment,
     classify,
 )
-from homeassistant.components.sandbox_v2.const import (
+from homeassistant.components.sandbox.const import (
     ALWAYS_MAIN,
     SANDBOX_INCOMPATIBLE_PLATFORMS,
 )
@@ -133,7 +133,7 @@ async def test_lockdown_helpers_pin_to_main(hass: HomeAssistant, domain: str) ->
 
     These read foreign entities / registries a sandboxed integration can't
     see once lockdown is enforced. The blanket-ALWAYS_MAIN decision lives in
-    sandbox_v2/plans/research/builtin-lockdown-breakage.md (point 1).
+    sandbox/plans/research/builtin-lockdown-breakage.md (point 1).
     """
     assert domain in ALWAYS_MAIN
     integration = _make_integration(hass, domain, platform_files={"sensor"})

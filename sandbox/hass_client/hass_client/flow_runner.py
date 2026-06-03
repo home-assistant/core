@@ -5,9 +5,9 @@ Runs an integration's :class:`ConfigFlow` inside a dedicated
 manager-side proxy :class:`ConfigFlow` calls these handlers across the
 :class:`Channel`:
 
-* ``sandbox_v2/flow_init``  → ``(handler, source, context, data)``  → flow result
-* ``sandbox_v2/flow_step``  → ``(flow_id, user_input)``             → flow result
-* ``sandbox_v2/flow_abort`` → ``(flow_id)``                         → ``{}``
+* ``sandbox/flow_init``  → ``(handler, source, context, data)``  → flow result
+* ``sandbox/flow_step``  → ``(flow_id, user_input)``             → flow result
+* ``sandbox/flow_abort`` → ``(flow_id)``                         → ``{}``
 
 Flow results cross the wire as plain dicts. ``data_schema`` and the
 ``progress_task`` field are intentionally stripped — the schema lives on
@@ -31,7 +31,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .channel import Channel
 from .messages import struct_to_dict
 from .schema_bridge import serialize_schema
@@ -106,10 +106,10 @@ class FlowRunner:
         return cls(hass)
 
     def register(self, channel: Channel) -> None:
-        """Register the ``sandbox_v2/flow_*`` handlers on ``channel``."""
-        channel.register("sandbox_v2/flow_init", self._handle_flow_init)
-        channel.register("sandbox_v2/flow_step", self._handle_flow_step)
-        channel.register("sandbox_v2/flow_abort", self._handle_flow_abort)
+        """Register the ``sandbox/flow_*`` handlers on ``channel``."""
+        channel.register("sandbox/flow_init", self._handle_flow_init)
+        channel.register("sandbox/flow_step", self._handle_flow_step)
+        channel.register("sandbox/flow_abort", self._handle_flow_abort)
 
     async def async_stop(self) -> None:
         """Tear down in-progress flows."""

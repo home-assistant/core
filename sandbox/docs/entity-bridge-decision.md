@@ -3,10 +3,10 @@
 > **Decision:** adopt **Option B — action-call forwarding** for the v2 entity
 > bridge. The proxy entity translates each entity method into a standard
 > `services.async_call("<domain>", "<service>", target={"entity_id": [...]})`
-> round-trip over the shared `sandbox_v2/call_service` transport.
+> round-trip over the shared `sandbox/call_service` transport.
 
-This document records the spike (`sandbox_v2/hass_client/hass_client/spike/`,
-tests at `tests/components/sandbox_v2/test_spike.py`), the numbers it
+This document records the spike (`sandbox/hass_client/hass_client/spike/`,
+tests at `tests/components/sandbox/test_spike.py`), the numbers it
 produced, and the trade-offs that drove the call.
 
 ## What the spike measured
@@ -22,10 +22,10 @@ add noise).
 Both options share that transport. The only differences between them are:
 
 - **Option A — method-forward RPC.** A bespoke
-  `sandbox_v2/entity_method_call` carries `(entity_id, method, kwargs)`. The
+  `sandbox/entity_method_call` carries `(entity_id, method, kwargs)`. The
   sandbox-side handler does `getattr(entity, method)(**kwargs)`.
 - **Option B — action-call forwarding.** A generic
-  `sandbox_v2/call_service` carries `(domain, service, target, service_data)`.
+  `sandbox/call_service` carries `(domain, service, target, service_data)`.
   The sandbox-side handler just calls `hass.services.async_call(...)`. The
   sandbox's normal service dispatcher resolves the target and invokes
   `async_turn_on` on the real entity.
@@ -77,7 +77,7 @@ proxy needs.
 ## Why Option B
 
 1. **Smaller protocol surface — and the channel is on the critical path
-   regardless.** Phase 6 has to build a generic `sandbox_v2/call_service`
+   regardless.** Phase 6 has to build a generic `sandbox/call_service`
    channel anyway, both to mirror sandbox-registered services back to main
    *and* so main can invoke services provided by sandboxed integrations.
    Option B reuses that channel for entity calls; Option A adds a second
@@ -198,21 +198,21 @@ the issue is what *their* entity methods return, not what calls them.
 ## Action items folded into the remaining plan
 
 - **Phase 5 (entity bridge):** build the proxy classes against the shared
-  `sandbox_v2/call_service` channel. Mark Option A as discarded in
+  `sandbox/call_service` channel. Mark Option A as discarded in
   `plan.md`'s "Open architectural choice".
 - **Phase 5 (entity bridge):** introduce the fan-out batching helper
   flagged in the plan's Risks section — proxy entities collected during one
-  service call should be coalesced into a single `sandbox_v2/call_service`
+  service call should be coalesced into a single `sandbox/call_service`
   carrying a multi-entity target, so a 200-light area call pays one RPC,
   not 200.
-- **Phase 6 (service & event mirroring):** the same `sandbox_v2/call_service`
+- **Phase 6 (service & event mirroring):** the same `sandbox/call_service`
   channel built here is the one used for arbitrary main→sandbox service
   forwarding; no new RPC type required.
 - **Phase 5 / Phase 6:** add a small exception-translation layer on the
   sandbox side so service-handler errors come back as the exception types
   the proxy entity methods originally raised.
 - **Phase 2 (classifier):** `ai_task` and `image` are added to
-  `ALWAYS_MAIN` immediately (see `homeassistant/components/sandbox_v2/
+  `ALWAYS_MAIN` immediately (see `homeassistant/components/sandbox/
   const.py`). The classifier test in Phase 2 must cover both — and
   ideally a parameterised case that asserts every domain in `ALWAYS_MAIN`
   routes to main without needing manifest inspection.
@@ -224,13 +224,13 @@ the issue is what *their* entity methods return, not what calls them.
 ## Reproducing the numbers
 
 ```bash
-uv run pytest tests/components/sandbox_v2/test_spike.py::test_report_comparison \
+uv run pytest tests/components/sandbox/test_spike.py::test_report_comparison \
     --no-cov -s
 ```
 
-The spike code lives at `sandbox_v2/hass_client/hass_client/spike/`. To run
+The spike code lives at `sandbox/hass_client/hass_client/spike/`. To run
 the per-option tests in isolation:
 
 ```bash
-uv run pytest tests/components/sandbox_v2/test_spike.py -v --no-cov
+uv run pytest tests/components/sandbox/test_spike.py -v --no-cov
 ```

@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``weather`` entities."""
+"""Sandbox proxy for ``weather`` entities."""
 
 from typing import TYPE_CHECKING
 

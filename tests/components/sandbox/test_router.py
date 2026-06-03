@@ -4,15 +4,15 @@ from typing import cast
 
 import pytest
 
-from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
-from homeassistant.components.sandbox_v2.manager import SandboxManager
-from homeassistant.components.sandbox_v2.messages import struct_to_dict
-from homeassistant.components.sandbox_v2.proxy_flow import SandboxFlowProxy
-from homeassistant.components.sandbox_v2.router import (
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.manager import SandboxManager
+from homeassistant.components.sandbox.messages import struct_to_dict
+from homeassistant.components.sandbox.proxy_flow import SandboxFlowProxy
+from homeassistant.components.sandbox.router import (
     SandboxFlowRouter,
     _entry_setup_payload,
 )
-from homeassistant.components.sandbox_v2.sources import (
+from homeassistant.components.sandbox.sources import (
     async_register_sandbox_source_resolver,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigFlowContext
@@ -108,7 +108,7 @@ async def test_async_setup_entry_routes_to_sandbox(
 ) -> None:
     """Entries carrying ``sandbox`` are routed to the manager.
 
-    The sandbox-side runtime replies to ``sandbox_v2/entry_setup`` via a
+    The sandbox-side runtime replies to ``sandbox/entry_setup`` via a
     stub on channel_b; the router rolls that response into the
     main-side entry state.
     """
@@ -119,7 +119,7 @@ async def test_async_setup_entry_routes_to_sandbox(
         received.append(payload)
         return pb.EntrySetupResult(ok=True)
 
-    channel_b.register("sandbox_v2/entry_setup", _entry_setup)
+    channel_b.register("sandbox/entry_setup", _entry_setup)
     channel_a.start()
     channel_b.start()
     manager.install("built-in", channel_a)
@@ -157,7 +157,7 @@ async def test_async_setup_entry_marks_setup_error_on_failure(
     async def _entry_setup(_payload: pb.EntrySetup) -> pb.EntrySetupResult:
         return pb.EntrySetupResult(ok=False, reason="boom")
 
-    channel_b.register("sandbox_v2/entry_setup", _entry_setup)
+    channel_b.register("sandbox/entry_setup", _entry_setup)
     channel_a.start()
     channel_b.start()
     manager.install("built-in", channel_a)

@@ -1,4 +1,4 @@
-"""Constants for the Sandbox v2 integration."""
+"""Constants for the Sandbox integration."""
 
 from typing import TYPE_CHECKING
 
@@ -7,12 +7,12 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from . import SandboxV2Data
 
-DOMAIN = "sandbox_v2"
+DOMAIN = "sandbox"
 
 DATA_SANDBOX_V2: HassKey[SandboxV2Data] = HassKey(DOMAIN)
 
-# Proxy entities all register under the shared ``sandbox_v2`` platform_name,
-# so the entity-registry uniqueness key ``(domain, "sandbox_v2", unique_id)``
+# Proxy entities all register under the shared ``sandbox`` platform_name,
+# so the entity-registry uniqueness key ``(domain, "sandbox", unique_id)``
 # would collide when two integrations in one group reuse a unique_id. The
 # proxy unique_id is therefore namespaced as
 # ``f"{source_domain}{UNIQUE_ID_SEPARATOR}{unique_id}"``. ``:`` is chosen
@@ -24,8 +24,8 @@ UNIQUE_ID_SEPARATOR = ":"
 # platform file in this set is forced onto `main`. Each entry needs a one-line
 # "why" so the deny-list is reviewable.
 #
-# TODO(sandbox_v2): revisit each entry once the protocol can carry the missing
-# payload shape. Tracked in sandbox_v2/plan.md "Risks → Deny-list rot".
+# TODO(sandbox): revisit each entry once the protocol can carry the missing
+# payload shape. Tracked in sandbox/plan.md "Risks → Deny-list rot".
 SANDBOX_INCOMPATIBLE_PLATFORMS: frozenset[str] = frozenset(
     {
         # stt: streams audio chunks via async generator; not serializable over WS.
@@ -64,7 +64,7 @@ ALWAYS_MAIN: frozenset[str] = frozenset(
         "image",
         # Broad readers — read ALL entities / registries, not narrowly
         # scopable, so they break under sandbox lockdown. See
-        # sandbox_v2/plans/research/builtin-lockdown-breakage.md (point 1,
+        # sandbox/plans/research/builtin-lockdown-breakage.md (point 1,
         # decision: blanket ALWAYS_MAIN).
         # template: Jinja states()/is_state() over any entity at render time.
         "template",

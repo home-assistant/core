@@ -1,12 +1,12 @@
 """Phase 8 tests for the main-side Store handlers on :class:`SandboxBridge`.
 
-We exercise the three ``sandbox_v2/store_*`` handlers via the in-memory
+We exercise the three ``sandbox/store_*`` handlers via the in-memory
 channel pair, with the bridge wired against the real ``hass`` config
 directory so we can also verify the on-disk layout.
 
 Coverage:
 
-* a save lands at ``<config>/.storage/sandbox_v2/<group>/<key>``;
+* a save lands at ``<config>/.storage/sandbox/<group>/<key>``;
 * a subsequent load round-trips the same payload;
 * a load for a missing key returns ``None``;
 * path-traversal attempts (``..`` / slashes) are rejected;
@@ -22,10 +22,10 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
-from homeassistant.components.sandbox_v2.bridge import SandboxBridge
-from homeassistant.components.sandbox_v2.channel import Channel, ChannelRemoteError
-from homeassistant.components.sandbox_v2.messages import struct_to_dict
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.bridge import SandboxBridge
+from homeassistant.components.sandbox.channel import Channel, ChannelRemoteError
+from homeassistant.components.sandbox.messages import struct_to_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -44,11 +44,11 @@ async def _wire(
 
 
 def _store_path(hass: HomeAssistant, group: str, key: str) -> Path:
-    return Path(hass.config.path(STORAGE_DIR, "sandbox_v2", group, key))
+    return Path(hass.config.path(STORAGE_DIR, "sandbox", group, key))
 
 
 async def test_store_save_writes_to_namespaced_path(hass: HomeAssistant) -> None:
-    """A save lands at ``.storage/sandbox_v2/<group>/<key>`` on main."""
+    """A save lands at ``.storage/sandbox/<group>/<key>`` on main."""
     _bridge, main_channel, sandbox_channel = await _wire(hass, group="built-in")
     wrapped = {
         "version": 1,
@@ -59,7 +59,7 @@ async def test_store_save_writes_to_namespaced_path(hass: HomeAssistant) -> None
     save = pb.StoreSave(key="phase8_demo")
     save.data.update(wrapped)
     try:
-        result = await sandbox_channel.call("sandbox_v2/store_save", save)
+        result = await sandbox_channel.call("sandbox/store_save", save)
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -83,9 +83,9 @@ async def test_store_load_returns_saved_payload(hass: HomeAssistant) -> None:
     save = pb.StoreSave(key="phase8_demo")
     save.data.update(wrapped)
     try:
-        await sandbox_channel.call("sandbox_v2/store_save", save)
+        await sandbox_channel.call("sandbox/store_save", save)
         loaded = await sandbox_channel.call(
-            "sandbox_v2/store_load", pb.StoreLoad(key="phase8_demo")
+            "sandbox/store_load", pb.StoreLoad(key="phase8_demo")
         )
     finally:
         await main_channel.close()
@@ -99,7 +99,7 @@ async def test_store_load_missing_key_returns_none(hass: HomeAssistant) -> None:
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     try:
         loaded = await sandbox_channel.call(
-            "sandbox_v2/store_load", pb.StoreLoad(key="never_saved")
+            "sandbox/store_load", pb.StoreLoad(key="never_saved")
         )
     finally:
         await main_channel.close()
@@ -122,12 +122,12 @@ async def test_store_remove_unlinks_file(hass: HomeAssistant) -> None:
         }
     )
     try:
-        await sandbox_channel.call("sandbox_v2/store_save", save)
+        await sandbox_channel.call("sandbox/store_save", save)
         path = _store_path(hass, "built-in", "to_remove")
         assert path.is_file()
 
         result = await sandbox_channel.call(
-            "sandbox_v2/store_remove", pb.StoreRemove(key="to_remove")
+            "sandbox/store_remove", pb.StoreRemove(key="to_remove")
         )
     finally:
         await main_channel.close()
@@ -142,7 +142,7 @@ async def test_store_remove_missing_key_is_noop(hass: HomeAssistant) -> None:
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     try:
         result = await sandbox_channel.call(
-            "sandbox_v2/store_remove", pb.StoreRemove(key="phantom")
+            "sandbox/store_remove", pb.StoreRemove(key="phantom")
         )
     finally:
         await main_channel.close()
@@ -166,9 +166,7 @@ async def test_store_rejects_path_traversal(hass: HomeAssistant, bad_key: str) -
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     try:
         with pytest.raises(ChannelRemoteError):
-            await sandbox_channel.call(
-                "sandbox_v2/store_load", pb.StoreLoad(key=bad_key)
-            )
+            await sandbox_channel.call("sandbox/store_load", pb.StoreLoad(key=bad_key))
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -179,7 +177,7 @@ async def test_store_rejects_missing_key(hass: HomeAssistant) -> None:
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     try:
         with pytest.raises(ChannelRemoteError):
-            await sandbox_channel.call("sandbox_v2/store_load", pb.StoreLoad(key=""))
+            await sandbox_channel.call("sandbox/store_load", pb.StoreLoad(key=""))
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -198,10 +196,10 @@ async def test_store_groups_are_isolated(hass: HomeAssistant) -> None:
     save = pb.StoreSave(key="shared_key")
     save.data.update(wrapped)
     try:
-        await sandbox_a.call("sandbox_v2/store_save", save)
+        await sandbox_a.call("sandbox/store_save", save)
         # The custom-group bridge cannot see built-in's data.
         loaded_custom = await sandbox_b.call(
-            "sandbox_v2/store_load", pb.StoreLoad(key="shared_key")
+            "sandbox/store_load", pb.StoreLoad(key="shared_key")
         )
     finally:
         await main_a.close()
@@ -227,7 +225,7 @@ async def test_store_survives_bridge_restart(hass: HomeAssistant) -> None:
     save = pb.StoreSave(key="persistent")
     save.data.update(wrapped)
     try:
-        await sandbox_a.call("sandbox_v2/store_save", save)
+        await sandbox_a.call("sandbox/store_save", save)
     finally:
         await main_a.close()
         await sandbox_a.close()
@@ -236,7 +234,7 @@ async def test_store_survives_bridge_restart(hass: HomeAssistant) -> None:
     _bridge2, main_b, sandbox_b = await _wire(hass, group="built-in")
     try:
         loaded = await sandbox_b.call(
-            "sandbox_v2/store_load", pb.StoreLoad(key="persistent")
+            "sandbox/store_load", pb.StoreLoad(key="persistent")
         )
     finally:
         await main_b.close()

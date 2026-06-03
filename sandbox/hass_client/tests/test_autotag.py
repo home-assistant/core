@@ -3,7 +3,7 @@
 These pin the sync classifier behaviour directly (no HA Core fixtures
 needed). The end-to-end "patched ``add_to_hass`` mutates ``entry.data``"
 case lives on the HA-core side at
-``tests/components/sandbox_v2/test_testing_plugins.py`` where
+``tests/components/sandbox/test_testing_plugins.py`` where
 ``MockConfigEntry`` is importable through the running pytest session.
 """
 

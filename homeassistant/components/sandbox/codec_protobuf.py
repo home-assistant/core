@@ -15,7 +15,7 @@ from typing import Any
 
 from google.protobuf.message import Message
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .channel import Frame, FrameKind
 from .messages import REGISTRY
 

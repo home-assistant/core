@@ -1,6 +1,6 @@
-"""In-process pytest plugin for sandbox_v2 compat tests.
+"""In-process pytest plugin for sandbox compat tests.
 
-The plugin sets up the ``sandbox_v2`` integration in the test HA, then
+The plugin sets up the ``sandbox`` integration in the test HA, then
 runs the sandbox-side :class:`hass_client.sandbox.SandboxRuntime` as an
 asyncio task on the same loop, joined to the manager-side
 :class:`Channel` via an in-memory loopback transport. No subprocess
@@ -16,9 +16,9 @@ Usage::
 
     pytest -p hass_client.testing.pytest_plugin <test path>
 
-The plugin exposes the ``sandbox_v2_inprocess`` fixture, which yields
+The plugin exposes the ``sandbox_inprocess`` fixture, which yields
 an :class:`InProcessSandbox` handle. The fixture sets up the
-``sandbox_v2`` integration in ``hass``, starts an in-process built-in
+``sandbox`` integration in ``hass``, starts an in-process built-in
 group sandbox, and tears everything down on exit.
 """
 
@@ -120,7 +120,7 @@ class _InProcessSandboxProcess:
         """Best-effort: issue a shutdown call so the runtime exits cleanly."""
         # Lazy import: testing package must not pull the HA integration
         # tree at import time.
-        from homeassistant.components.sandbox_v2.protocol import (  # noqa: PLC0415
+        from homeassistant.components.sandbox.protocol import (  # noqa: PLC0415
             MSG_SHUTDOWN,
         )
 
@@ -139,7 +139,7 @@ async def async_setup_inprocess_sandbox(
     group: str = DEFAULT_GROUP,
     config_dir: str | None = None,
 ) -> InProcessSandbox:
-    """Set up ``sandbox_v2`` and run a sandbox runtime in-process.
+    """Set up ``sandbox`` and run a sandbox runtime in-process.
 
     Returns an :class:`InProcessSandbox` handle whose
     :meth:`InProcessSandbox.stop` the caller is responsible for awaiting
@@ -149,19 +149,17 @@ async def async_setup_inprocess_sandbox(
     # Lazy import to keep ``hass_client.testing`` import-time free of HA
     # integration code (the testing package may be imported even when
     # the integration isn't installed).
-    from homeassistant.components.sandbox_v2.bridge import (  # noqa: PLC0415
+    from homeassistant.components.sandbox.bridge import (  # noqa: PLC0415
         async_create_bridge,
     )
-    from homeassistant.components.sandbox_v2.const import (  # noqa: PLC0415
-        DATA_SANDBOX_V2,
-    )
+    from homeassistant.components.sandbox.const import DATA_SANDBOX_V2  # noqa: PLC0415
     from homeassistant.setup import async_setup_component  # noqa: PLC0415
 
-    assert await async_setup_component(hass, "sandbox_v2", {})
+    assert await async_setup_component(hass, "sandbox", {})
     data = hass.data[DATA_SANDBOX_V2]
     manager = data.manager
     if manager is None:  # pragma: no cover — defensive only
-        raise RuntimeError("sandbox_v2 setup did not install a manager")
+        raise RuntimeError("sandbox setup did not install a manager")
 
     mgr_channel, rt_channel = make_inproc_channel_pair(group=group)
 
@@ -173,7 +171,7 @@ async def async_setup_inprocess_sandbox(
         channel_factory=_one_shot_channel_factory(rt_channel),
     )
     runtime_task = asyncio.create_task(
-        runtime.run(), name=f"sandbox_v2_inproc[{group}]"
+        runtime.run(), name=f"sandbox_inproc[{group}]"
     )
 
     try:
@@ -223,12 +221,12 @@ def _one_shot_channel_factory(channel: Any):
 
 
 @pytest_asyncio.fixture
-async def sandbox_v2_inprocess(
+async def sandbox_inprocess(
     hass: HomeAssistant,
     tmp_path_factory: pytest.TempPathFactory,
 ) -> AsyncIterator[InProcessSandbox]:
-    """Set up the ``sandbox_v2`` integration with an in-process built-in sandbox."""
-    config_dir = tmp_path_factory.mktemp("sandbox_v2_inproc")
+    """Set up the ``sandbox`` integration with an in-process built-in sandbox."""
+    config_dir = tmp_path_factory.mktemp("sandbox_inproc")
     sandbox = await async_setup_inprocess_sandbox(
         hass, group=DEFAULT_GROUP, config_dir=str(config_dir)
     )
@@ -242,5 +240,5 @@ __all__ = [
     "DEFAULT_GROUP",
     "InProcessSandbox",
     "async_setup_inprocess_sandbox",
-    "sandbox_v2_inprocess",
+    "sandbox_inprocess",
 ]

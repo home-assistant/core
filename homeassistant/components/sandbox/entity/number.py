@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``number`` entities."""
+"""Sandbox proxy for ``number`` entities."""
 
 from homeassistant.components.number import (
     ATTR_MAX,

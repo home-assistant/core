@@ -1,4 +1,4 @@
-# Home Assistant Sandbox v2
+# Home Assistant Sandbox
 
 This directory is the home for the v2 sandbox rewrite. v2 runs Home
 Assistant integrations in isolated subprocesses while main keeps a
@@ -31,7 +31,7 @@ second condition), as a deliberate call relying on git history for rollback.
   changed.
 - [`docs/entity-bridge-decision.md`](docs/entity-bridge-decision.md) —
   Option A vs Option B (Phase 1 spike). Option B (action-call
-  forwarding via the shared `sandbox_v2/call_service` channel) is
+  forwarding via the shared `sandbox/call_service` channel) is
   the protocol every entity proxy uses.
 - [`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md) —
   **SUPERSEDED.** The Phase-7 `RefreshToken.scopes` mechanism it
@@ -57,7 +57,7 @@ second condition), as a deliberate call relying on git history for rollback.
   and report (Phase 10).
 
 The HA Core side of the integration lives at
-`../homeassistant/components/sandbox_v2/`.
+`../homeassistant/components/sandbox/`.
 
 ## Stateless sandboxes — integration source
 
@@ -184,19 +184,19 @@ took the codebase from Phase 11 to Phase 17. What's still open:
 
 ```bash
 # HA-core side
-uv run pytest tests/components/sandbox_v2/ --no-cov -q
+uv run pytest tests/components/sandbox/ --no-cov -q
 
 # Client side (separate uv env — does NOT accept --no-cov)
-uv run pytest /home/paulus/dev/hass/core/sandbox_v2/hass_client/ -q
+uv run pytest /home/paulus/dev/hass/core/sandbox/hass_client/ -q
 
 # Compat lane
-cd sandbox_v2 && python run_compat.py
+cd sandbox && python run_compat.py
 ```
 
 For running the client runtime in a container (unix-socket transport today, WS
 later — not remote-ready yet), see
 [`hass_client/docs/docker.md`](hass_client/docs/docker.md).
 
-After modifying anything under `sandbox_v2/` or
-`homeassistant/components/sandbox_v2/`, run
+After modifying anything under `sandbox/` or
+`homeassistant/components/sandbox/`, run
 `uv run prek run --files <changed files>` before committing.

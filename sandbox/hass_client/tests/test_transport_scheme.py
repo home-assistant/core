@@ -11,11 +11,11 @@ import contextlib
 from pathlib import Path
 import tempfile
 
-from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.sandbox import SandboxRuntime, _open_unix_channel, _transport_scheme
-from hass_client.sandbox_v2.__main__ import _build_parser
+from hass_client.sandbox.__main__ import _build_parser
 import pytest
 
 
@@ -69,18 +69,18 @@ async def test_open_unix_channel_round_trips() -> None:
         reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ) -> None:
         channel = Channel(reader, writer, name="server", codec=ProtobufCodec())
-        channel.register("sandbox_v2/ping", _ping)
+        channel.register("sandbox/ping", _ping)
         channel.start()
         server_channels.append(channel)
 
-    with tempfile.TemporaryDirectory(prefix="sandbox_v2_test_") as socket_dir:
+    with tempfile.TemporaryDirectory(prefix="sandbox_test_") as socket_dir:
         socket_path = str(Path(socket_dir) / "control.sock")
         server = await asyncio.start_unix_server(_on_connect, path=socket_path)
         client = await _open_unix_channel(socket_path, name="client")
         try:
             client.start()
             result = await asyncio.wait_for(
-                client.call("sandbox_v2/ping", None), timeout=5.0
+                client.call("sandbox/ping", None), timeout=5.0
             )
             assert result.pong == "pong-unix"
         finally:

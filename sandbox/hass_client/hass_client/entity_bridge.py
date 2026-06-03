@@ -2,8 +2,8 @@
 
 The bridge listens for ``EVENT_STATE_CHANGED`` on the sandbox-private
 :class:`HomeAssistant`. First-time appearances (``old_state is None``)
-trigger a ``sandbox_v2/register_entity`` call up to main; subsequent
-changes become ``sandbox_v2/state_changed`` pushes.
+trigger a ``sandbox/register_entity`` call up to main; subsequent
+changes become ``sandbox/state_changed`` pushes.
 
 We deliberately tag every event with the sandbox-side ``entry_id`` of
 the owning :class:`EntityPlatform` so main can route each proxy entity
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
 from .messages import make_entity_description
@@ -109,14 +109,14 @@ class EntityBridge:
                 self._registered.discard(entity_id)
                 asyncio.create_task(  # noqa: RUF006
                     self._push_unregister(entity_id),
-                    name=f"sandbox_v2:unregister:{entity_id}",
+                    name=f"sandbox:unregister:{entity_id}",
                 )
             return
 
         if entity_id in self._registered:
             asyncio.create_task(  # noqa: RUF006
                 self._push_state(entity_id, new_state),
-                name=f"sandbox_v2:state:{entity_id}",
+                name=f"sandbox:state:{entity_id}",
             )
             return
 
@@ -129,7 +129,7 @@ class EntityBridge:
         self._pending.add(entity_id)
         asyncio.create_task(  # noqa: RUF006
             self._register_and_push(entity_id, new_state),
-            name=f"sandbox_v2:register:{entity_id}",
+            name=f"sandbox:register:{entity_id}",
         )
 
     @callback
@@ -143,7 +143,7 @@ class EntityBridge:
             return
         asyncio.create_task(  # noqa: RUF006
             self._resend(entity_id),
-            name=f"sandbox_v2:resend:{entity_id}",
+            name=f"sandbox:resend:{entity_id}",
         )
 
     @callback
@@ -162,7 +162,7 @@ class EntityBridge:
                 continue
             asyncio.create_task(  # noqa: RUF006
                 self._resend(entity_id),
-                name=f"sandbox_v2:resend:{entity_id}",
+                name=f"sandbox:resend:{entity_id}",
             )
 
     async def _register_and_push(self, entity_id: str, new_state: Any) -> None:

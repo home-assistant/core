@@ -1,4 +1,4 @@
-"""Sandbox v2 — subprocess lifecycle and supervision.
+"""Sandbox — subprocess lifecycle and supervision.
 
 Phase 3 building block. The manager owns one supervised subprocess per
 sandbox group (``main`` / ``built-in`` / ``custom``); higher phases call
@@ -6,7 +6,7 @@ sandbox group (``main`` / ``built-in`` / ``custom``); higher phases call
 
 The contract between manager and runtime is:
 
-* the manager launches ``python -m hass_client.sandbox_v2`` and tells it
+* the manager launches ``python -m hass_client.sandbox`` and tells it
   which control-channel transport to use via ``--url``
 * the runtime opens the control channel and sends a :data:`MSG_READY`
   frame as its first message once it is up (no stdout text marker)
@@ -66,7 +66,7 @@ ShutdownReplyCallback = Callable[[str, Any], Awaitable[None]]
 
 
 class SandboxV2Error(Exception):
-    """Base class for sandbox_v2 lifecycle errors."""
+    """Base class for sandbox lifecycle errors."""
 
 
 class SandboxStartError(SandboxV2Error):
@@ -169,7 +169,7 @@ class SandboxProcess:
         self._state = "starting"
         self._attempts.clear()
         self._supervisor = asyncio.create_task(
-            self._supervise(), name=f"sandbox_v2[{self.group}]"
+            self._supervise(), name=f"sandbox[{self.group}]"
         )
 
         ready_task = asyncio.create_task(self._ready.wait())
@@ -228,7 +228,7 @@ class SandboxProcess:
     async def async_graceful_shutdown(self, *, timeout: float) -> bool:
         """Phase 9: ask the runtime to unload + flush, then wait for exit.
 
-        Sends ``sandbox_v2/shutdown`` over the live channel and waits up
+        Sends ``sandbox/shutdown`` over the live channel and waits up
         to ``timeout`` for the runtime to reply and then exit on its
         own. Sets :attr:`_stopping` first so the supervisor does not
         treat the clean exit as a crash. Returns ``True`` if the process
@@ -367,7 +367,7 @@ class SandboxProcess:
         ``sun_path`` limit on Linux. It is unlinked when the server closes
         and the tempdir is removed on the way out — no leaked socket file.
         """
-        socket_dir = tempfile.mkdtemp(prefix=f"sandbox_v2_{self.group}_")
+        socket_dir = tempfile.mkdtemp(prefix=f"sandbox_{self.group}_")
         socket_path = os.path.join(socket_dir, "control.sock")
         loop = asyncio.get_running_loop()
         connected: asyncio.Future[tuple[asyncio.StreamReader, asyncio.StreamWriter]] = (
@@ -544,7 +544,7 @@ class SandboxManager:
 
         ``command_factory`` lets tests substitute the spawned command; it is
         called with ``(group, url)`` and the default builds the
-        ``python -m hass_client.sandbox_v2`` argv that
+        ``python -m hass_client.sandbox`` argv that
         :class:`hass_client.sandbox.SandboxRuntime` consumes.
 
         ``transport`` selects the control-channel transport for every
@@ -554,7 +554,7 @@ class SandboxManager:
 
         ``on_channel_ready`` is invoked once a sandbox's control channel is
         live; Phase 4's router uses it to register inbound flow handlers
-        (e.g., ``sandbox_v2/notify_flow_changed``).
+        (e.g., ``sandbox/notify_flow_changed``).
 
         ``token_factory`` returns the scoped access token the manager
         passes to the subprocess (Phase 7). Awaited once per group and
@@ -668,7 +668,7 @@ class SandboxManager:
         )
 
     def _default_command(self, group: str, url: str) -> list[str]:
-        """Argv for ``python -m hass_client.sandbox_v2``.
+        """Argv for ``python -m hass_client.sandbox``.
 
         ``url`` is the control-channel URL the manager's transport requires
         (``stdio://`` or ``unix://<path>``) — the runtime reads its scheme
@@ -676,11 +676,11 @@ class SandboxManager:
         still passed for the deferred websocket transport, which is the only
         path that consumes it.
         """
-        token = self._tokens.get(group, "sandbox_v2_placeholder")
+        token = self._tokens.get(group, "sandbox_placeholder")
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox_v2",
+            "hass_client.sandbox",
             "--name",
             group,
             "--url",

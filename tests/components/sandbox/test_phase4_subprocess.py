@@ -1,6 +1,6 @@
 """End-to-end subprocess tests for Phase 4.
 
-Spawns the real ``python -m hass_client.sandbox_v2`` runtime and exercises
+Spawns the real ``python -m hass_client.sandbox`` runtime and exercises
 the JSON-line control channel: handshake → ping round-trip → graceful
 shutdown.
 
@@ -15,7 +15,7 @@ import sys
 
 import pytest
 
-from homeassistant.components.sandbox_v2.manager import SandboxConfig, SandboxManager
+from homeassistant.components.sandbox.manager import SandboxConfig, SandboxManager
 from homeassistant.core import HomeAssistant
 
 FAST_CONFIG = SandboxConfig(
@@ -35,7 +35,7 @@ async def _manager_fixture(hass: HomeAssistant):
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox_v2",
+            "hass_client.sandbox",
             "--name",
             group,
             "--url",
@@ -56,8 +56,8 @@ async def test_subprocess_handshake_and_ping(manager: SandboxManager) -> None:
     channel = sandbox.channel
     assert channel is not None
 
-    result = await asyncio.wait_for(channel.call("sandbox_v2/ping", None), timeout=5.0)
-    assert result.pong == "sandbox_v2"
+    result = await asyncio.wait_for(channel.call("sandbox/ping", None), timeout=5.0)
+    assert result.pong == "sandbox"
 
     await manager.async_stop("built-in")
     assert sandbox.state == "stopped"

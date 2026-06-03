@@ -1,6 +1,6 @@
 """In-memory transport joining a manager-side and runtime-side Channel.
 
-Mirrors ``tests/components/sandbox_v2/_helpers.py:make_channel_pair`` so
+Mirrors ``tests/components/sandbox/_helpers.py:make_channel_pair`` so
 the testing plugin can build channel pairs without importing from the
 core tests tree (TID251 forbids ``hass_client`` → ``tests`` imports).
 
@@ -57,7 +57,7 @@ def make_inproc_channel_pair(*, group: str) -> tuple[Any, ClientChannel]:
     :class:`hass_client.sandbox.SandboxRuntime` consumes.
 
     The manager-side type is imported lazily because the testing package
-    must not pull ``homeassistant.components.sandbox_v2`` at import time
+    must not pull ``homeassistant.components.sandbox`` at import time
     (the integration is not always installed when ``hass_client`` is
     used). The wire format is identical on both sides; the separate
     classes exist only to honour the project's import-boundary rule.
@@ -66,10 +66,10 @@ def make_inproc_channel_pair(*, group: str) -> tuple[Any, ClientChannel]:
     # tree. Importing it eagerly would couple the testing helper to a
     # component that may not be loaded.
     from hass_client.codec_protobuf import ProtobufCodec as ClientCodec  # noqa: PLC0415
-    from homeassistant.components.sandbox_v2.channel import (  # noqa: PLC0415
+    from homeassistant.components.sandbox.channel import (  # noqa: PLC0415
         Channel as MgrChannel,
     )
-    from homeassistant.components.sandbox_v2.codec_protobuf import (  # noqa: PLC0415
+    from homeassistant.components.sandbox.codec_protobuf import (  # noqa: PLC0415
         ProtobufCodec as MgrCodec,
     )
 

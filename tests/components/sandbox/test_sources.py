@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.sandbox_v2.sources import (
+from homeassistant.components.sandbox.sources import (
     IntegrationSourceDict,
     SandboxSourceError,
     async_register_sandbox_source_resolver,

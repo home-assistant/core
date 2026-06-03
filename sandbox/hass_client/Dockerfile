@@ -1,4 +1,4 @@
-# Sandbox v2 runtime image — runs the `hass_client` sandbox runtime.
+# Sandbox runtime image — runs the `hass_client` sandbox runtime.
 #
 # NOT a remote-ready artifact today. The runtime talks to main over the
 # control channel; the only container-friendly transport that exists right now
@@ -41,7 +41,7 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # COPY the repo context (trimmed by .dockerignore) and install the local
-# checkout: the repo root provides `homeassistant`, and ./sandbox_v2/hass_client
+# checkout: the repo root provides `homeassistant`, and ./sandbox/hass_client
 # provides `hass-client-v2` (whose `homeassistant` dependency is already
 # satisfied by the local install, plus the `protobuf` + `aiohttp` runtime deps).
 #
@@ -50,7 +50,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 # (`async_process_requirements`) — which is exactly why the final image keeps
 # pip and needs network egress at runtime.
 COPY . /src
-RUN pip install /src /src/sandbox_v2/hass_client
+RUN pip install /src /src/sandbox/hass_client
 
 # ---------------------------------------------------------------------------
 # Stage 2 — runtime: copy the venv, drop privileges, run the runtime.
@@ -76,12 +76,12 @@ ENV PATH="/opt/venv/bin:$PATH" \
     SANDBOX_URL="stdio://" \
     SANDBOX_LOG_LEVEL="INFO"
 
-COPY --chown=sandbox:sandbox sandbox_v2/hass_client/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY --chown=sandbox:sandbox sandbox/hass_client/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # No VOLUME and no persistent state: the runtime keeps nothing on disk between
 # runs. It writes only an ephemeral config dir under the system temp dir
-# (TemporaryDirectory in hass_client/sandbox.py); storage/restore-state routes
+# (TemporaryDirectory in hass_client/sandbox/__init__.py); storage/restore-state routes
 # to main over the channel, and custom-integration code is fetched at startup.
 #
 # No HEALTHCHECK on purpose: readiness is the `Ready` frame the runtime sends
@@ -94,5 +94,5 @@ WORKDIR /home/sandbox
 # Exec-form entrypoint via tini → the entrypoint script `exec`s python, so
 # signals reach the runtime and it shuts down cleanly. The script expands the
 # SANDBOX_* env vars into the CLI flags (see docker-entrypoint.sh). The module
-# stays `hass_client.sandbox_v2` (the rename to `sandbox` is a separate plan).
+# stays `hass_client.sandbox` (the rename to `sandbox` is a separate plan).
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]

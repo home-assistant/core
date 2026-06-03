@@ -1,18 +1,18 @@
-"""Run HA Core integration test suites through the sandbox_v2 plugin.
+"""Run HA Core integration test suites through the sandbox plugin.
 
 Drives pytest with ``-p hass_client.testing.pytest_plugin`` (in-process)
 or ``-p hass_client.testing.conftest_sandbox`` (subprocess) across the
 ``tests/components/<integration>/`` directory of every integration the
 runner is asked about, parses the pytest summary, and writes a CSV plus
-a short Markdown report into ``sandbox_v2/``.
+a short Markdown report into ``sandbox/``.
 
 Shape mirrors ``sandbox/run_all_sandbox_tests.py`` (v1) but the report
-location is local to ``sandbox_v2/`` so the two compat lanes don't fight
+location is local to ``sandbox/`` so the two compat lanes don't fight
 over the same artefacts.
 
 Usage::
 
-    cd sandbox_v2
+    cd sandbox
     python run_compat.py                      # full run, in-process plugin
     python run_compat.py --plugin subprocess  # use the real-subprocess lane
     python run_compat.py input_boolean light  # restrict to specific integrations
@@ -33,7 +33,7 @@ import subprocess
 import sys
 import time
 
-# Paths are relative to this script (sandbox_v2/run_compat.py).
+# Paths are relative to this script (sandbox/run_compat.py).
 _HERE = Path(__file__).resolve().parent
 CORE_ROOT = _HERE.parent
 CORE_TESTS_DIR = CORE_ROOT / "tests" / "components"
@@ -43,7 +43,7 @@ DEFAULT_RESULTS_CSV = _HERE / "COMPAT.csv"
 # on every run. Auto-generated runs land in COMPAT_LATEST.md so reviewers
 # can diff against the curated baseline.
 DEFAULT_REPORT_MD = _HERE / "COMPAT_LATEST.md"
-ERRORS_DIR = Path(os.environ.get("SANDBOX_V2_ERRORS_DIR", "/tmp/sandbox_v2_errors"))
+ERRORS_DIR = Path(os.environ.get("SANDBOX_V2_ERRORS_DIR", "/tmp/sandbox_errors"))
 
 # Map CLI plugin choice → pytest ``-p`` argument.
 PLUGINS = {
@@ -173,7 +173,7 @@ def write_report(results: list[Result], plugin: str, path: Path) -> None:
         totals["skipped"] += result.skipped
 
     lines = [
-        "# Sandbox v2 compat report",
+        "# Sandbox compat report",
         "",
         f"Plugin: `{plugin}`",
         "",

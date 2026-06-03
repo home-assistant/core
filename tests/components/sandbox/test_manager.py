@@ -1,7 +1,7 @@
-"""Phase 3 tests for the sandbox_v2 lifecycle manager.
+"""Phase 3 tests for the sandbox lifecycle manager.
 
 These exercise the real subprocess machinery — the runtime entry point at
-``python -m hass_client.sandbox_v2`` is spawned for the happy path; the
+``python -m hass_client.sandbox`` is spawned for the happy path; the
 restart-budget and isolation tests use a stub argv that the manager can
 spawn and that fails immediately.
 """
@@ -13,7 +13,7 @@ import time
 
 import pytest
 
-from homeassistant.components.sandbox_v2.manager import (
+from homeassistant.components.sandbox.manager import (
     SandboxConfig,
     SandboxFailedError,
     SandboxManager,
@@ -105,7 +105,7 @@ async def test_multiple_groups_independent(hass: HomeAssistant) -> None:
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox_v2",
+            "hass_client.sandbox",
             "--name",
             group,
             "--url",

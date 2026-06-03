@@ -26,36 +26,36 @@ from google.protobuf.message import Message
 # pylint: disable-next=no-name-in-module
 from google.protobuf.struct_pb2 import ListValue, Struct, Value
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 
 # Wire type → (request message class, result message class). The result class
 # is ``None`` for one-way pushes (ready / state_changed / fire_event). The
 # codec resolves these from ``frame.type`` on both encode and decode.
 REGISTRY: dict[str, tuple[type[Message], type[Message] | None]] = {
     # handshake (push)
-    "sandbox_v2/ready": (pb.Ready, None),
+    "sandbox/ready": (pb.Ready, None),
     # main → sandbox
-    "sandbox_v2/entry_setup": (pb.EntrySetup, pb.EntrySetupResult),
-    "sandbox_v2/entry_unload": (pb.EntryUnload, pb.EntryUnloadResult),
-    "sandbox_v2/call_service": (pb.CallService, pb.CallServiceResult),
-    "sandbox_v2/shutdown": (pb.Shutdown, pb.ShutdownResult),
-    "sandbox_v2/ping": (pb.Ping, pb.PingResult),
-    "sandbox_v2/flow_init": (pb.FlowInit, pb.FlowResult),
-    "sandbox_v2/flow_step": (pb.FlowStep, pb.FlowResult),
-    "sandbox_v2/flow_abort": (pb.FlowAbort, pb.FlowAbortResult),
+    "sandbox/entry_setup": (pb.EntrySetup, pb.EntrySetupResult),
+    "sandbox/entry_unload": (pb.EntryUnload, pb.EntryUnloadResult),
+    "sandbox/call_service": (pb.CallService, pb.CallServiceResult),
+    "sandbox/shutdown": (pb.Shutdown, pb.ShutdownResult),
+    "sandbox/ping": (pb.Ping, pb.PingResult),
+    "sandbox/flow_init": (pb.FlowInit, pb.FlowResult),
+    "sandbox/flow_step": (pb.FlowStep, pb.FlowResult),
+    "sandbox/flow_abort": (pb.FlowAbort, pb.FlowAbortResult),
     # sandbox → main
-    "sandbox_v2/register_entity": (pb.EntityDescription, pb.RegisterEntityResult),
-    "sandbox_v2/unregister_entity": (pb.UnregisterEntity, pb.UnregisterEntityResult),
-    "sandbox_v2/state_changed": (pb.StateChanged, None),
-    "sandbox_v2/register_service": (pb.RegisterService, pb.RegisterServiceResult),
-    "sandbox_v2/unregister_service": (
+    "sandbox/register_entity": (pb.EntityDescription, pb.RegisterEntityResult),
+    "sandbox/unregister_entity": (pb.UnregisterEntity, pb.UnregisterEntityResult),
+    "sandbox/state_changed": (pb.StateChanged, None),
+    "sandbox/register_service": (pb.RegisterService, pb.RegisterServiceResult),
+    "sandbox/unregister_service": (
         pb.UnregisterService,
         pb.UnregisterServiceResult,
     ),
-    "sandbox_v2/fire_event": (pb.FireEvent, None),
-    "sandbox_v2/store_load": (pb.StoreLoad, pb.StoreLoadResult),
-    "sandbox_v2/store_save": (pb.StoreSave, pb.StoreSaveResult),
-    "sandbox_v2/store_remove": (pb.StoreRemove, pb.StoreRemoveResult),
+    "sandbox/fire_event": (pb.FireEvent, None),
+    "sandbox/store_load": (pb.StoreLoad, pb.StoreLoadResult),
+    "sandbox/store_save": (pb.StoreSave, pb.StoreSaveResult),
+    "sandbox/store_remove": (pb.StoreRemove, pb.StoreRemoveResult),
 }
 
 

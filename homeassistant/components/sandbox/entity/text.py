@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``text`` entities."""
+"""Sandbox proxy for ``text`` entities."""
 
 from homeassistant.components.text import (
     ATTR_MAX,

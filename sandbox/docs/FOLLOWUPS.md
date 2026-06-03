@@ -1,4 +1,4 @@
-# Sandbox v2 — Follow-up phases (12–17)
+# Sandbox — Follow-up phases (12–17)
 
 The Phase 5–10 implementation landings each flagged work forward that
 would have made the corresponding PR too large to review. Phase 11
@@ -26,8 +26,8 @@ channel), so any integration that relied on `delay_save` Stores
 flushing on shutdown silently lost data.
 
 **What landed.** Both `Channel` classes (HA-Core
-`homeassistant/components/sandbox_v2/channel.py` and sandbox
-`sandbox_v2/hass_client/hass_client/channel.py`) now dispatch each
+`homeassistant/components/sandbox/channel.py` and sandbox
+`sandbox/hass_client/hass_client/channel.py`) now dispatch each
 inbound call or push in its own `asyncio.create_task`. A bounded
 `asyncio.Semaphore` (default 16 in-flight, `max_inflight` keyword to
 dial down) gates concurrent handlers but is acquired inside the
@@ -37,7 +37,7 @@ cap is hit. `SandboxRuntime._run_graceful_shutdown` now fires
 and `await hass.async_block_till_done()`) so `delay_save` Stores flush
 their pending writes to main before the reply goes out.
 
-**Outcome.** 93 HA-core sandbox_v2 tests + 45 hass_client tests green
+**Outcome.** 93 HA-core sandbox tests + 45 hass_client tests green
 (2 new channel tests covering reentrancy + the concurrency cap; 2 new
 shutdown tests covering FINAL_WRITE + `delay_save` flush). Phase 9's
 "concurrent channel dispatcher" flag is closed.
@@ -57,12 +57,12 @@ around `SandboxProxyEntity` using the same `_call_service(...)`
 pattern — small but plenty enough to drown an in-flight PR.
 
 **What landed.** 28 new proxy classes under
-`homeassistant/components/sandbox_v2/entity/` plus a `scene` symmetry
+`homeassistant/components/sandbox/entity/` plus a `scene` symmetry
 proxy (`scene` lives in `ALWAYS_MAIN` so it never routes through, but
 the proxy exists so a future classifier change can't surprise us).
 Each proxy subclasses `SandboxProxyEntity` + the domain's `*Entity`,
 exposes domain-typed properties out of `_state_cache`, and translates
-methods into `sandbox_v2/call_service` RPCs via the Phase 5 batcher.
+methods into `sandbox/call_service` RPCs via the Phase 5 batcher.
 Domains that index `supported_features` with `in` re-wrap the wire int
 into the domain's `*EntityFeature` IntFlag in `__init__`; four whose
 `state` is `@final` and reads a name-mangled private field (`button`,
@@ -71,7 +71,7 @@ the mangled attribute directly so the parent's `@final` getter computes
 the right state.
 
 **Outcome.** `_DOMAIN_PROXIES` now dispatches every supported HA
-entity domain. 121 HA-core sandbox_v2 tests green (28 new parametrised
+entity domain. 121 HA-core sandbox tests green (28 new parametrised
 smoke tests + 93 prior). `calendar`/`todo` listing and
 `weather.async_forecast_*` flagged forward as query-shaped RPCs the
 action-call channel can't express — these stay open and live in
@@ -111,7 +111,7 @@ JSON encode/decode + batcher), registers 200 proxy lights,
 area-targets `light.turn_on`, and asserts the batcher coalesces 200
 entity invocations into ≤2 RPCs in under 500 ms.
 
-**Outcome.** 133 HA-core sandbox_v2 tests + 46 hass_client tests + 383
+**Outcome.** 133 HA-core sandbox tests + 46 hass_client tests + 383
 core `test_config_entries.py` + 30 core `test_entity_component.py`
 green. Phase 5's four deferrals (`data_schema`, `unique_id`,
 `async_unload_entry`, perf) all closed.
@@ -138,7 +138,7 @@ themselves create (otherwise the bridge code paths never run during
 the integration's own test suite).
 
 **What landed.** A sync classifier mirror in
-`sandbox_v2/hass_client/hass_client/testing/_autotag.py` (mirrors the
+`sandbox/hass_client/hass_client/testing/_autotag.py` (mirrors the
 Phase 2 classifier's five-rule order; the async real classifier
 can't run from inside an already-on-the-loop test). Both pytest
 plugins install the patch in `pytest_configure` and tear down in

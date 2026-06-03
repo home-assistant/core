@@ -1,8 +1,8 @@
-"""Tests for the sandbox_v2 auth helpers."""
+"""Tests for the sandbox auth helpers."""
 
 import pytest
 
-from homeassistant.components.sandbox_v2.auth import (
+from homeassistant.components.sandbox.auth import (
     async_get_or_create_sandbox_user,
     async_issue_sandbox_access_token,
 )
@@ -14,7 +14,7 @@ async def test_get_or_create_user_is_idempotent(hass: HomeAssistant) -> None:
     user = await async_get_or_create_sandbox_user(hass, "built-in")
     assert user.system_generated is True
     assert user.is_active is True
-    assert user.name == "Sandbox v2: built-in"
+    assert user.name == "Sandbox: built-in"
 
     again = await async_get_or_create_sandbox_user(hass, "built-in")
     assert again.id == user.id
@@ -32,7 +32,7 @@ async def test_issue_token_returns_valid_access_token(
     refresh = hass.auth.async_validate_access_token(token)
     assert refresh is not None
     assert refresh.user.system_generated is True
-    assert refresh.user.name == f"Sandbox v2: {group}"
+    assert refresh.user.name == f"Sandbox: {group}"
 
 
 async def test_issue_token_reuses_refresh_token(hass: HomeAssistant) -> None:

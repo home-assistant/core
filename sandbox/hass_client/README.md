@@ -1,18 +1,18 @@
 # hass-client (v2)
 
-Sandbox v2 client library. Independent `uv`-managed environment that depends
+Sandbox client library. Independent `uv`-managed environment that depends
 on `homeassistant` from the surrounding core checkout via
 `[tool.uv.sources]`.
 
 ```bash
-cd sandbox_v2/hass_client
+cd sandbox/hass_client
 uv sync
 uv run pytest
 ```
 
 ## Docker
 
-A container image runs the sandbox runtime (`python -m hass_client.sandbox_v2`)
+A container image runs the sandbox runtime (`python -m hass_client.sandbox`)
 for testing the client against main — see [`docs/docker.md`](docs/docker.md) for
 how to build it, the env vars, and the transport caveat (unix socket today,
 websocket later). It is partly forward-looking: not a remote-ready artifact

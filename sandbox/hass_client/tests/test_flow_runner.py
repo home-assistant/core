@@ -12,7 +12,7 @@ import tempfile
 from types import ModuleType
 from typing import Any
 
-from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.flow_runner import FlowRunner
@@ -88,7 +88,7 @@ async def _channels_fixture() -> tuple[Channel, Channel]:
 
 @pytest.fixture(name="runner")
 async def _runner_fixture() -> FlowRunner:
-    with tempfile.TemporaryDirectory(prefix="sandbox_v2_flowrunner_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="sandbox_flowrunner_") as tmp:
         runner = await FlowRunner.create(config_dir=tmp)
         # Stand up a fake "phase4_demo" integration in the loader caches
         # so async_get_flow_handler short-circuits to our registered class.
@@ -127,7 +127,7 @@ async def test_flow_init_returns_form(
 
     init_msg = pb.FlowInit(handler="phase4_demo")
     init_msg.context.update({"source": "user"})
-    result = await main.call("sandbox_v2/flow_init", init_msg)
+    result = await main.call("sandbox/flow_init", init_msg)
 
     assert result.type == "form"
     assert result.step_id == "user"
@@ -152,10 +152,10 @@ async def test_flow_step_creates_entry(
 
     init_msg = pb.FlowInit(handler="phase4_demo")
     init_msg.context.update({"source": "user"})
-    init_result = await main.call("sandbox_v2/flow_init", init_msg)
+    init_result = await main.call("sandbox/flow_init", init_msg)
     step_msg = pb.FlowStep(flow_id=init_result.flow_id)
     step_msg.user_input.CopyFrom(dict_to_struct({"host": "1.2.3.4"}))
-    step_result = await main.call("sandbox_v2/flow_step", step_msg)
+    step_result = await main.call("sandbox/flow_step", step_msg)
 
     assert step_result.type == "create_entry"
     assert step_result.title == "Demo 1.2.3.4"
@@ -173,10 +173,10 @@ async def test_flow_step_validation_error_returns_form(
 
     init_msg = pb.FlowInit(handler="phase4_demo")
     init_msg.context.update({"source": "user"})
-    init_result = await main.call("sandbox_v2/flow_init", init_msg)
+    init_result = await main.call("sandbox/flow_init", init_msg)
     step_msg = pb.FlowStep(flow_id=init_result.flow_id)
     step_msg.user_input.CopyFrom(dict_to_struct({"host": "bad"}))
-    step_result = await main.call("sandbox_v2/flow_step", step_msg)
+    step_result = await main.call("sandbox/flow_step", step_msg)
 
     assert step_result.type == "form"
     assert struct_to_dict(step_result.errors) == {"host": "invalid_host"}
@@ -193,7 +193,7 @@ async def test_flow_init_marshals_unique_id(
 
     init_msg = pb.FlowInit(handler="phase4_demo")
     init_msg.context.update({"source": "user", "unique_id": "demo-abc"})
-    result = await main.call("sandbox_v2/flow_init", init_msg)
+    result = await main.call("sandbox/flow_init", init_msg)
 
     assert result.type == "form"
     assert struct_to_dict(result.context).get("unique_id") == "demo-abc"
@@ -209,7 +209,7 @@ async def test_flow_abort_is_idempotent(
     sandbox.start()
 
     result = await main.call(
-        "sandbox_v2/flow_abort", pb.FlowAbort(flow_id="not-a-real-flow-id")
+        "sandbox/flow_abort", pb.FlowAbort(flow_id="not-a-real-flow-id")
     )
     # FlowAbortResult is an empty message (was `result == {}` on the dict wire).
     assert isinstance(result, pb.FlowAbortResult)

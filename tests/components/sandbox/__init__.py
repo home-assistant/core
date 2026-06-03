@@ -1,1 +1,1 @@
-"""Tests for the sandbox_v2 integration."""
+"""Tests for the sandbox integration."""

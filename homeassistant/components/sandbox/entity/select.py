@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``select`` entities."""
+"""Sandbox proxy for ``select`` entities."""
 
 from homeassistant.components.select import ATTR_OPTIONS, SelectEntity
 

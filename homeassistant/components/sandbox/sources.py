@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class IntegrationSourceDict(TypedDict, total=False):
 SandboxSourceResolver = Callable[[str], IntegrationSourceDict | None]
 
 DATA_SOURCE_RESOLVERS: HassKey[list[SandboxSourceResolver]] = HassKey(
-    "sandbox_v2_source_resolvers"
+    "sandbox_source_resolvers"
 )
 
 

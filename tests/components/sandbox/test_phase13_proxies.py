@@ -3,12 +3,12 @@
 Each parametrised case:
 
 1. Wires an in-memory channel pair and a :class:`SandboxBridge`.
-2. Pushes a ``sandbox_v2/register_entity`` describing a synthetic entity
+2. Pushes a ``sandbox/register_entity`` describing a synthetic entity
    on the domain under test.
-3. Pushes a ``sandbox_v2/state_changed`` so the cache reflects a real
+3. Pushes a ``sandbox/state_changed`` so the cache reflects a real
    value.
 4. Invokes one method on the proxy and asserts the resulting
-   ``sandbox_v2/call_service`` RPC carries the expected ``(domain,
+   ``sandbox/call_service`` RPC carries the expected ``(domain,
    service)`` plus an entity-targeted target list.
 
 The 4 proxies that already shipped in Phase 5 (light / switch / sensor /
@@ -24,10 +24,10 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
-from homeassistant.components.sandbox_v2.bridge import SandboxBridge
-from homeassistant.components.sandbox_v2.channel import Channel
-from homeassistant.components.sandbox_v2.messages import (
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.bridge import SandboxBridge
+from homeassistant.components.sandbox.channel import Channel
+from homeassistant.components.sandbox.messages import (
     make_entity_description,
     struct_to_dict,
 )
@@ -53,7 +53,7 @@ async def _wire(
 @pytest.fixture(name="entry")
 def _entry_fixture(hass: HomeAssistant) -> ConfigEntry:
     """Mock ConfigEntry the synthetic proxy entities attach to."""
-    entry = MockConfigEntry(domain="sandbox_v2_synthetic", title="Synthetic", data={})
+    entry = MockConfigEntry(domain="sandbox_synthetic", title="Synthetic", data={})
     entry.add_to_hass(hass)
     return entry
 
@@ -390,7 +390,7 @@ async def test_phase13_proxy_smoke(
         calls.append(payload)
         return None
 
-    sandbox_channel.register("sandbox_v2/call_service", _on_call_service)
+    sandbox_channel.register("sandbox/call_service", _on_call_service)
 
     sandbox_entity_id = f"{domain}.synthetic"
     payload = make_entity_description(
@@ -405,13 +405,13 @@ async def test_phase13_proxy_smoke(
     )
 
     try:
-        result = await sandbox_channel.call("sandbox_v2/register_entity", payload)
+        result = await sandbox_channel.call("sandbox/register_entity", payload)
         # State must round-trip through the cache.
         state_changed = pb.StateChanged(
             sandbox_entity_id=sandbox_entity_id, state=state_value
         )
         state_changed.attributes.update(dict(state_attrs))
-        await sandbox_channel.push("sandbox_v2/state_changed", state_changed)
+        await sandbox_channel.push("sandbox/state_changed", state_changed)
         # Let the state push run.
         for _ in range(20):
             await asyncio.sleep(0)

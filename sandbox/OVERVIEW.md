@@ -1,4 +1,4 @@
-# Sandbox v2 — Architecture overview
+# Sandbox — Architecture overview
 
 > **Status:** Complete through Phase 20. The follow-up phases (12–20)
 > closed every Phase 5–10 deferral; what remains of the original
@@ -38,16 +38,16 @@ inside the sandbox.
 
 ## How v2 differs from v1
 
-| | v1 (`sandbox/`) | v2 (`sandbox_v2/`) |
+| | v1 (`sandbox/`) | v2 (`sandbox/`) |
 |---|---|---|
-| Routing | `entry.options["sandbox"]` set by hand | Computed at runtime from manifest + platform inspection ([`classifier.py`](../homeassistant/components/sandbox_v2/classifier.py)) |
+| Routing | `entry.options["sandbox"]` set by hand | Computed at runtime from manifest + platform inspection ([`classifier.py`](../homeassistant/components/sandbox/classifier.py)) |
 | Transport | Live websocket connection back to main | Protobuf `Channel` over a pluggable transport (stdio by default, unix socket opt-in; websocket later) |
-| Entity bridge | Bespoke `sandbox/update_state` + `sandbox/entity_command_result` (Option A) | Shared `sandbox_v2/call_service` (Option B) — see [`docs/entity-bridge-decision.md`](docs/entity-bridge-decision.md) |
+| Entity bridge | Bespoke `sandbox/update_state` + `sandbox/entity_command_result` (Option A) | Shared `sandbox/call_service` (Option B) — see [`docs/entity-bridge-decision.md`](docs/entity-bridge-decision.md) |
 | Config flow | Forwarded through host integration | Runs inside the sandbox; main owns the canonical `ConfigEntry` store |
 | Auth | System-user token, full HA scope | System-user token (scope enforcement deferred until the sandbox→main connection lands) |
 | Data sharing | Sandbox sees all of main's state | Default locked-down; opt-in state/registry/area sharing per group is a future feature ([`docs/design-share-states.md`](docs/design-share-states.md)) |
-| Store routing | None — sandbox writes to its own tempdir | The `current_sandbox` contextvar makes `Store` IO proxy to main; main writes to `<config>/.storage/sandbox_v2/<group>/<key>` |
-| Shutdown | Best-effort | Graceful `sandbox_v2/shutdown` round-trip; sandbox unloads entries + dumps `RestoreEntity` state; main persists it for next boot |
+| Store routing | None — sandbox writes to its own tempdir | The `current_sandbox` contextvar makes `Store` IO proxy to main; main writes to `<config>/.storage/sandbox/<group>/<key>` |
+| Shutdown | Best-effort | Graceful `sandbox/shutdown` round-trip; sandbox unloads entries + dumps `RestoreEntity` state; main persists it for next boot |
 | Custom integrations | Out of scope | First-class — they route to the `custom` group |
 
 The design choices and the failure modes of v1 they fix are recorded in
@@ -59,7 +59,7 @@ The design choices and the failure modes of v1 they fix are recorded in
 ```
 ┌──────────────────────────────── Home Assistant Core ─────────────────────────────────┐
 │                                                                                       │
-│  homeassistant/components/sandbox_v2/                                                 │
+│  homeassistant/components/sandbox/                                                 │
 │   ┌────────────────────┐   ┌────────────────────┐   ┌────────────────────────────┐    │
 │   │ SandboxFlowRouter  │   │  SandboxManager    │   │   SandboxBridge (per group) │   │
 │   │ • plugged into     │   │ • dict[group,      │   │ • proxy-entity registry    │    │
@@ -76,11 +76,11 @@ The design choices and the failure modes of v1 they fix are recorded in
 └─────────────────────────┬─────────────────────────────────────────┼───────────────────┘
                           │                                         │
                           │  subprocess.Popen                       │  Channel
-                          │  python -m hass_client.sandbox_v2       │  (protobuf frames over
+                          │  python -m hass_client.sandbox       │  (protobuf frames over
                           │  --name … --url … --token …             │   stdio / unix socket)
                           ▼                                         │
 ┌──────────────────────────── Sandbox subprocess ──────────────────────────────────────┐
-│  sandbox_v2/hass_client/hass_client/sandbox.py                                       │
+│  sandbox/hass_client/hass_client/sandbox/__init__.py                                  │
 │                                                                                       │
 │  SandboxRuntime                                                                       │
 │  • private HomeAssistant instance                                                     │
@@ -97,7 +97,7 @@ The design choices and the failure modes of v1 they fix are recorded in
 
 ## Routing rules
 
-`classify(integration)` ([`classifier.py`](../homeassistant/components/sandbox_v2/classifier.py))
+`classify(integration)` ([`classifier.py`](../homeassistant/components/sandbox/classifier.py))
 is a pure function from a loaded `Integration` to a `SandboxAssignment`.
 It runs from two places: `SandboxFlowRouter.async_create_flow` (new
 flows) and `SandboxFlowRouter.async_setup_entry` (existing entries with
@@ -109,7 +109,7 @@ Rule order (first match wins):
    part of the HA runtime; sandboxing them is meaningless.
 2. `domain in ALWAYS_MAIN` → **main**. Hand-picked deny-list:
    `script`, `automation`, `scene`, `cloud`, `ai_task`, `image`. Each
-   entry has an inline "why" in [`const.py`](../homeassistant/components/sandbox_v2/const.py).
+   entry has an inline "why" in [`const.py`](../homeassistant/components/sandbox/const.py).
    `ai_task` and `image` were added by the Phase 1 spike because their
    service handlers do non-idempotent pre-dispatch work that neither
    bridge option intercepts cleanly — see the spike doc.
@@ -145,7 +145,7 @@ only when the first flow or entry routes to it. The subprocess command
 is:
 
 ```
-python -m hass_client.sandbox_v2 \
+python -m hass_client.sandbox \
     --name <name> \
     --url stdio:// \
     --token <sandbox access token>
@@ -156,7 +156,7 @@ frames ride the subprocess's stdin/stdout) or `unix://<path>` (the
 manager opens a unix socket and the runtime dials back). `ws://` / `wss://`
 are reserved for the deferred websocket transport and rejected for now.
 The runtime opens the channel and sends a `Ready` frame
-(`sandbox_v2/ready`) as its first message; the manager treats its arrival
+(`sandbox/ready`) as its first message; the manager treats its arrival
 as "running" (there is no stdout text marker — stdout carries nothing but
 channel frames). Frames are protobuf (a `Frame` envelope carrying one
 typed message per `type`; `JsonCodec` is kept only for channel-core tests)
@@ -174,7 +174,7 @@ transitions the sandbox to `failed` and `ensure_started` raises
 `SandboxFailedError` — the router surfaces this as
 `SETUP_RETRY` on the affected entries.
 
-A `sandbox_v2/ping` handler is registered and exercised by the
+A `sandbox/ping` handler is registered and exercised by the
 subprocess test (`test_phase4_subprocess`); the periodic 30s ping loop
 is wired through but currently disabled (process-exit detection covers
 the hard-crash case).
@@ -184,7 +184,7 @@ the hard-crash case).
 On `EVENT_HOMEASSISTANT_STOP` the integration runs:
 
 1. `manager.async_graceful_shutdown_all(timeout=manager.shutdown_grace)`
-   fans out `sandbox_v2/shutdown` to every running sandbox.
+   fans out `sandbox/shutdown` to every running sandbox.
 2. Each sandbox unloads its entries via `config_entries.async_unload`,
    snapshots `RestoreStateData.async_get_stored_states()` into a
    JSON-safe wrapped dict (round-tripped through orjson's HA-aware
@@ -193,7 +193,7 @@ On `EVENT_HOMEASSISTANT_STOP` the integration runs:
    exits 0 on its own.
 3. The reply lands in `SandboxV2Data`'s `on_shutdown_reply` callback,
    which writes `restore_state` to
-   `<config>/.storage/sandbox_v2/<group>/core.restore_state` via the
+   `<config>/.storage/sandbox/<group>/core.restore_state` via the
    bridge's store server.
 4. `manager.async_stop_all()` falls through to SIGTERM, then SIGKILL,
    for any sandbox that didn't ack the graceful round-trip.
@@ -224,8 +224,8 @@ from three call sites:
 look up any existing entry for the handler key, fall back to
 `classify(integration)`, then either return `None` (let HA handle it
 locally) or hand back a `SandboxFlowProxy` `ConfigFlow`. The proxy
-issues `sandbox_v2/flow_init`, `sandbox_v2/flow_step`, and
-`sandbox_v2/flow_abort` RPCs against the matching sandbox's runtime;
+issues `sandbox/flow_init`, `sandbox/flow_step`, and
+`sandbox/flow_abort` RPCs against the matching sandbox's runtime;
 each RPC returns a marshalled `FlowResult` that the proxy re-issues as
 `async_show_form` / `async_create_entry` / `async_abort` so the
 framework treats the result as native.
@@ -244,7 +244,7 @@ the `ConfigFlowResult`; the framework's `ConfigEntry` constructor in
 ensures the sandbox is running, and round-trips an `entry_setup` RPC.
 
 The flow proxy serialises `data_schema` via `voluptuous_serialize`
-([`schema_bridge.py`](../homeassistant/components/sandbox_v2/schema_bridge.py))
+([`schema_bridge.py`](../homeassistant/components/sandbox/schema_bridge.py))
 and rebuilds a `vol.Schema` on main so frontend forms render correctly
 (Phase 14). The reconstruction rebuilds the real `Selector` /
 `data_entry_flow.section` objects, so when the flow manager re-serialises
@@ -299,17 +299,17 @@ numbers in [`docs/entity-bridge-decision.md`](docs/entity-bridge-decision.md).
 We picked **Option B**: every proxy entity method translates into a
 standard `services.async_call("<domain>", "<service>",
 target={"entity_id": [...]})` round-trip over the shared
-`sandbox_v2/call_service` channel.
+`sandbox/call_service` channel.
 
 ### Sandbox side
 
-`EntryRunner` rebuilds a `ConfigEntry` from the `sandbox_v2/entry_setup`
+`EntryRunner` rebuilds a `ConfigEntry` from the `sandbox/entry_setup`
 payload, **fetches the integration's code** if needed (see below), drops the
 entry into the sandbox's `ConfigEntries`, and runs the integration's
 `async_setup_entry`. The integration adds entities the
 normal way — `EntityBridge` listens for `EVENT_STATE_CHANGED` on the
 sandbox's bus and, on each entity's first appearance, pushes
-`sandbox_v2/register_entity` to main with:
+`sandbox/register_entity` to main with:
 
 - `entry_id`, `domain`, `sandbox_entity_id`
 - `unique_id` (prefixed on main with the source domain, `<domain>:<unique_id>`,
@@ -319,7 +319,7 @@ sandbox's bus and, on each entity's first appearance, pushes
 - `capability_attributes` (`supported_color_modes`, color temp range, …)
 - the initial `state` + `attributes`
 
-Subsequent **state** updates push `sandbox_v2/state_changed` (state +
+Subsequent **state** updates push `sandbox/state_changed` (state +
 attributes only). `register_entity` is an **upsert**: post-setup changes to
 name / icon / category / capabilities / device_info arrive as
 entity- and device-registry-updated events, which re-send
@@ -330,7 +330,7 @@ duplicate entity).
 
 `SandboxBridge` receives `register_entity`, instantiates a
 domain-specific proxy from
-[`entity/`](../homeassistant/components/sandbox_v2/entity/), and attaches
+[`entity/`](../homeassistant/components/sandbox/entity/), and attaches
 it to the matching `EntityComponent` via the new
 `EntityComponent.async_register_remote_platform` core hook (Phase 5's
 sole core change). The proxy holds a cached state + attributes dict
@@ -338,7 +338,7 @@ fed by `state_changed`; `state`, `available`, and per-domain typed
 properties (`is_on`, `brightness`, `hs_color`, …) read from the cache.
 
 Proxy method calls (e.g., `async_turn_on`) translate into
-`sandbox_v2/call_service` RPCs via a per-loop-tick batcher
+`sandbox/call_service` RPCs via a per-loop-tick batcher
 (`_CallServiceBatcher`) that coalesces matching
 `(domain, service, service_data)` calls into one multi-entity RPC — so
 a 200-light area call pays one RPC, not 200.
@@ -354,7 +354,7 @@ mapping, where `vol.Invalid` → `TypeError`.)
 ### Domains shipped
 
 All 32 supported domains have a typed proxy under
-[`entity/`](../homeassistant/components/sandbox_v2/entity/). Phase 5
+[`entity/`](../homeassistant/components/sandbox/entity/). Phase 5
 shipped four (`light`, `switch`, `sensor`, `binary_sensor`) to prove
 the path; Phase 13 added the remaining 28 mechanical follow-ups
 (`alarm_control_panel`, `button`, `calendar`, `climate`, `cover`,
@@ -373,7 +373,7 @@ Unknown-domain registrations still fall back to the generic
 don't).
 
 The Phase 14 perf benchmark
-([`test_perf.py`](../tests/components/sandbox_v2/test_perf.py))
+([`test_perf.py`](../tests/components/sandbox/test_perf.py))
 registers 200 proxy lights, area-targets `light.turn_on`, and asserts
 the batcher coalesces the 200 entity invocations into ≤2 RPCs in under
 500 ms. A regression that broke same-tick coalescing would fail
@@ -390,14 +390,14 @@ domain by virtue of registering light entities). `ServiceMirror` and
 
 - **`ServiceMirror`** listens on the sandbox bus for
   `EVENT_SERVICE_REGISTERED` / `EVENT_SERVICE_REMOVED` and pushes
-  `sandbox_v2/register_service` / `unregister_service` (with
+  `sandbox/register_service` / `unregister_service` (with
   `supports_response` and the serialised voluptuous schema via the
   Phase 14 `schema_bridge`). Main reconstructs the schema and passes
   it to `hass.services.async_register`, so bad service-call input is
   rejected on main without round-tripping. The sandbox still owns
   the real schema and runs full validation when the call lands on
   its `services.async_call`. Main installs a thin forwarder that
-  ships each call back over the shared `sandbox_v2/call_service`
+  ships each call back over the shared `sandbox/call_service`
   channel, reusing the Phase 5 exception translator. The forwarder
   **refuses to clobber an existing handler**, so the `light.turn_on`
   registered by the host `light` EntityComponent for our proxy
@@ -406,7 +406,7 @@ domain by virtue of registering light entities). `ServiceMirror` and
 - **`EventMirror`** uses a `MATCH_ALL` listener with an internal-
   events deny-list and forwards only `<approved_domain>_*` events
   (e.g. `zha_event`, `mqtt_message_received`) via
-  `sandbox_v2/fire_event`. Main re-fires each on its own bus so
+  `sandbox/fire_event`. Main re-fires each on its own bus so
   `automation` listeners react as if the integration ran locally.
   The sandbox's `context_id` is on the wire but main does **not**
   honour it on the re-fire (a fresh local `Context` is used) —
@@ -416,7 +416,7 @@ domain by virtue of registering light entities). `ServiceMirror` and
 ## Sandbox auth & opt-in data sharing
 
 The sandbox issuance helper
-([`auth.py`](../homeassistant/components/sandbox_v2/auth.py)) creates a
+([`auth.py`](../homeassistant/components/sandbox/auth.py)) creates a
 dedicated system user per group and hands the subprocess a plain
 system-user access token, freshly minted from that user's refresh
 token on each spawn. There is **no scope restriction** on the token.
@@ -462,8 +462,8 @@ envelope came from disk or the bridge.
 The sandbox runtime supplies the bridge:
 `ChannelSandboxBridge` ([`hass_client/sandbox_bridge.py`](hass_client/hass_client/sandbox_bridge.py))
 implements the three `SandboxBridge` store methods over
-`sandbox_v2/store_load`, `sandbox_v2/store_save`,
-`sandbox_v2/store_remove`. `SandboxRuntime.run` does
+`sandbox/store_load`, `sandbox/store_save`,
+`sandbox/store_remove`. `SandboxRuntime.run` does
 `current_sandbox.set(ChannelSandboxBridge(channel))` right after the
 channel opens and **before** the warm-load and any per-runner handler
 registers, so every coroutine the runtime spawns inherits it (asyncio
@@ -474,7 +474,7 @@ reaches helpers like `restore_state` that captured the original `Store`
 reference at import.
 
 On main, each `SandboxBridge` owns a `_SandboxStoreServer` pinned to
-`<config>/.storage/sandbox_v2/<group>/`. Writes use
+`<config>/.storage/sandbox/<group>/`. Writes use
 `util.file.write_utf8_file_atomic` (the same primitive `Store` itself
 uses). Scope isolation is by construction: each bridge owns one
 channel for one group; forging a cross-group call would require
@@ -491,21 +491,21 @@ post-v2.
 
 Two pytest plugins under
 [`hass_client/hass_client/testing/`](hass_client/hass_client/testing/)
-let HA Core's per-integration test suites run with sandbox_v2 wired
+let HA Core's per-integration test suites run with sandbox wired
 in. Both share the same manager-side `SandboxBridge` code path; the
 only thing that differs is how the channel pair is materialised.
 
 | Plugin | Wire | When to use |
 |---|---|---|
 | `hass_client.testing.pytest_plugin` | in-memory channel pair, `SandboxRuntime` as an asyncio task | fast feedback, freezer-safe |
-| `hass_client.testing.conftest_sandbox` | real stdio protobuf channel (`python -m hass_client.sandbox_v2`) | pins the subprocess boundary, freezer tests auto-skip |
+| `hass_client.testing.conftest_sandbox` | real stdio protobuf channel (`python -m hass_client.sandbox`) | pins the subprocess boundary, freezer tests auto-skip |
 
 The compat lane runner
 [`run_compat.py`](run_compat.py) drives either plugin against a list of
 integration test directories, parses pytest's summary line, and writes
 [`COMPAT.csv`](COMPAT.csv) + [`COMPAT_LATEST.md`](COMPAT_LATEST.md)
 (the curated baseline lives in [`COMPAT.md`](COMPAT.md)). Per-failure
-output lands in `${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_v2_errors}`.
+output lands in `${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}`.
 
 [`run_compat_full.py`](run_compat_full.py) is the wider cross-sweep
 runner Phase 16 landed: asyncio + JUnit XML + outer concurrency,
@@ -589,18 +589,18 @@ deferred, and what it flagged for the next phase. For a quick map:
 
 | Concern | HA Core side | Sandbox side |
 |---|---|---|
-| Classifier | [`classifier.py`](../homeassistant/components/sandbox_v2/classifier.py) | — |
-| Lifecycle | [`manager.py`](../homeassistant/components/sandbox_v2/manager.py) | [`sandbox.py`](hass_client/hass_client/sandbox.py), [`sandbox_v2/__main__.py`](hass_client/hass_client/sandbox_v2/__main__.py) |
-| Channel | [`channel.py`](../homeassistant/components/sandbox_v2/channel.py) | [`channel.py`](hass_client/hass_client/channel.py) |
-| Config flow | [`router.py`](../homeassistant/components/sandbox_v2/router.py), [`proxy_flow.py`](../homeassistant/components/sandbox_v2/proxy_flow.py) | [`flow_runner.py`](hass_client/hass_client/flow_runner.py) |
-| Entity bridge | [`bridge.py`](../homeassistant/components/sandbox_v2/bridge.py), [`entity/`](../homeassistant/components/sandbox_v2/entity/) | [`entry_runner.py`](hass_client/hass_client/entry_runner.py), [`entity_bridge.py`](hass_client/hass_client/entity_bridge.py) |
-| Service/event mirror | [`bridge.py`](../homeassistant/components/sandbox_v2/bridge.py) | [`service_mirror.py`](hass_client/hass_client/service_mirror.py), [`event_mirror.py`](hass_client/hass_client/event_mirror.py), [`approved_domains.py`](hass_client/hass_client/approved_domains.py) |
-| Auth | [`auth.py`](../homeassistant/components/sandbox_v2/auth.py) (plain system-user token) | — |
-| Store routing | [`bridge.py`](../homeassistant/components/sandbox_v2/bridge.py) (`_SandboxStoreServer`), `homeassistant/helpers/sandbox_context.py`, `homeassistant/helpers/storage.py` | [`sandbox_bridge.py`](hass_client/hass_client/sandbox_bridge.py) |
-| Shutdown | [`__init__.py`](../homeassistant/components/sandbox_v2/__init__.py) (`_on_stop`), `manager.py` | [`sandbox.py`](hass_client/hass_client/sandbox.py) (`_run_graceful_shutdown`) |
+| Classifier | [`classifier.py`](../homeassistant/components/sandbox/classifier.py) | — |
+| Lifecycle | [`manager.py`](../homeassistant/components/sandbox/manager.py) | [`sandbox.py`](hass_client/hass_client/sandbox/__init__.py), [`sandbox/__main__.py`](hass_client/hass_client/sandbox/__main__.py) |
+| Channel | [`channel.py`](../homeassistant/components/sandbox/channel.py) | [`channel.py`](hass_client/hass_client/channel.py) |
+| Config flow | [`router.py`](../homeassistant/components/sandbox/router.py), [`proxy_flow.py`](../homeassistant/components/sandbox/proxy_flow.py) | [`flow_runner.py`](hass_client/hass_client/flow_runner.py) |
+| Entity bridge | [`bridge.py`](../homeassistant/components/sandbox/bridge.py), [`entity/`](../homeassistant/components/sandbox/entity/) | [`entry_runner.py`](hass_client/hass_client/entry_runner.py), [`entity_bridge.py`](hass_client/hass_client/entity_bridge.py) |
+| Service/event mirror | [`bridge.py`](../homeassistant/components/sandbox/bridge.py) | [`service_mirror.py`](hass_client/hass_client/service_mirror.py), [`event_mirror.py`](hass_client/hass_client/event_mirror.py), [`approved_domains.py`](hass_client/hass_client/approved_domains.py) |
+| Auth | [`auth.py`](../homeassistant/components/sandbox/auth.py) (plain system-user token) | — |
+| Store routing | [`bridge.py`](../homeassistant/components/sandbox/bridge.py) (`_SandboxStoreServer`), `homeassistant/helpers/sandbox_context.py`, `homeassistant/helpers/storage.py` | [`sandbox_bridge.py`](hass_client/hass_client/sandbox_bridge.py) |
+| Shutdown | [`__init__.py`](../homeassistant/components/sandbox/__init__.py) (`_on_stop`), `manager.py` | [`sandbox.py`](hass_client/hass_client/sandbox/__init__.py) (`_run_graceful_shutdown`) |
 | Test infra | — | [`testing/`](hass_client/hass_client/testing/), [`run_compat.py`](run_compat.py) |
 
 The wire protocol constants live in two files that mirror each other
 verbatim:
-[`homeassistant/components/sandbox_v2/protocol.py`](../homeassistant/components/sandbox_v2/protocol.py)
-and [`sandbox_v2/hass_client/hass_client/protocol.py`](hass_client/hass_client/protocol.py).
+[`homeassistant/components/sandbox/protocol.py`](../homeassistant/components/sandbox/protocol.py)
+and [`sandbox/hass_client/hass_client/protocol.py`](hass_client/hass_client/protocol.py).

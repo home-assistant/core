@@ -9,7 +9,7 @@ from pathlib import Path
 import tarfile
 
 from hass_client import sources as sources_module
-from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client._proto import sandbox_pb2 as pb
 from hass_client.sources import SandboxSourceError, async_ensure_integration_source
 import pytest
 

@@ -1,6 +1,6 @@
 """Unix-socket control-channel transport (transport T3).
 
-Spawns the real ``python -m hass_client.sandbox_v2`` runtime with the
+Spawns the real ``python -m hass_client.sandbox`` runtime with the
 manager configured for the unix-socket transport: the manager opens a
 listening unix socket, passes ``--url unix://<path>`` to the subprocess,
 the runtime dials back, and a ``ping`` round-trips over the socket. Also
@@ -13,7 +13,7 @@ import sys
 
 import pytest
 
-from homeassistant.components.sandbox_v2.manager import (
+from homeassistant.components.sandbox.manager import (
     TRANSPORT_UNIX,
     SandboxConfig,
     SandboxManager,
@@ -37,7 +37,7 @@ def _runtime_factory(seen: dict[str, str]) -> object:
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox_v2",
+            "hass_client.sandbox",
             "--name",
             group,
             "--url",
@@ -70,10 +70,8 @@ async def test_unix_socket_round_trip(hass: HomeAssistant) -> None:
 
         channel = sandbox.channel
         assert channel is not None
-        result = await asyncio.wait_for(
-            channel.call("sandbox_v2/ping", None), timeout=5.0
-        )
-        assert result.pong == "sandbox_v2"
+        result = await asyncio.wait_for(channel.call("sandbox/ping", None), timeout=5.0)
+        assert result.pong == "sandbox"
     finally:
         await mgr.async_stop_all()
 

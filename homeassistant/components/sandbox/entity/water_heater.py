@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``water_heater`` entities."""
+"""Sandbox proxy for ``water_heater`` entities."""
 
 from typing import TYPE_CHECKING, Any
 

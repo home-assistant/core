@@ -1,7 +1,7 @@
 """Option A — custom method-forward RPC.
 
 Main proxy entity translates each entity method call into a bespoke
-``sandbox_v2/entity_method_call`` RPC carrying ``(entity_id, method, kwargs)``.
+``sandbox/entity_method_call`` RPC carrying ``(entity_id, method, kwargs)``.
 The sandbox-side dispatcher looks up the local entity and ``await``-s the
 named method directly. Mirror of v1's design.
 """
@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from .synthetic_light import SyntheticLight
 from .transport import InProcessTransport
 
-COMMAND_ENTITY_METHOD_CALL = "sandbox_v2/entity_method_call"
+COMMAND_ENTITY_METHOD_CALL = "sandbox/entity_method_call"
 
 
 class OptionAMainBridge:

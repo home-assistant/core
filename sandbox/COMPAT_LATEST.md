@@ -1,4 +1,4 @@
-# Sandbox v2 compat report
+# Sandbox compat report
 
 Plugin: `hass_client.testing.pytest_plugin`
 

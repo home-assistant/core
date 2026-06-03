@@ -1,11 +1,11 @@
 """Phase 9 tests for graceful shutdown orchestration.
 
-The main side spawns the real ``python -m hass_client.sandbox_v2``
+The main side spawns the real ``python -m hass_client.sandbox``
 runtime, calls :meth:`SandboxManager.async_graceful_shutdown_all`, and
 asserts the subprocess exits 0 on its own — no SIGTERM required.
 
 The hung-sandbox case uses an in-memory :class:`SandboxProcess` stub:
-the real runtime always honours ``sandbox_v2/shutdown``, so to exercise
+the real runtime always honours ``sandbox/shutdown``, so to exercise
 the SIGTERM escalation we drive the manager's contract directly with a
 process whose channel is wired to never reply.
 """
@@ -16,8 +16,8 @@ import sys
 
 import pytest
 
-from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
-from homeassistant.components.sandbox_v2.manager import (
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.manager import (
     SandboxConfig,
     SandboxManager,
     SandboxStartError,
@@ -41,7 +41,7 @@ async def _manager_fixture(hass: HomeAssistant) -> AsyncIterator[SandboxManager]
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox_v2",
+            "hass_client.sandbox",
             "--name",
             group,
             "--url",
@@ -58,7 +58,7 @@ async def _manager_fixture(hass: HomeAssistant) -> AsyncIterator[SandboxManager]
 async def test_graceful_shutdown_exits_subprocess_cleanly(
     manager: SandboxManager,
 ) -> None:
-    """``sandbox_v2/shutdown`` makes the real runtime return 0 on its own."""
+    """``sandbox/shutdown`` makes the real runtime return 0 on its own."""
     sandbox = await manager.ensure_started("built-in")
     assert sandbox.state == "running"
     assert sandbox.pid is not None
@@ -81,7 +81,7 @@ async def test_graceful_shutdown_exits_subprocess_cleanly(
 async def test_graceful_shutdown_falls_through_to_sigterm_on_timeout(
     hass: HomeAssistant,
 ) -> None:
-    """A sandbox that ignores ``sandbox_v2/shutdown`` is killed by ``stop()``.
+    """A sandbox that ignores ``sandbox/shutdown`` is killed by ``stop()``.
 
     The stub runtime here sends the Ready frame, then idles forever
     reading from stdin without ever replying. ``async_graceful_shutdown``
@@ -95,10 +95,10 @@ async def test_graceful_shutdown_falls_through_to_sigterm_on_timeout(
             "-c",
             (
                 "import sys, time, struct;"
-                "from hass_client._proto import sandbox_v2_pb2 as pb;"
+                "from hass_client._proto import sandbox_pb2 as pb;"
                 # Length-prefixed protobuf Ready push frame — the manager's
                 # ProtobufCodec decodes this and flips to "running".
-                "frame = pb.Frame(id=0, type='sandbox_v2/ready');"
+                "frame = pb.Frame(id=0, type='sandbox/ready');"
                 "frame.request = pb.Ready().SerializeToString();"
                 "body = frame.SerializeToString();"
                 "sys.stdout.buffer.write(struct.pack('>I', len(body)) + body);"
@@ -183,7 +183,7 @@ async def test_on_shutdown_reply_callback_is_invoked(
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox_v2",
+            "hass_client.sandbox",
             "--name",
             group,
             "--url",

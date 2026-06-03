@@ -11,7 +11,7 @@ import asyncio
 from hass_client.channel import Channel
 from hass_client.protocol import MSG_READY
 from hass_client.sandbox import SandboxRuntime
-from hass_client.sandbox_v2.__main__ import _build_parser
+from hass_client.sandbox.__main__ import _build_parser
 import pytest
 
 
@@ -22,7 +22,7 @@ async def _noop_channel_factory() -> Channel | None:
 
 def test_ready_msg_type_is_stable() -> None:
     """The Ready frame type is part of the manager↔runtime protocol."""
-    assert MSG_READY == "sandbox_v2/ready"
+    assert MSG_READY == "sandbox/ready"
 
 
 def test_cli_parser_requires_name_url_and_token() -> None:
@@ -45,7 +45,7 @@ async def test_runtime_starts_in_locked_down_sharing_posture(
 
     Phase 20 dropped the unwired ``share_*`` config surface; the
     locked-down posture is now a property of the runtime itself rather
-    than a config flag. See ``sandbox_v2/docs/design-share-states.md``
+    than a config flag. See ``sandbox/docs/design-share-states.md``
     for the future opt-in design.
     """
     runtime = SandboxRuntime(

@@ -20,7 +20,7 @@ from collections.abc import AsyncGenerator, Generator
 import tempfile
 from typing import Any
 
-from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel, ChannelRemoteError, JsonCodec
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.flow_runner import FlowRunner
@@ -78,7 +78,7 @@ def _wrap(version: int, minor_version: int, key: str, data: Any) -> dict[str, An
 @pytest.fixture(name="hass_runtime")
 async def _hass_runtime_fixture() -> AsyncGenerator[HomeAssistant]:
     """A bare sandbox HA, like the runtime builds via ``FlowRunner.create``."""
-    with tempfile.TemporaryDirectory(prefix="sandbox_v2_bridge_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="sandbox_bridge_") as tmp:
         flow_runner = await FlowRunner.create(config_dir=tmp)
         try:
             yield flow_runner.hass
@@ -329,9 +329,9 @@ async def test_channel_bridge_maps_store_rpcs() -> None:
         removed.append(msg.key)
         return pb.StoreRemoveResult(ok=True)
 
-    main.register("sandbox_v2/store_save", _on_save)
-    main.register("sandbox_v2/store_load", _on_load)
-    main.register("sandbox_v2/store_remove", _on_remove)
+    main.register("sandbox/store_save", _on_save)
+    main.register("sandbox/store_load", _on_load)
+    main.register("sandbox/store_remove", _on_remove)
     main.start()
     sandbox.start()
 

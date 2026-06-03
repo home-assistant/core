@@ -9,7 +9,7 @@ up to main, so a sandboxed integration can't silently impersonate (say)
 Population:
 
 * The :class:`hass_client.entry_runner.EntryRunner` adds an entry's
-  domain when ``sandbox_v2/entry_setup`` succeeds, and removes it on
+  domain when ``sandbox/entry_setup`` succeeds, and removes it on
   ``entry_unload`` once the last entry for that domain unloads.
 * The :class:`hass_client.entity_bridge.EntityBridge` adds the entity's
   domain on each successful ``register_entity``. This covers the

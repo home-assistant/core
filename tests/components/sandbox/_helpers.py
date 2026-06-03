@@ -1,11 +1,11 @@
-"""Shared helpers for Phase 4 sandbox_v2 tests.
+"""Shared helpers for Phase 4 sandbox tests.
 
 Provides:
 
 * :func:`make_channel_pair` — two :class:`Channel` instances joined by an
   in-memory bytes transport. Each writer feeds the other reader.
 * :class:`FakeSandboxProcess` — a stand-in for
-  :class:`homeassistant.components.sandbox_v2.manager.SandboxProcess` that
+  :class:`homeassistant.components.sandbox.manager.SandboxProcess` that
   exposes a pre-built channel without ever spawning a subprocess.
 * :class:`FakeSandboxManager` — minimal stand-in for
   :class:`SandboxManager` that just returns FakeSandboxProcess instances.
@@ -13,8 +13,8 @@ Provides:
 
 import asyncio
 
-from homeassistant.components.sandbox_v2.channel import Channel, JsonCodec
-from homeassistant.components.sandbox_v2.codec_protobuf import ProtobufCodec
+from homeassistant.components.sandbox.channel import Channel, JsonCodec
+from homeassistant.components.sandbox.codec_protobuf import ProtobufCodec
 
 
 class _LoopbackWriter:

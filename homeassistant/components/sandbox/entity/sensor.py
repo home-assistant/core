@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``sensor`` entities."""
+"""Sandbox proxy for ``sensor`` entities."""
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT

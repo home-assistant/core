@@ -6,14 +6,14 @@ from typing import Any
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
-from homeassistant.components.sandbox_v2.bridge import (
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.bridge import (
     SandboxBridge,
     SandboxEntityDescription,
     _translate_remote_error,
 )
-from homeassistant.components.sandbox_v2.channel import Channel, ChannelRemoteError
-from homeassistant.components.sandbox_v2.messages import (
+from homeassistant.components.sandbox.channel import Channel, ChannelRemoteError
+from homeassistant.components.sandbox.messages import (
     make_entity_description,
     struct_to_dict,
 )
@@ -76,7 +76,7 @@ async def test_register_entity_creates_proxy_and_returns_entity_id(
     )
 
     try:
-        result = await sandbox_channel.call("sandbox_v2/register_entity", payload)
+        result = await sandbox_channel.call("sandbox/register_entity", payload)
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -95,8 +95,8 @@ async def test_register_entity_prefixes_unique_id_with_source_domain(
 ) -> None:
     """Two integrations reusing unique_id ``"1"`` land without colliding.
 
-    All proxies share ``platform_name="sandbox_v2"``, so the registry key
-    ``("light", "sandbox_v2", unique_id)`` would clash if the unique_id
+    All proxies share ``platform_name="sandbox"``, so the registry key
+    ``("light", "sandbox", unique_id)`` would clash if the unique_id
     weren't namespaced with the source integration domain.
     """
     _bridge, main_channel, sandbox_channel = await _wire(hass)
@@ -120,10 +120,10 @@ async def test_register_entity_prefixes_unique_id_with_source_domain(
 
     try:
         result_a = await sandbox_channel.call(
-            "sandbox_v2/register_entity", _payload(entry_a.entry_id, "light.a")
+            "sandbox/register_entity", _payload(entry_a.entry_id, "light.a")
         )
         result_b = await sandbox_channel.call(
-            "sandbox_v2/register_entity", _payload(entry_b.entry_id, "light.b")
+            "sandbox/register_entity", _payload(entry_b.entry_id, "light.b")
         )
     finally:
         await main_channel.close()
@@ -160,10 +160,10 @@ async def test_register_entity_upsert_updates_name_in_place(
 
     try:
         first = await sandbox_channel.call(
-            "sandbox_v2/register_entity", _payload("Old Name")
+            "sandbox/register_entity", _payload("Old Name")
         )
         second = await sandbox_channel.call(
-            "sandbox_v2/register_entity", _payload("New Name")
+            "sandbox/register_entity", _payload("New Name")
         )
     finally:
         await main_channel.close()
@@ -205,12 +205,12 @@ async def test_register_entity_upsert_refreshes_device(
         )
 
     try:
-        await sandbox_channel.call("sandbox_v2/register_entity", _payload("1.0"))
+        await sandbox_channel.call("sandbox/register_entity", _payload("1.0"))
         device = device_registry.async_get_device(identifiers={("demo", "dev-1")})
         assert device is not None
         assert device.sw_version == "1.0"
 
-        await sandbox_channel.call("sandbox_v2/register_entity", _payload("2.0"))
+        await sandbox_channel.call("sandbox/register_entity", _payload("2.0"))
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -241,10 +241,10 @@ async def test_state_changed_push_updates_proxy(
         initial_attributes={},
     )
     try:
-        result = await sandbox_channel.call("sandbox_v2/register_entity", register)
+        result = await sandbox_channel.call("sandbox/register_entity", register)
         state_changed = pb.StateChanged(sandbox_entity_id="light.lamp", state=STATE_ON)
         state_changed.attributes.update({"brightness": 250, "color_mode": "brightness"})
-        await sandbox_channel.push("sandbox_v2/state_changed", state_changed)
+        await sandbox_channel.push("sandbox/state_changed", state_changed)
         # Give the push handler a tick to land.
         for _ in range(20):
             state = hass.states.get(result.entity_id)
@@ -275,7 +275,7 @@ async def test_proxy_method_translates_to_call_service(
         calls.append(payload)
         return None
 
-    sandbox_channel.register("sandbox_v2/call_service", _on_call_service)
+    sandbox_channel.register("sandbox/call_service", _on_call_service)
 
     register = make_entity_description(
         entry_id=entry.entry_id,
@@ -288,7 +288,7 @@ async def test_proxy_method_translates_to_call_service(
         initial_attributes={},
     )
     try:
-        result = await sandbox_channel.call("sandbox_v2/register_entity", register)
+        result = await sandbox_channel.call("sandbox/register_entity", register)
         await hass.services.async_call(
             "light",
             "turn_on",
@@ -316,7 +316,7 @@ async def test_proxy_method_batches_concurrent_calls(
         calls.append(payload)
         return None
 
-    sandbox_channel.register("sandbox_v2/call_service", _on_call_service)
+    sandbox_channel.register("sandbox/call_service", _on_call_service)
 
     sandbox_ids = []
     try:
@@ -331,7 +331,7 @@ async def test_proxy_method_batches_concurrent_calls(
                 initial_state="off",
                 initial_attributes={},
             )
-            await sandbox_channel.call("sandbox_v2/register_entity", register)
+            await sandbox_channel.call("sandbox/register_entity", register)
             sandbox_ids.append(f"light.bulb_{idx}")
 
         # Call turn_on on every proxy "simultaneously" (no awaits between
@@ -492,7 +492,7 @@ async def test_register_entity_for_unknown_entry_raises(
     try:
         with pytest.raises(ChannelRemoteError):
             await sandbox_channel.call(
-                "sandbox_v2/register_entity",
+                "sandbox/register_entity",
                 make_entity_description(
                     entry_id="no-such-entry",
                     domain="light",
@@ -518,7 +518,7 @@ async def test_register_entity_auto_loads_domain_component(
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     try:
         result = await sandbox_channel.call(
-            "sandbox_v2/register_entity",
+            "sandbox/register_entity",
             make_entity_description(
                 entry_id=entry.entry_id,
                 domain="switch",
@@ -547,11 +547,11 @@ async def test_register_service_installs_forwarder(hass: HomeAssistant) -> None:
         seen_calls.append(payload)
         return None
 
-    sandbox_channel.register("sandbox_v2/call_service", _on_call_service)
+    sandbox_channel.register("sandbox/call_service", _on_call_service)
 
     try:
         result = await sandbox_channel.call(
-            "sandbox_v2/register_service",
+            "sandbox/register_service",
             pb.RegisterService(
                 domain="phase6_demo",
                 service="do_thing",
@@ -587,7 +587,7 @@ async def test_register_service_skips_existing_handler(
 
     try:
         result = await sandbox_channel.call(
-            "sandbox_v2/register_service",
+            "sandbox/register_service",
             pb.RegisterService(
                 domain="phase6_local",
                 service="noop",
@@ -611,7 +611,7 @@ async def test_unregister_service_removes_forwarder(
 
     try:
         await sandbox_channel.call(
-            "sandbox_v2/register_service",
+            "sandbox/register_service",
             pb.RegisterService(
                 domain="phase6_demo",
                 service="stop",
@@ -621,7 +621,7 @@ async def test_unregister_service_removes_forwarder(
         assert hass.services.has_service("phase6_demo", "stop")
 
         result = await sandbox_channel.call(
-            "sandbox_v2/unregister_service",
+            "sandbox/unregister_service",
             pb.UnregisterService(domain="phase6_demo", service="stop"),
         )
     finally:
@@ -647,7 +647,7 @@ async def test_fire_event_lands_on_main_bus(hass: HomeAssistant) -> None:
     try:
         fire_event = pb.FireEvent(event_type="zha_event")
         fire_event.event_data.update({"command": "on", "device_ieee": "0a:0b:0c"})
-        await sandbox_channel.push("sandbox_v2/fire_event", fire_event)
+        await sandbox_channel.push("sandbox/fire_event", fire_event)
         # Give the push handler a tick to run.
         for _ in range(20):
             if received:

@@ -1,10 +1,10 @@
-// Sandbox v2 control-channel wire protocol.
+// Sandbox control-channel wire protocol.
 //
 // Single source of truth for the protobuf messages exchanged between the HA
-// Core integration (`homeassistant/components/sandbox_v2`) and the sandbox
+// Core integration (`homeassistant/components/sandbox`) and the sandbox
 // runtime (`hass_client`). The generated `_pb2.py` + `_pb2.pyi` are checked
 // into BOTH mirrors (the two sides never cross-import); regenerate with
-// `sandbox_v2/proto/generate.sh` after editing this file.
+// `sandbox/proto/generate.sh` after editing this file.
 //
 // Field conventions:
 //   * Genuinely dynamic payloads (service_data, target, state attributes,
@@ -18,7 +18,7 @@
 
 syntax = "proto3";
 
-package sandbox_v2;
+package sandbox;
 
 import "google/protobuf/struct.proto";
 
@@ -29,7 +29,7 @@ import "google/protobuf/struct.proto";
 // from `type` on both encode and decode.
 message Frame {
   uint32 id = 1;            // 0 = push (no reply); >0 = call / response
-  string type = 2;          // e.g. "sandbox_v2/register_entity"
+  string type = 2;          // e.g. "sandbox/register_entity"
   oneof body {
     bytes request = 3;      // serialized request message (call or push)
     Response response = 4;  // response to a call we received

@@ -163,7 +163,7 @@ class SandboxProxyEntity(Entity):
 
 # Lazy import to avoid a circular dependency at module import time
 # (bridge imports build_proxy → entity imports proxies → proxies import
-# the domain platform; the domain platforms can import sandbox_v2
+# the domain platform; the domain platforms can import sandbox
 # indirectly via helpers).
 def build_proxy(
     bridge: SandboxBridge, description: SandboxEntityDescription

@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``device_tracker`` entities."""
+"""Sandbox proxy for ``device_tracker`` entities."""
 
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,

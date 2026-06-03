@@ -1,11 +1,11 @@
-"""Tests for the sandbox_v2 control :class:`Channel`."""
+"""Tests for the sandbox control :class:`Channel`."""
 
 import asyncio
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.sandbox_v2.channel import (
+from homeassistant.components.sandbox.channel import (
     Channel,
     ChannelClosedError,
     ChannelRemoteError,

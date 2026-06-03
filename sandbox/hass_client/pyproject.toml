@@ -3,9 +3,9 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hass-client-v2"
+name = "hass-client"
 version = "0.1.0"
-description = "Sandbox v2 client library — rewrite of hass-client for the v2 sandbox protocol."
+description = "Sandbox client library — the hass_client runtime for the sandbox protocol."
 readme = "README.md"
 requires-python = ">=3.14.2"
 license = { text = "Apache-2.0" }

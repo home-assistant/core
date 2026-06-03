@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``calendar`` entities."""
+"""Sandbox proxy for ``calendar`` entities."""
 
 from typing import Any
 

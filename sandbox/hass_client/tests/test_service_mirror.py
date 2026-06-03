@@ -11,7 +11,7 @@ import asyncio
 import tempfile
 from typing import Any
 
-from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client._proto import sandbox_pb2 as pb
 from hass_client.approved_domains import ApprovedDomains
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
@@ -62,7 +62,7 @@ async def _channels_fixture() -> tuple[Channel, Channel]:
 
 @pytest.fixture(name="hass_runtime")
 async def _hass_runtime_fixture():
-    with tempfile.TemporaryDirectory(prefix="sandbox_v2_service_mirror_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="sandbox_service_mirror_") as tmp:
         flow_runner = await FlowRunner.create(config_dir=tmp)
         try:
             yield flow_runner.hass
@@ -88,7 +88,7 @@ async def test_register_service_pushes_to_main(
         register_calls.append(msg)
         return pb.RegisterServiceResult(ok=True, installed=True)
 
-    main.register("sandbox_v2/register_service", _on_register)
+    main.register("sandbox/register_service", _on_register)
     main.start()
     sandbox.start()
 
@@ -127,7 +127,7 @@ async def test_unapproved_domain_is_rejected(
         register_calls.append(msg)
         return pb.RegisterServiceResult(ok=True, installed=True)
 
-    main.register("sandbox_v2/register_service", _on_register)
+    main.register("sandbox/register_service", _on_register)
     main.start()
     sandbox.start()
 
@@ -171,8 +171,8 @@ async def test_unregister_service_propagates(
         unregister_calls.append(msg)
         return pb.UnregisterServiceResult(ok=True, removed=True)
 
-    main.register("sandbox_v2/register_service", _on_register)
-    main.register("sandbox_v2/unregister_service", _on_unregister)
+    main.register("sandbox/register_service", _on_register)
+    main.register("sandbox/unregister_service", _on_unregister)
     main.start()
     sandbox.start()
 

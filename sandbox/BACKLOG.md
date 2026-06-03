@@ -1,4 +1,4 @@
-# Sandbox v2 — Phase 17 categorised backlog
+# Sandbox — Phase 17 categorised backlog
 
 Phase 17 moved the autotag's effect off `entry.data` onto a new
 first-class `ConfigEntry.sandbox` field. The full sweep was re-run
@@ -131,7 +131,7 @@ _Full per-integration list in `BACKLOG_FAILURES.json`._
 exercises pass cleanly on every integration in this sweep
 (`proxy-missing` and `dependencies-not-shared` are both at 0). The
 remaining work is integration-side snapshot updates and freezegun
-adoption, neither of which is the sandbox_v2 tree's responsibility.
+adoption, neither of which is the sandbox tree's responsibility.
 
 If we want to lift the pass rate further, the cleanest path is to
 extend the compat plugin with a fixture autouse that pins the clock
@@ -191,7 +191,7 @@ universe.
 ## Reproducing this report
 
 ```bash
-cd sandbox_v2
+cd sandbox
 # Full sweep (~12 min on a 16-core box, concurrency=6)
 uv run python run_compat_full.py --concurrency=6
 

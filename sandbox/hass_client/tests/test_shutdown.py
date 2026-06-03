@@ -1,6 +1,6 @@
 """Phase 9 tests for :class:`hass_client.sandbox.SandboxRuntime` shutdown.
 
-The runtime registers ``sandbox_v2/shutdown`` once its channel is up.
+The runtime registers ``sandbox/shutdown`` once its channel is up.
 These tests exercise:
 
 * the shutdown handler unloads loaded entries via
@@ -16,7 +16,7 @@ These tests exercise:
 import asyncio
 from typing import Any
 
-from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.messages import struct_to_dict
@@ -109,7 +109,7 @@ async def test_shutdown_handler_returns_summary_and_exits(
     runtime_pair: tuple[SandboxRuntime, Channel, asyncio.Task[int]],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """``sandbox_v2/shutdown`` replies with a summary and the runtime exits 0."""
+    """``sandbox/shutdown`` replies with a summary and the runtime exits 0."""
     _runtime, main_channel, task = runtime_pair
 
     result = await asyncio.wait_for(main_channel.call(MSG_SHUTDOWN, None), timeout=5.0)

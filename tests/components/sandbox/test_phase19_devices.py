@@ -4,13 +4,13 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
-from homeassistant.components.sandbox_v2.bridge import (
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.bridge import (
     SandboxBridge,
     SandboxEntityDescription,
 )
-from homeassistant.components.sandbox_v2.channel import Channel, ChannelRemoteError
-from homeassistant.components.sandbox_v2.messages import make_entity_description
+from homeassistant.components.sandbox.channel import Channel, ChannelRemoteError
+from homeassistant.components.sandbox.messages import make_entity_description
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -83,7 +83,7 @@ async def test_register_entity_creates_device_entry(
     )
 
     try:
-        result = await sandbox_channel.call("sandbox_v2/register_entity", payload)
+        result = await sandbox_channel.call("sandbox/register_entity", payload)
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -117,7 +117,7 @@ async def test_register_entity_propagates_device_id_to_proxy(
     )
 
     try:
-        await sandbox_channel.call("sandbox_v2/register_entity", payload)
+        await sandbox_channel.call("sandbox/register_entity", payload)
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -140,7 +140,7 @@ async def test_register_entity_without_device_info_leaves_device_id_unset(
     payload = _register_payload(entry)  # no device_info
 
     try:
-        await sandbox_channel.call("sandbox_v2/register_entity", payload)
+        await sandbox_channel.call("sandbox/register_entity", payload)
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -168,7 +168,7 @@ async def test_area_assignment_propagates_to_proxy(
     )
 
     try:
-        result = await sandbox_channel.call("sandbox_v2/register_entity", payload)
+        result = await sandbox_channel.call("sandbox/register_entity", payload)
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -201,7 +201,7 @@ async def test_invalid_device_info_surfaces_remote_error(
 
     try:
         with pytest.raises(ChannelRemoteError):
-            await sandbox_channel.call("sandbox_v2/register_entity", payload)
+            await sandbox_channel.call("sandbox/register_entity", payload)
     finally:
         await main_channel.close()
         await sandbox_channel.close()

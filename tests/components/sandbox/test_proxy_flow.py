@@ -8,11 +8,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
-from homeassistant.components.sandbox_v2.channel import Channel
-from homeassistant.components.sandbox_v2.manager import SandboxManager
-from homeassistant.components.sandbox_v2.messages import struct_to_dict
-from homeassistant.components.sandbox_v2.router import SandboxFlowRouter
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.channel import Channel
+from homeassistant.components.sandbox.manager import SandboxManager
+from homeassistant.components.sandbox.messages import struct_to_dict
+from homeassistant.components.sandbox.router import SandboxFlowRouter
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -32,11 +32,11 @@ class _SandboxStub:
         self.abort_calls: list[pb.FlowAbort] = []
 
     def attach(self, channel: Channel) -> None:
-        channel.register("sandbox_v2/flow_init", self._flow_init)
-        channel.register("sandbox_v2/flow_step", self._flow_step)
-        channel.register("sandbox_v2/flow_abort", self._flow_abort)
-        channel.register("sandbox_v2/entry_setup", self._entry_setup)
-        channel.register("sandbox_v2/entry_unload", self._entry_unload)
+        channel.register("sandbox/flow_init", self._flow_init)
+        channel.register("sandbox/flow_step", self._flow_step)
+        channel.register("sandbox/flow_abort", self._flow_abort)
+        channel.register("sandbox/entry_setup", self._entry_setup)
+        channel.register("sandbox/entry_unload", self._entry_unload)
 
     async def _flow_init(self, payload: pb.FlowInit) -> pb.FlowResult:
         self.init_calls.append(payload)
@@ -126,7 +126,7 @@ async def test_full_flow_user_to_create_entry(
     with (
         _wired_sandbox(manager, group="built-in", responses=responses) as stub,
         patch(
-            "homeassistant.components.sandbox_v2.router.classify",
+            "homeassistant.components.sandbox.router.classify",
             return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
         ),
     ):
@@ -191,7 +191,7 @@ async def test_form_with_errors_reshows(
     with (
         _wired_sandbox(manager, group="built-in", responses=responses),
         patch(
-            "homeassistant.components.sandbox_v2.router.classify",
+            "homeassistant.components.sandbox.router.classify",
             return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
         ),
     ):
@@ -224,7 +224,7 @@ async def test_abort_is_propagated(
     with (
         _wired_sandbox(manager, group="custom", responses=responses),
         patch(
-            "homeassistant.components.sandbox_v2.router.classify",
+            "homeassistant.components.sandbox.router.classify",
             return_value=type("A", (), {"is_main": False, "group": "custom"})(),
         ),
     ):

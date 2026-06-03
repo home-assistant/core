@@ -2,7 +2,7 @@
 
 Validates the Phase 5 :class:`_CallServiceBatcher` coalesces a 200-entity
 area-targeted ``light.turn_on`` into a single
-``sandbox_v2/call_service`` round-trip with sub-100 ms latency.
+``sandbox/call_service`` round-trip with sub-100 ms latency.
 
 The benchmark runs against the in-memory channel pair the in-process
 testing plugin builds — not a real subprocess. The subprocess boundary
@@ -27,8 +27,8 @@ from hass_client.testing.pytest_plugin import (
 )
 import pytest
 
-from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
-from homeassistant.components.sandbox_v2.messages import (
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.messages import (
     make_entity_description,
     struct_to_dict,
 )
@@ -57,7 +57,7 @@ async def in_process_sandbox(
     hass: HomeAssistant, tmp_path_factory: pytest.TempPathFactory
 ) -> InProcessSandbox:
     """Spin up the in-process sandbox and tear it down on exit."""
-    config_dir = tmp_path_factory.mktemp("sandbox_v2_perf")
+    config_dir = tmp_path_factory.mktemp("sandbox_perf")
     sandbox = await async_setup_inprocess_sandbox(
         hass, group=DEFAULT_GROUP, config_dir=str(config_dir)
     )
@@ -98,7 +98,7 @@ async def test_area_call_against_200_lights_completes_under_budget(
     # Replace the runtime's handler — we want our own bookkeeping for the
     # benchmark, not the runtime's normal dispatch.
     runtime_channel = in_process_sandbox.runtime._channel
-    runtime_channel.register("sandbox_v2/call_service", _on_call_service)
+    runtime_channel.register("sandbox/call_service", _on_call_service)
 
     # Push 200 register_entity calls in a tight loop. Each one synthesises
     # a proxy entity on main, places it in the entity registry, and lets
@@ -116,7 +116,7 @@ async def test_area_call_against_200_lights_completes_under_budget(
             initial_state=STATE_OFF,
             initial_attributes={"color_mode": "onoff"},
         )
-        result = await runtime_channel.call("sandbox_v2/register_entity", payload)
+        result = await runtime_channel.call("sandbox/register_entity", payload)
         entity_id = result.entity_id
         entity_ids.append(entity_id)
         entity_registry.async_update_entity(entity_id, area_id=area.id)

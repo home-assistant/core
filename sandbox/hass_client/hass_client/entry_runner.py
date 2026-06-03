@@ -1,7 +1,7 @@
 """Sandbox-side entry runner — loads integrations + drives ``async_setup_entry``.
 
 The manager pushes a serialised :class:`ConfigEntry` via
-``sandbox_v2/entry_setup`` (see :mod:`hass_client.protocol`). The runner
+``sandbox/entry_setup`` (see :mod:`hass_client.protocol`). The runner
 rebuilds the entry on the sandbox's private :class:`HomeAssistant`,
 calls ``hass.config_entries.async_setup`` to load the owning integration,
 and reports back. Main holds the canonical entry; the sandbox copy is
@@ -14,7 +14,7 @@ from types import MappingProxyType
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from ._proto import sandbox_v2_pb2 as pb
+from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
 from .messages import dict_to_struct, struct_to_dict
@@ -46,7 +46,7 @@ class EntryRunner:
         self._fetch = fetch
 
     def register(self, channel: Channel) -> None:
-        """Wire the ``sandbox_v2/entry_*`` + ``call_service`` handlers."""
+        """Wire the ``sandbox/entry_*`` + ``call_service`` handlers."""
         channel.register(MSG_ENTRY_SETUP, self._handle_entry_setup)
         channel.register(MSG_ENTRY_UNLOAD, self._handle_entry_unload)
         channel.register(MSG_CALL_SERVICE, self._handle_call_service)

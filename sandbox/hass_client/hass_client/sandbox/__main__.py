@@ -1,6 +1,6 @@
-"""Entry point for ``python -m hass_client.sandbox_v2``.
+"""Entry point for ``python -m hass_client.sandbox``.
 
-The Sandbox v2 manager spawns this module as a subprocess. CLI arguments
+The Sandbox manager spawns this module as a subprocess. CLI arguments
 mirror what the websocket client will need in Phase 4 so the manager-side
 command line is stable across phases.
 """
@@ -15,8 +15,8 @@ from hass_client.sandbox import SandboxRuntime
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="python -m hass_client.sandbox_v2",
-        description="Sandbox v2 runtime process.",
+        prog="python -m hass_client.sandbox",
+        description="Sandbox runtime process.",
     )
     parser.add_argument(
         "--name",

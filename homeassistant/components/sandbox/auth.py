@@ -6,7 +6,7 @@ token. The token is a plain system-user credential — there is no scope
 restriction. The sandbox does not currently open a websocket back to main,
 so no enforcement surface exists; scope enforcement is deferred until the
 sandbox→main connection actually lands (see
-``sandbox_v2/docs/auth-scoping-decision.md``, kept as a historical design
+``sandbox/docs/auth-scoping-decision.md``, kept as a historical design
 record for that future work).
 """
 
@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 # Marker stored on the system user's name + refresh_token client_id so the
 # manager can recognise (and reuse) an existing sandbox credential across
 # HA restarts.
-_USER_NAME_PREFIX = "Sandbox v2: "
-_CLIENT_ID_PREFIX = "sandbox_v2/"
+_USER_NAME_PREFIX = "Sandbox: "
+_CLIENT_ID_PREFIX = "sandbox/"
 
 
 def _user_name_for_group(group: str) -> str:

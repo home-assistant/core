@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``scene`` entities.
+"""Sandbox proxy for ``scene`` entities.
 
 ``scene`` is in ``ALWAYS_MAIN`` so the classifier never routes it to a
 sandbox in practice. The proxy ships anyway for symmetry — Phase 13

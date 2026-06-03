@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home Assistant Sandbox v2 — Architecture</title>
+    <title>Home Assistant Sandbox — Architecture</title>
     <style>
       * {
         box-sizing: border-box;
@@ -308,7 +308,7 @@
   <body>
     <div class="container">
       <header>
-        <h1>Home Assistant Sandbox v2</h1>
+        <h1>Home Assistant Sandbox</h1>
         <p class="subtitle">
           A backend rewrite that runs each integration's setup, config flow,
           entities, services, and events inside an isolated subprocess — while
@@ -406,7 +406,7 @@
       </p>
 
       <p>
-        Sandbox v2 puts each integration's code in an isolated subprocess (a
+        Sandbox puts each integration's code in an isolated subprocess (a
         "sandbox"). From the user's perspective, nothing changes: they add a
         light integration through the frontend, devices and entities show up in
         the registries, area targeting works (<code>light.turn_on</code> against
@@ -536,7 +536,7 @@
             hass.states (canonical)
           </text>
 
-          <!-- sandbox_v2 integration -->
+          <!-- sandbox integration -->
           <rect
             x="40"
             y="130"
@@ -555,7 +555,7 @@
             font-size="12"
             font-weight="bold"
           >
-            components/sandbox_v2
+            components/sandbox
           </text>
 
           <!-- SandboxFlowRouter -->
@@ -739,7 +739,7 @@
             fill="#a5f3fc"
             font-size="9.5"
           >
-            _SandboxStoreServer pinned to .storage/sandbox_v2/&lt;group&gt;/
+            _SandboxStoreServer pinned to .storage/sandbox/&lt;group&gt;/
           </text>
 
           <!-- websocket dispatcher -->
@@ -808,7 +808,7 @@
             font-size="11"
             font-weight="600"
           >
-            sandbox_v2/auth.py
+            sandbox/auth.py
           </text>
           <text
             x="355"
@@ -938,8 +938,8 @@
             fill="#67e8f9"
             font-size="10"
           >
-            python -m hass_client.sandbox_v2 --name &hellip; --url &hellip;
-            --token &hellip;
+            python -m hass_client.sandbox --name &hellip; --url &hellip; --token
+            &hellip;
           </text>
 
           <!-- SandboxRuntime -->
@@ -1251,7 +1251,7 @@
             fill="#a5f3fc"
             font-size="9.5"
           >
-            &rarr; sandbox_v2/store_{load,save,remove} on main
+            &rarr; sandbox/store_{load,save,remove} on main
           </text>
 
           <!-- Channel -->
@@ -1463,7 +1463,7 @@
         is:
       </p>
 
-      <pre><code>python -m hass_client.sandbox_v2 \
+      <pre><code>python -m hass_client.sandbox \
     --name &lt;name&gt; \
     --url stdio:// \
     --token &lt;sandbox access token&gt;</code></pre>
@@ -1475,7 +1475,7 @@
         unix socket and the runtime dials back). <code>ws://</code> /
         <code>wss://</code> are reserved for the deferred websocket transport
         and rejected for now. The runtime opens the channel and sends a
-        <code>Ready</code> frame (<code>sandbox_v2/ready</code>) as its first
+        <code>Ready</code> frame (<code>sandbox/ready</code>) as its first
         message; the manager treats its arrival as &ldquo;running&rdquo; &mdash;
         there is no stdout text marker, so stdout carries nothing but channel
         frames. Frames are protobuf and length-prefixed (4-byte big-endian
@@ -1495,10 +1495,9 @@
       </p>
 
       <p>
-        A <code>sandbox_v2/ping</code> handler is registered and exercised by
-        the subprocess test; the periodic 30&nbsp;s ping loop is wired through
-        but currently disabled (process-exit detection covers the hard-crash
-        case).
+        A <code>sandbox/ping</code> handler is registered and exercised by the
+        subprocess test; the periodic 30&nbsp;s ping loop is wired through but
+        currently disabled (process-exit detection covers the hard-crash case).
       </p>
 
       <h3>Graceful shutdown</h3>
@@ -1514,7 +1513,7 @@
           <code
             >manager.async_graceful_shutdown_all(timeout=manager.shutdown_grace)</code
           >
-          fans out <code>sandbox_v2/shutdown</code> to every running sandbox.
+          fans out <code>sandbox/shutdown</code> to every running sandbox.
         </li>
         <li>
           Each sandbox unloads its entries via
@@ -1530,7 +1529,7 @@
           <code>on_shutdown_reply</code> callback, which writes
           <code>restore_state</code> to
           <code
-            >&lt;config&gt;/.storage/sandbox_v2/&lt;group&gt;/core.restore_state</code
+            >&lt;config&gt;/.storage/sandbox/&lt;group&gt;/core.restore_state</code
           >
           via the bridge's store server.
         </li>
@@ -1596,8 +1595,8 @@
       <p>
         Both sides of the bridge share an identical
         <code>protocol.py</code> (type-string constants, mirrored verbatim in
-        <code>homeassistant/components/sandbox_v2/protocol.py</code> and
-        <code>sandbox_v2/hass_client/hass_client/protocol.py</code>) and an
+        <code>homeassistant/components/sandbox/protocol.py</code> and
+        <code>sandbox/hass_client/hass_client/protocol.py</code>) and an
         identical <code>messages.py</code> / generated <code>_pb2</code> pair. A
         <code>call_service</code> request, for example, is a
         <code>CallService</code> message (<code>domain</code>,
@@ -1677,12 +1676,12 @@
         <code>classify(integration)</code>, then either return
         <code>None</code> (let HA handle it locally) or hand back a
         <code>SandboxFlowProxy</code> <code>ConfigFlow</code>. The proxy issues
-        <code>sandbox_v2/flow_init</code>, <code>sandbox_v2/flow_step</code>,
-        and <code>sandbox_v2/flow_abort</code> RPCs against the matching
-        sandbox's runtime; each RPC returns a marshalled
-        <code>FlowResult</code> that the proxy re-issues as
-        <code>async_show_form</code> / <code>async_create_entry</code> /
-        <code>async_abort</code> so the framework treats the result as native.
+        <code>sandbox/flow_init</code>, <code>sandbox/flow_step</code>, and
+        <code>sandbox/flow_abort</code> RPCs against the matching sandbox's
+        runtime; each RPC returns a marshalled <code>FlowResult</code> that the
+        proxy re-issues as <code>async_show_form</code> /
+        <code>async_create_entry</code> / <code>async_abort</code> so the
+        framework treats the result as native.
       </p>
 
       <h3>Where the routing tag lives</h3>
@@ -1769,7 +1768,7 @@
           <tr>
             <td><strong>A &mdash; method-forward RPC</strong></td>
             <td>
-              <code>sandbox_v2/entity_method_call</code> with
+              <code>sandbox/entity_method_call</code> with
               <code>(entity_id, method, kwargs)</code>
             </td>
             <td>
@@ -1780,7 +1779,7 @@
           <tr>
             <td><strong>B &mdash; action-call forwarding</strong></td>
             <td>
-              Generic <code>sandbox_v2/call_service</code> with
+              Generic <code>sandbox/call_service</code> with
               <code>(domain, service, target, service_data)</code>
             </td>
             <td>
@@ -1835,7 +1834,7 @@
         <li>
           <strong
             >Phase 6 was going to need
-            <code>sandbox_v2/call_service</code> anyway</strong
+            <code>sandbox/call_service</code> anyway</strong
           >
           for service mirroring. Option B reuses that one channel; Option A
           would have added a parallel entity-only RPC alongside it. Smaller
@@ -1865,14 +1864,14 @@
 
       <p>
         <code>EntryRunner</code> rebuilds a <code>ConfigEntry</code> from the
-        <code>sandbox_v2/entry_setup</code> payload, fetches the integration's
-        code if needed (see below), drops the entry into the sandbox's
+        <code>sandbox/entry_setup</code> payload, fetches the integration's code
+        if needed (see below), drops the entry into the sandbox's
         <code>ConfigEntries</code>, and runs the integration's
         <code>async_setup_entry</code>. The integration adds entities the normal
         way &mdash; <code>EntityBridge</code> listens for
         <code>EVENT_STATE_CHANGED</code> on the sandbox's bus and, on each
         entity's first appearance, pushes
-        <code>sandbox_v2/register_entity</code> to main with:
+        <code>sandbox/register_entity</code> to main with:
       </p>
 
       <ul>
@@ -1896,8 +1895,8 @@
       </ul>
 
       <p>
-        Subsequent updates push <code>sandbox_v2/state_changed</code> &mdash;
-        state + attributes only, no re-registration.
+        Subsequent updates push <code>sandbox/state_changed</code> &mdash; state
+        + attributes only, no re-registration.
       </p>
 
       <h3>Integration source &mdash; fetch before setup (stateless)</h3>
@@ -1940,8 +1939,8 @@
         <code>light.turn_on</code> against an area or label, it is main's
         service layer that expands it to a concrete entity-id list and invokes
         <code>async_turn_on</code> on each proxy. Those proxy calls translate
-        into <code>sandbox_v2/call_service</code> RPCs via a per-loop-tick
-        batcher (<code>_CallServiceBatcher</code>) that coalesces matching
+        into <code>sandbox/call_service</code> RPCs via a per-loop-tick batcher
+        (<code>_CallServiceBatcher</code>) that coalesces matching
         <code>(domain, service, service_data)</code> calls into one multi-entity
         RPC &mdash; so a 200-light area call pays <strong>one RPC</strong>, not
         200. The sandbox never re-resolves areas or labels; it only ever
@@ -2011,13 +2010,13 @@
       <p>
         Listens on the sandbox bus for <code>EVENT_SERVICE_REGISTERED</code> /
         <code>EVENT_SERVICE_REMOVED</code> and pushes
-        <code>sandbox_v2/register_service</code> /
+        <code>sandbox/register_service</code> /
         <code>unregister_service</code> (with <code>supports_response</code>) to
         main. <strong>Schemas aren't serialised</strong> &mdash; the sandbox
         owns the real schema and runs validation when the call lands on its
         <code>services.async_call</code>. Main installs a thin forwarder that
         ships each call back over the shared
-        <code>sandbox_v2/call_service</code> channel, reusing the Phase&nbsp;5
+        <code>sandbox/call_service</code> channel, reusing the Phase&nbsp;5
         exception translator.
       </p>
 
@@ -2034,7 +2033,7 @@
         Uses a <code>MATCH_ALL</code> listener with an internal-events deny-list
         and forwards only <code>&lt;approved_domain&gt;_*</code> events (e.g.
         <code>zha_event</code>, <code>mqtt_message_received</code>) via
-        <code>sandbox_v2/fire_event</code>. Main re-fires each on its own bus so
+        <code>sandbox/fire_event</code>. Main re-fires each on its own bus so
         <code>automation</code> listeners react as if the integration ran
         locally.
       </p>
@@ -2060,7 +2059,7 @@
         <strong>Scope enforcement is deferred.</strong> Phase&nbsp;7 originally
         shipped a <code>RefreshToken.scopes</code> field plus a
         websocket-dispatcher <code>_scope_allows</code> check that rejected any
-        command outside <code>{"sandbox_v2/", "auth/current_user"}</code> with
+        command outside <code>{"sandbox/", "auth/current_user"}</code> with
         <code>ERR_UNAUTHORIZED</code>. But the sandbox never opened a websocket
         back to main, so no code path ever exercised the check end-to-end
         &mdash; it guarded a non-existent attack surface.
@@ -2160,13 +2159,13 @@
         <code>Store._async_write_data</code>, and
         <code>Store.async_remove</code> delegate to the contextvar's
         <code>SandboxBridge</code> instead of touching local disk &mdash;
-        talking to main via <code>sandbox_v2/store_load</code>,
-        <code>sandbox_v2/store_save</code>,
-        <code>sandbox_v2/store_remove</code>. Branching at
-        <code>_async_write_data</code> (rather than <code>async_save</code>) is
-        deliberate: <code>async_save</code>, <code>async_delay_save</code>, and
-        the <code>EVENT_HOMEASSISTANT_FINAL_WRITE</code> flush all funnel
-        through <code>_async_handle_write_data</code> &rarr;
+        talking to main via <code>sandbox/store_load</code>,
+        <code>sandbox/store_save</code>, <code>sandbox/store_remove</code>.
+        Branching at <code>_async_write_data</code> (rather than
+        <code>async_save</code>) is deliberate: <code>async_save</code>,
+        <code>async_delay_save</code>, and the
+        <code>EVENT_HOMEASSISTANT_FINAL_WRITE</code> flush all funnel through
+        <code>_async_handle_write_data</code> &rarr;
         <code>_async_write_data</code>, so one branch covers every write path.
         The migration loop in <code>_async_load_data</code> runs unchanged
         whether the wrapped envelope came from disk or the bridge.
@@ -2194,10 +2193,10 @@
       <p>
         Each <code>SandboxBridge</code> owns a
         <code>_SandboxStoreServer</code> pinned to
-        <code>&lt;config&gt;/.storage/sandbox_v2/&lt;group&gt;/</code>. Writes
-        use <code>util.file.write_utf8_file_atomic</code> &mdash; the same
-        primitive <code>Store</code> itself uses, so atomicity and durability
-        are unchanged. Scope isolation is by construction: each bridge owns one
+        <code>&lt;config&gt;/.storage/sandbox/&lt;group&gt;/</code>. Writes use
+        <code>util.file.write_utf8_file_atomic</code> &mdash; the same primitive
+        <code>Store</code> itself uses, so atomicity and durability are
+        unchanged. Scope isolation is by construction: each bridge owns one
         channel for one group; forging a cross-group call would require forging
         the channel. Key validation (<code>_require_key</code>) rejects
         <code>/</code>, <code>\</code>, NUL, <code>.</code>, <code>..</code>,
@@ -2218,7 +2217,7 @@
       <p>
         The proof that the bridge doesn't regress integration behaviour is the
         compat lane: run HA Core's existing per-integration test suites with
-        sandbox_v2 wired in and watch the pass rate.
+        sandbox wired in and watch the pass rate.
       </p>
 
       <h3>Two pytest plugins</h3>
@@ -2244,7 +2243,7 @@
             <td><code>hass_client.testing.conftest_sandbox</code></td>
             <td>
               Real stdio protobuf channel (<code
-                >python -m hass_client.sandbox_v2</code
+                >python -m hass_client.sandbox</code
               >)
             </td>
             <td>Pins the subprocess boundary; freezer tests auto-skip</td>
@@ -2265,7 +2264,7 @@
         <code>run_compat.py</code> drives either plugin against a list of
         integration test directories, parses pytest's summary line, and writes
         <code>COMPAT.csv</code> + <code>COMPAT.md</code>. Per-failure output
-        lands in <code>${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_v2_errors}</code>.
+        lands in <code>${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}</code>.
         <code>run_compat_full.py</code> drives it across all 807
         classifier-routable, config-entry-based integrations and captures JUnit
         per-test; <code>categorize_failures.py</code> buckets every failure into
@@ -2418,7 +2417,7 @@
             The <code>current_sandbox</code> contextvar routes every
             <code>Store(&hellip;)</code> in the sandbox to
             <code
-              >&lt;config&gt;/.storage/sandbox_v2/&lt;group&gt;/&lt;key&gt;</code
+              >&lt;config&gt;/.storage/sandbox/&lt;group&gt;/&lt;key&gt;</code
             >
             on main. <code>Store</code> reads the contextvar at IO time &mdash;
             no module-level rebinding. (Phase 8 shipped this as a storage-module
@@ -2649,26 +2648,26 @@
         <tbody>
           <tr>
             <td>Classifier</td>
-            <td><code>components/sandbox_v2/classifier.py</code></td>
+            <td><code>components/sandbox/classifier.py</code></td>
             <td>&mdash;</td>
           </tr>
           <tr>
             <td>Lifecycle</td>
-            <td><code>components/sandbox_v2/manager.py</code></td>
+            <td><code>components/sandbox/manager.py</code></td>
             <td>
               <code>hass_client/sandbox.py</code>,
-              <code>hass_client/sandbox_v2/__main__.py</code>
+              <code>hass_client/sandbox/__main__.py</code>
             </td>
           </tr>
           <tr>
             <td>Channel</td>
-            <td><code>components/sandbox_v2/channel.py</code></td>
+            <td><code>components/sandbox/channel.py</code></td>
             <td><code>hass_client/channel.py</code></td>
           </tr>
           <tr>
             <td>Config flow</td>
             <td>
-              <code>components/sandbox_v2/router.py</code>,
+              <code>components/sandbox/router.py</code>,
               <code>proxy_flow.py</code>
             </td>
             <td><code>hass_client/flow_runner.py</code></td>
@@ -2676,7 +2675,7 @@
           <tr>
             <td>Entity bridge</td>
             <td>
-              <code>components/sandbox_v2/bridge.py</code>, <code>entity/</code>
+              <code>components/sandbox/bridge.py</code>, <code>entity/</code>
             </td>
             <td>
               <code>hass_client/entry_runner.py</code>,
@@ -2685,7 +2684,7 @@
           </tr>
           <tr>
             <td>Service / event mirror</td>
-            <td><code>components/sandbox_v2/bridge.py</code></td>
+            <td><code>components/sandbox/bridge.py</code></td>
             <td>
               <code>hass_client/service_mirror.py</code>,
               <code>event_mirror.py</code>, <code>approved_domains.py</code>
@@ -2694,7 +2693,7 @@
           <tr>
             <td>Auth</td>
             <td>
-              <code>components/sandbox_v2/auth.py</code>
+              <code>components/sandbox/auth.py</code>
               (plain system-user token)
             </td>
             <td>&mdash;</td>
@@ -2702,7 +2701,7 @@
           <tr>
             <td>Store routing</td>
             <td>
-              <code>components/sandbox_v2/bridge.py</code>
+              <code>components/sandbox/bridge.py</code>
               (<code>_SandboxStoreServer</code>),
               <code>helpers/sandbox_context.py</code>,
               <code>helpers/storage.py</code>
@@ -2712,7 +2711,7 @@
           <tr>
             <td>Shutdown</td>
             <td>
-              <code>components/sandbox_v2/__init__.py</code>
+              <code>components/sandbox/__init__.py</code>
               (<code>_on_stop</code>), <code>manager.py</code>
             </td>
             <td>
@@ -2759,22 +2758,22 @@
       <h3>Running the tests</h3>
 
       <pre><code># HA Core side
-uv run pytest tests/components/sandbox_v2/ --no-cov -q
+uv run pytest tests/components/sandbox/ --no-cov -q
 
 # Client side (separate uv env &mdash; does NOT accept --no-cov)
-uv run pytest sandbox_v2/hass_client/ -q
+uv run pytest sandbox/hass_client/ -q
 
 # Compat lane
-cd sandbox_v2 && python run_compat.py
+cd sandbox && python run_compat.py
 </code></pre>
 
       <footer>
-        Home Assistant Sandbox v2 &middot; Architecture overview &middot; Phases
+        Home Assistant Sandbox &middot; Architecture overview &middot; Phases
         0&ndash;17 landed &middot; Source of truth:
-        <span class="kbd">sandbox_v2/OVERVIEW.md</span>,
-        <span class="kbd">sandbox_v2/plan.md</span>,
-        <span class="kbd">sandbox_v2/STATUS-phase-N.md</span>,
-        <span class="kbd">sandbox_v2/docs/*.md</span>.
+        <span class="kbd">sandbox/OVERVIEW.md</span>,
+        <span class="kbd">sandbox/plan.md</span>,
+        <span class="kbd">sandbox/STATUS-phase-N.md</span>,
+        <span class="kbd">sandbox/docs/*.md</span>.
       </footer>
     </div>
   </body>

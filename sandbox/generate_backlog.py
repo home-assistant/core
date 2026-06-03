@@ -12,7 +12,7 @@ commit diff.
 
 Usage::
 
-    cd sandbox_v2
+    cd sandbox
     uv run python generate_backlog.py              # writes BACKLOG.md
     uv run python generate_backlog.py --out FOO.md # custom output path
 """
@@ -62,7 +62,7 @@ BUCKET_BLURB: dict[str, str] = {
     ),
     "restore-state-not-applied": (
         "Phase 9 warm-loads `RestoreStateData` from"
-        " `<config>/.storage/sandbox_v2/<group>/core.restore_state`. Hits"
+        " `<config>/.storage/sandbox/<group>/core.restore_state`. Hits"
         " here mean an integration's restore-state assertion fires before"
         " the warm-load completes, or expects state the previous run never"
         " persisted."
@@ -107,7 +107,7 @@ BUCKET_BLURB: dict[str, str] = {
         "Integration depends on a main-side service or piece of state that"
         " opt-in sharing doesn't expose. Tracked alongside the unfinished"
         " state-sharing consumer (see"
-        " `sandbox_v2/docs/design-share-states.md`)."
+        " `sandbox/docs/design-share-states.md`)."
     ),
     "unknown": (
         "Catch-all bucket of last resort. Every entry here means the"
@@ -144,7 +144,7 @@ def _bucket_priority(name: str) -> int:
 def render_backlog(payload: dict[str, dict[str, list[dict[str, str]]]]) -> str:
     """Render the BACKLOG.md draft."""
     lines: list[str] = [
-        "# Sandbox v2 — Phase 16 backlog",
+        "# Sandbox — Phase 16 backlog",
         "",
         "**Auto-generated draft** from `BACKLOG_FAILURES.json`."
         " `generate_backlog.py` writes the skeleton; the *Proposed fix* and"

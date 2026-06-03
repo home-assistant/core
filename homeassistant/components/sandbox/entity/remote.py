@@ -1,4 +1,4 @@
-"""Sandbox v2 proxy for ``remote`` entities."""
+"""Sandbox proxy for ``remote`` entities."""
 
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any

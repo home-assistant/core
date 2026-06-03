@@ -1,7 +1,7 @@
 """Auto-tag :class:`MockConfigEntry` with the sandbox group at ``add_to_hass``.
 
 Without this patch, vanilla HA Core integration tests build their
-``MockConfigEntry`` instances with no sandbox tag, so the sandbox_v2
+``MockConfigEntry`` instances with no sandbox tag, so the sandbox
 router's classifier path never fires — the entry sets up locally and
 the sandbox bridge is bypassed entirely.
 
@@ -15,7 +15,7 @@ to integration tests that assert on data contents (the Phase 17 fix
 the BACKLOG had as the single highest-leverage gap).
 
 The classifier here is a synchronous filesystem-only re-implementation
-of :func:`homeassistant.components.sandbox_v2.classifier.classify`.
+of :func:`homeassistant.components.sandbox.classifier.classify`.
 Calling the real async classifier from the sync ``add_to_hass`` would
 require driving a coroutine from inside a running event loop, which is
 already where compat tests are. The duplicated logic is small (~30 LOC)
@@ -29,8 +29,8 @@ import pathlib
 from typing import TYPE_CHECKING, Any
 
 import homeassistant
-from homeassistant.components.sandbox_v2.classifier import GROUP_BUILT_IN, GROUP_CUSTOM
-from homeassistant.components.sandbox_v2.const import (
+from homeassistant.components.sandbox.classifier import GROUP_BUILT_IN, GROUP_CUSTOM
+from homeassistant.components.sandbox.const import (
     ALWAYS_MAIN,
     SANDBOX_INCOMPATIBLE_PLATFORMS,
 )
@@ -44,7 +44,7 @@ _HASS_COMPONENTS_DIR = pathlib.Path(homeassistant.__file__).parent / "components
 def classify_domain_sync(domain: str) -> str | None:
     """Return the sandbox group for ``domain``, or ``None`` for main.
 
-    Mirrors :func:`homeassistant.components.sandbox_v2.classifier.classify`
+    Mirrors :func:`homeassistant.components.sandbox.classifier.classify`
     but reads ``manifest.json`` + the integration directory contents
     directly so it can be called from a sync context.
     """
@@ -77,7 +77,7 @@ def install_mock_config_entry_autotag() -> Callable[[], None]:
     # the TID251 ban on importing ``tests`` doesn't apply.
     from tests.common import MockConfigEntry  # noqa: PLC0415, TID251
 
-    if getattr(MockConfigEntry, "_sandbox_v2_autotag_patched", False):
+    if getattr(MockConfigEntry, "_sandbox_autotag_patched", False):
         return lambda: None
 
     original = MockConfigEntry.add_to_hass
@@ -94,12 +94,12 @@ def install_mock_config_entry_autotag() -> Callable[[], None]:
         return original(self, hass)
 
     MockConfigEntry.add_to_hass = patched
-    MockConfigEntry._sandbox_v2_autotag_patched = True  # noqa: SLF001
+    MockConfigEntry._sandbox_autotag_patched = True  # noqa: SLF001
 
     def restore() -> None:
         MockConfigEntry.add_to_hass = original
         with contextlib.suppress(AttributeError):
-            delattr(MockConfigEntry, "_sandbox_v2_autotag_patched")
+            delattr(MockConfigEntry, "_sandbox_autotag_patched")
 
     return restore
 

@@ -1,7 +1,7 @@
 """Phase 5 tests for :class:`hass_client.entry_runner.EntryRunner`.
 
-Exercises the sandbox-side ``sandbox_v2/entry_setup`` round-trip plus the
-``sandbox_v2/call_service`` channel.
+Exercises the sandbox-side ``sandbox/entry_setup`` round-trip plus the
+``sandbox/call_service`` channel.
 """
 
 import asyncio
@@ -9,7 +9,7 @@ import tempfile
 from types import ModuleType
 from typing import Any
 
-from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.entry_runner import EntryRunner
@@ -60,7 +60,7 @@ async def _channels_fixture() -> tuple[Channel, Channel]:
 
 @pytest.fixture(name="runner")
 async def _runner_fixture() -> EntryRunner:
-    with tempfile.TemporaryDirectory(prefix="sandbox_v2_entryrunner_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="sandbox_entryrunner_") as tmp:
         flow_runner = await FlowRunner.create(config_dir=tmp)
         try:
             yield EntryRunner(flow_runner.hass)
@@ -71,7 +71,7 @@ async def _runner_fixture() -> EntryRunner:
 async def test_entry_setup_calls_integration_setup_entry(
     channels: tuple[Channel, Channel], runner: EntryRunner
 ) -> None:
-    """``sandbox_v2/entry_setup`` runs the integration's async_setup_entry."""
+    """``sandbox/entry_setup`` runs the integration's async_setup_entry."""
     main, sandbox = channels
     runner.register(sandbox)
     main.start()
@@ -138,7 +138,7 @@ async def test_entry_setup_calls_integration_setup_entry(
         minor_version=1,
     )
     payload.data.update({"host": "1.2.3.4"})
-    result = await main.call("sandbox_v2/entry_setup", payload)
+    result = await main.call("sandbox/entry_setup", payload)
 
     assert result.ok
     assert not result.HasField("reason")
@@ -165,7 +165,7 @@ async def test_entry_setup_reports_failure_reason(
         minor_version=1,
     )
 
-    result = await main.call("sandbox_v2/entry_setup", payload)
+    result = await main.call("sandbox/entry_setup", payload)
     assert result.ok is False
     assert result.HasField("reason")
 
@@ -188,7 +188,7 @@ async def test_call_service_dispatches_through_services(
 
     call_msg = pb.CallService(domain="test_call", service="do_it")
     call_msg.service_data.update({"hello": "world"})
-    result = await main.call("sandbox_v2/call_service", call_msg)
+    result = await main.call("sandbox/call_service", call_msg)
 
     # No return_response: proto result has no `response` field set (was
     # `result is None` on the dict wire).

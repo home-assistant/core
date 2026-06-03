@@ -28,7 +28,7 @@ from hass_client.testing.pytest_plugin import (
 )
 import pytest
 
-from homeassistant.components.sandbox_v2.const import DATA_SANDBOX_V2
+from homeassistant.components.sandbox.const import DATA_SANDBOX_V2
 from homeassistant.core import HomeAssistant
 
 
@@ -36,13 +36,13 @@ from homeassistant.core import HomeAssistant
 async def _in_process_sandbox_fixture(
     hass: HomeAssistant, tmp_path_factory: pytest.TempPathFactory
 ) -> AsyncIterator[InProcessSandbox]:
-    """Local copy of the ``sandbox_v2_inprocess`` fixture for these tests.
+    """Local copy of the ``sandbox_inprocess`` fixture for these tests.
 
     The plugin fixture is defined under ``hass_client.testing`` and the
     HA Core tests don't load that plugin by default — replicating the
     setup here keeps the assertion close to what the plugin guarantees.
     """
-    config_dir = tmp_path_factory.mktemp("sandbox_v2_inproc")
+    config_dir = tmp_path_factory.mktemp("sandbox_inproc")
     sandbox = await async_setup_inprocess_sandbox(
         hass, group=DEFAULT_GROUP, config_dir=str(config_dir)
     )
@@ -72,15 +72,15 @@ async def test_inprocess_plugin_wires_manager_and_bridge(
 async def test_inprocess_plugin_round_trips_ping(
     hass: HomeAssistant, in_process_sandbox: InProcessSandbox
 ) -> None:
-    """The in-memory channel speaks the real sandbox_v2 protocol.
+    """The in-memory channel speaks the real sandbox protocol.
 
-    Calling ``sandbox_v2/ping`` on the manager-side channel reaches the
+    Calling ``sandbox/ping`` on the manager-side channel reaches the
     runtime's handler and returns the same payload a subprocess would.
     """
     data = hass.data[DATA_SANDBOX_V2]
     channel = data.channels[DEFAULT_GROUP]
-    result = await asyncio.wait_for(channel.call("sandbox_v2/ping", None), timeout=2.0)
-    assert result.pong == "sandbox_v2"
+    result = await asyncio.wait_for(channel.call("sandbox/ping", None), timeout=2.0)
+    assert result.pong == "sandbox"
 
 
 async def test_inprocess_plugin_returns_existing_sandbox_on_ensure_started(
