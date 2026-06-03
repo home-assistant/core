@@ -270,7 +270,7 @@ async def async_setup_entry(
         if info[VEHICLE_HAS_EV]:
             descriptions.append(EV_PLUG_BINARY_SENSOR)
 
-        vehicle_data = coordinator.data.get(info[VEHICLE_VIN], {})
+        vehicle_data = coordinator.data.get(info[VEHICLE_VIN]) or {}
         features = vehicle_data.get(VEHICLE_FEATURES) or []
         descriptions.extend(_build_mil_descriptions(features))
 
