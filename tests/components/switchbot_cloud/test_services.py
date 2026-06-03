@@ -20,7 +20,6 @@ async def _setup(
     hass: HomeAssistant,
     mock_list_devices,
     mock_get_status,
-    mock_setup_webhook,
     device=AI_ART_FRAME_DEVICE,
 ):
     """Load default entry."""

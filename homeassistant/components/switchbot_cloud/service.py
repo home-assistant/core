@@ -1,12 +1,13 @@
 """SwitchBot Cloud Custom Service."""
 
 from logging import getLogger
+from typing import Any
 
 from switchbot_api import ArtFrameCommands, SwitchBotAPI
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import AI_ART_FRAME_UPLOAD_IMAGE_SERVICE, DOMAIN
@@ -18,8 +19,18 @@ UPLOAD_IMAGE_SCHEMA = vol.Schema(
     {
         vol.Required("image_url"): cv.url,
     },
-    extra=vol.ALLOW_EXTRA,  # 允许 HA 注入的 device_id/entity_id/area_id
+    extra=vol.ALLOW_EXTRA,
 )
+
+
+def _get_api(
+    entries: list[Any], device_model: str, target_entry_id: str
+) -> SwitchBotAPI:
+    """Get device's api."""
+    for entry in entries:
+        if target_entry_id == entry.entry_id:
+            return entry.runtime_data.api
+    raise ServiceValidationError(f"Device {device_model} Is Not Support This Service")
 
 
 async def handle_upload_image(call: ServiceCall) -> None:
@@ -46,20 +57,11 @@ async def handle_upload_image(call: ServiceCall) -> None:
 
         if model != "AI Art Frame":
             _LOGGER.error(
-                "Device %s Mac = %s Is Not Support This Service", model, device_mac
+                "No loaded config entry found for device %s mac = %s", model, device_mac
             )
             continue
 
-        def get_api(device_model: str, target_entry_id: str) -> SwitchBotAPI:
-            """Get device's api."""
-            for entry in entries:
-                if target_entry_id == entry.entry_id:
-                    return entry.runtime_data.api
-            raise HomeAssistantError(
-                f"Device {device_model} Is Not Support This Service"
-            )
-
-        api = get_api(model, entry_id)
+        api = _get_api(entries, model, entry_id)
         await api.send_command(
             device_id=device_mac,
             command=ArtFrameCommands.UPLOAD.value,
