@@ -61,7 +61,7 @@ def _zeroconf_info(data: dict[str, object]) -> ZeroconfServiceInfo:
 
 
 def _zeroconf_info_with_raw_data(data: object) -> ZeroconfServiceInfo:
-    """Return Kii Audio zeroconf discovery info with raw data bytes."""
+    """Return Kii Audio zeroconf discovery info with a raw data value."""
     return ZeroconfServiceInfo(
         ip_address=ip_address(HOST),
         ip_addresses=[ip_address(HOST)],
@@ -152,8 +152,59 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == SYSTEM_ID
 
 
-async def test_zeroconf_flow_rejects_legacy_backend(hass: HomeAssistant) -> None:
+async def test_zeroconf_flow_accepts_bytes(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery accepts JSON encoded as bytes."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_info_with_raw_data(
+            json.dumps(
+                {
+                    "deviceId": DEVICE_ID,
+                    "systemId": SYSTEM_ID,
+                    "version": 2,
+                    "ip": HOST,
+                }
+            ).encode()
+        ),
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == HOST
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {
+            "deviceId": DEVICE_ID,
+            "systemId": SYSTEM_ID,
+            "version": 1,
+        },
+        {
+            "deviceId": DEVICE_ID,
+            "systemId": SYSTEM_ID,
+        },
+    ],
+)
+async def test_zeroconf_flow_rejects_legacy_backend(
+    hass: HomeAssistant, data: dict[str, object]
+) -> None:
     """Test zeroconf discovery aborts for legacy backends."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_info(data),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_backend"
+
+
+async def test_zeroconf_flow_rejects_invalid_backend_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf discovery aborts when backend version is invalid."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -161,13 +212,13 @@ async def test_zeroconf_flow_rejects_legacy_backend(hass: HomeAssistant) -> None
             {
                 "deviceId": DEVICE_ID,
                 "systemId": SYSTEM_ID,
-                "version": 1,
+                "version": "invalid",
             }
         ),
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unsupported_backend"
+    assert result["reason"] == "invalid_discovery_info"
 
 
 async def test_zeroconf_flow_rejects_invalid_bytes(hass: HomeAssistant) -> None:
@@ -206,12 +257,21 @@ async def test_zeroconf_flow_rejects_missing_data(hass: HomeAssistant) -> None:
     assert result["reason"] == "invalid_discovery_info"
 
 
-async def test_zeroconf_flow_rejects_missing_ids(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"version": 2},
+        {"deviceId": DEVICE_ID, "systemId": "", "version": 2},
+    ],
+)
+async def test_zeroconf_flow_rejects_missing_ids(
+    hass: HomeAssistant, data: dict[str, object]
+) -> None:
     """Test zeroconf discovery aborts without required IDs."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=_zeroconf_info({"version": 2}),
+        data=_zeroconf_info(data),
     )
 
     assert result["type"] is FlowResultType.ABORT

@@ -1,12 +1,11 @@
 """Tests for the Kii Audio integration setup."""
 
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.kii_audio import async_migrate_entry
 from homeassistant.components.kii_audio.const import CONF_SYSTEM_ID, DOMAIN
+from homeassistant.components.kii_audio.coordinator import KiiAudioCoordinator
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .conftest import SYSTEM_ID, make_zone
@@ -14,7 +13,7 @@ from .conftest import SYSTEM_ID, make_zone
 from tests.common import MockConfigEntry
 
 
-async def _async_wait_ready(coordinator: Any) -> None:
+async def _async_wait_ready(coordinator: KiiAudioCoordinator) -> None:
     """Set initial Kii Audio data after the coordinator is ready."""
     coordinator.async_set_updated_data(
         {"systemName": "Kii System", "zones": [make_zone()]}
@@ -167,28 +166,3 @@ async def test_unload_entry_keeps_coordinator_running_when_platform_unload_fails
 
     assert entry.state is ConfigEntryState.FAILED_UNLOAD
     mock_stop.assert_not_awaited()
-
-
-async def test_migrate_entry_removes_stale_port(hass: HomeAssistant) -> None:
-    """Test migration removes stale port data."""
-    entry = _mock_config_entry(**{CONF_PORT: 9000})
-    entry.add_to_hass(hass)
-
-    assert await async_migrate_entry(hass, entry)
-
-    assert CONF_PORT not in entry.data
-
-
-async def test_migrate_entry_sets_missing_unique_id(hass: HomeAssistant) -> None:
-    """Test migration sets missing unique IDs from system ID."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Kii Audio",
-        data={CONF_HOST: "192.0.2.1", CONF_SYSTEM_ID: SYSTEM_ID},
-        unique_id=None,
-    )
-    entry.add_to_hass(hass)
-
-    assert await async_migrate_entry(hass, entry)
-
-    assert entry.unique_id == SYSTEM_ID

@@ -19,27 +19,14 @@ from .const import CONF_SYSTEM_ID, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+LEGACY_SOCKET_IO_BACKEND_VERSION = 1
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_SYSTEM_ID): str,
     }
 )
-
-
-def _supports_plain_websocket_backend(data: dict[str, Any]) -> bool:
-    """Return whether discovered device advertises the plain WebSocket backend."""
-    version = data.get("version")
-    if isinstance(version, bool):
-        return False
-    if isinstance(version, int | float):
-        return version > 1
-    if isinstance(version, str):
-        try:
-            return float(version) > 1
-        except ValueError:
-            return False
-    return False
 
 
 async def _async_get_system_info(hass: HomeAssistant, host: str) -> dict[str, Any]:
@@ -55,8 +42,8 @@ async def _async_get_system_info(hass: HomeAssistant, host: str) -> dict[str, An
             ready.set()
 
     client.add_listener(_handle_event)
-    await client.start()
     try:
+        await client.start()
         async with asyncio.timeout(10):
             await ready.wait()
     except TimeoutError as err:
@@ -65,14 +52,6 @@ async def _async_get_system_info(hass: HomeAssistant, host: str) -> dict[str, An
         await client.stop()
 
     return system_info
-
-
-async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-    system_info = await _async_get_system_info(hass, data[CONF_HOST])
-    system_id = system_info.get("systemId")
-    if isinstance(system_id, str) and system_id != data[CONF_SYSTEM_ID]:
-        raise InvalidSystemId
 
 
 class KiiAudioConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -85,23 +64,24 @@ class KiiAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                await _validate_input(self.hass, user_input)
+                system_info = await _async_get_system_info(
+                    self.hass, user_input[CONF_HOST]
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidSystemId:
-                errors["base"] = "invalid_system_id"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_SYSTEM_ID])
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: user_input[CONF_HOST]}
-                )
-                return self.async_create_entry(
-                    title=DEFAULT_NAME,
-                    data=user_input,
-                )
+                if system_info.get("systemId") != user_input[CONF_SYSTEM_ID]:
+                    errors["base"] = "invalid_system_id"
+                else:
+                    await self.async_set_unique_id(user_input[CONF_SYSTEM_ID])
+                    self._abort_if_unique_id_configured(updates=user_input)
+                    return self.async_create_entry(
+                        title=DEFAULT_NAME,
+                        data=user_input,
+                    )
 
         return self.async_show_form(
             step_id="user",
@@ -115,41 +95,40 @@ class KiiAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         _LOGGER.debug("Kii Audio device found via zeroconf: %s", discovery_info)
 
-        raw_data = discovery_info.properties.get("data")
-        if not isinstance(raw_data, str):
+        try:
+            data = json.loads(discovery_info.properties["data"])
+            device_id = data["deviceId"]
+            system_id = data["systemId"]
+            backend_version = data.get("version", LEGACY_SOCKET_IO_BACKEND_VERSION)
+        except KeyError, TypeError, UnicodeDecodeError, json.JSONDecodeError:
             _LOGGER.debug(
-                "Ignoring Kii Audio zeroconf discovery without data property: %s",
-                discovery_info,
+                "Ignoring Kii Audio zeroconf discovery with invalid data property: %s",
+                discovery_info.properties.get("data"),
+            )
+            return self.async_abort(reason="invalid_discovery_info")
+
+        if not system_id:
+            _LOGGER.debug(
+                "Ignoring Kii Audio discovery for device without a system ID: %s",
+                device_id,
             )
             return self.async_abort(reason="invalid_discovery_info")
 
         try:
-            data = json.loads(raw_data)
-        except json.JSONDecodeError:
+            if backend_version <= LEGACY_SOCKET_IO_BACKEND_VERSION:
+                _LOGGER.debug(
+                    "Ignoring Kii Audio discovery with legacy backend version: %s",
+                    backend_version,
+                )
+                return self.async_abort(reason="unsupported_backend")
+        except TypeError:
             _LOGGER.debug(
-                "Ignoring Kii Audio zeroconf discovery with invalid data property: %s",
-                raw_data,
+                "Ignoring Kii Audio discovery with invalid backend version: %s",
+                backend_version,
             )
             return self.async_abort(reason="invalid_discovery_info")
 
-        device_id = data.get("deviceId")
-        system_id = data.get("systemId")
-        if not isinstance(device_id, str) or not isinstance(system_id, str):
-            _LOGGER.debug(
-                "Ignoring Kii Audio zeroconf discovery with missing IDs: %s", data
-            )
-            return self.async_abort(reason="invalid_discovery_info")
-
-        if not _supports_plain_websocket_backend(data):
-            _LOGGER.debug(
-                "Ignoring Kii Audio zeroconf discovery with legacy backend: %s",
-                data,
-            )
-            return self.async_abort(reason="unsupported_backend")
-
-        host = data.get("ip")
-        if not isinstance(host, str) or not host:
-            host = discovery_info.host
+        host = data.get("ip") or discovery_info.host
         await self.async_set_unique_id(system_id)
         self._abort_if_unique_id_configured(
             updates={
@@ -171,7 +150,3 @@ class KiiAudioConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidSystemId(HomeAssistantError):
-    """Error to indicate the provided system ID does not match."""

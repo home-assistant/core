@@ -5,12 +5,12 @@ import copy
 import logging
 from typing import Any
 
+from aiohttp import ClientSession
 from aiokii import KiiAudioClient, KiiAudioError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -25,13 +25,15 @@ class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     config_entry: KiiAudioConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: KiiAudioConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: KiiAudioConfigEntry,
+        session: ClientSession,
+    ) -> None:
         """Initialize the coordinator."""
         self._ready = asyncio.Event()
-        self.client = KiiAudioClient(
-            async_get_clientsession(hass),
-            config_entry.data[CONF_HOST],
-        )
+        self.client = KiiAudioClient(session, config_entry.data[CONF_HOST])
         self.client.add_listener(self._handle_event)
         self.client.add_connection_listener(self._handle_connection_state)
 
@@ -73,8 +75,8 @@ class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _handle_connection_state(self, connected: bool) -> None:
         """Handle WebSocket connection state changes."""
         if connected:
-            if (data := getattr(self, "data", None)) is not None:
-                self.async_set_updated_data(data)
+            if self.data is not None:
+                self.async_set_updated_data(self.data)
             return
         if not self._ready.is_set():
             return
@@ -94,26 +96,17 @@ class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _handle_zone_setting(self, payload: dict[str, Any]) -> None:
         """Apply a pushed zone setting update to the cached system info."""
-        zone_id = payload.get("zoneId")
-        setting = payload.get("setting")
-        if "value" not in payload:
-            return
+        zone_id = payload["zoneId"]
+        setting = payload["setting"]
         value = payload["value"]
 
-        if not isinstance(zone_id, str) or not isinstance(setting, str):
-            return
-
-        current_data = self.data or {}
-        zones = current_data.get("zones")
-        if not isinstance(zones, list):
-            return
+        current_data = self.data
+        zones = current_data["zones"]
 
         for index, zone in enumerate(zones):
-            if not isinstance(zone, dict) or zone.get("zoneId") != zone_id:
+            if zone["zoneId"] != zone_id:
                 continue
-            settings = zone.get("settings", {})
-            if not isinstance(settings, dict):
-                return
+            settings = zone["settings"]
 
             data = dict(current_data)
             zones_copy = list(zones)
@@ -124,7 +117,7 @@ class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data["zones"] = zones_copy
 
             _set_path(settings_copy, setting, value)
-            if isinstance(payload.get("updateCount"), int):
+            if "updateCount" in payload:
                 settings_copy["updateCount"] = payload["updateCount"]
             self.async_set_updated_data(data)
             return

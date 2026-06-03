@@ -12,6 +12,7 @@ def _coordinator() -> KiiAudioCoordinator:
     """Return a minimal coordinator instance for callback tests."""
     coordinator = KiiAudioCoordinator.__new__(KiiAudioCoordinator)
     coordinator._ready = asyncio.Event()
+    coordinator.data = None
     return coordinator
 
 
@@ -144,27 +145,6 @@ def test_handle_zone_setting_event_updates_cached_data() -> None:
     }
 
 
-def test_handle_zone_setting_ignores_invalid_payloads() -> None:
-    """Test invalid zone setting payloads do not update data."""
-    coordinator = _coordinator()
-    coordinator.data = {"zones": []}
-    updates: list[dict[str, object]] = []
-    coordinator.async_set_updated_data = updates.append  # type: ignore[method-assign]
-
-    coordinator._handle_zone_setting({"zoneId": 1, "setting": "audio.volume"})
-    coordinator._handle_zone_setting({"zoneId": "zone-id", "setting": 1})
-    coordinator.data = {"zones": {}}
-    coordinator._handle_zone_setting(
-        {"zoneId": "zone-id", "setting": "audio.volume", "value": -40.0}
-    )
-    coordinator.data = {"zones": [{"zoneId": "zone-id", "settings": []}]}
-    coordinator._handle_zone_setting(
-        {"zoneId": "zone-id", "setting": "audio.volume", "value": -40.0}
-    )
-
-    assert updates == []
-
-
 def test_handle_zone_setting_replaces_non_dict_path() -> None:
     """Test zone setting events replace non-dict intermediate path values."""
     coordinator = _coordinator()
@@ -201,24 +181,5 @@ def test_handle_zone_setting_ignores_unknown_zone() -> None:
     coordinator._handle_zone_setting(
         {"zoneId": "zone-id", "setting": "audio.volume", "value": -40.0}
     )
-
-    assert updates == []
-
-
-def test_handle_zone_setting_ignores_missing_value() -> None:
-    """Test zone setting payloads without a value do not update data."""
-    coordinator = _coordinator()
-    coordinator.data = {
-        "zones": [
-            {
-                "zoneId": "zone-id",
-                "settings": {"audio": {"volume": -50.0}},
-            }
-        ]
-    }
-    updates: list[dict[str, object]] = []
-    coordinator.async_set_updated_data = updates.append  # type: ignore[method-assign]
-
-    coordinator._handle_zone_setting({"zoneId": "zone-id", "setting": "audio.volume"})
 
     assert updates == []
