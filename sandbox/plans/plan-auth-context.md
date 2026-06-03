@@ -69,22 +69,28 @@ correctness.
 This **replaces** `EventMirror`'s current "fresh `Context` on every re-fire"
 and folds the T2 `_resolve_context` helper into the seen-id lookup.
 
-### Part C — reconsider the per-group system user
+### Part C — DECIDED (2026-06-03): drop the per-group system user
 
-Decide between:
-- **(c1) Drop it.** Sandbox-originated unrecognised-id contexts use
-  `user_id=None` (a system/unauthenticated action — the honest shape, since no
-  user authored it). Removes `async_get_or_create_sandbox_user` and the
-  bridge's `_async_system_user_id`. Simplest; nothing in HA needs a sandbox to
-  *be* a user.
-- **(c2) Keep one shared sandbox user** (not per-group) if a stable non-null
-  `user_id` is wanted for audit/logbook attribution of genuinely
-  sandbox-originated actions.
+Sandbox-originated unrecognised-id contexts use `user_id=None` (a
+system/unauthenticated action — the honest shape, since no user authored it).
+Remove the per-group system user entirely:
+- `async_get_or_create_sandbox_user` + `async_issue_sandbox_access_token` in
+  `auth.py` (the whole helper goes away with Part A's token removal).
+- The bridge's `_async_system_user_id` / cached `_system_user_id`; the
+  `_resolve_context` fresh-mint path uses `user_id=None`.
 
-**Lean (c1)** unless a concrete need for a non-null attributing user surfaces —
-"the sandbox did this on nobody's behalf" is most faithfully `user_id=None`.
-Confirm against logbook/recorder expectations before removing (some surfaces may
-render a null user oddly).
+There is no reason for the sandbox to *be* a user right now — nothing in HA
+needs it to authenticate, and "the sandbox did this on nobody's behalf" is most
+faithfully `user_id=None`. Verify against logbook/recorder rendering (a null
+user should already be a normal case — automations/scripts without a user
+context produce it), but do not keep the user just to avoid a null.
+
+**Future work (not now):** a richer answer than `user_id=None` would be a
+`Context` that carries a **group attribute** identifying which sandbox group
+originated it — useful for audit/logbook ("this came from the `custom`
+sandbox") without pretending a sandbox is a user. That needs a core `Context`
+change (a new optional field) and is its own design; capture it as a follow-up
+when audit attribution actually needs it.
 
 ## Touch points
 
@@ -118,8 +124,11 @@ tests/components/sandbox/ (context restoration tests)
 - **Cache bounding:** assert eviction degrades to a fresh context, never an
   error.
 
-## Open decision for the user
+## Decisions locked (2026-06-03)
 
-- Part C: drop the system user entirely (c1, lean) vs keep one shared sandbox
-  user (c2)? Hinges on whether any audit surface wants a non-null `user_id` for
-  sandbox-originated actions.
+- **Part C: drop the per-group system user** (`user_id=None` for genuinely
+  sandbox-originated contexts). No current reason for the sandbox to be a user.
+- **Future work, not this plan:** a `Context` with a group attribute (which
+  sandbox group originated an action) is a better long-term answer than a null
+  user for audit/logbook — but it needs a core `Context` field change and waits
+  until audit attribution needs it.
