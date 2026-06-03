@@ -43,6 +43,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import condition
+from .const import DOMAIN
 
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
@@ -68,7 +69,7 @@ _LEGACY_TRIGGER_OPTIONS_SCHEMA = vol.Schema(
 _ZONE_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
     {
         vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_ZONE): cv.entity_domain("zone"),
+            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
         },
     }
 )
@@ -208,7 +209,7 @@ class LeftZoneTrigger(ZoneTriggerBase):
 _OCCUPANCY_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_ZONE): cv.entity_domain("zone"),
+            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
             vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
