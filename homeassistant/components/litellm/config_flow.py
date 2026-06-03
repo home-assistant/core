@@ -1,0 +1,352 @@
+"""Config flow for LiteLLM integration."""
+
+import logging
+from typing import Any
+from urllib.parse import urlparse
+
+import aiohttp
+import voluptuous as vol
+
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_URL
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import llm
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TemplateSelector,
+)
+
+from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
+
+_LOGGER = logging.getLogger(__name__)
+
+# Capability flag reported by the LiteLLM proxy `/model/info` endpoint for
+# models that can return structured output (JSON schema with strict mode).
+SUPPORTS_RESPONSE_SCHEMA = "supports_response_schema"
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect to the proxy."""
+
+
+class InvalidAuth(HomeAssistantError):
+    """Error to indicate the API key is invalid."""
+
+
+def _normalize_url(url: str) -> str:
+    """Normalize the proxy URL, ensuring it ends with the OpenAI `/v1` path."""
+    url = url.strip().rstrip("/")
+    if not url.endswith("/v1"):
+        url = f"{url}/v1"
+    return url
+
+
+async def _get_models(
+    hass: HomeAssistant, url: str, api_key: str | None
+) -> dict[str, dict[str, Any]]:
+    """Fetch available models and their capabilities from the LiteLLM proxy.
+
+    Prefers `/model/info` (which exposes capability flags) and falls back to the
+    plain OpenAI `/models` list when the proxy does not implement it.
+    """
+    session = async_get_clientsession(hass)
+    headers: dict[str, str] = {}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    try:
+        response = await session.get(
+            f"{url}/model/info",
+            headers=headers,
+            timeout=aiohttp.ClientTimeout(total=10),
+        )
+        if response.status in (401, 403):
+            raise InvalidAuth
+        if response.status == 200:
+            payload = await response.json()
+            return {
+                model["model_name"]: model.get("model_info") or {}
+                for model in payload.get("data", [])
+            }
+
+        response = await session.get(
+            f"{url}/models", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+        )
+        if response.status in (401, 403):
+            raise InvalidAuth
+        response.raise_for_status()
+        payload = await response.json()
+        return {model["id"]: {} for model in payload.get("data", [])}
+    except (TimeoutError, aiohttp.ClientError) as err:
+        raise CannotConnect from err
+
+
+class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for LiteLLM."""
+
+    VERSION = 1
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this handler."""
+        return {
+            "conversation": ConversationFlowHandler,
+            "ai_task_data": AITaskDataFlowHandler,
+        }
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors = {}
+        if user_input is not None:
+            url = _normalize_url(user_input[CONF_URL])
+            api_key = user_input.get(CONF_API_KEY)
+            self._async_abort_entries_match({CONF_URL: url})
+            try:
+                await _get_models(self.hass, url, api_key)
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                data = {CONF_URL: url}
+                if api_key:
+                    data[CONF_API_KEY] = api_key
+                return self.async_create_entry(
+                    title=urlparse(url).netloc or url,
+                    data=data,
+                )
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_URL): str,
+                    vol.Optional(CONF_API_KEY): str,
+                }
+            ),
+            errors=errors,
+        )
+
+
+class LiteLLMSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for LiteLLM."""
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        self.models: dict[str, dict[str, Any]] = {}
+
+    async def _fetch_models(self) -> None:
+        """Fetch models from the LiteLLM proxy."""
+        entry = self._get_entry()
+        self.models = await _get_models(
+            self.hass, entry.data[CONF_URL], entry.data.get(CONF_API_KEY)
+        )
+
+
+class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
+    """Handle conversation subentry flow."""
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+        self.options: dict[str, Any] = {}
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == SOURCE_USER
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create a conversation agent."""
+        self.options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
+        return await self.async_step_init(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of a conversation agent."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage conversation agent configuration."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            if not user_input.get(CONF_LLM_HASS_API):
+                user_input.pop(CONF_LLM_HASS_API, None)
+            if self._is_new:
+                return self.async_create_entry(
+                    title=user_input[CONF_MODEL], data=user_input
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=user_input,
+            )
+
+        try:
+            await self._fetch_models()
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        options = [SelectOptionDict(value=model, label=model) for model in self.models]
+
+        hass_apis: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label=api.name,
+                value=api.id,
+            )
+            for api in llm.async_get_apis(self.hass)
+        ]
+
+        if suggested_llm_apis := self.options.get(CONF_LLM_HASS_API):
+            valid_api_ids = {api["value"] for api in hass_apis}
+            self.options[CONF_LLM_HASS_API] = [
+                api for api in suggested_llm_apis if api in valid_api_ids
+            ]
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MODEL, default=self.options.get(CONF_MODEL)
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=options, mode=SelectSelectorMode.DROPDOWN, sort=True
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_PROMPT,
+                        description={
+                            "suggested_value": self.options.get(
+                                CONF_PROMPT,
+                                RECOMMENDED_CONVERSATION_OPTIONS[CONF_PROMPT],
+                            )
+                        },
+                    ): TemplateSelector(),
+                    vol.Optional(
+                        CONF_LLM_HASS_API,
+                        default=self.options.get(
+                            CONF_LLM_HASS_API,
+                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                    ),
+                }
+            ),
+        )
+
+
+class AITaskDataFlowHandler(LiteLLMSubentryFlowHandler):
+    """Handle AI task subentry flow."""
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+        self.options: dict[str, Any] = {}
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == SOURCE_USER
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create an AI task."""
+        self.options = {}
+        return await self.async_step_init(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of an AI task."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage AI task configuration."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            if self._is_new:
+                return self.async_create_entry(
+                    title=user_input[CONF_MODEL], data=user_input
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=user_input,
+            )
+
+        try:
+            await self._fetch_models()
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        # Prefer models that report structured-output support. When the proxy
+        # does not expose the capability for any model, fall back to all models.
+        structured = {
+            model: info
+            for model, info in self.models.items()
+            if info.get(SUPPORTS_RESPONSE_SCHEMA)
+        }
+        models = structured or self.models
+
+        options = [SelectOptionDict(value=model, label=model) for model in models]
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MODEL, default=self.options.get(CONF_MODEL)
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=options, mode=SelectSelectorMode.DROPDOWN, sort=True
+                        ),
+                    ),
+                }
+            ),
+        )

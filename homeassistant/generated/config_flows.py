@@ -416,6 +416,7 @@ FLOWS = {
         "lifx",
         "linkplay",
         "litejet",
+        "litellm",
         "litterrobot",
         "livisi",
         "local_calendar",

@@ -3885,6 +3885,12 @@
       "iot_class": "local_push",
       "single_config_entry": true
     },
+    "litellm": {
+      "name": "LiteLLM",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "litterrobot": {
       "name": "Whisker",
       "integration_type": "hub",
