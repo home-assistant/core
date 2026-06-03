@@ -11,11 +11,8 @@ from homeassistant.components.template import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -29,19 +26,11 @@ from tests.common import (
 from tests.typing import WebSocketGenerator
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(2, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
-                },
-            },
             "template": [
                 {
                     "trigger": {"platform": "event", "event_type": "event_1"},
@@ -51,10 +40,16 @@ from tests.typing import WebSocketGenerator
                     },
                 },
                 {
-                    "sensor": {
-                        "name": "top level state",
-                        "state": "{{ states.sensor.top_level.state }} + 2",
-                    },
+                    "sensor": [
+                        {
+                            "name": "state",
+                            "state": "{{ states.sensor.test_sensor.state }}",
+                        },
+                        {
+                            "name": "top level state",
+                            "state": "{{ states.sensor.top_level.state }} + 2",
+                        },
+                    ],
                     "binary_sensor": {
                         "name": "top level state",
                         "state": "{{ states.sensor.top_level.state == 'init' }}",
@@ -93,26 +88,26 @@ async def test_reloadable(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.top_level_2").state == "reload"
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(2, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "event_1"},
+                    "sensor": {
+                        "name": "top level",
+                        "state": "{{ trigger.event.data.source }}",
                     },
                 },
-            },
-            "template": {
-                "trigger": {"platform": "event", "event_type": "event_1"},
-                "sensor": {
-                    "name": "top level",
-                    "state": "{{ trigger.event.data.source }}",
+                {
+                    "sensor": {
+                        "name": "state",
+                        "state": "{{ states.sensor.test_sensor.state }}",
+                    },
                 },
-            },
+            ],
         },
     ],
 )
@@ -131,17 +126,15 @@ async def test_reloadable_can_remove(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 1
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
+            "template": {
+                "sensor": {
+                    "name": "state",
+                    "state": "{{ states.sensor.test_sensor.state }}",
                 },
             }
         },
@@ -155,22 +148,22 @@ async def test_reloadable_stops_on_invalid_config(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.state").state == "mytest"
     assert len(hass.states.async_all()) == 2
 
-    await async_yaml_patch_helper(hass, "configuration.yaml.corrupt")
+    with pytest.raises(HomeAssistantError, match="Error reloading template entities: "):
+        await async_yaml_patch_helper(hass, "configuration.yaml.corrupt")
+
     assert hass.states.get("sensor.state").state == "mytest"
     assert len(hass.states.async_all()) == 2
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
+            "template": {
+                "sensor": {
+                    "name": "state",
+                    "state": "{{ states.sensor.test_sensor.state }}",
                 },
             }
         },
@@ -178,7 +171,7 @@ async def test_reloadable_stops_on_invalid_config(hass: HomeAssistant) -> None:
 )
 @pytest.mark.usefixtures("start_ha")
 async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> None:
-    """Test we can still setup valid sensors when configuration.yaml has a broken entry."""
+    """Test we can still setup valid sensors when config has a broken entry."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
     assert hass.states.get("sensor.state").state == "mytest"
@@ -192,17 +185,19 @@ async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> N
     assert float(hass.states.get("sensor.combined_sensor_energy_usage").state) == 0
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
+            "template": {
+                "sensor": {
+                    "name": "state",
+                    "state": "{{ states.sensor.test_sensor.state }}",
+                },
+                "binary_sensor": {
+                    "name": "state",
+                    "state": "{{ states.sensor.test_sensor.state == 'foo' }}",
                 },
             }
         },
@@ -212,20 +207,6 @@ async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> N
 async def test_reloadable_multiple_platforms(hass: HomeAssistant) -> None:
     """Test that we can reload."""
     hass.states.async_set("sensor.test_sensor", "mytest")
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
-                },
-            }
-        },
-    )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.state").state == "mytest"
     assert hass.states.get("binary_sensor.state").state == "off"
@@ -239,15 +220,15 @@ async def test_reloadable_multiple_platforms(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.top_level_2") is not None
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {"value_template": "{{ 1 }}"},
+            "template": {
+                "sensor": {
+                    "name": "state",
+                    "state": "{{ 1 }}",
                 },
             }
         },
@@ -271,50 +252,6 @@ async def test_reload_sensors_that_reference_other_template_sensors(
     assert hass.states.get("sensor.test1").state == "3"
     assert hass.states.get("sensor.test2").state == "1"
     assert hass.states.get("sensor.test3").state == "2"
-
-
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
-                    "state2": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
-                    "state3": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
-                },
-            },
-        },
-    ],
-)
-@pytest.mark.usefixtures("start_ha")
-async def test_reload_removes_legacy_deprecation(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test that we can reload and remove all template sensors."""
-    hass.states.async_set("sensor.test_sensor", "old")
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 4
-    assert hass.states.get("sensor.state").state == "old"
-    assert hass.states.get("sensor.state2").state == "old"
-    assert hass.states.get("sensor.state3").state == "old"
-
-    assert len(issue_registry.issues) == 3
-
-    await async_yaml_patch_helper(hass, "legacy_template_deprecation.yaml")
-    assert len(hass.states.async_all()) == 4
-    assert hass.states.get("sensor.state").state == "old"
-    assert hass.states.get("sensor.state2").state == "old"
-    assert hass.states.get("sensor.state3").state == "old"
-    assert len(issue_registry.issues) == 1
 
 
 async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:

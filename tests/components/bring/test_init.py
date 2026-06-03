@@ -72,7 +72,7 @@ async def test_init_failure(
     """Test an initialization error on integration load."""
     mock_bring_client.login.side_effect = exception
     await setup_integration(hass, bring_config_entry)
-    assert bring_config_entry.state == status
+    assert bring_config_entry.state is status
 
     assert (
         any(

@@ -30,23 +30,38 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 HVAC_MODES_PROGRAMS_MAP = {
-    HVACMode.AUTO: ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
-    HVACMode.COOL: ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_COOL,
-    HVACMode.DRY: ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_DRY,
-    HVACMode.FAN_ONLY: ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN,
-    HVACMode.HEAT: ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_HEAT,
+    HVACMode.AUTO: (
+        ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO
+    ),
+    HVACMode.COOL: (
+        ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_COOL
+    ),
+    HVACMode.DRY: (ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_DRY),
+    HVACMode.FAN_ONLY: (
+        ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN
+    ),
+    HVACMode.HEAT: (
+        ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_HEAT
+    ),
 }
 
 PROGRAMS_HVAC_MODES_MAP = {v: k for k, v in HVAC_MODES_PROGRAMS_MAP.items()}
 
 PRESET_MODES_PROGRAMS_MAP = {
-    "active_clean": ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN,
+    "active_clean": (
+        ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
+    ),
 }
 PROGRAMS_PRESET_MODES_MAP = {v: k for k, v in PRESET_MODES_PROGRAMS_MAP.items()}
 
 FAN_MODES_OPTIONS = {
-    FAN_AUTO: "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
-    "manual": "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
+    FAN_AUTO: (
+        "HeatingVentilationAirConditioning"
+        ".AirConditioner.EnumType.FanSpeedMode.Automatic"
+    ),
+    "manual": (
+        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual"
+    ),
 }
 
 FAN_MODES_OPTIONS_INVERTED = {v: k for k, v in FAN_MODES_OPTIONS.items()}
@@ -131,17 +146,12 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
     @property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
+        active_clean = (
+            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
+        )
         return (
-            [
-                PROGRAMS_PRESET_MODES_MAP[
-                    ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
-                ]
-            ]
-            if any(
-                program.key
-                is ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
-                for program in self.appliance.programs
-            )
+            [PROGRAMS_PRESET_MODES_MAP[active_clean]]
+            if any(program.key is active_clean for program in self.appliance.programs)
             else None
         )
 
@@ -194,19 +204,19 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         event = self.appliance.events.get(EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM)
         program_key = cast(ProgramKey, event.value) if event else None
         power_state = self.appliance.settings.get(SettingKey.BSH_COMMON_POWER_STATE)
+        active_clean = (
+            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
+        )
         self._attr_hvac_mode = (
             HVACMode.OFF
             if power_state is not None and power_state.value != BSH_POWER_ON
             else PROGRAMS_HVAC_MODES_MAP.get(program_key)
-            if program_key
-            and program_key
-            != ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
+            if program_key and program_key != active_clean
             else None
         )
         self._attr_preset_mode = (
             PROGRAMS_PRESET_MODES_MAP.get(program_key)
-            if program_key
-            == ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
+            if program_key == active_clean
             else None
         )
 
@@ -262,7 +272,6 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     "appliance_name": self.appliance.info.name,
-                    "value": BSH_POWER_ON,
                 },
             ) from err
 

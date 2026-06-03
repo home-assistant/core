@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -67,7 +68,6 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
 CONF_ET = "et"
 CONF_MAXRH = "maxrh"
@@ -456,6 +456,7 @@ async def async_setup_entry(  # noqa: C901
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
+        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
         hass.services.async_register(
             DOMAIN,
             service_name,
