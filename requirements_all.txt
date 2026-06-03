@@ -600,7 +600,7 @@ autoskope_client==1.4.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-av==16.0.1
+av==17.0.1
 
 # homeassistant.components.avea
 avea==1.8.0
