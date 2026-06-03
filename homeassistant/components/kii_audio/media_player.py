@@ -12,8 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import KiiAudioConfigEntry
 from .const import KII_CONTROL_PRODUCT_ID, MAX_VOLUME, MIN_VOLUME, VOLUME_STEP
-from .coordinator import KiiAudioConfigEntry, KiiAudioCoordinator
+from .coordinator import KiiAudioCoordinator
 from .entity import zone_device_info
 
 SOURCE_NAMES = {
@@ -105,11 +106,6 @@ class KiiAudioZoneMediaPlayer(
         )
         self._attr_unique_id = f"{system_id}_{self._zone_id}"
         self._attr_device_info = zone_device_info(coordinator, self._zone_id, zone)
-
-    @property
-    def name(self) -> str | None:
-        """Return the entity name."""
-        return None
 
     @property
     def state(self) -> MediaPlayerState:

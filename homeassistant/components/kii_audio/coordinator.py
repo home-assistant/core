@@ -17,18 +17,16 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type KiiAudioConfigEntry = ConfigEntry[KiiAudioCoordinator]
-
 
 class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinate Kii Audio system state."""
 
-    config_entry: KiiAudioConfigEntry
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: KiiAudioConfigEntry,
+        config_entry: ConfigEntry,
         session: ClientSession,
     ) -> None:
         """Initialize the coordinator."""
