@@ -72,6 +72,7 @@ class DomainConstantChecker(BaseChecker):
 
         if arg_position is not None and len(call_node.args) > arg_position:
             self._ensure_domain_argument_node(call_node, call_node.args[arg_position])
+            return
 
         for keyword in call_node.keywords:
             if keyword.arg == kwarg_name:
