@@ -336,13 +336,14 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
     def _handle_invalid_source_state(self, state: State | None) -> bool:
         # Handle source states that cannot be used directly for derivative
         # calculation.
-        # - Missing/uknonwn source state: mark this entity unavailable and write
+        # - Missing/unknown source state: mark this entity unavailable and write
         #   that availability change.
+        # - Unknown source state: keep this entity available and write an unknown
+        #   native value.
         # - Unavailable source state: when `replace_unavailable` is
         #   enabled, keep this entity available and write a numeric 0 while
         #   preserving timing/history for the next valid sample. If disabled,
-        #   write an unknown native value (for unknown) or mark unavailable
-        #   (for unavailable).
+        #   mark unavailable.
         # - Non-numeric source state: keep this entity available and write an
         #   unknown native value.
         if not state:
@@ -350,18 +351,18 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             self.async_write_ha_state()
             return False
 
-        if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        if state.state == STATE_UNKNOWN:
+            self._attr_available = True
+            self._write_native_value(None)
+            return False
+
+        if state.state == STATE_UNAVAILABLE:
             if self._replace_unavailable:
                 self._attr_available = True
                 # Preserve the last valid timestamp and time-window history so the
                 # first valid sample after an unavailable gap can still be correlated
                 # to the prior valid sample.
                 self._write_native_value(Decimal(0))
-                return False
-
-            if state.state == STATE_UNKNOWN:
-                self._attr_available = True
-                self._write_native_value(None)
                 return False
 
             # Fallback for STATE_UNAVAILABLE when replace_unavailable is False
