@@ -24,6 +24,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
+    SERVICE_ADJUST,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -1399,6 +1400,109 @@ async def test_service_calls(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_RGB_COLOR] == (255, 0, 0)
+
+
+async def test_adjust_service_call_only_targets_on_group_members(
+    hass: HomeAssistant,
+) -> None:
+    """Test the adjust service only targets on group members."""
+    entities = [
+        MockLight("test1", STATE_ON),
+        MockLight("test2", STATE_OFF),
+        MockLight("test3", STATE_ON),
+    ]
+    setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
+
+    for entity in entities:
+        entity.supported_color_modes = {ColorMode.BRIGHTNESS}
+        entity.color_mode = ColorMode.BRIGHTNESS
+        entity.brightness = 64
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["light.test1", "light.test2", "light.test3"],
+                    "all": "false",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_ADJUST,
+        {ATTR_ENTITY_ID: "light.light_group", ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+
+    assert hass.states.get("light.test1").state == STATE_ON
+    assert hass.states.get("light.test1").attributes[ATTR_BRIGHTNESS] == 128
+    assert hass.states.get("light.test2").state == STATE_OFF
+    assert entities[1].brightness == 64
+    assert hass.states.get("light.test3").state == STATE_ON
+    assert hass.states.get("light.test3").attributes[ATTR_BRIGHTNESS] == 128
+
+    _, data = entities[0].last_call("turn_on")
+    assert data == {ATTR_BRIGHTNESS: 128}
+    assert entities[1].last_call("turn_on") is None
+    _, data = entities[2].last_call("turn_on")
+    assert data == {ATTR_BRIGHTNESS: 128}
+
+
+async def test_adjust_service_call_all_off_group_is_noop(
+    hass: HomeAssistant,
+) -> None:
+    """Test the adjust service is a no-op when all group members are off."""
+    entities = [
+        MockLight("test1", STATE_OFF),
+        MockLight("test2", STATE_OFF),
+    ]
+    setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
+
+    for entity in entities:
+        entity.supported_color_modes = {ColorMode.BRIGHTNESS}
+        entity.color_mode = ColorMode.BRIGHTNESS
+        entity.brightness = 64
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["light.test1", "light.test2"],
+                    "all": "false",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.light_group").state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_ADJUST,
+        {ATTR_ENTITY_ID: "light.light_group", ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+
+    for entity in entities:
+        assert hass.states.get(entity.entity_id).state == STATE_OFF
+        assert entity.brightness == 64
+        assert entity.last_call("turn_on") is None
 
 
 async def test_service_call_effect(hass: HomeAssistant) -> None:

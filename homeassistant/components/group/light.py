@@ -185,6 +185,30 @@ class LightGroup(GroupEntity, LightEntity):
             context=self._context,
         )
 
+    async def async_adjust(self, **kwargs: Any) -> None:
+        """Forward the adjust command to on lights in the light group."""
+        data = {
+            key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
+        }
+        entity_ids = [
+            entity_id
+            for entity_id in self._entity_ids
+            if self.hass.states.is_state(entity_id, STATE_ON)
+        ]
+        if not entity_ids:
+            return
+        data[ATTR_ENTITY_ID] = entity_ids
+
+        _LOGGER.debug("Forwarded adjust command: %s", data)
+
+        await self.hass.services.async_call(
+            light.DOMAIN,
+            light.SERVICE_ADJUST,
+            data,
+            blocking=True,
+            context=self._context,
+        )
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}

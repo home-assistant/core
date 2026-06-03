@@ -213,7 +213,7 @@ turn_on:
           min: 0
           max: 100
           unit_of_measurement: "%"
-    brightness_step_pct:
+    brightness_step_pct: &brightness_step_pct
       filter: *brightness_support
       selector:
         number:
@@ -262,7 +262,7 @@ turn_on:
             number:
               min: 0
               max: 255
-        brightness_step:
+        brightness_step: &brightness_step
           filter: *brightness_support
           selector:
             number:
@@ -302,6 +302,29 @@ turn_off:
       collapsed: true
       fields:
         flash: *flash
+
+adjust:
+  target:
+    entity:
+      domain: light
+  fields:
+    transition: *transition
+    rgb_color: *rgb_color
+    color_temp_kelvin: *color_temp_kelvin
+    brightness_pct: *brightness_pct
+    effect: *effect
+    advanced_fields:
+      collapsed: true
+      fields:
+        rgbw_color: *rgbw_color
+        rgbww_color: *rgbww_color
+        color_name: *color_name
+        hs_color: *hs_color
+        xy_color: *xy_color
+        brightness: *brightness
+        brightness_step: *brightness_step
+        brightness_step_pct: *brightness_step_pct
+        white: *white
 
 toggle:
   target:

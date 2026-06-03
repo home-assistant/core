@@ -44,6 +44,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 
+SERVICE_ADJUST = "adjust"
 
 # Color mode of the light
 ATTR_COLOR_MODE = "color_mode"
@@ -182,7 +183,9 @@ LIGHT_TURN_ON_SCHEMA: VolDictType = {
     vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
     vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
     vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
-    vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
+    vol.Exclusive(
+        ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS
+    ): VALID_BRIGHTNESS_STEP_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
     vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): cv.positive_int,
     vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
@@ -214,6 +217,39 @@ LIGHT_TURN_ON_SCHEMA: VolDictType = {
 LIGHT_TURN_OFF_SCHEMA: VolDictType = {
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_FLASH: VALID_FLASH,
+}
+
+LIGHT_ADJUST_SCHEMA: VolDictType = {
+    ATTR_TRANSITION: VALID_TRANSITION,
+    vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+    vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
+    vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
+    vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): cv.positive_int,
+    vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
+        vol.Coerce(tuple),
+        vol.ExactSequence(
+            (
+                vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+                vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+            )
+        ),
+    ),
+    vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
+    ),
+    vol.Exclusive(ATTR_RGBW_COLOR, COLOR_GROUP): vol.All(
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 4)
+    ),
+    vol.Exclusive(ATTR_RGBWW_COLOR, COLOR_GROUP): vol.All(
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 5)
+    ),
+    vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
+        vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
+    ),
+    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): vol.Any(True, VALID_BRIGHTNESS),
+    ATTR_EFFECT: cv.string,
 }
 
 
@@ -524,6 +560,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         await light.async_turn_off(**filter_turn_off_params(light, params))
 
+    async def async_handle_light_adjust_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
+        """Handle adjusting a light without turning it on."""
+        if not light.is_on:
+            return
+
+        if not call.data["params"]:
+            return
+
+        params = process_turn_on_params(hass, light, call.data["params"])
+
+        if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
+            return
+
+        await light.async_adjust(**filter_turn_on_params(light, params))
+
     async def async_handle_toggle_service(
         light: LightEntity, call: ServiceCall
     ) -> None:
@@ -536,6 +589,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_TURN_ON,
         vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
         async_handle_light_on_service,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_ADJUST,
+        vol.All(cv.make_entity_service_schema(LIGHT_ADJUST_SCHEMA), preprocess_data),
+        async_handle_light_adjust_service,
     )
 
     component.async_register_entity_service(
@@ -1062,3 +1121,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         params = process_turn_off_params(self.hass, self, kwargs)
         await self.async_turn_off(**filter_turn_off_params(self, params))
+
+    async def async_adjust(self, **kwargs: Any) -> None:
+        """Adjust the entity without turning it on."""
+        await self.async_turn_on(**kwargs)
