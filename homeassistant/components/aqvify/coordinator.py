@@ -59,20 +59,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
             entry.data[CONF_API_KEY], websession=async_get_clientsession(hass)
         )
 
-    # async def _async_setup(self) -> None:
-    #     try:
-    #         tank_data = await self.api_client.async_get_tank_data()
-    #     except ClientResponseError as err:
-    #         raise UpdateFailed("Could not fetch device info") from err
-    #     self.device_info = CentriConnectDeviceInfo(
-    #         device_key=tank_data.device_key,
-    #         device_name=tank_data.device_name,
-    #         hardware_version=tank_data.hardware_version,
-    #         lte_version=tank_data.lte_version,
-    #         tank_size=tank_data.tank_size,
-    #         tank_size_unit=tank_data.tank_size_unit,
-    #     )
-
     async def _async_update_data(self) -> AqvifyCoordinatorData:
         """Fetch device state."""
         try:
