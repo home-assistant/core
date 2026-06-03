@@ -12,10 +12,10 @@ Composes the sandbox's per-process services:
   registrations and ``<owned_domain>_*`` events up to main, gated by
   :class:`ApprovedDomains` (Phase 6).
 
-The handshake order is unchanged: write the ready marker, open the
-stdio channel, register handlers, then idle until SIGTERM (or until
-main asks for a graceful shutdown over the channel — see Phase 9's
-:meth:`SandboxRuntime._handle_shutdown`).
+The handshake: open the stdio channel, send a :data:`MSG_READY` frame
+as the first message, warm-load restore state, register handlers, then
+idle until SIGTERM (or until main asks for a graceful shutdown over the
+channel — see Phase 9's :meth:`SandboxRuntime._handle_shutdown`).
 """
 
 import asyncio
@@ -40,7 +40,7 @@ from .entity_bridge import EntityBridge
 from .entry_runner import EntryRunner
 from .event_mirror import EventMirror
 from .flow_runner import FlowRunner
-from .protocol import MSG_SHUTDOWN
+from .protocol import MSG_READY, MSG_SHUTDOWN
 from .sandbox_bridge import ChannelSandboxBridge
 from .service_mirror import ServiceMirror
 
@@ -48,18 +48,16 @@ _LOGGER = logging.getLogger(__name__)
 
 ChannelFactory = Callable[[], Awaitable[Channel | None]]
 
-# Stdout token the manager scans for to mark the runtime ready. Kept in
-# sync with ``homeassistant.components.sandbox_v2.manager.READY_MARKER``.
-READY_MARKER = "sandbox_v2:ready"
-
 
 class SandboxRuntime:
-    """Phase 4 runtime: stdout-marker handshake + JSON-line control channel.
+    """Runtime: Ready-frame handshake + length-prefixed control channel.
 
     The websocket URL/token still come in on the CLI for forward-compat
-    with Phase 7 (the scoped sandbox token will travel that path), but
-    Phase 4 only uses the stdin/stdout control channel that the manager
-    sets up after the ready marker.
+    with the deferred WS transport (the scoped sandbox token will travel
+    that path), but today the runtime only uses the stdin/stdout control
+    channel that the manager opens. The handshake is a :data:`MSG_READY`
+    frame sent as the channel's first message — there is no stdout text
+    marker.
     """
 
     def __init__(
@@ -151,12 +149,6 @@ class SandboxRuntime:
         self._service_mirror = ServiceMirror(hass, self._approved)
         self._event_mirror = EventMirror(hass, self._approved)
 
-        # The marker MUST be written before we hand stdout to asyncio — once
-        # connect_write_pipe takes ownership of the FD, Python's stdout
-        # buffer and the StreamWriter race for bytes on the wire.
-        sys.stdout.write(f"{READY_MARKER}\n")
-        sys.stdout.flush()
-
         self._channel = await self._channel_factory()
         sandbox_token: Any = None
         if self._channel is not None:
@@ -193,6 +185,11 @@ class SandboxRuntime:
             # cached. Handlers register *after* the warm-load so no
             # entry_setup can arrive before the cache is populated.
             self._channel.start()
+            # Signal readiness as the channel's first outbound frame — the
+            # manager flips to "running" on its arrival. Sent before the
+            # warm-load so the handshake timing matches the old stdout
+            # marker (which was written before warm-load too).
+            await self._channel.push(MSG_READY)
             await _load_restore_state(hass)
             self._channel.register("sandbox_v2/ping", _handle_ping)
             self._channel.register(MSG_SHUTDOWN, self._handle_shutdown)
@@ -371,4 +368,4 @@ async def _handle_ping(_payload: object) -> dict[str, str]:
     return {"pong": "sandbox_v2"}
 
 
-__all__ = ["READY_MARKER", "SandboxRuntime"]
+__all__ = ["SandboxRuntime"]

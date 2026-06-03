@@ -4,11 +4,11 @@ Phase 3 building block. The manager owns one supervised subprocess per
 sandbox group (``main`` / ``built-in`` / ``custom``); higher phases call
 :meth:`SandboxManager.ensure_started` lazily as config entries are routed.
 
-The websocket protocol between manager and runtime is not yet implemented
-— Phase 4 plugs it in. For now the contract is just:
+The contract between manager and runtime is:
 
 * the manager launches ``python -m hass_client.sandbox_v2``
-* the runtime prints :data:`READY_MARKER` to stdout once it is up
+* the runtime opens the control channel and sends a :data:`MSG_READY`
+  frame as its first message once it is up (no stdout text marker)
 * on ``SIGTERM`` the runtime exits cleanly
 """
 
@@ -24,13 +24,9 @@ import time
 from homeassistant.core import HomeAssistant
 
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
-from .protocol import MSG_SHUTDOWN
+from .protocol import MSG_READY, MSG_SHUTDOWN
 
 _LOGGER = logging.getLogger(__name__)
-
-# Stdout token the runtime prints once it is ready to take work. Kept in
-# sync with ``hass_client.sandbox.READY_MARKER``.
-READY_MARKER = "sandbox_v2:ready"
 
 DEFAULT_RESTART_LIMIT = 3
 DEFAULT_RESTART_WINDOW = 60.0
@@ -85,10 +81,11 @@ class SandboxProcess:
     ) -> None:
         """Initialise a supervised sandbox subprocess.
 
-        ``on_channel_ready`` is invoked with the live :class:`Channel` once
-        the runtime has printed its ready marker. It runs synchronously on
-        the manager's loop — register Phase 4 protocol handlers there
-        before any caller can issue a call.
+        ``on_channel_ready`` is invoked with the live :class:`Channel` as
+        soon as it is opened — before the runtime's :data:`MSG_READY`
+        frame arrives — so its handlers are in place before the runtime's
+        own warm-load round-trip lands. It runs synchronously on the
+        manager's loop.
 
         ``on_shutdown_reply`` is invoked with the runtime's reply to
         :data:`MSG_SHUTDOWN` (Phase 9) so the caller can persist any
@@ -323,7 +320,27 @@ class SandboxProcess:
             return
 
         self._process = proc
-        ready_task = asyncio.create_task(self._await_ready(proc))
+        # Open the channel up front — stdout carries nothing but frames now.
+        # Handlers go on before the reader starts so the runtime's warm-load
+        # round-trip (and any early push) is never dropped.
+        channel = self._open_channel(proc)
+        self._channel = channel
+        ready_frame = asyncio.Event()
+
+        async def _on_ready(_payload: object) -> None:
+            ready_frame.set()
+
+        channel.register(MSG_READY, _on_ready)
+        if self._on_channel_ready is not None:
+            try:
+                self._on_channel_ready(self.group, channel)
+            except Exception:
+                _LOGGER.exception(
+                    "Sandbox %s on_channel_ready callback raised", self.group
+                )
+        channel.start()
+
+        ready_task = asyncio.create_task(ready_frame.wait())
         exit_task = asyncio.create_task(proc.wait())
         stderr_task = asyncio.create_task(self._drain_stream(proc.stderr, "stderr"))
 
@@ -332,21 +349,10 @@ class SandboxProcess:
                 {ready_task, exit_task}, return_when=asyncio.FIRST_COMPLETED
             )
             if ready_task.done() and not ready_task.cancelled():
-                if ready_task.exception() is None and ready_task.result():
-                    self._channel = self._open_channel(proc)
-                    if self._on_channel_ready is not None:
-                        try:
-                            self._on_channel_ready(self.group, self._channel)
-                        except Exception:
-                            _LOGGER.exception(
-                                "Sandbox %s on_channel_ready callback raised",
-                                self.group,
-                            )
-                    self._channel.start()
-                    self._state = "running"
-                    self._ready.set()
-                    # Hold here until the process exits.
-                    await exit_task
+                self._state = "running"
+                self._ready.set()
+                # Hold here until the process exits.
+                await exit_task
         finally:
             for task in (ready_task, exit_task):
                 if not task.done():
@@ -366,29 +372,13 @@ class SandboxProcess:
     def _open_channel(self, proc: asyncio.subprocess.Process) -> Channel:
         """Wrap the subprocess pipes in a :class:`Channel`.
 
-        Stdout is post-marker — the rest is JSON-line protocol. Stdin is
-        always JSON-line.
+        ``proc.stdout`` is a :class:`~asyncio.StreamReader`; ``proc.stdin``
+        is a :class:`~asyncio.StreamWriter`. Both carry length-prefixed
+        channel frames end-to-end — there is no text preamble.
         """
         assert proc.stdout is not None
         assert proc.stdin is not None
-        # proc.stdin is a StreamWriter; proc.stdout is a StreamReader. They
-        # are exactly what Channel needs.
         return Channel(proc.stdout, proc.stdin, name=self.group)
-
-    async def _await_ready(self, proc: asyncio.subprocess.Process) -> bool:
-        """Read stdout until the ready marker arrives or stdout closes."""
-        stream = proc.stdout
-        if stream is None:
-            return False
-        while True:
-            line = await stream.readline()
-            if not line:
-                return False
-            text = line.decode("utf-8", errors="replace").rstrip()
-            if text:
-                _LOGGER.debug("sandbox %s: %s", self.group, text)
-            if READY_MARKER in text:
-                return True
 
     async def _drain_stream(
         self, stream: asyncio.StreamReader | None, name: str
@@ -556,7 +546,6 @@ class SandboxManager:
 
 
 __all__ = [
-    "READY_MARKER",
     "CommandFactory",
     "SandboxConfig",
     "SandboxFailedError",

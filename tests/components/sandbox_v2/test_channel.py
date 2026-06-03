@@ -6,11 +6,63 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.sandbox_v2.channel import (
+    Channel,
     ChannelClosedError,
     ChannelRemoteError,
 )
 
 from ._helpers import make_channel_pair
+
+
+class _QueueTransport:
+    """In-memory :class:`Transport` backed by a pair of queues.
+
+    Stands in for a non-stream transport (the seam a future
+    ``WebSocketTransport`` uses) so :meth:`Channel.from_transport` is
+    exercised without any reader/writer pipe.
+    """
+
+    def __init__(
+        self, inbox: asyncio.Queue[bytes | None], outbox: asyncio.Queue[bytes | None]
+    ) -> None:
+        self._inbox = inbox
+        self._outbox = outbox
+        self._closed = False
+
+    async def read_frame(self) -> bytes | None:
+        return await self._inbox.get()
+
+    async def write_frame(self, data: bytes) -> None:
+        self._outbox.put_nowait(data)
+
+    def close(self) -> None:
+        if not self._closed:
+            self._closed = True
+            self._inbox.put_nowait(None)  # EOF sentinel for our reader
+
+    async def wait_closed(self) -> None:
+        return None
+
+
+async def test_from_transport_round_trips() -> None:
+    """A channel built over an arbitrary Transport dispatches normally."""
+    q1: asyncio.Queue[bytes | None] = asyncio.Queue()
+    q2: asyncio.Queue[bytes | None] = asyncio.Queue()
+    channel_a = Channel.from_transport(_QueueTransport(q1, q2), name="a")
+    channel_b = Channel.from_transport(_QueueTransport(q2, q1), name="b")
+    channel_a.start()
+    channel_b.start()
+
+    async def echo(payload: object) -> dict[str, object]:
+        return {"echoed": payload}
+
+    channel_b.register("test/echo", echo)
+    try:
+        result = await asyncio.wait_for(channel_a.call("test/echo", 7), timeout=2.0)
+        assert result == {"echoed": 7}
+    finally:
+        await channel_a.close()
+        await channel_b.close()
 
 
 @pytest.fixture(name="channels")

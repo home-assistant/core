@@ -9,6 +9,11 @@ for the message catalogue.
 
 from typing import Final
 
+# Handshake: the runtime's first frame on the channel. Replaces the old
+# stdout text marker — the manager waits for this push instead of scanning
+# stdout, so stdout carries nothing but channel frames.
+MSG_READY: Final = "sandbox_v2/ready"
+
 # Main → Sandbox
 MSG_ENTRY_SETUP: Final = "sandbox_v2/entry_setup"
 MSG_ENTRY_UNLOAD: Final = "sandbox_v2/entry_unload"
@@ -32,6 +37,7 @@ __all__ = [
     "MSG_ENTRY_SETUP",
     "MSG_ENTRY_UNLOAD",
     "MSG_FIRE_EVENT",
+    "MSG_READY",
     "MSG_REGISTER_ENTITY",
     "MSG_REGISTER_SERVICE",
     "MSG_SHUTDOWN",

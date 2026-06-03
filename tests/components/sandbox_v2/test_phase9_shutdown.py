@@ -82,7 +82,7 @@ async def test_graceful_shutdown_falls_through_to_sigterm_on_timeout(
 ) -> None:
     """A sandbox that ignores ``sandbox_v2/shutdown`` is killed by ``stop()``.
 
-    The stub runtime here writes the ready marker, then idles forever
+    The stub runtime here sends the Ready frame, then idles forever
     reading from stdin without ever replying. ``async_graceful_shutdown``
     must time out; the follow-up ``async_stop_all`` then escalates to
     SIGTERM / SIGKILL.
@@ -93,9 +93,14 @@ async def test_graceful_shutdown_falls_through_to_sigterm_on_timeout(
             sys.executable,
             "-c",
             (
-                "import sys, time;"
-                "sys.stdout.write('sandbox_v2:ready\\n');"
-                "sys.stdout.flush();"
+                "import sys, time, struct, json;"
+                # Length-prefixed Ready push frame — the manager's
+                # StreamTransport reads this and flips to "running".
+                "body = json.dumps("
+                "{'type': 'sandbox_v2/ready', 'payload': None}"
+                ").encode();"
+                "sys.stdout.buffer.write(struct.pack('>I', len(body)) + body);"
+                "sys.stdout.buffer.flush();"
                 # Just sleep — stdin is wired to the manager but we never read.
                 "time.sleep(600)"
             ),

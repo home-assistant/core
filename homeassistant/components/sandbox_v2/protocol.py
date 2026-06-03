@@ -66,6 +66,12 @@ Main → Sandbox shutdown (Phase 9):
 
 from typing import Final
 
+# Handshake (Sandbox → Main): the runtime's first frame on the channel.
+# Replaces the old ``sandbox_v2:ready`` stdout text marker — the manager
+# registers a handler for this push and treats its arrival as "running",
+# so stdout carries nothing but channel frames.
+MSG_READY: Final = "sandbox_v2/ready"
+
 # Main → Sandbox
 MSG_ENTRY_SETUP: Final = "sandbox_v2/entry_setup"
 MSG_ENTRY_UNLOAD: Final = "sandbox_v2/entry_unload"
@@ -89,6 +95,7 @@ __all__ = [
     "MSG_ENTRY_SETUP",
     "MSG_ENTRY_UNLOAD",
     "MSG_FIRE_EVENT",
+    "MSG_READY",
     "MSG_REGISTER_ENTITY",
     "MSG_REGISTER_SERVICE",
     "MSG_SHUTDOWN",

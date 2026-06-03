@@ -9,7 +9,8 @@ public contract: argparser, the constant the manager scans for, and that
 import asyncio
 
 from hass_client.channel import Channel
-from hass_client.sandbox import READY_MARKER, SandboxRuntime
+from hass_client.protocol import MSG_READY
+from hass_client.sandbox import SandboxRuntime
 from hass_client.sandbox_v2.__main__ import _build_parser
 import pytest
 
@@ -19,9 +20,9 @@ async def _noop_channel_factory() -> Channel | None:
     return None
 
 
-def test_ready_marker_is_stable() -> None:
-    """The marker is part of the manager↔runtime protocol; do not rename."""
-    assert READY_MARKER == "sandbox_v2:ready"
+def test_ready_msg_type_is_stable() -> None:
+    """The Ready frame type is part of the manager↔runtime protocol."""
+    assert MSG_READY == "sandbox_v2/ready"
 
 
 def test_cli_parser_requires_name_url_and_token() -> None:
@@ -103,5 +104,7 @@ async def test_runtime_shuts_down_on_request(
     exit_code = await asyncio.wait_for(task, timeout=2.0)
     assert exit_code == 0
 
-    captured = capsys.readouterr()
-    assert READY_MARKER in captured.out
+    # With the noop channel factory there is no channel, so no Ready frame
+    # is sent and stdout stays clean (the handshake is a channel frame now,
+    # not a stdout text marker). Drain captured output regardless.
+    capsys.readouterr()
