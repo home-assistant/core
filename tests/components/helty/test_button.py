@@ -2,11 +2,14 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyhelty import HeltyError
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -45,3 +48,22 @@ async def test_reset_filter_press(
         blocking=True,
     )
     mock_helty_client.async_reset_filter.assert_awaited_once()
+
+
+async def test_reset_filter_press_error(
+    hass: HomeAssistant,
+    mock_helty_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a device failure during reset raises a HomeAssistantError."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_helty_client.async_reset_filter.side_effect = HeltyError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: RESET_FILTER_ENTITY},
+            blocking=True,
+        )

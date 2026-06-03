@@ -36,5 +36,13 @@
         "name": "Outdoor temperature"
       }
     }
+  },
+  "exceptions": {
+    "reset_filter_failed": {
+      "message": "Failed to reset the filter."
+    },
+    "set_fan_mode_failed": {
+      "message": "Failed to set the ventilation mode."
+    }
   }
 }
