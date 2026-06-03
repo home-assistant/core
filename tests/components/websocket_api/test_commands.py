@@ -2911,6 +2911,41 @@ async def test_test_condition_config_error(
     assert "Error handling message" not in caplog.text
 
 
+async def test_test_condition_check_error_not_logged(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test errors raised while checking the condition are not logged.
+
+    The condition is valid and instantiates fine, but checking it raises (here
+    the entity does not exist). The error is reported to the client without
+    being logged by the default websocket error handler.
+    """
+    caplog.set_level(logging.ERROR)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "test_condition",
+            "condition": {
+                "condition": "state",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "home_assistant_error",
+        "message": "In 'state':\n  In 'state' condition: unknown entity hello.world",
+    }
+
+    assert "Error handling message" not in caplog.text
+
+
 async def test_subscribe_condition(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,

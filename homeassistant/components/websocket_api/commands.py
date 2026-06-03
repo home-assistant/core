@@ -1054,17 +1054,7 @@ async def handle_test_condition(
     condition_trace = trace.trace_get()
     try:
         with trace.record_template_errors():
-            result: dict[str, Any] = {
-                "result": condition.async_check(variables=msg.get("variables"))
-            }
-        if template_errors := [
-            template_error
-            for elements in condition_trace.values()
-            for element in elements
-            for template_error in element.template_errors
-        ]:
-            result["template_errors"] = template_errors
-        connection.send_result(msg["id"], result)
+            check_result = condition.async_check(variables=msg.get("variables"))
     except HomeAssistantError as err:
         connection.send_error(
             msg["id"],
@@ -1074,6 +1064,16 @@ async def handle_test_condition(
             translation_key=err.translation_key,
             translation_placeholders=err.translation_placeholders,
         )
+    else:
+        result: dict[str, Any] = {"result": check_result}
+        if template_errors := [
+            template_error
+            for elements in condition_trace.values()
+            for element in elements
+            for template_error in element.template_errors
+        ]:
+            result["template_errors"] = template_errors
+        connection.send_result(msg["id"], result)
     finally:
         condition.async_unload()
 
