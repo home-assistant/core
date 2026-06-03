@@ -980,7 +980,24 @@ async def handle_subscribe_trigger(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe trigger command."""
-    trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
+    # Validating the trigger config can fail on bad user input. Handle those
+    # errors here so they are reported to the client without being logged as
+    # unexpected errors by the default websocket error handler.
+    try:
+        trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
+    except vol.Invalid as err:
+        connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        return
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
 
     @callback
     def forward_triggers(
