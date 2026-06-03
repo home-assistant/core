@@ -255,7 +255,12 @@ class MobileAppNotificationService(BaseNotificationService):
     def _resolve_live_activity_push(
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> tuple[str, LiveActivityEvent] | None:
-        """Return ``(token, event)`` for a Live Activity push, or ``None``."""
+        """Return ``(token, event)`` for a Live Activity push, or ``None``.
+
+        Core needs to choose the ActivityKit route before calling the relay:
+        updates and ends must use the stored per-activity token for the tag,
+        while a new or expired tag must use the device's push-to-start token.
+        """
         notification_data = data.get(ATTR_DATA) or {}
         tag = notification_data.get(ATTR_TAG)
         if not tag:
