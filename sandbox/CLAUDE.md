@@ -1,7 +1,7 @@
 # Home Assistant Sandbox
 
-This directory is the home for the sandbox rewrite (formerly `sandbox_v2`,
-renamed once v1 was gone). The sandbox runs Home Assistant integrations in
+This directory is the home for the sandbox rewrite (renamed from its earlier
+`_v2` suffix once v1 was gone). The sandbox runs Home Assistant integrations in
 isolated subprocesses while main keeps a single unified view of devices,
 entities, services, and events.
 
