@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, KEY_HIGH_LEAK, KEY_LOW_LEAK
+from .const import DOMAIN, KEY_HIGH_FLOW, KEY_UNUSUAL_FLOW
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
 
 PARALLEL_UPDATES = 0
@@ -30,14 +30,14 @@ class DropletBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BINARY_SENSORS: list[DropletBinarySensorEntityDescription] = [
     DropletBinarySensorEntityDescription(
-        key=KEY_LOW_LEAK,
-        translation_key=KEY_LOW_LEAK,
+        key=KEY_UNUSUAL_FLOW,
+        translation_key=KEY_UNUSUAL_FLOW,
         device_class=BinarySensorDeviceClass.MOISTURE,
         value_fn=lambda device: device.get_low_leak(),
     ),
     DropletBinarySensorEntityDescription(
-        key=KEY_HIGH_LEAK,
-        translation_key=KEY_HIGH_LEAK,
+        key=KEY_HIGH_FLOW,
+        translation_key=KEY_HIGH_FLOW,
         device_class=BinarySensorDeviceClass.MOISTURE,
         value_fn=lambda device: device.get_high_leak(),
     ),

@@ -1,7 +1,7 @@
 {
   "entity": {
     "binary_sensor": {
-      "leak": {
+      "high_flow": {
         "default": "mdi:alert-circle"
       },
       "unusual_flow": {

@@ -33,8 +33,20 @@
   },
   "entity": {
     "binary_sensor": {
-      "leak": { "name": "Leak" },
-      "unusual_flow": { "name": "Unusual flow" }
+      "high_flow": {
+        "name": "High flow alert",
+        "state": {
+          "off": "Inactive",
+          "on": "Active"
+        }
+      },
+      "unusual_flow": {
+        "name": "Unusual flow alert",
+        "state": {
+          "off": "Inactive",
+          "on": "Active"
+        }
+      }
     },
     "sensor": {
       "current_flow_rate": { "name": "Flow rate" },
