@@ -78,10 +78,10 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
     async def async_handle_unban_service(service: ServiceCall) -> None:
         """Handle calls to http.unban."""
         try:
-            ip_address_ = ip_address(service.data[CONF_IP_ADDRESS])
+            unbanned_ip_address = ip_address(service.data[CONF_IP_ADDRESS])
         except ValueError as exc:
             raise ServiceValidationError("Invalid IP address") from exc
-        await app[KEY_BAN_MANAGER].async_remove_ban(ip_address_)
+        await app[KEY_BAN_MANAGER].async_remove_ban(unbanned_ip_address)
 
     async_register_admin_service(
         hass,
