@@ -1,0 +1,287 @@
+{
+  "applianceId": "999007091_50:22002306-443E071A93FA",
+  "properties": {
+    "desired": {},
+    "reported": {
+      "timeToEnd": 1800,
+      "doorState": "CLOSED",
+      "displayLight": "DISPLAY_LIGHT_0",
+      "networkInterfaceAlwaysOn": "ON",
+      "miscellaneous": {
+        "defaultSoftPlus": true
+      },
+      "applianceUiSwVersion": "URCA003C",
+      "applianceTotalWorkingTime": 129600,
+      "remoteControl": "NOT_SAFETY_RELEVANT_ENABLED",
+      "language": "ENGLISH",
+      "fCMiscellaneousState": {
+        "detergentExtradosage": 40,
+        "tankAReserve": false,
+        "tankBReserve": false,
+        "softenerExtradosage": 20,
+        "optisenseResult": 0,
+        "ecoLevel": 255,
+        "waterUsage": 0,
+        "tankADetLoadForNominalWeight": 0,
+        "tankBDetLoadForNominalWeight": 0,
+        "adTankBDetLoaded": 0,
+        "adTankBSoftLoaded": 0,
+        "adTankADetLoaded": 0
+      },
+      "cyclePhase": "UNAVAILABLE",
+      "endOfCycleSound": "SHORT_SOUND",
+      "cyclePersonalization": {
+        "EWX1493A_stain": false,
+        "EWX1493A_wetMode": false,
+        "EWX1493A_dryMode": false,
+        "EWX1493A_preWashPhase": false,
+        "analogSpinSpeed": "DISABLED",
+        "EWX1493A_steamMode": false,
+        "EWX1493A_easyIron": false,
+        "EWX1493A_rinseHold": false,
+        "EWX1493A_wmEconomy": false,
+        "EWX1493A_nightCycle": false,
+        "EWX1493A_tcSensor": false,
+        "programUID": "MACHINE_SETTINGS_HIDDEN_TEST",
+        "EWX1493A_anticreaseNoSteam": false,
+        "EWX1493A_anticreaseWSteam": false,
+        "EWX1493A_pod": false,
+        "adTankASel": "AUTODOSE_DETERGENT_DUAL_ON",
+        "adTankBSel": "AUTODOSE_SOFTENER_ON",
+        "adFineTuneSoftLevel": "FINE_TUNE_SOFT_NOT_AVAILABLE",
+        "extraRinseNumber": "PLUS_2_RINSE",
+        "adFineTuneDetLevel": "FINE_TUNE_DET_LEV_3",
+        "steamValue": "STEAM_OFF",
+        "timeManagerLevel": "NORMAL",
+        "analogTemperature": "40_CELSIUS"
+      },
+      "startTime": -1,
+      "stopTime": 14400,
+      "userSelections": {
+        "extraRinseNumber": "NONE",
+        "analogTemperature": "40_CELSIUS",
+        "steamValue": "STEAM_OFF",
+        "programUID": "SYNTHETIC_PR_SYNTHETICS",
+        "analogSpinSpeed": "1200_RPM",
+        "anticreaseNoSteam": false,
+        "adTankASel": "AUTODOSE_OFF",
+        "preWashPhase": false,
+        "adTankBSel": "AUTODOSE_OFF",
+        "adFineTuneSoftLevel": "FINE_TUNE_SOFT_NOT_AVAILABLE",
+        "anticreaseWSteam": false,
+        "nightCycle": false,
+        "adFineTuneDetLevel": "FINE_TUNE_DET_LEV_3",
+        "wmEconomy": false,
+        "rinseHold": false,
+        "intensive": false,
+        "tcSensor": false,
+        "timeManagerLevel": "NORMAL",
+        "EWX1493A_preWashPhase": false,
+        "EWX1493A_rinseHold": false,
+        "EWX1493A_wmEconomy": false,
+        "EWX1493A_nightCycle": false,
+        "EWX1493A_tcSensor": false,
+        "EWX1493A_anticreaseNoSteam": false,
+        "EWX1493A_anticreaseWSteam": false,
+        "EWX1493A_intensive": false,
+        "EWX1493A_stain": false,
+        "memoryId": 255,
+        "EWX1493A_pod": false,
+        "EWX1493A_wetMode": true,
+        "EWX1493A_dryMode": false,
+        "EWX1493A_steamMode": false,
+        "EWX1493A_easyIron": false,
+        "EWX1493A_ultraMix": false
+      },
+      "minFinishInTime": 0,
+      "defaultExtraRinse": "EXTRA_RINSE_OFF",
+      "waterHardness": "STEP_4",
+      "totalWashingTime": 100800,
+      "applianceInfo": {
+        "applianceType": "WM",
+        "capabilityHash": "50f5ab6bd5244b20ff2ae88cf559ac742c13ea863ab9c2f99bee4e608dbb30ea"
+      },
+      "doorLock": "OFF",
+      "uiLockMode": false,
+      "washingNominalLoadWeight": 4000,
+      "cpv": "00",
+      "dwywWashData": {
+        "wmLoadWeight": 40,
+        "wmLoadMoisture": 34,
+        "dwywDataType": "FOR_PLANNING",
+        "roomTemp": 255,
+        "wmLoadError": 20,
+        "programUID": "SYNTHETIC_PR_SYNTHETICS"
+      },
+      "totalWashCyclesCount": 82,
+      "waterSoftenerMode": "WASH_ONLY",
+      "fcOptisenseLoadWeight": 65408,
+      "applianceState": "DELAYED_START",
+      "applianceMode": "NORMAL",
+      "applianceMainBoardSwVersion": "WKB32010",
+      "totalCycleCounter": 82,
+      "measuredLoadWeight": 65535,
+      "alerts": [],
+      "networkInterface": {
+        "swVersion": "v3.0.0S_argo",
+        "otaState": "IDLE",
+        "linkQualityIndicator": "GOOD",
+        "niuSwUpdateCurrentDescription": "A23642201A-S00007645A",
+        "swAncAndRevision": "S00007645A"
+      },
+      "applianceCareAndMaintenance0": {
+        "1": {
+          "occured": false,
+          "threshold": 60
+        },
+        "2": {
+          "occured": false,
+          "threshold": 80
+        },
+        "3": {
+          "occured": false,
+          "threshold": 80
+        },
+        "4": {
+          "occured": false,
+          "threshold": 240
+        },
+        "5": {
+          "occured": false,
+          "threshold": 240
+        }
+      },
+      "remoteNotificationPending": "OFF",
+      "applianceCareAndMaintenance1": {
+        "6": {
+          "occured": false,
+          "threshold": 150
+        },
+        "7": {
+          "occured": false,
+          "threshold": 0
+        },
+        "8": {
+          "occured": false,
+          "threshold": 0
+        },
+        "9": {
+          "occured": false,
+          "threshold": 0
+        },
+        "10": {
+          "occured": false,
+          "threshold": 0
+        }
+      },
+      "applianceCareAndMaintenance2": {
+        "11": {
+          "occured": false,
+          "threshold": 0
+        }
+      },
+      "cycleMemory3": {
+        "adTankASel": "AUTODOSE_OFF",
+        "EWX1493A_stain": false,
+        "adTankBSel": "AUTODOSE_OFF",
+        "EWX1493A_wetMode": true,
+        "timeManagerLevel": "NORMAL",
+        "EWX1493A_dryMode": false,
+        "EWX1493A_preWashPhase": false,
+        "analogSpinSpeed": "400_RPM",
+        "extraRinseNumber": "NONE",
+        "EWX1493A_steamMode": false,
+        "EWX1493A_easyIron": false,
+        "EWX1493A_rinseHold": false,
+        "analogTemperature": "40_CELSIUS",
+        "EWX1493A_wmEconomy": false,
+        "memoryId": 10,
+        "EWX1493A_nightCycle": false,
+        "steamValue": "STEAM_OFF",
+        "EWX1493A_tcSensor": false,
+        "programUID": "SYNTHETIC_PR_SYNTHETICS",
+        "EWX1493A_anticreaseNoSteam": false,
+        "EWX1493A_anticreaseWSteam": false,
+        "EWX1493A_pod": false,
+        "EWX1493A_intensive": false,
+        "adFineTuneSoftLevel": "FINE_TUNE_SOFT_NOT_AVAILABLE",
+        "adFineTuneDetLevel": "FINE_TUNE_DET_LEV_3",
+        "EWX1493A_ultraMix": false
+      },
+      "applianceCareAndMaintenance3": {
+        "16": {
+          "occured": false,
+          "threshold": 0
+        }
+      },
+      "autoDosing": {
+        "adTankBDetStandardDose": 90,
+        "adLocalFineTuning": true,
+        "adTankAConfiguration": "DISABLED",
+        "adTankBSoftStandardDose": 25,
+        "adTankBConfiguration": "DISABLED",
+        "adTankADetStandardDose": 157
+      },
+      "cycleSubPhase": "NOT_AVAILABLE",
+      "connectivityState": "connected",
+      "cycleMemory2": {
+        "adTankASel": "AUTODOSE_OFF",
+        "EWX1493A_stain": false,
+        "adTankBSel": "AUTODOSE_OFF",
+        "EWX1493A_wetMode": true,
+        "timeManagerLevel": "NORMAL",
+        "EWX1493A_dryMode": false,
+        "EWX1493A_preWashPhase": false,
+        "analogSpinSpeed": "400_RPM",
+        "extraRinseNumber": "NONE",
+        "EWX1493A_steamMode": false,
+        "EWX1493A_easyIron": false,
+        "EWX1493A_rinseHold": false,
+        "analogTemperature": "95_CELSIUS",
+        "EWX1493A_wmEconomy": false,
+        "memoryId": 20,
+        "EWX1493A_nightCycle": false,
+        "steamValue": "STEAM_OFF",
+        "EWX1493A_tcSensor": false,
+        "programUID": "COTTON_PR_COTTONS",
+        "EWX1493A_anticreaseNoSteam": false,
+        "EWX1493A_anticreaseWSteam": false,
+        "EWX1493A_pod": false,
+        "EWX1493A_intensive": false,
+        "adFineTuneSoftLevel": "FINE_TUNE_SOFT_NOT_AVAILABLE",
+        "adFineTuneDetLevel": "FINE_TUNE_DET_LEV_3",
+        "EWX1493A_ultraMix": false
+      },
+      "cycleMemory1": {
+        "adTankASel": "AUTODOSE_OFF",
+        "EWX1493A_stain": false,
+        "adTankBSel": "AUTODOSE_OFF",
+        "EWX1493A_wetMode": true,
+        "timeManagerLevel": "NORMAL",
+        "EWX1493A_dryMode": false,
+        "EWX1493A_preWashPhase": false,
+        "analogSpinSpeed": "1200_RPM",
+        "extraRinseNumber": "NONE",
+        "EWX1493A_steamMode": false,
+        "EWX1493A_easyIron": false,
+        "EWX1493A_rinseHold": false,
+        "analogTemperature": "40_CELSIUS",
+        "EWX1493A_wmEconomy": false,
+        "memoryId": 30,
+        "EWX1493A_nightCycle": false,
+        "steamValue": "STEAM_OFF",
+        "EWX1493A_tcSensor": false,
+        "programUID": "SYNTHETIC_PR_SYNTHETICS",
+        "EWX1493A_anticreaseNoSteam": false,
+        "EWX1493A_anticreaseWSteam": false,
+        "EWX1493A_pod": false,
+        "EWX1493A_intensive": false,
+        "adFineTuneSoftLevel": "FINE_TUNE_SOFT_NOT_AVAILABLE",
+        "adFineTuneDetLevel": "FINE_TUNE_DET_LEV_3",
+        "EWX1493A_ultraMix": false
+      }
+    }
+  },
+  "status": "enabled",
+  "connectionState": "connected"
+}

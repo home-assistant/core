@@ -1,0 +1,80 @@
+{
+  "applianceId": "911438421_03:33109002-443E07338CF5",
+  "properties": {
+    "desired": {},
+    "reported": {
+      "waterHardness": "STEP_9",
+      "applianceInfo": {
+        "capabilityHash": "e859a73035615f1ef229d79e415ab2077bb86eb305fd784d7f50c0706102016e",
+        "applianceType": "DW"
+      },
+      "doorState": "OPEN",
+      "displayLight": "DISPLAY_LIGHT_8",
+      "rinseAidLevel": 5,
+      "remoteControl": "TEMPORARY_LOCKED",
+      "cpv": "00",
+      "displayOnFloor": "GREEN",
+      "applianceState": "OFF",
+      "applianceMode": "NORMAL",
+      "totalCycleCounter": 3,
+      "alerts": [
+        {
+          "severity": "WARNING",
+          "acknowledgeStatus": "NOT_NEEDED",
+          "code": "DISH_ALARM_SALT_MISSING",
+          "applianceCode": "101"
+        },
+        {
+          "severity": "WARNING",
+          "acknowledgeStatus": "NOT_NEEDED",
+          "code": "DISH_ALARM_RINSE_AID_LOW",
+          "applianceCode": "100"
+        }
+      ],
+      "cyclePhase": "UNAVAILABLE",
+      "keyTone": true,
+      "preSelectLast": false,
+      "applianceCareAndMaintenance0": {
+        "1": {
+          "occured": false,
+          "threshold": 60
+        }
+      },
+      "networkInterface": {
+        "swVersion": "v4.0.0S_argo",
+        "otaState": "IDLE",
+        "linkQualityIndicator": "EXCELLENT",
+        "niuSwUpdateCurrentDescription": "A23642205A-S00008458A",
+        "swAncAndRevision": "S00008458A",
+        "autoLocalTimeOffset": -2147483648,
+        "timeZoneDatabaseName": "Etc/UTC"
+      },
+      "endOfCycleSound": "NO_SOUND",
+      "startTime": -1,
+      "miscellaneousState": {
+        "ecoMode": false
+      },
+      "userSelections": {
+        "extraPowerOption": false,
+        "energyScore": 5,
+        "sprayZoneOption": false,
+        "waterScore": 3,
+        "extraSilentOption": false,
+        "autoDoorOpener": true,
+        "sanitizeOption": true,
+        "ecoScore": 2,
+        "glassCareOption": false,
+        "programUID": "NORMAL90",
+        "oneRackOption": false,
+        "zoneCleanOption": false,
+        "xtraDryOption": false
+      },
+      "connectivityState": "connected",
+      "timeToEnd": 8340
+    },
+    "metadataDesired": {},
+    "metadata": {}
+  },
+  "status": "enabled",
+  "connectionState": "connected"
+}

@@ -1,0 +1,1233 @@
+{
+  "applianceInfo": {
+    "serialNumber": "33109002",
+    "pnc": "911438421",
+    "brand": "AEG",
+    "deviceType": "DISH_WASHER",
+    "model": "SprayZone",
+    "variant": "FSK93718P",
+    "colour": "WHITE"
+  },
+  "capabilities": {
+    "alerts": {
+      "access": "read",
+      "type": "alert",
+      "values": {
+        "DISH_ALARM_I01": {},
+        "DISH_ALARM_I02": {},
+        "DISH_ALARM_I10": {},
+        "DISH_ALARM_I11": {},
+        "DISH_ALARM_I20": {},
+        "DISH_ALARM_I30": {},
+        "DISH_ALARM_I41": {},
+        "DISH_ALARM_I43": {},
+        "DISH_ALARM_I44": {},
+        "DISH_ALARM_I51": {},
+        "DISH_ALARM_I52": {},
+        "DISH_ALARM_I53": {},
+        "DISH_ALARM_I54": {},
+        "DISH_ALARM_I55": {},
+        "DISH_ALARM_I56": {},
+        "DISH_ALARM_I57": {},
+        "DISH_ALARM_I58": {},
+        "DISH_ALARM_I59": {},
+        "DISH_ALARM_I5A": {},
+        "DISH_ALARM_I5B": {},
+        "DISH_ALARM_I5C": {},
+        "DISH_ALARM_I5D": {},
+        "DISH_ALARM_I5F": {},
+        "DISH_ALARM_I61": {},
+        "DISH_ALARM_I69": {},
+        "DISH_ALARM_I6C": {},
+        "DISH_ALARM_I80": {},
+        "DISH_ALARM_I94": {},
+        "DISH_ALARM_I95": {},
+        "DISH_ALARM_I96": {},
+        "DISH_ALARM_IC0": {},
+        "DISH_ALARM_IC3": {},
+        "DISH_ALARM_IF1": {},
+        "DISH_ALARM_RINSE_AID_LOW": {},
+        "DISH_ALARM_SALT_MISSING": {}
+      }
+    },
+    "applianceCareAndMaintenance0": {
+      "access": "readwrite",
+      "type": "careMaintenance"
+    },
+    "applianceCareAndMaintenance0/maint1_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint1_occured": {
+      "access": "read",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint1_threshold": {
+      "access": "read",
+      "type": "int",
+      "values": {}
+    },
+    "applianceMode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DEMO": {},
+        "DIAGNOSTIC": {},
+        "NORMAL": {},
+        "SERVICE": {}
+      }
+    },
+    "applianceState": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "PAUSE": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "RUNNING",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "RESUME": {},
+                "STOPRESET": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "PAUSED",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "END_OF_CYCLE",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "START": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "READY_TO_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "START": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "IDLE",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            },
+            "userSelections/programUID": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "DELAYED_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "startTime": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "DELAYED_START",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "RUNNING",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "startTime": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "PAUSED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "startTime",
+              "operand_2": "INVALID_OR_NOT_SET_TIME",
+              "operator": "eq"
+            },
+            "operator": "and"
+          }
+        },
+        {
+          "action": {
+            "startTime": {
+              "access": "default"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "PAUSED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "startTime",
+              "operand_2": "INVALID_OR_NOT_SET_TIME",
+              "operator": "ne"
+            },
+            "operator": "and"
+          }
+        },
+        {
+          "action": {
+            "startTime": {
+              "access": "default"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "READY_TO_START",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "DELAYED_START",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "displayLight": {
+              "access": "read"
+            },
+            "displayOnFloor": {
+              "access": "read"
+            },
+            "endOfCycleSound": {
+              "access": "read"
+            },
+            "keyTone": {
+              "access": "read"
+            },
+            "rinseAidLevel": {
+              "access": "read"
+            },
+            "userSelections/autoDoorOpener": {
+              "access": "read"
+            },
+            "waterHardness": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "RUNNING",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "DELAYED_START",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "displayLight": {
+              "access": "default"
+            },
+            "displayOnFloor": {
+              "access": "default"
+            },
+            "endOfCycleSound": {
+              "access": "default"
+            },
+            "keyTone": {
+              "access": "default"
+            },
+            "rinseAidLevel": {
+              "access": "default"
+            },
+            "userSelections/autoDoorOpener": {
+              "access": "default"
+            },
+            "waterHardness": {
+              "access": "default"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "READY_TO_START",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "IDLE",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "displayLight": {
+              "access": "read"
+            },
+            "displayOnFloor": {
+              "access": "read"
+            },
+            "endOfCycleSound": {
+              "access": "read"
+            },
+            "keyTone": {
+              "access": "read"
+            },
+            "rinseAidLevel": {
+              "access": "read"
+            },
+            "userSelections/autoDoorOpener": {
+              "access": "read"
+            },
+            "waterHardness": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "PAUSED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "END_OF_CYCLE",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "userSelections/extraPowerOption": {
+              "access": "read"
+            },
+            "userSelections/glassCareOption": {
+              "access": "read"
+            },
+            "userSelections/sanitizeOption": {
+              "access": "read"
+            },
+            "userSelections/sprayZoneOption": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "RUNNING",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "DELAYED_START",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "userSelections/extraPowerOption": {
+              "access": "default"
+            },
+            "userSelections/glassCareOption": {
+              "access": "default"
+            },
+            "userSelections/sanitizeOption": {
+              "access": "default"
+            },
+            "userSelections/sprayZoneOption": {
+              "access": "default"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "READY_TO_START",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "IDLE",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "userSelections/extraPowerOption": {
+              "access": "read"
+            },
+            "userSelections/glassCareOption": {
+              "access": "read"
+            },
+            "userSelections/sanitizeOption": {
+              "access": "read"
+            },
+            "userSelections/sprayZoneOption": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "PAUSED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "END_OF_CYCLE",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "ALARM": {},
+        "DELAYED_START": {},
+        "END_OF_CYCLE": {},
+        "IDLE": {},
+        "OFF": {},
+        "PAUSED": {},
+        "READY_TO_START": {},
+        "RUNNING": {}
+      }
+    },
+    "condTwoSoil": {
+      "access": "constant",
+      "type": "string",
+      "values": {
+        "AUTO": {},
+        "FRESH": {},
+        "FRESH_LIGHT": {},
+        "HEAVY": {},
+        "NORMAL": {}
+      }
+    },
+    "cyclePhase": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "ADO_DRYING": {},
+        "COLDRINSE": {},
+        "DRYING": {},
+        "EXTRARINSE": {},
+        "HOTRINSE": {},
+        "MAINWASH": {},
+        "PREWASH": {},
+        "UNAVAILABLE": {}
+      }
+    },
+    "displayLight": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "DISPLAY_LIGHT_0": {},
+        "DISPLAY_LIGHT_1": {},
+        "DISPLAY_LIGHT_2": {},
+        "DISPLAY_LIGHT_3": {},
+        "DISPLAY_LIGHT_4": {},
+        "DISPLAY_LIGHT_5": {},
+        "DISPLAY_LIGHT_7": {},
+        "DISPLAY_LIGHT_8": {},
+        "DISPLAY_LIGHT_9": {}
+      }
+    },
+    "displayOnFloor": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "GREEN": {},
+        "OFF": {}
+      }
+    },
+    "doorState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "CLOSED": {},
+        "OPEN": {}
+      }
+    },
+    "endOfCycleSound": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "NO_SOUND": {},
+        "SHORT_SOUND": {}
+      }
+    },
+    "executeCommand": {
+      "access": "write",
+      "type": "string",
+      "values": {
+        "PAUSE": {},
+        "RESUME": {},
+        "START": {},
+        "STOPRESET": {}
+      }
+    },
+    "keyTone": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "miscellaneousState": {
+      "access": "read",
+      "type": "complex"
+    },
+    "miscellaneousState/ecoMode": {
+      "access": "read",
+      "type": "boolean"
+    },
+    "networkInterface": {
+      "command": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "APPLIANCE_AUTHORIZE": {},
+          "START": {},
+          "USER_AUTHORIZE": {},
+          "USER_NOT_AUTHORIZE": {}
+        }
+      },
+      "linkQualityIndicator": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "EXCELLENT": {},
+          "GOOD": {},
+          "POOR": {},
+          "UNDEFINED": {},
+          "VERY_GOOD": {},
+          "VERY_POOR": {}
+        }
+      },
+      "niuSwUpdateCurrentDescription": {
+        "access": "read",
+        "type": "string"
+      },
+      "otaState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DESCRIPTION_AVAILABLE": {},
+          "DESCRIPTION_DOWNLOADING": {},
+          "DESCRIPTION_READY": {},
+          "FW_DOWNLOADING": {},
+          "FW_DOWNLOAD_START": {},
+          "FW_SIGNATURE_CHECK": {},
+          "FW_UPDATE_IN_PROGRESS": {},
+          "IDLE": {},
+          "READY_TO_UPDATE": {},
+          "UPDATE_ABORT": {},
+          "UPDATE_CHECK": {},
+          "UPDATE_ERROR": {},
+          "UPDATE_OK": {},
+          "WAITINGFORAUTHORIZATION": {}
+        }
+      },
+      "startUpCommand": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "UNINSTALL": {}
+        }
+      },
+      "swAncAndRevision": {
+        "access": "read",
+        "type": "string"
+      },
+      "swVersion": {
+        "access": "read",
+        "type": "string"
+      }
+    },
+    "remoteControl": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DISABLED": {},
+        "ENABLED": {},
+        "NOT_SAFETY_RELEVANT_ENABLED": {},
+        "TEMPORARY_LOCKED": {}
+      }
+    },
+    "rinseAidLevel": {
+      "access": "readwrite",
+      "default": 4,
+      "max": 6,
+      "min": 0,
+      "step": 1,
+      "type": "number"
+    },
+    "startTime": {
+      "access": "readwrite",
+      "max": 86400,
+      "min": 0,
+      "step": 600,
+      "triggers": [
+        {
+          "action": {
+            "$self": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "INVALID_OR_NOT_SET_TIME",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "applianceState",
+              "operand_2": "PAUSED",
+              "operator": "eq"
+            },
+            "operator": "and"
+          }
+        }
+      ],
+      "type": "number",
+      "values": {
+        "INVALID_OR_NOT_SET_TIME": {
+          "disabled": true
+        }
+      }
+    },
+    "timeToEnd": {
+      "access": "read",
+      "type": "number"
+    },
+    "totalCycleCounter": {
+      "access": "read",
+      "type": "number"
+    },
+    "userSelections": {
+      "access": "readwrite",
+      "type": "complex"
+    },
+    "userSelections/autoDoorOpener": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "userSelections/ecoScore": {
+      "access": "read",
+      "max": 7,
+      "min": 0,
+      "step": 1,
+      "type": "number"
+    },
+    "userSelections/energyScore": {
+      "access": "read",
+      "max": 7,
+      "min": 0,
+      "step": 1,
+      "type": "number"
+    },
+    "userSelections/extraPowerOption": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/extraSilentOption": {
+              "default": false
+            },
+            "userSelections/glassCareOption": {
+              "default": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "userSelections/extraSilentOption": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/extraPowerOption": {
+              "default": false
+            },
+            "userSelections/glassCareOption": {
+              "default": false
+            },
+            "userSelections/sanitizeOption": {
+              "default": false
+            },
+            "userSelections/sprayZoneOption": {
+              "default": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "userSelections/glassCareOption": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/extraPowerOption": {
+              "default": false
+            },
+            "userSelections/extraSilentOption": {
+              "default": false
+            },
+            "userSelections/sanitizeOption": {
+              "default": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "userSelections/programUID": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "AUTO": {
+          "condTwoSoil": {
+            "access": "readwrite",
+            "default": "AUTO",
+            "disabled": false,
+            "values": {
+              "AUTO": {}
+            }
+          },
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86400,
+            "min": 0,
+            "step": 600,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/ecoScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/energyScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/waterScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          }
+        },
+        "ECO": {
+          "condTwoSoil": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          },
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86400,
+            "min": 0,
+            "step": 600,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/ecoScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/energyScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/extraPowerOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/extraSilentOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/glassCareOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/sanitizeOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/sprayZoneOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/waterScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          }
+        },
+        "INTENSIVE": {
+          "condTwoSoil": {
+            "access": "readwrite",
+            "default": "HEAVY",
+            "disabled": false,
+            "values": {
+              "HEAVY": {}
+            }
+          },
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86400,
+            "min": 0,
+            "step": 600,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/ecoScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/energyScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/extraPowerOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/glassCareOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/sanitizeOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/sprayZoneOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/waterScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          }
+        },
+        "MACHINE_CARE": {},
+        "MACHINE_SETTINGS_HIDDEN_TEST": {
+          "disabled": true
+        },
+        "NORMAL90": {
+          "condTwoSoil": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          },
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86400,
+            "min": 0,
+            "step": 600,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/ecoScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/energyScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/extraPowerOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/glassCareOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/sanitizeOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/sprayZoneOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/waterScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          }
+        },
+        "QUICK30": {
+          "condTwoSoil": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FRESH": {}
+            }
+          },
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86400,
+            "min": 0,
+            "step": 600,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/ecoScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/energyScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/extraPowerOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/glassCareOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/sanitizeOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/sprayZoneOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/waterScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          }
+        },
+        "QUICK60": {
+          "condTwoSoil": {
+            "access": "readwrite",
+            "default": "FRESH_LIGHT",
+            "disabled": false,
+            "values": {
+              "FRESH_LIGHT": {}
+            }
+          },
+          "startTime": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86400,
+            "min": 0,
+            "step": 600,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/ecoScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/energyScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          },
+          "userSelections/extraPowerOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/glassCareOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/sanitizeOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/sprayZoneOption": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/waterScore": {
+            "access": "read",
+            "disabled": false,
+            "max": 7,
+            "min": 0,
+            "step": 1
+          }
+        },
+        "RINSE": {
+          "startTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 86400,
+            "min": 0,
+            "step": 600,
+            "values": {
+              "INVALID_OR_NOT_SET_TIME": {
+                "disabled": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "userSelections/programsOrder": {
+      "items": [
+        "MACHINE_SETTINGS_HIDDEN_TEST",
+        "QUICK30",
+        "QUICK60",
+        "NORMAL90",
+        "INTENSIVE",
+        "ECO",
+        "AUTO",
+        "MACHINE_CARE",
+        "RINSE"
+      ]
+    },
+    "userSelections/sanitizeOption": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/extraSilentOption": {
+              "default": false
+            },
+            "userSelections/glassCareOption": {
+              "default": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "userSelections/sprayZoneOption": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/extraSilentOption": {
+              "default": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "userSelections/waterScore": {
+      "access": "read",
+      "max": 7,
+      "min": 0,
+      "step": 1,
+      "type": "number"
+    },
+    "waterHardness": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "HARD": {},
+        "MEDIUM": {},
+        "SOFT": {},
+        "STEP_10": {},
+        "STEP_4": {},
+        "STEP_5": {},
+        "STEP_6": {},
+        "STEP_7": {},
+        "STEP_8": {},
+        "STEP_9": {}
+      }
+    }
+  }
+}
