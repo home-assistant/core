@@ -105,6 +105,41 @@ async def test_phase1_spike_late_additions_pin_to_main(
     assert classify(integration).is_main
 
 
+@pytest.mark.parametrize(
+    "domain",
+    [
+        "template",
+        "group",
+        "homekit",
+        "min_max",
+        "statistics",
+        "trend",
+        "threshold",
+        "derivative",
+        "integration",
+        "utility_meter",
+        "filter",
+        "mold_indicator",
+        "bayesian",
+        "generic_thermostat",
+        "generic_hygrostat",
+        "switch_as_x",
+        "history_stats",
+        "proximity",
+    ],
+)
+async def test_lockdown_helpers_pin_to_main(hass: HomeAssistant, domain: str) -> None:
+    """Broad readers + source-entity helpers must run on main under lockdown.
+
+    These read foreign entities / registries a sandboxed integration can't
+    see once lockdown is enforced. The blanket-ALWAYS_MAIN decision lives in
+    sandbox_v2/plans/research/builtin-lockdown-breakage.md (point 1).
+    """
+    assert domain in ALWAYS_MAIN
+    integration = _make_integration(hass, domain, platform_files={"sensor"})
+    assert classify(integration).is_main
+
+
 @pytest.mark.parametrize("platform", sorted(SANDBOX_INCOMPATIBLE_PLATFORMS))
 async def test_each_incompatible_platform_forces_main(
     hass: HomeAssistant, platform: str
