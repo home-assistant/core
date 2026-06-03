@@ -32,7 +32,7 @@ async def async_setup_entry(
     )
 
 
-class RainDelayNumber(CoordinatorEntity[RainbirdUpdateCoordinator], NumberEntity):  # pylint: disable=home-assistant-missing-entity-unique-id
+class RainDelayNumber(CoordinatorEntity[RainbirdUpdateCoordinator], NumberEntity):
     """A number implementation for the rain delay."""
 
     _attr_native_min_value = 0

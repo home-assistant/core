@@ -37,7 +37,7 @@ async def async_setup_entry(
     )
 
 
-class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity):  # pylint: disable=home-assistant-missing-entity-unique-id
+class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity):
     """Representation of a Rain Bird switch."""
 
     def __init__(
