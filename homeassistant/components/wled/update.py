@@ -122,3 +122,8 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
             version = cast(str, self.latest_version)
         await self.coordinator.wled.upgrade(version=version)
         await self.coordinator.async_refresh()
+
+    async def async_update(self) -> None:
+        """Update the entity."""
+        await super().async_update()
+        await self.releases_coordinator.async_request_refresh()

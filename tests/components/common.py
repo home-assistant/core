@@ -876,7 +876,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
             attribute values before they are written to the state. Use
             this when the trigger stores its tracked value on a different
             scale than the threshold — e.g. `media_player` volume is
-            stored as 0.0–1.0 but the threshold is in percent, so pass
+            stored as 0.0-1.0 but the threshold is in percent, so pass
             `attribute_value_scale=0.01`.
         attribute_required: When True, `(state, {attribute: None})` is
             classified as an *excluded* state (filtered out of the all/count
@@ -1024,7 +1024,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
             attribute values before they are written to the state. Use
             this when the trigger stores its tracked value on a different
             scale than the threshold — e.g. `media_player` volume is
-            stored as 0.0–1.0 but the threshold is in percent, so pass
+            stored as 0.0-1.0 but the threshold is in percent, so pass
             `attribute_value_scale=0.01`.
         attribute_required: When True, `(state, {attribute: None})` is
             classified as an *excluded* state (filtered out of the all/count
@@ -1485,12 +1485,12 @@ async def _validate_condition_options(
     options: dict[str, Any] | None,
     *,
     valid: bool,
+    supports_target: bool = True,
 ) -> None:
     """Assert that a condition accepts or rejects the given options."""
-    config: dict[str, Any] = {
-        CONF_CONDITION: condition,
-        CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
-    }
+    config: dict[str, Any] = {CONF_CONDITION: condition}
+    if supports_target:
+        config[CONF_TARGET] = {ATTR_LABEL_ID: "test_label"}
     if options is not None:
         config[CONF_OPTIONS] = options
     if valid:
@@ -1536,6 +1536,7 @@ async def assert_condition_options_supported(
     *,
     supports_behavior: bool,
     supports_duration: bool,
+    supports_target: bool = True,
 ) -> None:
     """Assert which options a condition supports.
 
@@ -1555,9 +1556,15 @@ async def assert_condition_options_supported(
     # Minimal config should always be valid
     # If there are no base options, also test that options can be omitted or be empty
     supports_empty = not bool(base_options)
-    await _validate_condition_options(hass, condition, None, valid=supports_empty)
-    await _validate_condition_options(hass, condition, {}, valid=supports_empty)
-    await _validate_condition_options(hass, condition, base_options, valid=True)
+    await _validate_condition_options(
+        hass, condition, None, valid=supports_empty, supports_target=supports_target
+    )
+    await _validate_condition_options(
+        hass, condition, {}, valid=supports_empty, supports_target=supports_target
+    )
+    await _validate_condition_options(
+        hass, condition, base_options, valid=True, supports_target=supports_target
+    )
 
     def _merge(extra: dict[str, Any]) -> dict[str, Any]:
         return {**(base_options or {}), **extra}
@@ -1565,18 +1572,30 @@ async def assert_condition_options_supported(
     # Behavior
     for behavior in ("any", "all"):
         await _validate_condition_options(
-            hass, condition, _merge({"behavior": behavior}), valid=supports_behavior
+            hass,
+            condition,
+            _merge({"behavior": behavior}),
+            valid=supports_behavior,
+            supports_target=supports_target,
         )
 
     # Duration
     for for_value in ({"seconds": 5}, "00:00:05", 5):
         await _validate_condition_options(
-            hass, condition, _merge({"for": for_value}), valid=supports_duration
+            hass,
+            condition,
+            _merge({"for": for_value}),
+            valid=supports_duration,
+            supports_target=supports_target,
         )
 
     # Unknown option should always be rejected
     await _validate_condition_options(
-        hass, condition, _merge({"unknown_option": True}), valid=False
+        hass,
+        condition,
+        _merge({"unknown_option": True}),
+        valid=False,
+        supports_target=supports_target,
     )
 
 
@@ -1586,12 +1605,12 @@ async def _validate_trigger_options(
     options: dict[str, Any] | None,
     *,
     valid: bool,
+    supports_target: bool = True,
 ) -> None:
     """Assert that a trigger accepts or rejects the given options during validation."""
-    trigger_config: dict[str, Any] = {
-        CONF_PLATFORM: trigger,
-        CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
-    }
+    trigger_config: dict[str, Any] = {CONF_PLATFORM: trigger}
+    if supports_target:
+        trigger_config[CONF_TARGET] = {ATTR_LABEL_ID: "test_label"}
     if options is not None:
         trigger_config[CONF_OPTIONS] = options
     if valid:
@@ -1608,6 +1627,7 @@ async def assert_trigger_options_supported(
     *,
     supports_behavior: bool,
     supports_duration: bool,
+    supports_target: bool = True,
 ) -> None:
     """Assert which options a trigger supports.
 
@@ -1624,9 +1644,15 @@ async def assert_trigger_options_supported(
 
     # Minimal config should always be valid
     supports_empty = not bool(base_options)
-    await _validate_trigger_options(hass, trigger, None, valid=supports_empty)
-    await _validate_trigger_options(hass, trigger, {}, valid=supports_empty)
-    await _validate_trigger_options(hass, trigger, base_options, valid=True)
+    await _validate_trigger_options(
+        hass, trigger, None, valid=supports_empty, supports_target=supports_target
+    )
+    await _validate_trigger_options(
+        hass, trigger, {}, valid=supports_empty, supports_target=supports_target
+    )
+    await _validate_trigger_options(
+        hass, trigger, base_options, valid=True, supports_target=supports_target
+    )
 
     def _merge(extra: dict[str, Any]) -> dict[str, Any]:
         return {**(base_options or {}), **extra}
@@ -1634,18 +1660,30 @@ async def assert_trigger_options_supported(
     # Behavior
     for behavior in ("each", "first", "all"):
         await _validate_trigger_options(
-            hass, trigger, _merge({"behavior": behavior}), valid=supports_behavior
+            hass,
+            trigger,
+            _merge({"behavior": behavior}),
+            valid=supports_behavior,
+            supports_target=supports_target,
         )
 
     # Duration
     for for_value in ({"seconds": 5}, "00:00:05", 5):
         await _validate_trigger_options(
-            hass, trigger, _merge({"for": for_value}), valid=supports_duration
+            hass,
+            trigger,
+            _merge({"for": for_value}),
+            valid=supports_duration,
+            supports_target=supports_target,
         )
 
     # Unknown option should always be rejected
     await _validate_trigger_options(
-        hass, trigger, _merge({"unknown_option": True}), valid=False
+        hass,
+        trigger,
+        _merge({"unknown_option": True}),
+        valid=False,
+        supports_target=supports_target,
     )
 
 
@@ -2210,9 +2248,9 @@ def parametrize_numerical_attribute_condition_above_below_any(
             attribute values before they are written to the state. Use
             this when the condition stores its tracked value on a
             different scale than the threshold — e.g. `media_player`
-            volume is stored as 0.0–1.0 but the threshold is in percent,
+            volume is stored as 0.0-1.0 but the threshold is in percent,
             so pass `attribute_value_scale=0.01`; light brightness is
-            stored as 0–255 but the threshold is in percent, so pass
+            stored as 0-255 but the threshold is in percent, so pass
             `attribute_value_scale=255/100`.
     """
     condition_options = condition_options or {}
@@ -2357,9 +2395,9 @@ def parametrize_numerical_attribute_condition_above_below_all(
             attribute values before they are written to the state. Use
             this when the condition stores its tracked value on a
             different scale than the threshold — e.g. `media_player`
-            volume is stored as 0.0–1.0 but the threshold is in percent,
+            volume is stored as 0.0-1.0 but the threshold is in percent,
             so pass `attribute_value_scale=0.01`; light brightness is
-            stored as 0–255 but the threshold is in percent, so pass
+            stored as 0-255 but the threshold is in percent, so pass
             `attribute_value_scale=255/100`.
     """
     condition_options = condition_options or {}

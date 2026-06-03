@@ -10,7 +10,9 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_ENTITY_ID,
     CONF_EVENT,
+    CONF_FOR,
     CONF_OPTIONS,
+    CONF_TARGET,
     CONF_ZONE,
 )
 from homeassistant.core import (
@@ -41,6 +43,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import condition
+from .const import DOMAIN
 
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
@@ -66,7 +69,7 @@ _LEGACY_TRIGGER_OPTIONS_SCHEMA = vol.Schema(
 _ZONE_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
     {
         vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_ZONE): cv.entity_domain("zone"),
+            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
         },
     }
 )
@@ -203,10 +206,80 @@ class LeftZoneTrigger(ZoneTriggerBase):
         return not self._in_target_zone(state)
 
 
+_OCCUPANCY_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS, default={}): {
+            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
+            vol.Optional(CONF_FOR): cv.positive_time_period,
+        },
+    }
+)
+
+
+class _ZoneOccupancyTriggerBase(EntityTriggerBase):
+    """Base for zone occupancy triggers (single zone, no behavior)."""
+
+    _domain_specs = {"zone": DomainSpec()}
+    _schema = _OCCUPANCY_TRIGGER_SCHEMA
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config and synthesize a target from the zone option.
+
+        We synthesize a target because we allow users to pick a single zone
+        to monitor, not a target.
+        """
+        config = cast(ConfigType, cls._schema(config))
+        config[CONF_TARGET] = {CONF_ENTITY_ID: [config[CONF_OPTIONS][CONF_ZONE]]}
+        return config
+
+    @staticmethod
+    def _occupancy_count(state: State) -> int | None:
+        """Return the zone's persons-in-zone count; None if unparsable."""
+        try:
+            return int(state.state)
+        except TypeError, ValueError:
+            return None
+
+    @classmethod
+    def _is_occupied(cls, state: State) -> bool:
+        """Return True if the zone has at least one occupant."""
+        count = cls._occupancy_count(state)
+        return count is not None and count >= 1
+
+
+class OccupancyDetectedTrigger(_ZoneOccupancyTriggerBase):
+    """Trigger when a zone transitions to an occupied state."""
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check that the zone is occupied."""
+        return self._is_occupied(state)
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check that the zone was previously not occupied."""
+        return not self._is_occupied(from_state)
+
+
+class OccupancyClearedTrigger(_ZoneOccupancyTriggerBase):
+    """Trigger when a zone transitions from occupied to unoccupied."""
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check that the zone is empty (count == 0)."""
+        return self._occupancy_count(state) == 0
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check that the zone was previously occupied."""
+        return self._is_occupied(from_state)
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "_": LegacyZoneTrigger,
     "entered": EnteredZoneTrigger,
     "left": LeftZoneTrigger,
+    "occupancy_detected": OccupancyDetectedTrigger,
+    "occupancy_cleared": OccupancyClearedTrigger,
 }
 
 
