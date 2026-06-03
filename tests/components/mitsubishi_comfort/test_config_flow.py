@@ -7,10 +7,14 @@ from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionE
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.mitsubishi_comfort.const import DOMAIN
+from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+
+from .conftest import MOCK_MAC
 
 from tests.common import MockConfigEntry
 
@@ -110,5 +114,91 @@ async def test_user_step_already_configured(
         result["flow_id"],
         {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
     )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+def _dhcp_info(ip: str, mac: str = MOCK_MAC) -> DhcpServiceInfo:
+    """Build DHCP discovery info (DHCP reports MACs without separators)."""
+    return DhcpServiceInfo(
+        ip=ip, hostname="kumo", macaddress=mac.replace(":", "").lower()
+    )
+
+
+async def test_dhcp_updates_address_and_reloads(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery records a new IP for a known device and reloads."""
+    mock_config_entry.add_to_hass(hass)
+    formatted_mac = format_mac(MOCK_MAC)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=_dhcp_info("192.168.1.250"),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_ADDRESSES][formatted_mac] == "192.168.1.250"
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
+async def test_dhcp_same_address_does_not_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery of an unchanged IP does not trigger a reload."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=_dhcp_info("192.168.1.100"),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_reload.assert_not_called()
+
+
+async def test_dhcp_unknown_device_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery of a MAC not owned by any entry changes nothing."""
+    mock_config_entry.add_to_hass(hass)
+    original = dict(mock_config_entry.data[CONF_ADDRESSES])
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=_dhcp_info("192.168.1.251", mac="99:99:99:99:99:99"),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_ADDRESSES] == original
+    mock_reload.assert_not_called()
+
+
+async def test_dhcp_no_account_aborts(hass: HomeAssistant) -> None:
+    """Test DHCP discovery with no configured account aborts without a flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=_dhcp_info("192.168.1.252"),
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

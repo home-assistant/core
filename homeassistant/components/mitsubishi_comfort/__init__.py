@@ -15,8 +15,15 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 
-from .const import DEFAULT_CONNECT_TIMEOUT, DEFAULT_RESPONSE_TIMEOUT, DOMAIN, PLATFORMS
+from .const import (
+    CONF_ADDRESSES,
+    DEFAULT_CONNECT_TIMEOUT,
+    DEFAULT_RESPONSE_TIMEOUT,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,14 +71,41 @@ async def async_setup_entry(
             translation_key="no_devices",
         )
 
+    # The cloud supplies each device's password, crypto serial, and MAC, but not
+    # its LAN IP. Resolve the IP from the DHCP-discovered address cache (keyed by
+    # MAC) and register every owned MAC so async_step_dhcp knows which addresses
+    # belong to this entry.
+    stored: dict[str, str] = entry.data.get(CONF_ADDRESSES, {})
+    # Keep an entry for every owned MAC (defaulting to ""), dropping MACs for
+    # devices no longer on the account.
+    addresses = {format_mac(info.mac): "" for info in devices.values()}
+    addresses.update({mac: ip for mac, ip in stored.items() if mac in addresses})
+    if addresses != stored:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_ADDRESSES: addresses}
+        )
+
     coordinators: dict[str, MitsubishiComfortCoordinator] = {}
     for serial, info in devices.items():
+        info.address = addresses.get(format_mac(info.mac)) or info.address
         if not info.address or not info.password or not info.crypto_serial:
-            _LOGGER.warning("Device %s missing credentials, skipping", info.label)
+            _LOGGER.debug(
+                "Device %s has no known LAN address yet; it will be added once "
+                "discovered on the network",
+                info.label,
+            )
             continue
         device = _make_device(info, serial, session)
         coordinators[serial] = MitsubishiComfortCoordinator(
             hass, entry, device, info.mac
+        )
+
+    if not coordinators:
+        # No device has a usable LAN address yet. Raise so Home Assistant retries
+        # with backoff; DHCP discovery will fill in addresses and reload the entry.
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="no_devices_reachable",
         )
 
     await asyncio.gather(

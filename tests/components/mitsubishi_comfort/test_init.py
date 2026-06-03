@@ -6,10 +6,14 @@ from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
 
-from homeassistant.components.mitsubishi_comfort.const import DOMAIN
+from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
+
+from .conftest import MOCK_ADDRESS, MOCK_MAC, MOCK_PASSWORD, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -69,25 +73,53 @@ async def test_setup_entry_no_devices_raises(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_entry_incomplete_credentials_loads_empty(
+async def test_setup_entry_no_address_raises_retry(
+    hass: HomeAssistant,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test setup retries when no device has a known LAN address yet.
+
+    The cloud returns each device's credentials but never its LAN IP, so an
+    entry with no resolved addresses cannot reach any device. Setup must raise
+    ConfigEntryNotReady (not load empty) so Home Assistant retries while DHCP
+    discovery resolves the addresses.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    # The device's MAC is registered so a later DHCP discovery can supply its IP.
+    assert format_mac(MOCK_MAC) in entry.data[CONF_ADDRESSES]
+
+
+async def test_setup_entry_resolves_address_from_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_device_info: DeviceInfo,
-    mock_cloud_account: AsyncMock,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
 ) -> None:
-    """Test setup loads with no entities when devices have incomplete credentials."""
+    """Test the LAN address is injected from the entry's persisted cache.
+
+    The cloud-discovered device carries no address; the entity is only created
+    because the entry holds a previously resolved address for the device's MAC.
+    """
     mock_config_entry.add_to_hass(hass)
-    mock_device_info.password = ""
-    mock_device_info.address = ""
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # The entity only exists because the address resolved; an unresolved address
+    # would have raised ConfigEntryNotReady instead of creating a coordinator.
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
+    assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
+    assert mock_config_entry.data[CONF_ADDRESSES][format_mac(MOCK_MAC)] == MOCK_ADDRESS
 
 
 async def test_setup_entry_skips_incomplete_devices(
