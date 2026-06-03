@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from ha_xthings_cloud import XthingsCloudApiError
 from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceCandidateInit
@@ -392,7 +393,7 @@ async def test_webrtc_pending_candidates_are_limited_per_session(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test pending WebRTC candidates are limited per session."""
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
