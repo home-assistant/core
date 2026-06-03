@@ -80,8 +80,11 @@
   share-states). (`plan-transport.md` T3 `1eaa79d261e`)
 - [x] **Handlers consume typed protobuf messages** (no dict adapters).
   (`plan-transport.md` T2 `360e4543300`)
-- [ ] **Test Dockerfile** for running the client runtime against main.
-  (`plan-docker.md`)
+- [x] **Test Dockerfile** for running the client runtime against main.
+  Multi-stage `python:3.14-slim` runtime image (no pre-baked integration
+  reqs, no git, non-root, no volumes/healthcheck, tini PID 1); unix-socket
+  compose harness is forward-looking (manager spawn-not-attach gap). Not
+  remote-ready until WS (T4). (`plan-docker.md` `1224f16df1e`)
 - [ ] v1 reference code lives only in git history now.
 
 ## Not in this batch (so people don't ask)
