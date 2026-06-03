@@ -81,7 +81,9 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
             unbanned_ip_address = ip_address(service.data[CONF_IP_ADDRESS])
         except ValueError as exc:
             raise ServiceValidationError(
-                f"Invalid IP address: {service.data[CONF_IP_ADDRESS]}"
+                translation_domain=DOMAIN,
+                translation_key="unban_invalid_ip_address",
+                translation_placeholders={"ip_address": service.data[CONF_IP_ADDRESS]},
             ) from exc
         await app[KEY_BAN_MANAGER].async_remove_ban(unbanned_ip_address)
 
@@ -307,4 +309,8 @@ class IpBanManager:
             if self.ip_bans_lookup.pop(remote_addr, None):
                 await self.hass.async_add_executor_job(self._save_all_bans)
             else:
-                raise ServiceValidationError(f"{remote_addr} not banned")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="unban_not_banned_ip_address",
+                    translation_placeholders={"ip_address": remote_addr},
+                )

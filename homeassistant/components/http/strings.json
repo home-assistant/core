@@ -1,4 +1,12 @@
 {
+  "exceptions": {
+    "unban_invalid_ip_address": {
+      "message": "Unable to unban {ip_address}: Invalid IP address"
+    },
+    "unban_not_banned_ip_address": {
+      "message": "Unable to unban {ip_address}: IP address is not banned"
+    }
+  },
   "issues": {
     "server_host_deprecated_hassio": {
       "description": "The deprecated `server_host` configuration option in the HTTP integration is prone to break the communication between Home Assistant Core and Supervisor, and will be removed.\n\nIf you are using this option to bind Home Assistant to specific network interfaces, please remove it from your configuration. Home Assistant will automatically bind to all available interfaces by default.\n\nIf you have specific networking requirements, consider using firewall rules or other network configuration to control access to Home Assistant.",
