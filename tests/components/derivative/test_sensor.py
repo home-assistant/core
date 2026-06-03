@@ -953,7 +953,7 @@ async def test_unavailable(
     hass: HomeAssistant,
 ) -> None:
     """Test derivative sensor state when unavailable."""
-    config, entity_id = await _setup_sensor(hass, {"unit_time": "s"})
+    _config, entity_id = await _setup_sensor(hass, {"unit_time": "s"})
 
     times = [0, 1, 2, 3]
     values = [0, 1, bad_state, 2]
