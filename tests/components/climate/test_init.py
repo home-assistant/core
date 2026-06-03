@@ -144,6 +144,8 @@ class MockClimateEntity(MockEntity, ClimateEntity):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
             self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+        if ATTR_PRESET_MODE in kwargs:
+            self._attr_preset_mode = kwargs[ATTR_PRESET_MODE]
         if ATTR_TARGET_TEMP_HIGH in kwargs:
             self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
             self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
@@ -734,3 +736,104 @@ async def test_target_temp_high_higher_than_low(
         == "'Lower target temperature' cannot be higher than 'Upper target temperature'"
     )
     assert exc.value.translation_key == "low_temp_higher_than_high_temp"
+
+
+async def test_set_temperature_with_preset_mode(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+) -> None:
+    """Test set_temperature with preset_mode."""
+
+    class MockClimateEntityWithTemp(MockClimateEntity):
+        """Mock climate with TARGET_TEMPERATURE support."""
+
+        _attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.SWING_HORIZONTAL_MODE
+            | ClimateEntityFeature.TARGET_TEMPERATURE
+        )
+        _attr_target_temperature = 20
+
+        def set_temperature(self, **kwargs: Any) -> None:
+            """Set new target temperature."""
+            if ATTR_TEMPERATURE in kwargs:
+                self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+            if ATTR_PRESET_MODE in kwargs:
+                self._attr_preset_mode = kwargs[ATTR_PRESET_MODE]
+
+    climate_entity = MockClimateEntityWithTemp(name="test", entity_id="climate.test")
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[climate_entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_PRESET_MODE) == "home"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            "temperature": 20.0,
+            "preset_mode": "away",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_PRESET_MODE) == "away"
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test",
+                "temperature": 20.0,
+                "preset_mode": "invalid",
+            },
+            blocking=True,
+        )
+    assert exc.value.translation_key == "not_valid_preset_mode"
+
+
+async def test_set_temperature_preset_mode_missing_feature(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+) -> None:
+    """Test set_temperature preset_mode on entity without PRESET_MODE."""
+
+    class MockClimateNoPreset(MockClimateEntity):
+        """Mock climate without preset mode support."""
+
+        _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        _attr_target_temperature = 15
+
+    test_climate = MockClimateNoPreset(
+        name="Test",
+        unique_id="unique_climate_test",
+    )
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test",
+                "temperature": 20.0,
+                "preset_mode": "away",
+            },
+            blocking=True,
+        )
+    assert exc.value.translation_key == "missing_preset_mode_entity_feature"

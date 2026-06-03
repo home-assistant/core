@@ -60,6 +60,13 @@ set_temperature:
           hide_states:
             - unavailable
             - unknown
+    preset_mode:
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.PRESET_MODE
+      selector:
+        state:
+          attribute: preset_mode
 set_humidity:
   target:
     entity:

@@ -114,6 +114,7 @@ SET_TEMPERATURE_SCHEMA = vol.All(
             vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
             vol.Optional(ATTR_HVAC_MODE): vol.Coerce(HVACMode),
+            vol.Optional(ATTR_PRESET_MODE): cv.string,
         }
     ),
 )
@@ -787,6 +788,14 @@ async def async_service_temperature_set(
             translation_domain=DOMAIN,
             translation_key="missing_target_temperature_range_entity_feature",
         )
+    if (
+        ATTR_PRESET_MODE in service_call.data
+        and not entity.supported_features & ClimateEntityFeature.PRESET_MODE
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_preset_mode_entity_feature",
+        )
 
     hass = entity.hass
     kwargs: dict[str, Any] = {}
@@ -834,5 +843,18 @@ async def async_service_temperature_set(
                 )
         else:
             kwargs[value] = temp
+
+    if ATTR_PRESET_MODE in kwargs:
+        preset_mode = kwargs[ATTR_PRESET_MODE]
+        if entity.preset_modes and preset_mode not in entity.preset_modes:
+            modes_str = ", ".join(entity.preset_modes)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_valid_preset_mode",
+                translation_placeholders={
+                    "mode": preset_mode,
+                    "modes": modes_str,
+                },
+            )
 
     await entity.async_set_temperature(**kwargs)

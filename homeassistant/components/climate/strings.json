@@ -267,6 +267,9 @@
     "low_temp_higher_than_high_temp": {
       "message": "'Lower target temperature' cannot be higher than 'Upper target temperature'."
     },
+    "missing_preset_mode_entity_feature": {
+      "message": "Set temperature action was used with the 'Preset mode' parameter but the entity does not support it."
+    },
     "missing_target_temperature_entity_feature": {
       "message": "Set temperature action was used with the 'Target temperature' parameter but the entity does not support it."
     },
@@ -359,6 +362,10 @@
         "hvac_mode": {
           "description": "HVAC operation mode.",
           "name": "HVAC mode"
+        },
+        "preset_mode": {
+          "description": "Preset mode.",
+          "name": "Preset mode"
         },
         "target_temp_high": {
           "description": "The max temperature setpoint.",
