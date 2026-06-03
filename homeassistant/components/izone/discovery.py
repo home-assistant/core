@@ -25,7 +25,7 @@ from .const import (
     DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE,
     DISPATCH_ZONE_UPDATE,
-    IZONE,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ def _async_is_ignored_or_excluded_uid(hass: HomeAssistant, uid: str) -> bool:
             entry.source == config_entries.SOURCE_IGNORE
             or entry.disabled_by is not None
         )
-        for entry in hass.config_entries.async_entries(IZONE)
+        for entry in hass.config_entries.async_entries(DOMAIN)
     )
 
 
@@ -151,7 +151,7 @@ def _async_has_actionable_entries(hass: HomeAssistant) -> bool:
     """Return True when there is at least one enabled, non-ignored iZone entry."""
     return any(
         hass.config_entries.async_entries(
-            IZONE, include_ignore=False, include_disabled=False
+            DOMAIN, include_ignore=False, include_disabled=False
         )
     )
 
@@ -162,7 +162,7 @@ def _async_has_actionable_flows(hass: HomeAssistant) -> bool:
     return any(
         flow["context"].get("source") != config_entries.SOURCE_IGNORE
         for flow in hass.config_entries.flow.async_progress_by_handler(
-            IZONE, include_uninitialized=True
+            DOMAIN, include_uninitialized=True
         )
     )
 
