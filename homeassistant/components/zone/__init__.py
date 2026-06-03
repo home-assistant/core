@@ -9,6 +9,7 @@ from typing import Any, Self, cast
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import device_tracker
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_LATITUDE,
@@ -22,10 +23,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
-    STATE_HOME,
-    STATE_NOT_HOME,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     Event,
@@ -516,14 +514,6 @@ class Zone(collection.CollectionEntity):
         """Return if given state is in zone."""
         return (
             state is not None
-            and state.state
-            not in (
-                STATE_NOT_HOME,
-                STATE_UNKNOWN,
-                STATE_UNAVAILABLE,
-            )
-            and (
-                state.state.casefold() == self._case_folded_name
-                or (state.state == STATE_HOME and self.entity_id == ENTITY_ID_HOME)
-            )
+            and device_tracker.ATTR_IN_ZONES in state.attributes
+            and self.entity_id in state.attributes[device_tracker.ATTR_IN_ZONES]
         )
