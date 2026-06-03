@@ -106,47 +106,28 @@ async def test_zone_state_updates(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "chassis_on", "expected_commands"),
+    ("zone", "entity_id", "power_on_command"),
     [
-        # Chassis already awake, so only this zone is switched on.
-        pytest.param(MAIN_ENTITY_ID, True, [("ZM", "ON")], id="main_chassis_on"),
-        pytest.param(ZONE_2_ENTITY_ID, True, [("Z2", "ON")], id="zone_2_chassis_on"),
-        # Chassis in standby: wake it first, then switch this zone on.
-        pytest.param(
-            MAIN_ENTITY_ID, False, [("PW", "ON"), ("ZM", "ON")], id="main_chassis_off"
-        ),
-        pytest.param(
-            ZONE_2_ENTITY_ID,
-            False,
-            [("PW", "ON"), ("Z2", "ON")],
-            id="zone_2_chassis_off",
-        ),
+        ("main", MAIN_ENTITY_ID, ("ZM", "ON")),
+        ("zone_2", ZONE_2_ENTITY_ID, ("Z2", "ON")),
+        ("zone_3", ZONE_3_ENTITY_ID, ("Z1", "ON")),
     ],
 )
 async def test_turn_on(
     hass: HomeAssistant,
     mock_receiver: MockReceiver,
+    zone: ZoneName,
     entity_id: str,
-    chassis_on: bool,
-    expected_commands: list[tuple[str, str]],
+    power_on_command: tuple[str, str],
 ) -> None:
-    """Test turning a zone on wakes the chassis first when it is in standby."""
-    # Only the chassis power gates the wake command; zone power is irrelevant.
-    state = _default_state()
-    state.power = chassis_on
-    mock_receiver.mock_state(state)
-    await hass.async_block_till_done()
-
-    mock_receiver._send_command.reset_mock()
+    """Test turning a zone on sends that zone's power-on command."""
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert mock_receiver._send_command.await_args_list == [
-        call(*command) for command in expected_commands
-    ]
+    assert mock_receiver._send_command.await_args == call(*power_on_command)
 
 
 @pytest.mark.parametrize(

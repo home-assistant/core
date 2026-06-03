@@ -202,12 +202,6 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the receiver on."""
-        # Wake the chassis first if it is in standby, then switch this zone on.
-        # A zone-on does not wake the chassis on every model, and the chassis
-        # (PW) is independent of the main zone (ZM), so this does not force the
-        # main zone on.
-        if not self._receiver.power:
-            await self._receiver.power_on()
         await self._player.power_on()
 
     async def async_turn_off(self) -> None:
