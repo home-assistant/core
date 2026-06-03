@@ -168,7 +168,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 on_transient="raise_update_failed"
             )
         except VerisureLoginError:
-            LOGGER.debug("Cookie expired, acquiring new cookies")
+            LOGGER.debug("Login token expired, refreshing session")
             await self._async_refresh_session_after_auth_failure()
         except VerisureRateLimitError as ex:
             LOGGER.warning("Verisure rate limited during cookie refresh, %s", ex)
