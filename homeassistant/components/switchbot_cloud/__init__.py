@@ -504,12 +504,12 @@ def _create_handle_webhook(
         _LOGGER.debug("Received data from switchbot webhook: %s", repr(data))
         device_mac = data["context"]["deviceMac"]
 
-        register_devices = [
+        registered_device_macs = [
             coordinator.data.get("deviceMac") or coordinator.data.get("deviceId")
             for coordinator in coordinators_by_id.values()
             if coordinator.manageable_by_webhook() and coordinator.data is not None
         ]
-        if device_mac not in register_devices:
+        if device_mac not in registered_device_macs:
             _LOGGER.debug(
                 "Received data for unknown entity from switchbot webhook: %s", data
             )
