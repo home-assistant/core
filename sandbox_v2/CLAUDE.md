@@ -49,7 +49,9 @@ second condition), as a deliberate call relying on git history for rollback.
 - `hass_client/` — Python client library (its own `uv` env). Hosts
   `SandboxRuntime`, `FlowRunner`, `EntryRunner`, `EntityBridge`,
   `ServiceMirror`, `EventMirror`, `ChannelSandboxBridge`, and the two
-  pytest plugins under `hass_client/testing/`.
+  pytest plugins under `hass_client/testing/`. Also carries the runtime's
+  **Docker test image** (`hass_client/Dockerfile` + `docker-compose.test.yml`)
+  — see [`hass_client/docs/docker.md`](hass_client/docs/docker.md).
 - `docs/` — per-phase decision write-ups.
 - `run_compat.py` + `COMPAT.md` + `COMPAT.csv` — compat-lane runner
   and report (Phase 10).
@@ -190,6 +192,10 @@ uv run pytest /home/paulus/dev/hass/core/sandbox_v2/hass_client/ -q
 # Compat lane
 cd sandbox_v2 && python run_compat.py
 ```
+
+For running the client runtime in a container (unix-socket transport today, WS
+later — not remote-ready yet), see
+[`hass_client/docs/docker.md`](hass_client/docs/docker.md).
 
 After modifying anything under `sandbox_v2/` or
 `homeassistant/components/sandbox_v2/`, run

@@ -1,0 +1,79 @@
+# Sandbox v2 — same-host unix-socket test harness (FORWARD-LOOKING).
+#
+# ┌───────────────────────────────────────────────────────────────────────┐
+# │ THIS HARNESS DOES NOT RUN AGAINST TODAY'S MANAGER. It captures the      │
+# │ INTENDED two-container shape so it is ready when the manager grows the  │
+# │ capabilities below. It is valid YAML (`docker compose config` parses    │
+# │ it), but `docker compose up` will not produce a working sandbox today.  │
+# │ See docs/docker.md → "Compose harness gap" and STATUS-plan-docker.md.   │
+# └───────────────────────────────────────────────────────────────────────┘
+#
+# Why it can't run yet (two manager gaps, neither hacked here):
+#
+#   (a) Configurable socket path. The manager puts its unix socket in a private
+#       per-attempt tempdir (`tempfile.mkdtemp(...control.sock)` in
+#       homeassistant/components/sandbox_v2/manager.py), not on a shared path.
+#       For a cross-container harness the socket must live on the shared volume
+#       (`/shared/sandbox.sock`). There is no option to point it there today.
+#
+#   (b) Listen-only / attach mode. More fundamentally, the manager *spawns* the
+#       runtime as its own child process (`create_subprocess_exec`) and then
+#       listens for that child to dial back. It never waits for a separately
+#       started runtime to connect. So the "sandbox" service below would never
+#       be used — `main` spawns its own in-container child instead. A
+#       two-container split needs a manager mode that listens on a known socket
+#       and attaches to an externally launched runtime (or the websocket
+#       transport — see below).
+#
+# The genuinely remote variant arrives with the WEBSOCKET transport (T4), which
+# is DEFERRED. With WS, `main` would listen and the sandbox container would dial
+# in over the network — no shared volume, no spawn. Until then, the only
+# transports that work are stdio and unix, both between `main` and a child it
+# spawned *inside its own container* (single-container model).
+
+services:
+  # Home Assistant core (main). Would run the sandbox_v2 integration with the
+  # manager configured for the unix transport, pointing its control socket at
+  # the shared volume — see gap (a). Image/build left to the deployment; this is
+  # a placeholder showing the wiring, not a runnable service today.
+  main:
+    image: homeassistant/home-assistant:dev
+    # init: true  # PID-1 signal handling if main's image needs it.
+    volumes:
+      - sandbox_sock:/shared
+    environment:
+      # Forward-looking: the manager option that would place the control socket
+      # on the shared volume. No such option exists yet — gap (a).
+      SANDBOX_V2_TRANSPORT: unix
+      SANDBOX_V2_SOCKET_PATH: /shared/sandbox.sock
+    # The sandbox container can only attach once main listens on (not spawns
+    # into) the shared socket — gap (b).
+    depends_on:
+      - sandbox
+
+  # The Sandbox v2 runtime image built from ./Dockerfile. Dials the shared
+  # unix socket that main would expose. Stateless: no volumes of its own beyond
+  # the shared socket dir.
+  sandbox:
+    build:
+      # Build context is the repo root (two levels up) so the image can install
+      # the local `homeassistant` checkout; the repo-root .dockerignore trims
+      # the context.
+      context: ../..
+      dockerfile: sandbox_v2/hass_client/Dockerfile
+    init: true # tini is baked in, but `init: true` is a harmless belt-and-braces.
+    volumes:
+      - sandbox_sock:/shared
+    environment:
+      SANDBOX_NAME: built-in
+      # Must match the path main writes its socket to on the shared volume.
+      SANDBOX_URL: unix:///shared/sandbox.sock
+      # A real scoped sandbox token from main; placeholder here.
+      SANDBOX_TOKEN: replace-with-a-real-scoped-token
+      SANDBOX_LOG_LEVEL: INFO
+
+# Shared volume carrying the unix socket between the two services. (No volume
+# carries sandbox *state* — the runtime is stateless; this volume exists solely
+# so both containers can see the same unix socket file.)
+volumes:
+  sandbox_sock:

@@ -10,6 +10,12 @@ uv sync
 uv run pytest
 ```
 
-Phase 0 ships an empty package. Phase 1 adds the spike module
-(`hass_client.spike`) used to compare the two entity-bridge designs — see
-[`../docs/entity-bridge-decision.md`](../docs/entity-bridge-decision.md).
+## Docker
+
+A container image runs the sandbox runtime (`python -m hass_client.sandbox_v2`)
+for testing the client against main — see [`docs/docker.md`](docs/docker.md) for
+how to build it, the env vars, and the transport caveat (unix socket today,
+websocket later). It is partly forward-looking: not a remote-ready artifact
+today. The accompanying `docker-compose.test.yml` captures the intended
+same-host unix-socket harness but does not run against today's manager (gaps
+documented in `docs/docker.md`).
