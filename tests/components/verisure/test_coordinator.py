@@ -397,7 +397,7 @@ async def test_refresh_session_generic_error_on_login_cookie(
     )
     mock_verisure_session.login_cookie.side_effect = VerisureBaseError("unknown")
 
-    with pytest.raises(UpdateFailed, match="Could not log in to verisure"):
+    with pytest.raises(UpdateFailed, match="Could not log in to Verisure"):
         await coordinator._async_update_data()
 
 

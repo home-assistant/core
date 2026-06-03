@@ -28,7 +28,7 @@ from .const import CONF_GIID, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 type VerisureConfigEntry = ConfigEntry[VerisureDataUpdateCoordinator]
 
 
-def _is_transient_verisure_error(exc: BaseException) -> bool:
+def _is_transient_verisure_error(exc: VerisureError) -> bool:
     """Return True for network, server, or rate-limit failures (not bad credentials)."""
     return isinstance(
         exc,
@@ -121,7 +121,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(
                     "Could not refresh Verisure session (transient)"
                 ) from ex
-            raise UpdateFailed("Could not log in to verisure") from ex
+            raise UpdateFailed("Could not log in to Verisure") from ex
 
     async def async_login(self) -> bool:
         """Login to Verisure."""
@@ -146,7 +146,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                     ex,
                 )
                 return False
-            LOGGER.error("Could not log in to verisure, %s", ex)
+            LOGGER.error("Could not log in to Verisure, %s", ex)
             return False
 
         await self.hass.async_add_executor_job(
