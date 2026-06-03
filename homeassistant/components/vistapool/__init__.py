@@ -189,7 +189,9 @@ async def _async_reconcile_pools(
             except ConfigEntryNotReady as err:
                 _LOGGER.warning("Failed to add new pool %s: %s", pool_id, err)
                 continue
-            async_dispatcher_send(hass, SIGNAL_NEW_POOL, coordinator)
+            async_dispatcher_send(
+                hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", coordinator
+            )
 
         if stale := current - fetched:
             device_registry = dr.async_get(hass)

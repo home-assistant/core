@@ -176,7 +176,9 @@ async def async_setup_entry(
         async_add_entities(_build_sensor_entities(coordinator))
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, SIGNAL_NEW_POOL, _async_add_pool)
+        async_dispatcher_connect(
+            hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", _async_add_pool
+        )
     )
 
 
