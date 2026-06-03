@@ -11,12 +11,12 @@
     "step": {
       "user": {
         "data": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "url": "The base URL of your LiteLLM proxy, including the host and port",
-          "api_key": "An optional LiteLLM API key or virtual key. Leave empty if your proxy does not require authentication."
+          "api_key": "An optional LiteLLM API key or virtual key. Leave empty if your proxy does not require authentication.",
+          "url": "The base URL of your LiteLLM proxy, including the host and port"
         }
       }
     }
