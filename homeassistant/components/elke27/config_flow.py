@@ -146,10 +146,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         title = _panel_name(panel_info) or host
-        result = self.async_create_entry(title=title, data=data, options=options)
-        if "title" not in result:
-            result["title"] = title
-        return result
+        return self.async_create_entry(title=title, data=data, options=options)
 
 
 def _create_client() -> Elke27Client:

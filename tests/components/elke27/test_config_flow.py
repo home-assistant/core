@@ -183,48 +183,6 @@ async def test_link_and_create_entry_preserves_disconnect_cancellation(
     client.async_disconnect.assert_awaited_once()
 
 
-async def test_create_entry_adds_title_when_missing(hass: HomeAssistant) -> None:
-    """Verify created entry gets a title if missing."""
-    client = AsyncMock()
-    client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
-    client.async_connect = AsyncMock(return_value=None)
-    client.wait_ready = AsyncMock(return_value=True)
-    client.async_disconnect = AsyncMock(return_value=None)
-    client.snapshot = FakeSnapshot(
-        panel=FakePanelInfo(panel_name="Panel", mac="aa", panel_serial="1"),
-        table_info=FakeTableInfo(areas=1, zones=1),
-    )
-
-    flow = config_flow.Elke27ConfigFlow()
-    flow.hass = hass
-    flow.flow_id = "flow123"
-
-    with (
-        patch(
-            "homeassistant.components.elke27.config_flow._create_client",
-            side_effect=_client_factory([client]),
-        ),
-        patch.object(
-            flow,
-            "async_create_entry",
-            return_value={"type": "create_entry", "data": {}},
-        ),
-        patch.object(
-            flow,
-            "async_set_unique_id",
-            AsyncMock(return_value=None),
-        ),
-    ):
-        result = await flow._async_link_and_create_entry(
-            host="1.2.3.4",
-            port=DEFAULT_PORT,
-            access_code="1",
-            passphrase="2",
-            errors={},
-        )
-        assert result["title"] == "Panel"
-
-
 def test_imports_without_elkm1_lib(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that Elke27 imports do not require elkm1_lib."""
     real_import = builtins.__import__
