@@ -67,9 +67,10 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self._attr_supported_features = CameraEntityFeature.STREAM
         self._cached_image: bytes | None = None
         self._cached_snapshot_url: str | None = None
-        self._snapshot_task: asyncio.Task | None = None
-        self._kvs_sessions: dict[str, Any] = {}
+        self._snapshot_task: asyncio.Task[None] | None = None
+        self._kvs_sessions: dict[str, KvsSignalingClient] = {}
         self._pending_candidates: dict[str, list[RTCIceCandidateInit]] = {}
+        self._closed_sessions: set[str] = set()
 
     @property
     def device_data(self) -> dict[str, Any]:
@@ -238,6 +239,12 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Forward ICE candidate to KVS signaling channel."""
+        if session_id in self._closed_sessions:
+            LOGGER.debug(
+                "KVS: Ignoring ICE candidate for closed session %s", session_id
+            )
+            return
+
         kvs_client = self._kvs_sessions.get(session_id)
         if kvs_client:
             await kvs_client.async_send_ice_candidate(
@@ -246,12 +253,27 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 sdp_m_line_index=candidate.sdp_m_line_index,
             )
         else:
-            self._pending_candidates.setdefault(session_id, []).append(candidate)
-            LOGGER.debug("KVS: Cached ICE candidate for session %s", session_id)
+            candidates = self._pending_candidates.setdefault(session_id, [])
+            if len(candidates) < 50:
+                candidates.append(candidate)
+                LOGGER.debug("KVS: Cached ICE candidate for session %s", session_id)
+            else:
+                LOGGER.warning(
+                    "KVS: Dropped ICE candidate, cache limit reached for session %s",
+                    session_id,
+                )
 
     def close_webrtc_session(self, session_id: str) -> None:
         """Close WebRTC session and clean up KVS signaling."""
         self._pending_candidates.pop(session_id, None)
         kvs_client = self._kvs_sessions.pop(session_id, None)
+
+        # Track closed sessions to prevent late candidates from leaking memory
+        self._closed_sessions.add(session_id)
+        # Prevent closed sessions set from growing indefinitely
+        if len(self._closed_sessions) > 100:
+            # Remove an arbitrary element if limit is exceeded
+            self._closed_sessions.pop()
+
         if kvs_client:
             self.hass.async_create_task(kvs_client.async_close())
