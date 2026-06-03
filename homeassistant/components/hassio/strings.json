@@ -38,6 +38,9 @@
       }
     },
     "update": {
+      "rpi_firmware_update": {
+        "name": "Firmware"
+      },
       "update": {
         "name": "[%key:component::update::title%]"
       }

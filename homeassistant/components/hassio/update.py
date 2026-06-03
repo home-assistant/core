@@ -4,7 +4,7 @@ import re
 from typing import Any
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import Job
+from aiohasupervisor.models import Job, RaspberryPiFirmwareInfo
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
@@ -15,10 +15,13 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
-from .const import ADDONS_COORDINATOR, ATTR_VERSION_LATEST, MAIN_COORDINATOR
-from .coordinator import AddonData
+from .const import ADDONS_COORDINATOR, ATTR_VERSION_LATEST, DOMAIN, MAIN_COORDINATOR
+from .coordinator import AddonData, HassioMainDataUpdateCoordinator
 from .entity import (
     HassioAddonEntity,
     HassioCoreEntity,
@@ -26,12 +29,41 @@ from .entity import (
     HassioSupervisorEntity,
 )
 from .jobs import JobSubscription
-from .update_helper import update_addon, update_core, update_os
+from .update_helper import update_addon, update_core, update_os, update_rpi_firmware
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
     translation_key="update",
     key=ATTR_VERSION_LATEST,
 )
+
+RPI_FIRMWARE_ENTITY_DESCRIPTION = UpdateEntityDescription(
+    translation_key="rpi_firmware_update",
+    key="rpi_firmware",
+)
+
+RPI_FIRMWARE_RELEASE_URL = (
+    "https://github.com/raspberrypi/rpi-eeprom/blob/master/releases.md"
+)
+
+
+def _humanize_rpi_firmware_version(version: str | None) -> str | None:
+    """Turn a raw firmware version into a human-readable string.
+
+    The Supervisor reports the bootloader EEPROM build as a Unix timestamp,
+    optionally suffixed with the VL805 EEPROM revision (`timestamp-hexstring`).
+    Render the timestamp as a UTC `YYYY-MM-DD` date, appending
+    `(VL805 hexstring)` when a VL805 revision is present.
+    """
+    if version is None:
+        return None
+    timestamp, _, vl805 = version.partition("-")
+    try:
+        date = dt_util.utc_from_timestamp(int(timestamp)).strftime("%Y-%m-%d")
+    except ValueError:
+        return version
+    if vl805:
+        return f"{date} (VL805 {vl805})"
+    return date
 
 
 async def async_setup_entry(
@@ -60,6 +92,15 @@ async def async_setup_entry(
                 entity_description=ENTITY_DESCRIPTION,
             )
         )
+
+        rpi_firmware = coordinator.data.rpi_firmware
+        if rpi_firmware is not None and not rpi_firmware.update_blocked:
+            entities.append(
+                SupervisorRPiFirmwareUpdateEntity(
+                    coordinator=coordinator,
+                    entity_description=RPI_FIRMWARE_ENTITY_DESCRIPTION,
+                )
+            )
 
     addons_coordinator = hass.data[ADDONS_COORDINATOR]
     entities.extend(
@@ -258,6 +299,110 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         await update_os(self.hass, version, backup)
+
+
+class SupervisorRPiFirmwareUpdateEntity(
+    CoordinatorEntity[HassioMainDataUpdateCoordinator], UpdateEntity
+):
+    """Update entity for the Raspberry Pi firmware (bootloader EEPROM and VL805).
+
+    Available on RPi4/RPi5/Yellow and uses `rpi-eeprom-update` via OS Agent.
+    To apply the update, a reboot is required - the issue is raised by
+    Supervisor after a successful update action.
+    """
+
+    _attr_has_entity_name = True
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
+    )
+    _attr_title = "Raspberry Pi Firmware"
+
+    def __init__(
+        self,
+        coordinator: HassioMainDataUpdateCoordinator,
+        entity_description: UpdateEntityDescription,
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"home_assistant_os_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "rpi_firmware")})
+
+    @property
+    def _firmware(self) -> RaspberryPiFirmwareInfo | None:
+        """Return the firmware info from coordinator data (None if absent)."""
+        return self.coordinator.data.rpi_firmware
+
+    @property
+    def available(self) -> bool:
+        """Return True if firmware info is available and the update isn't blocked."""
+        return (
+            super().available
+            and self._firmware is not None
+            and not self._firmware.update_blocked
+        )
+
+    @property
+    def installed_version(self) -> str | None:
+        """Composite installed firmware version.
+
+        Once an update is applied (`update_pending`) the new version is
+        reported as installed so the entity reads "up to date".
+        REBOOT_REQUIRED is indicated after the update and actual switch to the
+        new version applies after the reboot.
+        """
+        if not self._firmware:
+            return None
+        if self._firmware.update_pending:
+            return _humanize_rpi_firmware_version(self._firmware.latest_version)
+        return _humanize_rpi_firmware_version(self._firmware.current_version)
+
+    @property
+    def latest_version(self) -> str | None:
+        """Composite available firmware version."""
+        if not self._firmware:
+            return None
+        return _humanize_rpi_firmware_version(self._firmware.latest_version)
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the icon of the entity (the HA OS device icon)."""
+        return "/api/brands/integration/homeassistant/icon.png?placeholder=no"
+
+    @property
+    def release_url(self) -> str | None:
+        """Return a link to the official Raspberry Pi bootloader docs."""
+        return RPI_FIRMWARE_RELEASE_URL
+
+    async def async_release_notes(self) -> str | None:
+        """Return the pre-install warning and reboot notice as ha-alert boxes."""
+        return (
+            "<ha-alert alert-type='warning'>"
+            "Do not interrupt the firmware flash. "
+            "Power loss during the EEPROM update can brick your device."
+            "</ha-alert>\n\n"
+            "<ha-alert alert-type='info'>"
+            "A reboot is required after install for the new firmware to "
+            "take effect."
+            "</ha-alert>\n"
+        )
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        # The flash is a single blocking host call with no progress output, so
+        # only a boolean in-progress state is available for the duration.
+        self._attr_in_progress = True
+        self.async_write_ha_state()
+        try:
+            await update_rpi_firmware(self.hass)
+        except HomeAssistantError:
+            self._attr_in_progress = False
+            self.async_write_ha_state()
+            raise
+        self._attr_in_progress = False
+        await self.coordinator.async_refresh()
 
 
 class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):

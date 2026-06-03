@@ -19,6 +19,7 @@ from aiohasupervisor.models import (
     Job,
     JobsInfo,
     OSUpdate,
+    RaspberryPiFirmwareInfo,
     StoreAddonUpdate,
 )
 import pytest
@@ -32,6 +33,7 @@ from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1982,3 +1984,345 @@ async def test_setting_up_core_update_when_addon_fails(
     state = hass.states.get("update.home_assistant_core_update")
     assert state
     assert state.state == "on"
+
+
+RPI_FIRMWARE_ENTITY_ID = "update.raspberry_pi_firmware"
+
+
+def _set_rpi_firmware_mock(
+    os_info: AsyncMock,
+    supervisor_client: AsyncMock,
+    *,
+    board: str,
+    update_blocked: bool = False,
+    update_pending: bool = False,
+    current_version: str = "1765222194",
+    latest_version: str = "1778498402",
+    blocked_reason: str | None = None,
+) -> None:
+    """Configure the Supervisor mocks for an RPi firmware scenario."""
+    os_info.return_value = replace(os_info.return_value, board=board)
+    supervisor_client.os.raspberry_pi_firmware_info.side_effect = None
+    supervisor_client.os.raspberry_pi_firmware_info.return_value = (
+        RaspberryPiFirmwareInfo(
+            current_version=current_version,
+            latest_version=latest_version,
+            update_available=current_version != latest_version,
+            update_blocked=update_blocked,
+            update_pending=update_pending,
+            blocked_reason=blocked_reason
+            or ("unsupported_boot_device" if update_blocked else None),
+        )
+    )
+
+
+@pytest.mark.parametrize("board", ["rpi4-64", "rpi5-64", "yellow"])
+async def test_rpi_firmware_entity_registered(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    os_info: AsyncMock,
+    board: str,
+) -> None:
+    """The Raspberry Pi firmware update entity is registered on RPi4/5/Yellow."""
+    _set_rpi_firmware_mock(os_info, supervisor_client, board=board)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    # wait_background_tasks drains the home_assistant_yellow auto-discovery
+    # cascade so it doesn't leak into teardown when board == "yellow".
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(RPI_FIRMWARE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["installed_version"] == "2025-12-08"
+    assert state.attributes["latest_version"] == "2026-05-11"
+
+
+@pytest.mark.parametrize(
+    ("current_version", "latest_version", "expected_installed", "expected_latest"),
+    [
+        pytest.param(
+            "1765222194",
+            "1778498402",
+            "2025-12-08",
+            "2026-05-11",
+            id="eeprom_only",
+        ),
+        pytest.param(
+            "1765222194-000138a1",
+            "1778498402-000138c0",
+            "2025-12-08 (VL805 000138a1)",
+            "2026-05-11 (VL805 000138c0)",
+            id="with_vl805",
+        ),
+        pytest.param(
+            "not-a-timestamp",
+            "1778498402",
+            "not-a-timestamp",
+            "2026-05-11",
+            id="unparseable_passthrough",
+        ),
+    ],
+)
+async def test_rpi_firmware_version_humanized(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    os_info: AsyncMock,
+    current_version: str,
+    latest_version: str,
+    expected_installed: str,
+    expected_latest: str,
+) -> None:
+    """Firmware versions are rendered as UTC dates with an optional VL805 suffix."""
+    _set_rpi_firmware_mock(
+        os_info,
+        supervisor_client,
+        board="rpi5-64",
+        current_version=current_version,
+        latest_version=latest_version,
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(RPI_FIRMWARE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["installed_version"] == expected_installed
+    assert state.attributes["latest_version"] == expected_latest
+
+
+async def test_rpi_firmware_device(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    os_info: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """The firmware entity lives on its own device nested under the OS device."""
+    _set_rpi_firmware_mock(os_info, supervisor_client, board="rpi5-64")
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "rpi_firmware")})
+    assert device is not None
+    assert device.name == "Raspberry Pi"
+
+    os_device = device_registry.async_get_device(identifiers={(DOMAIN, "OS")})
+    assert os_device is not None
+    assert device.via_device_id == os_device.id
+
+    entity_entry = er.async_get(hass).async_get(RPI_FIRMWARE_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.device_id == device.id
+
+
+async def test_rpi_firmware_entity_absent_on_older_supervisor(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    os_info: AsyncMock,
+) -> None:
+    """If the supervisor doesn't expose firmware info yet, no entity is created."""
+    os_info.return_value = replace(os_info.return_value, board="rpi5-64")
+    supervisor_client.os.raspberry_pi_firmware_info.side_effect = (
+        SupervisorNotFoundError("Not found")
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(RPI_FIRMWARE_ENTITY_ID) is None
+
+
+async def test_rpi_firmware_install(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    os_info: AsyncMock,
+) -> None:
+    """Install action delegates to the supervisor's update_raspberry_pi_firmware."""
+    _set_rpi_firmware_mock(os_info, supervisor_client, board="rpi5-64")
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    supervisor_client.os.update_raspberry_pi_firmware.return_value = None
+    await hass.services.async_call(
+        "update",
+        "install",
+        {"entity_id": RPI_FIRMWARE_ENTITY_ID},
+        blocking=True,
+    )
+
+    supervisor_client.os.update_raspberry_pi_firmware.assert_called_once_with()
+
+
+async def test_rpi_firmware_entity_hidden_when_update_blocked(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    os_info: AsyncMock,
+) -> None:
+    """No firmware entity is created when the update is blocked."""
+    _set_rpi_firmware_mock(
+        os_info,
+        supervisor_client,
+        board="rpi4-64",
+        update_blocked=True,
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(RPI_FIRMWARE_ENTITY_ID) is None
+
+
+async def test_rpi_firmware_release_notes_warning(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    os_info: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Release notes carry the pre-install firmware-flash warning."""
+    _set_rpi_firmware_mock(os_info, supervisor_client, board="rpi5-64")
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "update/release_notes", "entity_id": RPI_FIRMWARE_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert "Do not interrupt" in msg["result"]
+
+
+async def test_rpi_firmware_entity_up_to_date_when_update_pending(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    os_info: AsyncMock,
+) -> None:
+    """A pending (applied) update reads as up to date until the reboot."""
+    _set_rpi_firmware_mock(
+        os_info, supervisor_client, board="rpi5-64", update_pending=True
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(RPI_FIRMWARE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "off"
+    # The applied version is reported as installed even though the running
+    # firmware only changes after the reboot.
+    assert state.attributes["installed_version"] == "2026-05-11"
+    assert state.attributes["latest_version"] == "2026-05-11"
+
+
+async def test_rpi_firmware_up_to_date_after_install(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    os_info: AsyncMock,
+) -> None:
+    """The entity reads up to date once the flash reports an update pending."""
+    _set_rpi_firmware_mock(os_info, supervisor_client, board="rpi5-64")
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(RPI_FIRMWARE_ENTITY_ID).state == "on"
+
+    # The supervisor reports update_pending once the flash completes; the
+    # post-install coordinator refresh then picks that up.
+    async def mark_pending() -> None:
+        _set_rpi_firmware_mock(
+            os_info, supervisor_client, board="rpi5-64", update_pending=True
+        )
+
+    supervisor_client.os.update_raspberry_pi_firmware.side_effect = mark_pending
+    await hass.services.async_call(
+        "update",
+        "install",
+        {"entity_id": RPI_FIRMWARE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert hass.states.get(RPI_FIRMWARE_ENTITY_ID).state == "off"
+
+
+async def test_rpi_firmware_install_sets_in_progress(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    os_info: AsyncMock,
+) -> None:
+    """The firmware entity reports in_progress while the flash runs."""
+    _set_rpi_firmware_mock(os_info, supervisor_client, board="rpi5-64")
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(RPI_FIRMWARE_ENTITY_ID).attributes["in_progress"] is False
+
+    async def check_progress(hass: HomeAssistant) -> None:
+        assert hass.states.get(RPI_FIRMWARE_ENTITY_ID).attributes["in_progress"] is True
+
+    with patch(
+        "homeassistant.components.hassio.update.update_rpi_firmware",
+        side_effect=check_progress,
+    ) as mock_update:
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": RPI_FIRMWARE_ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_update.assert_called_once()

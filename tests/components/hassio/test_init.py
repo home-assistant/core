@@ -1164,19 +1164,21 @@ async def test_coordinator_updates_stats_entities_enabled(
 
 
 @pytest.mark.parametrize(
-    ("board", "integration"),
+    ("board", "integration", "supervisor_calls"),
     [
-        ("green", "homeassistant_green"),
-        ("odroid-c2", "hardkernel"),
-        ("odroid-c4", "hardkernel"),
-        ("odroid-n2", "hardkernel"),
-        ("odroid-xu4", "hardkernel"),
-        ("rpi2", "raspberry_pi"),
-        ("rpi3", "raspberry_pi"),
-        ("rpi3-64", "raspberry_pi"),
-        ("rpi4", "raspberry_pi"),
-        ("rpi4-64", "raspberry_pi"),
-        ("yellow", "homeassistant_yellow"),
+        ("green", "homeassistant_green", 16),
+        ("odroid-c2", "hardkernel", 16),
+        ("odroid-c4", "hardkernel", 16),
+        ("odroid-n2", "hardkernel", 16),
+        ("odroid-xu4", "hardkernel", 16),
+        ("rpi2", "raspberry_pi", 16),
+        ("rpi3", "raspberry_pi", 16),
+        ("rpi3-64", "raspberry_pi", 16),
+        ("rpi4", "raspberry_pi", 16),
+        # rpi4-64, rpi5-64 and yellow add a raspberry_pi_firmware_info
+        ("rpi4-64", "raspberry_pi", 17),
+        ("rpi5-64", "raspberry_pi", 17),
+        ("yellow", "homeassistant_yellow", 17),
     ],
 )
 async def test_setup_hardware_integration(
@@ -1185,6 +1187,7 @@ async def test_setup_hardware_integration(
     os_info: AsyncMock,
     board: str,
     integration: str,
+    supervisor_calls: int,
 ) -> None:
     """Test setup initiates hardware integration."""
     os_info.return_value = replace(os_info.return_value, board=board)
@@ -1204,7 +1207,7 @@ async def test_setup_hardware_integration(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == supervisor_calls
     assert len(mock_setup_entry.mock_calls) == 1
 
 

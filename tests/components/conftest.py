@@ -12,7 +12,11 @@ import string
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohasupervisor import SupervisorClient, SupervisorNotFoundError
+from aiohasupervisor import (
+    SupervisorBadRequestError,
+    SupervisorClient,
+    SupervisorNotFoundError,
+)
 from aiohasupervisor.addons import AddonsClient
 from aiohasupervisor.backups import BackupsClient
 from aiohasupervisor.discovery import DiscoveryClient
@@ -862,6 +866,10 @@ def supervisor_client() -> Generator[AsyncMock]:
     )
     supervisor_client.network = AsyncMock(spec=NetworkClient)
     supervisor_client.os = AsyncMock(spec=OSClient)
+    supervisor_client.os.raspberry_pi_firmware_info.side_effect = (
+        # default for most targets, to be overridden in RPi FW update tests
+        SupervisorBadRequestError
+    )
     supervisor_client.resolution = AsyncMock(spec=ResolutionClient)
     supervisor_client.supervisor = AsyncMock(spec=SupervisorManagementClient)
     supervisor_client.store = AsyncMock(spec=StoreClient)

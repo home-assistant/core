@@ -77,3 +77,18 @@ async def update_os(hass: HomeAssistant, version: str | None, backup: bool) -> N
         raise HomeAssistantError(
             f"Error updating Home Assistant Operating System: {err}"
         ) from err
+
+
+async def update_rpi_firmware(hass: HomeAssistant) -> None:
+    """Trigger the Raspberry Pi firmware (bootloader EEPROM and VL805) update.
+
+    The Supervisor always raises a reboot-required notice on success - the new
+    firmware only runs after the next reboot.
+    """
+    client = get_supervisor_client(hass)
+    try:
+        await client.os.update_raspberry_pi_firmware()
+    except SupervisorError as err:
+        raise HomeAssistantError(
+            f"Error updating Raspberry Pi firmware: {err}"
+        ) from err
