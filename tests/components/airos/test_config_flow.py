@@ -1,6 +1,5 @@
 """Test the Ubiquiti airOS config flow."""
 
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from airos.exceptions import (
@@ -884,7 +883,7 @@ async def test_manual_flow_retries_with_legacy_tls(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
-    ap_status_fixture: dict[str, Any],
+    ap_status_fixture: AirOSData,
 ) -> None:
     """Test manual flow retries with legacy TLS and creates an entry."""
     legacy_session = MagicMock()
@@ -932,23 +931,15 @@ async def test_manual_flow_retries_with_legacy_tls(
 
 async def test_validate_raise_on_attempted_legacy(
     hass: HomeAssistant,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test legacy mode re-raises TLS compatibility errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
-
     legacy_session = MagicMock()
     legacy_session.close = AsyncMock()
 
+    mock_async_get_firmware_data.side_effect = AirOSTLSCompatibilityError()
+
     with (
-        patch(
-            "homeassistant.components.airos.config_flow.async_get_firmware_data",
-            side_effect=AirOSTLSCompatibilityError(),
-        ),
         patch(
             "homeassistant.components.airos.config_flow.TCPConnector",
             return_value=MagicMock(),
@@ -960,12 +951,25 @@ async def test_validate_raise_on_attempted_legacy(
         patch(
             "homeassistant.components.airos.config_flow.build_legacy_context",
             return_value=MagicMock(),
-        ),
+        ) as mock_build_legacy_context,
     ):
-        result = await flow._validate_and_get_device_info(MOCK_CONFIG, legacy=True)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "manual"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_CONFIG
+        )
 
-    assert result is None
-    assert flow.errors == {"base": "cannot_connect"}
-
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_async_get_firmware_data.await_count == 2
     mock_client_session.assert_called_once()
+    mock_build_legacy_context.assert_called_once_with(
+        verify_ssl=MOCK_CONFIG[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL]
+    )
     legacy_session.close.assert_awaited_once()
