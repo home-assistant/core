@@ -310,3 +310,114 @@ async def test_area_devices(
     info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_devices }}}}")
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
+
+
+async def test_area_temperature_sensor(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test area_temperature_sensor function."""
+
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    area = area_registry.async_get_or_create("Area")
+
+    # Test with no temperature sensor set
+    # Test with invalid area, area name and area id
+    for test in [("", None), (area.name, None), (area.id, None)]:
+        # Test function
+        info = render_to_info(hass, f'{{{{ area_temperature_sensor("{test[0]}") }}}}')
+        assert_result_info(info, test[1])
+
+        # Test filter
+        info = render_to_info(hass, f'{{{{ "{test[0]}" | area_temperature_sensor }}}}')
+        assert_result_info(info, test[1])
+
+    # Add a temperature sensor
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "template",
+        "temperature",
+        config_entry=config_entry,
+    )
+    # Set its state
+    hass.states.async_set(
+        entity_entry.entity_id,
+        "20",
+        {"device_class": "temperature", "unit_of_measurement": "°C"},
+    )
+    # Add it to area
+    area_registry.async_update(area.id, temperature_entity_id=entity_entry.entity_id)
+
+    # Test with temperature sensor set
+    # Test with invalid area, area name and area id
+    for test in [
+        ("", None),
+        (area.name, entity_entry.entity_id),
+        (area.id, entity_entry.entity_id),
+    ]:
+        # Test function
+        info = render_to_info(hass, f'{{{{ area_temperature_sensor("{test[0]}") }}}}')
+        assert_result_info(info, test[1])
+
+        # Test filter
+        info = render_to_info(hass, f'{{{{ "{test[0]}" | area_temperature_sensor }}}}')
+        assert_result_info(info, test[1])
+
+
+async def test_area_humidity_sensor(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test area_humidity_sensor function."""
+
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    area = area_registry.async_get_or_create("Area")
+
+    # Test with no humidity sensor set
+    # Test with invalid area, area name and area id
+    for test in [("", None), (area.name, None), (area.id, None)]:
+        # Test function
+        info = render_to_info(hass, f'{{{{ area_humidity_sensor("{test[0]}") }}}}')
+        assert_result_info(info, test[1])
+
+        # Test filter
+        info = render_to_info(hass, f'{{{{ "{test[0]}" | area_humidity_sensor }}}}')
+        assert_result_info(info, test[1])
+
+    # Add a humidity sensor
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "template",
+        "humidity",
+        config_entry=config_entry,
+        original_device_class="humidity",
+    )
+    # Set its state
+    hass.states.async_set(
+        entity_entry.entity_id,
+        "50",
+        {"device_class": "humidity", "unit_of_measurement": "%"},
+    )
+    # Add it to area
+    area_registry.async_update(area.id, humidity_entity_id=entity_entry.entity_id)
+
+    # Test with humidity sensor set
+    # Test with invalid area, area name and area id
+    for test in [
+        ("", None),
+        (area.name, entity_entry.entity_id),
+        (area.id, entity_entry.entity_id),
+    ]:
+        # Test function
+        info = render_to_info(hass, f'{{{{ area_humidity_sensor("{test[0]}") }}}}')
+        assert_result_info(info, test[1])
+
+        # Test filter
+        info = render_to_info(hass, f'{{{{ "{test[0]}" | area_humidity_sensor }}}}')
+        assert_result_info(info, test[1])
