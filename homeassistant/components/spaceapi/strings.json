@@ -43,6 +43,66 @@
     }
   },
   "config_subentries": {
+    "keymaster": {
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Keymaster",
+      "error": {
+        "no_contact_method": "Provide at least one of IRC nick, phone, email or Twitter."
+      },
+      "initiate_flow": {
+        "user": "Add keymaster"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "email": "[%key:common::config_flow::data::email%]",
+            "irc_nick": "IRC nick",
+            "mastodon": "Mastodon",
+            "matrix": "Matrix",
+            "name": "Name",
+            "phone": "Phone",
+            "twitter": "Twitter",
+            "xmpp": "XMPP"
+          },
+          "data_description": {
+            "email": "Email address of the keymaster.",
+            "irc_nick": "IRC nickname of the keymaster.",
+            "mastodon": "Mastodon account of the keymaster.",
+            "matrix": "Matrix account of the keymaster.",
+            "name": "Real name of the keymaster.",
+            "phone": "Phone number of the keymaster.",
+            "twitter": "Twitter account of the keymaster.",
+            "xmpp": "XMPP address of the keymaster."
+          },
+          "title": "Edit keymaster"
+        },
+        "user": {
+          "data": {
+            "email": "[%key:common::config_flow::data::email%]",
+            "irc_nick": "IRC nick",
+            "mastodon": "Mastodon",
+            "matrix": "Matrix",
+            "name": "Name",
+            "phone": "Phone",
+            "twitter": "Twitter",
+            "xmpp": "XMPP"
+          },
+          "data_description": {
+            "email": "Email address of the keymaster.",
+            "irc_nick": "IRC nickname of the keymaster.",
+            "mastodon": "Mastodon account of the keymaster.",
+            "matrix": "Matrix account of the keymaster.",
+            "name": "Real name of the keymaster.",
+            "phone": "Phone number of the keymaster.",
+            "twitter": "Twitter account of the keymaster.",
+            "xmpp": "XMPP address of the keymaster."
+          },
+          "title": "Add keymaster"
+        }
+      }
+    },
     "link": {
       "abort": {
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
@@ -257,8 +317,11 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "facebook": "Facebook",
+          "foursquare": "Foursquare",
           "gopher": "Gopher",
+          "identica": "Identi.ca",
           "irc": "IRC channel",
+          "issue_mail": "Issue report email",
           "mastodon": "Mastodon",
           "matrix": "Matrix",
           "ml": "Mailing list",
@@ -271,8 +334,11 @@
         "data_description": {
           "email": "Contact email address for the space.",
           "facebook": "Facebook page URL of the space.",
+          "foursquare": "Foursquare ID of the space.",
           "gopher": "Gopher URL of the space.",
+          "identica": "Identi.ca or StatusNet account of the space.",
           "irc": "IRC channel of the space.",
+          "issue_mail": "Separate email address for issue reports.",
           "mastodon": "Mastodon account of the space.",
           "matrix": "Matrix room of the space.",
           "ml": "Mailing list address of the space.",

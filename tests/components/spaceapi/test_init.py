@@ -883,6 +883,35 @@ async def test_spaceapi_state_message_entity_missing(
     assert "message" not in data["state"]
 
 
+async def test_spaceapi_keymasters_output(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test keymaster subentries are emitted under contact.keymasters."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="keymaster",
+            data=MappingProxyType({"name": "Alice", "email": "alice@example.org"}),
+            title="Alice",
+            unique_id=None,
+        ),
+    )
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["contact"]["keymasters"] == [
+        {"name": "Alice", "email": "alice@example.org"}
+    ]
+
+
 async def test_spaceapi_merge_config_semantics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

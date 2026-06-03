@@ -78,11 +78,14 @@ from .const import (
     CONF_FEED_URL,
     CONF_FEED_WIKI,
     CONF_FEEDS,
+    CONF_FOURSQUARE,
     CONF_HINT,
     CONF_ICON_CLOSED,
     CONF_ICON_OPEN,
     CONF_ICONS,
+    CONF_IDENTICA,
     CONF_IRC,
+    CONF_ISSUE_MAIL,
     CONF_KEYMASTER_EMAIL,
     CONF_KEYMASTER_IRC_NICK,
     CONF_KEYMASTER_NAME,
@@ -122,6 +125,7 @@ from .const import (
     SENSOR_DEFAULT_UNITS,
     SENSOR_TYPES,
     SPACEAPI_COMPATIBILITY,
+    SUBENTRY_KEYMASTER,
     SUBENTRY_LINK,
     SUBENTRY_LINKED_SPACE,
     SUBENTRY_LOCATION_AREA,
@@ -142,9 +146,7 @@ type _EventEntry = dict[str, str | int]
 
 _CONF_CACHE = "cache"
 _CONF_CACHE_SCHEDULE = "schedule"
-_CONF_FOURSQUARE = "foursquare"
-_CONF_IDENTICA = "identica"
-_CONF_ISSUE_MAIL = "issue_mail"
+_CONF_GOOGLE = "google"  # Removed in v15, dropped on import
 _CONF_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 _CONF_JABBER = "jabber"
 _CONF_M4 = "m4"
@@ -201,10 +203,11 @@ CONTACT_SCHEMA = vol.Schema(
         vol.Optional(CONF_TWITTER): cv.string,
         vol.Optional(CONF_SIP): cv.string,
         vol.Optional(CONF_FACEBOOK): cv.string,
-        vol.Optional(_CONF_IDENTICA): cv.string,  # Removed in v15
-        vol.Optional(_CONF_FOURSQUARE): cv.string,  # Removed in v15
+        vol.Optional(CONF_IDENTICA): cv.string,
+        vol.Optional(CONF_FOURSQUARE): cv.string,
         vol.Optional(_CONF_JABBER): cv.string,  # Renamed to xmpp in v15
-        vol.Optional(_CONF_ISSUE_MAIL): cv.string,  # Removed in v15
+        vol.Optional(CONF_ISSUE_MAIL): cv.string,
+        vol.Optional(_CONF_GOOGLE): cv.string,  # Removed in v15, dropped on import
         vol.Optional(CONF_KEYMASTERS): vol.All(
             cv.ensure_list, [KEYMASTER_SCHEMA], vol.Length(min=1)
         ),
@@ -258,7 +261,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_CONTACT): CONTACT_SCHEMA,
                 vol.Required(_CONF_ISSUE_REPORT_CHANNELS): vol.All(  # Removed in v15
                     cv.ensure_list,
-                    [vol.In([CONF_EMAIL, _CONF_ISSUE_MAIL, CONF_ML, CONF_TWITTER])],
+                    [vol.In([CONF_EMAIL, CONF_ISSUE_MAIL, CONF_ML, CONF_TWITTER])],
                 ),
                 vol.Optional(CONF_LOCATION): LOCATION_SCHEMA,
                 vol.Required(CONF_LOGO): cv.url,
@@ -641,9 +644,18 @@ class APISpaceApiView(HomeAssistantView):
         entry = entries[0]
         spaceapi: dict[str, Any] = entry.runtime_data.config
 
+        contact = dict(spaceapi.get(CONF_CONTACT, {}))
+        keymasters = [
+            dict(se.data)
+            for se in entry.subentries.values()
+            if se.subentry_type == SUBENTRY_KEYMASTER
+        ]
+        if keymasters:
+            contact[CONF_KEYMASTERS] = keymasters
+
         data: dict[str, Any] = {
             "api_compatibility": SPACEAPI_COMPATIBILITY,
-            ATTR_API_CONTACT: spaceapi.get(CONF_CONTACT, {}),
+            ATTR_API_CONTACT: contact,
             ATTR_LOCATION: self._build_location(hass, spaceapi, entry),
             ATTR_API_LOGO: spaceapi[CONF_LOGO],
             ATTR_API_SPACE: spaceapi[CONF_SPACE],
