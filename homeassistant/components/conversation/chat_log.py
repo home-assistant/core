@@ -1,7 +1,5 @@
 """Conversation chat log."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager
@@ -423,9 +421,11 @@ class ChatLog:
     ) -> AsyncGenerator[ToolResultContent]:
         """Add assistant content and execute tool calls.
 
-        tool_call_tasks can contains tasks for tool calls that are already in progress.
+        tool_call_tasks can contain tasks for tool calls
+        that are already in progress.
 
-        This method is an async generator and will yield the tool results as they come in.
+        This method is an async generator and will yield
+        the tool results as they come in.
         """
         LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
@@ -489,14 +489,17 @@ class ChatLog:
     ) -> AsyncGenerator[AssistantContent | ToolResultContent]:
         """Stream content into the chat log.
 
-        Returns a generator with all content that was added to the chat log.
+        Returns a generator with all content that was added
+        to the chat log.
 
-        stream iterates over dictionaries with optional keys role, content and tool_calls.
+        stream iterates over dictionaries with optional keys
+        role, content and tool_calls.
 
-        When a delta contains a role key, the current message is considered complete and
-        a new message is started.
+        When a delta contains a role key, the current message
+        is considered complete and a new message is started.
 
-        The keys content and tool_calls will be concatenated if they appear multiple times.
+        The keys content and tool_calls will be concatenated
+        if they appear multiple times.
         """
         current_content = ""
         current_thinking_content = ""
@@ -732,7 +735,8 @@ class ChatLog:
         if llm_api:
             prompt_parts.append(llm_api.api_prompt)
 
-        # Append current date and time to the prompt if the corresponding tool is not provided
+        # Append current date and time to the prompt if the
+        # corresponding tool is not provided
         llm_tools: list[llm.Tool] = llm_api.tools if llm_api else []
         if not any(tool.name.endswith("GetDateTime") for tool in llm_tools):
             prompt_parts.append(

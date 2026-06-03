@@ -1,7 +1,5 @@
 """Support for select entities through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import cast
 
@@ -167,13 +165,15 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         command=Command.SET_AMOUNT,
         entity_category=EntityCategory.CONFIG,
     ),
-    Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
-        key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
-        translation_key="flexible_detergent_amount",
-        options_attribute=Attribute.SUPPORTED_AMOUNT,
-        status_attribute=Attribute.AMOUNT,
-        command=Command.SET_AMOUNT,
-        entity_category=EntityCategory.CONFIG,
+    Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: (
+        SmartThingsSelectDescription(
+            key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
+            translation_key="flexible_detergent_amount",
+            options_attribute=Attribute.SUPPORTED_AMOUNT,
+            status_attribute=Attribute.AMOUNT,
+            command=Command.SET_AMOUNT,
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     Capability.SAMSUNG_CE_LAMP: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_LAMP,
@@ -363,7 +363,12 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             capabilities.update(extra_capabilities)
         super().__init__(client, device, capabilities, component=component)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{entity_description.key}_{entity_description.status_attribute}_{entity_description.status_attribute}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}"
+            f"_{entity_description.key}"
+            f"_{entity_description.status_attribute}"
+            f"_{entity_description.status_attribute}"
+        )
 
     @property
     def options(self) -> list[str]:

@@ -1,7 +1,5 @@
 """Config flow for the ntfy integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import random
@@ -20,10 +18,13 @@ from yarl import URL
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
+    SOURCE_USER,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    FlowType,
+    SubentryFlowContext,
     SubentryFlowResult,
 )
 from homeassistant.const import (
@@ -56,6 +57,7 @@ from .const import (
     DOMAIN,
     SECTION_AUTH,
     SECTION_FILTER,
+    SUBENTRY_TYPE_TOPIC,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,6 +148,8 @@ TOPIC_FILTER_SCHEMA = vol.Schema(
 STEP_USER_TOPIC_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOPIC): str,
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Optional(CONF_NAME): str,
         vol.Required(SECTION_FILTER): data_entry_flow.section(
             TOPIC_FILTER_SCHEMA,
@@ -166,7 +170,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {"topic": TopicSubentryFlowHandler}
+        return {SUBENTRY_TYPE_TOPIC: TopicSubentryFlowHandler}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -231,6 +235,18 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Start subentry flow after creating main entry."""
+        subentry_result = await self.hass.config_entries.subentries.async_init(
+            (result["result"].entry_id, SUBENTRY_TYPE_TOPIC),
+            context=SubentryFlowContext(source=SOURCE_USER),
+        )
+        result["next_flow"] = (
+            FlowType.CONFIG_SUBENTRIES_FLOW,
+            subentry_result["flow_id"],
+        )
+        return result
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -287,7 +303,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                             "wrong_username": account.username,
                         },
                     )
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     entry,
                     data_updates={CONF_TOKEN: token},
                 )
@@ -350,7 +366,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                             },
                         )
 
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         entry,
                         data_updates={CONF_TOKEN: token},
                     )
@@ -360,7 +376,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME: account.username,
                     }
                 )
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     entry,
                     data_updates={
                         CONF_USERNAME: account.username,

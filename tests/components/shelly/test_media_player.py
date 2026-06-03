@@ -141,7 +141,12 @@ STATUS_AUDIO_FILE = {
             "artist": "Artist",
             "duration": 132415,
             "position": 64644,
-            "thumb": "data:image/webp;base64,UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAIAAAAAAFZQOCAYAAAAMAEAnQEqAQABAAFAJiWkAANwAP79NmgA",
+            "thumb": (
+                "data:image/webp;base64,"
+                "UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAA"
+                "QUxQSAIAAAAAAFZQOCAYAAAAMAEAnQEqAQABAAFA"
+                "JiWkAANwAP79NmgA"
+            ),
             "title": "Title",
         },
         "media_type": "AUDIO",
@@ -417,7 +422,7 @@ async def test_get_image_http_stale_url_after_thumb_invalidated(
 
     client = await hass_client_no_auth()
     resp = await client.get(entity_picture)
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_entity_picture_absent_base64_data_invalid(
@@ -439,7 +444,7 @@ async def test_entity_picture_absent_base64_data_invalid(
 
     client = await hass_client()
     resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.parametrize(
@@ -469,7 +474,7 @@ async def test_entity_picture_absent_thumb_string_invalid(
 
     client = await hass_client()
     resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_entity_picture_absent_mime_type_not_allowed(
@@ -491,7 +496,7 @@ async def test_entity_picture_absent_mime_type_not_allowed(
 
     client = await hass_client()
     resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_rpc_media_player_browse_media_root(
@@ -655,11 +660,13 @@ async def test_rpc_media_player_browse_media_unsupported_media_type(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for media_player.test_name of Test name",
+            "Device communication error occurred while calling action"
+            " for media_player.test_name of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for media_player.test_name of Test name",
+            "RPC call error occurred while calling action"
+            " for media_player.test_name of Test name",
         ),
         (
             InvalidAuthError,

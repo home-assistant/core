@@ -38,7 +38,7 @@ def decide_duration(
     zone_id: int,
     overlay_mode: str | None = None,
 ) -> None | int:
-    """Return correct duration based on the selected overlay mode/duration and tado config."""
+    """Return correct duration based on overlay mode and tado config."""
 
     # If we ended up with a timer but no duration, set a default duration
     # If we ended up with a timer but no duration, set a default duration

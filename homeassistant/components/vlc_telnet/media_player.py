@@ -1,7 +1,5 @@
 """Provide functionality to interact with the vlc telnet interface."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate, Literal
@@ -21,6 +19,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -53,23 +52,48 @@ async def async_setup_entry(
 
 
 def catch_vlc_errors[_VlcDeviceT: VlcDevice, **_P](
-    func: Callable[Concatenate[_VlcDeviceT, _P], Awaitable[None]],
-) -> Callable[Concatenate[_VlcDeviceT, _P], Coroutine[Any, Any, None]]:
+    *, log: bool = False
+) -> Callable[
+    [Callable[Concatenate[_VlcDeviceT, _P], Awaitable[None]]],
+    Callable[Concatenate[_VlcDeviceT, _P], Coroutine[Any, Any, None]],
+]:
     """Catch VLC errors."""
 
-    @wraps(func)
-    async def wrapper(self: _VlcDeviceT, *args: _P.args, **kwargs: _P.kwargs) -> None:
-        """Catch VLC errors and modify availability."""
-        try:
-            await func(self, *args, **kwargs)
-        except CommandError as err:
-            LOGGER.error("Command error: %s", err)
-        except ConnectError as err:
-            if self._attr_available:
-                LOGGER.error("Connection error: %s", err)
-                self._attr_available = False
+    def decorator(
+        func: Callable[Concatenate[_VlcDeviceT, _P], Awaitable[None]],
+    ) -> Callable[Concatenate[_VlcDeviceT, _P], Coroutine[Any, Any, None]]:
+        @wraps(func)
+        async def wrapper(
+            self: _VlcDeviceT, *args: _P.args, **kwargs: _P.kwargs
+        ) -> None:
+            try:
+                await func(self, *args, **kwargs)
+            except CommandError as err:
+                if log:
+                    LOGGER.error("Command error: %s", err)
+                else:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="command_error",
+                        translation_placeholders={"error": str(err)},
+                    ) from err
+            except ConnectError as err:
+                if log:
+                    if self._attr_available:
+                        LOGGER.error("Connection error: %s", err)
+                        self._attr_available = False
+                else:
+                    self._attr_available = False
+                    self.async_write_ha_state()
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="connect_error",
+                        translation_placeholders={"error": str(err)},
+                    ) from err
 
-    return wrapper
+        return wrapper
+
+    return decorator
 
 
 class VlcDevice(MediaPlayerEntity):
@@ -112,7 +136,7 @@ class VlcDevice(MediaPlayerEntity):
         )
         self._using_addon = config_entry.source == SOURCE_HASSIO
 
-    @catch_vlc_errors
+    @catch_vlc_errors(log=True)
     async def async_update(self) -> None:
         """Get the latest details from the device."""
         if not self.available:
@@ -166,7 +190,8 @@ class VlcDevice(MediaPlayerEntity):
         self._attr_media_title = _get_str(data.get("data", {}), "title")
         now_playing = _get_str(data.get("data", {}), "now_playing")
 
-        # Many radio streams put artist/title/album in now_playing and title is the station name.
+        # Many radio streams put artist/title/album in
+        # now_playing and title is the station name.
         if now_playing:
             if not self.media_artist:
                 self._attr_media_artist = self._attr_media_title
@@ -185,12 +210,12 @@ class VlcDevice(MediaPlayerEntity):
             else:
                 self._attr_media_title = media_title
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
         await self._vlc.seek(round(position))
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         assert self._attr_volume_level is not None
@@ -202,7 +227,7 @@ class VlcDevice(MediaPlayerEntity):
 
         self._attr_is_volume_muted = mute
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._vlc.set_volume(round(volume * MAX_VOLUME))
@@ -212,7 +237,7 @@ class VlcDevice(MediaPlayerEntity):
             # This can happen if we were muted and then see a volume_up.
             self._attr_is_volume_muted = False
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_media_play(self) -> None:
         """Send play command."""
         status = await self._vlc.status()
@@ -223,7 +248,7 @@ class VlcDevice(MediaPlayerEntity):
             await self._vlc.play()
         self._attr_state = MediaPlayerState.PLAYING
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_media_pause(self) -> None:
         """Send pause command."""
         status = await self._vlc.status()
@@ -233,13 +258,13 @@ class VlcDevice(MediaPlayerEntity):
 
         self._attr_state = MediaPlayerState.PAUSED
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._vlc.stop()
         self._attr_state = MediaPlayerState.IDLE
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -259,22 +284,22 @@ class VlcDevice(MediaPlayerEntity):
         await self._vlc.add(media_id)
         self._attr_state = MediaPlayerState.PLAYING
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._vlc.prev()
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._vlc.next()
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._vlc.clear()
 
-    @catch_vlc_errors
+    @catch_vlc_errors()
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         shuffle_command: Literal["on", "off"] = "on" if shuffle else "off"

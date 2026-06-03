@@ -1,7 +1,5 @@
 """Support for the cloud for text-to-speech service."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

@@ -1,7 +1,5 @@
 """Remote control support for Android TV Remote."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from typing import Any

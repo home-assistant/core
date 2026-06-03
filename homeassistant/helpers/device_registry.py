@@ -1,7 +1,5 @@
 """Provide a way to connect entities belonging to one device."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
@@ -10,7 +8,7 @@ from enum import StrEnum
 from functools import lru_cache
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack
 
 import attr
 from yarl import URL
@@ -37,7 +35,6 @@ from .deprecation import deprecated_function
 from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
-from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -224,11 +221,11 @@ class DeviceConnectionCollisionError(DeviceCollisionError):
         )
 
 
-def _validate_device_info(
+def _determine_device_info_type(
     config_entry: ConfigEntry,
     device_info: DeviceInfo,
 ) -> str:
-    """Process a device info."""
+    """Determine the type of a device info."""
     keys = set(device_info)
 
     # If no keys or not enough info to match up, abort
@@ -260,22 +257,66 @@ def _validate_device_info(
     return device_info_type
 
 
+class _ValidatedDeviceInfoFields(TypedDict):
+    """Device info fields validated on create and update."""
+
+    configuration_url: str | URL | None | UndefinedType
+    hw_version: str | None | UndefinedType
+    manufacturer: str | None | UndefinedType
+    model: str | None | UndefinedType
+    model_id: str | None | UndefinedType
+    serial_number: str | None | UndefinedType
+    sw_version: str | None | UndefinedType
+
+
 _cached_parse_url = lru_cache(maxsize=512)(URL)
 """Parse a URL and cache the result."""
 
 
-def _validate_configuration_url(value: Any) -> str | None:
-    """Validate and convert configuration_url."""
-    if value is None:
-        return None
+def _validate_str(name: str, value: Any) -> str | None | UndefinedType:
+    """Validate that a device registry string field has correct type."""
+    if (
+        value is UNDEFINED
+        or value is None
+        or type(value) is str  # fast path for exact str
+        or isinstance(value, str)
+    ):
+        return value
+    report_usage(
+        f"passes a non-string value of type {type(value).__name__} "
+        f"as {name} to the device registry",
+        core_behavior=ReportBehavior.LOG,
+        breaks_in_ha_version="2026.12.0",
+    )
+    return str(value)
 
-    url_as_str = str(value)
-    url = value if type(value) is URL else _cached_parse_url(url_as_str)
 
-    if url.scheme not in CONFIGURATION_URL_SCHEMES or not url.host:
-        raise ValueError(f"invalid configuration_url '{value}'")
-
-    return url_as_str
+def _validate_device_info_fields(
+    **fields: Unpack[_ValidatedDeviceInfoFields],
+) -> _ValidatedDeviceInfoFields:
+    """Validate device-info field values."""
+    configuration_url = fields["configuration_url"]
+    url: URL | None = None
+    if type(configuration_url) is URL:
+        url = configuration_url
+        configuration_url = str(configuration_url)
+    else:
+        configuration_url = _validate_str("configuration_url", configuration_url)
+        if isinstance(configuration_url, str):
+            url = _cached_parse_url(configuration_url)
+    if url is not None and (
+        url.scheme not in CONFIGURATION_URL_SCHEMES or not url.host
+    ):
+        raise ValueError(f"invalid configuration_url '{configuration_url}'")
+    return {
+        "configuration_url": configuration_url,
+        "hw_version": _validate_str("hw_version", fields["hw_version"]),
+        "manufacturer": _validate_str("manufacturer", fields["manufacturer"]),
+        "model": _validate_str("model", fields["model"]),
+        "model_id": _validate_str("model_id", fields["model_id"]),
+        "serial_number": _validate_str("serial_number", fields["serial_number"]),
+        "sw_version": _validate_str("sw_version", fields["sw_version"]),
+    }
 
 
 @lru_cache(maxsize=512)
@@ -368,8 +409,8 @@ class DeviceEntry:
             "configuration_url": self.configuration_url,
             "config_entries": list(self.config_entries),
             "config_entries_subentries": {
-                config_entry_id: list(subentries)
-                for config_entry_id, subentries in self.config_entries_subentries.items()
+                entry_id: list(subentries)
+                for entry_id, subentries in self.config_entries_subentries.items()
             },
             "connections": list(self.connections),
             "created_at": self.created_at.timestamp(),
@@ -418,8 +459,10 @@ class DeviceEntry:
                     # representation in HA Core 2026.2
                     "config_entries": list(self.config_entries),
                     "config_entries_subentries": {
-                        config_entry_id: list(subentries)
-                        for config_entry_id, subentries in self.config_entries_subentries.items()
+                        entry_id: list(subentries)
+                        for entry_id, subentries in (
+                            self.config_entries_subentries.items()
+                        )
                     },
                     "configuration_url": self.configuration_url,
                     "connections": list(self.connections),
@@ -517,8 +560,10 @@ class DeletedDeviceEntry:
                     # representation in HA Core 2026.2
                     "config_entries": list(self.config_entries),
                     "config_entries_subentries": {
-                        config_entry_id: list(subentries)
-                        for config_entry_id, subentries in self.config_entries_subentries.items()
+                        entry_id: list(subentries)
+                        for entry_id, subentries in (
+                            self.config_entries_subentries.items()
+                        )
                     },
                     "connections": list(self.connections),
                     "created_at": self.created_at,
@@ -772,11 +817,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     devices: ActiveDeviceRegistryItems
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
     _device_data: dict[str, DeviceEntry]
-    _loaded_event: asyncio.Event | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
         self.hass = hass
+        self._loaded_event = asyncio.Event()
         self._store = DeviceRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -785,11 +830,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             minor_version=STORAGE_VERSION_MINOR,
             serialize_in_event_loop=False,
         )
-
-    @callback
-    def async_setup(self) -> None:
-        """Set up the registry."""
-        self._loaded_event = asyncio.Event()
 
     @callback
     def async_get(self, device_id: str) -> DeviceEntry | None:
@@ -866,8 +906,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
-        if configuration_url is not UNDEFINED:
-            configuration_url = _validate_configuration_url(configuration_url)
+        default_manufacturer = _validate_str(
+            "default_manufacturer", default_manufacturer
+        )
+        default_model = _validate_str("default_model", default_model)
+        validated_fields = _validate_device_info_fields(
+            configuration_url=configuration_url,
+            hw_version=hw_version,
+            manufacturer=manufacturer,
+            model=model,
+            model_id=model_id,
+            serial_number=serial_number,
+            sw_version=sw_version,
+        )
 
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
@@ -893,27 +944,21 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         device_info: DeviceInfo = {  # type: ignore[assignment]
             key: val
             for key, val in (
-                ("configuration_url", configuration_url),
                 ("connections", connections),
                 ("default_manufacturer", default_manufacturer),
                 ("default_model", default_model),
                 ("default_name", default_name),
                 ("entry_type", entry_type),
-                ("hw_version", hw_version),
                 ("identifiers", identifiers),
-                ("manufacturer", manufacturer),
-                ("model", model),
-                ("model_id", model_id),
                 ("name", name),
-                ("serial_number", serial_number),
                 ("suggested_area", suggested_area),
-                ("sw_version", sw_version),
                 ("via_device", via_device),
+                *validated_fields.items(),
             )
             if val is not UNDEFINED
         }
 
-        device_info_type = _validate_device_info(config_entry, device_info)
+        device_info_type = _determine_device_info_type(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:
             identifiers = set()
@@ -965,10 +1010,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 name = config_entry.title
 
         if default_manufacturer is not UNDEFINED and device.manufacturer is None:
-            manufacturer = default_manufacturer
+            validated_fields["manufacturer"] = default_manufacturer
 
         if default_model is not UNDEFINED and device.model is None:
-            model = default_model
+            validated_fields["model"] = default_model
 
         if default_name is not UNDEFINED and device.name is None:
             name = default_name
@@ -992,22 +1037,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             allow_collisions=True,
             add_config_entry_id=config_entry_id,
             add_config_subentry_id=config_subentry_id,
-            configuration_url=configuration_url,
             device_info_type=device_info_type,
             disabled_by=disabled_by,
             entry_type=entry_type,
-            hw_version=hw_version,
             is_new=is_new,
-            manufacturer=manufacturer,
             merge_connections=connections or UNDEFINED,
             merge_identifiers=identifiers or UNDEFINED,
-            model=model,
-            model_id=model_id,
             name=name,
-            serial_number=serial_number,
             suggested_area=suggested_area,
-            sw_version=sw_version,
             via_device_id=via_device_id,
+            **validated_fields,
         )
 
         # This is safe because _async_update_device will always return a device
@@ -1052,8 +1091,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> DeviceEntry | None:
         """Private update device attributes.
 
-        :param add_config_subentry_id: Add the device to a specific subentry of add_config_entry_id
-        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_entry_id
+        :param add_config_subentry_id: Add the device to a specific
+            subentry of add_config_entry_id
+        :param remove_config_subentry_id: Remove the device from a
+            specific subentry of remove_config_entry_id
         """
         old = self.devices[device_id]
 
@@ -1085,7 +1126,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 and add_config_subentry_id not in add_config_entry.subentries  # type: ignore[union-attr]
             ):
                 raise HomeAssistantError(
-                    f"Config entry {add_config_entry_id} has no subentry {add_config_subentry_id}"
+                    f"Config entry {add_config_entry_id} has no"
+                    f" subentry {add_config_subentry_id}"
                 )
 
         if (
@@ -1141,8 +1183,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 # Enable the device if it was disabled by config entry and we're adding
                 # a non disabled config entry
                 if (
-                    # mypy says add_config_entry can be None. That's impossible, because we
-                    # raise above if that happens
+                    # mypy says add_config_entry can be None.
+                    # That's impossible, because we raise above if
+                    # that happens
                     not add_config_entry.disabled_by  # type: ignore[union-attr]
                     and old.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY
                 ):
@@ -1251,9 +1294,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
             old_values["identifiers"] = old.identifiers
 
-        if configuration_url is not UNDEFINED:
-            configuration_url = _validate_configuration_url(configuration_url)
-
         for attr_name, value in (
             ("area_id", area_id),
             ("configuration_url", configuration_url),
@@ -1353,8 +1393,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> DeviceEntry | None:
         """Update device attributes.
 
-        :param add_config_subentry_id: Add the device to a specific subentry of add_config_entry_id
-        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_entry_id
+        :param add_config_subentry_id: Add the device to a specific
+            subentry of add_config_entry_id
+        :param remove_config_subentry_id: Remove the device from a
+            specific subentry of remove_config_entry_id
         """
         if suggested_area is not UNDEFINED:
             report_usage(
@@ -1363,32 +1405,36 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 breaks_in_ha_version="2026.9.0",
             )
 
+        validated_fields = _validate_device_info_fields(
+            configuration_url=configuration_url,
+            hw_version=hw_version,
+            manufacturer=manufacturer,
+            model=model,
+            model_id=model_id,
+            serial_number=serial_number,
+            sw_version=sw_version,
+        )
+
         return self._async_update_device(
             device_id,
             add_config_entry_id=add_config_entry_id,
             add_config_subentry_id=add_config_subentry_id,
             area_id=area_id,
-            configuration_url=configuration_url,
             device_info_type=device_info_type,
             disabled_by=disabled_by,
             entry_type=entry_type,
-            hw_version=hw_version,
             labels=labels,
-            manufacturer=manufacturer,
             merge_connections=merge_connections,
             merge_identifiers=merge_identifiers,
-            model=model,
-            model_id=model_id,
             name_by_user=name_by_user,
             name=name,
             new_connections=new_connections,
             new_identifiers=new_identifiers,
             remove_config_entry_id=remove_config_entry_id,
             remove_config_subentry_id=remove_config_subentry_id,
-            serial_number=serial_number,
             suggested_area=suggested_area,
-            sw_version=sw_version,
             via_device_id=via_device_id,
+            **validated_fields,
         )
 
     @callback
@@ -1470,8 +1516,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     async def _async_load(self) -> None:
         """Load the device registry."""
-        assert self._loaded_event is not None
-        assert not self._loaded_event.is_set()
+        if self._loaded_event.is_set():
+            raise RuntimeError("Device registry is already loaded")
 
         async_setup_cleanup(self.hass, self)
 
@@ -1573,12 +1619,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self._loaded_event.set()
 
     async def async_wait_loaded(self) -> None:
-        """Wait until the device registry is fully loaded.
-
-        Will only wait if the registry had already been set up.
-        """
-        if self._loaded_event is not None:
-            await self._loaded_event.wait()
+        """Wait until the device registry is fully loaded."""
+        await self._loaded_event.wait()
 
     @callback
     def _data_to_save(self) -> dict[str, Any]:
@@ -1720,16 +1762,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
 
 @callback
-@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
-    return DeviceRegistry(hass)
+    try:
+        return hass.data[DATA_REGISTRY]
+    except KeyError as ex:
+        raise RuntimeError("Device registry not set up") from ex
 
 
 def async_setup(hass: HomeAssistant) -> None:
     """Set up device registry."""
-    assert DATA_REGISTRY not in hass.data
-    async_get(hass).async_setup()
+    if DATA_REGISTRY in hass.data:
+        raise RuntimeError("Device registry is already set up")
+    hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:

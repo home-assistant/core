@@ -1,7 +1,5 @@
 """Shelly entity helper."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass
 from functools import wraps
@@ -246,7 +244,8 @@ def async_restore_rpc_attribute_entities(
     sensor_class: Callable,
 ) -> None:
     """Restore RPC attributes entities."""
-    entities = []
+    entities: list[Entity] = []
+    sleep_period = config_entry.data[CONF_SLEEP_PERIOD]
 
     ent_reg = er.async_get(hass)
     entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
@@ -261,11 +260,13 @@ def async_restore_rpc_attribute_entities(
         attribute = entry.unique_id.split("-")[-1]
 
         if description := sensors.get(attribute):
-            entities.append(
-                get_entity_class(sensor_class, description)(
-                    coordinator, key, attribute, description, entry
+            entity_class = get_entity_class(sensor_class, description)
+            if sleep_period:
+                entities.append(
+                    entity_class(coordinator, key, attribute, description, entry)
                 )
-            )
+            else:
+                entities.append(entity_class(coordinator, key, attribute, description))
 
     if not entities:
         return
@@ -375,7 +376,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self._attr_device_info = get_entity_block_device_info(coordinator, block)
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
         self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
@@ -430,7 +431,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Device status by entity key."""
         return cast(dict, self.coordinator.device.status[self.key])
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
         self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))

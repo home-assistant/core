@@ -1,7 +1,5 @@
 """Support for RESTful switches."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -29,7 +27,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
@@ -41,6 +39,8 @@ from homeassistant.helpers.trigger_template_entity import (
     ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CONF_BODY_OFF = "body_off"
@@ -165,15 +165,21 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
 
         try:
             req = await self.set_device_state(body_on_t)
+        except (TimeoutError, httpx.RequestError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_communicating",
+                translation_placeholders={"resource": self._resource},
+            ) from err
 
-            if HTTPStatus.OK <= req.status_code < HTTPStatus.MULTIPLE_CHOICES:
-                self._attr_is_on = True
-            else:
-                _LOGGER.error(
-                    "Can't turn on %s. Is resource/endpoint offline?", self._resource
-                )
-        except TimeoutError, httpx.RequestError:
-            _LOGGER.error("Error while switching on %s", self._resource)
+        if not HTTPStatus.OK <= req.status_code < HTTPStatus.MULTIPLE_CHOICES:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on_failed",
+                translation_placeholders={"resource": self._resource},
+            )
+
+        self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -181,14 +187,21 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
 
         try:
             req = await self.set_device_state(body_off_t)
-            if HTTPStatus.OK <= req.status_code < HTTPStatus.MULTIPLE_CHOICES:
-                self._attr_is_on = False
-            else:
-                _LOGGER.error(
-                    "Can't turn off %s. Is resource/endpoint offline?", self._resource
-                )
-        except TimeoutError, httpx.RequestError:
-            _LOGGER.error("Error while switching off %s", self._resource)
+        except (TimeoutError, httpx.RequestError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_communicating",
+                translation_placeholders={"resource": self._resource},
+            ) from err
+
+        if not HTTPStatus.OK <= req.status_code < HTTPStatus.MULTIPLE_CHOICES:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_off_failed",
+                translation_placeholders={"resource": self._resource},
+            )
+
+        self._attr_is_on = False
 
     async def set_device_state(self, body: Any) -> httpx.Response:
         """Send a state update to the device."""
@@ -213,9 +226,17 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         try:
             req = await self.get_response(self.hass)
         except TimeoutError, httpx.TimeoutException:
-            _LOGGER.exception("Timed out while fetching data")
+            _LOGGER.exception(
+                "Timed out while fetching data for %s from %s",
+                self.entity_id,
+                self._state_resource,
+            )
         except httpx.RequestError:
-            _LOGGER.exception("Error while fetching data")
+            _LOGGER.exception(
+                "Error fetching data for %s from %s",
+                self.entity_id,
+                self._state_resource,
+            )
 
         if req:
             self._async_update(req.text)

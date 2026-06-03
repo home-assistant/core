@@ -1,7 +1,5 @@
 """Config flow for Radio Browser integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

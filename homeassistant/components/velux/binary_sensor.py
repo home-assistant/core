@@ -1,7 +1,5 @@
 """Support for rain sensors built into some Velux windows."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from pyvlx import OpeningDevice, Position, PyVLXException, Window
@@ -40,7 +38,7 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
     """Representation of a Velux rain sensor."""
 
     node: Window
-    _attr_should_poll = True  # the rain sensor / opening limitations needs polling unlike the rest of the Velux devices
+    _attr_should_poll = True
     _attr_entity_registry_enabled_default = False
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
     _attr_translation_key = "rain_sensor"
@@ -73,8 +71,10 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
 
         self._attr_available = True
 
-        # Velux windows with rain sensors report an opening limitation when rain is detected.
-        # So far we've seen 89, 91, 93 (most cases) or 100 (Velux GPU). It probably makes sense to
+        # Velux windows with rain sensors report an opening
+        # limitation when rain is detected. So far we've
+        # seen 89, 91, 93 (most cases) or 100 (Velux GPU).
+        # It probably makes sense to
         # assume that any large enough limitation (we use >=89) means rain is detected.
         # Documentation on this is non-existent AFAIK.
         self._attr_is_on = limitation.position_percent >= 89

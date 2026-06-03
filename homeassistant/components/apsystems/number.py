@@ -1,7 +1,5 @@
 """The output limit which can be set in the APsystems local API integration."""
 
-from __future__ import annotations
-
 from aiohttp import ClientConnectorError
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode

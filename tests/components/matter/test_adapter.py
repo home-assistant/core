@@ -1,7 +1,5 @@
 """Test the adapter."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from matter_server.common.models import EventType
@@ -152,7 +150,7 @@ async def test_device_registry_single_node_composed_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that a composed device within a standalone node only creates one HA device entry."""
+    """Test composed device in standalone node creates one device entry."""
     assert len(device_registry.devices) == 1
 
 

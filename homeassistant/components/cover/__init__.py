@@ -1,7 +1,5 @@
 """Support for Cover devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import functools as ft
@@ -430,9 +428,13 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # * fully open but do not report `current_cover_position`
         # * stopped partially open
         # * either opening or closing, but do not report them
-        # If we previously reported opening/closing, we should move in the opposite direction.
-        # Otherwise, we must assume we are (partially) open and should always close.
-        # Note: _cover_is_last_toggle_direction_open will always remain True if we never report opening/closing.
+        # If we previously reported opening/closing, we should
+        # move in the opposite direction.
+        # Otherwise, we must assume we are (partially) open
+        # and should always close.
+        # Note: _cover_is_last_toggle_direction_open will
+        # always remain True if we never report
+        # opening/closing.
         return (
             fns["close"] if self._cover_is_last_toggle_direction_open else fns["open"]
         )

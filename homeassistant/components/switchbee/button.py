@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities(
         SwitchBeeButton(switchbee_device, coordinator)
         for switchbee_device in coordinator.data.values()
-        if switchbee_device.type == DeviceType.Scenario
+        if switchbee_device.type is DeviceType.Scenario
     )
 
 

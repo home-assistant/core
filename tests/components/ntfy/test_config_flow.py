@@ -22,8 +22,9 @@ from homeassistant.components.ntfy.const import (
     DOMAIN,
     SECTION_AUTH,
     SECTION_FILTER,
+    SUBENTRY_TYPE_TOPIC,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
+from homeassistant.config_entries import SOURCE_USER, ConfigSubentry, FlowType
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -88,6 +89,28 @@ async def test_form(
     assert result["title"] == "ntfy.sh"
     assert result["data"] == entry_data
     assert len(mock_setup_entry.mock_calls) == 1
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    subentry_flows = hass.config_entries.subentries.async_progress()
+    assert len(subentry_flows) == 1
+    assert result["next_flow"][0] == FlowType.CONFIG_SUBENTRIES_FLOW
+    result = await hass.config_entries.subentries.async_configure(
+        result["next_flow"][1], {"next_step_id": "add_topic"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_topic"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {},
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "mytopic"
+    assert result["data"] == {CONF_TOPIC: "mytopic"}
 
 
 @pytest.mark.parametrize(
@@ -196,7 +219,7 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "topic"),
+        (config_entry.entry_id, SUBENTRY_TYPE_TOPIC),
         context={"source": SOURCE_USER},
     )
 
@@ -236,7 +259,7 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
                 CONF_MESSAGE: "triggered",
             },
             subentry_id=subentry_id,
-            subentry_type="topic",
+            subentry_type=SUBENTRY_TYPE_TOPIC,
             title="mytopic",
             unique_id="mytopic",
         )
@@ -258,7 +281,7 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "topic"),
+        (config_entry.entry_id, SUBENTRY_TYPE_TOPIC),
         context={"source": SOURCE_USER},
     )
 
@@ -299,7 +322,7 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
         subentry_id: ConfigSubentry(
             data={CONF_TOPIC: "randomtopic"},
             subentry_id=subentry_id,
-            subentry_type="topic",
+            subentry_type=SUBENTRY_TYPE_TOPIC,
             title="mytopic",
             unique_id="randomtopic",
         )
@@ -319,7 +342,7 @@ async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> Non
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "topic"),
+        (config_entry.entry_id, SUBENTRY_TYPE_TOPIC),
         context={"source": SOURCE_USER},
     )
 
@@ -360,7 +383,7 @@ async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> Non
         subentry_id: ConfigSubentry(
             data={CONF_TOPIC: "mytopic"},
             subentry_id=subentry_id,
-            subentry_type="topic",
+            subentry_type=SUBENTRY_TYPE_TOPIC,
             title="mytopic",
             unique_id="mytopic",
         )
@@ -380,7 +403,7 @@ async def test_topic_already_configured(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "topic"),
+        (config_entry.entry_id, SUBENTRY_TYPE_TOPIC),
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.MENU
@@ -789,7 +812,7 @@ async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
                     CONF_MESSAGE: "triggered",
                 },
                 subentry_id="subentry_id",
-                subentry_type="topic",
+                subentry_type=SUBENTRY_TYPE_TOPIC,
                 title="mytopic",
                 unique_id="mytopic",
             )
@@ -826,7 +849,7 @@ async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
                 CONF_MESSAGE: None,
             },
             subentry_id="subentry_id",
-            subentry_type="topic",
+            subentry_type=SUBENTRY_TYPE_TOPIC,
             title="mytopic",
             unique_id="mytopic",
         )

@@ -1,7 +1,5 @@
 """Light platform for UniFi Network integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
@@ -54,7 +52,7 @@ def convert_brightness_to_ha(
 
 
 def get_device_brightness_or_default(device: Device) -> int:
-    """Get device's current LED brightness. Defaults to 100 (full brightness) if not set."""
+    """Get device LED brightness, default 100 if not set."""
     value = device.led_override_color_brightness
     return value if value is not None else 100
 

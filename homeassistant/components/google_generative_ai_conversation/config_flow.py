@@ -1,7 +1,5 @@
 """Config flow for Google Generative AI Conversation integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from functools import partial
 import logging
@@ -21,7 +19,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
@@ -40,7 +38,6 @@ from .const import (
     CONF_HARASSMENT_BLOCK_THRESHOLD,
     CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
@@ -227,7 +224,7 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Set conversation options."""
         # abort if entry is not loaded
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         errors: dict[str, str] = {}
@@ -256,7 +253,8 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
                 if not user_input.get(CONF_LLM_HASS_API):
                     user_input.pop(CONF_LLM_HASS_API, None)
-                # Don't allow to save options that enable the Google Search tool with an Assist API
+                # Don't allow to save options that enable the
+                # Google Search tool with an Assist API
                 if not (
                     user_input.get(CONF_LLM_HASS_API)
                     and user_input.get(CONF_USE_GOOGLE_SEARCH_TOOL, False) is True
@@ -323,6 +321,8 @@ async def google_generative_ai_config_option_schema(
         else:
             default_name = DEFAULT_CONVERSATION_NAME
         schema: dict[vol.Required | vol.Optional, Any] = {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(CONF_NAME, default=default_name): str,
         }
     else:

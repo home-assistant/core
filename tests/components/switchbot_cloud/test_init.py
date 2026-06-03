@@ -147,7 +147,7 @@ async def test_setup_entry_fails_when_listing_devices(
     """Test error handling when list_devices in setup of entry."""
     mock_list_devices.side_effect = error
     entry = await configure_integration(hass)
-    assert entry.state == state
+    assert entry.state is state
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()

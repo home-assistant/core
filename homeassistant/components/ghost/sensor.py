@@ -1,7 +1,5 @@
 """Sensor platform for Ghost."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -71,6 +69,12 @@ SENSORS: tuple[GhostSensorEntityDescription, ...] = (
         translation_key="comped_members",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.members.get("comped", 0),
+    ),
+    GhostSensorEntityDescription(
+        key="gift_members",
+        translation_key="gift_members",
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.members.get("gift", 0),
     ),
     # Post metrics
     GhostSensorEntityDescription(

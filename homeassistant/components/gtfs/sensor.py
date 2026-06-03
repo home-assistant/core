@@ -1,7 +1,5 @@
 """Support for GTFS (Google/General Transport Format Schema)."""
 
-from __future__ import annotations
-
 import datetime
 import logging
 import os

@@ -1,7 +1,5 @@
 """Support for ESPHome buttons."""
 
-from __future__ import annotations
-
 from functools import partial
 
 from aioesphomeapi import ButtonInfo, EntityInfo, EntityState

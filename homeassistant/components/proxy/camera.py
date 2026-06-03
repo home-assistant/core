@@ -1,7 +1,5 @@
 """Proxy camera platform that enables image processing of camera data."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import io

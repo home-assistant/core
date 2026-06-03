@@ -1,7 +1,5 @@
 """Test Tuya button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
@@ -25,7 +23,7 @@ def platform_autouse():
         yield
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,

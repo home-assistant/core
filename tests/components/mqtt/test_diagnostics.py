@@ -17,12 +17,8 @@ from tests.components.diagnostics import (
 )
 from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
-default_entry_data = {
-    "broker": "mock-broker",
-}
-default_entry_options = {
-    "birth_message": {},
-}
+default_entry_data = {"broker": "mock-broker", "protocol": "5"}
+default_entry_options = {"birth_message": {}}
 
 
 async def test_entry_diagnostics(
@@ -145,6 +141,7 @@ async def test_entry_diagnostics(
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
+                mqtt.CONF_PROTOCOL: "5",
                 CONF_PASSWORD: "hunter2",
                 CONF_USERNAME: "my_user",
             },

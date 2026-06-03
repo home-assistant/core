@@ -1,7 +1,5 @@
 """Support for UniFi Protect NVR alarm control panel."""
 
-from __future__ import annotations
-
 from uiprotect.data import NVR, NvrArmModeStatus
 from uiprotect.exceptions import GlobalAlarmManagerError
 

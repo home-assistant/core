@@ -1,7 +1,5 @@
 """The MusicCast integration."""
 
-from __future__ import annotations
-
 from aiomusiccast.capabilities import Capability
 
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_VIA_DEVICE
@@ -65,7 +63,7 @@ class MusicCastDeviceEntity(MusicCastEntity):
             },
             manufacturer=BRAND,
             model=self.coordinator.data.model_name,
-            sw_version=self.coordinator.data.system_version,
+            sw_version=str(self.coordinator.data.system_version),
         )
 
         if self._zone_id == DEFAULT_ZONE:

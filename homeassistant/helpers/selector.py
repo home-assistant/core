@@ -1,7 +1,5 @@
 """Selectors for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from enum import StrEnum
@@ -57,9 +55,12 @@ class Selector[_T: Mapping[str, Any]]:
     CONFIG_SCHEMA: Callable
     config: _T
     selector_type: str
-    # Context keys that are allowed to be used in the selector, with list of allowed selector types.
-    # Selectors can use the value of other fields in the same schema as context for filtering for example.
-    # The selector defines which context keys it supports and what selector types are allowed for each key.
+    # Context keys that are allowed to be used in the
+    # selector, with list of allowed selector types. Selectors
+    # can use the value of other fields in the same schema as
+    # context for filtering for example. The selector defines
+    # which context keys it supports and what selector types
+    # are allowed for each key.
     allowed_context_keys: dict[str, set[str]] = {}
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
@@ -300,7 +301,11 @@ AddonSelectorConfig = AppSelectorConfig
 
 @SELECTORS.register("addon")
 class AddonSelector(Selector[AddonSelectorConfig]):
-    """Selector of an add-on, kept for backward compatibility after add-ons -> apps rename."""
+    """Selector of an add-on.
+
+    Kept for backward compatibility after add-ons -> apps
+    rename.
+    """
 
     selector_type = "addon"
 
@@ -427,7 +432,7 @@ class AutomationBehavior(StrEnum):
 
     ALL = "all"
     FIRST = "first"
-    LAST = "last"
+    EACH = "each"
     ANY = "any"
 
 
@@ -441,8 +446,8 @@ class AutomationBehaviorSelectorMode(StrEnum):
 _AUTOMATION_BEHAVIOR_MODES: dict[AutomationBehaviorSelectorMode, list[str]] = {
     AutomationBehaviorSelectorMode.TRIGGER: [
         AutomationBehavior.FIRST,
-        AutomationBehavior.LAST,
-        AutomationBehavior.ANY,
+        AutomationBehavior.ALL,
+        AutomationBehavior.EACH,
     ],
     AutomationBehaviorSelectorMode.CONDITION: [
         AutomationBehavior.ALL,
@@ -1700,7 +1705,11 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
                 if field_data.get("required") and field not in _config:
                     raise vol.Invalid(f"Field {field} is required")
                 if field in _config:
-                    selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+                    field_selector = field_data["selector"]
+                    if isinstance(field_selector, Selector):
+                        field_selector(_config[field])  # type: ignore[operator]
+                    else:
+                        selector(field_selector)(_config[field])  # type: ignore[operator]
 
             for key in _config:
                 if key not in self.config["fields"]:

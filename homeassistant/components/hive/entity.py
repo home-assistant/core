@@ -1,7 +1,5 @@
 """Support for the Hive devices and services."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from apyhiveapi import Hive

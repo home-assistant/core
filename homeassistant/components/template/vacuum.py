@@ -1,7 +1,5 @@
 """Support for Template vacuums."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any
@@ -24,14 +22,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
-    CONF_NAME,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
@@ -50,8 +41,6 @@ from .helpers import (
     async_setup_template_preview,
 )
 from .schemas import (
-    TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_attributes_schema,
@@ -62,23 +51,15 @@ from .trigger_entity import TriggerEntity
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BATTERY_LEVEL = "battery_level"
-CONF_BATTERY_LEVEL_TEMPLATE = "battery_level_template"
 CONF_CLEAN_SEGMENTS = "clean_segments"
 CONF_FAN_SPEED = "fan_speed"
 CONF_FAN_SPEED_LIST = "fan_speeds"
-CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
 CONF_SEGMENTS = "segments"
 CONF_VACUUMS = "vacuums"
 
 DEFAULT_NAME = "Template Vacuum"
 
 ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
-
-LEGACY_FIELDS = {
-    CONF_BATTERY_LEVEL_TEMPLATE: CONF_BATTERY_LEVEL,
-    CONF_FAN_SPEED_TEMPLATE: CONF_FAN_SPEED,
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
 
 SCRIPT_FIELDS = (
     CONF_CLEAN_SEGMENTS,
@@ -130,34 +111,6 @@ VACUUM_YAML_SCHEMA = vol.All(
     cv.key_dependency(CONF_CLEAN_SEGMENTS, CONF_UNIQUE_ID),
 )
 
-VACUUM_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
-            vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-            vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY.schema)
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
-)
-
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_VACUUMS): cv.schema_with_slug_keys(VACUUM_LEGACY_YAML_SCHEMA)}
-)
-
 VACUUM_CONFIG_ENTRY_SCHEMA = VACUUM_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
@@ -178,8 +131,6 @@ async def async_setup_platform(
         TriggerVacuumEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_VACUUMS,
         script_options=SCRIPT_FIELDS,
     )
 
@@ -294,8 +245,11 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 

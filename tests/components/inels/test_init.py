@@ -37,7 +37,9 @@ async def test_ha_mqtt_publish(
         topic, payload, qos, retain = "test/topic", "test_payload", 1, True
 
         await config_entry.runtime_data.mqtt.publish(topic, payload, qos, retain)
-        mqtt_mock.async_publish.assert_called_once_with(topic, payload, qos, retain)
+        mqtt_mock.async_publish.assert_called_once_with(
+            topic, payload, qos, retain, message_expiry_interval=None
+        )
 
 
 async def test_ha_mqtt_subscribe(

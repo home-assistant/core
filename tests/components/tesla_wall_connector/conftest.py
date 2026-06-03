@@ -115,7 +115,7 @@ def get_lifetime_mock() -> Lifetime:
 
 @dataclass
 class EntityAndExpectedValues:
-    """Class for keeping entity id along with expected value for first and second data updates."""
+    """Class for keeping entity id along with expected update values."""
 
     entity_id: str
     first_value: Any
@@ -142,7 +142,8 @@ async def _test_sensors(
         state = hass.states.get(entity.entity_id)
         assert state, f"Unable to get state of {entity.entity_id}"
         assert state.state == entity.first_value, (
-            f"First update: {entity.entity_id} is expected to have state {entity.first_value} but has {state.state}"
+            f"First update: {entity.entity_id} is expected to have"
+            f" state {entity.first_value} but has {state.state}"
         )
 
     # Simulate second data update
@@ -165,5 +166,6 @@ async def _test_sensors(
     for entity in entities_and_expected_values:
         state = hass.states.get(entity.entity_id)
         assert state.state == entity.second_value, (
-            f"Second update: {entity.entity_id} is expected to have state {entity.second_value} but has {state.state}"
+            f"Second update: {entity.entity_id} is expected to have"
+            f" state {entity.second_value} but has {state.state}"
         )

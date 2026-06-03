@@ -1,7 +1,5 @@
 """Support for TPLink Omada binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING

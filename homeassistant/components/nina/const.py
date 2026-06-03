@@ -1,7 +1,5 @@
 """Constants for the Nina integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from logging import Logger, getLogger
 from typing import Final
@@ -31,7 +29,6 @@ ATTR_SEVERITY: str = "severity"
 ATTR_RECOMMENDED_ACTIONS: str = "recommended_actions"
 ATTR_AFFECTED_AREAS: str = "affected_areas"
 ATTR_WEB: str = "web"
-ATTR_ID: str = "id"
 ATTR_SENT: str = "sent"
 ATTR_START: str = "start"
 ATTR_EXPIRES: str = "expires"

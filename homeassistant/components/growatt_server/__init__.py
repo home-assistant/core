@@ -25,6 +25,7 @@ Error handling pattern for reauth:
 """
 
 from collections.abc import Mapping
+import datetime
 from json import JSONDecodeError
 import logging
 
@@ -33,8 +34,14 @@ from requests import RequestException
 
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -46,10 +53,14 @@ from .const import (
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
     DEPRECATED_URLS,
+    DEVICE_SCAN_INTERVAL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
+    SUPPORTED_DEVICE_TYPES,
     V1_API_ERROR_NO_PRIVILEGE,
+    V1_API_ERROR_RATE_LIMITED,
+    V1_DEVICE_TYPES,
 )
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
 from .models import GrowattRuntimeData
@@ -88,7 +99,8 @@ async def async_migrate_entry(
     achieve:
         Migration: login() → plant_list() → [cache API instance]
         Setup:     [reuse cached API] → device_list()
-    This reduces to just 1 login() call during the migration+setup cycle and prevent account lockout.
+    This reduces to just 1 login() call during the
+    migration+setup cycle and prevent account lockout.
     """
     _LOGGER.debug(
         "Migrating config entry from version %s.%s",
@@ -125,7 +137,8 @@ async def async_migrate_entry(
 
         # Handle DEFAULT_PLANT_ID resolution
         if config.get(CONF_PLANT_ID) == DEFAULT_PLANT_ID:
-            # V1 API should never have DEFAULT_PLANT_ID (plant selection happens in config flow)
+            # V1 API should never have DEFAULT_PLANT_ID
+            # (plant selection happens in config flow)
             # If it does, this indicates a corrupted config entry
             if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
                 _LOGGER.error(
@@ -239,9 +252,6 @@ def _login_classic_api(
     return login_response
 
 
-V1_DEVICE_TYPES: dict[int, str] = {5: "sph", 7: "min"}
-
-
 def get_device_list_v1(
     api, config: Mapping[str, str]
 ) -> tuple[list[dict[str, str]], str]:
@@ -259,8 +269,13 @@ def get_device_list_v1(
             raise ConfigEntryAuthFailed(
                 f"Authentication failed for Growatt API: {e.error_msg or str(e)}"
             ) from e
+        if e.error_code == V1_API_ERROR_RATE_LIMITED:
+            raise ConfigEntryNotReady(
+                f"Growatt API rate limited, will retry: {e.error_msg or str(e)}"
+            ) from e
         raise ConfigEntryError(
-            f"API error during device list: {e.error_msg or str(e)} (Code: {e.error_code})"
+            f"API error during device list: {e.error_msg or str(e)}"
+            f" (Code: {e.error_code})"
         ) from e
     devices = devices_dict.get("devices", [])
     supported_devices = [
@@ -350,7 +365,7 @@ async def async_setup_entry(
             hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
         )
         for device in devices
-        if device["deviceType"] in ["inverter", "tlx", "storage", "mix", "min", "sph"]
+        if device["deviceType"] in SUPPORTED_DEVICE_TYPES
     }
 
     # Perform the first refresh for the total coordinator
@@ -368,6 +383,96 @@ async def async_setup_entry(
 
     # Set up all the entities
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    async def _async_scan_for_new_devices(_now: datetime.datetime) -> None:
+        """Scan for new or removed devices and update HA accordingly."""
+        # Fetch current config (in case it was updated via reauth or options)
+        current_plant_id = config_entry.data[CONF_PLANT_ID]
+
+        total_coordinator = config_entry.runtime_data.total_coordinator
+        # Signal the coordinator to also fetch the device list on its next
+        # _sync_update_data run, then force an immediate refresh.  This keeps
+        # the device_list call in the same executor thread as the existing
+        # login() + plant-overview call, so for Classic API there is no extra
+        # login and no thread-safety concern with the shared session.
+        total_coordinator.request_device_list_scan()
+        await total_coordinator.async_refresh()
+
+        if not total_coordinator.last_update_success:
+            _LOGGER.debug("Coordinator refresh failed during device scan, skipping")
+            return
+
+        current_devices = total_coordinator.device_list
+        if current_devices is None:
+            _LOGGER.debug(
+                "Device list not populated after coordinator refresh, skipping scan"
+            )
+            return
+
+        runtime_data = config_entry.runtime_data
+        current_device_sns = {device["deviceSn"] for device in current_devices}
+
+        # Remove stale devices
+        device_registry = dr.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        ):
+            device_domain_ids = {
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if not device_domain_ids:
+                continue
+            # Skip the plant "total" device
+            if current_plant_id in device_domain_ids:
+                continue
+            if device_domain_ids.isdisjoint(current_device_sns):
+                for device_sn in device_domain_ids:
+                    if coordinator := runtime_data.devices.pop(device_sn, None):
+                        await coordinator.async_shutdown()
+                device_registry.async_update_device(
+                    device_entry.id,
+                    remove_config_entry_id=config_entry.entry_id,
+                )
+
+        # Add new devices
+        new_coordinators: list[GrowattCoordinator] = []
+        for device in current_devices:
+            device_sn = device["deviceSn"]
+            device_type = device["deviceType"]
+            if device_sn in runtime_data.devices:
+                continue
+            if device_type not in SUPPORTED_DEVICE_TYPES:
+                _LOGGER.debug(
+                    "New device %s with type %s is not supported, skipping",
+                    device_sn,
+                    device_type,
+                )
+                continue
+            coordinator = GrowattCoordinator(
+                hass, config_entry, device_sn, device_type, current_plant_id
+            )
+            await coordinator.async_refresh()
+            if not coordinator.last_update_success:
+                _LOGGER.debug("Failed to refresh new device %s, skipping", device_sn)
+                await coordinator.async_shutdown()
+                continue
+            runtime_data.devices[device_sn] = coordinator
+            new_coordinators.append(coordinator)
+
+        if new_coordinators:
+            async_dispatcher_send(
+                hass,
+                f"{DOMAIN}_new_device_{config_entry.entry_id}",
+                new_coordinators,
+            )
+
+    config_entry.async_on_unload(
+        async_track_time_interval(
+            hass, _async_scan_for_new_devices, DEVICE_SCAN_INTERVAL
+        )
+    )
 
     return True
 

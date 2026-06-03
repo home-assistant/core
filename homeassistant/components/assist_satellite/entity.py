@@ -291,7 +291,8 @@ class AssistSatelliteEntity(entity.Entity):
         self._is_announcing = True
         self._set_state(AssistSatelliteState.RESPONDING)
 
-        # Provide our start info to the LLM so it understands context of incoming message
+        # Provide our start info to the LLM so it understands
+        # context of incoming message
         if extra_system_prompt is not None:
             self._extra_system_prompt = extra_system_prompt
         else:
@@ -501,7 +502,8 @@ class AssistSatelliteEntity(entity.Entity):
         with chat_session.async_get_chat_session(
             self.hass, self._conversation_id
         ) as session:
-            # Store the conversation ID. If it is no longer valid, get_chat_session will reset it
+            # Store the conversation ID. If it is no longer valid,
+            # get_chat_session will reset it
             self._conversation_id = session.conversation_id
             self._pipeline_task = (
                 self.platform.config_entry.async_create_background_task(

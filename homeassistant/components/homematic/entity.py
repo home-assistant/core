@@ -1,7 +1,5 @@
 """Homematic base entity."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from datetime import timedelta
 import logging
@@ -144,7 +142,8 @@ class HMDevice(Entity):
                         channel = channels[0]
                     else:
                         channel = self._channel
-                    # Remember the channel for this attribute to ignore invalid events later
+                    # Remember the channel for this attribute to
+                    # ignore invalid events later
                     self._channel_map[node] = str(channel)
 
         _LOGGER.debug("Channel map for %s: %s", self._address, str(self._channel_map))

@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +65,7 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
             ssl_verify_cert=user_input[CONF_VERIFY_SSL],
+            timeout=TIMEOUT,
         )
         try:
             await self.hass.async_add_executor_job(client.principal)
@@ -74,6 +75,9 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
                 return "invalid_auth"
             # AuthorizationError can be raised if the url is incorrect or
             # on some other unexpected server response.
+            return "cannot_connect"
+        except requests.Timeout as err:
+            _LOGGER.warning("Timeout connecting to CalDAV server: %s", err)
             return "cannot_connect"
         except requests.ConnectionError as err:
             _LOGGER.warning("Connection Error connecting to CalDAV server: %s", err)

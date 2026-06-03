@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!SmartHome switch devices."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyfritzhome.devicetypes import FritzhomeTrigger
@@ -73,7 +71,7 @@ class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):
         await self.coordinator.async_refresh()
 
     def check_lock_state(self) -> None:
-        """Raise an Error if manual switching via FRITZ!Box user interface is disabled."""
+        """Raise an Error if manual switching via FRITZ!Box is disabled."""
         if self.data.lock:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

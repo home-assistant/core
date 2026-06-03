@@ -105,7 +105,7 @@ async def test_full_reconfigure_flow_unique_id_mismatch(
 async def test_full_reconfigure_flow_connection_error_and_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_wled: MagicMock
 ) -> None:
-    """Test we show user form on WLED connection error and allows user to change host."""
+    """Test user form on WLED connection error allows host change."""
     mock_config_entry.add_to_hass(hass)
 
     # Mock connection error

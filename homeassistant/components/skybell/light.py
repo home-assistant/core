@@ -1,7 +1,5 @@
 """Light/LED support for the Skybell HD Doorbell."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aioskybell.helpers.const import BRIGHTNESS, RGB_COLOR

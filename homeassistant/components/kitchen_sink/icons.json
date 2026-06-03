@@ -9,9 +9,15 @@
     }
   },
   "services": {
+    "set_scanner_connected": {
+      "service": "mdi:lan-connect"
+    },
+    "set_tracker_location": {
+      "service": "mdi:map-marker"
+    },
     "test_service_1": {
       "sections": {
-        "advanced_fields": "mdi:test-tube"
+        "additional_fields": "mdi:test-tube"
       },
       "service": "mdi:flask"
     }

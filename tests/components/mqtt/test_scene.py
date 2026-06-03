@@ -81,7 +81,7 @@ async def test_sending_mqtt_commands(
     await hass.services.async_call(scene.DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "beer on", 0, False
+        "command-topic", "beer on", 0, False, message_expiry_interval=None
     )
 
 

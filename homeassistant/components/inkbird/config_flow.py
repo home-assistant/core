@@ -1,12 +1,11 @@
 """Config flow for inkbird ble integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from inkbird_ble import INKBIRDBluetoothDeviceData as DeviceData
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -76,6 +75,7 @@ class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=title, data={CONF_DEVICE_TYPE: device_type}
             )
 
+        await bluetooth.async_request_active_scan(self.hass)
         current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address

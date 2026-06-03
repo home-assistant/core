@@ -21,7 +21,7 @@ async def test_light_entity(
     """Tests lights entity."""
 
     device_name = "Light Controller"
-    entity_key = "light.light_controller_test_entity_name"
+    entity_key = "light.test_entity_room_light_controller_test_entity_name"
     entity_type = "light"
 
     mock_api.lights = [
@@ -74,7 +74,7 @@ async def test_dimmer_entity(
     """Tests dimmer entity."""
 
     device_name = "Light Controller"
-    entity_key = "light.light_controller_test_entity_name"
+    entity_key = "light.test_entity_room_light_controller_test_entity_name"
     entity_type = "dimmer"
     entity_type_override = "light"
 

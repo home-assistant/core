@@ -1,7 +1,5 @@
 """Test Home Assistant date util methods."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -147,7 +145,7 @@ def test_parse_datetime_returns_none_for_incorrect_format() -> None:
 
 
 def test_parse_datetime_raises_for_incorrect_format() -> None:
-    """Test parse_datetime raises ValueError if raise_on_error is set with an incorrect format."""
+    """Test parse_datetime raises ValueError if raise_on_error is set."""
     with pytest.raises(ValueError):
         dt_util.parse_datetime("not a datetime string", raise_on_error=True)
 
@@ -392,7 +390,8 @@ def test_find_next_time_expression_time_dst() -> None:
     )
 
 
-# DST begins on 2021.03.28 2:00, clocks were turned forward 1h; 2:00-3:00 time does not exist
+# DST begins on 2021.03.28 2:00, clocks were turned forward 1h;
+# 2:00-3:00 time does not exist
 @pytest.mark.parametrize(
     ("now_dt", "expected_dt"),
     [
@@ -421,7 +420,8 @@ def test_find_next_time_expression_entering_dst(now_dt, expected_dt) -> None:
     assert dt_util.as_utc(res_dt) == dt_util.as_utc(expected_dt)
 
 
-# DST ends on 2021.10.31 2:00, clocks were turned backward 1h; 2:00-3:00 time is ambiguous
+# DST ends on 2021.10.31 2:00, clocks were turned backward 1h;
+# 2:00-3:00 time is ambiguous
 @pytest.mark.parametrize(
     ("now_dt", "expected_dt"),
     [
@@ -605,7 +605,7 @@ def test_find_next_time_expression_day_before_dst_change_the_same_time() -> None
 def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_30_s() -> (
     None
 ):
-    """Test leaving daylight saving time for find_next_time_expression_time 30s into the future."""
+    """Test leaving DST for find_next_time_expression_time 30s ahead."""
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
 
@@ -627,10 +627,10 @@ def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_30_s()
     assert next_time.fold == 0
 
 
-def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_same_time() -> (
+def test_find_next_time_expression_time_leave_dst_chicago_before_fold_same_time() -> (
     None
 ):
-    """Test leaving daylight saving time for find_next_time_expression_time with the same time."""
+    """Test leaving DST for find_next_time_expression_time same time."""
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
 
@@ -678,7 +678,7 @@ def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_same_tim
     )
 
 
-def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_ahead_1_hour_10_min() -> (
+def test_find_next_time_expression_time_leave_dst_chicago_into_fold_ahead_1h_10m() -> (
     None
 ):
     """Test leaving daylight saving time for find_next_time_expression_time."""
@@ -706,7 +706,7 @@ def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_ahead_1_
     )
 
 
-def test_find_next_time_expression_time_leave_dst_chicago_inside_the_fold_ahead_10_min() -> (
+def test_find_next_time_expression_time_leave_dst_chicago_inside_fold_ahead_10m() -> (
     None
 ):
     """Test leaving daylight saving time for find_next_time_expression_time."""
@@ -734,7 +734,7 @@ def test_find_next_time_expression_time_leave_dst_chicago_inside_the_fold_ahead_
     )
 
 
-def test_find_next_time_expression_time_leave_dst_chicago_past_the_fold_ahead_2_hour_10_min() -> (
+def test_find_next_time_expression_time_leave_dst_chicago_past_fold_ahead_2h_10m() -> (
     None
 ):
     """Test leaving daylight saving time for find_next_time_expression_time."""
@@ -785,10 +785,8 @@ def test_find_next_time_expression_microseconds() -> None:
     assert time_after == datetime(2022, 5, 13, 1, 5, 10, tzinfo=dt_util.UTC)
 
 
-def test_find_next_time_expression_tenth_second_pattern_does_not_drift_entering_dst() -> (
-    None
-):
-    """Test finding next time expression tenth second pattern does not drift entering dst."""
+def test_find_next_time_expression_tenth_second_no_drift_entering_dst() -> None:
+    """Test next time expression tenth second pattern no drift entering DST."""
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
     tenth_second_pattern = (None, None, "10")

@@ -1,7 +1,5 @@
 """samsungctl and samsungtvws bridge classes."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError

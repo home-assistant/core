@@ -47,7 +47,7 @@
     {
       "creationTime": 1740136137000,
       "lastUpdateTime": 1740136137000,
-      "label": "** *(**)*",
+      "label": "TaHoma (HomeKit)",
       "deviceURL": "homekit://1234-5678-5010/stack",
       "shortcut": false,
       "controllableName": "homekit:StackComponent",
@@ -70,12 +70,12 @@
         {
           "name": "homekit:SetupCode",
           "type": 3,
-          "value": "**"
+          "value": "012-34-567"
         },
         {
           "name": "homekit:SetupPayload",
           "type": 3,
-          "value": "**:*/*/**"
+          "value": "X-HM://0000000000000"
         }
       ],
       "available": true,
@@ -89,7 +89,7 @@
     {
       "creationTime": 1740136137000,
       "lastUpdateTime": 1740136137000,
-      "label": "**",
+      "label": "TaHoma",
       "deviceURL": "internal://1234-5678-5010/pod/0",
       "shortcut": false,
       "controllableName": "internal:PodV3Component",
@@ -217,7 +217,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "**"
+          "value": "TaHoma"
         }
       ],
       "available": true,
@@ -231,7 +231,7 @@
     {
       "creationTime": 1740136137000,
       "lastUpdateTime": 1740136137000,
-      "label": "** *(**/**)*",
+      "label": "TaHoma (WiFi/Ethernet)",
       "deviceURL": "internal://1234-5678-5010/wifi/0",
       "shortcut": false,
       "controllableName": "internal:WifiComponent",
@@ -2985,7 +2985,7 @@
     {
       "creationTime": 1740139813000,
       "lastUpdateTime": 1740139813000,
-      "label": "** *(**)*",
+      "label": "TaHoma (IO)",
       "deviceURL": "io://1234-5678-5010/8508653",
       "shortcut": false,
       "controllableName": "io:StackComponent",
@@ -3043,7 +3043,7 @@
     {
       "creationTime": 1740136141000,
       "lastUpdateTime": 1740136141000,
-      "label": "** ** **",
+      "label": "Somfy Protect Bridge",
       "deviceURL": "ogp://1234-5678-5010/00000BE8",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -3137,7 +3137,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Somfy Protect Bridge"
         }
       ],
       "attributes": [
@@ -3183,7 +3183,7 @@
     {
       "creationTime": 1740136141000,
       "lastUpdateTime": 1740136141000,
-      "label": "** ** **",
+      "label": "Somfy Protect Camera",
       "deviceURL": "ogp://1234-5678-5010/0003FEF3",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -3229,7 +3229,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Somfy Protect Camera"
         }
       ],
       "attributes": [
@@ -3276,7 +3276,7 @@
     {
       "creationTime": 1740136141000,
       "lastUpdateTime": 1740136141000,
-      "label": "** ** **",
+      "label": "Somfy Protect Sensor",
       "deviceURL": "ogp://1234-5678-5010/039575E9",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -3326,7 +3326,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Somfy Protect Sensor"
         }
       ],
       "attributes": [
@@ -3369,7 +3369,7 @@
     {
       "creationTime": 1740136140000,
       "lastUpdateTime": 1740136140000,
-      "label": "** ** **",
+      "label": "Somfy Protect Siren",
       "deviceURL": "ogp://1234-5678-5010/09E45393",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -3419,7 +3419,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Somfy Protect Siren"
         }
       ],
       "attributes": [
@@ -3462,7 +3462,7 @@
     {
       "creationTime": 1740136137000,
       "lastUpdateTime": 1740136137000,
-      "label": "** *(**)*",
+      "label": "TaHoma (Zigbee)",
       "deviceURL": "zigbee://1234-5678-5010/65535",
       "shortcut": false,
       "controllableName": "zigbee:TransceiverV3_0Component",

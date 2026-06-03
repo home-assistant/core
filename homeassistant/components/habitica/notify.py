@@ -1,7 +1,5 @@
 """Notify platform for the Habitica integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from enum import StrEnum
 from typing import TYPE_CHECKING
@@ -111,6 +109,7 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
         try:
             await self._send_message(message)
         except NotAuthorizedError as e:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="send_message_forbidden",
@@ -120,6 +119,7 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
                 },
             ) from e
         except NotFoundError as e:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="send_message_not_found",

@@ -1,7 +1,5 @@
 """Test repairs for synology dsm."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -172,7 +170,7 @@ async def test_missing_backup_success(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test the missing backup location setup repair flow is fully processed by the user."""
+    """Test missing backup location repair flow is fully processed."""
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
     entries = hass.config_entries.async_entries(DOMAIN)

@@ -345,8 +345,29 @@
     }
   },
   "exceptions": {
+    "api_status_error": {
+      "message": "API returned status code: {status}"
+    },
     "cannot_connect": {
       "message": "Value cannot be set because the device is not connected"
+    },
+    "client_init_failed": {
+      "message": "Failed to initialize PoolDose client: {status}"
+    },
+    "connect_failed": {
+      "message": "Failed to connect to PoolDose device"
+    },
+    "connect_timeout": {
+      "message": "Timeout connecting to PoolDose device"
+    },
+    "no_data_received": {
+      "message": "No data received from API"
+    },
+    "update_connect_failed": {
+      "message": "Failed to connect to PoolDose device while fetching data"
+    },
+    "update_timeout": {
+      "message": "Timeout fetching data from PoolDose device"
     },
     "write_rejected": {
       "message": "The device rejected the value for {entity}: {value}"

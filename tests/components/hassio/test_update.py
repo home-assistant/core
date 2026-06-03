@@ -25,7 +25,7 @@ import pytest
 
 from homeassistant.components.backup import BackupManagerError, ManagerBackup
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.backup.manager import AgentBackupStatus
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
@@ -1366,7 +1366,7 @@ async def test_update_supervisor_progress(
     hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_info: AsyncMock,
 ) -> None:
-    """Test progress reporting for a Supervisor update that was not initiated via the entity.
+    """Test progress reporting for a Supervisor update not initiated via entity.
 
     Covers CLI-triggered and Supervisor self-update flows: the entity must
     show download progress from job events and stay in the installing state
@@ -1495,7 +1495,8 @@ async def test_update_supervisor_stays_in_progress_until_restart(
     )
 
     # The install HTTP call returned, but Supervisor is still restarting.
-    # The base UpdateEntity reset _attr_in_progress; _update_ongoing keeps us in progress.
+    # The base UpdateEntity reset _attr_in_progress;
+    # _update_ongoing keeps us in progress.
     assert hass.states.get(entity_id).attributes.get("in_progress") is True
 
     # Supervisor comes up with the new version and fires STARTUP_COMPLETE.
@@ -1534,7 +1535,7 @@ async def test_update_supervisor_completes_on_any_version_change(
     supervisor_client: AsyncMock,
     supervisor_info: AsyncMock,
 ) -> None:
-    """Test completion is detected when installed version changes from the pre-install one.
+    """Test completion is detected when installed version changes.
 
     If upstream publishes an even newer release between install-start and the
     post-restart refresh, installed_version will not equal latest_version but

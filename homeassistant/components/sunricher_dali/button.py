@@ -1,7 +1,5 @@
 """Support for Sunricher DALI device identify button."""
 
-from __future__ import annotations
-
 import logging
 
 from PySrDaliGateway import Device

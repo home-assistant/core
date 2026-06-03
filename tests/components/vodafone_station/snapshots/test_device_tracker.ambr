@@ -41,6 +41,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'LanDevice1',
       'host_name': 'LanDevice1',
+      'in_zones': list([
+      ]),
       'ip': '192.168.1.11',
       'mac': 'yy:yy:yy:yy:yy:yy',
       'source_type': <SourceType.ROUTER: 'router'>,
@@ -95,6 +97,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'WifiDevice0',
       'host_name': 'WifiDevice0',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '192.168.1.10',
       'mac': 'xx:xx:xx:xx:xx:xx',
       'source_type': <SourceType.ROUTER: 'router'>,

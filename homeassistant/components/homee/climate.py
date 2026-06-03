@@ -200,7 +200,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
 def get_climate_features(
     node: HomeeNode,
 ) -> tuple[ClimateEntityFeature, list[HVACMode], list[str] | None]:
-    """Determine supported climate features of a node based on the available attributes."""
+    """Determine supported climate features of a node."""
     features = ClimateEntityFeature.TARGET_TEMPERATURE
     hvac_modes = [HVACMode.HEAT]
     preset_modes: list[str] = []

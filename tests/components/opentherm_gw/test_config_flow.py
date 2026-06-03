@@ -1,7 +1,8 @@
 """Test the Opentherm Gateway config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
+import pytest
 from serial import SerialException
 
 from homeassistant import config_entries
@@ -25,11 +26,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form_user(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_user(hass: HomeAssistant, mock_pyotgw: MagicMock) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -54,10 +52,9 @@ async def test_form_user(
     assert mock_pyotgw.return_value.disconnect.await_count == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_duplicate_entries(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_pyotgw: MagicMock
 ) -> None:
     """Test duplicate device or id errors."""
     flow1 = await hass.config_entries.flow.async_init(
@@ -91,10 +88,9 @@ async def test_form_duplicate_entries(
     assert mock_pyotgw.return_value.disconnect.await_count == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_connection_timeout(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_pyotgw: MagicMock
 ) -> None:
     """Test we handle connection timeout."""
     flow = await hass.config_entries.flow.async_init(
@@ -114,10 +110,9 @@ async def test_form_connection_timeout(
     assert mock_pyotgw.return_value.connect.await_count == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_connection_error(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_pyotgw: MagicMock
 ) -> None:
     """Test we handle serial connection error."""
     flow = await hass.config_entries.flow.async_init(
@@ -135,11 +130,8 @@ async def test_form_connection_error(
     assert mock_pyotgw.return_value.connect.await_count == 1
 
 
-async def test_options_form(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_form(hass: HomeAssistant, mock_pyotgw: MagicMock) -> None:
     """Test the options form."""
     entry = MockConfigEntry(
         domain=DOMAIN,

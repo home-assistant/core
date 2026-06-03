@@ -1,7 +1,5 @@
 """Support for Qwikswitch Relays and Dimmers."""
 
-from __future__ import annotations
-
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

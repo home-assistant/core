@@ -1,7 +1,5 @@
 """Music Assistant Number platform."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from music_assistant_client.client import MusicAssistantClient
@@ -79,7 +77,7 @@ async def async_setup_entry(
 
 
 class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberEntity):
-    """Representation of a Number entity to control player provider dependent settings."""
+    """Representation of a Number entity to control player settings."""
 
     def __init__(
         self,

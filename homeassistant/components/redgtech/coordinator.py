@@ -1,7 +1,5 @@
 """Coordinator for Redgtech integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
@@ -37,7 +35,8 @@ type RedgtechConfigEntry = ConfigEntry[RedgtechDataUpdateCoordinator]
 class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RedgtechDevice]]):
     """Coordinator to manage fetching data from the Redgtech API.
 
-    Uses a dictionary keyed by unique_id for O(1) device lookup instead of O(n) list iteration.
+    Uses a dictionary keyed by unique_id for O(1) device lookup
+    instead of O(n) list iteration.
     """
 
     config_entry: RedgtechConfigEntry

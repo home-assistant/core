@@ -1,7 +1,5 @@
 """Repairs implementation for supervisor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from types import MethodType
 from typing import Any
@@ -10,10 +8,13 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import ContextType
 import voluptuous as vol
 
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 
 from . import get_addons_list
 from .const import (
@@ -24,6 +25,7 @@ from .const import (
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_DOCUMENTATION,
@@ -79,7 +81,7 @@ class SupervisorIssueRepairFlow(RepairsFlow):
 
         return placeholders or None
 
-    def _async_form_for_suggestion(self, suggestion: Suggestion) -> FlowResult:
+    def _async_form_for_suggestion(self, suggestion: Suggestion) -> RepairsFlowResult:
         """Return form for suggestion."""
         return self.async_show_form(
             step_id=suggestion.key,
@@ -88,7 +90,7 @@ class SupervisorIssueRepairFlow(RepairsFlow):
             last_step=True,
         )
 
-    async def async_step_init(self, _: None = None) -> FlowResult:
+    async def async_step_init(self, _: None = None) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         # Out of sync with supervisor, issue is resolved or not fixable. Remove it
         if not self.issue or not self.issue.suggestions:
@@ -110,7 +112,7 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         # Always show a form for one suggestion to explain to user what's happening
         return self._async_form_for_suggestion(self.issue.suggestions[0])
 
-    async def async_step_fix_menu(self, _: None = None) -> FlowResult:
+    async def async_step_fix_menu(self, _: None = None) -> RepairsFlowResult:
         """Show the fix menu."""
         assert self.issue
 
@@ -122,8 +124,11 @@ class SupervisorIssueRepairFlow(RepairsFlow):
 
     async def _async_step_apply_suggestion(
         self, suggestion: Suggestion, confirmed: bool = False
-    ) -> FlowResult:
-        """Handle applying a suggestion as a flow step. Optionally request confirmation."""
+    ) -> RepairsFlowResult:
+        """Handle applying a suggestion as a flow step.
+
+        Optionally request confirmation.
+        """
         if not confirmed and suggestion.key in SUGGESTION_CONFIRMATION_REQUIRED:
             return self._async_form_for_suggestion(suggestion)
 
@@ -139,13 +144,13 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         suggestion: Suggestion,
     ) -> Callable[
         [SupervisorIssueRepairFlow, dict[str, str] | None],
-        Coroutine[Any, Any, FlowResult],
+        Coroutine[Any, Any, RepairsFlowResult],
     ]:
         """Generate a step handler for a suggestion."""
 
         async def _async_step(
             self: SupervisorIssueRepairFlow, user_input: dict[str, str] | None = None
-        ) -> FlowResult:
+        ) -> RepairsFlowResult:
             """Handle a flow step for a suggestion."""
             return await self._async_step_apply_suggestion(
                 suggestion, confirmed=user_input is not None
@@ -229,6 +234,8 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
+    if issue_id == ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER:
+        return ConfirmRepairFlow()
     supervisor_issues = get_issues_info(hass)
     issue = supervisor_issues and supervisor_issues.get_issue(issue_id)
     if issue and issue.key == ISSUE_KEY_SYSTEM_DOCKER_CONFIG:

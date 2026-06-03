@@ -1,7 +1,5 @@
 """The tests for the Shell command component."""
 
-from __future__ import annotations
-
 import asyncio
 import os
 import re
@@ -348,7 +346,7 @@ async def test_repair_issue_on_reserved_reload_name(
 async def test_repair_issue_on_reload_service_reload(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry, hass_admin_user: MockUser
 ) -> None:
-    """Test repair issue is created if 'reload' is used in YAML and reload service is called."""
+    """Test repair issue when 'reload' is used in YAML config."""
     config = {shell_command.DOMAIN: {"test": "echo ok"}}
     await async_setup_component(hass, shell_command.DOMAIN, config)
     await hass.async_block_till_done()

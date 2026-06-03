@@ -16,7 +16,11 @@ SKYCONNECT_CONFIG_ENTRY = MockConfigEntry(
     domain=DOMAIN,
     unique_id="some_unique_id",
     data={
-        "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+        "device": (
+            "/dev/serial/by-id/"
+            "usb-Nabu_Casa_SkyConnect_v1.0"
+            "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+        ),
         "vid": "10C4",
         "pid": "EA60",
         "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
@@ -31,7 +35,11 @@ CONNECT_ZBT1_CONFIG_ENTRY = MockConfigEntry(
     domain=DOMAIN,
     unique_id="some_unique_id",
     data={
-        "device": "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+        "device": (
+            "/dev/serial/by-id/"
+            "usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1"
+            "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+        ),
         "vid": "10C4",
         "pid": "EA60",
         "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
@@ -57,7 +65,7 @@ def test_get_usb_service_info() -> None:
 
 def test_get_hardware_variant() -> None:
     """Test `get_hardware_variant` extraction."""
-    assert get_hardware_variant(SKYCONNECT_CONFIG_ENTRY) == HardwareVariant.SKYCONNECT
+    assert get_hardware_variant(SKYCONNECT_CONFIG_ENTRY) is HardwareVariant.SKYCONNECT
     assert (
-        get_hardware_variant(CONNECT_ZBT1_CONFIG_ENTRY) == HardwareVariant.CONNECT_ZBT1
+        get_hardware_variant(CONNECT_ZBT1_CONFIG_ENTRY) is HardwareVariant.CONNECT_ZBT1
     )

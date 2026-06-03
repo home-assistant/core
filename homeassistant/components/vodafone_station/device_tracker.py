@@ -1,7 +1,5 @@
 """Support for Vodafone Station routers."""
 
-from __future__ import annotations
-
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

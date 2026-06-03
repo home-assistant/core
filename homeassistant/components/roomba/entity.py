@@ -1,7 +1,5 @@
 """Base class for iRobot devices."""
 
-from __future__ import annotations
-
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -31,7 +29,11 @@ class IRobotEntity(Entity):
             model=self.vacuum_state.get("sku"),
             name=str(self.vacuum_state.get("name")),
             sw_version=self.vacuum_state.get("softwareVer"),
-            hw_version=self.vacuum_state.get("hardwareRev"),
+            hw_version=(
+                str(hw_rev)
+                if (hw_rev := self.vacuum_state.get("hardwareRev")) is not None
+                else None
+            ),
         )
 
         if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(

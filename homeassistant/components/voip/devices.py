@@ -1,21 +1,21 @@
 """Class to manage devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from voip_utils import CallInfo, VoipDatagramProtocol
 from voip_utils.sip import SipEndpoint
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 from .store import DeviceContact, DeviceContacts, VoipStore
+
+if TYPE_CHECKING:
+    from . import VoipConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,13 +80,15 @@ class VoIPDevice:
 class VoIPDevices:
     """Class to store devices."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: VoipConfigEntry, store: VoipStore
+    ) -> None:
         """Initialize VoIP devices."""
         self.hass = hass
         self.config_entry = config_entry
         self._new_device_listeners: list[Callable[[VoIPDevice], None]] = []
         self.devices: dict[str, VoIPDevice] = {}
-        self.device_store: VoipStore = config_entry.runtime_data
+        self.device_store = store
 
     async def async_setup(self) -> None:
         """Set up devices."""

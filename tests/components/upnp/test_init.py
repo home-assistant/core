@@ -1,7 +1,5 @@
 """Test UPnP/IGD setup process."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import copy
 from typing import Any
@@ -124,7 +122,7 @@ async def test_async_setup_entry_multi_location(
 async def test_async_setup_udn_mismatch(
     hass: HomeAssistant, mock_async_create_device: AsyncMock
 ) -> None:
-    """Test async_setup_entry for a device which reports a different UDN from SSDP-discovery and device description."""
+    """Test async_setup_entry for a device with different UDN from SSDP."""
     test_discovery = copy.deepcopy(TEST_DISCOVERY)
     test_discovery.upnp[ATTR_UPNP_UDN] = "uuid:another_udn"
 
@@ -238,7 +236,8 @@ async def test_async_setup_entry_force_poll_subscribe_error(
     mock_igd_device.async_subscribe_services.side_effect = UpnpCommunicationError
     mock_igd_device.async_unsubscribe_services.side_effect = UpnpCommunicationError
 
-    # Load config_entry, should still be able to load, falling back to polling/the old functionality.
+    # Load config_entry, should still be able to load,
+    # falling back to polling/the old functionality.
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id) is True
 

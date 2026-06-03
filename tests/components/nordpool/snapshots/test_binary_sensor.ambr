@@ -1,0 +1,201 @@
+# serializer version: 1
+# name: test_binary_sensor_off[load_platforms0][binary_sensor.nord_pool_se3_tomorrow_price_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.nord_pool_se3_tomorrow_price_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tomorrow price available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tomorrow price available',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tomorrow_price_available',
+    'unique_id': 'SE3-tomorrow_price_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_off[load_platforms0][binary_sensor.nord_pool_se3_tomorrow_price_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Tomorrow price available',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.nord_pool_se3_tomorrow_price_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_off[load_platforms0][binary_sensor.nord_pool_se4_tomorrow_price_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.nord_pool_se4_tomorrow_price_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tomorrow price available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tomorrow price available',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tomorrow_price_available',
+    'unique_id': 'SE4-tomorrow_price_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_off[load_platforms0][binary_sensor.nord_pool_se4_tomorrow_price_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Tomorrow price available',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.nord_pool_se4_tomorrow_price_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_on[load_platforms0][binary_sensor.nord_pool_se3_tomorrow_price_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.nord_pool_se3_tomorrow_price_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tomorrow price available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tomorrow price available',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tomorrow_price_available',
+    'unique_id': 'SE3-tomorrow_price_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_on[load_platforms0][binary_sensor.nord_pool_se3_tomorrow_price_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Tomorrow price available',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.nord_pool_se3_tomorrow_price_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_on[load_platforms0][binary_sensor.nord_pool_se4_tomorrow_price_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.nord_pool_se4_tomorrow_price_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tomorrow price available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tomorrow price available',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tomorrow_price_available',
+    'unique_id': 'SE4-tomorrow_price_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_on[load_platforms0][binary_sensor.nord_pool_se4_tomorrow_price_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Tomorrow price available',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.nord_pool_se4_tomorrow_price_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

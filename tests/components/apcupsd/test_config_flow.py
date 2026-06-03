@@ -1,7 +1,5 @@
 """Test APCUPSd config flow setup process."""
 
-from __future__ import annotations
-
 import asyncio
 from unittest.mock import AsyncMock
 
@@ -37,16 +35,17 @@ async def test_config_flow_cannot_connect(
     assert result["errors"]["base"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_duplicate_host_port(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_request_status: AsyncMock,
 ) -> None:
     """Test duplicate config flow setup with the same host / port."""
     mock_config_entry.add_to_hass(hass)
 
-    # Assign the same host and port, which we should reject since the entry already exists.
+    # Assign the same host and port, which we should reject since
+    # the entry already exists.
     mock_request_status.return_value = MOCK_STATUS
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
@@ -54,7 +53,8 @@ async def test_config_flow_duplicate_host_port(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    # Now we change the host with a different serial number and add it again. This should be successful.
+    # Now we change the host with a different serial number and
+    # add it again. This should be successful.
     another_host = CONF_DATA | {CONF_HOST: "another_host"}
     mock_request_status.return_value = MOCK_STATUS | {
         "SERIALNO": MOCK_STATUS["SERIALNO"] + "ZZZ"
@@ -68,17 +68,18 @@ async def test_config_flow_duplicate_host_port(
     assert result["data"] == another_host
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_duplicate_serial_number(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_request_status: AsyncMock,
 ) -> None:
-    """Test duplicate config flow setup with different host but the same serial number."""
+    """Test duplicate config flow with different host, same serial."""
     mock_config_entry.add_to_hass(hass)
 
-    # Assign the different host and port, but we should still reject the creation since the
-    # serial number is the same as the existing entry.
+    # Assign the different host and port, but we should still reject
+    # the creation since the serial number is the same as the
+    # existing entry.
     mock_request_status.return_value = MOCK_STATUS
     another_host = CONF_DATA | {CONF_HOST: "another_host"}
     result = await hass.config_entries.flow.async_init(
@@ -130,7 +131,8 @@ async def test_flow_works(
         (MOCK_MINIMAL_STATUS | {"UPSNAME": "Friendly Name"}, "Friendly Name"),
         (MOCK_MINIMAL_STATUS | {"MODEL": "MODEL X"}, "MODEL X"),
         (MOCK_MINIMAL_STATUS | {"SERIALNO": "ZZZZ"}, "ZZZZ"),
-        # Some models report "Blank" as the serial number, which we should treat it as not reported.
+        # Some models report "Blank" as the serial number,
+        # which we should treat it as not reported.
         (MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"}, "APC UPS"),
         (MOCK_MINIMAL_STATUS | {}, "APC UPS"),
     ],
@@ -142,7 +144,9 @@ async def test_flow_minimal_status(
     mock_setup_entry: AsyncMock,
     mock_request_status: AsyncMock,
 ) -> None:
-    """Test successful creation of config entries via user configuration when minimal status is reported.
+    """Test successful creation of config entries via user configuration.
+
+    Minimal status is reported.
 
     We test different combinations of minimal statuses, where the title of the
     integration will vary.
@@ -187,9 +191,9 @@ async def test_reconfigure_flow_works(
     assert mock_config_entry.data[CONF_PORT] == new_conf_data[CONF_PORT]
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_cannot_connect(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_request_status: AsyncMock,
 ) -> None:

@@ -73,6 +73,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to OpenRGB SDK server {server_address}: {error}"
+    },
     "communication_error": {
       "message": "Failed to communicate with OpenRGB SDK server {server_address}: {error}"
     },

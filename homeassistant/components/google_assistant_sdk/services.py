@@ -1,7 +1,5 @@
 """Services for the Google Assistant SDK integration."""
 
-from __future__ import annotations
-
 import dataclasses
 
 import voluptuous as vol

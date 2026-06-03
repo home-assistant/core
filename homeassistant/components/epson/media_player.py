@@ -1,7 +1,5 @@
 """Support for Epson projector."""
 
-from __future__ import annotations
-
 import logging
 
 from epson_projector import Projector, ProjectorUnavailableError

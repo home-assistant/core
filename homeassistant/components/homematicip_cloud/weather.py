@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud weather devices."""
 
-from __future__ import annotations
-
 from homematicip.base.enums import WeatherCondition
 from homematicip.device import WeatherSensor, WeatherSensorPlus, WeatherSensorPro
 
@@ -37,7 +35,9 @@ HOME_WEATHER_CONDITION = {
     WeatherCondition.HEAVILY_CLOUDY_WITH_SNOW: ATTR_CONDITION_SNOWY,
     WeatherCondition.HEAVILY_CLOUDY_WITH_SNOW_RAIN: ATTR_CONDITION_SNOWY_RAINY,
     WeatherCondition.HEAVILY_CLOUDY_WITH_THUNDER: ATTR_CONDITION_LIGHTNING,
-    WeatherCondition.HEAVILY_CLOUDY_WITH_RAIN_AND_THUNDER: ATTR_CONDITION_LIGHTNING_RAINY,
+    WeatherCondition.HEAVILY_CLOUDY_WITH_RAIN_AND_THUNDER: (
+        ATTR_CONDITION_LIGHTNING_RAINY
+    ),
     WeatherCondition.FOGGY: ATTR_CONDITION_FOG,
     WeatherCondition.STRONG_WIND: ATTR_CONDITION_WINDY,
     WeatherCondition.UNKNOWN: "",
@@ -73,11 +73,6 @@ class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the weather sensor."""
         super().__init__(hap, device, feature_id="weather")
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._device.label
 
     @property
     def native_temperature(self) -> float:
@@ -118,6 +113,7 @@ class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
 class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
     """Representation of the HomematicIP home weather."""
 
+    _attr_has_entity_name = False
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_attribution = "Powered by Homematic IP"

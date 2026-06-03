@@ -1,7 +1,5 @@
 """Config flow for TP-Link Omada integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import re
@@ -59,7 +57,8 @@ async def create_omada_client(
         and re.fullmatch(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", host_parts.hostname)
         is not None
     ):
-        # TP-Link API uses cookies for login session, so an unsafe cookie jar is required for IP addresses
+        # TP-Link API uses cookies for login session,
+        # so an unsafe cookie jar is required for IPs
         websession = async_create_clientsession(
             hass, cookie_jar=CookieJar(unsafe=True), verify_ssl=verify_ssl
         )

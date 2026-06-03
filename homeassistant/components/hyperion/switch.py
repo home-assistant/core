@@ -1,7 +1,5 @@
 """Switch platform for Hyperion."""
 
-from __future__ import annotations
-
 import functools
 from typing import Any
 
@@ -70,7 +68,8 @@ def _component_to_unique_id(server_id: str, component: str, instance_num: int) -
         server_id,
         instance_num,
         slugify(
-            f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE} {KEY_COMPONENTID_TO_NAME[component]}"
+            f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE}"
+            f" {KEY_COMPONENTID_TO_NAME[component]}"
         ),
     )
 

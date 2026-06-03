@@ -1,7 +1,5 @@
 """Support for deCONZ sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -99,7 +97,7 @@ T = TypeVar(
 
 
 @dataclass(frozen=True, kw_only=True)
-class DeconzSensorDescription(SensorEntityDescription, Generic[T]):
+class DeconzSensorDescription(SensorEntityDescription, Generic[T]):  # noqa: UP046
     """Class describing deCONZ binary sensor entities."""
 
     instance_check: type[T] | None = None

@@ -1,12 +1,11 @@
 """Config flow for Trend integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_NAME, UnitOfTime
 from homeassistant.helpers import selector
@@ -28,6 +27,8 @@ from .const import (
     DEFAULT_SAMPLE_DURATION,
     DOMAIN,
 )
+
+ALLOWED_DOMAINS = [COUNTER_DOMAIN, SENSOR_DOMAIN]
 
 
 async def get_base_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
@@ -92,7 +93,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN, multiple=False),
+            selector.EntitySelectorConfig(domain=ALLOWED_DOMAINS, multiple=False),
         ),
     }
 )

@@ -103,6 +103,17 @@
       }
     }
   },
+  "exceptions": {
+    "failed_to_set_fan_speed_for_profile": {
+      "message": "Failed to set fan speed to {fan_speed}% for profile {profile}"
+    },
+    "failed_to_set_profile": {
+      "message": "Failed to set profile to {profile}"
+    },
+    "failed_to_set_profile_for_duration": {
+      "message": "Failed to set profile to {profile} for {duration} minutes"
+    }
+  },
   "selector": {
     "profile": {
       "options": {

@@ -1,7 +1,5 @@
 """The test for the sensibo sensor."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock
 
 from yalesmartalarmclient import YaleSmartAlarmData

@@ -1,7 +1,5 @@
 """Constants for 1-Wire component."""
 
-from __future__ import annotations
-
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 4304
 
@@ -29,6 +27,7 @@ DEVICE_SUPPORT = {
     "3B": (),
     "42": (),
     "7E": ("EDS0065", "EDS0066", "EDS0068"),
+    "81": (),
     "A6": (),
     "EF": ("HB_HUB", "HB_MOISTURE_METER", "HobbyBoards_EF"),
 }

@@ -1,7 +1,5 @@
 """Support for SimpliSafe alarm systems."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 
 from simplipy.device import Device, DeviceTypes

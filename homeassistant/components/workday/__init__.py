@@ -1,7 +1,5 @@
 """Sensor to indicate whether the current day is a workday."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import cast
 
@@ -71,3 +69,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> 
     """Unload Workday config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> bool:
+    """Migrate old config entry."""
+
+    # This means the user has downgraded from a future version
+    if entry.version > 1:
+        return False
+
+    if entry.version == 1 and entry.minor_version == 1:
+        # By keeping name in the data, it's enough to bump the minor version
+        hass.config_entries.async_update_entry(
+            entry,
+            minor_version=2,
+        )
+
+    return True

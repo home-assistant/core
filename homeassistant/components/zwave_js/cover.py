@@ -1,7 +1,5 @@
 """Support for Z-Wave cover devices."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from zwave_js_server.const import (
@@ -169,7 +167,7 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
 
     @property
     def current_cover_position(self) -> int | None:
-        """Return the current position of cover where 0 means closed and 100 is fully open."""
+        """Return current position of cover (0=closed, 100=open)."""
         if (
             self._current_position_value is None
             or self._current_position_value.value is None
@@ -234,7 +232,8 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         assert self._stop_position_value
         # Stop the cover, will stop regardless of the actual direction of travel.
         result = await self._async_set_value(self._stop_position_value, False)
-        # When stopping is successful (or unsupervised), we can assume the cover has stopped moving.
+        # When stopping is successful (or unsupervised),
+        # we can assume the cover has stopped moving.
         if result is not None and result.status in (
             SetValueStatus.SUCCESS,
             SetValueStatus.SUCCESS_UNSUPERVISED,
@@ -503,7 +502,8 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
             and tpv.value == cv.value == self._fully_open_position
         )
         result = await self._async_set_value(self._up_value, True)
-        # StartLevelChange: SUCCESS means the device started moving in the desired direction
+        # StartLevelChange: SUCCESS means the device started
+        # moving in the desired direction
         if (
             result is not None
             and result.status in SET_VALUE_SUCCESS
@@ -524,7 +524,8 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
             and tpv.value == cv.value == self._fully_closed_position
         )
         result = await self._async_set_value(self._down_value, True)
-        # StartLevelChange: SUCCESS means the device started moving in the desired direction
+        # StartLevelChange: SUCCESS means the device started
+        # moving in the desired direction
         if (
             result is not None
             and result.status in SET_VALUE_SUCCESS
@@ -538,7 +539,8 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         result = await self._async_set_value(self._up_value, False)
-        # When stopping is successful (or unsupervised), we can assume the cover has stopped moving.
+        # When stopping is successful (or unsupervised),
+        # we can assume the cover has stopped moving.
         if result is not None and result.status in (
             SetValueStatus.SUCCESS,
             SetValueStatus.SUCCESS_UNSUPERVISED,

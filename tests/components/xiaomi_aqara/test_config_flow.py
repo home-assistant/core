@@ -122,7 +122,7 @@ async def test_config_flow_user_success(hass: HomeAssistant) -> None:
 
 
 async def test_config_flow_user_multiple_success(hass: HomeAssistant) -> None:
-    """Test a successful config flow initialized by the user with multiple gateways discovered."""
+    """Test successful config flow with multiple gateways discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -211,7 +211,7 @@ async def test_config_flow_user_no_key_success(hass: HomeAssistant) -> None:
 
 
 async def test_config_flow_user_host_mac_success(hass: HomeAssistant) -> None:
-    """Test a successful config flow initialized by the user with a host and mac specified."""
+    """Test successful config flow with host and mac specified."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

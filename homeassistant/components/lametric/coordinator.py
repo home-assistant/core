@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the LaMatric integration."""
 
-from __future__ import annotations
-
 from demetriek import Device, LaMetricAuthenticationError, LaMetricDevice, LaMetricError
 
 from homeassistant.config_entries import ConfigEntry

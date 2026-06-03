@@ -1,7 +1,5 @@
 """Unique ID migration for HomematicIP Cloud entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 import re

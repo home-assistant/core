@@ -1,7 +1,5 @@
 """Support for the Airzone Cloud climate."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 from aioairzone_cloud.common import OperationAction, OperationMode, TemperatureUnit

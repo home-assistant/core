@@ -1,7 +1,5 @@
 """Base class for common speaker tasks."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Collection, Coroutine
 import contextlib
@@ -353,7 +351,7 @@ class SonosSpeaker:
     def log_subscription_result(
         self, result: Any, event: str, level: int = logging.DEBUG
     ) -> None:
-        """Log a message if a subscription action (create/renew/stop) results in an exception."""
+        """Log if a subscription action results in an exception."""
         if not isinstance(result, Exception):
             return
 
@@ -968,7 +966,8 @@ class SonosSpeaker:
             new_members = set(sonos_group[1:])
             removed_members = old_members - new_members
             for removed_speaker in removed_members:
-                # Only clear if this speaker was coordinated by self and in the same group
+                # Only clear if this speaker was coordinated
+                # by self and in the same group
                 if (
                     removed_speaker.coordinator == self
                     and removed_speaker.sonos_group is self.sonos_group
@@ -1178,10 +1177,12 @@ class SonosSpeaker:
             if not with_group:
                 return groups
 
-            # Unjoin non-coordinator speakers not contained in the desired snapshot group
+            # Unjoin non-coordinator speakers not contained in
+            # the desired snapshot group
             #
-            # If a coordinator is unjoined from its group, another speaker from the group
-            # will inherit the coordinator's playqueue and its own playqueue will be lost
+            # If a coordinator is unjoined from its group,
+            # another speaker from the group will inherit the
+            # coordinator's playqueue and its own will be lost
             speakers_to_unjoin = set()
             for speaker in speakers:
                 if speaker.sonos_group == speaker.snapshot_group:
@@ -1267,7 +1268,8 @@ class SonosSpeaker:
                     await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
             group_description = "; ".join(
-                f"{group[0].zone_name}: {', '.join(speaker.zone_name for speaker in group)}"
+                f"{group[0].zone_name}: "
+                f"{', '.join(speaker.zone_name for speaker in group)}"
                 for group in groups
             )
             raise HomeAssistantError(

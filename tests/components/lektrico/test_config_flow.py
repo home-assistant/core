@@ -4,6 +4,7 @@ import dataclasses
 from ipaddress import ip_address
 
 from lektricowifi import DeviceConnectionError
+import pytest
 
 from homeassistant.components.lektrico.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -115,9 +116,8 @@ async def test_user_setup_device_offline(hass: HomeAssistant, mock_device) -> No
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_discovered_zeroconf(
-    hass: HomeAssistant, mock_device, mock_setup_entry
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_discovered_zeroconf(hass: HomeAssistant, mock_device) -> None:
     """Test we can setup when discovered from zeroconf."""
 
     result = await hass.config_entries.flow.async_init(

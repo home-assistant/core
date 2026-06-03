@@ -1,7 +1,5 @@
 """Support for the Dynalite devices as entities."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
@@ -23,7 +21,7 @@ def async_setup_entry_base(
     platform: str,
     entity_from_device: Callable,
 ) -> None:
-    """Record the async_add_entities function to add them later when received from Dynalite."""
+    """Record the async_add_entities function to add them later."""
     LOGGER.debug("Setting up %s entry = %s", platform, config_entry.data)
     bridge = config_entry.runtime_data
 

@@ -1,7 +1,5 @@
 """The Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from aiohttp.client_exceptions import (
@@ -75,7 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
         await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
-    # Create device now as BeoWebsocket needs a device for debug logging, firing events etc.
+    # Create device now as BeoWebsocket needs a device for
+    # debug logging, firing events etc.
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

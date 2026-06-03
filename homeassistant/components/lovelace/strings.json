@@ -1,5 +1,8 @@
 {
   "exceptions": {
+    "failed_to_reload": {
+      "message": "Failed to reload dashboard resources. Please check your configuration and try again."
+    },
     "url_already_exists": {
       "message": "The URL \"{url}\" is already in use. Please choose a different one."
     }

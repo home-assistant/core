@@ -1,6 +1,6 @@
 """Tests for the Hanna Instruments integration config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from hanna_cloud import AuthenticationError
 import pytest
@@ -15,11 +15,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hanna_client: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_hanna_client: MagicMock) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -61,9 +58,9 @@ async def test_full_flow(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_error_scenarios(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_hanna_client: MagicMock,
     exception: Exception,
     expected_error: str,
@@ -100,9 +97,9 @@ async def test_error_scenarios(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_hanna_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:

@@ -1,7 +1,5 @@
 """Support for an exposed aREST RESTful API of a device."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 from typing import Any

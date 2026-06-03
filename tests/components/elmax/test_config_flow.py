@@ -326,7 +326,8 @@ async def test_zeroconf_panel_changed_ip(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    # Simulate a MDNS discovery finds the same panel with a different IP (MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO).
+    # Simulate a MDNS discovery finds the same panel with a
+    # different IP (MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO).
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -359,7 +360,8 @@ async def test_one_config_allowed_cloud(hass: HomeAssistant) -> None:
         unique_id=MOCK_PANEL_ID,
     ).add_to_hass(hass)
 
-    # Attempt to add another instance of the integration for the very same panel, it must fail.
+    # Attempt to add another instance of the integration
+    # for the very same panel, it must fail.
     show_form_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

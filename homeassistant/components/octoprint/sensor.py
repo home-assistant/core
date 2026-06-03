@@ -1,7 +1,5 @@
 """Support for monitoring OctoPrint sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 
@@ -104,7 +102,8 @@ class OctoPrintSensorBase(
         self._attr_device_info = coordinator.device_info
 
 
-# Map the strings returned by the OctoPrint API back into values based on the underlying OctoPrint constants.
+# Map the strings returned by the OctoPrint API back into values
+# based on the underlying OctoPrint constants.
 # See octoprint.util.comm.MahcineCom.getStateString():
 # https://github.com/OctoPrint/OctoPrint/blob/7e7d418dac467e308b24c669a03e8b4256f04b45/src/octoprint/util/comm.py#L965
 _API_STATE_VALUE = {
@@ -152,7 +151,8 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
         if not printer:
             return None
 
-        # Translate the string from the API into an internal state value, or return None (Unknown) if no match
+        # Translate the string from the API into an internal
+        # state value, or return None (Unknown) if no match
         return _API_STATE_VALUE.get(printer.state.text)
 
     @property

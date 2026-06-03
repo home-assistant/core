@@ -131,6 +131,7 @@
     }
   },
   "exceptions": {
+    "incorrect_credentials": { "message": "Incorrect credentials." },
     "no_heaters": {
       "message": "[%key:component::incomfort::config::error::no_heaters%]"
     },
@@ -142,6 +143,9 @@
     },
     "unknown": {
       "message": "[%key:component::incomfort::config::error::unknown%]"
+    },
+    "update_failed_with_error_message": {
+      "message": "Update failed, got {error}."
     }
   },
   "options": {

@@ -1,7 +1,5 @@
 """Config flow for Yeelight integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Self
 from urllib.parse import urlparse
@@ -108,7 +106,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ID
             ):
                 continue
-            reload = entry.state == ConfigEntryState.SETUP_RETRY
+            reload = entry.state is ConfigEntryState.SETUP_RETRY
             if entry.data.get(CONF_HOST) != self._discovered_ip:
                 self.hass.config_entries.async_update_entry(
                     entry, data={**entry.data, CONF_HOST: self._discovered_ip}

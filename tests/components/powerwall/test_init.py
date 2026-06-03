@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) -> None:
-    """Test if _update_data of PowerwallDataManager reauthenticates on AccessDeniedError."""
+    """Test PowerwallDataManager reauths on AccessDeniedError."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
     # login responses for the different tests:
@@ -87,7 +87,8 @@ async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) 
 async def test_init_uses_cookie_if_present(hass: HomeAssistant) -> None:
     """Tests if the init will use the auth cookie if present.
 
-    If the cookie is present, the login step will be skipped and info will be fetched directly (see _login_and_fetch_base_info).
+    If the cookie is present, the login step will be skipped and info
+    will be fetched directly (see _login_and_fetch_base_info).
     """
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
 

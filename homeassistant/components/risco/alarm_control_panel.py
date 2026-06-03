@@ -1,7 +1,5 @@
 """Support for Risco alarms."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -39,7 +37,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STATES_TO_SUPPORTED_FEATURES = {
     AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+        AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    ),
     AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
     AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
 }

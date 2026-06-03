@@ -1,7 +1,5 @@
 """Support for HitachiAirToAirHeatPump."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -214,7 +212,14 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
     def _control_backfill(
         self, value: str | None, state_name: str, fallback_value: str
     ) -> str:
-        """Overkiz doesn't accept commands with undefined parameters. This function is guaranteed to return a `str` which is the provided `value` if set, or the current device state if set, or the provided `fallback_value` otherwise."""
+        """Return a parameter value accepted in a command.
+
+        Overkiz doesn't accept commands with undefined
+        parameters. This function is guaranteed to return a
+        `str` which is the provided `value` if set, or the
+        current device state if set, or the provided
+        `fallback_value` otherwise.
+        """
         if value:
             return value
         state = self.device.states[state_name]
@@ -231,7 +236,11 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
         swing_mode: str | None = None,
         leave_home: str | None = None,
     ) -> None:
-        """Execute globalControl command with all parameters. There is no option to only set a single parameter, without passing all other values."""
+        """Execute globalControl command with all parameters.
+
+        There is no option to only set a single parameter,
+        without passing all other values.
+        """
 
         main_operation = self._control_backfill(
             main_operation, MAIN_OPERATION_STATE, OverkizCommandParam.ON
@@ -247,14 +256,16 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
             hvac_mode,
             MODE_CHANGE_STATE,
             OverkizCommandParam.AUTO,
-        ).lower()  # Overkiz can return states that have uppercase characters which are not accepted back as commands
-        if (
-            hvac_mode.replace(" ", "")
-            in [  # Overkiz can return states like 'auto cooling' or 'autoHeating' that are not valid commands and need to be converted to 'auto'
-                OverkizCommandParam.AUTOCOOLING,
-                OverkizCommandParam.AUTOHEATING,
-            ]
-        ):
+        ).lower()
+        # Overkiz can return states that have uppercase
+        # characters which are not accepted back as commands.
+        if hvac_mode.replace(" ", "") in [
+            # Overkiz can return states like 'auto cooling' or
+            # 'autoHeating' that are not valid commands and
+            # need to be converted to 'auto'
+            OverkizCommandParam.AUTOCOOLING,
+            OverkizCommandParam.AUTOHEATING,
+        ]:
             hvac_mode = OverkizCommandParam.AUTO
 
         swing_mode = self._control_backfill(

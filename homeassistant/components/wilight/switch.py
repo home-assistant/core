@@ -1,7 +1,5 @@
 """Support for WiLight switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pywilight.const import ITEM_SWITCH, SWITCH_PAUSE_VALVE, SWITCH_VALVE

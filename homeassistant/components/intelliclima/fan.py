@@ -107,8 +107,8 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     ) -> None:
         """Turn on the fan.
 
-        Defaults back to 25% if percentage argument is 0 to prevent loop of turning off/on
-        infinitely.
+        Defaults back to 25% if percentage argument is 0
+        to prevent loop of turning off/on infinitely.
         """
         percentage = 25 if percentage == 0 else percentage
         await self.async_set_mode_speed(preset_mode=preset_mode, percentage=percentage)

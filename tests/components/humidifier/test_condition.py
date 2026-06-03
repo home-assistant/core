@@ -6,7 +6,6 @@ from typing import Any
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.humidifier.condition import CONF_MODE
 from homeassistant.components.humidifier.const import (
     ATTR_ACTION,
     ATTR_HUMIDITY,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITY_ID,
+    CONF_MODE,
     CONF_OPTIONS,
     CONF_TARGET,
     STATE_OFF,
@@ -64,6 +64,9 @@ async def test_humidifier_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
+_HUMIDITY_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
@@ -72,6 +75,8 @@ async def test_humidifier_conditions_gated_by_labs_flag(
         ("humidifier.is_on", {}, True, True),
         ("humidifier.is_drying", {}, True, True),
         ("humidifier.is_humidifying", {}, True, True),
+        ("humidifier.is_mode", {"mode": ["normal"]}, True, True),
+        ("humidifier.is_target_humidity", _HUMIDITY_THRESHOLD, True, True),
     ],
 )
 async def test_humidifier_condition_options_validation(

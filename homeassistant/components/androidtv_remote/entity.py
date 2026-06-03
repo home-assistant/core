@@ -1,7 +1,5 @@
 """Base entity for Android TV Remote."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
@@ -44,7 +42,7 @@ class AndroidTVRemoteBaseEntity(Entity):
 
     @callback
     def _is_available_updated(self, is_available: bool) -> None:
-        """Update the state when the device is ready to receive commands or is unavailable."""
+        """Update the state when the device is ready or unavailable."""
         self._attr_available = is_available
         self.async_write_ha_state()
 
@@ -67,7 +65,8 @@ class AndroidTVRemoteBaseEntity(Entity):
     def _send_key_command(self, key_code: str, direction: str = "SHORT") -> None:
         """Send a key press to Android TV.
 
-        This does not block; it buffers the data and arranges for it to be sent out asynchronously.
+        This does not block; it buffers the data and arranges
+        for it to be sent out asynchronously.
         """
         try:
             self._api.send_key_command(key_code, direction)
@@ -79,7 +78,8 @@ class AndroidTVRemoteBaseEntity(Entity):
     def _send_launch_app_command(self, app_link: str) -> None:
         """Launch an app on Android TV.
 
-        This does not block; it buffers the data and arranges for it to be sent out asynchronously.
+        This does not block; it buffers the data and arranges
+        for it to be sent out asynchronously.
         """
         try:
             self._api.send_launch_app_command(app_link)

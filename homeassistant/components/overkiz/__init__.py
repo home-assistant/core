@@ -1,7 +1,5 @@
 """The Overkiz (by Somfy) integration."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -30,8 +28,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_API_TYPE,
@@ -44,6 +47,9 @@ from .const import (
     UPDATE_INTERVAL_LOCAL,
 )
 from .coordinator import OverkizDataUpdateCoordinator
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
@@ -56,6 +62,12 @@ class HomeAssistantOverkizData:
 
 
 type OverkizDataConfigEntry = ConfigEntry[HomeAssistantOverkizData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Overkiz component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:
@@ -119,7 +131,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
 
     if coordinator.is_stateless:
         LOGGER.debug(
-            "All devices have an assumed state. Update interval has been reduced to: %s",
+            "All devices have an assumed state."
+            " Update interval has been reduced to: %s",
             UPDATE_INTERVAL_ALL_ASSUMED_STATE,
         )
         coordinator.set_update_interval(UPDATE_INTERVAL_ALL_ASSUMED_STATE)
@@ -191,12 +204,15 @@ async def _async_migrate_entries(
 
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
-        # Python 3.11 treats (str, Enum) and StrEnum in a different way
-        # Since pyOverkiz switched to StrEnum, we need to rewrite the unique ids once to the new style
+        # Python 3.11 treats (str, Enum) and StrEnum
+        # differently. Since pyOverkiz switched to StrEnum, we
+        # need to rewrite the unique ids once to the new style.
         #
-        # io://xxxx-xxxx-xxxx/3541212-OverkizState.CORE_DISCRETE_RSSI_LEVEL -> io://xxxx-xxxx-xxxx/3541212-core:DiscreteRSSILevelState
-        # internal://xxxx-xxxx-xxxx/alarm/0-UIWidget.TSKALARM_CONTROLLER -> internal://xxxx-xxxx-xxxx/alarm/0-TSKAlarmController
-        # io://xxxx-xxxx-xxxx/xxxxxxx-UIClass.ON_OFF -> io://xxxx-xxxx-xxxx/xxxxxxx-OnOff
+        # OverkizState.CORE_DISCRETE_RSSI_LEVEL
+        #   -> core:DiscreteRSSILevelState
+        # UIWidget.TSKALARM_CONTROLLER
+        #   -> TSKAlarmController
+        # UIClass.ON_OFF -> OnOff
         if (key := entry.unique_id.split("-")[-1]).startswith(
             ("OverkizState", "UIWidget", "UIClass")
         ):
@@ -223,7 +239,8 @@ async def _async_migrate_entries(
                 entry.domain, entry.platform, new_unique_id
             ):
                 LOGGER.debug(
-                    "Cannot migrate to unique_id '%s', already exists for '%s'. Entity will be removed",
+                    "Cannot migrate to unique_id '%s', already"
+                    " exists for '%s'. Entity will be removed",
                     new_unique_id,
                     existing_entity_id,
                 )
@@ -262,7 +279,8 @@ def create_cloud_client(
     hass: HomeAssistant, username: str, password: str, server: OverkizServer
 ) -> OverkizClient:
     """Create Overkiz cloud client."""
-    # To allow users with multiple accounts/hubs, we create a new session so they have separate cookies
+    # To allow users with multiple accounts/hubs, we create a
+    # new session so they have separate cookies
     session = async_create_clientsession(hass)
 
     return OverkizClient(

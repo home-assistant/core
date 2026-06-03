@@ -273,7 +273,8 @@ async def test_external_usb_new_device(
     # Mock the get_devices method to simulate a USB disk being added
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb2()
     # Coordinator refresh
-    await setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central.async_request_refresh()
+    coordinator = setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central
+    await coordinator.async_request_refresh()
     await hass.async_block_till_done()
 
     for sensor_id, (expected_state, expected_attrs) in chain(
@@ -338,7 +339,8 @@ async def test_external_usb_availability(
     # Mock the get_devices method to simulate no USB devices being connected
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb0()
     # Coordinator refresh
-    await setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central.async_request_refresh()
+    coordinator = setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central
+    await coordinator.async_request_refresh()
     await hass.async_block_till_done()
 
     for sensor_id, (

@@ -1,12 +1,11 @@
 """Config flow for Qingping integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from qingping_ble import QingpingBluetoothDeviceData as DeviceData
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
@@ -98,6 +97,7 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self._discovered_devices[address], data={}
             )
 
+        await bluetooth.async_request_active_scan(self.hass)
         current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address

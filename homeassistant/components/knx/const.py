@@ -1,7 +1,5 @@
 """Constants for the KNX integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Final, TypedDict
@@ -19,7 +17,8 @@ if TYPE_CHECKING:
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
 
-# Address is used for configuration and services by the same functions so the key has to match
+# Address is used for configuration and services by the
+# same functions so the key has to match
 KNX_ADDRESS: Final = "address"
 
 CONF_INVERT: Final = "invert"

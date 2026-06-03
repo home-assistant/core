@@ -1,7 +1,5 @@
 """Tests for the Touchline climate platform."""
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

@@ -1,7 +1,5 @@
 """Diagnostics support for UniFi Network."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from uiprotect.test_util.anonymize import anonymize_data

@@ -1,7 +1,5 @@
 """Support for MQTT room presence detection."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from functools import lru_cache
 import logging

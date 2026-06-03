@@ -21,7 +21,7 @@ def assert_sensor_state(
     expected_state: str,
     attributes: dict[str, Any] | None = None,
 ) -> None:
-    """Assert that the given entity has the expected state and at least the provided attributes."""
+    """Assert entity has expected state and provided attributes."""
     state = hass.states.get(entity_id)
     assert state
     actual_state = state.state
@@ -99,14 +99,14 @@ def assert_sensor_registered(
 
 @pytest.fixture
 def monitors() -> Generator[AsyncMock]:
-    """Provide a mock greeneye.Monitors object that has listeners and can add new monitors."""
+    """Provide a mock greeneye.Monitors object with listeners."""
     with patch("greeneye.Monitors", autospec=True) as mock_monitors:
         mock = mock_monitors.return_value
         add_listeners(mock)
         mock.monitors = {}
 
         def add_monitor(monitor: MagicMock) -> None:
-            """Add the given mock monitor as a monitor with the given serial number, notifying any listeners on the Monitors object."""
+            """Add mock monitor and notify listeners."""
             serial_number = monitor.serial_number
             mock.monitors[serial_number] = monitor
             mock.notify_all_listeners(monitor)

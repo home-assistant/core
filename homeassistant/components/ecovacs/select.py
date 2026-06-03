@@ -174,7 +174,8 @@ class EcovacsActiveMapSelectEntity(
         if self._attr_current_option not in self._option_to_id:
             self._attr_current_option = None
 
-        # Sort named maps first, then numeric IDs (unnamed maps during building) in ascending order.
+        # Sort named maps first, then numeric IDs
+        # (unnamed maps during building) in ascending order.
         self._attr_options = sorted(
             self._option_to_id.keys(), key=lambda x: (x.isdigit(), x.lower())
         )

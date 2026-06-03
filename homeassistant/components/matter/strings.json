@@ -610,6 +610,11 @@
         "name": "Target opening position"
       }
     },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
+      }
+    },
     "switch": {
       "child_lock": {
         "name": "Child lock"

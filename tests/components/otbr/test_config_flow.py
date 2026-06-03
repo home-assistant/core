@@ -51,7 +51,9 @@ HASSIO_DATA_OTBR = HassioServiceInfo(
         "host": "core-openthread-border-router",
         "port": 8081,
         "device": "/dev/ttyUSB1",
-        "firmware": "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57\r",
+        "firmware": (
+            "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57\r"
+        ),
         "addon": "OpenThread Border Router",
     },
     name="OpenThread Border Router",
@@ -66,7 +68,7 @@ def _expected_dataset_body(pan_id: int, key_format: KeyFormat) -> dict[str, Any]
     python_otbr_api emits camelCase by default and rewrites to PascalCase only
     when the /api/actions probe returns 404.
     """
-    if key_format == KeyFormat.PASCAL_CASE:
+    if key_format is KeyFormat.PASCAL_CASE:
         return {
             "Channel": 15,
             "NetworkName": f"ha-thread-{pan_id:04x}",
@@ -304,7 +306,7 @@ async def test_user_flow_router_not_setup(
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
     body = aioclient_mock.mock_calls[-2][2]
-    pan_id = body["PanId" if key_format == KeyFormat.PASCAL_CASE else "panId"]
+    pan_id = body["PanId" if key_format is KeyFormat.PASCAL_CASE else "panId"]
     assert body == _expected_dataset_body(pan_id, key_format)
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
@@ -729,7 +731,7 @@ async def test_hassio_discovery_flow_router_not_setup(
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
     body = aioclient_mock.mock_calls[-2][2]
-    pan_id = body["PanId" if key_format == KeyFormat.PASCAL_CASE else "panId"]
+    pan_id = body["PanId" if key_format is KeyFormat.PASCAL_CASE else "panId"]
     assert body == _expected_dataset_body(pan_id, key_format)
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
@@ -848,7 +850,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
     body = aioclient_mock.mock_calls[-2][2]
-    pan_id = body["PanId" if key_format == KeyFormat.PASCAL_CASE else "panId"]
+    pan_id = body["PanId" if key_format is KeyFormat.PASCAL_CASE else "panId"]
     assert body == _expected_dataset_body(pan_id, key_format)
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"

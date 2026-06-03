@@ -1,7 +1,5 @@
 """Microsoft Teams platform for notify component."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -72,5 +70,6 @@ class MSTeamsNotificationService(BaseNotificationService):
             teams_message.addSection(message_section)
         try:
             teams_message.send()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except RuntimeError as err:
             _LOGGER.error("Could not send notification. Error: %s", err)

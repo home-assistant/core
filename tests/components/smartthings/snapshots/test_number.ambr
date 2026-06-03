@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[da_ks_microwave_0101x][number.microwave_fan_speed-entry]
+# name: test_all_entities[da_ks_microwave_0101x][number.theater_microwave_fan_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.microwave_fan_speed',
+    'entity_id': 'number.theater_microwave_fan_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][number.microwave_fan_speed-state]
+# name: test_all_entities[da_ks_microwave_0101x][number.theater_microwave_fan_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Microwave Fan speed',
@@ -51,14 +51,14 @@
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.microwave_fan_speed',
+    'entity_id': 'number.theater_microwave_fan_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][number.refrigerator_freezer_temperature-entry]
+# name: test_all_entities[da_ref_normal_000001][number.theater_refrigerator_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -77,7 +77,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.refrigerator_freezer_temperature',
+    'entity_id': 'number.theater_refrigerator_freezer_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -100,7 +100,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][number.refrigerator_freezer_temperature-state]
+# name: test_all_entities[da_ref_normal_000001][number.theater_refrigerator_freezer_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -112,14 +112,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.refrigerator_freezer_temperature',
+    'entity_id': 'number.theater_refrigerator_freezer_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-18.0',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][number.refrigerator_fridge_temperature-entry]
+# name: test_all_entities[da_ref_normal_000001][number.theater_refrigerator_fridge_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -138,7 +138,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.refrigerator_fridge_temperature',
+    'entity_id': 'number.theater_refrigerator_fridge_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -161,7 +161,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][number.refrigerator_fridge_temperature-state]
+# name: test_all_entities[da_ref_normal_000001][number.theater_refrigerator_fridge_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -173,7 +173,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.refrigerator_fridge_temperature',
+    'entity_id': 'number.theater_refrigerator_fridge_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -485,7 +485,7 @@
     'state': '3',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][number.washer_rinse_cycles-entry]
+# name: test_all_entities[da_wm_wm_000001][number.theater_washer_rinse_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -504,7 +504,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.washer_rinse_cycles',
+    'entity_id': 'number.theater_washer_rinse_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -527,7 +527,7 @@
     'unit_of_measurement': 'cycles',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][number.washer_rinse_cycles-state]
+# name: test_all_entities[da_wm_wm_000001][number.theater_washer_rinse_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Rinse cycles',
@@ -538,7 +538,7 @@
       'unit_of_measurement': 'cycles',
     }),
     'context': <ANY>,
-    'entity_id': 'number.washer_rinse_cycles',
+    'entity_id': 'number.theater_washer_rinse_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

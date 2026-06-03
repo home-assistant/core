@@ -1,7 +1,5 @@
 """Parent class for every Overkiz device."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from pyoverkiz.enums import APIType, OverkizAttribute, OverkizCommandParam, OverkizState
@@ -49,7 +47,8 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         if self.device.available:
             return super().available
 
-        # Workaround: local API may incorrectly report available=False (Somfy-TaHoma-Developer-Mode#217)
+        # Workaround: local API may incorrectly report
+        # available=False (Somfy-TaHoma-Developer-Mode#217)
         if self.coordinator.client.api_type != APIType.LOCAL:
             return False
 

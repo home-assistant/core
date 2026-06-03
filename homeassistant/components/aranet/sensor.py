@@ -1,7 +1,5 @@
 """Support for Aranet sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -195,7 +193,11 @@ async def async_setup_entry(
             Aranet4BluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(entry.runtime_data.async_register_processor(processor))
+    entry.async_on_unload(
+        entry.runtime_data.async_register_processor(
+            processor, AranetSensorEntityDescription
+        )
+    )
 
 
 class Aranet4BluetoothSensorEntity(

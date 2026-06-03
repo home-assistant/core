@@ -28,6 +28,7 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
+from .util import get_device_info
 
 type TuyaConfigEntry = ConfigEntry[DeviceListener]
 
@@ -145,14 +146,7 @@ class DeviceListener(SharingDeviceListener):
 
         device_registry.async_get_or_create(
             config_entry_id=self._entry.entry_id,
-            identifiers={(DOMAIN, device.id)},
-            manufacturer="Tuya",
-            name=device.name,
-            # Note: the model is overridden via entity.device_info property
-            # when the entity is created. If no entities are generated, it will
-            # stay as unsupported
-            model=f"{device.product_name} (unsupported)",
-            model_id=device.product_id,
+            **get_device_info(device, initial=True),
         )
 
     def remove_device(self, device_id: str) -> None:

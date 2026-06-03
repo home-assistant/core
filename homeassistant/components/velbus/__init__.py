@@ -1,7 +1,5 @@
 """Support for Velbus devices."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import logging
@@ -143,7 +141,8 @@ async def async_migrate_entry(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
-    # This is the config entry migration for swapping the usb unique id to the serial number
+    # This is the config entry migration for swapping the
+    # usb unique id to the serial number
     # migrate from 2.1 to 2.2
     if (
         config_entry.version < 3

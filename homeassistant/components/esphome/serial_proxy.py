@@ -1,7 +1,5 @@
 """Home Assistant-aware ESPHome serial proxy URI handler for serialx."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from typing import cast

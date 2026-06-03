@@ -1467,12 +1467,13 @@ async def test_no_state_class_warnings(
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test enphase_envoy sensor creation does not result in deviceclass/state_class warnings."""
+    """Test sensor creation has no deviceclass/state_class warnings."""
     logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
 
-    # Simple test to verify no sensor device class / state class mismatch warning is reported
+    # Verify no sensor device class / state class mismatch
+    # warning is reported
     #
     # assert "which is impossible considering" not in caplog.text
     assert "create a bug report at" not in caplog.text

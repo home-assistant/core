@@ -1,7 +1,5 @@
 """The Electric Kiwi integration."""
 
-from __future__ import annotations
-
 import aiohttp
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException, AuthException

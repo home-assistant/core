@@ -246,13 +246,17 @@ async def test_migration_from_v1(
             None,
             [
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation_2",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation_2"
+                    ),
                     "device_disabled_by": None,
                     "entity_disabled_by": None,
                     "device": 1,
                 },
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation"
+                    ),
                     "device_disabled_by": DeviceEntryDisabler.USER,
                     "entity_disabled_by": RegistryEntryDisabler.DEVICE,
                     "device": 0,
@@ -267,13 +271,17 @@ async def test_migration_from_v1(
             None,
             [
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation"
+                    ),
                     "device_disabled_by": None,
                     "entity_disabled_by": None,
                     "device": 0,
                 },
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation_2",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation_2"
+                    ),
                     "device_disabled_by": DeviceEntryDisabler.USER,
                     "entity_disabled_by": RegistryEntryDisabler.DEVICE,
                     "device": 1,
@@ -288,13 +296,17 @@ async def test_migration_from_v1(
             ConfigEntryDisabler.USER,
             [
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation"
+                    ),
                     "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
                     "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
                     "device": 0,
                 },
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation_2",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation_2"
+                    ),
                     "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
                     "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
                     "device": 1,

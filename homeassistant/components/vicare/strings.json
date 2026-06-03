@@ -1,38 +1,30 @@
 {
   "config": {
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
-    "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
-    "flow_title": "{name}",
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "client_id": "[%key:component::vicare::config::step::user::data::client_id%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "client_id": "[%key:component::vicare::config::step::user::data_description::client_id%]",
-          "password": "[%key:component::vicare::config::step::user::data_description::password%]"
-        },
-        "description": "Please verify credentials."
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
-      "user": {
-        "data": {
-          "client_id": "Client ID",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::email%]"
-        },
-        "data_description": {
-          "client_id": "The ID of the API client created in the [Viessmann developer portal]({viessmann_developer_portal}).",
-          "password": "The password to log in to your ViCare account.",
-          "username": "The email address to log in to your ViCare account."
-        },
-        "description": "Set up ViCare integration."
+      "reauth_confirm": {
+        "description": "The ViCare integration needs to re-authenticate your account.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },
@@ -612,6 +604,9 @@
       "supply_temperature": {
         "name": "Supply temperature"
       },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
       "valve_position": {
         "name": "Valve position"
       },
@@ -664,6 +659,12 @@
     },
     "program_unknown": {
       "message": "Cannot translate preset {preset} into a valid ViCare program"
+    }
+  },
+  "issues": {
+    "update_redirect_uri": {
+      "description": "ViCare has been migrated to OAuth2 authentication. Your existing session will continue to work, but if re-authentication is ever needed, you must first add a redirect URI to your API client.\n\nGo to the [Viessmann Developer Portal]({viessmann_developer_portal}) and add the following redirect URI to your API client:\n\n`{redirect_url}`\n\nThis is not urgent, but we recommend doing it soon.",
+      "title": "Update your API client in the Viessmann Developer Portal"
     }
   },
   "services": {

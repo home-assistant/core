@@ -1,7 +1,5 @@
 """Code to support homekit_controller tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -319,21 +317,25 @@ async def setup_test_component(
 async def assert_devices_and_entities_created(
     hass: HomeAssistant, expected: DeviceTestInfo
 ):
-    """Check that all expected devices and entities are loaded and enumerated as expected."""
+    """Check all expected devices and entities are loaded correctly."""
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
     async def _do_assertions(expected: DeviceTestInfo) -> dr.DeviceEntry:
         # Note: homekit_controller currently uses a 3-tuple for device identifiers
-        # The current standard is a 2-tuple (hkc was not migrated when this change was brought in)
+        # The current standard is a 2-tuple (hkc was not migrated when this change was
+        # brought in)
 
         # There are currently really 3 cases here:
-        # - We can match exactly one device by serial number. This won't work for devices like the Ryse.
-        #   These have nlank or broken serial numbers.
-        # - The device unique id is "00:00:00:00:00:00" - this is the pairing id. This is only set for
+        # - We can match exactly one device by serial number. This won't
+        #   work for devices like the Ryse.
+        #   These have blank or broken serial numbers.
+        # - The device unique id is "00:00:00:00:00:00" - this is the pairing id.
+        #   This is only set for
         #   the root (bridge) device.
-        # - The device unique id is "00:00:00:00:00:00-X", where X is a HAP aid. This is only set when
-        #   we have detected broken serial numbers (and serial number is not used as an identifier).
+        # - The device unique id is "00:00:00:00:00:00-X", where X is a HAP aid.
+        #   This is only set when we have detected broken serial numbers
+        #   (and serial number is not used as an identifier).
 
         device = device_registry.async_get_device(
             identifiers={(IDENTIFIER_ACCESSORY_ID, expected.unique_id)}
@@ -349,7 +351,8 @@ async def assert_devices_and_entities_created(
         assert device.sw_version == expected.sw_version
 
         # We might have matched the device by one identifier only
-        # Lets check that the other one is correct. Otherwise the test might silently be wrong.
+        # Lets check that the other one is correct. Otherwise the test might silently be
+        # wrong.
         accessory_id_set = False
 
         for key, value in device.identifiers:
@@ -357,7 +360,8 @@ async def assert_devices_and_entities_created(
                 assert value == expected.unique_id
                 accessory_id_set = True
 
-        # If unique_id or serial is provided it MUST actually appear in the device registry entry.
+        # If unique_id or serial is provided it MUST actually appear in the device
+        # registry entry.
         assert (not expected.unique_id) ^ accessory_id_set
 
         for entity_info in expected.entities:

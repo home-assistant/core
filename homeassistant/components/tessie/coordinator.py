@@ -1,7 +1,5 @@
 """Tessie Data Coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -225,7 +223,9 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             or not data["time_series"]
         ):
             _LOGGER.warning(
-                "Tessie returned no energy history time_series for coordinator %s; skipping update",
+                "Tessie returned no energy history"
+                " time_series for coordinator %s;"
+                " skipping update",
                 self.config_entry.entry_id,
             )
             return self.data

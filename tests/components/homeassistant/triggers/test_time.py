@@ -102,7 +102,10 @@ async def test_if_fires_using_at_input_datetime(
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
-    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+    some_data = (
+        "{{ trigger.platform }}-{{ trigger.now.day }}"
+        "-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+    )
 
     freezer.move_to(dt_util.as_utc(time_that_will_not_match_right_away))
     assert await async_setup_component(
@@ -205,7 +208,10 @@ async def test_if_fires_using_at_input_datetime_with_offset(
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
-    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+    some_data = (
+        "{{ trigger.platform }}-{{ trigger.now.day }}"
+        "-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+    )
 
     freezer.move_to(dt_util.as_utc(time_that_will_not_match_right_away))
     assert await async_setup_component(
@@ -545,7 +551,10 @@ async def test_if_fires_using_at_sensor(
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
-    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+    some_data = (
+        "{{ trigger.platform }}-{{ trigger.now.day }}"
+        "-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+    )
 
     freezer.move_to(dt_util.as_utc(time_that_will_not_match_right_away))
     assert await async_setup_component(
@@ -664,7 +673,11 @@ async def test_if_fires_using_at_sensor_with_offset(
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
-    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{ trigger.now.minute }}-{{ trigger.now.second }}-{{trigger.entity_id}}"
+    some_data = (
+        "{{ trigger.platform }}-{{ trigger.now.day }}"
+        "-{{ trigger.now.hour }}-{{ trigger.now.minute }}"
+        "-{{ trigger.now.second }}-{{trigger.entity_id}}"
+    )
 
     freezer.move_to(dt_util.as_utc(time_that_will_not_match_right_away))
     assert await async_setup_component(
@@ -693,8 +706,9 @@ async def test_if_fires_using_at_sensor_with_offset(
 
     assert len(service_calls) == 1
     assert (
-        service_calls[0].data["some"]
-        == f"time-{trigger_dt.day}-{trigger_dt.hour}-{trigger_dt.minute}-{trigger_dt.second}-sensor.next_alarm"
+        service_calls[0].data["some"] == f"time-{trigger_dt.day}-{trigger_dt.hour}"
+        f"-{trigger_dt.minute}-{trigger_dt.second}"
+        "-sensor.next_alarm"
     )
 
     start_dt += timedelta(days=1, hours=1)
@@ -712,8 +726,9 @@ async def test_if_fires_using_at_sensor_with_offset(
 
     assert len(service_calls) == 2
     assert (
-        service_calls[1].data["some"]
-        == f"time-{trigger_dt.day}-{trigger_dt.hour}-{trigger_dt.minute}-{trigger_dt.second}-sensor.next_alarm"
+        service_calls[1].data["some"] == f"time-{trigger_dt.day}-{trigger_dt.hour}"
+        f"-{trigger_dt.minute}-{trigger_dt.second}"
+        "-sensor.next_alarm"
     )
 
 
@@ -834,7 +849,12 @@ async def test_datetime_in_past_on_load(
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+                        "some": (
+                            "{{ trigger.platform }}"
+                            "-{{ trigger.now.day }}"
+                            "-{{ trigger.now.hour }}"
+                            "-{{trigger.entity_id}}"
+                        )
                     },
                 },
             }
@@ -955,7 +975,9 @@ async def test_if_fires_using_weekday_single(
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.platform }} - {{ trigger.now.strftime('%A') }}",
+                        "some": (
+                            "{{ trigger.platform }} - {{ trigger.now.strftime('%A') }}"
+                        ),
                     },
                 },
             }
@@ -1003,7 +1025,9 @@ async def test_if_fires_using_weekday_multiple(
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.platform }} - {{ trigger.now.strftime('%A') }}",
+                        "some": (
+                            "{{ trigger.platform }} - {{ trigger.now.strftime('%A') }}"
+                        ),
                     },
                 },
             }
@@ -1078,7 +1102,9 @@ async def test_if_fires_using_weekday_with_entity(
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.platform }} - {{ trigger.now.strftime('%A') }}",
+                        "some": (
+                            "{{ trigger.platform }} - {{ trigger.now.strftime('%A') }}"
+                        ),
                         "entity": "{{ trigger.entity_id }}",
                     },
                 },

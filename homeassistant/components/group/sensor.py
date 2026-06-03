@@ -1,6 +1,7 @@
-"""Platform allowing several sensors to be grouped into one sensor to provide numeric combinations."""
+"""Platform allowing several sensors to be grouped into one sensor.
 
-from __future__ import annotations
+Provides numeric combinations.
+"""
 
 from collections.abc import Callable
 from datetime import datetime
@@ -401,7 +402,8 @@ class SensorGroup(GroupEntity, SensorEntity):
                     numeric_state = float(state.state)
                     uom = state.attributes.get("unit_of_measurement")
 
-                    # Convert the state to the native unit of measurement when we have valid units
+                    # Convert the state to the native unit of
+                    # measurement when we have valid units
                     # and a correct device class
                     if valid_units and uom in valid_units and self._can_convert is True:
                         numeric_state = UNIT_CONVERTERS[self.device_class].convert(
@@ -441,10 +443,14 @@ class SensorGroup(GroupEntity, SensorEntity):
                     if entity_id not in self._state_incorrect:
                         self._state_incorrect.add(entity_id)
                         _LOGGER.warning(
-                            "Unable to use state. Only entities with correct unit of measurement"
+                            "Unable to use state. Only entities"
+                            " with correct unit of measurement"
                             " is supported,"
-                            " entity %s, value %s with device class %s"
-                            " and unit of measurement %s excluded from calculation in %s",
+                            " entity %s, value %s with"
+                            " device class %s"
+                            " and unit of measurement %s"
+                            " excluded from calculation"
+                            " in %s",
                             entity_id,
                             state.state,
                             self.device_class,
@@ -509,7 +515,8 @@ class SensorGroup(GroupEntity, SensorEntity):
         if not self._ignore_non_numeric and len(valid_state_entities) < len(
             self._entity_ids
         ):
-            # Only return state class if all states are valid when not ignoring non numeric
+            # Only return state class if all states are valid
+            # when not ignoring non numeric
             return None
 
         state_classes: list[SensorStateClass] = []
@@ -564,7 +571,8 @@ class SensorGroup(GroupEntity, SensorEntity):
         if not self._ignore_non_numeric and len(valid_state_entities) < len(
             self._entity_ids
         ):
-            # Only return device class if all states are valid when not ignoring non numeric
+            # Only return device class if all states are valid
+            # when not ignoring non numeric
             return None
 
         device_classes: list[SensorDeviceClass] = []
@@ -620,7 +628,8 @@ class SensorGroup(GroupEntity, SensorEntity):
         if not self._ignore_non_numeric and len(valid_state_entities) < len(
             self._entity_ids
         ):
-            # Only return device class if all states are valid when not ignoring non numeric
+            # Only return device class if all states are valid
+            # when not ignoring non numeric
             return None
 
         unit_of_measurements: list[str] = []
@@ -633,7 +642,8 @@ class SensorGroup(GroupEntity, SensorEntity):
                 return None
             unit_of_measurements.append(_unit_of_measurement)
 
-        # Ensure only valid unit of measurements for the specific device class can be used
+        # Ensure only valid unit of measurements for the
+        # specific device class can be used
         if (
             (
                 # Test if uom's in device class is convertible

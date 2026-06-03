@@ -1,7 +1,5 @@
 """Switchbot integration light platform."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 
@@ -17,10 +15,12 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from .coordinator import SwitchbotConfigEntry
+from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
 SWITCHBOT_COLOR_MODE_TO_HASS = {
@@ -38,7 +38,74 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switchbot light."""
-    async_add_entities([SwitchbotLightEntity(entry.runtime_data)])
+    coordinator = entry.runtime_data
+    if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
+        async_add_entities([SwitchbotAirPurifierLightEntity(coordinator)])
+    else:
+        async_add_entities([SwitchbotLightEntity(coordinator)])
+
+
+class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntity):
+    """Representation of a Switchbot air purifier light."""
+
+    _device: switchbot.SwitchbotAirPurifier
+    _attr_translation_key = "air_purifier_light"
+    _attr_is_on: bool | None = None
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}_light"
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state:
+            self._attr_is_on = last_state.state == STATE_ON
+
+    @property
+    def brightness(self) -> int:
+        """Return the brightness of the light."""
+        return max(0, min(255, round(self._device.brightness * 2.55)))
+
+    @property
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the RGB color of the light."""
+        return self._device.rgb
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the light is on."""
+        return self._attr_is_on
+
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Instruct the light to turn on."""
+        _LOGGER.debug("Turning on light %s, address %s", kwargs, self._address)
+        brightness = round(
+            cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness)) / 255 * 100
+        )
+        if ATTR_RGB_COLOR in kwargs:
+            rgb = kwargs[ATTR_RGB_COLOR]
+            await self._device.set_rgb(brightness, rgb[0], rgb[1], rgb[2])
+            return
+        if ATTR_BRIGHTNESS in kwargs:
+            await self._device.set_brightness(brightness)
+            return
+        await self._device.turn_led_on()
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Instruct the light to turn off."""
+        _LOGGER.debug("Turning off light %s, address %s", kwargs, self._address)
+        await self._device.turn_led_off()
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
 
 class SwitchbotLightEntity(SwitchbotEntity, LightEntity):

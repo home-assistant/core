@@ -1,7 +1,5 @@
 """Casper Glow integration button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 

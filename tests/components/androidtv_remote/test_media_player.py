@@ -19,7 +19,10 @@ MEDIA_PLAYER_ENTITY = "media_player.my_android_tv"
 async def test_media_player_receives_push_updates(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
-    """Test the Android TV Remote media player receives push updates and state is updated."""
+    """Test the Android TV Remote media player push updates.
+
+    Receives push updates and state is updated.
+    """
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry,

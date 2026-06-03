@@ -1,7 +1,5 @@
 """Event entities for the WeatherFlow integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from pyweatherflowudp.device import EVENT_RAIN_START, EVENT_STRIKE, WeatherFlowDevice

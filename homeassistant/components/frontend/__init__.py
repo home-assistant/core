@@ -1,7 +1,5 @@
 """Handle the frontend for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
 from functools import lru_cache, partial
 import logging
@@ -511,7 +509,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.info("Using frontend from PR #%s", dev_pr_number)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to download PR #%s: %s, falling back to the integrated frontend",
+                "Failed to download PR #%s: %s, falling back"
+                " to the integrated frontend",
                 dev_pr_number,
                 err,
             )

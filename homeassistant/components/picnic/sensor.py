@@ -1,7 +1,5 @@
 """Definition of Picnic sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -66,7 +64,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_CART_TOTAL_PRICE,
         translation_key=SENSOR_CART_TOTAL_PRICE,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_registry_enabled_default=True,
         data_type="cart_data",
         value_fn=lambda cart: cart.get("total_price", 0) / 100,
     ),
@@ -74,7 +71,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_SELECTED_SLOT_START,
         translation_key=SENSOR_SELECTED_SLOT_START,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="slot_data",
         value_fn=lambda slot: dt_util.parse_datetime(str(slot.get("window_start"))),
     ),
@@ -82,7 +78,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_SELECTED_SLOT_END,
         translation_key=SENSOR_SELECTED_SLOT_END,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="slot_data",
         value_fn=lambda slot: dt_util.parse_datetime(str(slot.get("window_end"))),
     ),
@@ -90,7 +85,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
         translation_key=SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="slot_data",
         value_fn=lambda slot: dt_util.parse_datetime(str(slot.get("cut_off_time"))),
     ),
@@ -98,7 +92,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
         translation_key=SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_registry_enabled_default=True,
         data_type="slot_data",
         value_fn=lambda slot: (
             slot["minimum_order_value"] / 100
@@ -134,7 +127,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_LAST_ORDER_MAX_ORDER_TIME,
         translation_key=SENSOR_LAST_ORDER_MAX_ORDER_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="last_order_data",
         value_fn=lambda last_order: dt_util.parse_datetime(
             str(last_order.get("slot", {}).get("cut_off_time"))
@@ -144,7 +136,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_LAST_ORDER_DELIVERY_TIME,
         translation_key=SENSOR_LAST_ORDER_DELIVERY_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="last_order_data",
         value_fn=lambda last_order: dt_util.parse_datetime(
             str(last_order.get("delivery_time", {}).get("start"))
@@ -161,7 +152,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_NEXT_DELIVERY_ETA_START,
         translation_key=SENSOR_NEXT_DELIVERY_ETA_START,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="next_delivery_data",
         value_fn=lambda next_delivery: dt_util.parse_datetime(
             str(next_delivery.get("eta", {}).get("start"))
@@ -171,7 +161,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_NEXT_DELIVERY_ETA_END,
         translation_key=SENSOR_NEXT_DELIVERY_ETA_END,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="next_delivery_data",
         value_fn=lambda next_delivery: dt_util.parse_datetime(
             str(next_delivery.get("eta", {}).get("end"))

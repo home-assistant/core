@@ -1,7 +1,5 @@
 """Config flow for Coinbase integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -302,4 +300,4 @@ class CurrencyUnavailable(HomeAssistantError):
 
 
 class ExchangeRateUnavailable(HomeAssistantError):
-    """Error to indicate the requested exchange rate resource is not provided by the API."""
+    """Error to indicate the requested exchange rate is not provided by the API."""

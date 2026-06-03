@@ -1,9 +1,7 @@
 """Support for Tuya valves."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.valve import (
-    TuyaValveDefinition,
+    ValveDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -121,7 +119,7 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ValveEntityDescription,
-        definition: TuyaValveDefinition,
+        definition: ValveDefinition,
     ) -> None:
         """Init TuyaValveEntity."""
         super().__init__(device, device_manager, description)

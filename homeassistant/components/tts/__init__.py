@@ -1,7 +1,5 @@
 """Provide functionality for TTS."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, MutableMapping
 from dataclasses import dataclass, field
@@ -142,7 +140,7 @@ class TTSCache:
     """If an error occurred while loading, contains the error."""
 
     _consumers: list[asyncio.Queue[bytes | None]] | None = None
-    """A queue for each current consumer to notify of new data while the generator is loading."""
+    """Queue for consumers to receive data while loading."""
 
     def __init__(
         self,

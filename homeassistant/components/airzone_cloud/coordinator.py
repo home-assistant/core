@@ -1,7 +1,5 @@
 """The Airzone Cloud integration coordinator."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from datetime import timedelta
 import logging

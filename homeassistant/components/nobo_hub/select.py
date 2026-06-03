@@ -1,8 +1,6 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
-from __future__ import annotations
-
-from pynobo import nobo
+from pynobo import PynoboError, nobo
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import ATTR_NAME
@@ -85,8 +83,11 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
             await self._nobo.async_create_override(
                 mode, self._override_type, nobo.API.OVERRIDE_TARGET_GLOBAL
             )
-        except Exception as exp:
-            raise HomeAssistantError from exp
+        except PynoboError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_global_override_failed",
+            ) from err
 
     async def async_update(self) -> None:
         """Fetch new state data for this zone."""
@@ -94,7 +95,7 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
 
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. These are only local calls."""
+        """Copy the current hub state onto the entity attributes."""
         for override in self._nobo.overrides.values():
             if override["target_type"] == nobo.API.OVERRIDE_TARGET_GLOBAL:
                 self._attr_current_option = self._modes[override["mode"]]
@@ -105,14 +106,14 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
     """Week profile selector for Nobø zones."""
 
     _attr_translation_key = "week_profile"
-    _profiles: dict[int, str] = {}
-    _attr_options: list[str] = []
     _attr_current_option: str | None = None
 
     def __init__(self, zone_id: str, hub: nobo) -> None:
         """Initialize the week profile selector."""
         super().__init__(hub)
         self._id = zone_id
+        self._profiles: dict[str, str] = {}
+        self._attr_options: list[str] = []
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:profile"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
@@ -128,8 +129,11 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
             await self._nobo.async_update_zone(
                 self._id, week_profile_id=week_profile_id
             )
-        except Exception as exp:
-            raise HomeAssistantError from exp
+        except PynoboError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_week_profile_failed",
+            ) from err
 
     async def async_update(self) -> None:
         """Fetch new state data for this zone."""
@@ -137,7 +141,7 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
 
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. These are only local calls."""
+        """Copy the current hub state onto the entity attributes."""
         if self._id not in self._nobo.zones:
             # Zone removed via the Nobø app; mark unavailable.
             self._attr_available = False

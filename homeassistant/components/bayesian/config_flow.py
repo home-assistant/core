@@ -1,4 +1,5 @@
 """Config flow for the Bayesian integration."""
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 from collections.abc import Mapping
 from enum import StrEnum
@@ -233,7 +234,8 @@ STATE_SUBSCHEMA = vol.Schema(
         vol.Required(CONF_TO_STATE): selector.TextSelector(
             selector.TextSelectorConfig(
                 multiline=False, type=selector.TextSelectorType.TEXT, multiple=False
-            )  # ideally this would be a state selector context-linked to the above entity.
+            )  # ideally this would be a state selector
+            # context-linked to the above entity.
         ),
     },
 ).extend(OBSERVATION_BOILERPLATE.schema)
@@ -269,7 +271,7 @@ TEMPLATE_SUBSCHEMA = vol.Schema(
 def _convert_percentages_to_fractions(
     data: dict[str, str | float | int],
 ) -> dict[str, str | float]:
-    """Convert percentage probability values in a dictionary to fractions for storing in the config entry."""
+    """Convert percentage probability values to fractions for storage."""
     probabilities = [
         CONF_P_GIVEN_T,
         CONF_P_GIVEN_F,
@@ -289,7 +291,7 @@ def _convert_percentages_to_fractions(
 def _convert_fractions_to_percentages(
     data: dict[str, str | float],
 ) -> dict[str, str | float]:
-    """Convert fraction probability values in a dictionary to percentages for loading into the UI."""
+    """Convert fraction probability values to percentages for the UI."""
     probabilities = [
         CONF_P_GIVEN_T,
         CONF_P_GIVEN_F,
@@ -337,7 +339,10 @@ def _get_observation_values_for_editing(
 async def _validate_user(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Modify user input to convert to fractions for storage. Validation is done entirely by the schemas."""
+    """Convert user input to fractions for storage.
+
+    Validation is done entirely by the schemas.
+    """
     user_input = _convert_percentages_to_fractions(user_input)
     return {**user_input}
 
@@ -347,7 +352,10 @@ def _validate_observation_subentry(
     user_input: dict[str, Any],
     other_subentries: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Validate an observation input and manually update options with observations as they are nested items."""
+    """Validate an observation input and update options.
+
+    Observations are nested items and need manual updates.
+    """
 
     if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
         raise SchemaFlowError("equal_probabilities")
@@ -543,7 +551,10 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_state(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to add a state observation. Function name must be in the format async_step_{observation_type}."""
+        """User flow to add a state observation.
+
+        Function name must be async_step_{observation_type}.
+        """
 
         return await self.step_common(
             user_input=user_input, obs_type=ObservationTypes.STATE
@@ -552,7 +563,10 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_numeric_state(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to add a new numeric state observation, (a numeric range). Function name must be in the format async_step_{observation_type}."""
+        """User flow to add a new numeric state observation.
+
+        Function name must be async_step_{observation_type}.
+        """
 
         return await self.step_common(
             user_input=user_input, obs_type=ObservationTypes.NUMERIC_STATE
@@ -561,7 +575,10 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_template(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to add a new template observation. Function name must be in the format async_step_{observation_type}."""
+        """User flow to add a new template observation.
+
+        Function name must be async_step_{observation_type}.
+        """
 
         return await self.step_common(
             user_input=user_input, obs_type=ObservationTypes.TEMPLATE
@@ -570,7 +587,10 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Enable the reconfigure button for observations. Function name must be async_step_reconfigure to be recognised by hass."""
+        """Enable the reconfigure button for observations.
+
+        Function name must be async_step_reconfigure.
+        """
 
         sub_entry = self._get_reconfigure_subentry()
 

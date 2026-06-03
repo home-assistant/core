@@ -562,7 +562,7 @@ async def test_ikea_default_transition_time(
     hass: HomeAssistant,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
-    """Verify that service calls to IKEA lights always extend with transition tinme 0 if absent."""
+    """Verify IKEA light calls always extend with transition time 0 if absent."""
     aioclient_mock = mock_put_request("/lights/0/state")
 
     await hass.services.async_call(

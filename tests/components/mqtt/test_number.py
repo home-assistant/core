@@ -250,7 +250,9 @@ async def test_native_value_validation(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("test/cmd_number", "20", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test/cmd_number", "20", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
 
@@ -445,7 +447,9 @@ async def test_run_number_service_optimistic(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(topic, "30", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, "30", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "30"
@@ -458,7 +462,9 @@ async def test_run_number_service_optimistic(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(topic, "42", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, "42", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "42"
@@ -471,7 +477,9 @@ async def test_run_number_service_optimistic(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(topic, "42.1", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, "42.1", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "42.1"
@@ -494,7 +502,7 @@ async def test_run_number_service_optimistic(
 async def test_run_number_service_optimistic_with_command_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that set_value service works in optimistic mode and with a command_template."""
+    """Test set_value in optimistic mode with a command_template."""
     topic = "test/number"
 
     RESTORE_DATA = {
@@ -522,7 +530,9 @@ async def test_run_number_service_optimistic_with_command_template(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(topic, '{"number": 30 }', 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, '{"number": 30 }', 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "30"
@@ -535,7 +545,9 @@ async def test_run_number_service_optimistic_with_command_template(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(topic, '{"number": 42 }', 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, '{"number": 42 }', 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "42"
@@ -549,7 +561,7 @@ async def test_run_number_service_optimistic_with_command_template(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        topic, '{"number": 42.1 }', 0, False
+        topic, '{"number": 42.1 }', 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
@@ -589,7 +601,9 @@ async def test_run_number_service(
         {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 30},
         blocking=True,
     )
-    mqtt_mock.async_publish.assert_called_once_with(cmd_topic, "30", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        cmd_topic, "30", 0, False, message_expiry_interval=None
+    )
     state = hass.states.get("number.test_number")
     assert state.state == "32"
 
@@ -612,7 +626,7 @@ async def test_run_number_service(
 async def test_run_number_service_with_command_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that set_value service works in non optimistic mode and with a command_template."""
+    """Test set_value service with a command_template."""
     cmd_topic = "test/number/set"
     state_topic = "test/number"
 
@@ -629,7 +643,7 @@ async def test_run_number_service_with_command_template(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
-        cmd_topic, '{"number": 30 }', 0, False
+        cmd_topic, '{"number": 30 }', 0, False, message_expiry_interval=None
     )
     state = hass.states.get("number.test_number")
     assert state.state == "32"
@@ -1351,6 +1365,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

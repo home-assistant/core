@@ -23,7 +23,6 @@ MOVING_TARGET_DISTANCE_DESCRIPTION = SensorEntityDescription(
     translation_key="moving_target_distance",
     device_class=SensorDeviceClass.DISTANCE,
     entity_registry_enabled_default=False,
-    entity_registry_visible_default=True,
     native_unit_of_measurement=UnitOfLength.CENTIMETERS,
     state_class=SensorStateClass.MEASUREMENT,
 )
@@ -33,7 +32,6 @@ STATIC_TARGET_DISTANCE_DESCRIPTION = SensorEntityDescription(
     translation_key="static_target_distance",
     device_class=SensorDeviceClass.DISTANCE,
     entity_registry_enabled_default=False,
-    entity_registry_visible_default=True,
     native_unit_of_measurement=UnitOfLength.CENTIMETERS,
     state_class=SensorStateClass.MEASUREMENT,
 )
@@ -43,7 +41,6 @@ DETECTION_DISTANCE_DESCRIPTION = SensorEntityDescription(
     translation_key="detection_distance",
     device_class=SensorDeviceClass.DISTANCE,
     entity_registry_enabled_default=False,
-    entity_registry_visible_default=True,
     native_unit_of_measurement=UnitOfLength.CENTIMETERS,
     state_class=SensorStateClass.MEASUREMENT,
 )
@@ -51,9 +48,7 @@ DETECTION_DISTANCE_DESCRIPTION = SensorEntityDescription(
 MOVING_TARGET_ENERGY_DESCRIPTION = SensorEntityDescription(
     key="moving_target_energy",
     translation_key="moving_target_energy",
-    device_class=None,
     entity_registry_enabled_default=False,
-    entity_registry_visible_default=True,
     native_unit_of_measurement="Target Energy",
     state_class=SensorStateClass.MEASUREMENT,
 )
@@ -61,9 +56,7 @@ MOVING_TARGET_ENERGY_DESCRIPTION = SensorEntityDescription(
 STATIC_TARGET_ENERGY_DESCRIPTION = SensorEntityDescription(
     key="static_target_energy",
     translation_key="static_target_energy",
-    device_class=None,
     entity_registry_enabled_default=False,
-    entity_registry_visible_default=True,
     native_unit_of_measurement="Target Energy",
     state_class=SensorStateClass.MEASUREMENT,
 )

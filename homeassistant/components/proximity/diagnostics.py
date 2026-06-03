@@ -1,7 +1,5 @@
 """Diagnostics support for Proximity."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.device_tracker import ATTR_GPS, ATTR_IP, ATTR_MAC

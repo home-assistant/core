@@ -11,7 +11,8 @@ from homeassistant.components.cloudflare_r2.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
     suggested_filenames,
 )
-from homeassistant.components.cloudflare_r2.const import CONF_PREFIX, DOMAIN
+from homeassistant.components.cloudflare_r2.const import DOMAIN
+from homeassistant.const import CONF_PREFIX
 
 from .const import USER_INPUT
 

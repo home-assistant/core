@@ -495,7 +495,7 @@ async def test_purge_method(
 @pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 @pytest.mark.usefixtures("recorder_mock")
 async def test_purge_edge_case(hass: HomeAssistant, use_sqlite: bool) -> None:
-    """Test states and events are purged even if they occurred shortly before purge_before."""
+    """Test states and events purged even if shortly before purge_before."""
 
     async def _add_db_entries(hass: HomeAssistant, timestamp: datetime) -> None:
         with session_scope(hass=hass) as session:
@@ -559,7 +559,7 @@ async def test_purge_edge_case(hass: HomeAssistant, use_sqlite: bool) -> None:
 
 
 async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -> None:
-    """Test states and events are purged only if they occurred before "now() - keep_days"."""
+    """Test purge only removes entries before now() - keep_days."""
 
     async def _add_db_entries(hass: HomeAssistant, cutoff: datetime, rows: int) -> None:
         timestamp_keep = cutoff
@@ -1021,7 +1021,7 @@ async def test_purge_can_mix_legacy_and_new_format(
     assert recorder_mock.use_legacy_events_index is False
 
     def _recreate_legacy_events_index():
-        """Recreate the legacy events index since its no longer created on new instances."""
+        """Recreate the legacy events index."""
         migration._create_index(
             recorder_mock, recorder_mock.get_session, "states", "ix_states_event_id"
         )
@@ -1172,7 +1172,7 @@ async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
     assert recorder_mock.use_legacy_events_index is False
 
     def _recreate_legacy_events_index():
-        """Recreate the legacy events index since its no longer created on new instances."""
+        """Recreate the legacy events index."""
         migration._create_index(
             recorder_mock, recorder_mock.get_session, "states", "ix_states_event_id"
         )

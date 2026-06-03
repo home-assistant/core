@@ -1,7 +1,5 @@
 """Config flow for myStrom integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -21,6 +19,8 @@ DEFAULT_NAME = "myStrom Device"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
     }

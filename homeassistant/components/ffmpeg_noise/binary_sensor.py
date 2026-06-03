@@ -1,7 +1,5 @@
 """Provides a binary sensor which is a collection of ffmpeg tools."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import haffmpeg.sensor as ffmpeg_sensor
@@ -19,7 +17,7 @@ from homeassistant.components.ffmpeg import (
     FFmpegManager,
     get_ffmpeg_manager,
 )
-from homeassistant.components.ffmpeg_motion.binary_sensor import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.ffmpeg_motion.binary_sensor import (  # pylint: disable=home-assistant-component-root-import
     FFmpegBinarySensor,
 )
 from homeassistant.const import CONF_NAME

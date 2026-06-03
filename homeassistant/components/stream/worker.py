@@ -1,7 +1,5 @@
 """Provides the worker thread needed for processing streams."""
 
-from __future__ import annotations
-
 from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
@@ -187,7 +185,11 @@ class StreamMuxer:
             # https://github.com/home-assistant/core/pull/39970
             # "cmaf" flag replaces several of the movflags used,
             # but too recent to use for now
-            "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
+            "movflags": (
+                "frag_custom+empty_moov+default_base_moof"
+                "+frag_discont+negative_cts_offsets"
+                "+skip_trailer+delay_moov"
+            ),
             # Sometimes the first segment begins with negative timestamps,
             # and this setting just
             # adjusts the timestamps in the output from that segment to start
@@ -201,7 +203,12 @@ class StreamMuxer:
             # Fragment durations may exceed the 15% allowed variance but it seems ok
             **(
                 {
-                    "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
+                    "movflags": (
+                        "empty_moov+default_base_moof"
+                        "+frag_discont"
+                        "+negative_cts_offsets"
+                        "+skip_trailer+delay_moov"
+                    ),
                     # Create a fragment every TARGET_PART_DURATION. The data from
                     # each fragment is stored in a "Part" that can be combined with
                     # the data from all the other "Part"s, plus an init section,
@@ -664,7 +671,8 @@ def stream_worker(
     except av.FFmpegError as ex:
         container.close()
         raise StreamWorkerError(
-            f"Error demuxing stream while finding first packet ({redact_av_error_string(ex)})"
+            "Error demuxing stream while finding first packet"
+            f" ({redact_av_error_string(ex)})"
         ) from ex
 
     muxer = StreamMuxer(

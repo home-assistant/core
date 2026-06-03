@@ -1,7 +1,5 @@
 """Support for Fumis pellet stoves."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -13,6 +11,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 

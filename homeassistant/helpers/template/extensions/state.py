@@ -1,8 +1,5 @@
 """State functions for Home Assistant templates."""
 
-from __future__ import annotations
-
-import collections.abc
 from collections.abc import Iterable
 import logging
 from typing import TYPE_CHECKING, Any
@@ -164,7 +161,7 @@ class StateExtension(BaseTemplateExtension):
                     continue
             elif isinstance(entity, State):
                 entity_id = entity.entity_id
-            elif isinstance(entity, collections.abc.Iterable):
+            elif isinstance(entity, Iterable):
                 search += entity
                 continue
             else:

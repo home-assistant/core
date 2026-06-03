@@ -1,7 +1,5 @@
 """Reolink parent entity class."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -50,7 +48,8 @@ class ReolinkChimeEntityDescription(ReolinkEntityDescription):
 class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
     """Parent class for entities that control the Reolink NVR itself, without a channel.
 
-    A camera connected directly to HomeAssistant without using a NVR is in the reolink API
+    A camera connected directly to HomeAssistant without using
+    a NVR is in the reolink API
     basically a NVR with a single channel that has the camera connected to that channel.
     """
 
@@ -96,6 +95,13 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
         """Return True if entity is available."""
         if self.entity_description.always_available:
             return True
+
+        if self._host.api.is_battery:
+            return (
+                self._host.api.baichuan.login_sucess
+                and not self._host.api.baichuan.privacy_mode()
+                and super().available
+            )
 
         return (
             self._host.api.session_active
@@ -153,7 +159,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
 
 
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
-    """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
+    """Parent class for Reolink camera entities connected to a NVR channel."""
 
     def __init__(
         self,
@@ -161,12 +167,16 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         channel: int,
         coordinator: ReolinkCoordinator | None = None,
     ) -> None:
-        """Initialize ReolinkChannelCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
+        """Initialize ReolinkChannelCoordinatorEntity."""
         super().__init__(reolink_data, coordinator)
 
         self._channel = channel
         if self._host.api.is_nvr and self._host.api.supported(channel, "UID"):
-            self._attr_unique_id = f"{self._host.unique_id}_{self._host.api.camera_uid(channel)}_{self.entity_description.key}"
+            self._attr_unique_id = (
+                f"{self._host.unique_id}"
+                f"_{self._host.api.camera_uid(channel)}"
+                f"_{self.entity_description.key}"
+            )
         else:
             self._attr_unique_id = (
                 f"{self._host.unique_id}_{channel}_{self.entity_description.key}"

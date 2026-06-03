@@ -1,7 +1,5 @@
 """Config flow for melnor."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol

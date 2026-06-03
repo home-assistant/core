@@ -1,7 +1,5 @@
 """Support for the Airzone diagnostics."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aioairzone.const import API_MAC, AZD_MAC

@@ -1,8 +1,10 @@
 """Test Volvo locks."""
 
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from volvocarsapi.api import VolvoCarsApi
@@ -14,7 +16,8 @@ from homeassistant.components.lock import (
     SERVICE_UNLOCK,
     LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.volvo.coordinator import FAST_INTERVAL
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -22,7 +25,7 @@ from homeassistant.helpers import entity_registry as er
 from . import configure_mock
 from .const import DEFAULT_VIN
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_api", "full_model")
@@ -134,3 +137,28 @@ async def test_unlock_failure(
         )
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == LockState.LOCKED
+
+
+@pytest.mark.freeze_time("2025-05-31T10:00:00+00:00")
+@pytest.mark.usefixtures("full_model")
+async def test_lock_unavailable_when_api_field_missing(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_api: VolvoCarsApi,
+) -> None:
+    """Test lock becomes unavailable when centralLock is missing from API response."""
+
+    with patch("homeassistant.components.volvo.PLATFORMS", [Platform.LOCK]):
+        assert await setup_integration()
+
+    entity_id = "lock.volvo_xc40_lock"
+    assert hass.states.get(entity_id).state == LockState.LOCKED
+
+    # Simulate API returning doors data without centralLock
+    configure_mock(mock_api.async_get_doors_status, return_value={})
+    freezer.tick(timedelta(minutes=FAST_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

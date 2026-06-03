@@ -1,7 +1,5 @@
 """Sensor platform for the EARN-E P1 Meter integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

@@ -1,7 +1,5 @@
 """The Radarr component."""
 
-from __future__ import annotations
-
 from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription

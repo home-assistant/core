@@ -1,7 +1,5 @@
 """Support for Harmony Hub devices."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import json
 import logging
@@ -261,7 +259,8 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
     def write_config_file(self) -> None:
         """Write Harmony configuration file.
 
-        This is a handy way for users to figure out the available commands for automations.
+        This is a handy way for users to figure out the
+        available commands for automations.
         """
         _LOGGER.debug(
             "%s: Writing hub configuration to file: %s",

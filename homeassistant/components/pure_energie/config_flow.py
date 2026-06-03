@@ -1,7 +1,5 @@
 """Config flow for Pure Energie integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from gridnet import Device, GridNet, GridNetConnectionError

@@ -1,7 +1,5 @@
 """Support for Overkiz water heater devices."""
 
-from __future__ import annotations
-
 from pyoverkiz.enums.ui import UIWidget
 
 from homeassistant.const import Platform
@@ -54,7 +52,13 @@ WIDGET_TO_WATER_HEATER_ENTITY = {
 }
 
 CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY = {
-    "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": AtlanticDomesticHotWaterProductionMBLComponent,
-    "io:AtlanticDomesticHotWaterProductionV2_CV4E_IOComponent": AtlanticDomesticHotWaterProductionV2IOComponent,
-    "io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent": AtlanticDomesticHotWaterProductionV2IOComponent,
+    "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": (
+        AtlanticDomesticHotWaterProductionMBLComponent
+    ),
+    "io:AtlanticDomesticHotWaterProductionV2_CV4E_IOComponent": (
+        AtlanticDomesticHotWaterProductionV2IOComponent
+    ),
+    "io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent": (
+        AtlanticDomesticHotWaterProductionV2IOComponent
+    ),
 }

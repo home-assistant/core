@@ -1,7 +1,9 @@
 """The tests for sensor recorder platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -106,7 +108,7 @@ async def test_rename_entity_on_mocked_platform(
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test states meta is migrated when entity_id is changed when using a mocked platform.
+    """Test states meta is migrated when entity_id is changed.
 
     This test will call async_remove on the entity so we can make
     sure that we do not record the entity as removed in the database
@@ -220,11 +222,12 @@ async def test_rename_entity_collision(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
     assert len(hist["sensor.test1"]) == 3
 
-    hass.states.async_set("sensor.test99", "collision")
-    hass.states.async_remove("sensor.test99")
+    with freeze_time(four - timedelta(seconds=1)):
+        hass.states.async_set("sensor.test99", "collision")
+        hass.states.async_remove("sensor.test99")
 
-    await hass.async_block_till_done()
-    await async_wait_recording_done(hass)
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
 
     # Rename entity sensor.test1 to sensor.test99
     entity_registry.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
@@ -290,11 +293,12 @@ async def test_rename_entity_collision_without_states_meta_safeguard(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
     assert len(hist["sensor.test1"]) == 3
 
-    hass.states.async_set("sensor.test99", "collision")
-    hass.states.async_remove("sensor.test99")
+    with freeze_time(four - timedelta(seconds=1)):
+        hass.states.async_set("sensor.test99", "collision")
+        hass.states.async_remove("sensor.test99")
 
-    await hass.async_block_till_done()
-    await async_wait_recording_done(hass)
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
 
     # Verify history before collision
     hist = history.get_significant_states(
@@ -305,7 +309,8 @@ async def test_rename_entity_collision_without_states_meta_safeguard(
 
     instance = recorder.get_instance(hass)
     # Patch out the safeguard in the states meta manager
-    # so that we hit the filter_unique_constraint_integrity_error safeguard in the entity_registry
+    # so that we hit the filter_unique_constraint_integrity_error
+    # safeguard in the entity_registry
     with patch.object(instance.states_meta_manager, "get", return_value=None):
         # Rename entity sensor.test1 to sensor.test99
         entity_registry.async_update_entity(

@@ -1,7 +1,5 @@
 """Support for Venstar WiFi Thermostats."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -101,11 +99,11 @@ async def async_setup_platform(
         "Loading venstar via platform config is deprecated; The configuration"
         " has been migrated to a config entry and can be safely removed"
     )
-    # No config entry exists and configuration.yaml config exists, trigger the import flow.
-    if not hass.config_entries.async_entries(DOMAIN):
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
+    # Trigger the import flow for this YAML entry; duplicates by host are
+    # aborted in the import step so each configured device is imported.
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
 
 
 class VenstarThermostat(VenstarEntity, ClimateEntity):

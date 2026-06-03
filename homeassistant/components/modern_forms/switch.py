@@ -1,7 +1,5 @@
 """Support for Modern Forms switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -64,11 +62,13 @@ class ModernFormsAwaySwitch(ModernFormsSwitch):
         """Return the state of the switch."""
         return bool(self.coordinator.data.state.away_mode_enabled)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Modern Forms Away mode switch."""
         await self.coordinator.modern_forms.away(away=False)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Modern Forms Away mode switch."""
@@ -95,11 +95,13 @@ class ModernFormsAdaptiveLearningSwitch(ModernFormsSwitch):
         """Return the state of the switch."""
         return bool(self.coordinator.data.state.adaptive_learning_enabled)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Modern Forms Adaptive Learning switch."""
         await self.coordinator.modern_forms.adaptive_learning(adaptive_learning=False)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Modern Forms Adaptive Learning switch."""

@@ -57,12 +57,18 @@ async def test_default_state(
 async def test_state_reporting(hass: HomeAssistant) -> None:
     """Test the state reporting.
 
-    The group state is unavailable if all group members are unavailable.
-    Otherwise, the group state is unknown if at least one group member is unknown or unavailable.
-    Otherwise, the group state is jammed if at least one group member is jammed.
-    Otherwise, the group state is locking if at least one group member is locking.
-    Otherwise, the group state is unlocking if at least one group member is unlocking.
-    Otherwise, the group state is unlocked if at least one group member is unlocked.
+    The group state is unavailable if all group members are
+    unavailable.
+    Otherwise, the group state is unknown if at least one group member
+    is unknown or unavailable.
+    Otherwise, the group state is jammed if at least one group member
+    is jammed.
+    Otherwise, the group state is locking if at least one group member
+    is locking.
+    Otherwise, the group state is unlocking if at least one group
+    member is unlocking.
+    Otherwise, the group state is unlocked if at least one group
+    member is unlocked.
     Otherwise, the group state is locked.
     """
     await async_setup_component(

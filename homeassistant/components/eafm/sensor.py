@@ -114,7 +114,8 @@ class Measurement(CoordinatorEntity, SensorEntity):
         if "latestReading" not in self.coordinator.data["measures"][self.key]:
             return False
 
-        # Sometimes lastestReading key is present but actually a URL rather than a piece of data
+        # Sometimes lastestReading key is present but actually
+        # a URL rather than a piece of data.
         # This is usually because the sensor has been archived
         if not isinstance(
             self.coordinator.data["measures"][self.key]["latestReading"], dict

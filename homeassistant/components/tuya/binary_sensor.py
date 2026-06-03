@@ -1,11 +1,9 @@
 """Support for Tuya binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from tuya_device_handlers.definition.binary_sensor import (
-    TuyaBinarySensorDefinition,
+    BinarySensorDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -91,6 +89,14 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="tankfull",
         ),
         TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_FULL",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="FULL",
+            translation_key="tankfull",
+        ),
+        TuyaBinarySensorEntityDescription(
             key="defrost",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
@@ -99,12 +105,68 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="defrost",
         ),
         TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_COIL",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="COIL",
+            translation_key="coil_freeze",
+        ),
+        TuyaBinarySensorEntityDescription(
             key="wet",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             bitmap_key="wet",
             translation_key="wet",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_Cleaning",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="Cleaning",
+            translation_key="filter_cleaning",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_E1",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="E1",
+            translation_key="temp_error",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_CL",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="CL",
+            translation_key="low_temp",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_CH",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="CH",
+            translation_key="high_temp",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_LO",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="LO",
+            translation_key="low_humidity",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_MOTOR",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="MOTOR",
+            translation_key="motor_fault",
         ),
     ),
     DeviceCategory.CWWSQ: (
@@ -434,7 +496,7 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
-        definition: TuyaBinarySensorDefinition,
+        definition: BinarySensorDefinition,
     ) -> None:
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager, description)

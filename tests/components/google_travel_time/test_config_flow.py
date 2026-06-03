@@ -105,7 +105,9 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
         (Unauthorized("Invalid API key."), "invalid_auth"),
         (
             PermissionDenied(
-                "Requests to this API routes.googleapis.com method google.maps.routing.v2.Routes.ComputeRoutes are blocked."
+                "Requests to this API routes.googleapis.com method"
+                " google.maps.routing.v2.Routes.ComputeRoutes"
+                " are blocked."
             ),
             "permission_denied",
         ),

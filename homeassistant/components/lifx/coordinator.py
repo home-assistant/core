@@ -1,7 +1,5 @@
 """Coordinator for lifx."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
@@ -280,7 +278,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                 callb: Callable[[Message, dict[str, Any] | None], None],
                 get_color_zones_args: dict[str, Any],
             ) -> None:
-                """Capture the callback and make sure resp_set_multizonemultizone is called before."""
+                """Capture the callback for resp_set_multizone."""
 
                 def _wrapped_callback(
                     bulb: Light,
@@ -325,7 +323,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             )
         )
         if self.is_128zone_matrix:
-            # For 128-zone ceiling devices, we need another get64 request for the next set of zones
+            # For 128-zone ceiling devices, we need another
+            # get64 request for the next set of zones
             calls.append(
                 partial(
                     self.device.get64,
@@ -382,7 +381,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         if update_rssi:
             # We always send the rssi request second
-            self._rssi = int(floor(10 * log10(responses[1].signal) + 0.5))
+            self._rssi = floor(10 * log10(responses[1].signal) + 0.5)
 
         if self.is_matrix or self.is_extended_multizone or self.is_legacy_multizone:
             self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]

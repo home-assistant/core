@@ -1,7 +1,5 @@
 """Common code for tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from enum import Enum
 from typing import NamedTuple
@@ -141,7 +139,7 @@ class ComponentFactory:
         self.vera_controller_class_mock.return_value = controller
 
         # Setup component through config flow.
-        if controller_config.config_source == ConfigSource.CONFIG_FLOW:
+        if controller_config.config_source is ConfigSource.CONFIG_FLOW:
             await hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_USER},
@@ -150,7 +148,7 @@ class ComponentFactory:
             await hass.async_block_till_done()
 
         # Setup component directly from config entry.
-        if controller_config.config_source == ConfigSource.CONFIG_ENTRY:
+        if controller_config.config_source is ConfigSource.CONFIG_ENTRY:
             entry = MockConfigEntry(
                 domain=DOMAIN,
                 data=controller_config.config,

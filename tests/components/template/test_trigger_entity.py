@@ -264,7 +264,7 @@ async def test_coordinator_shutdown_unloads_script_and_condition(
 async def test_shutdown_stops_script_and_keeps_triggers_subscribed(
     hass: HomeAssistant,
 ) -> None:
-    """Test that HA shutdown stops coordinator scripts without unsubscribing triggers."""
+    """Test HA shutdown stops coordinator scripts without unsubscribing."""
     assert await async_setup_component(
         hass,
         "template",

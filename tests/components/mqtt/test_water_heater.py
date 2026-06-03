@@ -187,7 +187,9 @@ async def test_set_operation(
     await common.async_set_operation_mode(hass, "eco", ENTITY_WATER_HEATER)
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "eco"
-    mqtt_mock.async_publish.assert_called_once_with("mode-topic", "eco", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "mode-topic", "eco", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -291,22 +293,30 @@ async def test_set_operation_with_power_command(
     await common.async_set_operation_mode(hass, "electric", ENTITY_WATER_HEATER)
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "electric"
-    mqtt_mock.async_publish.assert_has_calls([call("mode-topic", "electric", 0, False)])
+    mqtt_mock.async_publish.assert_has_calls(
+        [call("mode-topic", "electric", 0, False, message_expiry_interval=None)]
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_set_operation_mode(hass, "off", ENTITY_WATER_HEATER)
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "off"
-    mqtt_mock.async_publish.assert_has_calls([call("mode-topic", "off", 0, False)])
+    mqtt_mock.async_publish.assert_has_calls(
+        [call("mode-topic", "off", 0, False, message_expiry_interval=None)]
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_on(hass, ENTITY_WATER_HEATER)
     # the water heater is not updated optimistically as this is not supported
-    mqtt_mock.async_publish.assert_has_calls([call("power-command", "ON", 0, False)])
+    mqtt_mock.async_publish.assert_has_calls(
+        [call("power-command", "ON", 0, False, message_expiry_interval=None)]
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, ENTITY_WATER_HEATER)
-    mqtt_mock.async_publish.assert_has_calls([call("power-command", "OFF", 0, False)])
+    mqtt_mock.async_publish.assert_has_calls(
+        [call("power-command", "OFF", 0, False, message_expiry_interval=None)]
+    )
     mqtt_mock.async_publish.reset_mock()
 
 
@@ -331,7 +341,9 @@ async def test_turn_on_and_off_optimistic_with_power_command(
     await common.async_set_operation_mode(hass, "electric", ENTITY_WATER_HEATER)
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "electric"
-    mqtt_mock.async_publish.assert_has_calls([call("mode-topic", "electric", 0, False)])
+    mqtt_mock.async_publish.assert_has_calls(
+        [call("mode-topic", "electric", 0, False, message_expiry_interval=None)]
+    )
     mqtt_mock.async_publish.reset_mock()
     await common.async_set_operation_mode(hass, "off", ENTITY_WATER_HEATER)
     state = hass.states.get(ENTITY_WATER_HEATER)
@@ -341,7 +353,9 @@ async def test_turn_on_and_off_optimistic_with_power_command(
     # the water heater is not updated optimistically as this is not supported
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "off"
-    mqtt_mock.async_publish.assert_has_calls([call("power-command", "ON", 0, False)])
+    mqtt_mock.async_publish.assert_has_calls(
+        [call("power-command", "ON", 0, False, message_expiry_interval=None)]
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_set_operation_mode(hass, "gas", ENTITY_WATER_HEATER)
@@ -351,7 +365,9 @@ async def test_turn_on_and_off_optimistic_with_power_command(
     # the water heater is not updated optimistically as this is not supported
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "gas"
-    mqtt_mock.async_publish.assert_has_calls([call("power-command", "OFF", 0, False)])
+    mqtt_mock.async_publish.assert_has_calls(
+        [call("power-command", "OFF", 0, False, message_expiry_interval=None)]
+    )
     mqtt_mock.async_publish.reset_mock()
 
 
@@ -368,7 +384,7 @@ async def test_set_target_temperature(
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "performance"
     mqtt_mock.async_publish.assert_called_once_with(
-        "mode-topic", "performance", 0, False
+        "mode-topic", "performance", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     await common.async_set_temperature(
@@ -377,7 +393,7 @@ async def test_set_target_temperature(
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.attributes.get("temperature") == 50
     mqtt_mock.async_publish.assert_called_once_with(
-        "temperature-topic", "50.0", 0, False
+        "temperature-topic", "50.0", 0, False, message_expiry_interval=None
     )
 
     # also test directly supplying the operation mode to set_temperature
@@ -390,8 +406,8 @@ async def test_set_target_temperature(
     assert state.attributes.get("temperature") == 47
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("mode-topic", "eco", 0, False),
-            call("temperature-topic", "47.0", 0, False),
+            call("mode-topic", "eco", 0, False, message_expiry_interval=None),
+            call("temperature-topic", "47.0", 0, False, message_expiry_interval=None),
         ]
     )
 
@@ -626,7 +642,7 @@ async def test_set_and_templates(
     # Mode
     await common.async_set_operation_mode(hass, "heat_pump", ENTITY_WATER_HEATER)
     mqtt_mock.async_publish.assert_called_once_with(
-        "mode-topic", "mode: heat_pump", 0, False
+        "mode-topic", "mode: heat_pump", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_WATER_HEATER)
@@ -637,7 +653,7 @@ async def test_set_and_templates(
         hass, temperature=107, entity_id=ENTITY_WATER_HEATER
     )
     mqtt_mock.async_publish.assert_called_once_with(
-        "temperature-topic", "temp: 107.0", 0, False
+        "temperature-topic", "temp: 107.0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_WATER_HEATER)
@@ -645,10 +661,14 @@ async def test_set_and_templates(
 
     # Power
     await common.async_turn_on(hass, entity_id=ENTITY_WATER_HEATER)
-    mqtt_mock.async_publish.assert_called_once_with("power-topic", "pwr: ON", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "power-topic", "pwr: ON", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     await common.async_turn_off(hass, entity_id=ENTITY_WATER_HEATER)
-    mqtt_mock.async_publish.assert_called_once_with("power-topic", "pwr: OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "power-topic", "pwr: OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
 
@@ -1250,6 +1270,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

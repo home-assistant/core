@@ -1,7 +1,5 @@
 """Support for Android IP Webcam Cameras."""
 
-from __future__ import annotations
-
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.const import (

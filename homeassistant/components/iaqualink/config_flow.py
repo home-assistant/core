@@ -1,6 +1,4 @@
-"""Config flow to configure zone component."""
-
-from __future__ import annotations
+"""Config flow for iAquaLink."""
 
 from collections.abc import Mapping
 from typing import Any
@@ -33,7 +31,7 @@ CREDENTIALS_DATA_SCHEMA = vol.Schema(
 
 
 class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Aqualink config flow."""
+    """iAquaLink config flow."""
 
     VERSION = 1
 
@@ -52,7 +50,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 pass
         except AqualinkServiceUnauthorizedException:
             return {"base": "invalid_auth"}
-        except AqualinkServiceException, httpx.HTTPError:
+        except AqualinkServiceException, TimeoutError, httpx.HTTPError:
             return {"base": "cannot_connect"}
 
         return {}

@@ -61,7 +61,7 @@ async def test_full_flow_java(hass: HomeAssistant) -> None:
 
 
 async def test_full_flow_bedrock(hass: HomeAssistant) -> None:
-    """Test config entry in case of a successful connection to a Bedrock Edition server."""
+    """Test config entry for successful Bedrock Edition connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -90,7 +90,7 @@ async def test_full_flow_bedrock(hass: HomeAssistant) -> None:
 
 
 async def test_full_flow_legacy_java(hass: HomeAssistant) -> None:
-    """Test config entry in case of a successful connection to a legacy Java Edition server."""
+    """Test config entry for successful legacy Java Edition connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -208,7 +208,7 @@ async def test_service_already_configured_legacy_java(
 
 
 async def test_recovery_java(hass: HomeAssistant) -> None:
-    """Test config flow recovery with a Java Edition server (successful connection after a failed connection)."""
+    """Test config flow recovery with a Java Edition server."""
     with (
         patch(
             "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
@@ -257,7 +257,7 @@ async def test_recovery_java(hass: HomeAssistant) -> None:
 
 
 async def test_recovery_bedrock(hass: HomeAssistant) -> None:
-    """Test config flow recovery with a Bedrock Edition server (successful connection after a failed connection)."""
+    """Test config flow recovery with a Bedrock Edition server."""
     with (
         patch(
             "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
@@ -302,7 +302,7 @@ async def test_recovery_bedrock(hass: HomeAssistant) -> None:
 
 
 async def test_recovery_legacy_java(hass: HomeAssistant) -> None:
-    """Test config flow recovery with a legacy Java Edition server (successful connection after a failed connection)."""
+    """Test config flow recovery with a legacy Java Edition server."""
     with (
         patch(
             "homeassistant.components.minecraft_server.api.BedrockServer.lookup",

@@ -1,7 +1,5 @@
 """Support for locks which integrates with other components."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -9,20 +7,12 @@ import voluptuous as vol
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     LockEntity,
     LockEntityFeature,
     LockState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_CODE,
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import ATTR_CODE, CONF_NAME, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import config_validation as cv
@@ -42,7 +32,6 @@ from .helpers import (
     async_setup_template_preview,
 )
 from .schemas import (
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_schema,
@@ -50,7 +39,6 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
 CONF_CODE_FORMAT = "code_format"
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
@@ -58,11 +46,6 @@ CONF_OPEN = "open"
 
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
-
-LEGACY_FIELDS = {
-    CONF_CODE_FORMAT_TEMPLATE: CONF_CODE_FORMAT,
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
 
 SCRIPT_FIELDS = (
     CONF_LOCK,
@@ -85,19 +68,6 @@ LOCK_YAML_SCHEMA = LOCK_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).
     make_template_entity_common_modern_schema(LOCK_DOMAIN, DEFAULT_NAME).schema
 )
 
-PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_CODE_FORMAT_TEMPLATE): cv.template,
-        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-    }
-).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
-
 LOCK_CONFIG_ENTRY_SCHEMA = LOCK_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
@@ -118,7 +88,6 @@ async def async_setup_platform(
         TriggerLockEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
         script_options=SCRIPT_FIELDS,
     )
 
@@ -160,8 +129,11 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._code_format_template_error: TemplateError | None = None

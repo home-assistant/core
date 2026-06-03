@@ -1,7 +1,5 @@
 """Representation of Z-Wave locks."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from zwave_js_server.const import CommandClass
@@ -27,9 +25,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import const, lock_helpers
 from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+from .lock_helpers import (
+    CREDENTIAL_RULE_REVERSE_MAP,
+    CREDENTIAL_TYPE_REVERSE_MAP,
+    USER_TYPE_REVERSE_MAP,
+    CredentialCapabilitiesResult,
+    SetCredentialReturn,
+    SetUserReturn,
+    UsersResult,
+)
 from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
@@ -44,6 +52,17 @@ STATE_TO_ZWAVE_MAP: dict[int, dict[str, int | bool]] = {
         LockState.LOCKED: True,
     },
 }
+
+
+def _credential_service_error(
+    translation_key: str, err: Exception, **extra: str
+) -> HomeAssistantError:
+    """Wrap a zwave-js-server error with a credential-service translation."""
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key=translation_key,
+        translation_placeholders={"error": str(err), **extra},
+    )
 
 
 async def async_setup_entry(
@@ -220,3 +239,98 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         if result.remaining_duration is not None:
             msg += f" and remaining duration is {result.remaining_duration!s}"
         LOGGER.info("%s after setting lock configuration for %s", msg, self.entity_id)
+
+    async def async_set_user(self, **kwargs: Any) -> SetUserReturn:
+        """Create or update an access-control user on the lock."""
+        user_type = kwargs.get(const.ATTR_USER_TYPE)
+        credential_rule = kwargs.get(const.ATTR_CREDENTIAL_RULE)
+        try:
+            return await lock_helpers.async_set_user(
+                self.info.node,
+                user_id=kwargs.get(const.ATTR_USER_ID),
+                user_name=kwargs.get(const.ATTR_USER_NAME),
+                user_type=(
+                    USER_TYPE_REVERSE_MAP[user_type] if user_type is not None else None
+                ),
+                credential_rule=(
+                    CREDENTIAL_RULE_REVERSE_MAP[credential_rule]
+                    if credential_rule is not None
+                    else None
+                ),
+                active=kwargs.get(const.ATTR_USER_ACTIVE),
+            )
+        except BaseZwaveJSServerError as err:
+            raise _credential_service_error("set_user_failed", err) from err
+
+    async def async_delete_user(self, **kwargs: Any) -> None:
+        """Delete a single access-control user."""
+        user_id: int = kwargs[const.ATTR_USER_ID]
+        try:
+            await lock_helpers.async_delete_user(self.info.node, user_id)
+        except BaseZwaveJSServerError as err:
+            raise _credential_service_error(
+                "delete_user_failed", err, user_id=str(user_id)
+            ) from err
+
+    async def async_delete_all_users(self) -> None:
+        """Delete all access-control users."""
+        try:
+            await lock_helpers.async_delete_all_users(self.info.node)
+        except BaseZwaveJSServerError as err:
+            raise _credential_service_error("delete_all_users_failed", err) from err
+
+    async def async_get_credential_capabilities(
+        self,
+    ) -> CredentialCapabilitiesResult:
+        """Return credential management capabilities for the lock."""
+        try:
+            return await lock_helpers.async_get_credential_capabilities(self.info.node)
+        except BaseZwaveJSServerError as err:
+            raise _credential_service_error(
+                "get_credential_capabilities_failed", err
+            ) from err
+
+    async def async_get_users(self) -> UsersResult:
+        """Return access-control users for the lock."""
+        try:
+            return await lock_helpers.async_get_users(self.info.node)
+        except BaseZwaveJSServerError as err:
+            raise _credential_service_error("get_users_failed", err) from err
+
+    async def async_set_credential(self, **kwargs: Any) -> SetCredentialReturn:
+        """Add or update a credential for an existing user."""
+        credential_type = kwargs[const.ATTR_CREDENTIAL_TYPE]
+        try:
+            return await lock_helpers.async_set_credential(
+                self.info.node,
+                user_id=kwargs[const.ATTR_USER_ID],
+                credential_type=CREDENTIAL_TYPE_REVERSE_MAP[credential_type],
+                credential_data=kwargs[const.ATTR_CREDENTIAL_DATA],
+                credential_slot=kwargs.get(const.ATTR_CREDENTIAL_SLOT),
+            )
+        except BaseZwaveJSServerError as err:
+            raise _credential_service_error("set_credential_failed", err) from err
+
+    async def async_delete_credential(self, **kwargs: Any) -> None:
+        """Delete a single credential."""
+        try:
+            await lock_helpers.async_delete_credential(
+                self.info.node,
+                user_id=kwargs[const.ATTR_USER_ID],
+                credential_type=CREDENTIAL_TYPE_REVERSE_MAP[
+                    kwargs[const.ATTR_CREDENTIAL_TYPE]
+                ],
+                credential_slot=kwargs[const.ATTR_CREDENTIAL_SLOT],
+            )
+        except BaseZwaveJSServerError as err:
+            raise _credential_service_error("delete_credential_failed", err) from err
+
+    async def async_delete_all_credentials(self, **kwargs: Any) -> None:
+        """Delete all credentials for a user."""
+        user_id: int = kwargs[const.ATTR_USER_ID]
+        try:
+            await lock_helpers.async_delete_all_credentials(self.info.node, user_id)
+        except BaseZwaveJSServerError as err:
+            raise _credential_service_error(
+                "delete_all_credentials_failed", err, user_id=str(user_id)
+            ) from err

@@ -1,7 +1,5 @@
 """Update platform for the ntfy integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 
 from homeassistant.components.update import (

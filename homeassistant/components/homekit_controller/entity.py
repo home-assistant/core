@@ -1,7 +1,5 @@
 """Homekit Controller entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohomekit.model.characteristics import (
@@ -161,12 +159,13 @@ class HomeKitEntity(Entity):
 
         char_types = self.get_characteristic_types()
 
-        # Setup events and/or polling for characteristics directly attached to this entity
+        # Setup events and/or polling for characteristics
+        # directly attached to this entity
         for char in self.service.characteristics.filter(char_types=char_types):
             self._setup_characteristic(char)
 
-        # Setup events and/or polling for characteristics attached to sub-services of this
-        # entity (like an INPUT_SOURCE).
+        # Setup events and/or polling for characteristics attached
+        # to sub-services of this entity (like an INPUT_SOURCE).
         for service in self.accessory.services.filter(parent_service=self.service):
             for char in service.characteristics.filter(char_types=char_types):
                 self._setup_characteristic(char)
@@ -250,7 +249,7 @@ class HomeKitEntity(Entity):
 
 
 class AccessoryEntity(HomeKitEntity):
-    """A HomeKit entity that is related to an entire accessory rather than a specific service or characteristic."""
+    """A HomeKit entity related to an entire accessory."""
 
     def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
         """Initialise a generic HomeKit accessory."""
@@ -265,10 +264,11 @@ class AccessoryEntity(HomeKitEntity):
 
 
 class BaseCharacteristicEntity(HomeKitEntity):
-    """A HomeKit entity that is related to an single characteristic rather than a whole service.
+    """A HomeKit entity related to a single characteristic.
 
-    This is typically used to expose additional sensor, binary_sensor or number entities that don't belong with
-    the service entity.
+    This is typically used to expose additional sensor,
+    binary_sensor or number entities that don't belong
+    with the service entity.
     """
 
     def __init__(
@@ -302,10 +302,11 @@ class BaseCharacteristicEntity(HomeKitEntity):
 
 
 class CharacteristicEntity(BaseCharacteristicEntity):
-    """A HomeKit entity that is related to an single characteristic rather than a whole service.
+    """A HomeKit entity related to a single characteristic.
 
-    This is typically used to expose additional sensor, binary_sensor or number entities that don't belong with
-    the service entity.
+    This is typically used to expose additional sensor,
+    binary_sensor or number entities that don't belong
+    with the service entity.
     """
 
     def __init__(
@@ -321,4 +322,8 @@ class CharacteristicEntity(BaseCharacteristicEntity):
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        return f"homekit-{serial}-aid:{self._aid}-sid:{self._char.service.iid}-cid:{self._char.iid}"
+        return (
+            f"homekit-{serial}-aid:{self._aid}"
+            f"-sid:{self._char.service.iid}"
+            f"-cid:{self._char.iid}"
+        )

@@ -262,7 +262,7 @@ async def test_device_setup_registry(
     assert device_entry.name == device.name
     assert device_entry.model == device.model
     assert device_entry.manufacturer == device.manufacturer
-    assert device_entry.sw_version == device.fwversion
+    assert device_entry.sw_version == str(device.fwversion)
 
     for entry in er.async_entries_for_device(entity_registry, device_entry.id):
         assert (

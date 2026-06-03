@@ -1,7 +1,5 @@
 """Data update coordinator for SimpliSafe."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import TYPE_CHECKING
 

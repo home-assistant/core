@@ -1,7 +1,5 @@
 """Music Assistant Button platform."""
 
-from __future__ import annotations
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -34,7 +32,7 @@ async def async_setup_entry(
 
 
 class MusicAssistantFavoriteButton(MusicAssistantEntity, ButtonEntity):
-    """Representation of a Button entity to favorite the currently playing item on a player."""
+    """Representation of a Button entity to favorite the current item."""
 
     entity_description = ButtonEntityDescription(
         key="favorite_now_playing",

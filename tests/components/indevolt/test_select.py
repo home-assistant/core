@@ -92,10 +92,7 @@ async def test_select_set_option_error(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, mock_config_entry)
 
-    # Mock set_data to raise an error
-    mock_indevolt.set_data.side_effect = HomeAssistantError(
-        "Device communication failed"
-    )
+    mock_indevolt.set_data.return_value = False
 
     # Attempt to change option
     with pytest.raises(HomeAssistantError):
@@ -119,7 +116,7 @@ async def test_select_unavailable_outdoor_portable(
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that entity is unavailable when device is in outdoor/portable mode (value 0)."""
+    """Test entity is unavailable in outdoor/portable mode (value 0)."""
 
     # Update mock data to fake outdoor/portable mode
     mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (

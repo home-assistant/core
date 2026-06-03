@@ -1,7 +1,5 @@
 """Support for MQTT events."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -113,7 +111,8 @@ class MqttEvent(MqttEntity, EventEntity):
         """Handle new MQTT messages."""
         if msg.retain:
             _LOGGER.debug(
-                "Ignoring event trigger from replayed retained payload '%s' on topic %s",
+                "Ignoring event trigger from replayed retained"
+                " payload '%s' on topic %s",
                 msg.payload,
                 msg.topic,
             )

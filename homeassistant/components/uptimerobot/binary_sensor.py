@@ -1,7 +1,5 @@
 """UptimeRobot binary_sensor platform."""
 
-from __future__ import annotations
-
 from pyuptimerobot import UptimeRobotMonitor
 
 from homeassistant.components.binary_sensor import (

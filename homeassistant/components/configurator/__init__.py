@@ -6,8 +6,6 @@ A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime

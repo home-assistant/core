@@ -1,7 +1,5 @@
 """Support for vacuum cleaner robots (botvacs)."""
 
-from __future__ import annotations
-
 from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING
 

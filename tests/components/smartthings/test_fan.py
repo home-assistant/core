@@ -52,7 +52,7 @@ async def test_all_entities(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id", "device_id"),
     [
-        ("fake_fan", "fan.fake_fan", "f1af21a2-d5a1-437c-b10a-b34a87394b71"),
+        ("fake_fan", "fan.theater_fake_fan", "f1af21a2-d5a1-437c-b10a-b34a87394b71"),
         ("da_ks_hood_01001", "fan.range_hood", "fa5fca25-fa7a-1807-030a-2f72ee0f7bff"),
     ],
 )
@@ -101,7 +101,7 @@ async def test_set_percentage(
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.fake_fan", ATTR_PERCENTAGE: 50},
+        {ATTR_ENTITY_ID: "fan.theater_fake_fan", ATTR_PERCENTAGE: 50},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -116,7 +116,7 @@ async def test_set_percentage(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id", "device_id"),
     [
-        ("fake_fan", "fan.fake_fan", "f1af21a2-d5a1-437c-b10a-b34a87394b71"),
+        ("fake_fan", "fan.theater_fake_fan", "f1af21a2-d5a1-437c-b10a-b34a87394b71"),
         ("da_ks_hood_01001", "fan.range_hood", "fa5fca25-fa7a-1807-030a-2f72ee0f7bff"),
     ],
 )
@@ -156,7 +156,7 @@ async def test_set_percentage_on(
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.fake_fan", ATTR_PERCENTAGE: 50},
+        {ATTR_ENTITY_ID: "fan.theater_fake_fan", ATTR_PERCENTAGE: 50},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -180,7 +180,7 @@ async def test_set_preset_mode(
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "fan.fake_fan", ATTR_PRESET_MODE: "turbo"},
+        {ATTR_ENTITY_ID: "fan.theater_fake_fan", ATTR_PRESET_MODE: "turbo"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -201,19 +201,19 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("fan.fake_fan").state == STATE_OFF
+    assert hass.states.get("fan.theater_fake_fan").state == STATE_OFF
 
     await trigger_health_update(
         hass, devices, "f1af21a2-d5a1-437c-b10a-b34a87394b71", HealthStatus.OFFLINE
     )
 
-    assert hass.states.get("fan.fake_fan").state == STATE_UNAVAILABLE
+    assert hass.states.get("fan.theater_fake_fan").state == STATE_UNAVAILABLE
 
     await trigger_health_update(
         hass, devices, "f1af21a2-d5a1-437c-b10a-b34a87394b71", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("fan.fake_fan").state == STATE_OFF
+    assert hass.states.get("fan.theater_fake_fan").state == STATE_OFF
 
 
 @pytest.mark.parametrize("device_fixture", ["fake_fan"])
@@ -224,7 +224,7 @@ async def test_availability_at_start(
 ) -> None:
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("fan.fake_fan").state == STATE_UNAVAILABLE
+    assert hass.states.get("fan.theater_fake_fan").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])

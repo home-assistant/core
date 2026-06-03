@@ -1,7 +1,5 @@
 """The constants of the Evohome integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import StrEnum, unique
 from typing import TYPE_CHECKING, Final

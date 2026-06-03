@@ -1,7 +1,5 @@
 """Sensor for SigFox devices."""
 
-from __future__ import annotations
-
 import datetime
 from http import HTTPStatus
 import json

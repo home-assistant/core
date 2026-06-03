@@ -1,7 +1,5 @@
 """Home Assistant Connect ZBT-2 firmware update entity."""
 
-from __future__ import annotations
-
 import logging
 
 from universal_silabs_flasher.flasher import Zbt2Flasher
@@ -176,7 +174,10 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         device_registry = dr.async_get(self.hass)
         device_registry.async_update_device(
             device_id=self.device_entry.id,
-            sw_version=f"{self.entity_description.firmware_name} {self._attr_installed_version}",
+            sw_version=(
+                f"{self.entity_description.firmware_name}"
+                f" {self._attr_installed_version}"
+            ),
         )
 
     @callback

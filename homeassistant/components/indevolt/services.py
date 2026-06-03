@@ -1,7 +1,5 @@
 """Services for Indevolt integration."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Final, Never
 
@@ -187,7 +185,10 @@ def _raise_power_exceeds_max(power: int, max_power: int, generation: int) -> Nev
 
 
 def _raise_soc_below_minimum(target_soc: int, minimum_soc: int) -> Never:
-    """Raise a translated validation error when SOC is below the device's hard minimum."""
+    """Raise a translated validation error.
+
+    Called when SOC is below the device's hard minimum.
+    """
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="soc_below_minimum",

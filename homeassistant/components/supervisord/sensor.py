@@ -1,7 +1,5 @@
 """Sensor for Supervisord process status."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 import xmlrpc.client

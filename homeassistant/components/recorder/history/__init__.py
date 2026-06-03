@@ -1,7 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable, Iterator
 from datetime import datetime
 from itertools import groupby

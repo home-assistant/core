@@ -170,7 +170,7 @@ async def test_config_flow_from_dhcp_no_update(
     mock_setup_entry: AsyncMock,
     mock_hub_refresh: AsyncMock,
 ) -> None:
-    """Test we do not use DHCP discovery to overwrite hostname with IP in config entry."""
+    """Test DHCP discovery does not overwrite hostname with IP."""
     info = DhcpServiceInfo(
         ip="1.2.3.4", hostname="webcontrol", macaddress="001122334455"
     )

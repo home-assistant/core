@@ -1,7 +1,5 @@
 """The Lidarr component."""
 
-from __future__ import annotations
-
 from dataclasses import fields
 
 from aiopyarr.lidarr_client import LidarrClient

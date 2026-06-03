@@ -1,7 +1,5 @@
 """The Meater Temperature Probe integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -131,7 +129,8 @@ SENSOR_TYPES = (
         ),
     ),
     # Remaining time in seconds. When unknown/calculating default is used. Default: -1
-    # Exposed as a TIMESTAMP sensor where the timestamp is current time + remaining time.
+    # Exposed as a TIMESTAMP sensor where the timestamp is
+    # current time + remaining time.
     MeaterSensorEntityDescription(
         key="cook_time_remaining",
         translation_key="cook_time_remaining",

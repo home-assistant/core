@@ -231,8 +231,10 @@ async def test_sensor_with_time_filtering(
     minute = departure_local.minute
     # Verify first trip: is NOT before 16:00 (i.e., filtered trips are excluded)
     assert hour >= 16, (
-        f"Expected first trip at or after 16:00 Amsterdam time, but got {hour}:{minute:02d}. "
-        "This means trips before the configured time were NOT filtered out by the time window filter."
+        f"Expected first trip at or after 16:00 Amsterdam time,"
+        f" but got {hour}:{minute:02d}. "
+        "This means trips before the configured time were NOT"
+        " filtered out by the time window filter."
     )
 
     # Verify next trip also passes the filter
@@ -245,13 +247,16 @@ async def test_sensor_with_time_filtering(
 
     # Verify next trip is also at or after 16:00
     assert next_hour >= 16, (
-        f"Expected next trip at or after 16:00 Amsterdam time, but got {next_hour}:{next_minute:02d}. "
-        "This means the window filter is not applied consistently to all trips."
+        f"Expected next trip at or after 16:00 Amsterdam time,"
+        f" but got {next_hour}:{next_minute:02d}. "
+        "This means the window filter is not applied"
+        " consistently to all trips."
     )
 
     # Verify next trip is after the first trip
     assert (next_hour, next_minute) > (hour, minute), (
-        f"Expected next trip ({next_hour}:{next_minute:02d}) to be after first trip ({hour}:{minute:02d})"
+        f"Expected next trip ({next_hour}:{next_minute:02d})"
+        f" to be after first trip ({hour}:{minute:02d})"
     )
 
 
@@ -261,15 +266,18 @@ async def test_sensor_with_time_filtering_next_day(
     hass: HomeAssistant,
     mock_tomorrow_trips_nsapi: AsyncMock,
 ) -> None:
-    """Test that time filtering automatically rolls over to next day when time is in past.
+    """Test time filtering rolls over to next day when time is in past.
 
     This test verifies the day boundary logic:
-    1. When configured time is >1 hour in the past, coordinator queries tomorrow's trips
+    1. When configured time is >1 hour in the past, coordinator
+       queries tomorrow's trips
     2. The API is called with tomorrow's date + configured time
-    3. This ensures users get their morning commute trips even when configured in evening
+    3. This ensures users get their morning commute trips even
+       when configured in evening
 
-    Example: It's 16:30 (4:30 PM), user configured 08:00 (8:00 AM) for morning commute.
-    Instead of showing no trips (since 08:00 already passed today), we show tomorrow's 08:00 trips.
+    Example: It's 16:30 (4:30 PM), user configured 08:00 for
+    morning commute. Instead of showing no trips (since 08:00
+    already passed today), we show tomorrow's 08:00 trips.
     """
     # Current time: 16:30 Amsterdam (14:30 UTC frozen)
     # Configured time: 08:00 (8.5 hours in the past, >1 hour threshold)
@@ -324,13 +332,17 @@ async def test_sensor_with_time_filtering_next_day(
 
     # Verify trip is at or after 08:00 morning time
     assert 8 <= departure_hour < 12, (
-        f"Expected morning trip (08:00-11:59) but got {departure_hour}:{departure_minute:02d}. "
-        "This means the rollover to tomorrow logic is not working correctly."
+        "Expected morning trip (08:00-11:59) but got"
+        f" {departure_hour}:{departure_minute:02d}. "
+        "This means the rollover to tomorrow logic is not"
+        " working correctly."
     )
 
     # Verify trip is from tomorrow (2025-09-16)
     expected_date = date(2025, 9, 16)
     assert departure_date == expected_date, (
-        f"Expected trip from tomorrow (2025-09-16) but got {departure_date}. "
-        "The coordinator should query tomorrow's trips when configured time is >1 hour in the past."
+        "Expected trip from tomorrow (2025-09-16) but got"
+        f" {departure_date}. "
+        "The coordinator should query tomorrow's trips when"
+        " configured time is >1 hour in the past."
     )

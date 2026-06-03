@@ -37,6 +37,14 @@
     }
   },
   "entity": {
+    "select": {
+      "room_priority": {
+        "name": "Room priority",
+        "state": {
+          "follow_me": "Follow me"
+        }
+      }
+    },
     "sensor": {
       "indoor_humidity": {
         "name": "Indoor humidity"
@@ -65,6 +73,24 @@
     }
   },
   "exceptions": {
+    "failed_to_set_fan_mode": {
+      "message": "Failed to set fan mode"
+    },
+    "failed_to_set_hold_time": {
+      "message": "Failed to set hold time"
+    },
+    "failed_to_set_hvac_mode": {
+      "message": "Failed to set HVAC mode"
+    },
+    "failed_to_set_preset_mode": {
+      "message": "Failed to set preset mode"
+    },
+    "failed_to_set_temperature": {
+      "message": "Failed to set temperature"
+    },
+    "invalid_fan_mode": {
+      "message": "The fan mode {fan_mode} is not supported by this device"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }

@@ -1,7 +1,5 @@
 """Support for power sensors in WeMo Insight devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast

@@ -7,8 +7,6 @@ Support for controlling WLAN availability.
 Support for controlling zone based traffic rules.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -51,7 +49,6 @@ from homeassistant.components.switch import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -150,7 +147,7 @@ async def async_firewall_policy_control_fn(
 
 @callback
 def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Check if firewall policy is able to be controlled. Predefined policies are unable to be turned off."""
+    """Check if firewall policy can be controlled."""
     policy = hub.api.firewall_policies[obj_id]
     return not policy.predefined
 
@@ -381,41 +378,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
 )
 
 
-@callback
-def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) -> None:
-    """Normalize switch unique ID to have a prefix rather than midfix.
-
-    Introduced with release 2023.12.
-    """
-    hub = config_entry.runtime_data
-    ent_reg = er.async_get(hass)
-
-    @callback
-    def update_unique_id(obj_id: str, type_name: str) -> None:
-        """Rework unique ID."""
-        new_unique_id = f"{type_name}-{obj_id}"
-        if ent_reg.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, new_unique_id):
-            return
-
-        prefix, _, suffix = obj_id.partition("_")
-        unique_id = f"{prefix}-{type_name}-{suffix}"
-        if entity_id := ent_reg.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id):
-            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-    for obj_id in hub.api.outlets:
-        update_unique_id(obj_id, "outlet")
-
-    for obj_id in hub.api.ports:
-        update_unique_id(obj_id, "poe")
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for UniFi Network integration."""
-    async_update_unique_id(hass, config_entry)
     config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities,
         UnifiSwitchEntity,

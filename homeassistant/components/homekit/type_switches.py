@@ -1,7 +1,5 @@
 """Class to hold all switch accessories."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Final, NamedTuple
 
@@ -351,9 +349,13 @@ class ValveBase(HomeAccessory):
                 CHAR_REMAINING_DURATION,
                 getter_callback=self.get_remaining_duration,
                 properties={
-                    # Default remaining time maxValue to 48 hours if not set via linked default duration.
-                    # pyhap truncates the remaining time to maxValue of the characteristic (pyhap default is 1 hour).
-                    # This can potentially show a remaining duration that is lower than the actual remaining duration.
+                    # Default remaining time maxValue to 48 hours
+                    # if not set via linked default duration.
+                    # pyhap truncates the remaining time to
+                    # maxValue of the characteristic (pyhap
+                    # default is 1 hour). This can potentially
+                    # show a remaining duration that is lower
+                    # than the actual remaining duration.
                     PROP_MAX_VALUE: self._get_linked_duration_property(
                         INPUT_NUMBER_CONF_MAX, VALVE_REMAINING_TIME_MAX_DEFAULT
                     ),

@@ -1,7 +1,5 @@
 """Constants for sensor."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import Final
 
@@ -177,7 +175,8 @@ class SensorDeviceClass(StrEnum):
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
-    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `mg/m³`, `μg/m³`
+    Unit of measurement: `ppb` (parts per billion),
+    `ppm` (parts per million), `mg/m³`, `μg/m³`
     """
 
     CO2 = "carbon_dioxide"
@@ -229,16 +228,20 @@ class SensorDeviceClass(StrEnum):
 
     Use this device class for sensors measuring energy consumption, for example
     electric energy consumption.
-    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
+    `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
+    `Mcal`, `Gcal`
     """
 
     ENERGY_DISTANCE = "energy_distance"
     """Energy distance.
 
-    Use this device class for sensors measuring energy by distance, for example the amount
-    of electric energy consumed by an electric car.
+    Use this device class for sensors measuring energy by
+    distance, for example the amount of electric energy
+    consumed by an electric car.
 
-    Unit of measurement: `kWh/100km`, `Wh/km`, `mi/kWh`, `km/kWh`
+    Unit of measurement: `kWh/100km`, `Wh/km`,
+    `mi/kWh`, `km/kWh`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -247,7 +250,9 @@ class SensorDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
+    `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
+    `Mcal`, `Gcal`
     """
 
     FREQUENCY = "frequency"
@@ -466,8 +471,10 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`, `gal` (warning: volumes expressed in
-    USCS/imperial units are currently assumed to be US volumes)
+    - USCS / imperial: `ft³`, `CCF`, `MCF`,
+    `fl. oz.`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be
+    US volumes)
     """
 
     VOLUME_STORAGE = "volume_storage"
@@ -478,8 +485,10 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`, `gal` (warning: volumes expressed in
-    USCS/imperial units are currently assumed to be US volumes)
+    - USCS / imperial: `ft³`, `CCF`, `MCF`,
+    `fl. oz.`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be
+    US volumes)
     """
 
     VOLUME_FLOW_RATE = "volume_flow_rate"
@@ -547,7 +556,10 @@ class SensorStateClass(StrEnum):
     """The state represents a measurement in present time."""
 
     MEASUREMENT_ANGLE = "measurement_angle"
-    """The state represents a angle measurement in present time. Currently only degrees are supported."""
+    """The state represents an angle measurement in present time.
+
+    Currently only degrees are supported.
+    """
 
     TOTAL = "total"
     """The state represents a total amount.

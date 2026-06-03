@@ -1,7 +1,5 @@
 """Repairs support for notify integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir

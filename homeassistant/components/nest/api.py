@@ -1,7 +1,5 @@
 """API for Google Nest Device Access bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
 import datetime
 import logging
 from typing import cast
@@ -29,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
-    """Provide Google Nest Device Access authentication tied to an OAuth2 based config entry."""
+    """Provide Google Nest Device Access auth tied to an OAuth2 config entry."""
 
     def __init__(
         self,

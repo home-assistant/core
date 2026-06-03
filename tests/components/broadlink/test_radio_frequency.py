@@ -1,13 +1,11 @@
 """Tests for the Broadlink radio_frequency platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 from broadlink.exceptions import BroadlinkException
 import pytest
-from rf_protocols import OOKCommand
+from rf_protocols.commands.ook import OOKCommand
 
 from homeassistant.components import radio_frequency
 from homeassistant.components.broadlink.const import DOMAIN

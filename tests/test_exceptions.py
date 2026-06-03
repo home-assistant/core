@@ -1,7 +1,5 @@
 """Test to verify that Home Assistant exceptions work."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -122,10 +120,17 @@ async def test_home_assistant_error(
 
 
 async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
-    """Test __str__ method on an HomeAssistantError subclass."""
+    """Test __str__ method and translation attributes on HomeAssistantError subclass."""
 
     class _SubExceptionDefault(HomeAssistantError):
         """Sub class, default with generated message."""
+
+    class _SubExceptionNoSuper(HomeAssistantError):
+        """Sub class which doesn't call super().__init__()."""
+
+        # pylint: disable-next=super-init-not-called
+        def __init__(self) -> None:
+            pass
 
     class _SubExceptionConstructor(HomeAssistantError):
         """Sub class with constructor, no generated message."""
@@ -188,6 +193,18 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
                 translation_placeholders={"bla": "Bla"},
             )
         assert str(exc.value) == "Bla from cache"
+        assert exc.value.translation_domain == "test"
+        assert exc.value.translation_key == "bla"
+        assert exc.value.translation_placeholders == {"bla": "Bla"}
+
+        # A subclass which doesn't call super should not raise an error when __str__
+        # is called and should have None for translation attributes.
+        with pytest.raises(HomeAssistantError) as exc:
+            raise _SubExceptionNoSuper
+        assert str(exc.value) == ""
+        assert exc.value.translation_domain is None
+        assert exc.value.translation_key is None
+        assert exc.value.translation_placeholders is None
 
         # A subclass with a constructor that does not parse `args` to the super class
         with pytest.raises(HomeAssistantError) as exc:
@@ -198,11 +215,18 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
                 translation_placeholders={"bla": "Bla"},
             )
         assert str(exc.value) == "Bla from cache"
+        assert exc.value.translation_domain == "test"
+        assert exc.value.translation_key == "bla"
+        assert exc.value.translation_placeholders == {"bla": "Bla"}
+
         with pytest.raises(HomeAssistantError) as exc:
             raise _SubExceptionConstructor(
                 "custom arg",
             )
         assert str(exc.value) == ""
+        assert exc.value.translation_domain is None
+        assert exc.value.translation_key is None
+        assert exc.value.translation_placeholders is None
 
         # A subclass with a constructor that generates the message
         with pytest.raises(HomeAssistantError) as exc:
@@ -213,6 +237,9 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
                 translation_placeholders={"bla": "Bla"},
             )
         assert str(exc.value) == "Bla from cache"
+        assert exc.value.translation_domain == "test"
+        assert exc.value.translation_key == "bla"
+        assert exc.value.translation_placeholders == {"bla": "Bla"}
 
         # A subclass without overridden constructors and passed args
         # defaults to the passed args
@@ -224,6 +251,9 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
                 translation_placeholders={"bla": "Bla"},
             )
         assert str(exc.value) == "wrong value"
+        assert exc.value.translation_domain == "test"
+        assert exc.value.translation_key == "bla"
+        assert exc.value.translation_placeholders == {"bla": "Bla"}
 
         # A subclass without overridden constructors and passed args
         # and generate_message = True,  generates a message
@@ -235,6 +265,9 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
                 translation_placeholders={"bla": "Bla"},
             )
         assert str(exc.value) == "Bla from cache"
+        assert exc.value.translation_domain == "test"
+        assert exc.value.translation_key == "bla"
+        assert exc.value.translation_placeholders == {"bla": "Bla"}
 
         # A subclass with an ExceptionGroup subclass requires a message to be passed.
         # As we pass args, we will not generate the message.
@@ -248,12 +281,19 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
                 translation_placeholders={"bla": "Bla"},
             )
         assert str(exc.value) == "group message (2 sub-exceptions)"
+        assert exc.value.translation_domain == "test"
+        assert exc.value.translation_key == "bla"
+        assert exc.value.translation_placeholders == {"bla": "Bla"}
+
         with pytest.raises(HomeAssistantError) as exc:
             raise _SubClassWithExceptionGroup(
                 "group message",
                 [ValueError("wrong value"), TypeError("wrong type")],
             )
         assert str(exc.value) == "group message (2 sub-exceptions)"
+        assert exc.value.translation_domain is None
+        assert exc.value.translation_key is None
+        assert exc.value.translation_placeholders is None
 
         # A subclass with an ExceptionGroup subclass requires a message to be passed.
         # The `generate_message` flag is set.`
@@ -267,3 +307,6 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
                 translation_placeholders={"bla": "Bla"},
             )
         assert str(exc.value) == "Bla from cache"
+        assert exc.value.translation_domain == "test"
+        assert exc.value.translation_key == "bla"
+        assert exc.value.translation_placeholders == {"bla": "Bla"}

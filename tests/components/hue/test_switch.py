@@ -29,7 +29,8 @@ async def test_switch(
     assert test_entity.state == "on"
     assert test_entity.attributes["device_class"] == "switch"
 
-    # test config switch to enable/disable a behavior_instance resource (=builtin automation)
+    # test config switch to enable/disable a behavior_instance resource (=builtin
+    # automation)
     test_entity = hass.states.get("switch.philips_hue_automation_timer_test")
     assert test_entity is not None
     assert test_entity.name == "Philips hue Automation: Timer Test"
@@ -113,7 +114,8 @@ async def test_switch_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     # verify entity does not exist before we start
     assert hass.states.get(test_entity_id) is None
 
-    # Add new fake entity (and attached device and zigbee_connectivity) by emitting events
+    # Add new fake entity (and attached device and zigbee_connectivity) by emitting
+    # events
     mock_bridge_v2.api.emit_event("add", FAKE_BINARY_SENSOR)
     await hass.async_block_till_done()
 

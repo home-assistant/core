@@ -1,7 +1,5 @@
 """Utility functions for Habitica."""
 
-from __future__ import annotations
-
 from dataclasses import asdict, fields
 import datetime
 from math import floor
@@ -192,7 +190,10 @@ def quest_attributes(party: GroupData, content: ContentData) -> dict[str, Any]:
         "quest_details": content.quests[party.quest.key].notes
         if party.quest.key
         else None,
-        "quest_participants": f"{sum(x is True for x in party.quest.members.values())} / {party.memberCount}",
+        "quest_participants": (
+            f"{sum(x is True for x in party.quest.members.values())}"
+            f" / {party.memberCount}"
+        ),
     }
 
 

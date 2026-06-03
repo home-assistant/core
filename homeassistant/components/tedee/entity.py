@@ -36,6 +36,11 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
             via_device=(DOMAIN, coordinator.bridge.serial),
         )
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._lock.is_connected
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

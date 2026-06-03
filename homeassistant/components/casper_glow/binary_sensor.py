@@ -1,7 +1,5 @@
 """Casper Glow integration binary sensor platform."""
 
-from __future__ import annotations
-
 from pycasperglow import GlowState
 
 from homeassistant.components.binary_sensor import (

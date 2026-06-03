@@ -1,7 +1,5 @@
 """Helpers for dealing with entity targets."""
 
-from __future__ import annotations
-
 import abc
 from collections.abc import Callable
 import dataclasses
@@ -303,7 +301,7 @@ class TargetEntityChangeTracker(abc.ABC):
     @abc.abstractmethod
     @callback
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
-        """Called when there's an update to the list of entities of the tracked targets."""
+        """Called when there's an update to tracked target entities."""
 
     @callback
     def _handle_target_update(self, event: Event[Any] | None = None) -> None:
@@ -323,7 +321,8 @@ class TargetEntityChangeTracker(abc.ABC):
         """Set up listeners for registry changes that require resubscription."""
 
         # Subscribe to registry updates that can change the entities to track:
-        # - Entity registry: entity added/removed; entity labels changed; entity area changed.
+        # - Entity registry: entity added/removed;
+        #   entity labels changed; entity area changed.
         # - Device registry: device labels changed; device area changed.
         # - Area registry: area floor changed.
         #
@@ -414,15 +413,19 @@ def async_track_target_selector_state_change_event(
     *,
     primary_entities_only: bool = True,
 ) -> CALLBACK_TYPE:
-    """Track state changes for entities referenced directly or indirectly in a target selector.
+    """Track state changes for entities in a target selector.
 
-    When `primary_entities_only` is True, indirect target expansion (via device, area,
-    and floor) skips entities with an `entity_category` (i.e. config or diagnostic entities).
+    Tracks entities referenced directly or indirectly.
+    When `primary_entities_only` is True, indirect target
+    expansion (via device, area, and floor) skips entities
+    with an `entity_category` (config or diagnostic entities).
     """
     target_selection = TargetSelection(target_selector_config)
     if not target_selection.has_any_target:
         raise HomeAssistantError(
-            f"Target selector {target_selector_config} does not have any selectors defined"
+            "Target selector"
+            f" {target_selector_config}"
+            " does not have any selectors defined"
         )
     tracker = TargetStateChangeTracker(
         hass,

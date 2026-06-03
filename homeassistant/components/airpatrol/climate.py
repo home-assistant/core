@@ -1,7 +1,5 @@
 """Climate platform for AirPatrol integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.climate import (

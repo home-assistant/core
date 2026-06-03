@@ -1,7 +1,5 @@
 """The tests for the InfluxDB sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import timedelta

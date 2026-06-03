@@ -1,7 +1,5 @@
 """The go2rtc component."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from secrets import token_hex
@@ -76,7 +74,7 @@ _AUTH = "auth"
 
 
 def _validate_auth(config: dict) -> dict:
-    """Validate that username and password are only set when a URL is configured or when debug UI is enabled."""
+    """Validate username/password only when URL is configured or debug UI enabled."""
     auth_exists = CONF_USERNAME in config
     debug_ui_enabled = config.get(CONF_DEBUG_UI, False)
 
@@ -85,7 +83,8 @@ def _validate_auth(config: dict) -> dict:
 
     if auth_exists and CONF_URL not in config and not debug_ui_enabled:
         raise vol.Invalid(
-            "Username and password can only be set when a URL is configured or debug_ui is true"
+            "Username and password can only be set when a URL is"
+            " configured or debug_ui is true"
         )
 
     return config
@@ -365,7 +364,8 @@ class WebRTCProvider(CameraWebRTCProvider):
 
         if camera.platform.platform_name == "generic":
             # This is a workaround to use ffmpeg for generic cameras
-            # A proper fix will be added in the future together with supporting multiple streams per camera
+            # A proper fix will be added in the future together
+            # with supporting multiple streams per camera
             stream_source = "ffmpeg:" + stream_source
 
         if not self.async_is_supported(stream_source):
@@ -409,7 +409,8 @@ class WebRTCProvider(CameraWebRTCProvider):
                 [
                     stream_source,
                     # We are setting any ffmpeg rtsp related logs to debug
-                    # Connection problems to the camera will be logged by the first stream
+                    # Connection problems to the camera will be
+                    # logged by the first stream
                     # Therefore setting it to debug will not hide any important logs
                     f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
                 ],

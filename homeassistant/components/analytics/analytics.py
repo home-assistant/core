@@ -1,10 +1,9 @@
 """Analytics helper class for the analytics integration."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import timeout
 from collections.abc import Awaitable, Callable, Iterable, Mapping
+import contextlib
 from dataclasses import asdict as dataclass_asdict, dataclass, field
 from datetime import datetime
 import random
@@ -299,20 +298,20 @@ class Analytics:
         if stored:
             self._data = AnalyticsData.from_dict(stored)
 
-        if (
-            self.supervisor
-            and (supervisor_info := hassio.get_supervisor_info(self._hass)) is not None
-        ):
-            if not self.onboarded:
-                # User have not configured analytics, get this setting from the supervisor
-                if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
-                    ATTR_DIAGNOSTICS, False
-                ):
-                    self._data.preferences[ATTR_DIAGNOSTICS] = True
-                elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
-                    ATTR_DIAGNOSTICS, False
-                ):
-                    self._data.preferences[ATTR_DIAGNOSTICS] = False
+        if self.supervisor and not self.onboarded:
+            # This may raise HassioNotReadyError if Supervisor was unreachable.
+            # The caller is responsible for handling this and triggering a retry.
+            supervisor_info = hassio.get_supervisor_info(self._hass)
+
+            # User have not configured analytics, get this setting from the supervisor
+            if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
+                ATTR_DIAGNOSTICS, False
+            ):
+                self._data.preferences[ATTR_DIAGNOSTICS] = True
+            elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
+                ATTR_DIAGNOSTICS, False
+            ):
+                self._data.preferences[ATTR_DIAGNOSTICS] = False
 
     async def _save(self) -> None:
         """Save data."""
@@ -346,9 +345,14 @@ class Analytics:
             await self._save()
 
         if self.supervisor:
-            supervisor_info = hassio.get_supervisor_info(hass)
-            operating_system_info = hassio.get_os_info(hass) or {}
-            addons_info = hassio.get_addons_info(hass) or {}
+            # Try to pull Supervisor information, but don't fail if some or all
+            # of it is unavailable due to setup failures in the hassio integration.
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                supervisor_info = hassio.get_supervisor_info(hass)
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                operating_system_info = hassio.get_os_info(hass)
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                addons_info = hassio.get_addons_info(hass)
 
         system_info = await async_get_system_info(hass)
         integrations = []
@@ -421,7 +425,7 @@ class Analytics:
 
                 integrations.append(integration.domain)
 
-            if addons_info is not None:
+            if addons_info:
                 supervisor_client = hassio.get_supervisor_client(hass)
                 installed_addons = await asyncio.gather(
                     *(supervisor_client.addons.addon_info(slug) for slug in addons_info)
@@ -604,7 +608,8 @@ class Analytics:
 
                 else:
                     LOGGER.warning(
-                        "Unexpected status code %s when submitting snapshot analytics to %s",
+                        "Unexpected status code %s when submitting"
+                        " snapshot analytics to %s",
                         response.status,
                         url,
                     )
@@ -806,7 +811,8 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
             if not isinstance(integration_config, AnalyticsModifications):
                 LOGGER.error(  # type: ignore[unreachable]
-                    "Calling async_modify_analytics for integration '%s' did not return an AnalyticsConfig",
+                    "Calling async_modify_analytics for integration"
+                    " '%s' did not return an AnalyticsConfig",
                     integration_domain,
                 )
                 integration_configs[integration_domain] = AnalyticsModifications(
@@ -820,7 +826,8 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
     # We need to refer to other devices, for example in `via_device` field.
     # We don't however send the original device ids outside of Home Assistant,
-    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
+    # instead we refer to devices by
+    # (integration_domain, index_in_integration_device_list).
     device_id_mapping: dict[str, tuple[str, int]] = {}
 
     # Fill out information about devices

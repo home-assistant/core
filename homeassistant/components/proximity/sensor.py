@@ -1,7 +1,5 @@
 """Support for Proximity sensors."""
 
-from __future__ import annotations
-
 from typing import NamedTuple
 
 from homeassistant.components.sensor import (
@@ -175,7 +173,11 @@ class ProximityTrackedEntitySensor(
         self.entity_description = description
         self.tracked_entity_id = tracked_entity_descriptor.entity_id
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{tracked_entity_descriptor.identifier}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{tracked_entity_descriptor.identifier}"
+            f"_{description.key}"
+        )
         self._attr_device_info = _device_info(coordinator)
         self._attr_translation_placeholders = {
             "tracked_entity": tracked_entity_descriptor.name

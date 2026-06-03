@@ -1,7 +1,5 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Volcano Feeds."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

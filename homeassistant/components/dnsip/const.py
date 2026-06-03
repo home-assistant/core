@@ -12,6 +12,7 @@ CONF_PORT_IPV6 = "port_ipv6"
 CONF_IPV4 = "ipv4"
 CONF_IPV6 = "ipv6"
 CONF_IPV6_V4 = "ipv6_v4"
+CONF_ADVANCED_OPTIONS = "advanced_options"
 
 DEFAULT_HOSTNAME = "myip.opendns.com"
 DEFAULT_IPV6 = False

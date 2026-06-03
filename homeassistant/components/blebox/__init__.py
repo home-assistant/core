@@ -32,6 +32,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 PARALLEL_UPDATES = 0

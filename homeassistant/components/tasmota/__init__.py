@@ -1,7 +1,5 @@
 """The Tasmota integration."""
 
-from __future__ import annotations
-
 import logging
 
 from hatasmota.const import (
@@ -44,8 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def _publish(
         topic: str,
         payload: mqtt.PublishPayloadType,
-        qos: int | None,
-        retain: bool | None,
+        qos: int,
+        retain: bool,
     ) -> None:
         await mqtt.async_publish(hass, topic, payload, qos, retain)
 

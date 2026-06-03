@@ -1,7 +1,5 @@
 """Generate application_credentials data."""
 
-from __future__ import annotations
-
 from .model import Config, Integration
 from .serializer import format_python_namespace
 
@@ -37,7 +35,8 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if application_credentials_path.read_text(encoding="utf-8") != content:
         config.add_error(
             "application_credentials",
-            "File application_credentials.py is not up to date. Run python3 -m script.hassfest",
+            "File application_credentials.py is not up to date."
+            " Run python3 -m script.hassfest",
             fixable=True,
         )
 

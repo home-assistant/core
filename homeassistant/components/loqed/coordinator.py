@@ -10,7 +10,7 @@ from loqedAPI import loqed
 from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CLOUDHOOK_URL, DOMAIN
@@ -119,6 +119,12 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             self.hass, DOMAIN, "Loqed", webhook_id, self._handle_webhook
         )
 
+        @callback
+        def _async_unregister_webhook() -> None:
+            webhook.async_unregister(self.hass, webhook_id)
+
+        self.config_entry.async_on_unload(_async_unregister_webhook)
+
         if cloud.async_active_subscription(self.hass):
             webhook_url = await async_cloudhook_generate_url(
                 self.hass, self.config_entry
@@ -152,10 +158,6 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         else:
             webhook_url = webhook.async_generate_url(self.hass, webhook_id)
 
-        webhook.async_unregister(
-            self.hass,
-            webhook_id,
-        )
         _LOGGER.debug("Webhook URL: %s", webhook_url)
 
         webhooks = await self.lock.getWebhooks()

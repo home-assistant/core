@@ -1,7 +1,5 @@
 """Support for LG TV running on NetCast 3 or 4."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 

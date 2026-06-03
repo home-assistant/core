@@ -1,7 +1,5 @@
 """Config flow for WS66i 6-Zone Amplifier integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

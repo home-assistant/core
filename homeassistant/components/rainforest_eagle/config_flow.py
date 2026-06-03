@@ -1,7 +1,5 @@
 """Config flow for Rainforest Eagle integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -76,22 +74,28 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             elif eagle_type == TYPE_EAGLE_100:
                 user_input[CONF_TYPE] = eagle_type
 
-                # For EAGLE-100, there is no hardware address to select, so set it to None and move on
+                # For EAGLE-100, there is no hardware address
+                # to select, so set it to None and move on
                 user_input[CONF_HARDWARE_ADDRESS] = None
             elif eagle_type == TYPE_EAGLE_200:
                 user_input[CONF_TYPE] = eagle_type
 
-                # For EAGLE-200, a connected meter's hardware address is required to create the entry
+                # For EAGLE-200, a connected meter's hardware
+                # address is required to create the entry
                 if not hardware_address:
-                    # hardware_address will be None if there are no meters at all or if none are currently Connected
+                    # hardware_address will be None if there are
+                    # no meters at all or if none are
+                    # currently Connected
                     errors["base"] = "no_meters_connected"
                 else:
                     user_input[CONF_HARDWARE_ADDRESS] = hardware_address
             else:
-                # This is a device that isn't supported, yet, but was detected by async_get_type
+                # This is a device that isn't supported, yet,
+                # but was detected by async_get_type
                 errors["base"] = "unsupported_device_type"
 
-            # All information gathering is done, so if there are no errors at this point, create the entry
+            # All information gathering is done, so if there
+            # are no errors at this point, create the entry
             if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_CLOUD_ID], data=user_input

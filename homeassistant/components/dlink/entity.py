@@ -1,7 +1,5 @@
 """Entity representing a D-Link Power Plug device."""
 
-from __future__ import annotations
-
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo

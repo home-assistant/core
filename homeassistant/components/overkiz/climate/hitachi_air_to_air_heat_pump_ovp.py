@@ -1,7 +1,5 @@
 """Support for HitachiAirToAirHeatPump."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -67,11 +65,11 @@ SWING_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_SWING_MODES.items()}
 
 OVERKIZ_TO_FAN_MODES: dict[str, str] = {
     OverkizCommandParam.AUTO: FAN_AUTO,
-    OverkizCommandParam.HIGH: FAN_HIGH,  # fallback, state can be exposed as HIGH, new state = hi
+    OverkizCommandParam.HIGH: FAN_HIGH,  # fallback, new = hi
     OverkizCommandParam.HI: FAN_HIGH,
     OverkizCommandParam.LOW: FAN_LOW,
     OverkizCommandParam.LO: FAN_LOW,
-    OverkizCommandParam.MEDIUM: FAN_MEDIUM,  # fallback, state can be exposed as MEDIUM, new state = med
+    OverkizCommandParam.MEDIUM: FAN_MEDIUM,  # fallback, new = med
     OverkizCommandParam.MED: FAN_MEDIUM,
     OverkizCommandParam.SILENT: OverkizCommandParam.SILENT,
 }
@@ -321,19 +319,23 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             OverkizCommandParam.STOP,
         )
 
-        # AUTO_MANU parameter is not controlled by HA and is turned "off" when the device is on Holiday mode
+        # AUTO_MANU parameter is not controlled by HA and is
+        # turned "off" when the device is on Holiday mode
         auto_manu_mode = self._control_backfill(
             None, OverkizState.CORE_AUTO_MANU_MODE, OverkizCommandParam.MANU
         )
         if self.preset_mode == PRESET_HOLIDAY_MODE:
             auto_manu_mode = OverkizCommandParam.OFF
 
-        # In all the hvac modes except AUTO, the temperature command parameter is the target temperature
+        # In all the hvac modes except AUTO, the temperature
+        # command parameter is the target temperature
         temperature_command = None
         target_temperature = target_temperature or self.target_temperature
         if hvac_mode == OverkizCommandParam.AUTO:
-            # In hvac mode AUTO, the temperature command parameter is a temperature_change
-            # which is the delta between a pivot temperature (25) and the target temperature
+            # In hvac mode AUTO, the temperature command
+            # parameter is a temperature_change which is the
+            # delta between a pivot temperature (25) and the
+            # target temperature
             temperature_change = 0
 
             if target_temperature:

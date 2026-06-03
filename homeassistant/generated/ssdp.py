@@ -201,11 +201,6 @@ SSDP = {
             "manufacturer": "ZyXEL Communications Corp.",
         },
     ],
-    "konnected": [
-        {
-            "manufacturer": "konnected.io",
-        },
-    ],
     "lametric": [
         {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",

@@ -1,7 +1,5 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
-from __future__ import annotations
-
 from pynobo import nobo
 
 from homeassistant.components.sensor import (
@@ -45,6 +43,7 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
 
     def __init__(self, serial: str, hub: nobo) -> None:
         """Initialize the temperature sensor."""
@@ -70,14 +69,11 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
 
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. This is a local call."""
+        """Copy the current hub state onto the entity attributes."""
         if self._id not in self._nobo.components:
             # Component removed via the Nobø app; mark unavailable.
             self._attr_available = False
             return
         self._attr_available = True
         value = self._nobo.get_current_component_temperature(self._id)
-        if value is None:
-            self._attr_native_value = None
-        else:
-            self._attr_native_value = round(float(value), 1)
+        self._attr_native_value = None if value is None else float(value)

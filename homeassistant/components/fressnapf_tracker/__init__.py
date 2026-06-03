@@ -38,7 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 async def _get_valid_tracker(hass: HomeAssistant, device: Device) -> Tracker | None:
     """Test if the tracker returns valid data and return it.
 
-    Malformed data might indicate the tracker is broken or hasn't been properly registered with the app.
+    Malformed data might indicate the tracker is broken or
+    hasn't been properly registered with the app.
     """
     client = ApiClient(
         serial_number=device.serialnumber,

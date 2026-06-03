@@ -1,7 +1,5 @@
 """The Ghost integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

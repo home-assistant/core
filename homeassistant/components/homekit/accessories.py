@@ -1,7 +1,5 @@
 """Extend the basic Accessory and Bridge functions."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 from uuid import UUID
@@ -529,7 +527,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             for attr in self._reload_on_change_attrs:
                 if old_attributes.get(attr) != new_attributes.get(attr):
                     _LOGGER.debug(
-                        "%s: Reloading HomeKit accessory since %s has changed from %s -> %s",
+                        "%s: Reloading HomeKit accessory since"
+                        " %s has changed from %s -> %s",
                         self.entity_id,
                         attr,
                         old_attributes.get(attr),
@@ -652,7 +651,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     @ha_callback
     def async_reload(self) -> None:
-        """Reload and recreate an accessory and update the c# value in the mDNS record."""
+        """Reload and recreate an accessory.
+
+        Update the c# value in the mDNS record.
+        """
         async_dispatcher_send(
             self.hass,
             SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),

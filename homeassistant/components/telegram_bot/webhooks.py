@@ -69,7 +69,7 @@ def _get_trusted_networks(config: TelegramBotConfigEntry) -> list[IPv4Network]:
 
 
 class PushBot(BaseTelegramBot):
-    """Handles all the push/webhook logic and passes telegram updates to `self.handle_update`."""
+    """Handles push/webhook logic, passes updates to `self.handle_update`."""
 
     def __init__(
         self,
@@ -82,7 +82,8 @@ class PushBot(BaseTelegramBot):
         self.bot = bot
         self.trusted_networks = _get_trusted_networks(config)
         self.secret_token = secret_token
-        # Dumb Application that just gets our updates to our handler callback (self.handle_update)
+        # Application that gets our updates to our handler
+        # callback (self.handle_update)
         self.application = ApplicationBuilder().bot(bot).updater(None).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
         super().__init__(hass, config, bot)

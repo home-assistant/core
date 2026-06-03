@@ -1,11 +1,12 @@
 """Test the UniFi Protect select platform."""
 
-from __future__ import annotations
-
 from copy import copy
 from unittest.mock import AsyncMock, Mock
 
+import pytest
 from uiprotect.data import (
+    NVR,
+    ArmProfile,
     Camera,
     DoorbellMessageType,
     IRLEDMode,
@@ -14,11 +15,16 @@ from uiprotect.data import (
     LightModeEnableType,
     LightModeType,
     Liveview,
+    NvrArmMode,
+    NvrArmModeStatus,
     PTZPatrol,
+    PublicBootstrap,
+    PublicHdrMode,
     RecordingMode,
     Viewer,
 )
 from uiprotect.data.nvr import DoorbellMessage
+from uiprotect.exceptions import GlobalAlarmManagerError
 
 from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -31,6 +37,7 @@ from homeassistant.components.unifiprotect.select import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import patch_ufp_method
@@ -448,7 +455,7 @@ async def test_select_set_option_camera_doorbell_custom(
     )
 
     with patch_ufp_method(
-        doorbell, "set_lcd_text", new_callable=AsyncMock
+        doorbell, "set_lcd_message_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "select",
@@ -474,9 +481,14 @@ async def test_select_set_option_camera_doorbell_unifi(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with patch_ufp_method(
-        doorbell, "set_lcd_text", new_callable=AsyncMock
-    ) as mock_method:
+    with (
+        patch_ufp_method(
+            doorbell, "set_lcd_message_public", new_callable=AsyncMock
+        ) as mock_public,
+        patch_ufp_method(
+            doorbell, "set_lcd_text", new_callable=AsyncMock
+        ) as mock_legacy,
+    ):
         await hass.services.async_call(
             "select",
             "select_option",
@@ -487,7 +499,7 @@ async def test_select_set_option_camera_doorbell_unifi(
             blocking=True,
         )
 
-        mock_method.assert_called_once_with(DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR)
+        mock_public.assert_called_once_with(DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR)
 
         await hass.services.async_call(
             "select",
@@ -499,7 +511,7 @@ async def test_select_set_option_camera_doorbell_unifi(
             blocking=True,
         )
 
-        mock_method.assert_called_with(None)
+        mock_legacy.assert_called_once_with(None)
 
 
 async def test_select_set_option_camera_doorbell_default(
@@ -528,6 +540,44 @@ async def test_select_set_option_camera_doorbell_default(
         )
 
         mock_method.assert_called_once_with(None)
+
+
+@pytest.mark.parametrize(
+    ("option", "expected"),
+    [
+        pytest.param("auto", PublicHdrMode.AUTO, id="auto"),
+        pytest.param("always", PublicHdrMode.ON, id="always"),
+        pytest.param("off", PublicHdrMode.OFF, id="off"),
+    ],
+)
+async def test_select_set_option_camera_hdr_mode(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    option: str,
+    expected: PublicHdrMode,
+) -> None:
+    """Test HDR mode select calls public API with mapped value."""
+
+    await init_entry(hass, ufp, [doorbell])
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
+
+    description = next(d for d in CAMERA_SELECTS if d.key == "hdr_mode")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, description
+    )
+
+    with patch_ufp_method(
+        doorbell, "set_hdr_mode_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+            blocking=True,
+        )
+
+        mock_method.assert_called_once_with(expected)
 
 
 async def test_select_set_option_viewer(
@@ -758,3 +808,243 @@ async def test_select_ptz_camera_adopt(
 
     patrol_entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
     assert patrol_entity_id is not None
+
+
+# --- NVR Arm Profile Select Tests ---
+
+ARM_PROFILE_ENTITY_ID = "select.unifiprotect_alarm_profile"
+
+
+def _make_arm_profile(profile_id: str, name: str) -> Mock:
+    """Create an ArmProfile mock for testing."""
+    profile = Mock(spec=ArmProfile)
+    profile.id = profile_id
+    profile.name = name
+    return profile
+
+
+def _make_nvr_arm_mode(profile_id: str | None = None) -> Mock:
+    """Create an NvrArmMode mock for testing."""
+    arm_mode = Mock(spec=NvrArmMode)
+    arm_mode.status = NvrArmModeStatus.DISABLED
+    arm_mode.arm_profile_id = profile_id
+    return arm_mode
+
+
+def _make_public_bootstrap(arm_mode: Mock | None, profiles: dict[str, Mock]) -> Mock:
+    """Create a PublicBootstrap mock with arm profiles for testing."""
+    pb = Mock(spec=PublicBootstrap)
+    pb.arm_mode = arm_mode
+    pb.arm_profiles = profiles
+    pb.relays = {}
+    pb.sirens = {}
+    return pb
+
+
+async def test_select_nvr_arm_profile_not_created_without_public_bootstrap(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Arm profile select is NOT created when has_public_bootstrap is False."""
+    ufp.api.has_public_bootstrap = False
+
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(ARM_PROFILE_ENTITY_ID) is None
+
+
+async def test_select_nvr_arm_profile_not_created_without_arm_mode(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Arm profile select is NOT created when arm_mode is None (old firmware)."""
+    profile = _make_arm_profile("p1", "Home")
+    pb = _make_public_bootstrap(arm_mode=None, profiles={"p1": profile})
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(ARM_PROFILE_ENTITY_ID) is None
+
+
+async def test_select_nvr_arm_profile_not_created_without_profiles(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Arm profile select is NOT created when no arm profiles exist."""
+    arm_mode = _make_nvr_arm_mode()
+    pb = _make_public_bootstrap(arm_mode=arm_mode, profiles={})
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(ARM_PROFILE_ENTITY_ID) is None
+
+
+async def test_select_nvr_arm_profile_created(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    nvr: NVR,
+) -> None:
+    """Arm profile select IS created with correct options and current option."""
+    profile_home = _make_arm_profile("p1", "Home")
+    profile_away = _make_arm_profile("p2", "Away")
+    profiles = {"p1": profile_home, "p2": profile_away}
+    arm_mode = _make_nvr_arm_mode(profile_id="p2")
+    pb = _make_public_bootstrap(arm_mode=arm_mode, profiles=profiles)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+    await init_entry(hass, ufp, [])
+
+    entity = entity_registry.async_get(ARM_PROFILE_ENTITY_ID)
+    assert entity is not None
+    assert entity.unique_id == f"{nvr.mac}_nvr_arm_profile"
+
+    state = hass.states.get(ARM_PROFILE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "Away (p2)"
+    assert set(state.attributes[ATTR_OPTIONS]) == {"Home (p1)", "Away (p2)"}
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+
+async def test_select_nvr_arm_profile_duplicate_names(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Duplicate profile names are disambiguated with an id suffix."""
+    profile_a = _make_arm_profile("aaaaaa111111", "Home")
+    profile_b = _make_arm_profile("bbbbbb222222", "Home")
+    profile_c = _make_arm_profile("cccccc333333", "Away")
+    profiles = {p.id: p for p in (profile_a, profile_b, profile_c)}
+    arm_mode = _make_nvr_arm_mode(profile_id="aaaaaa111111")
+    pb = _make_public_bootstrap(arm_mode=arm_mode, profiles=profiles)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+    await init_entry(hass, ufp, [])
+
+    state = hass.states.get(ARM_PROFILE_ENTITY_ID)
+    assert state is not None
+    # All labels always include the last 6 chars of the id for stability.
+    assert state.state == "Home (111111)"
+    assert set(state.attributes[ATTR_OPTIONS]) == {
+        "Home (111111)",
+        "Home (222222)",
+        "Away (333333)",
+    }
+
+
+async def test_select_nvr_arm_profile_duplicate_names_select_option(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Selecting a disambiguated duplicate name maps back to the correct id."""
+    profile_a = _make_arm_profile("aaaaaa111111", "Home")
+    profile_b = _make_arm_profile("bbbbbb222222", "Home")
+    profiles = {p.id: p for p in (profile_a, profile_b)}
+    arm_mode = _make_nvr_arm_mode(profile_id="aaaaaa111111")
+    pb = _make_public_bootstrap(arm_mode=arm_mode, profiles=profiles)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+    ufp.api.set_current_arm_profile_public = AsyncMock()
+
+    await init_entry(hass, ufp, [])
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: ARM_PROFILE_ENTITY_ID, ATTR_OPTION: "Home (222222)"},
+        blocking=True,
+    )
+
+    ufp.api.set_current_arm_profile_public.assert_called_once_with("bbbbbb222222")
+
+
+async def test_select_nvr_arm_profile_select_option(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Selecting an arm profile calls set_current_arm_profile_public."""
+    profile_home = _make_arm_profile("p1", "Home")
+    profile_away = _make_arm_profile("p2", "Away")
+    profiles = {"p1": profile_home, "p2": profile_away}
+    arm_mode = _make_nvr_arm_mode(profile_id="p1")
+    pb = _make_public_bootstrap(arm_mode=arm_mode, profiles=profiles)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+    ufp.api.set_current_arm_profile_public = AsyncMock()
+
+    await init_entry(hass, ufp, [])
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: ARM_PROFILE_ENTITY_ID, ATTR_OPTION: "Away (p2)"},
+        blocking=True,
+    )
+
+    ufp.api.set_current_arm_profile_public.assert_called_once_with("p2")
+
+
+async def test_select_nvr_arm_profile_global_alarm_error(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """GlobalAlarmManagerError on profile change raises HomeAssistantError."""
+    profile_home = _make_arm_profile("p1", "Home")
+    profiles = {"p1": profile_home}
+    arm_mode = _make_nvr_arm_mode(profile_id="p1")
+    pb = _make_public_bootstrap(arm_mode=arm_mode, profiles=profiles)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+    ufp.api.set_current_arm_profile_public = AsyncMock(
+        side_effect=GlobalAlarmManagerError()
+    )
+
+    await init_entry(hass, ufp, [])
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: ARM_PROFILE_ENTITY_ID, ATTR_OPTION: "Home (p1)"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "global_alarm_manager"
+
+
+async def test_select_nvr_arm_profile_ws_update(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    nvr: NVR,
+) -> None:
+    """Arm profile select updates via the public devices websocket."""
+    profile_home = _make_arm_profile("p1", "Home")
+    profile_away = _make_arm_profile("p2", "Away")
+    profiles = {"p1": profile_home, "p2": profile_away}
+    arm_mode = _make_nvr_arm_mode(profile_id="p1")
+    pb = _make_public_bootstrap(arm_mode=arm_mode, profiles=profiles)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+    await init_entry(hass, ufp, [])
+
+    state = hass.states.get(ARM_PROFILE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "Home (p1)"
+
+    # Simulate the NVR arm_profile_id changing via the public devices websocket
+    arm_mode.arm_profile_id = "p2"
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.old_obj = nvr
+    mock_msg.new_obj = nvr
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ARM_PROFILE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "Away (p2)"

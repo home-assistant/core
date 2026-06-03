@@ -1,7 +1,5 @@
 """Platform for NASweb thermostat."""
 
-from __future__ import annotations
-
 import time
 from typing import Any
 
@@ -154,7 +152,8 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         """Update the entity.
 
         Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
+        Scheduling updates is not necessary, the coordinator
+        takes care of updates via push notifications.
         """
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

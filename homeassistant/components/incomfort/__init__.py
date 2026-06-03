@@ -1,7 +1,5 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
 
-from __future__ import annotations
-
 from aiohttp import ClientResponseError
 from incomfortclient import InvalidGateway, InvalidHeaterList
 
@@ -75,7 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: InComfortConfigEntry) ->
     except InvalidHeaterList as exc:
         raise NoHeaters from exc
     except InvalidGateway as exc:
-        raise ConfigEntryAuthFailed("Incorrect credentials") from exc
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="incorrect_credentials"
+        ) from exc
     except ClientResponseError as exc:
         if exc.status == 404:
             raise NotFound from exc

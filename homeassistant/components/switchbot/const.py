@@ -56,6 +56,7 @@ class SupportedModels(StrEnum):
     STRIP_LIGHT_3 = "strip_light_3"
     RGBICWW_STRIP_LIGHT = "rgbicww_strip_light"
     RGBICWW_FLOOR_LAMP = "rgbicww_floor_lamp"
+    PERMANENT_OUTDOOR_LIGHT = "permanent_outdoor_light"
     PLUG_MINI_EU = "plug_mini_eu"
     RELAY_SWITCH_2PM = "relay_switch_2pm"
     K11_PLUS_VACUUM = "k11+_vacuum"
@@ -66,6 +67,10 @@ class SupportedModels(StrEnum):
     ART_FRAME = "art_frame"
     KEYPAD_VISION = "keypad_vision"
     KEYPAD_VISION_PRO = "keypad_vision_pro"
+    LOCK_VISION_PRO = "lock_vision_pro"
+    LOCK_VISION = "lock_vision"
+    LOCK_PRO_WIFI = "lock_pro_wifi"
+    WEATHER_STATION = "weather_station"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -101,6 +106,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.STRIP_LIGHT_3: SupportedModels.STRIP_LIGHT_3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT: SupportedModels.RGBICWW_STRIP_LIGHT,
     SwitchbotModel.RGBICWW_FLOOR_LAMP: SupportedModels.RGBICWW_FLOOR_LAMP,
+    SwitchbotModel.PERMANENT_OUTDOOR_LIGHT: SupportedModels.PERMANENT_OUTDOOR_LIGHT,
     SwitchbotModel.PLUG_MINI_EU: SupportedModels.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM: SupportedModels.RELAY_SWITCH_2PM,
     SwitchbotModel.K11_VACUUM: SupportedModels.K11_PLUS_VACUUM,
@@ -111,6 +117,9 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.KEYPAD_VISION: SupportedModels.KEYPAD_VISION,
     SwitchbotModel.KEYPAD_VISION_PRO: SupportedModels.KEYPAD_VISION_PRO,
     SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
+    SwitchbotModel.LOCK_VISION_PRO: SupportedModels.LOCK_VISION_PRO,
+    SwitchbotModel.LOCK_VISION: SupportedModels.LOCK_VISION,
+    SwitchbotModel.LOCK_PRO_WIFI: SupportedModels.LOCK_PRO_WIFI,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -126,6 +135,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
     SwitchbotModel.HUB3: SupportedModels.HUB3,
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
+    SwitchbotModel.WEATHER_STATION: SupportedModels.WEATHER_STATION,
 }
 
 SUPPORTED_MODEL_TYPES = (
@@ -148,6 +158,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.STRIP_LIGHT_3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT,
     SwitchbotModel.RGBICWW_FLOOR_LAMP,
+    SwitchbotModel.PERMANENT_OUTDOOR_LIGHT,
     SwitchbotModel.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER,
@@ -155,6 +166,9 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.ART_FRAME,
     SwitchbotModel.KEYPAD_VISION,
     SwitchbotModel.KEYPAD_VISION_PRO,
+    SwitchbotModel.LOCK_VISION_PRO,
+    SwitchbotModel.LOCK_VISION,
+    SwitchbotModel.LOCK_PRO_WIFI,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -175,13 +189,19 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.STRIP_LIGHT_3: switchbot.SwitchbotStripLight3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT: switchbot.SwitchbotRgbicLight,
     SwitchbotModel.RGBICWW_FLOOR_LAMP: switchbot.SwitchbotRgbicLight,
+    SwitchbotModel.PERMANENT_OUTDOOR_LIGHT: switchbot.SwitchbotPermanentOutdoorLight,
     SwitchbotModel.PLUG_MINI_EU: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER: switchbot.SwitchbotRelaySwitch,
-    SwitchbotModel.SMART_THERMOSTAT_RADIATOR: switchbot.SwitchbotSmartThermostatRadiator,
+    SwitchbotModel.SMART_THERMOSTAT_RADIATOR: (
+        switchbot.SwitchbotSmartThermostatRadiator
+    ),
     SwitchbotModel.ART_FRAME: switchbot.SwitchbotArtFrame,
     SwitchbotModel.KEYPAD_VISION: switchbot.SwitchbotKeypadVision,
     SwitchbotModel.KEYPAD_VISION_PRO: switchbot.SwitchbotKeypadVision,
+    SwitchbotModel.LOCK_VISION_PRO: switchbot.SwitchbotLock,
+    SwitchbotModel.LOCK_VISION: switchbot.SwitchbotLock,
+    SwitchbotModel.LOCK_PRO_WIFI: switchbot.SwitchbotLock,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {

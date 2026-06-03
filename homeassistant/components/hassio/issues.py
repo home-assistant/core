@@ -1,8 +1,7 @@
 """Supervisor events monitor."""
 
-from __future__ import annotations
-
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 import logging
@@ -182,6 +181,8 @@ class SupervisorIssues:
         self._unhealthy_reasons: set[str] = set()
         self._issues: dict[UUID, Issue] = {}
         self._supervisor_client = get_supervisor_client(hass)
+        self._disconnect: Callable[[], None] | None = None
+        self._cancel_update_retry: Callable[[], None] | None = None
 
     @property
     def unhealthy_reasons(self) -> set[str]:
@@ -253,7 +254,10 @@ class SupervisorIssues:
         return set(self._issues.values())
 
     def add_issue(self, issue: Issue) -> None:
-        """Add or update an issue in the list. Create or update a repair if necessary."""
+        """Add or update an issue in the list.
+
+        Create or update a repair if necessary.
+        """
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:
             if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
                 placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
@@ -352,24 +356,41 @@ class SupervisorIssues:
 
     async def setup(self) -> None:
         """Create supervisor events listener."""
-        await self._update()
+        await self.async_update()
 
-        async_dispatcher_connect(
+        self._disconnect = async_dispatcher_connect(
             self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
         )
 
-    async def _update(self, _: datetime | None = None) -> None:
+    def unload(self) -> None:
+        """Remove supervisor events listener."""
+        if self._disconnect is not None:
+            self._disconnect()
+            self._disconnect = None
+        if self._cancel_update_retry is not None:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
+
+    async def async_update(self) -> None:
         """Update issues from Supervisor resolution center."""
+        if self._cancel_update_retry:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
+        await self._update()
+
+    async def _update(self, _: datetime | None = None) -> None:
+        """Update issues from Supervisor resolution center with retry on failure."""
         try:
             data = await self._supervisor_client.resolution.info()
         except SupervisorError as err:
             _LOGGER.error("Failed to update supervisor issues: %r", err)
-            async_call_later(
+            self._cancel_update_retry = async_call_later(
                 self._hass,
                 REQUEST_REFRESH_DELAY,
                 HassJob(self._update, cancel_on_shutdown=True),
             )
             return
+        self._cancel_update_retry = None
         self.unhealthy_reasons = set(data.unhealthy)
         self.unsupported_reasons = set(data.unsupported)
 
@@ -393,7 +414,7 @@ class SupervisorIssues:
             and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
             and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
         ):
-            self._hass.async_create_task(self._update())
+            self._hass.async_create_task(self.async_update())
 
         elif event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
             self.unhealthy_reasons = (

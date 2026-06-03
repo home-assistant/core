@@ -1,7 +1,5 @@
 """Tests for the LG Infrared integration setup."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 

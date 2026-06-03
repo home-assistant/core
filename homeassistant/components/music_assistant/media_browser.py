@@ -1,7 +1,5 @@
 """Media Source Implementation."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -549,7 +547,8 @@ def _process_search_results(
                 continue
 
             # Create browse item
-            # Convert to string to get the original value since we're using MASSMediaType enum
+            # Convert to string to get the original value
+            # since we're using MASSMediaType enum
             str_media_type = media_type.value.lower()
             can_expand = _should_expand_media_type(str_media_type)
             media_class = _get_media_class_for_type(str_media_type)

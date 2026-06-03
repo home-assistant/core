@@ -1,7 +1,5 @@
 """Tests for the Google Generative AI Conversation STT entity."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable, Generator
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -11,20 +9,19 @@ import pytest
 from homeassistant.components import stt
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
-    CONF_PROMPT,
     DEFAULT_STT_PROMPT,
     DOMAIN,
     RECOMMENDED_STT_MODEL,
 )
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 
 from . import API_ERROR_500, CLIENT_ERROR_BAD_REQUEST
 
 from tests.common import MockConfigEntry
 
-TEST_CHAT_MODEL = "models/gemini-2.5-flash"
+TEST_CHAT_MODEL = "models/gemini-3.1-flash-lite"
 TEST_PROMPT = "Please transcribe the audio."
 
 

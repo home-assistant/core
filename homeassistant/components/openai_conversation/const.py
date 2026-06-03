@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.helpers import llm
 
 DOMAIN = "openai_conversation"
@@ -20,7 +20,6 @@ CONF_IMAGE_MODEL = "image_model"
 CONF_CODE_INTERPRETER = "code_interpreter"
 CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"
-CONF_PROMPT = "prompt"
 CONF_REASONING_EFFORT = "reasoning_effort"
 CONF_REASONING_SUMMARY = "reasoning_summary"
 CONF_RECOMMENDED = "recommended"
@@ -72,7 +71,6 @@ UNSUPPORTED_MODELS: list[str] = [
 ]
 
 UNSUPPORTED_WEB_SEARCH_MODELS: list[str] = [
-    "gpt-5-nano",
     "gpt-3.5",
     "gpt-4-turbo",
     "gpt-4.1-nano",

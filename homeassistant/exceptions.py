@@ -1,9 +1,6 @@
 """The exceptions used by Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator, Sequence
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponse, ClientResponseError, RequestInfo
@@ -38,6 +35,9 @@ class HomeAssistantError(Exception):
 
     _message: str | None = None
     generate_message: bool = False
+    translation_domain: str | None = None
+    translation_key: str | None = None
+    translation_placeholders: dict[str, str] | None = None
 
     def __init__(
         self,
@@ -59,9 +59,9 @@ class HomeAssistantError(Exception):
     def __str__(self) -> str:
         """Return exception message.
 
-        If no message was passed to `__init__`, the exception message is generated from
-        the translation_key. The message will be in English, regardless of the configured
-        language.
+        If no message was passed to `__init__`, the exception message
+        is generated from the translation_key. The message will be in
+        English, regardless of the configured language.
         """
 
         if self._message:
@@ -129,11 +129,13 @@ class TemplateError(HomeAssistantError):
             super().__init__(f"{exception.__class__.__name__}: {exception}")
 
 
-@dataclass(slots=True)
 class ConditionError(HomeAssistantError):
     """Error during condition evaluation."""
 
-    type: str
+    def __init__(self, type: str) -> None:
+        """Initialize condition error."""
+        super().__init__()
+        self.type = type
 
     @staticmethod
     def _indent(indent: int, message: str) -> str:
@@ -149,28 +151,47 @@ class ConditionError(HomeAssistantError):
         return "\n".join(list(self.output(indent=0)))
 
 
-@dataclass(slots=True)
 class ConditionErrorMessage(ConditionError):
     """Condition error message."""
 
-    # A message describing this error
-    message: str
+    def __init__(self, type: str, message: str) -> None:
+        """Initialize condition error with a message.
+
+        Args:
+            message: A message describing the error.
+        """
+        super().__init__(type)
+        self.message = message
 
     def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
 
 
-@dataclass(slots=True)
 class ConditionErrorIndex(ConditionError):
     """Condition error with index."""
 
-    # The zero-based index of the failed condition, for conditions with multiple parts
-    index: int
-    # The total number of parts in this condition, including non-failed parts
-    total: int
-    # The error that this error wraps
-    error: ConditionError
+    def __init__(
+        self,
+        type: str,
+        *,
+        index: int,
+        total: int,
+        error: ConditionError,
+    ) -> None:
+        """Initialize condition error with index.
+
+        Args:
+            index: The zero-based index of the failed condition,
+                for conditions with multiple parts.
+            total: The total number of parts in this condition,
+                including non-failed parts.
+            error: The error that this error wraps.
+        """
+        super().__init__(type)
+        self.index = index
+        self.total = total
+        self.error = error
 
     def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
@@ -184,12 +205,17 @@ class ConditionErrorIndex(ConditionError):
         yield from self.error.output(indent + 1)
 
 
-@dataclass(slots=True)
 class ConditionErrorContainer(ConditionError):
     """Condition error with subconditions."""
 
-    # List of ConditionErrors that this error wraps
-    errors: Sequence[ConditionError]
+    def __init__(self, type: str, *, errors: Sequence[ConditionError]) -> None:
+        """Initialize condition error container.
+
+        Args:
+            errors: List of ConditionErrors that this error wraps.
+        """
+        super().__init__(type)
+        self.errors = errors
 
     def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""

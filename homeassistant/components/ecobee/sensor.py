@@ -1,7 +1,5 @@
 """Support for Ecobee sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN

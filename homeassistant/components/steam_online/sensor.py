@@ -1,7 +1,5 @@
 """Sensor for Steam account status."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from time import localtime, mktime
 from typing import cast

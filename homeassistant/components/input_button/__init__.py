@@ -1,7 +1,5 @@
 """Support to keep track of user controlled buttons which can be used in automations."""
 
-from __future__ import annotations
-
 import logging
 from typing import Self, cast
 
@@ -125,7 +123,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     """Representation of a button."""
 

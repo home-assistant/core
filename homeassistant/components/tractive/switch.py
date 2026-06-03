@@ -1,7 +1,5 @@
 """Support for Tractive switches."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import Any, Literal
@@ -11,6 +9,7 @@ from aiotractive.exceptions import TractiveError
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Trackables, TractiveClient, TractiveConfigEntry
@@ -19,6 +18,7 @@ from .const import (
     ATTR_LED,
     ATTR_LIVE_TRACKING,
     ATTR_POWER_SAVING,
+    DOMAIN,
     TRACKER_SWITCH_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
@@ -113,8 +113,11 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         try:
             result = await self._method(True)
         except TractiveError as error:
-            _LOGGER.error(error)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_turn_on",
+                translation_placeholders={"entity": self.entity_id},
+            ) from error
         # Write state back to avoid switch flips with a slow response
         if result["pending"]:
             self._attr_is_on = True
@@ -125,8 +128,11 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         try:
             result = await self._method(False)
         except TractiveError as error:
-            _LOGGER.error(error)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_turn_off",
+                translation_placeholders={"entity": self.entity_id},
+            ) from error
         # Write state back to avoid switch flips with a slow response
         if result["pending"]:
             self._attr_is_on = False

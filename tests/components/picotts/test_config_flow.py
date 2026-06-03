@@ -47,9 +47,7 @@ async def test_user_step(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_step_binary_not_found(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_user_step_binary_not_found(hass: HomeAssistant) -> None:
     """Test user step aborts when binary not found."""
     with patch(
         "homeassistant.components.picotts.shutil.which",

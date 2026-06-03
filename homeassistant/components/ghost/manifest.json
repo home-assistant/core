@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aioghost"],
   "quality_scale": "gold",
-  "requirements": ["aioghost==0.4.0"]
+  "requirements": ["aioghost==0.4.16"]
 }

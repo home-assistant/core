@@ -1,7 +1,5 @@
 """Tests for the DNS IP integration."""
 
-from __future__ import annotations
-
 
 class QueryResult:
     """Return Query results."""

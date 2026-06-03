@@ -223,7 +223,6 @@
               "read": true,
               "step": 0.1,
               "type": "number",
-              "unit": "ppm",
               "write": false
             }
           }
@@ -245,7 +244,7 @@
               "read": true,
               "step": 0.1,
               "type": "number",
-              "unit": "kWh",
+              "unit": "A",
               "write": false
             }
           }
@@ -265,7 +264,7 @@
               "read": true,
               "step": 0.1,
               "type": "number",
-              "unit": "A",
+              "unit": "Wh",
               "write": false
             }
           }
@@ -517,6 +516,35 @@
           },
           "refId": "000001/94/1",
           "type": "humidity"
+        },
+        {
+          "id": "UL90",
+          "location": "Living",
+          "locationId": 0,
+          "name": "Stepper",
+          "originalName": "Stepper",
+          "properties": {
+            "value": {
+              "read": true,
+              "type": "number",
+              "valueList": [
+                { "name": "0", "value": 0 },
+                { "name": "Here comes", "value": 1 },
+                { "name": "the hotstepper", "value": 2 },
+                { "name": "3", "value": 3 },
+                { "name": "item 4", "value": 4 },
+                { "name": "5", "value": 5 },
+                { "name": "6", "value": 6 },
+                { "name": "7", "value": 7 },
+                { "name": "8", "value": 8 },
+                { "name": "9", "value": 9 },
+                { "name": "item 10, last", "value": 10 }
+              ],
+              "write": true
+            }
+          },
+          "refId": "000001/68",
+          "type": "stepper"
         }
       ]
     }

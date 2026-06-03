@@ -1,7 +1,5 @@
 """The test for the sensibo switch platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -49,7 +47,7 @@ async def test_switch_timer(
 ) -> None:
     """Test the Sensibo switch timer."""
 
-    state = hass.states.get("switch.hallway_timer")
+    state = hass.states.get("switch.hallway_hallway_timer")
     assert state.state == STATE_OFF
     assert state.attributes["id"] is None
     assert state.attributes["turn_on"] is None
@@ -80,7 +78,7 @@ async def test_switch_timer(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.hallway_timer")
+    state = hass.states.get("switch.hallway_hallway_timer")
     assert state.state == STATE_ON
     assert state.attributes["id"] == "SzTGE4oZ4D"
     assert state.attributes["turn_on"] is False
@@ -105,7 +103,7 @@ async def test_switch_timer(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.hallway_timer")
+    state = hass.states.get("switch.hallway_hallway_timer")
     assert state.state == STATE_OFF
 
 
@@ -117,7 +115,7 @@ async def test_switch_pure_boost(
 ) -> None:
     """Test the Sensibo switch pure boost."""
 
-    state = hass.states.get("switch.kitchen_pure_boost")
+    state = hass.states.get("switch.kitchen_kitchen_pure_boost")
     assert state.state == STATE_OFF
 
     mock_client.async_set_pureboost.return_value = {"status": "success"}
@@ -142,7 +140,7 @@ async def test_switch_pure_boost(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.kitchen_pure_boost")
+    state = hass.states.get("switch.kitchen_kitchen_pure_boost")
     assert state.state == STATE_ON
 
     await hass.services.async_call(
@@ -162,7 +160,7 @@ async def test_switch_pure_boost(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.kitchen_pure_boost")
+    state = hass.states.get("switch.kitchen_kitchen_pure_boost")
     assert state.state == STATE_OFF
 
 
@@ -171,7 +169,7 @@ async def test_switch_command_failure(
 ) -> None:
     """Test the Sensibo switch fails commands."""
 
-    state = hass.states.get("switch.hallway_timer")
+    state = hass.states.get("switch.hallway_hallway_timer")
 
     mock_client.async_set_timer.return_value = {"status": "failure"}
 
@@ -210,7 +208,7 @@ async def test_switch_climate_react(
 ) -> None:
     """Test the Sensibo switch for climate react."""
 
-    state = hass.states.get("switch.hallway_climate_react")
+    state = hass.states.get("switch.hallway_hallway_climate_react")
     assert state.state == STATE_OFF
 
     mock_client.async_enable_climate_react.return_value = {"status": "success"}
@@ -230,7 +228,7 @@ async def test_switch_climate_react(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.hallway_climate_react")
+    state = hass.states.get("switch.hallway_hallway_climate_react")
     assert state.state == STATE_ON
 
     await hass.services.async_call(
@@ -248,7 +246,7 @@ async def test_switch_climate_react(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.hallway_climate_react")
+    state = hass.states.get("switch.hallway_hallway_climate_react")
     assert state.state == STATE_OFF
 
 
@@ -268,7 +266,7 @@ async def test_switch_climate_react_no_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.hallway_climate_react")
+    state = hass.states.get("switch.hallway_hallway_climate_react")
     assert state.state == STATE_OFF
 
     with pytest.raises(HomeAssistantError):

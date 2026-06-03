@@ -1,7 +1,5 @@
 """Media player entity for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from datetime import timedelta
@@ -175,8 +173,12 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
             WebsocketNotification.BEOLINK: self._async_update_beolink,
             WebsocketNotification.CONFIGURATION: self._async_update_name_and_beolink,
             WebsocketNotification.PLAYBACK_ERROR: self._async_update_playback_error,
-            WebsocketNotification.PLAYBACK_METADATA: self._async_update_playback_metadata_and_beolink,
-            WebsocketNotification.PLAYBACK_PROGRESS: self._async_update_playback_progress,
+            WebsocketNotification.PLAYBACK_METADATA: (
+                self._async_update_playback_metadata_and_beolink
+            ),
+            WebsocketNotification.PLAYBACK_PROGRESS: (
+                self._async_update_playback_progress
+            ),
             WebsocketNotification.PLAYBACK_SOURCE: self._async_update_sources,
             WebsocketNotification.PLAYBACK_STATE: self._async_update_playback_state,
             WebsocketNotification.REMOTE_MENU_CHANGED: self._async_update_sources,
@@ -219,7 +221,8 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
     async def async_update(self) -> None:
         """Update queue settings."""
         # The WebSocket event listener is the main handler for connection state.
-        # The polling updates do therefore not set the device as available or unavailable
+        # The polling updates do therefore not set the device
+        # as available or unavailable
         with contextlib.suppress(ApiException, ClientConnectorError, TimeoutError):
             queue_settings = await self._client.get_settings_queue(_request_timeout=5)
 
@@ -246,13 +249,16 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
                 sw_version = self._software_status.software_version
 
             _LOGGER.warning(
-                "The API is outdated compared to the device software version %s and %s. Using fallback sources",
+                "The API is outdated compared to the device"
+                " software version %s and %s."
+                " Using fallback sources",
                 MOZART_API_VERSION,
                 sw_version,
             )
             sources = FALLBACK_SOURCES
 
-        # Save all of the relevant enabled sources, both the ID and the friendly name for displaying in a dict.
+        # Save all of the relevant enabled sources, both the ID
+        # and the friendly name for displaying in a dict.
         self._audio_sources = {
             source.id: source.name
             for source in cast(list[Source], sources.items)
@@ -520,7 +526,8 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
         if active_sound_mode is None:
             active_sound_mode = await self._client.get_active_listening_mode()
 
-        # Add the key to make the labels unique (As labels are not required to be unique on B&O devices)
+        # Add the key to make the labels unique
+        # (As labels are not required to be unique on B&O devices)
         for sound_mode in sound_modes:
             label = f"{sound_mode.name} ({sound_mode.id})"
 
@@ -602,7 +609,7 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
 
     @property
     def media_image_remotely_accessible(self) -> bool:
-        """Return whether or not the image of the current media is available outside the local network."""
+        """Return whether the media image is remotely accessible."""
         return not self._media_image.has_local_image
 
     @property
@@ -982,7 +989,8 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
                     await self._client.post_beolink_expand(jid=beolink_jid)
                 except NotFoundException:
                     _LOGGER.warning(
-                        "Unable to expand to %s. Is the device available on the network?",
+                        "Unable to expand to %s."
+                        " Is the device available on the network?",
                         beolink_jid,
                     )
 

@@ -1,7 +1,5 @@
 """Async wrappings for mqtt client."""
 
-from __future__ import annotations
-
 from functools import lru_cache
 from types import TracebackType
 from typing import Self

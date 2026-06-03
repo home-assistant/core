@@ -1,7 +1,5 @@
 """Support for Roborock switch."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -123,7 +121,7 @@ async def async_setup_entry(
 
 
 class RoborockSwitch(RoborockEntityV1, SwitchEntity):
-    """A class to let you turn functionality on Roborock devices on and off that does need a coordinator."""
+    """A class to toggle Roborock device functionality with a coordinator."""
 
     entity_description: RoborockSwitchDescription
 

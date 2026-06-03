@@ -1,7 +1,5 @@
 """Support for Yale sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast
@@ -167,7 +165,7 @@ class YaleOperatorSensor(YaleEntity, RestoreSensor):
         return attributes
 
     async def async_added_to_hass(self) -> None:
-        """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
+        """Restore ATTR_CHANGED_BY on startup."""
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()

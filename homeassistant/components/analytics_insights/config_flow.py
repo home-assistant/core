@@ -1,7 +1,5 @@
 """Config flow for Homeassistant Analytics integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from python_homeassistant_analytics import (

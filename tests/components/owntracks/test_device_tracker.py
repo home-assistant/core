@@ -3,7 +3,6 @@
 import base64
 from collections.abc import Callable, Generator
 import json
-import pickle
 from typing import Any
 from unittest.mock import patch
 
@@ -13,9 +12,18 @@ import pytest
 
 from homeassistant.components import owntracks
 from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.owntracks.const import (
+    ATTR_ADDRESS,
+    ATTR_BATTERY_STATUS,
+    ATTR_COURSE,
+    ATTR_TID,
+    ATTR_UPDATE_TIMESTAMP,
+    ATTR_VELOCITY,
+)
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import ClientSessionGenerator, MqttMockHAClient
@@ -139,6 +147,14 @@ DEFAULT_BEACON_TRANSITION_MESSAGE = {
 
 # Location messages
 LOCATION_MESSAGE = DEFAULT_LOCATION_MESSAGE
+
+LOCATION_MESSAGE_WITH_CUSTOM_ATTRIBUTES = build_message(
+    {
+        "addr": "123 Main Street",
+        "bs": 3,
+    },
+    LOCATION_MESSAGE,
+)
 
 LOCATION_MESSAGE_INACCURATE = build_message(
     {
@@ -392,6 +408,14 @@ def assert_location_source_type(hass: HomeAssistant, source_type: str) -> None:
     assert state.attributes.get("source_type") == source_type
 
 
+def assert_location_update_timestamp(hass: HomeAssistant, timestamp: int) -> None:
+    """Test the assertion of update_timestamp."""
+    state = hass.states.get(DEVICE_TRACKER_STATE)
+    assert state.attributes.get(ATTR_UPDATE_TIMESTAMP) == dt_util.utc_from_timestamp(
+        timestamp
+    )
+
+
 def assert_mobile_tracker_state(
     hass: HomeAssistant, location: str, beacon: str = IBEACON_DEVICE
 ) -> None:
@@ -435,6 +459,7 @@ async def test_location_update(hass: HomeAssistant) -> None:
     assert_location_source_type(hass, "gps")
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
     assert_location_accuracy(hass, LOCATION_MESSAGE["acc"])
+    assert_location_update_timestamp(hass, LOCATION_MESSAGE["tst"])
     assert_location_state(hass, "outer")
 
 
@@ -1394,12 +1419,14 @@ def generate_ciphers(secret):
     ctxt = SecretBox(key).encrypt(msg, encoder=Base64Encoder).decode("utf-8")
 
     mctxt = base64.b64encode(
-        pickle.dumps(
-            (
-                secret.encode("utf-8"),
-                json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8"),
-            )
-        )
+        json.dumps(
+            [
+                base64.b64encode(secret.encode("utf-8")).decode("utf-8"),
+                base64.b64encode(
+                    json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8")
+                ).decode("utf-8"),
+            ]
+        ).encode("utf-8")
     ).decode("utf-8")
     return ctxt, mctxt
 
@@ -1415,18 +1442,20 @@ ENCRYPTED_LOCATION_MESSAGE = {
 }
 
 MOCK_ENCRYPTED_LOCATION_MESSAGE = {
-    # Mock-encrypted version of LOCATION_MESSAGE using pickle
+    # Mock-encrypted version of LOCATION_MESSAGE
     "_type": "encrypted",
     "data": MOCK_CIPHERTEXT,
 }
 
 
 def mock_cipher():
-    """Return a dummy pickle-based cipher."""
+    """Return a dummy mock cipher."""
 
     def mock_decrypt(ciphertext, key):
-        """Decrypt/unpickle."""
-        (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
+        """Decrypt mock-encrypted message."""
+        mkey, plaintext = json.loads(base64.b64decode(ciphertext))
+        mkey = base64.b64decode(mkey)
+        plaintext = base64.b64decode(plaintext)
         if key != mkey:
             raise ValueError
         return plaintext
@@ -1590,7 +1619,7 @@ async def test_restore_state(
     client = await hass_client()
     resp = await client.post(
         "/api/webhook/owntracks_test",
-        json=LOCATION_MESSAGE,
+        json=LOCATION_MESSAGE_WITH_CUSTOM_ATTRIBUTES,
         headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
     )
     assert resp.status == 200
@@ -1613,6 +1642,18 @@ async def test_restore_state(
     assert state_1.attributes["longitude"] == state_2.attributes["longitude"]
     assert state_1.attributes["battery_level"] == state_2.attributes["battery_level"]
     assert state_1.attributes["source_type"] == state_2.attributes["source_type"]
+    assert state_1.attributes[ATTR_TID] == state_2.attributes[ATTR_TID]
+    assert state_1.attributes[ATTR_VELOCITY] == state_2.attributes[ATTR_VELOCITY]
+    assert state_1.attributes[ATTR_COURSE] == state_2.attributes[ATTR_COURSE]
+    assert state_1.attributes[ATTR_ADDRESS] == state_2.attributes[ATTR_ADDRESS]
+    assert (
+        state_1.attributes[ATTR_UPDATE_TIMESTAMP]
+        == state_2.attributes[ATTR_UPDATE_TIMESTAMP]
+    )
+    assert (
+        state_1.attributes[ATTR_BATTERY_STATUS]
+        == state_2.attributes[ATTR_BATTERY_STATUS]
+    )
 
 
 async def test_returns_empty_friends(

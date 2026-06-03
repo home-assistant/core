@@ -1,7 +1,5 @@
 """Support for LinkPlay media players."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import timedelta
 import logging
@@ -225,7 +223,8 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         return await media_source.async_browse_media(
             self.hass,
             media_content_id,
-            # This allows filtering content. In this case it will only show audio sources.
+            # This allows filtering content. In this case it
+            # will only show audio sources.
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
 

@@ -67,25 +67,11 @@ OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str | None, BinarySensorDeviceClass
 
 
 def get_opening_category(netatmo_device: NetatmoDevice) -> str:
-    """Helper function to get opening category from Netatmo API raw data."""
+    """Helper function to get opening category for doortag."""
 
-    # Iterate through each home in the raw data.
-    for home in netatmo_device.data_handler.account.raw_data["homes"]:
-        # Check if the modules list exists for the current home.
-        if "modules" in home:
-            # Iterate through each module to find a matching ID.
-            for module in home["modules"]:
-                if module["id"] == netatmo_device.device.entity_id:
-                    # We found the matching device. Get its category.
-                    if module.get("category") is not None:
-                        return cast(str, module["category"])
-                    raise ValueError(
-                        f"Device {netatmo_device.device.entity_id} found, "
-                        "but 'category' is missing in raw data."
-                    )
-
-    raise ValueError(
-        f"Device {netatmo_device.device.entity_id} not found in Netatmo raw data."
+    return (
+        getattr(netatmo_device.device, "doortag_category", None)
+        or DOORTAG_CATEGORY_OTHER
     )
 
 
@@ -103,9 +89,9 @@ OPENING_CATEGORY_TO_KEY: Final[dict[str, str | None]] = {
 class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Netatmo binary sensor entity."""
 
-    netatmo_name: str | None = (
-        None  # The name used by Netatmo API for this sensor (exposed feature as attribute) if different than key
-    )
+    # The name used by Netatmo API for this sensor
+    # (exposed feature as attribute) if different than key
+    netatmo_name: str | None = None
     value_fn: Callable[[str], str | bool | None] = lambda x: x
 
 
@@ -300,8 +286,11 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
-        # Register publishers for the entity if needed (not already done in parent class - weather and air_care)
-        # We need to keep this here because we have two classes depending on it and we want to avoid adding publishers for all binary sensors
+        # Register publishers for the entity if needed
+        # (not already done in parent class - weather and
+        # air_care). We need to keep this here because we have
+        # two classes depending on it and we want to avoid
+        # adding publishers for all binary sensors
         if self.device.device_category in DEVICE_CATEGORY_BINARY_PUBLISHERS:
             self._publishers.extend(
                 [
@@ -317,9 +306,11 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        # Should be the connectivity (reachable) sensor only here as we have update for opening in its class
+        # Should be the connectivity (reachable) sensor only
+        # here as we have update for opening in its class
 
-        # Setting reachable sensor, so we just get it directly (backward compatibility to weather binary sensor)
+        # Setting reachable sensor, so we just get it directly
+        # (backward compatibility to weather binary sensor)
         value = getattr(self.device, self.entity_description.key, None)
 
         if value is None:

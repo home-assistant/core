@@ -1,7 +1,5 @@
 """The Tesla Powerwall integration."""
 
-from __future__ import annotations
-
 from contextlib import AsyncExitStack
 import logging
 
@@ -180,7 +178,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
             except (TimeoutError, PowerwallUnreachableError) as err:
                 raise ConfigEntryNotReady from err
             except MissingAttributeError as err:
-                # The error might include some important information about what exactly changed.
+                # The error might include some important
+                # information about what exactly changed.
                 _LOGGER.error("The powerwall api has changed: %s", str(err))
                 persistent_notification.async_create(
                     hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE

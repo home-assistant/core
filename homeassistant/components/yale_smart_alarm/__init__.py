@@ -1,7 +1,5 @@
 """The yale_smart_alarm component."""
 
-from __future__ import annotations
-
 from homeassistant.components.lock import CONF_DEFAULT_CODE, DOMAIN as LOCK_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE, CONF_NAME

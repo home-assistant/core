@@ -1,7 +1,5 @@
 """Config flow for OpenRouter integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -143,7 +141,7 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage conversation agent configuration."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
@@ -258,7 +256,7 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage AI task configuration."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:

@@ -1,7 +1,5 @@
 """Support for Azure DevOps sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime

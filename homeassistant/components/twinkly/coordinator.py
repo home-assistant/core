@@ -88,7 +88,7 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
         brightness = (
             int(brightness["value"]) if brightness["mode"] == "enabled" else 100
         )
-        brightness = int(round(brightness * 2.55)) if is_on else 0
+        brightness = round(brightness * 2.55) if is_on else 0
         if self.device_name != device_info[DEV_NAME]:
             self._async_update_device_info(device_info[DEV_NAME])
         return TwinklyData(

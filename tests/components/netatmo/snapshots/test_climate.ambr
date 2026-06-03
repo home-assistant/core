@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entity[climate.bureau-entry]
+# name: test_entity[climate.bureau_bureau-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27,7 +27,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bureau',
+    'entity_id': 'climate.bureau_bureau',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -50,7 +50,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[climate.bureau-state]
+# name: test_entity[climate.bureau_bureau-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
@@ -71,14 +71,14 @@
       'target_temp_step': 0.5,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bureau',
+    'entity_id': 'climate.bureau_bureau',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_entity[climate.cocina-entry]
+# name: test_entity[climate.cocina_cocina-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -106,7 +106,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.cocina',
+    'entity_id': 'climate.cocina_cocina',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -129,7 +129,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[climate.cocina-state]
+# name: test_entity[climate.cocina_cocina-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
@@ -157,14 +157,14 @@
       'temperature': 7,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.cocina',
+    'entity_id': 'climate.cocina_cocina',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_entity[climate.corridor-entry]
+# name: test_entity[climate.corridor_corridor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -192,7 +192,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.corridor',
+    'entity_id': 'climate.corridor_corridor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,7 +215,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[climate.corridor-state]
+# name: test_entity[climate.corridor_corridor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
@@ -242,14 +242,14 @@
       'temperature': 22,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.corridor',
+    'entity_id': 'climate.corridor_corridor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_entity[climate.entrada-entry]
+# name: test_entity[climate.entrada_entrada-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -277,7 +277,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.entrada',
+    'entity_id': 'climate.entrada_entrada',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -300,7 +300,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[climate.entrada-state]
+# name: test_entity[climate.entrada_entrada-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
@@ -328,14 +328,14 @@
       'temperature': 7,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.entrada',
+    'entity_id': 'climate.entrada_entrada',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_entity[climate.livingroom-entry]
+# name: test_entity[climate.livingroom_livingroom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -364,7 +364,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.livingroom',
+    'entity_id': 'climate.livingroom_livingroom',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -387,7 +387,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[climate.livingroom-state]
+# name: test_entity[climate.livingroom_livingroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
@@ -415,7 +415,7 @@
       'temperature': 12,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.livingroom',
+    'entity_id': 'climate.livingroom_livingroom',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

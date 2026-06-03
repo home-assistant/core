@@ -511,7 +511,8 @@ async def test_form_ssdp(
             ssdp_location="http://192.168.1.5:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX99",  # MAC address, but SSDP does not have `-`
+                # MAC address, but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX99",
             },
         ),
     )
@@ -558,7 +559,8 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
             ssdp_location="http://192.168.1.5:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX59",
             },
         ),
     )
@@ -601,7 +603,8 @@ async def test_skip_reconfig_ssdp(
             ssdp_location=f"http://{new_host}:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX59",
             },
         ),
     )
@@ -634,7 +637,8 @@ async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
             ssdp_location="http://192.168.1.5:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX59",
             },
         ),
     )
@@ -707,7 +711,8 @@ async def test_discovered_via_zeroconf(
             type="_http._tcp.local.",
             name="mydsm._http._tcp.local.",
             properties={
-                "mac_address": "00:11:32:XX:XX:99|00:11:22:33:44:55",  # MAC address, but SSDP does not have `-`
+                # MAC address, but SSDP does not have `-`
+                "mac_address": "00:11:32:XX:XX:99|00:11:22:33:44:55",
             },
         ),
     )

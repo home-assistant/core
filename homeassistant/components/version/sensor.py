@@ -1,16 +1,14 @@
 """Sensor that can display the current Home Assistant versions."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SOURCE, DEFAULT_NAME
+from .const import DEFAULT_NAME
 from .coordinator import VersionConfigEntry
 from .entity import VersionEntity
 

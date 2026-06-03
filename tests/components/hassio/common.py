@@ -1,7 +1,5 @@
 """Provide common test tools for hassio."""
 
-from __future__ import annotations
-
 from dataclasses import fields
 import logging
 from types import MethodType
@@ -122,6 +120,7 @@ def mock_addon_info(
         supervisor_api=False,
         supervisor_role="default",
         icon=False,
+        auto_update=False,
     )
     addon_info.name = "test"
     addon_info.to_dict = MethodType(

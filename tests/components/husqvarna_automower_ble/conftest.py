@@ -1,7 +1,7 @@
 """Common fixtures for the Husqvarna Automower Bluetooth tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from automower_ble.protocol import ResponseResult
 from gardena_bluetooth.parse import ManufacturerData
@@ -52,7 +52,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_get_manufacturer_data(
     hass: HomeAssistant, enable_bluetooth: None
 ) -> Generator[None]:
-    """Mock async_get_manufacturer_data to return decoded data from injected service infos."""
+    """Mock async_get_manufacturer_data to return injected data."""
 
     async def _get_manufacturer_data(
         addresses: set[str], **kwargs
@@ -77,6 +77,8 @@ def mock_get_manufacturer_data(
 @pytest.fixture(autouse=True)
 def mock_automower_client(enable_bluetooth: None) -> Generator[AsyncMock]:
     """Mock a BleakClient client."""
+    mock_device = Mock()
+    mock_device.name = "Mower"
     with (
         patch(
             "homeassistant.components.husqvarna_automower_ble.Mower",
@@ -85,6 +87,10 @@ def mock_automower_client(enable_bluetooth: None) -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.husqvarna_automower_ble.config_flow.Mower",
             new=mock_client,
+        ),
+        patch(
+            "homeassistant.components.husqvarna_automower_ble.config_flow.bluetooth.async_ble_device_from_address",
+            return_value=mock_device,
         ),
     ):
         client = mock_client.return_value

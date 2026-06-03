@@ -45,7 +45,7 @@ async def test_initialization_errors(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state == config_entry_state
+    assert mock_config_entry.state is config_entry_state
 
 
 async def test_device_info(

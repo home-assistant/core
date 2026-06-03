@@ -1,7 +1,5 @@
 """Expose Home Assistant entity states to KNX."""
 
-from __future__ import annotations
-
 from asyncio import TaskGroup
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -129,10 +127,13 @@ def _yaml_config_to_expose_options(config: ConfigType) -> KnxExposeOptions:
     value_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
     dpt: type[DPTBase]
     if value_type == "binary":
-        # HA yaml expose flag for DPT-1 (no explicit DPT 1 definitions in xknx back then)
+        # HA yaml expose flag for DPT-1
+        # (no explicit DPT 1 definitions in xknx back then)
         dpt = DPTSwitch
     else:
-        dpt = DPTBase.parse_transcoder(config[ExposeSchema.CONF_KNX_EXPOSE_TYPE])  # type: ignore[assignment]  # checked by schema validation
+        dpt = DPTBase.parse_transcoder(  # type: ignore[assignment]
+            config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
+        )
     ga = parse_device_group_address(config[KNX_ADDRESS])
     cooldown_seconds = config[ExposeSchema.CONF_KNX_EXPOSE_COOLDOWN].total_seconds()
     periodic_send_seconds = config[

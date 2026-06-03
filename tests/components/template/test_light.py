@@ -36,7 +36,6 @@ from .conftest import (
     TemplatePlatformSetup,
     assert_action,
     async_get_flow_preview_state,
-    async_setup_legacy_platforms,
     async_trigger,
     make_test_action,
     make_test_trigger,
@@ -53,7 +52,6 @@ TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_LIGHT = TemplatePlatformSetup(
     light.DOMAIN,
-    "lights",
     "test_light",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,
@@ -86,15 +84,6 @@ COLOR_TEMP_ACTION = make_test_action(
 ON_OFF_COLOR_TEMP_ACTIONS = {
     **ON_OFF_ACTIONS,
     **COLOR_TEMP_ACTION,
-}
-
-
-ON_OFF_LEGACY_COLOR_ACTIONS = {
-    **ON_OFF_ACTIONS,
-    **make_test_action(
-        "set_color",
-        {"s": "{{ s }}", "h": "{{ h }}"},
-    ),
 }
 
 HS_ACTION = make_test_action(
@@ -297,17 +286,8 @@ async def setup_light_with_effects(
         count,
         {
             **SET_EFFECT_ACTION,
-            **(
-                {
-                    "effect_list_template": effect_list_template,
-                    "effect_template": effect_template,
-                }
-                if style == ConfigurationStyle.LEGACY
-                else {
-                    "effect_list": effect_list_template,
-                    "effect": effect_template,
-                }
-            ),
+            "effect_list": effect_list_template,
+            "effect": effect_template,
         },
         "{{ true }}",
         ON_OFF_ACTIONS,
@@ -330,12 +310,8 @@ async def setup_light_with_mireds(
         count,
         {
             attribute: attribute_template,
+            "temperature": "{{ 200 }}",
             **make_test_action("set_temperature", {"color_temp": "{{ color_temp }}"}),
-            **(
-                {"temperature_template": "{{ 200 }}"}
-                if style == ConfigurationStyle.LEGACY
-                else {"temperature": "{{ 200 }}"}
-            ),
         },
         "{{ 1==1 }}",
         ON_OFF_ACTIONS,
@@ -357,19 +333,9 @@ async def setup_light_with_transition_template(
         count,
         {
             **SET_EFFECT_ACTION,
-            **(
-                {
-                    "effect_list_template": "{{ ['Disco', 'Police'] }}",
-                    "effect_template": "{{ None }}",
-                    "supports_transition_template": transition_template,
-                }
-                if style == ConfigurationStyle.LEGACY
-                else {
-                    "effect_list": "{{ ['Disco', 'Police'] }}",
-                    "effect": "{{ None }}",
-                    "supports_transition": transition_template,
-                }
-            ),
+            "effect_list": "{{ ['Disco', 'Police'] }}",
+            "effect": "{{ None }}",
+            "supports_transition": transition_template,
         },
         "{{ 1==1 }}",
         ON_OFF_ACTIONS,
@@ -382,7 +348,7 @@ async def setup_light_with_transition_template(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_light")
 async def test_template_state_invalid(hass: HomeAssistant) -> None:
@@ -401,7 +367,7 @@ async def test_template_state_invalid(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_light")
 async def test_template_state_text(hass: HomeAssistant) -> None:
@@ -426,7 +392,7 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(("count", "extra_config"), [(1, {})])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("state_template", "expected_state", "expected_color_mode"),
@@ -459,27 +425,12 @@ async def test_template_state_boolean(
     assert state.attributes["supported_features"] == 0
 
 
-async def test_legacy_template_config_errors(hass: HomeAssistant) -> None:
-    """Test legacy template light configuration errors."""
-    await async_setup_legacy_platforms(
-        hass,
-        light.DOMAIN,
-        "bad name here",
-        0,
-        {
-            **ON_OFF_SET_LEVEL_ACTIONS,
-            "value_template": "{{ 1== 1}}",
-        },
-    )
-    assert hass.states.async_all("light") == []
-
-
 @pytest.mark.parametrize(
     ("count", "state_template", "extra_config"), [(0, "{%- if false -%}", {})]
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_light")
 async def test_template_config_errors(hass: HomeAssistant) -> None:
@@ -493,7 +444,7 @@ async def test_template_config_errors(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_light")
 async def test_missing_key(hass: HomeAssistant) -> None:
@@ -507,7 +458,7 @@ async def test_missing_key(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_light")
 async def test_on_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -532,14 +483,6 @@ async def test_on_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
 @pytest.mark.parametrize(
     ("config", "style"),
     [
-        (
-            {
-                "value_template": "{{states.light.test_state.state}}",
-                **ON_ACTION_WITH_TRANSITION,
-                "supports_transition_template": "{{true}}",
-            },
-            ConfigurationStyle.LEGACY,
-        ),
         (
             {
                 "state": "{{states.light.test_state.state}}",
@@ -584,7 +527,7 @@ async def test_on_action_with_transition(
 @pytest.mark.parametrize(("count", "config"), [(1, ON_OFF_SET_LEVEL_ACTIONS)])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_light")
 async def test_on_action_optimistic(
@@ -629,7 +572,7 @@ async def test_on_action_optimistic(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_light")
 async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -653,14 +596,6 @@ async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None
 @pytest.mark.parametrize(
     ("config", "style"),
     [
-        (
-            {
-                "value_template": "{{states.light.test_state.state}}",
-                **OFF_ACTION_WITH_TRANSITION,
-                "supports_transition_template": "{{true}}",
-            },
-            ConfigurationStyle.LEGACY,
-        ),
         (
             {
                 "state": "{{states.light.test_state.state}}",
@@ -704,7 +639,7 @@ async def test_off_action_with_transition(
 @pytest.mark.parametrize(("count", "config"), [(1, ON_OFF_SET_LEVEL_ACTIONS)])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_light")
 async def test_off_action_optimistic(
@@ -733,7 +668,7 @@ async def test_off_action_optimistic(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_light")
 async def test_level_action_no_template(
@@ -764,7 +699,6 @@ async def test_level_action_no_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "level_template"),
         (ConfigurationStyle.MODERN, "level"),
         (ConfigurationStyle.TRIGGER, "level"),
     ],
@@ -806,7 +740,6 @@ async def test_level_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "temperature_template"),
         (ConfigurationStyle.MODERN, "temperature"),
         (ConfigurationStyle.TRIGGER, "temperature"),
     ],
@@ -843,7 +776,6 @@ async def test_temperature_template(
 @pytest.mark.parametrize(
     "style",
     [
-        ConfigurationStyle.LEGACY,
         ConfigurationStyle.MODERN,
         ConfigurationStyle.TRIGGER,
     ],
@@ -882,7 +814,6 @@ async def test_temperature_action_no_template(
 @pytest.mark.parametrize(
     ("style", "attribute", "entity_id"),
     [
-        (ConfigurationStyle.LEGACY, "friendly_name", TEST_LIGHT.entity_id),
         (ConfigurationStyle.MODERN, "name", "light.template_light"),
         (ConfigurationStyle.TRIGGER, "name", "light.template_light"),
     ],
@@ -901,7 +832,6 @@ async def test_friendly_name(hass: HomeAssistant, entity_id: str) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "icon_template"),
         (ConfigurationStyle.MODERN, "icon"),
         (ConfigurationStyle.TRIGGER, "icon"),
     ],
@@ -925,7 +855,6 @@ async def test_icon_template(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "entity_picture_template"),
         (ConfigurationStyle.MODERN, "picture"),
         (ConfigurationStyle.TRIGGER, "picture"),
     ],
@@ -945,82 +874,10 @@ async def test_entity_picture_template(hass: HomeAssistant) -> None:
     assert state.attributes["entity_picture"] == "/local/light.png"
 
 
-@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_LEGACY_COLOR_ACTIONS)])
-@pytest.mark.parametrize(
-    "style",
-    [
-        ConfigurationStyle.LEGACY,
-    ],
-)
-@pytest.mark.usefixtures("setup_single_action_light")
-async def test_legacy_color_action_no_template(
-    hass: HomeAssistant, calls: list[ServiceCall]
-) -> None:
-    """Test setting color with optimistic template."""
-    state = hass.states.get(TEST_LIGHT.entity_id)
-    assert state.attributes.get("hs_color") is None
-
-    await _call_and_assert_action(
-        hass,
-        calls,
-        SERVICE_TURN_ON,
-        {ATTR_HS_COLOR: (40, 50)},
-        {"h": 40, "s": 50},
-        "set_color",
-    )
-
-    state = hass.states.get(TEST_LIGHT.entity_id)
-    assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == ColorMode.HS
-    assert state.attributes.get("hs_color") == (40, 50)
-    assert state.attributes["supported_color_modes"] == [ColorMode.HS]
-    assert state.attributes["supported_features"] == 0
-
-
-@pytest.mark.parametrize(
-    ("count", "style", "extra_config", "attribute"),
-    [
-        (
-            1,
-            ConfigurationStyle.LEGACY,
-            ON_OFF_LEGACY_COLOR_ACTIONS,
-            "color_template",
-        ),
-    ],
-)
-@pytest.mark.parametrize(
-    ("expected_hs", "attribute_template", "expected_color_mode"),
-    [
-        ((360, 100), "{{(360, 100)}}", ColorMode.HS),
-        ((359.9, 99.9), "{{(359.9, 99.9)}}", ColorMode.HS),
-        (None, "{{(361, 100)}}", ColorMode.HS),
-        (None, "{{(360, 101)}}", ColorMode.HS),
-        (None, "[{{(360)}},{{null}}]", ColorMode.HS),
-        (None, "{{x - 12}}", ColorMode.HS),
-        (None, "", ColorMode.HS),
-        (None, "{{ none }}", ColorMode.HS),
-        (None, "{{('one','two')}}", ColorMode.HS),
-    ],
-)
-@pytest.mark.usefixtures("setup_single_attribute_light")
-async def test_legacy_color_template(
-    hass: HomeAssistant,
-    expected_hs: tuple[float, float] | None,
-    expected_color_mode: ColorMode,
-) -> None:
-    """Test the template for the color."""
-    state = hass.states.get(TEST_LIGHT.entity_id)
-    assert state.attributes.get("hs_color") == expected_hs
-    assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == expected_color_mode
-    assert state.attributes["supported_color_modes"] == [ColorMode.HS]
-    assert state.attributes["supported_features"] == 0
-
-
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     (
@@ -1101,7 +958,6 @@ async def test_color_actions_no_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "hs_template"),
         (ConfigurationStyle.MODERN, "hs"),
         (ConfigurationStyle.TRIGGER, "hs"),
     ],
@@ -1141,7 +997,6 @@ async def test_hs_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "rgb_template"),
         (ConfigurationStyle.MODERN, "rgb"),
         (ConfigurationStyle.TRIGGER, "rgb"),
     ],
@@ -1182,7 +1037,6 @@ async def test_rgb_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "rgbw_template"),
         (ConfigurationStyle.MODERN, "rgbw"),
         (ConfigurationStyle.TRIGGER, "rgbw"),
     ],
@@ -1225,7 +1079,6 @@ async def test_rgbw_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "rgbww_template"),
         (ConfigurationStyle.MODERN, "rgbww"),
         (ConfigurationStyle.TRIGGER, "rgbww"),
     ],
@@ -1272,14 +1125,6 @@ async def test_rgbww_template(
 @pytest.mark.parametrize(
     ("config", "style"),
     [
-        (
-            {
-                **ON_OFF_ACTIONS,
-                "value_template": "{{1 == 1}}",
-                **ALL_COLOR_ACTIONS,
-            },
-            ConfigurationStyle.LEGACY,
-        ),
         (
             {
                 **ON_OFF_ACTIONS,
@@ -1464,7 +1309,7 @@ async def test_all_colors_mode_no_template(
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("effect_list_template", "effect_template", "effect", "expected"),
@@ -1501,7 +1346,7 @@ async def test_effect_action(
 @pytest.mark.parametrize(("count", "effect_template"), [(1, "{{ None }}")])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("expected_effect_list", "effect_list_template"),
@@ -1539,7 +1384,7 @@ async def test_effect_list_template(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("expected_effect", "effect_template"),
@@ -1566,7 +1411,6 @@ async def test_effect_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "min_mireds_template"),
         (ConfigurationStyle.MODERN, "min_mireds"),
         (ConfigurationStyle.TRIGGER, "min_mireds"),
     ],
@@ -1597,7 +1441,6 @@ async def test_min_mireds_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "max_mireds_template"),
         (ConfigurationStyle.MODERN, "max_mireds"),
         (ConfigurationStyle.TRIGGER, "max_mireds"),
     ],
@@ -1629,7 +1472,6 @@ async def test_max_mireds_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "supports_transition_template"),
         (ConfigurationStyle.MODERN, "supports_transition"),
         (ConfigurationStyle.TRIGGER, "supports_transition"),
     ],
@@ -1671,7 +1513,7 @@ async def test_supports_transition_template(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_light_with_transition_template")
 async def test_supports_transition_template_updates(hass: HomeAssistant) -> None:
@@ -1722,7 +1564,6 @@ async def test_supports_transition_template_updates(hass: HomeAssistant) -> None
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -1762,7 +1603,6 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
     ],
 )
@@ -1778,7 +1618,7 @@ async def test_invalid_availability_template_keeps_component_available(
 @pytest.mark.parametrize("config", [ON_OFF_ACTIONS])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_unique_id(
     hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
@@ -1807,7 +1647,6 @@ async def test_nested_unique_id(
 @pytest.mark.parametrize(
     "style",
     [
-        ConfigurationStyle.LEGACY,
         ConfigurationStyle.MODERN,
     ],
 )
@@ -1855,13 +1694,6 @@ async def test_empty_color_mode_action_config(
 @pytest.mark.parametrize(
     ("style", "extra_config"),
     [
-        (
-            ConfigurationStyle.LEGACY,
-            {
-                "effect_list_template": "{{ ['a'] }}",
-                "effect_template": "{{ 'a' }}",
-            },
-        ),
         (
             ConfigurationStyle.MODERN,
             {

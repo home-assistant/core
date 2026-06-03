@@ -44,7 +44,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -178,7 +178,7 @@ async def test_button_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     entity_ids = [
         "button.washer_pause_program",
         "button.washer_stop_program",
@@ -244,7 +244,7 @@ async def test_button_functionality(
     expected_kwargs: dict[str, Any],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -267,7 +267,7 @@ async def test_command_button_exception(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     entity_id = "button.washer_pause_program"
 
     client_with_exception.get_available_commands = AsyncMock(
@@ -302,7 +302,7 @@ async def test_stop_program_button_exception(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     entity_id = "button.washer_stop_program"
 
     assert await integration_setup(client_with_exception)

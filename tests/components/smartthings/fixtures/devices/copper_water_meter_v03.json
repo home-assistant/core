@@ -1,0 +1,57 @@
+{
+  "items": [
+    {
+      "deviceId": "93337b49-7a89-41f6-80de-d6537d4438dc",
+      "name": "copper_water_meter_v03",
+      "label": "Indoor Water Meter",
+      "manufacturerName": "0A6v",
+      "presentationId": "ST_b6fb7ca3-2949-4a1a-891b-5dec2937d398",
+      "deviceManufacturerCode": "CopperLabs",
+      "locationId": "4e88bf74-3bed-4e6d-9fa7-6acb776a4df9",
+      "ownerId": "6fc21de5-123e-2f8c-2cc6-311635aeaaef",
+      "roomId": "fafae9db-a2b5-480f-8ff5-df8f913356df",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "healthCheck",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "mirrorhappy40050.copperWaterMeter",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "WaterValve",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-02-27T14:06:11.523Z",
+      "profile": {
+        "id": "d487b37d-26a3-4d37-8fbc-56d022de4834"
+      },
+      "viper": {
+        "manufacturerName": "CopperLabs",
+        "modelName": "Virtual Indoor Water Meter",
+        "endpointAppId": "viper_1d5767a0-af08-11ed-a999-9f1f172a27ff"
+      },
+      "type": "VIPER",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

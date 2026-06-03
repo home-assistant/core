@@ -1,7 +1,5 @@
 """Provides functionality to interact with lights."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import csv
 import dataclasses
@@ -243,7 +241,7 @@ def preprocess_turn_on_alternatives(
 
     if (color_name := params.pop(ATTR_COLOR_NAME, None)) is not None:
         try:
-            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+            params[ATTR_RGB_COLOR] = tuple(color_util.color_name_to_rgb(color_name))
         except ValueError:
             _LOGGER.warning("Got unknown color %s, falling back to white", color_name)
             params[ATTR_RGB_COLOR] = (255, 255, 255)

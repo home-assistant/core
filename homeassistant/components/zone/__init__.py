@@ -1,7 +1,5 @@
 """Support for the definition of zones."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from operator import attrgetter
@@ -180,6 +178,63 @@ def async_in_zones(
     # Sort by distance and then by radius so the closest and smallest zone is first.
     zones.sort(key=lambda x: (x[1], x[2]))
     return (closest, [itm[0] for itm in zones])
+
+
+def async_get_enclosing_zones(hass: HomeAssistant, zone_entity_id: str) -> list[str]:
+    """Find zones which fully contain the given zone.
+
+    Returns a list of zone entity_ids whose interior contains the given zone
+    (``zone_dist + input_radius <= other_zone_radius``); a zone whose edge
+    touches another zone's edge from the inside counts as contained. Passive
+    zones are included. The queried zone itself is excluded from the result.
+    The list is sorted by radius then distance, so the smallest enclosing zone
+    is first.
+
+    Returns an empty list if the zone does not exist or is unavailable.
+
+    This method must be run in the event loop.
+    """
+    if (
+        not (input_zone := hass.states.get(zone_entity_id))
+        or input_zone.state == STATE_UNAVAILABLE
+    ):
+        return []
+    input_attrs = input_zone.attributes
+    input_latitude: float = input_attrs[ATTR_LATITUDE]
+    input_longitude: float = input_attrs[ATTR_LONGITUDE]
+    input_radius: float = input_attrs[ATTR_RADIUS]
+
+    zones: list[tuple[str, float, float]] = []
+
+    # This can be called before async_setup by device tracker
+    zone_entity_ids = hass.data.get(DATA_ZONE_ENTITY_IDS, ())
+
+    for entity_id in zone_entity_ids:
+        if entity_id == zone_entity_id:
+            continue
+        if (
+            not (zone := hass.states.get(entity_id))
+            # Skip unavailable zones
+            or zone.state == STATE_UNAVAILABLE
+        ):
+            continue
+        zone_attrs = zone.attributes
+        if (
+            zone_dist := distance(
+                input_latitude,
+                input_longitude,
+                zone_attrs[ATTR_LATITUDE],
+                zone_attrs[ATTR_LONGITUDE],
+            )
+        ) is None:
+            continue
+        zone_radius = zone_attrs[ATTR_RADIUS]
+        if not zone_dist + input_radius <= zone_radius:
+            continue
+        zones.append((zone.entity_id, zone_dist, zone_radius))
+
+    zones.sort(key=lambda x: (x[2], x[1]))
+    return [itm[0] for itm in zones]
 
 
 def async_active_zone(

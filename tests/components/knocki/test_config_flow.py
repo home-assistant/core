@@ -88,10 +88,10 @@ async def test_duplcate_entry(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_exceptions(
     hass: HomeAssistant,
     mock_knocki_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     field: str,
     exception: Exception,
     error: str,
@@ -123,11 +123,8 @@ async def test_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_dhcp(
-    hass: HomeAssistant,
-    mock_knocki_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp(hass: HomeAssistant, mock_knocki_client: AsyncMock) -> None:
     """Test DHCP discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY

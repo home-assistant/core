@@ -93,4 +93,4 @@ class DeakoLightEntity(LightEntity):
             self._attr_supported_color_modes is not None
             and ColorMode.BRIGHTNESS in self._attr_supported_color_modes
         ):
-            self._attr_brightness = int(round(state.get("dim", 0) * 2.55))
+            self._attr_brightness = round(state.get("dim", 0) * 2.55)

@@ -1,7 +1,5 @@
 """The OpenAI Conversation integration."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from types import MappingProxyType
 
@@ -17,7 +15,7 @@ from openai.types.responses import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_PROMPT, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -44,7 +42,6 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_FILENAMES,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_STORE_RESPONSES,
@@ -288,7 +285,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
         http_client=get_async_client(hass),
     )
 
-    # Cache current platform data which gets added to each request (caching done by library)
+    # Cache current platform data which gets added to each request
+    # (caching done by library)
     _ = await hass.async_add_executor_job(client.platform_headers)
 
     try:

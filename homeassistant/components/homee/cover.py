@@ -30,6 +30,11 @@ OPEN_CLOSE_ATTRIBUTES = [
     AttributeType.UP_DOWN,
 ]
 POSITION_ATTRIBUTES = [AttributeType.POSITION, AttributeType.SHUTTER_SLAT_POSITION]
+COVER_DEVICE_PROFILES = {
+    NodeProfile.GARAGE_DOOR_OPERATOR: CoverDeviceClass.GARAGE,
+    NodeProfile.ENTRANCE_GATE_OPERATOR: CoverDeviceClass.GATE,
+    NodeProfile.SHUTTER_POSITION_SWITCH: CoverDeviceClass.SHUTTER,
+}
 
 
 def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute | None:
@@ -44,7 +49,7 @@ def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute | None:
 def get_cover_features(
     node: HomeeNode, open_close_attribute: HomeeAttribute | None
 ) -> CoverEntityFeature:
-    """Determine the supported cover features of a homee node based on the available attributes."""
+    """Determine the supported cover features of a homee node."""
     features = CoverEntityFeature(0)
 
     if (open_close_attribute is not None) and open_close_attribute.editable:
@@ -69,12 +74,6 @@ def get_cover_features(
 
 def get_device_class(node: HomeeNode) -> CoverDeviceClass | None:
     """Determine the device class a homee node based on the node profile."""
-    COVER_DEVICE_PROFILES = {
-        NodeProfile.GARAGE_DOOR_OPERATOR: CoverDeviceClass.GARAGE,
-        NodeProfile.ENTRANCE_GATE_OPERATOR: CoverDeviceClass.GATE,
-        NodeProfile.SHUTTER_POSITION_SWITCH: CoverDeviceClass.SHUTTER,
-    }
-
     return COVER_DEVICE_PROFILES.get(node.profile)
 
 
@@ -100,7 +99,7 @@ async def async_setup_entry(
 
 
 def is_cover_node(node: HomeeNode) -> bool:
-    """Determine if a node is controllable as a homee cover based on its profile and attributes."""
+    """Determine if a node is controllable as a homee cover."""
     return node.profile in [
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH,
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH_WITHOUT_SLAT_POSITION,

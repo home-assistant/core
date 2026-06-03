@@ -1,7 +1,5 @@
 """The kraken integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -292,4 +290,5 @@ class KrakenSensor(
 
 def create_device_name(tracked_asset_pair: str) -> str:
     """Create the device name for a given tracked asset pair."""
-    return f"{tracked_asset_pair.split('/', maxsplit=1)[0]} {tracked_asset_pair.split('/')[1]}"
+    parts = tracked_asset_pair.split("/", maxsplit=2)
+    return f"{parts[0]} {parts[1]}"

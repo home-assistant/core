@@ -197,6 +197,42 @@
         "name": "[%key:component::light::title%]"
       }
     },
+    "media_player": {
+      "media_player": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "am": "AM",
+              "analog1": "Analog 1",
+              "analog2": "Analog 2",
+              "analog3": "Analog 3",
+              "aux": "AUX",
+              "bluetooth": "Bluetooth",
+              "cd": "CD",
+              "coaxial": "Coaxial",
+              "digital": "Digital",
+              "digital_input": "Digital input",
+              "digital_tv": "Digital TV",
+              "fm": "FM",
+              "hdmi": "HDMI",
+              "hdmi1": "HDMI 1",
+              "hdmi2": "HDMI 2",
+              "hdmi3": "HDMI 3",
+              "hdmi4": "HDMI 4",
+              "hdmi5": "HDMI 5",
+              "hdmi6": "HDMI 6",
+              "melon": "Melon",
+              "network": "Network",
+              "optical": "Optical",
+              "phono": "Phono",
+              "usb": "USB",
+              "wifi": "Wi-Fi",
+              "youtube": "YouTube"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
@@ -951,6 +987,15 @@
       },
       "water_filter_usage": {
         "name": "Water filter usage"
+      },
+      "water_usage_current": {
+        "name": "Current water usage"
+      },
+      "water_usage_day": {
+        "name": "Water usage today"
+      },
+      "water_usage_month": {
+        "name": "Water usage this month"
       },
       "x_coordinate": {
         "name": "X coordinate"

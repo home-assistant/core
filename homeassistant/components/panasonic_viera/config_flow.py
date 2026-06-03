@@ -93,6 +93,8 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
                         if self._data[CONF_HOST] is not None
                         else "",
                     ): str,
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Optional(
                         CONF_NAME,
                         default=self._data[CONF_NAME]
@@ -169,6 +171,6 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data[CONF_ON_ACTION] = self._data.get(CONF_ON_ACTION)
 
         # Uses the host/IP value from CONF_HOST as unique ID, which is no longer allowed
-        # pylint: disable-next=hass-unique-id-ip-based
+        # pylint: disable-next=home-assistant-unique-id-ip-based
         await self.async_set_unique_id(self._data[CONF_HOST])
         self._abort_if_unique_id_configured()

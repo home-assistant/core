@@ -1,7 +1,5 @@
 """Config flow for AlarmDecoder."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 
@@ -356,8 +354,9 @@ def _validate_zone_input(zone_input: dict[str, Any] | None) -> dict[str, str]:
 def _fix_input_types(zone_input: dict[str, Any]) -> dict[str, Any]:
     """Convert necessary keys to int.
 
-    Since ConfigFlow inputs of type int cannot default to an empty string, we collect the values below as
-    strings and then convert them to ints.
+    Since ConfigFlow inputs of type int cannot default to an empty
+    string, we collect the values below as strings and then convert
+    them to ints.
     """
 
     for key in (CONF_ZONE_LOOP, CONF_RELAY_ADDR, CONF_RELAY_CHAN):

@@ -1,7 +1,5 @@
 """Constants for calendar components."""
 
-from __future__ import annotations
-
 from enum import IntFlag
 from typing import TYPE_CHECKING
 
@@ -15,6 +13,7 @@ if TYPE_CHECKING:
 DOMAIN = "calendar"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_EVENT = "event"
 
 

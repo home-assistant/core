@@ -148,7 +148,8 @@ async def test_access_from_banned_ip_with_invalid_ip_entry(
     manager = app[KEY_BAN_MANAGER]
     assert len(manager.ip_bans_lookup) == len(BANNED_IPS)
 
-    # Valid banned IPs should still be blocked (even though they came after invalid ones)
+    # Valid banned IPs should still be blocked (even though they came after invalid
+    # ones)
     for remote_addr in BANNED_IPS:
         set_real_ip(remote_addr)
         resp = await client.get("/")
@@ -251,6 +252,13 @@ async def test_ip_ban_manager_never_started(
     "os_info",
     "store_info",
     "supervisor_info",
+    "homeassistant_info",
+    "host_info",
+    "network_info",
+    "addons_list",
+    "addon_info",
+    "homeassistant_stats",
+    "supervisor_stats",
     "ingress_panels",
 )
 async def test_access_from_supervisor_ip(
@@ -366,12 +374,15 @@ async def test_ip_bans_file_creation(
         assert len(notifications) == 2
         assert (
             notifications["http-login"]["message"]
-            == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
+            == "Login attempt or request with invalid authentication"
+            " from example.com (200.201.202.204)."
+            " See the log for details."
         )
 
         assert (
-            "Login attempt or request with invalid authentication from example.com (200.201.202.204). Requested URL: '/example'."
-            in caplog.text
+            "Login attempt or request with invalid authentication"
+            " from example.com (200.201.202.204)."
+            " Requested URL: '/example'." in caplog.text
         )
 
 

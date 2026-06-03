@@ -1,7 +1,5 @@
 """Support for Enphase Envoy solar energy monitor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 import datetime
@@ -583,7 +581,6 @@ CT_SENSORS = (
         EnvoyCTSensorEntityDescription(
             key=key,
             translation_key=(translation_key if translation_key != "" else key),
-            state_class=None,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
@@ -653,7 +650,6 @@ ENCHARGE_INVENTORY_SENSORS = (
     EnvoyEnchargeSensorEntityDescription(
         key=LAST_REPORTED_KEY,
         translation_key=LAST_REPORTED_KEY,
-        native_unit_of_measurement=None,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda encharge: dt_util.utc_from_timestamp(encharge.last_report_date),
     ),
@@ -731,7 +727,6 @@ COLLAR_SENSORS = (
     EnvoyCollarSensorEntityDescription(
         key=LAST_REPORTED_KEY,
         translation_key=LAST_REPORTED_KEY,
-        native_unit_of_measurement=None,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda collar: dt_util.utc_from_timestamp(collar.last_report_date),
     ),
@@ -769,7 +764,6 @@ C6CC_SENSORS = (
     EnvoyC6CCSensorEntityDescription(
         key=LAST_REPORTED_KEY,
         translation_key=LAST_REPORTED_KEY,
-        native_unit_of_measurement=None,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda c6cc: dt_util.utc_from_timestamp(c6cc.last_report_date),
     ),

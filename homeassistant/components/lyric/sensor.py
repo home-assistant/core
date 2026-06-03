@@ -1,7 +1,5 @@
 """Support for Honeywell Lyric sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta

@@ -64,6 +64,7 @@ class SkyRemote(RemoteEntity):
                 )
         try:
             self._remote.send_keys(command)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ValueError as err:
             _LOGGER.error("Invalid command: %s. Error: %s", command, err)
             return

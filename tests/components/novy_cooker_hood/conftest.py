@@ -1,42 +1,16 @@
 """Common fixtures for the Novy Cooker Hood tests."""
 
-from __future__ import annotations
-
-from collections.abc import Iterator
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
-from rf_protocols import CodeCollection
 
-from homeassistant.components.novy_cooker_hood.const import (
-    CONF_CODE,
-    CONF_TRANSMITTER,
-    DOMAIN,
-)
+from homeassistant.components.novy_cooker_hood.const import CONF_TRANSMITTER, DOMAIN
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-from tests.components.radio_frequency.common import (
-    MockRadioFrequencyCommand,
-    MockRadioFrequencyEntity,
-)
+from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
-
-
-@pytest.fixture(autouse=True)
-def mock_get_codes() -> Iterator[MagicMock]:
-    """Patch the bundled-codes loader so tests don't hit the filesystem."""
-    fake_collection = MagicMock(spec=CodeCollection)
-    fake_collection.async_load_command = AsyncMock(
-        side_effect=lambda name: MockRadioFrequencyCommand()
-    )
-    with patch(
-        "homeassistant.components.novy_cooker_hood.commands.get_codes",
-        return_value=fake_collection,
-    ):
-        yield fake_collection
 
 
 @pytest.fixture

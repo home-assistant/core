@@ -1,7 +1,5 @@
 """Test the SQL config flow."""
 
-from __future__ import annotations
-
 from pathlib import Path
 import re
 from typing import Any
@@ -138,7 +136,10 @@ async def test_form_with_query_template(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Get Value"
     assert result["options"] == {
-        CONF_QUERY: "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+        CONF_QUERY: (
+            "SELECT {% if states('sensor.input1')=='on' %}"
+            " 5 {% else %} 6 {% endif %} as value"
+        ),
         CONF_COLUMN_NAME: "value",
         CONF_ADVANCED_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
@@ -182,7 +183,10 @@ async def test_form_with_broken_query_template(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Get Value"
     assert result["options"] == {
-        CONF_QUERY: "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+        CONF_QUERY: (
+            "SELECT {% if states('sensor.input1')=='on' %}"
+            " 5 {% else %} 6 {% endif %} as value"
+        ),
         CONF_COLUMN_NAME: "value",
         CONF_ADVANCED_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",

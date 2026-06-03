@@ -1,7 +1,5 @@
 """Conftest for the KNX integration."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
@@ -91,7 +89,8 @@ class KNXTestKit:
             # after XKNX.__init__() to not overwrite it by the config entry again
             # before StateUpdater starts to avoid slow down of tests
             self.xknx.rate_limit = 0
-            # set XknxConnectionState.CONNECTED to avoid `unavailable` entities at startup
+            # set XknxConnectionState.CONNECTED to avoid `unavailable`
+            # entities at startup
             # and start StateUpdater. This would be awaited on normal startup too.
             self.xknx.connection_manager.connection_state_changed(
                 state=XknxConnectionState.CONNECTED,
@@ -346,8 +345,9 @@ def mock_config_entry() -> MockConfigEntry:
         title="KNX",
         domain=DOMAIN,
         data={
-            # homeassistant.components.knx.config_flow.DEFAULT_ENTRY_DATA has additional keys
-            # there are installations out there without these keys so we test with legacy data
+            # homeassistant.components.knx.config_flow.DEFAULT_ENTRY_DATA
+            # has additional keys - there are installations out there
+            # without these keys so we test with legacy data
             # to ensure backwards compatibility (local_ip, telegram_log_size)
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,

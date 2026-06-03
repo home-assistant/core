@@ -1,7 +1,5 @@
 """Browse media features for media player."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -25,6 +23,7 @@ from .const import CONTENT_AUTH_EXPIRY_TIME, MediaClass, MediaType
 
 # Paths that we don't need to sign
 PATHS_WITHOUT_AUTH = (
+    "/local/",
     "/api/tts_proxy/",
     "/api/esphome/ffmpeg_proxy/",
     "/api/assist_satellite/static/",

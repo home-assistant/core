@@ -85,7 +85,7 @@ async def test_hassio_system_health(
         disk_free=1.6,
         disk_total=32.0,
         disk_used=30.0,
-        disk_life_time=None,
+        disk_life_time=25.0,
         features=[],
         hostname=None,
         llmnr_hostname=None,
@@ -215,6 +215,7 @@ async def test_hassio_system_health(
         "board": "odroid-n2",
         "disk_total": "32.0 GB",
         "disk_used": "30.0 GB",
+        "disk_life_time": "25 %",
         "docker_version": "19.0.3",
         "healthy": True,
         "host_connectivity": True,
@@ -327,6 +328,7 @@ async def test_hassio_system_health_with_issues(
         host_internet=None,
         supervisor_internet=False,
     )
+    hass.data[DATA_ADDONS_LIST] = []
 
     with patch.dict(os.environ, MOCK_ENVIRON):
         info = await get_system_health_info(hass, "hassio")

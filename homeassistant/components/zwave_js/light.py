@@ -1,7 +1,5 @@
 """Support for Z-Wave lights."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, cast
 
 from zwave_js_server.const import (
@@ -512,7 +510,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
 
 class ZwaveColorOnOffLight(ZwaveLight):
-    """Representation of a colored Z-Wave light with an optional binary switch to turn on/off.
+    """Colored Z-Wave light with optional binary switch.
 
     Dimming for RGB lights is realized by scaling the color channels.
     """
@@ -582,7 +580,8 @@ class ZwaveColorOnOffLight(ZwaveLight):
                     ColorComponent.BLUE: 255,
                 }
         elif brightness is not None:
-            # If brightness gets set, preserve the color and mix it with the new brightness
+            # If brightness gets set, preserve the color
+            # and mix it with the new brightness
             if self.color_mode == ColorMode.HS:
                 scale = brightness / 255
             if self._last_on_color is not None:

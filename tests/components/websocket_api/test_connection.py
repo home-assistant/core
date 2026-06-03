@@ -24,43 +24,55 @@ from tests.common import MockUser
             exceptions.Unauthorized(),
             websocket_api.ERR_UNAUTHORIZED,
             "Unauthorized",
-            "Error handling message: Unauthorized (unauthorized) Mock User from 127.0.0.42 (Browser)",
+            "Error handling message: Unauthorized (unauthorized)"
+            " Mock User from 127.0.0.42 (Browser)",
         ),
         (
             vol.Invalid("Invalid something"),
             websocket_api.ERR_INVALID_FORMAT,
             "Invalid something. Got {'id': 5}",
-            "Error handling message: Invalid something. Got {'id': 5} (invalid_format) Mock User from 127.0.0.42 (Browser)",
+            "Error handling message: Invalid something."
+            " Got {'id': 5} (invalid_format)"
+            " Mock User from 127.0.0.42 (Browser)",
         ),
         (
             TimeoutError(),
             websocket_api.ERR_TIMEOUT,
             "Timeout",
-            "Error handling message: Timeout (timeout) Mock User from 127.0.0.42 (Browser)",
+            "Error handling message: Timeout (timeout)"
+            " Mock User from 127.0.0.42 (Browser)",
         ),
         (
             exceptions.HomeAssistantError("Failed to do X"),
             websocket_api.ERR_HOME_ASSISTANT_ERROR,
             "Failed to do X",
-            "Error handling message: Failed to do X (home_assistant_error) Mock User from 127.0.0.42 (Browser)",
+            "Error handling message: Failed to do X"
+            " (home_assistant_error)"
+            " Mock User from 127.0.0.42 (Browser)",
         ),
         (
             exceptions.ServiceValidationError("Failed to do X"),
             websocket_api.ERR_HOME_ASSISTANT_ERROR,
             "Failed to do X",
-            "Error handling message: Failed to do X (home_assistant_error) Mock User from 127.0.0.42 (Browser)",
+            "Error handling message: Failed to do X"
+            " (home_assistant_error)"
+            " Mock User from 127.0.0.42 (Browser)",
         ),
         (
             ValueError("Really bad"),
             websocket_api.ERR_UNKNOWN_ERROR,
             "Unknown error",
-            "Error handling message: Unknown error (unknown_error) Mock User from 127.0.0.42 (Browser)",
+            "Error handling message: Unknown error"
+            " (unknown_error)"
+            " Mock User from 127.0.0.42 (Browser)",
         ),
         (
             exceptions.HomeAssistantError,
             websocket_api.ERR_UNKNOWN_ERROR,
             "Unknown error",
-            "Error handling message: Unknown error (unknown_error) Mock User from 127.0.0.42 (Browser)",
+            "Error handling message: Unknown error"
+            " (unknown_error)"
+            " Mock User from 127.0.0.42 (Browser)",
         ),
     ],
 )

@@ -62,7 +62,11 @@ MOCK_ALBUM_WITH_ASSETS = ImmichAlbum.from_dict(
                 "deviceId": "WEB",
                 "libraryId": None,
                 "type": "IMAGE",
-                "originalPath": "upload/upload/e7ef5713-9dab-4bd4-b899-715b0ca4379e/b4/b8/b4b8ef00-8a6d-4056-91ff-7f86dc66e427.jpg",
+                "originalPath": (
+                    "upload/upload/e7ef5713-9dab-4bd4-b899"
+                    "-715b0ca4379e/b4/b8/"
+                    "b4b8ef00-8a6d-4056-91ff-7f86dc66e427.jpg"
+                ),
                 "originalFileName": "filename.jpg",
                 "originalMimeType": "image/jpeg",
                 "thumbhash": "1igGFALX8mVGdHc5aChJf5nxNg==",
@@ -90,7 +94,11 @@ MOCK_ALBUM_WITH_ASSETS = ImmichAlbum.from_dict(
                 "deviceId": "WEB",
                 "libraryId": None,
                 "type": "IMAGE",
-                "originalPath": "upload/upload/e7ef5713-9dab-4bd4-b899-715b0ca4379e/b4/b8/b4b8ef00-8a6d-4056-eeff-7f86dc66e427.mp4",
+                "originalPath": (
+                    "upload/upload/e7ef5713-9dab-4bd4-b899"
+                    "-715b0ca4379e/b4/b8/"
+                    "b4b8ef00-8a6d-4056-eeff-7f86dc66e427.mp4"
+                ),
                 "originalFileName": "filename.mp4",
                 "originalMimeType": "video/mp4",
                 "thumbhash": "1igGFALX8mVGdHc5aChJf5nxNg==",
@@ -121,10 +129,16 @@ MOCK_PEOPLE_ASSETS = [
             "id": "2242eda3-94c2-49ee-86d4-e9e071b6fbf4",
             "deviceAssetId": "1000092019",
             "ownerId": "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-            "deviceId": "5933dd9394fc6bf0493a26b4e38acca1076f30ab246442976d2917f1d57d99a1",
+            "deviceId": (
+                "5933dd9394fc6bf0493a26b4e38acca1076f30ab246442976d2917f1d57d99a1"
+            ),
             "libraryId": None,
             "type": "IMAGE",
-            "originalPath": "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4-b899-715b0ca4379e/8e/a3/8ea31ee8-49c3-4be9-aa9d-b8ef26ba0abe.jpg",
+            "originalPath": (
+                "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4"
+                "-b899-715b0ca4379e/8e/a3/"
+                "8ea31ee8-49c3-4be9-aa9d-b8ef26ba0abe.jpg"
+            ),
             "originalFileName": "20250714_201122.jpg",
             "originalMimeType": "image/jpeg",
             "thumbhash": "XRgGDILGeMlPaJaMWIeagJcJSA==",
@@ -152,10 +166,16 @@ MOCK_PEOPLE_ASSETS = [
             "id": "046ac0d9-8acd-44d8-953f-ecb3c786358a",
             "deviceAssetId": "1000092018",
             "ownerId": "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-            "deviceId": "5933dd9394fc6bf0493a26b4e38acca1076f30ab246442976d2917f1d57d99a1",
+            "deviceId": (
+                "5933dd9394fc6bf0493a26b4e38acca1076f30ab246442976d2917f1d57d99a1"
+            ),
             "libraryId": None,
             "type": "IMAGE",
-            "originalPath": "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4-b899-715b0ca4379e/f5/b4/f5b4b200-47dd-45e8-98a4-4128df3f9189.jpg",
+            "originalPath": (
+                "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4"
+                "-b899-715b0ca4379e/f5/b4/"
+                "f5b4b200-47dd-45e8-98a4-4128df3f9189.jpg"
+            ),
             "originalFileName": "20250714_201121.jpg",
             "originalMimeType": "image/jpeg",
             "thumbhash": "XRgGDILHeMlPeJaMSJmKgJcIWQ==",
@@ -189,7 +209,11 @@ MOCK_TAGS_ASSETS = [
             "deviceId": "CLI",
             "libraryId": None,
             "type": "IMAGE",
-            "originalPath": "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4-b899-715b0ca4379e/07/d0/07d04d86-7188-4335-95ca-9bd9fd2b399d.JPG",
+            "originalPath": (
+                "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4"
+                "-b899-715b0ca4379e/07/d0/"
+                "07d04d86-7188-4335-95ca-9bd9fd2b399d.JPG"
+            ),
             "originalFileName": "20110306_025024.jpg",
             "originalMimeType": "image/jpeg",
             "thumbhash": "WCgSFYRXaYdQiYineIiHd4SghQUY",
@@ -219,7 +243,11 @@ MOCK_TAGS_ASSETS = [
             "deviceId": "CLI",
             "libraryId": None,
             "type": "IMAGE",
-            "originalPath": "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4-b899-715b0ca4379e/4a/f4/4af42484-86f8-47a0-958a-f32da89ee03a.JPG",
+            "originalPath": (
+                "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4"
+                "-b899-715b0ca4379e/4a/f4/"
+                "4af42484-86f8-47a0-958a-f32da89ee03a.JPG"
+            ),
             "originalFileName": "20110306_024053.jpg",
             "originalMimeType": "image/jpeg",
             "thumbhash": "4AcKFYZPZnhSmGl5daaYeG859ytT",
@@ -250,10 +278,16 @@ MOCK_FAVORITE_ASSETS = [
             "createdAt": "2026-04-06T11:38:53.264Z",
             "deviceAssetId": "55039",
             "ownerId": "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-            "deviceId": "eca179936c70787e4f76e58338c617472c5f795d7961ae8a7207246919659b44",
+            "deviceId": (
+                "eca179936c70787e4f76e58338c617472c5f795d7961ae8a7207246919659b44"
+            ),
             "libraryId": None,
             "type": "IMAGE",
-            "originalPath": "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4-b899-715b0ca4379e/17/af/17afbef0-dccf-42ad-9c90-618f981914f5.jpg",
+            "originalPath": (
+                "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4"
+                "-b899-715b0ca4379e/17/af/"
+                "17afbef0-dccf-42ad-9c90-618f981914f5.jpg"
+            ),
             "originalFileName": "20260406_133809.jpg",
             "originalMimeType": "image/jpeg",
             "thumbhash": "YNcFRIZnd4qMdquQh4R4cHcGdw==",
@@ -284,10 +318,16 @@ MOCK_FAVORITE_ASSETS = [
             "createdAt": "2026-03-19T18:31:11.540Z",
             "deviceAssetId": "52952",
             "ownerId": "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-            "deviceId": "eca179936c70787e4f76e58338c617472c5f795d7961ae8a7207246919659b44",
+            "deviceId": (
+                "eca179936c70787e4f76e58338c617472c5f795d7961ae8a7207246919659b44"
+            ),
             "libraryId": None,
             "type": "IMAGE",
-            "originalPath": "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4-b899-715b0ca4379e/f6/40/f640c504-bff3-43cc-b520-60a43269de4b.jpg",
+            "originalPath": (
+                "/usr/src/app/upload/upload/e7ef5713-9dab-4bd4"
+                "-b899-715b0ca4379e/f6/40/"
+                "f640c504-bff3-43cc-b520-60a43269de4b.jpg"
+            ),
             "originalFileName": "20260319_192209.jpg",
             "originalMimeType": "image/jpeg",
             "thumbhash": "VEkGDIIke5yIl5h/UUUgXQKmBg==",

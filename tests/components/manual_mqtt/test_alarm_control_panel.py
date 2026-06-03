@@ -1452,7 +1452,11 @@ async def test_state_changes_are_published_to_mqtt(
     # Component should send disarmed alarm state on startup
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", AlarmControlPanelState.DISARMED, 0, True
+        "alarm/state",
+        AlarmControlPanelState.DISARMED,
+        0,
+        True,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1460,7 +1464,11 @@ async def test_state_changes_are_published_to_mqtt(
     await common.async_alarm_arm_home(hass, "1234")
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", AlarmControlPanelState.PENDING, 0, True
+        "alarm/state",
+        AlarmControlPanelState.PENDING,
+        0,
+        True,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     # Fast-forward a little bit
@@ -1472,7 +1480,11 @@ async def test_state_changes_are_published_to_mqtt(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", AlarmControlPanelState.ARMED_HOME, 0, True
+        "alarm/state",
+        AlarmControlPanelState.ARMED_HOME,
+        0,
+        True,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1480,7 +1492,11 @@ async def test_state_changes_are_published_to_mqtt(
     await common.async_alarm_arm_away(hass, "1234")
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", AlarmControlPanelState.PENDING, 0, True
+        "alarm/state",
+        AlarmControlPanelState.PENDING,
+        0,
+        True,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     # Fast-forward a little bit
@@ -1492,7 +1508,11 @@ async def test_state_changes_are_published_to_mqtt(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", AlarmControlPanelState.ARMED_AWAY, 0, True
+        "alarm/state",
+        AlarmControlPanelState.ARMED_AWAY,
+        0,
+        True,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1500,7 +1520,11 @@ async def test_state_changes_are_published_to_mqtt(
     await common.async_alarm_arm_night(hass, "1234")
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", AlarmControlPanelState.PENDING, 0, True
+        "alarm/state",
+        AlarmControlPanelState.PENDING,
+        0,
+        True,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     # Fast-forward a little bit
@@ -1512,7 +1536,11 @@ async def test_state_changes_are_published_to_mqtt(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", AlarmControlPanelState.ARMED_NIGHT, 0, True
+        "alarm/state",
+        AlarmControlPanelState.ARMED_NIGHT,
+        0,
+        True,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1520,7 +1548,11 @@ async def test_state_changes_are_published_to_mqtt(
     await common.async_alarm_disarm(hass)
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", AlarmControlPanelState.DISARMED, 0, True
+        "alarm/state",
+        AlarmControlPanelState.DISARMED,
+        0,
+        True,
+        message_expiry_interval=None,
     )
 
 

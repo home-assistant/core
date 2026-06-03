@@ -1,7 +1,8 @@
 """Test the Hikvision config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
+import pytest
 import requests
 
 from homeassistant.components.hikvision.const import DOMAIN
@@ -28,11 +29,8 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
-async def test_form(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form(hass: HomeAssistant, mock_hikcamera: MagicMock) -> None:
     """Test we get the form and can create entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -69,10 +67,9 @@ async def test_form(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
+    hass: HomeAssistant, mock_hikcamera: MagicMock
 ) -> None:
     """Test we handle cannot connect error and can recover."""
     mock_hikcamera.return_value.get_id = None
@@ -113,11 +110,8 @@ async def test_form_cannot_connect(
     assert result["result"].unique_id == TEST_DEVICE_ID
 
 
-async def test_form_exception(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_exception(hass: HomeAssistant, mock_hikcamera: MagicMock) -> None:
     """Test we handle exception during connection and can recover."""
     mock_hikcamera.side_effect = requests.exceptions.RequestException(
         "Connection failed"
@@ -161,10 +155,9 @@ async def test_form_exception(
     assert result["result"].unique_id == TEST_DEVICE_ID
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_unknown_exception(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
+    hass: HomeAssistant, mock_hikcamera: MagicMock
 ) -> None:
     """Test we handle unknown exception during connection and can recover."""
     mock_hikcamera.side_effect = Exception("Unexpected error")
@@ -207,11 +200,9 @@ async def test_form_unknown_exception(
     assert result["result"].unique_id == TEST_DEVICE_ID
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_hikcamera: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we handle already configured devices."""
     mock_config_entry.add_to_hass(hass)
@@ -235,11 +226,8 @@ async def test_form_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_flow(hass: HomeAssistant, mock_hikcamera: MagicMock) -> None:
     """Test YAML import flow creates config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -270,10 +258,9 @@ async def test_import_flow(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_with_defaults(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
+    hass: HomeAssistant, mock_hikcamera: MagicMock
 ) -> None:
     """Test YAML import flow uses default values."""
     result = await hass.config_entries.flow.async_init(
@@ -293,10 +280,9 @@ async def test_import_flow_with_defaults(
     assert result["data"][CONF_SSL] is False
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_cannot_connect(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
+    hass: HomeAssistant, mock_hikcamera: MagicMock
 ) -> None:
     """Test YAML import flow aborts on connection error."""
     mock_hikcamera.side_effect = requests.exceptions.RequestException(
@@ -319,10 +305,9 @@ async def test_import_flow_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_no_device_id(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
+    hass: HomeAssistant, mock_hikcamera: MagicMock
 ) -> None:
     """Test YAML import flow aborts when device_id is None."""
     mock_hikcamera.return_value.get_id = None
@@ -343,10 +328,9 @@ async def test_import_flow_no_device_id(
     assert result["reason"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_unknown_exception(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
+    hass: HomeAssistant, mock_hikcamera: MagicMock
 ) -> None:
     """Test YAML import flow aborts on unknown exception."""
     mock_hikcamera.side_effect = Exception("Unexpected error")
@@ -367,11 +351,9 @@ async def test_import_flow_unknown_exception(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_hikcamera: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test YAML import flow aborts when device is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -392,11 +374,8 @@ async def test_import_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_form_with_ssl(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_with_ssl(hass: HomeAssistant, mock_hikcamera: MagicMock) -> None:
     """Test user flow with ssl enabled passes ssl parameter to HikCamera."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

@@ -1,7 +1,5 @@
 """Support for ISY sensors."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyisy.constants import (
@@ -281,10 +279,6 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         if uom in (UOM_INDEX, UOM_ON_OFF):
             return cast(str, self.target.formatted)
 
-        # Check if this is an index type and get formatted value
-        if uom == UOM_INDEX and hasattr(self.target, "formatted"):
-            return cast(str, self.target.formatted)
-
         # Handle ISY precision and rounding
         value = convert_isy_value_to_hass(value, uom, self.target.prec)
         if value is None:
@@ -367,7 +361,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         """Return the target value."""
         return None if self.target is None else self.target.value
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events.
 

@@ -1,7 +1,5 @@
 """The vizio component."""
 
-from __future__ import annotations
-
 from pyvizio import VizioAsync
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass

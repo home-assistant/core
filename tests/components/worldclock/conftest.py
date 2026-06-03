@@ -1,7 +1,5 @@
 """Fixtures for the Worldclock integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -10,12 +8,11 @@ import pytest
 
 from homeassistant.components.worldclock.const import (
     CONF_TIME_FORMAT,
-    DEFAULT_NAME,
     DEFAULT_TIME_STR_FORMAT,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
+from homeassistant.const import CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -39,7 +36,6 @@ async def get_config_to_integration_load() -> dict[str, Any]:
     @pytest.mark.parametrize("get_config", [{...}])
     """
     return {
-        CONF_NAME: DEFAULT_NAME,
         CONF_TIME_ZONE: "America/New_York",
         CONF_TIME_FORMAT: DEFAULT_TIME_STR_FORMAT,
     }
@@ -52,7 +48,7 @@ async def load_integration(
     """Set up the Worldclock integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        title=DEFAULT_NAME,
+        title=get_config[CONF_TIME_ZONE],
         source=SOURCE_USER,
         options=get_config,
         entry_id="1",

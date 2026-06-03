@@ -1,7 +1,5 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 
-from __future__ import annotations
-
 from pyspcwebgw import SpcWebGateway
 from pyspcwebgw.const import ZoneInput, ZoneType
 from pyspcwebgw.zone import Zone

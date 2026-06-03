@@ -1,7 +1,5 @@
 """The INKBIRD Bluetooth integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -9,9 +7,11 @@ from typing import Any
 from inkbird_ble import INKBIRDBluetoothDeviceData, SensorUpdate
 
 from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
+    async_address_reachability_diagnostics,
     async_ble_device_from_address,
     async_last_service_info,
 )
@@ -28,6 +28,11 @@ from .const import CONF_DEVICE_DATA, CONF_DEVICE_TYPE, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 FALLBACK_POLL_INTERVAL = timedelta(seconds=180)
+
+# IBS-TH2 broadcasts every ~20-30s and only carries sensor data in the scan
+# response, so the default 10s active window misses the device most cycles.
+# 25s covers one full broadcast interval with margin to absorb jitter.
+ACTIVE_SCAN_DURATION = 25.0
 
 
 class INKBIRDActiveBluetoothProcessorCoordinator(
@@ -59,6 +64,7 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             needs_poll_method=self._async_needs_poll,
             poll_method=self._async_poll_data,
             connectable=False,  # Polling only happens if active scanning is disabled
+            scan_duration=ACTIVE_SCAN_DURATION,
         )
 
     async def async_init(self) -> None:
@@ -80,7 +86,14 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="no_advertisement",
-                translation_placeholders={"address": self.address},
+                translation_placeholders={
+                    "address": self.address,
+                    "reason": async_address_reachability_diagnostics(
+                        self.hass,
+                        self.address.upper(),
+                        BluetoothReachabilityIntent.ACTIVE_ADVERTISEMENT,
+                    ),
+                },
             )
         await self._data.async_start(service_info, service_info.device)
         self._entry.async_on_unload(self._data.async_stop)
@@ -130,7 +143,18 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
     @callback
     def _async_schedule_poll(self, _: datetime) -> None:
         """Schedule a poll of the device."""
-        if self._last_service_info and self._async_needs_poll(
-            self._last_service_info, self._last_poll
-        ):
+        # ``self._last_service_info`` only tracks dispatched events, so when
+        # the device keeps broadcasting the same payload (HA dedupes the
+        # repeats before dispatch) its timestamp stops advancing. Pull the
+        # latest service info from the bluetooth manager instead so the
+        # recency check in ``poll_needed`` sees every observed advertisement.
+        service_info = (
+            async_last_service_info(self.hass, self.address, connectable=False)
+            or self._last_service_info
+        )
+        if service_info and self.needs_poll(service_info):
+            # Seed ``_last_service_info`` so the debounced poll has a service
+            # info to hand to ``_async_poll_data``; the base ``_async_poll``
+            # asserts on it.
+            self._last_service_info = service_info
             self._debounced_poll.async_schedule_call()

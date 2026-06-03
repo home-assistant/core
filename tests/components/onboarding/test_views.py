@@ -745,7 +745,8 @@ async def test_wait_integration_startup(
     # Allow setup to proceed
     setup_stall.set()
 
-    # The component is scheduled to load, this will block until the config entry is loaded
+    # The component is scheduled to load, this will block until
+    # the config entry is loaded
     req = await client.post("/api/onboarding/integration/wait", json={"domain": "test"})
     assert req.status == HTTPStatus.OK
     data = await req.json()

@@ -1,7 +1,5 @@
 """Entity representing a Sonos Alarm."""
 
-from __future__ import annotations
-
 import datetime
 import logging
 from typing import Any, cast
@@ -157,7 +155,7 @@ async def async_setup_entry(
     def _get_switch_state(
         speaker: SonosSpeaker,
     ) -> tuple[list[str], str | None, bool | None]:
-        """Return all switch state needed for entity creation in a single executor call."""
+        """Return all switch state for entity creation."""
         return (
             available_soco_attributes(speaker),
             _get_tv_autoplay_state(speaker),
@@ -401,7 +399,8 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         """Enable or disable ungroup on autoplay on the device."""
         try:
             self.soco.deviceProperties.SetAutoplayLinkedZones(
-                # enable=True (ungroup) → IncludeLinkedZones=0 (don't include linked zones)
+                # enable=True (ungroup) → IncludeLinkedZones=0
+                # (don't include linked zones)
                 [("IncludeLinkedZones", "0" if enable else "1"), *_TV_SOURCE]
             )
         except SoCoUPnPException as exc:

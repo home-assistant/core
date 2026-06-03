@@ -554,11 +554,9 @@ async def test_zeroconf_legacy_mac(
     assert len(mock_smlight_client.get_info.mock_calls) == 3
 
 
-@pytest.mark.usefixtures("mock_smlight_client")
+@pytest.mark.usefixtures("mock_smlight_client", "mock_setup_entry")
 async def test_zeroconf_updates_host(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test zeroconf discovery updates host ip."""
     mock_config_entry.add_to_hass(hass)
@@ -576,11 +574,9 @@ async def test_zeroconf_updates_host(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.164"
 
 
-@pytest.mark.usefixtures("mock_smlight_client")
+@pytest.mark.usefixtures("mock_smlight_client", "mock_setup_entry")
 async def test_dhcp_discovery_updates_host(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test dhcp discovery updates host ip."""
     mock_config_entry.add_to_hass(hass)
@@ -600,11 +596,9 @@ async def test_dhcp_discovery_updates_host(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.164"
 
 
-@pytest.mark.usefixtures("mock_smlight_client")
+@pytest.mark.usefixtures("mock_smlight_client", "mock_setup_entry")
 async def test_dhcp_discovery_aborts(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test dhcp discovery updates host ip."""
     mock_config_entry.add_to_hass(hass)
@@ -624,11 +618,11 @@ async def test_dhcp_discovery_aborts(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.161"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_smlight_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth flow completes successfully."""
     mock_smlight_client.check_auth_needed.return_value = True
@@ -659,11 +653,11 @@ async def test_reauth_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_auth_error(
     hass: HomeAssistant,
     mock_smlight_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth flow with authentication error."""
     mock_smlight_client.check_auth_needed.return_value = True

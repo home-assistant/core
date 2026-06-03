@@ -137,11 +137,9 @@ async def test_flow_duplicate(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow with success."""
     mock_config_entry.add_to_hass(hass)
@@ -182,10 +180,10 @@ async def test_reauth_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_exceptions(
     hass: HomeAssistant,
     mock_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -232,11 +230,9 @@ async def test_reauth_exceptions(
     assert len(hass.config_entries.async_entries()) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_different_user_id_new(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow with different, new user ID updating the existing entry."""
     mock_config_entry.add_to_hass(hass)
@@ -270,11 +266,9 @@ async def test_reauth_different_user_id_new(
     assert config_entries[0].unique_id == "new_user_id"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_different_user_id_existing(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow with different, existing user ID aborting."""
     mock_config_entry.add_to_hass(hass)

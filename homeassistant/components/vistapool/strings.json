@@ -1,0 +1,66 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_pools": "No pools were found on this account.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Vistapool Username"
+        },
+        "data_description": {
+          "password": "The password for your Vistapool account",
+          "username": "The email used for your Vistapool account"
+        },
+        "description": "Enter your Vistapool credentials. All pools on the account will be added automatically.",
+        "title": "Authentication"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "chlorine": {
+        "name": "Chlorine"
+      },
+      "conductivity": {
+        "name": "Conductivity"
+      },
+      "electrolysis": {
+        "name": "Electrolysis"
+      },
+      "filtration_intel_time": {
+        "name": "Filtration intel time"
+      },
+      "hydrolysis": {
+        "name": "Hydrolysis"
+      },
+      "redox_potential": {
+        "name": "Redox potential"
+      },
+      "rssi": {
+        "name": "Wi-Fi signal strength"
+      },
+      "uv": {
+        "name": "UV"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "Invalid Vistapool credentials."
+    },
+    "no_pools": {
+      "message": "No pools were found on this account."
+    },
+    "update_failed": {
+      "message": "Error fetching data from Vistapool."
+    }
+  }
+}

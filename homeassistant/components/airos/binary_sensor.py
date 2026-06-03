@@ -1,10 +1,7 @@
 """AirOS Binary Sensor component for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
 
 from airos.data import AirOSDataBaseClass
 
@@ -22,13 +19,10 @@ from .entity import AirOSEntity
 
 PARALLEL_UPDATES = 0
 
-AirOSDataModel = TypeVar("AirOSDataModel", bound=AirOSDataBaseClass)
-
 
 @dataclass(frozen=True, kw_only=True)
-class AirOSBinarySensorEntityDescription(
+class AirOSBinarySensorEntityDescription[AirOSDataModel: AirOSDataBaseClass](
     BinarySensorEntityDescription,
-    Generic[AirOSDataModel],
 ):
     """Describe an AirOS binary sensor."""
 

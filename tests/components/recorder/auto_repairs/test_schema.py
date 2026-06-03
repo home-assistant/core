@@ -69,7 +69,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
     recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test validating DB schema with MySQL when the schema is broken and repairing it."""
+    """Test validating DB schema with MySQL when broken."""
     await async_wait_recording_done(hass)
     session_maker = recorder_mock.get_session
 
@@ -152,7 +152,7 @@ async def test_validate_db_schema_precision_correct_collation(
     recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test validating DB schema when the schema is correct with the correct collation."""
+    """Test validating DB schema with correct collation."""
     await async_wait_recording_done(hass)
     schema_errors = await recorder_mock.async_add_executor_job(
         validate_table_schema_has_correct_collation,
@@ -169,7 +169,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
     recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test validating DB schema with MySQL when the schema is broken and cannot be repaired."""
+    """Test validating DB schema with MySQL when unrepairable."""
     await async_wait_recording_done(hass)
     session_maker = recorder_mock.get_session
 

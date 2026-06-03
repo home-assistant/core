@@ -1,7 +1,5 @@
 """The islamic_prayer_times component."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform

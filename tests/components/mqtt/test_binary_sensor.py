@@ -211,7 +211,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
+    """Test binary_sensor with expire_after on discovery and update."""
     await mqtt_mock_entry()
     config = {
         "name": "Test",
@@ -222,7 +222,8 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
 
     config_msg = json.dumps(config)
 
-    # Set time and publish config message to create binary_sensor via discovery with 4 s expiry
+    # Set time and publish config message to create binary_sensor
+    # via discovery with 4 s expiry
     realnow = dt_util.utcnow()
     now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
     freezer.move_to(now)
@@ -452,13 +453,15 @@ async def test_setting_sensor_value_via_mqtt_message_and_template2(
                     "state_topic": "test-topic",
                     "payload_on": "ON",
                     "payload_off": "OFF",
-                    "value_template": "{%if value|unpack('b')-%}ON{%else%}OFF{%-endif-%}",
+                    "value_template": (
+                        "{%if value|unpack('b')-%}ON{%else%}OFF{%-endif-%}"
+                    ),
                 }
             }
         }
     ],
 )
-async def test_setting_sensor_value_via_mqtt_message_and_template_and_raw_state_encoding(
+async def test_setting_sensor_value_via_mqtt_msg_and_template_and_raw_state_encoding(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -1034,7 +1037,6 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.usefixtures("mock_temp_dir")
 @pytest.mark.parametrize(
     ("hass_config", "payload1", "state1", "payload2", "state2"),
     [
@@ -1265,6 +1267,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

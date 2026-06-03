@@ -1,7 +1,5 @@
 """Support for displaying the current CPU speed."""
 
-from __future__ import annotations
-
 from cpuinfo import cpuinfo
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity

@@ -1,7 +1,5 @@
 """Support for Litter-Robot binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
@@ -25,7 +23,8 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class RobotBinarySensorEntityDescription(
-    BinarySensorEntityDescription, Generic[_WhiskerEntityT]
+    BinarySensorEntityDescription,
+    Generic[_WhiskerEntityT],  # noqa: UP046
 ):
     """A class that describes robot binary sensor entities."""
 

@@ -1,7 +1,5 @@
 """Support for Yeelight Sunflower color bulbs (not Yeelight Blue or WiFi)."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

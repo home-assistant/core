@@ -62,7 +62,7 @@ from tests.typing import WebSocketGenerator
 async def _async_inject_ble_discovery(
     hass: HomeAssistant, info: BluetoothServiceInfoBleak
 ) -> None:
-    """Inject BLE discovery info and wait for processing without triggering config flows."""
+    """Inject BLE discovery info and wait for processing."""
     with patch.object(hass.config_entries.flow, "async_init"):
         inject_bluetooth_service_info_bleak(hass, info)
         await hass.async_block_till_done()
@@ -103,19 +103,25 @@ BLE_MANUFACTURER_DATA_RPC = {
 BLE_MANUFACTURER_DATA_NO_RPC = {
     0x0BA9: bytes([0x01, 0x02, 0x00])
 }  # Flags without RPC bit
-BLE_MANUFACTURER_DATA_WITH_MAC = {
-    0x0BA9: bytes.fromhex("0105000b30100a70d6c297bacc")
-}  # Flags (0x01, 0x05, 0x00), Model (0x0b, 0x30, 0x10), MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
-# Device WiFi MAC: 70d6c297bacc (little-endian) -> CCBA97C2D670 (reversed to big-endian)
-# BLE MAC is typically device MAC + 2: CCBA97C2D670 + 2 = CC:BA:97:C2:D6:72
+BLE_MANUFACTURER_DATA_WITH_MAC = {0x0BA9: bytes.fromhex("0105000b30100a70d6c297bacc")}
+# Flags (0x01, 0x05, 0x00), Model (0x0b, 0x30, 0x10),
+# MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
+# Device WiFi MAC: 70d6c297bacc (little-endian) ->
+# CCBA97C2D670 (reversed to big-endian)
+# BLE MAC is typically device MAC + 2:
+# CCBA97C2D670 + 2 = CC:BA:97:C2:D6:72
 
 BLE_MANUFACTURER_DATA_WITH_MAC_UNKNOWN_MODEL = {
     0x0BA9: bytes.fromhex("0105000b99990a70d6c297bacc")
-}  # Flags (0x01, 0x05, 0x00), Model (0x0b, 0x99, 0x99) - unknown model ID, MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
+}
+# Flags (0x01, 0x05, 0x00), Model (0x0b, 0x99, 0x99) -
+# unknown model ID, MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
 
 BLE_MANUFACTURER_DATA_FOR_CLEAR_TEST = {
     0x0BA9: bytes.fromhex("0105000b30100a00eeddccbbaa")
-}  # Flags (0x01, 0x05, 0x00), Model (0x0b, 0x30, 0x10), MAC (0x0a, 0x00, 0xee, 0xdd, 0xcc, 0xbb, 0xaa)
+}
+# Flags (0x01, 0x05, 0x00), Model (0x0b, 0x30, 0x10),
+# MAC (0x0a, 0x00, 0xee, 0xdd, 0xcc, 0xbb, 0xaa)
 # Device WiFi MAC: 00eeddccbbaa (little-endian) -> AABBCCDDEE00 (reversed to big-endian)
 
 BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
@@ -893,11 +899,9 @@ async def test_user_setup_ignored_device(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_no_devices_discovered(
-    hass: HomeAssistant,
-    mock_block_device: Mock,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
+    hass: HomeAssistant, mock_block_device: Mock, mock_setup: AsyncMock
 ) -> None:
     """Test user flow with no discovered devices redirects to manual entry."""
     # mock_discovery fixture already returns empty list by default
@@ -987,11 +991,11 @@ async def test_user_flow_with_zeroconf_devices(
     assert result["data"][CONF_HOST] == "192.168.1.100"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_select_zeroconf_device(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_rpc_device: Mock,
-    mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
     """Test selecting a discovered Zeroconf device completes setup."""
@@ -1027,11 +1031,11 @@ async def test_user_flow_select_zeroconf_device(
     assert result["data"][CONF_PORT] == 80
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_select_manual_entry(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_block_device: Mock,
-    mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
     """Test selecting manual entry from device list."""
@@ -1075,11 +1079,11 @@ async def test_user_flow_select_manual_entry(
     assert result["data"][CONF_HOST] == "192.168.1.200"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_both_ble_and_zeroconf_prefers_zeroconf(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_rpc_device: Mock,
-    mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
     """Test device discovered via both BLE and Zeroconf prefers Zeroconf."""
@@ -1377,7 +1381,7 @@ async def test_user_flow_aborts_when_another_flow_finishes_while_in_progress(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
 ) -> None:
-    """Test that user flow aborts when another flow finishes and creates a config entry."""
+    """Test user flow aborts when another flow creates config entry."""
     # Mock zeroconf discovery
     mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
@@ -1396,7 +1400,8 @@ async def test_user_flow_aborts_when_another_flow_finishes_while_in_progress(
     assert "AABBCCDDEEFF" in options
     assert options["AABBCCDDEEFF"] == "shellyplus2pm-AABBCCDDEEFF"
 
-    # Now simulate another flow configuring the device while user is on the selection form
+    # Now simulate another flow configuring the device while user is
+    # on the selection form
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="AABBCCDDEEFF",
@@ -2653,6 +2658,21 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.PASSIVE
 
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.AUTO,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.AUTO
+
     await hass.config_entries.async_unload(entry.entry_id)
 
 
@@ -2700,7 +2720,7 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
 async def test_zeroconf_already_configured_triggers_refresh(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test zeroconf discovery triggers refresh when the mac is obtained via get_info."""
+    """Test zeroconf discovery triggers refresh via get_info mac."""
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
@@ -2869,7 +2889,7 @@ async def test_zeroconf_sleeping_device_attempts_configure_ws_disabled(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test zeroconf discovery configures a sleeping device outbound websocket when its disabled."""
+    """Test zeroconf configures sleeping device outbound websocket."""
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
@@ -3295,14 +3315,11 @@ async def test_bluetooth_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provisioning_clears_match_history(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
-    """Test bluetooth provisioning clears match history at discovery start and after successful provisioning."""
+    """Test bluetooth provisioning clears match history."""
     # Configure mock BLE device for this test
     mock_ble_rpc_device.wifi_scan.return_value = [
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
@@ -3357,7 +3374,8 @@ async def test_bluetooth_provisioning_clears_match_history(
         assert result["result"].unique_id == "AABBCCDDEE00"
 
         # Verify match history was cleared once during provisioning
-        # Only count calls with our test device's address to avoid interference from other tests
+        # Only count calls with our test device's address to avoid
+        # interference from other tests
         our_device_calls = [
             call
             for call in mock_clear.call_args_list
@@ -3383,14 +3401,11 @@ async def test_bluetooth_discovery_no_rpc_over_ble(
     assert result["reason"] == "invalid_discovery_info"
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_factory_reset_rediscovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
-    """Test device can be rediscovered after factory reset when RPC-over-BLE is re-enabled."""
+    """Test device rediscovery after factory reset with BLE."""
     # Configure mock BLE device for this test
     mock_ble_rpc_device.wifi_scan.return_value = [
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
@@ -3492,7 +3507,8 @@ async def test_bluetooth_discovery_mac_in_manufacturer_data(
     # Should successfully extract MAC from manufacturer data
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
-    # MAC from manufacturer data: 70d6c297bacc (reversed) = CC:BA:97:C2:D6:70 = CCBA97C2D670
+    # MAC from manufacturer data: 70d6c297bacc (reversed) =
+    # CC:BA:97:C2:D6:70 = CCBA97C2D670
     # Model ID 0x1030 = Shelly 1 Mini Gen4
     # Device name should use model name from model ID: Shelly1MiniGen4-<MAC>
     assert result["description_placeholders"]["name"] == "Shelly1MiniGen4-CCBA97C2D670"
@@ -3515,7 +3531,8 @@ async def test_bluetooth_discovery_mac_unknown_model(
     # Should successfully extract MAC from manufacturer data
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
-    # MAC from manufacturer data: 70d6c297bacc (reversed) = CC:BA:97:C2:D6:70 = CCBA97C2D670
+    # MAC from manufacturer data: 70d6c297bacc (reversed) =
+    # CC:BA:97:C2:D6:70 = CCBA97C2D670
     # Model ID 0x9999 is unknown - should fall back to generic "Shelly-<MAC>"
     assert result["description_placeholders"]["name"] == "Shelly-CCBA97C2D670"
 
@@ -4306,7 +4323,7 @@ async def test_bluetooth_provision_with_zeroconf_discovery_fast_path(
     mock_setup: AsyncMock,
     mock_ble_rpc_device: AsyncMock,
 ) -> None:
-    """Test zeroconf discovery arrives during WiFi provisioning (fast path - line 551)."""
+    """Test zeroconf arrives during WiFi provisioning fast path."""
     # Configure mock BLE device
     mock_ble_rpc_device.wifi_scan.return_value = [
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
@@ -4457,15 +4474,14 @@ async def test_bluetooth_provision_timeout_active_lookup_fails(
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
     mock_ble_rpc_device: AsyncMock,
     mock_ble_rpc_device_class: MagicMock,
 ) -> None:
-    """Test WiFi provisioning times out, active lookup fails, but BLE fallback succeeds."""
+    """Test WiFi provisioning timeout with BLE fallback success."""
     # Configure mock BLE device
     mock_ble_rpc_device.wifi_scan.return_value = [
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
@@ -4502,7 +4518,8 @@ async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
     mock_ble_rpc_device_class.create.side_effect = mock_create
 
     # Confirm and scan, then select network and enter password
-    # Provision WiFi but no zeroconf discovery arrives, active lookup fails, BLE fallback succeeds
+    # Provision WiFi but no zeroconf discovery arrives,
+    # active lookup fails, BLE fallback succeeds
     with (
         patch(
             "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
@@ -4545,7 +4562,7 @@ async def test_bluetooth_provision_timeout_ble_fallback_fails(
     hass: HomeAssistant,
     mock_ble_rpc_device: AsyncMock,
 ) -> None:
-    """Test WiFi provisioning times out, active lookup fails, and BLE fallback also fails."""
+    """Test WiFi provisioning timeout with BLE fallback failure."""
     # Configure mock BLE device
     mock_ble_rpc_device.wifi_scan.return_value = [
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
@@ -4607,7 +4624,7 @@ async def test_bluetooth_provision_timeout_ble_exception(
     hass: HomeAssistant,
     mock_ble_rpc_device: AsyncMock,
 ) -> None:
-    """Test WiFi provisioning times out, active lookup fails, and BLE raises exception."""
+    """Test WiFi provisioning timeout with BLE raising exception."""
     # Configure mock BLE device for initial wifi scan
     mock_ble_rpc_device.wifi_scan.return_value = [
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
@@ -4625,11 +4642,13 @@ async def test_bluetooth_provision_timeout_ble_exception(
     # Scan for networks first
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # Now configure update_status to raise exception (BLE raises exception during IP fetch)
+    # Now configure update_status to raise exception
+    # (BLE raises exception during IP fetch)
     mock_ble_rpc_device.update_status.side_effect = DeviceConnectionError
 
     # Confirm and scan, select network and enter password
-    # Provision WiFi but no zeroconf discovery, active lookup fails, BLE raises exception
+    # Provision WiFi but no zeroconf discovery, active lookup fails,
+    # BLE raises exception
     # Keep patches active until all background tasks complete to avoid socket errors
     with (
         patch(
@@ -4675,12 +4694,9 @@ async def test_bluetooth_provision_timeout_ble_exception(
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_both_enabled(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning with both AP and BLE disable enabled (default)."""
     # Configure mock BLE device
@@ -4735,12 +4751,9 @@ async def test_bluetooth_provision_secure_device_both_enabled(
     assert mock_device.shutdown.called
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_both_disabled(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning with both AP and BLE disable disabled."""
     # Configure mock BLE device
@@ -4784,12 +4797,9 @@ async def test_bluetooth_provision_secure_device_both_disabled(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_only_ap_disabled(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning with only AP disable enabled."""
     # Configure mock BLE device
@@ -4843,12 +4853,9 @@ async def test_bluetooth_provision_secure_device_only_ap_disabled(
     assert mock_device.shutdown.called
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_only_ble_disabled(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning with only BLE disable enabled."""
     # Configure mock BLE device
@@ -4902,12 +4909,9 @@ async def test_bluetooth_provision_secure_device_only_ble_disabled(
     assert mock_device.shutdown.called
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_with_restart_required(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning when BLE disable requires restart."""
     # Configure mock BLE device
@@ -4962,12 +4966,9 @@ async def test_bluetooth_provision_secure_device_with_restart_required(
     assert mock_device.shutdown.called
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_fails_gracefully(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning succeeds even when secure device calls fail."""
     # Configure mock BLE device

@@ -1,7 +1,5 @@
 """The tests for RFXCOM RFXtrx device triggers."""
 
-from __future__ import annotations
-
 from typing import Any, NamedTuple
 
 import pytest

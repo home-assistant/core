@@ -1,7 +1,5 @@
 """Support for Envisalink zone bypass switches."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

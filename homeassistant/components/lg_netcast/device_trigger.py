@@ -1,7 +1,5 @@
 """Provides device triggers for LG Netcast."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol

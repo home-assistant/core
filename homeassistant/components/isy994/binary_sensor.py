@@ -1,7 +1,5 @@
 """Support for ISY binary sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import Any
 

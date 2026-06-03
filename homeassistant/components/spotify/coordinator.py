@@ -121,8 +121,9 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 position_updated_at=None,
                 playlist=None,
             )
-        # Record the last updated time, because Spotify's timestamp property is unreliable
-        # and doesn't actually return the fetch time as is mentioned in the API description
+        # Record the last updated time, because Spotify's
+        # timestamp property is unreliable and doesn't
+        # actually return the fetch time as described in API
         position_updated_at = dt_util.utcnow()
 
         dj_playlist = False

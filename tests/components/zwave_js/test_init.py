@@ -1295,7 +1295,7 @@ async def test_stop_addon(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == entry_state
+    assert entry.state is entry_state
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_zwave_js")
 
@@ -1969,7 +1969,7 @@ async def test_remove_entity_on_value_removed(
     client: MagicMock,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that when entity primary values are removed the entity becomes unavailable."""
+    """Test entity becomes unavailable when primary values removed."""
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
@@ -2359,8 +2359,8 @@ async def test_server_logging(
 
         _reset_mocks()
 
-        # Validate that the server logging doesn't get enabled because HA thinks it already
-        # is enabled
+        # Validate that the server logging doesn't get enabled
+        # because HA thinks it already is enabled
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert len(client.async_send_command.call_args_list) == 2
@@ -2376,8 +2376,8 @@ async def test_server_logging(
         client.server_logging_enabled = False
         await hass.config_entries.async_unload(entry.entry_id)
 
-        # Validate that the server logging was not disabled because HA thinks it is already
-        # is disabled
+        # Validate that the server logging was not disabled
+        # because HA thinks it is already disabled
         assert len(client.async_send_command.call_args_list) == 0
         assert not client.enable_server_logging.called
         assert not client.disable_server_logging.called

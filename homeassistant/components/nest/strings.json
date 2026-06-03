@@ -163,5 +163,17 @@
         "create_new_topic": "Create new topic"
       }
     }
+  },
+  "services": {
+    "set_fan_timer": {
+      "description": "Sets the fan to run for a specific duration.",
+      "fields": {
+        "duration": {
+          "description": "The duration the fan should run for.",
+          "name": "Duration"
+        }
+      },
+      "name": "Set fan timer"
+    }
   }
 }

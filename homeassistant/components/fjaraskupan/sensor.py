@@ -1,7 +1,5 @@
 """Support for sensors."""
 
-from __future__ import annotations
-
 from fjaraskupan import Device
 
 from homeassistant.components.sensor import (

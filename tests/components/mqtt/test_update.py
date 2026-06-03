@@ -149,7 +149,7 @@ async def test_run_update_setup(
 async def test_run_update_setup_float(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that it fetches the given payload when the version is parsable as a number."""
+    """Test payload fetching when version is parsable as a number."""
     installed_version_topic = "test/installed-version"
     latest_version_topic = "test/latest-version"
     await mqtt_mock_entry()
@@ -231,9 +231,15 @@ async def test_value_template(
                 update.DOMAIN: {
                     "state_topic": "test/update",
                     "value_template": (
-                        "{\"latest_version\":\"{{ value_json['update']['latest_version'] }}\","
-                        "\"installed_version\":\"{{ value_json['update']['installed_version'] }}\","
-                        "\"update_percentage\":{{ value_json['update'].get('progress', 'null') }}}"
+                        '{"latest_version":'
+                        "\"{{ value_json['update']"
+                        "['latest_version'] }}\","
+                        '"installed_version":'
+                        "\"{{ value_json['update']"
+                        "['installed_version'] }}\","
+                        '"update_percentage":'
+                        "{{ value_json['update']"
+                        ".get('progress', 'null') }}}"
                     ),
                     "name": "Test Update",
                 }
@@ -246,7 +252,7 @@ async def test_errornous_value_template(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that it fetches the given payload with a template or handles the exception."""
+    """Test payload fetching with template or exception handling."""
     state_topic = "test/update"
     await mqtt_mock_entry()
 
@@ -307,7 +313,7 @@ async def test_errornous_value_template(
 async def test_value_template_float(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that it fetches the given payload with a template when the version is parsable as a number."""
+    """Test template payload when version is parsable as a number."""
     installed_version_topic = "test/installed-version"
     latest_version_topic = "test/latest-version"
     await mqtt_mock_entry()
@@ -592,7 +598,9 @@ async def test_run_install_service(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(command_topic, "install", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        command_topic, "install", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -745,7 +753,10 @@ async def test_discovery_update_unchanged_update(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered update."""
-    data1 = '{ "name": "Beer", "state_topic": "installed-topic", "latest_version_topic": "latest-topic"}'
+    data1 = (
+        '{ "name": "Beer", "state_topic": "installed-topic",'
+        ' "latest_version_topic": "latest-topic"}'
+    )
     with patch(
         "homeassistant.components.mqtt.update.MqttUpdate.discovery_update"
     ) as discovery_update:
@@ -760,7 +771,10 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk", "state_topic": "installed-topic", "latest_version_topic": "latest-topic" }'
+    data2 = (
+        '{ "name": "Milk", "state_topic": "installed-topic",'
+        ' "latest_version_topic": "latest-topic" }'
+    )
 
     await help_test_discovery_broken(hass, mqtt_mock_entry, update.DOMAIN, data1, data2)
 
@@ -930,8 +944,8 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
 
 

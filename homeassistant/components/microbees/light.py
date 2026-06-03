@@ -56,10 +56,10 @@ class MBLight(MicroBeesActuatorEntity, LightEntity):
         """Turn on the light."""
         if ATTR_RGBW_COLOR in kwargs:
             self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
-        sendCommand = await self.coordinator.microbees.sendCommand(
+        send_command = await self.coordinator.microbees.sendCommand(
             self.actuator_id, 1, color=self._attr_rgbw_color
         )
-        if not sendCommand:
+        if not send_command:
             raise HomeAssistantError(f"Failed to turn on {self.name}")
 
         self.actuator.value = True
@@ -67,10 +67,10 @@ class MBLight(MicroBeesActuatorEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        sendCommand = await self.coordinator.microbees.sendCommand(
+        send_command = await self.coordinator.microbees.sendCommand(
             self.actuator_id, 0, color=self._attr_rgbw_color
         )
-        if not sendCommand:
+        if not send_command:
             raise HomeAssistantError(f"Failed to turn off {self.name}")
 
         self.actuator.value = False

@@ -117,7 +117,10 @@ class FitbitApi(ABC):
         return devices
 
     async def async_get_latest_time_series(self, resource_type: str) -> dict[str, Any]:
-        """Return the most recent value from the time series for the specified resource type."""
+        """Return the most recent value from the time series.
+
+        Returns the value for the specified resource type.
+        """
         client = await self._async_get_client()
 
         # Set request header based on the configured unit system

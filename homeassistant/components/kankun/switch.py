@@ -1,7 +1,5 @@
 """Support for customised Kankun SP3 Wifi switch."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

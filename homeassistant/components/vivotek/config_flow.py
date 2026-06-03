@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -143,39 +142,4 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders=DESCRIPTION_PLACEHOLDERS,
-        )
-
-    async def async_step_import(
-        self, import_data: (dict[str, Any])
-    ) -> ConfigFlowResult:
-        """Import a Yaml config."""
-        self._async_abort_entries_match({CONF_IP_ADDRESS: import_data[CONF_IP_ADDRESS]})
-        port = 443 if import_data[CONF_SSL] else 80
-        try:
-            cam_client = build_cam_client({**import_data, CONF_PORT: port})
-            mac_address = await self.hass.async_add_executor_job(cam_client.get_mac)
-        except VivotekCameraError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected error during camera connection test")
-            return self.async_abort(reason="unknown")
-        await self.async_set_unique_id(format_mac(mac_address))
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_data.get(CONF_NAME, DEFAULT_NAME),
-            data={
-                CONF_IP_ADDRESS: import_data[CONF_IP_ADDRESS],
-                CONF_PORT: port,
-                CONF_PASSWORD: import_data[CONF_PASSWORD],
-                CONF_USERNAME: import_data[CONF_USERNAME],
-                CONF_AUTHENTICATION: import_data[CONF_AUTHENTICATION],
-                CONF_SSL: import_data[CONF_SSL],
-                CONF_VERIFY_SSL: import_data[CONF_VERIFY_SSL],
-                CONF_SECURITY_LEVEL: import_data[CONF_SECURITY_LEVEL],
-                CONF_STREAM_PATH: import_data[CONF_STREAM_PATH],
-            },
-            options={
-                CONF_FRAMERATE: import_data[CONF_FRAMERATE],
-            },
         )

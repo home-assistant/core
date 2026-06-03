@@ -1,7 +1,5 @@
 """esphome session fixtures."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import Event
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator

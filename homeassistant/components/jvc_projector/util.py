@@ -1,7 +1,5 @@
 """Utility helpers for the jvc_projector integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
@@ -95,7 +93,9 @@ def get_automations_and_scripts_using_entity(
             # Prefer entity-registry metadata so we can render edit links.
             if item := entity_registry.async_get(used_entity_id):
                 items.append(
-                    f"- [{item.original_name}](/config/{integration}/edit/{item.unique_id})"
+                    f"- [{item.original_name}]"
+                    f"(/config/{integration}"
+                    f"/edit/{item.unique_id})"
                 )
             else:
                 # Keep unresolved references as plain text so they still count as usage.

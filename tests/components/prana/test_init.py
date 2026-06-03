@@ -13,7 +13,7 @@ from tests.common import SnapshotAssertion
 async def test_async_setup_entry_and_unload_entry(
     hass: HomeAssistant, mock_config_entry, mock_prana_api
 ) -> None:
-    """async_setup_entry should create coordinator, refresh it, store runtime_data and forward setups."""
+    """Test async_setup_entry creates coordinator and forwards."""
 
     await async_init_integration(hass, mock_config_entry)
 

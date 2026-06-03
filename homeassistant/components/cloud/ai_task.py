@@ -1,7 +1,5 @@
 """AI Task integration for Home Assistant Cloud."""
 
-from __future__ import annotations
-
 import io
 from json import JSONDecodeError
 import logging

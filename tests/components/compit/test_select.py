@@ -44,7 +44,7 @@ async def test_select_unknown_device_parameters(
     mock_connector: MagicMock,
     mock_return_value: Any,
 ) -> None:
-    """Test that select entity shows unknown when get_current_option returns various invalid values."""
+    """Test select entity shows unknown for invalid values."""
     mock_connector.get_current_option.side_effect = lambda device_id, parameter_code: (
         mock_return_value
     )

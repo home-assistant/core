@@ -150,7 +150,9 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             JSONDecodeError,
         ) as err:
             if isinstance(err, JSONDecodeError):
-                # Plain html response (usually occurs after a firmware update), requiring session reinitialization
+                # Plain html response (usually occurs after
+                # a firmware update), requiring session
+                # reinitialization
                 _LOGGER.info("Stale session detected, reinitializing API session")
                 await self.initialize_api()
             raise UpdateFailed(

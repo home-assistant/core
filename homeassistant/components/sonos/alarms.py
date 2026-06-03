@@ -1,7 +1,5 @@
 """Class representing Sonos alarms."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 import logging
 from typing import TYPE_CHECKING, Any
@@ -91,10 +89,14 @@ class SonosAlarms(SonosHouseholdCoordinator):
             if "Alarm list UID" in err_msg and "does not match" in err_msg:
                 if not self._household_mismatch_logged:
                     _LOGGER.warning(
-                        "Sonos alarms for %s cannot be updated due to a household mismatch. "
-                        "This is a known limitation in setups with multiple households. "
-                        "You can safely ignore this warning, or to silence it, remove the "
-                        "affected household from your Sonos system. Error: %s",
+                        "Sonos alarms for %s cannot be updated"
+                        " due to a household mismatch. "
+                        "This is a known limitation in setups"
+                        " with multiple households. "
+                        "You can safely ignore this warning,"
+                        " or to silence it, remove the "
+                        "affected household from your Sonos"
+                        " system. Error: %s",
                         soco.player_name,
                         err_msg,
                     )

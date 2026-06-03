@@ -1,7 +1,5 @@
 """The Litter-Robot coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import timedelta
 import logging

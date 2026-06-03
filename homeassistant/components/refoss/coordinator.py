@@ -1,7 +1,5 @@
 """Helper and coordinator for refoss."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from refoss_ha.controller.device import BaseDevice

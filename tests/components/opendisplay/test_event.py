@@ -61,7 +61,7 @@ async def test_multiple_binary_input_instances(
     mock_multi_instance_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Entities across multiple BinaryInputs instances get globally sequential button numbers."""
+    """Entities get globally sequential button numbers."""
     mock_multi_instance_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(
         mock_multi_instance_config_entry.entry_id

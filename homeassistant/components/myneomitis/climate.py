@@ -1,7 +1,5 @@
 """Climate entities for MyNeomitis integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -297,7 +295,8 @@ class MyNeoClimate(ClimateEntity):
             ok = await self._set_device_mode(preset_to_restore)
             if not ok:
                 raise HomeAssistantError(
-                    f"Failed to restore preset '{preset_to_restore}' for {self.entity_id}"
+                    f"Failed to restore preset '{preset_to_restore}'"
+                    f" for {self.entity_id}"
                 )
             self._attr_preset_mode = preset_to_restore
 
@@ -340,7 +339,8 @@ class MyNeoClimate(ClimateEntity):
                 rfid = self._device.get("rfid")
                 if not gateway or not rfid:
                     _LOGGER.error(
-                        "Missing gateway or rfid for sub-device %s, cannot set temperature",
+                        "Missing gateway or rfid for sub-device"
+                        " %s, cannot set temperature",
                         self._attr_unique_id,
                     )
                     return False

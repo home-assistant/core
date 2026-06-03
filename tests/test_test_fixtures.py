@@ -122,6 +122,7 @@ async def test_evict_faked_translations(
     fake_domain = "test"
     real_domain = "homeassistant"
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "en" in cache.loaded:
         # Evict the real domain from the cache in case it's been loaded before
         cache.loaded["en"].discard(real_domain)
@@ -147,6 +148,7 @@ async def test_evict_faked_translations(
     with pytest.raises(StopIteration):
         next(gen)
 
-    # The mock integration should be removed from the cache, the real domain should still be there
+    # The mock integration should be removed from the cache,
+    # the real domain should still be there
     assert fake_domain not in cache.loaded["en"]
     assert real_domain in cache.loaded["en"]

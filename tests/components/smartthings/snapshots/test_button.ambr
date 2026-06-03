@@ -99,7 +99,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][button.microwave_stop-entry]
+# name: test_all_entities[da_ks_microwave_0101x][button.theater_microwave_stop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.microwave_stop',
+    'entity_id': 'button.theater_microwave_stop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -136,13 +136,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][button.microwave_stop-state]
+# name: test_all_entities[da_ks_microwave_0101x][button.theater_microwave_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Microwave Stop',
     }),
     'context': <ANY>,
-    'entity_id': 'button.microwave_stop',
+    'entity_id': 'button.theater_microwave_stop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -349,7 +349,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][button.refrigerator_reset_water_filter-entry]
+# name: test_all_entities[da_ref_normal_000001][button.theater_refrigerator_reset_water_filter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -363,7 +363,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.refrigerator_reset_water_filter',
+    'entity_id': 'button.theater_refrigerator_reset_water_filter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -386,13 +386,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][button.refrigerator_reset_water_filter-state]
+# name: test_all_entities[da_ref_normal_000001][button.theater_refrigerator_reset_water_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Refrigerator Reset water filter',
     }),
     'context': <ANY>,
-    'entity_id': 'button.refrigerator_reset_water_filter',
+    'entity_id': 'button.theater_refrigerator_reset_water_filter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -599,7 +599,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][button.dishwasher_cancel-entry]
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_cancel-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -613,7 +613,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.dishwasher_cancel',
+    'entity_id': 'button.theater_dishwasher_cancel',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -636,20 +636,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][button.dishwasher_cancel-state]
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_cancel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Cancel',
     }),
     'context': <ANY>,
-    'entity_id': 'button.dishwasher_cancel',
+    'entity_id': 'button.theater_dishwasher_cancel',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][button.dishwasher_cancel_and_drain-entry]
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_cancel_and_drain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -663,7 +663,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.dishwasher_cancel_and_drain',
+    'entity_id': 'button.theater_dishwasher_cancel_and_drain',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -686,20 +686,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][button.dishwasher_cancel_and_drain-state]
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_cancel_and_drain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Cancel and drain',
     }),
     'context': <ANY>,
-    'entity_id': 'button.dishwasher_cancel_and_drain',
+    'entity_id': 'button.theater_dishwasher_cancel_and_drain',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][button.dishwasher_pause-entry]
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_pause-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -713,7 +713,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.dishwasher_pause',
+    'entity_id': 'button.theater_dishwasher_pause',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -736,20 +736,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][button.dishwasher_pause-state]
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Pause',
     }),
     'context': <ANY>,
-    'entity_id': 'button.dishwasher_pause',
+    'entity_id': 'button.theater_dishwasher_pause',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][button.dishwasher_resume-entry]
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_resume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -763,7 +763,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.dishwasher_resume',
+    'entity_id': 'button.theater_dishwasher_resume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -786,20 +786,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][button.dishwasher_resume-state]
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_resume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Resume',
     }),
     'context': <ANY>,
-    'entity_id': 'button.dishwasher_resume',
+    'entity_id': 'button.theater_dishwasher_resume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][button.dishwasher_start-entry]
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -813,7 +813,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.dishwasher_start',
+    'entity_id': 'button.theater_dishwasher_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -836,13 +836,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][button.dishwasher_start-state]
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Start',
     }),
     'context': <ANY>,
-    'entity_id': 'button.dishwasher_start',
+    'entity_id': 'button.theater_dishwasher_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -494,7 +494,10 @@ async def test_air_quality_numerical_no_unit_condition_behavior_any(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test air quality numerical conditions without unit conversion and 'any' behavior."""
+    """Test air quality numerical conditions.
+
+    Without unit conversion and 'any' behavior.
+    """
     await assert_condition_behavior_any(
         hass,
         target_entities=target_sensors,
@@ -557,7 +560,10 @@ async def test_air_quality_numerical_no_unit_condition_behavior_all(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test air quality numerical conditions without unit conversion and 'all' behavior."""
+    """Test air quality numerical conditions.
+
+    Without unit conversion and 'all' behavior.
+    """
     await assert_condition_behavior_all(
         hass,
         target_entities=target_sensors,

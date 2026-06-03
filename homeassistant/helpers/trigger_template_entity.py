@@ -1,7 +1,5 @@
 """TemplateEntity utility class."""
 
-from __future__ import annotations
-
 import itertools
 import logging
 from typing import Any
@@ -16,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
     async_parse_date_datetime,
 )
 from homeassistant.const import (
@@ -108,7 +106,10 @@ TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
 
 
 class ValueTemplate(Template):
-    """Class to hold a value_template and manage caching and rendering it with 'value' in variables."""
+    """Class to hold a value_template.
+
+    Manages caching and rendering it with 'value' in variables.
+    """
 
     @classmethod
     def from_template(cls, template: Template) -> ValueTemplate:
@@ -137,7 +138,11 @@ class ValueTemplate(Template):
                 self.template, compiled, **variables
             ).strip()
         except jinja2.TemplateError as ex:
-            message = f"Error parsing value for {entity_id}: {ex} (value: {variables['value']}, template: {self.template})"
+            message = (
+                f"Error parsing value for {entity_id}:"
+                f" {ex} (value: {variables['value']},"
+                f" template: {self.template})"
+            )
             logger = logging.getLogger(
                 f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}"
             )
@@ -363,7 +368,8 @@ class ManualTriggerEntity(TriggerBaseEntity):
     ) -> dict[str, Any]:
         """Render template variables.
 
-        Implementing class should call this first in update method to render variables for templates.
+        Implementing class should call this first in update
+        method to render variables for templates.
         Ex: variables = self._render_template_variables_with_value(payload)
         """
         run_variables: dict[str, Any] = {"value": value}

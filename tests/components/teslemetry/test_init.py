@@ -781,7 +781,7 @@ async def test_vehicle_polling_version_update(
     mock_legacy: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test vehicle sw_version is updated when polling coordinator receives new version."""
+    """Test vehicle sw_version updates when polling coordinator refreshes."""
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
@@ -812,7 +812,7 @@ async def test_energy_site_version_update(
     mock_site_info: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test energy site sw_version is updated when info coordinator receives new version."""
+    """Test energy site sw_version updates when info coordinator refreshes."""
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 

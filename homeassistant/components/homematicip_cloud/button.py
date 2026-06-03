@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud button devices."""
 
-from __future__ import annotations
-
 from homematicip.device import WallMountedGarageDoorController
 
 from homeassistant.components.button import ButtonEntity

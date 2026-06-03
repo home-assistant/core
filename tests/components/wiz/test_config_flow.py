@@ -6,10 +6,9 @@ import pytest
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
 from homeassistant import config_entries
-from homeassistant.components.wiz.config_flow import CONF_DEVICE
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -499,7 +498,7 @@ async def test_setup_via_discovery_exception_finds_nothing(hass: HomeAssistant) 
 
 
 async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
-    """Test we check the device again between first discovery and config entry creation."""
+    """Test we recheck the device between discovery and entry creation."""
     with _patch_wizlight(
         device=None,
         extended_white_range=FAKE_EXTENDED_WHITE_RANGE,

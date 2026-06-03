@@ -1,7 +1,5 @@
 """Coordinator for lookin devices."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
@@ -72,7 +70,7 @@ class LookinDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     @callback
     def async_set_updated_data(self, data: _DataT) -> None:
-        """Manually update data, notify listeners and reset refresh interval, and remember."""
+        """Manually update data, notify listeners and reset refresh interval."""
         self.push_coordinator.update()
         super().async_set_updated_data(data)
 

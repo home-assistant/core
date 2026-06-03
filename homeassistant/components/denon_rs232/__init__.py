@@ -1,6 +1,4 @@
-"""The Denon RS232 integration."""
-
-from __future__ import annotations
+"""The Denon RS-232 integration."""
 
 from denon_rs232 import DenonReceiver, ReceiverState
 from denon_rs232.models import MODELS
@@ -16,7 +14,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DenonRS232ConfigEntry) -> bool:
-    """Set up Denon RS232 from a config entry."""
+    """Set up Denon RS-232 from a config entry."""
     port = entry.data[CONF_DEVICE]
     model = MODELS[entry.data[CONF_MODEL]]
     receiver = DenonReceiver(port, model=model)

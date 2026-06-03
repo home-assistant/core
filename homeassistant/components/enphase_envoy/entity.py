@@ -1,7 +1,5 @@
 """Support for Enphase Envoy solar energy monitor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 

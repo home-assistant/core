@@ -1,7 +1,5 @@
 """Support for Bosch Alarm Panel History as a sensor."""
 
-from __future__ import annotations
-
 from bosch_alarm_mode2 import Panel
 
 from homeassistant.components.sensor import Entity

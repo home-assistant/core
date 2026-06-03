@@ -1,7 +1,5 @@
 """Fixtures for the System Monitor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import socket
 from unittest.mock import AsyncMock, Mock, NonCallableMock, patch

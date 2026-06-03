@@ -1,7 +1,5 @@
 """Test for SQL component Init."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
@@ -97,7 +95,8 @@ async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
     with pytest.raises(vol.Invalid, match="SQL query must be of type SELECT"):
         validate_sql_select(
             Template(
-                "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;",
+                "WITH test AS (SELECT state FROM states)"
+                " UPDATE states SET states.state = test.state;",
                 hass,
             )
         )

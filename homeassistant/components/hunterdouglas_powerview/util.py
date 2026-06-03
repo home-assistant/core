@@ -1,7 +1,5 @@
 """Coordinate data for powerview devices."""
 
-from __future__ import annotations
-
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
 

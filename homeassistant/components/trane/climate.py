@@ -1,7 +1,5 @@
 """Climate platform for the Trane Local integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from steamloop import FanMode, HoldType, ThermostatConnection, ZoneMode

@@ -1,7 +1,5 @@
 """Component provides support for the Foscam Switch."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -17,14 +15,22 @@ from .entity import FoscamEntity
 
 
 def handle_ir_turn_on(session: FoscamCamera) -> None:
-    """Turn on IR LED: sets IR mode to auto (if supported), then turns off the IR LED."""
+    """Turn on IR LED.
+
+    Sets IR mode to auto (if supported), then turns off
+    the IR LED.
+    """
 
     session.set_infra_led_config(1)
     session.open_infra_led()
 
 
 def handle_ir_turn_off(session: FoscamCamera) -> None:
-    """Turn off IR LED: sets IR mode to manual (if supported), then turns open the IR LED."""
+    """Turn off IR LED.
+
+    Sets IR mode to manual (if supported), then turns
+    open the IR LED.
+    """
 
     session.set_infra_led_config(0)
     session.close_infra_led()

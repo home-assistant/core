@@ -1,7 +1,5 @@
 """Test configuration and mocks for the google integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 import datetime
 import http

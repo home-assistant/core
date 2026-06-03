@@ -64,7 +64,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
 
     # Test base URI returns all domains
     media = await media_source.async_browse_media(hass, const.URI_SCHEME)
-    assert isinstance(media, media_source.models.BrowseMediaSource)
+    assert isinstance(media, media_source.models.RootBrowseMediaSource)
     assert len(media.children) == 1
     assert media.children[0].title == "My media"
 

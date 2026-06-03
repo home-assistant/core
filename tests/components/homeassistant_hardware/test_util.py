@@ -219,7 +219,7 @@ async def test_guess_hardware_owners_z2m(
             return_value=None,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.util.get_multiprotocol_addon_manager",
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
             return_value=multipan_addon_manager,
         ),
         patch(
@@ -290,7 +290,7 @@ async def test_guess_hardware_owners_otbr(hass: HomeAssistant) -> None:
             return_value=otbr_addon_fw_info,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.util.get_multiprotocol_addon_manager",
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
             return_value=multipan_addon_manager,
         ),
         patch(
@@ -334,7 +334,7 @@ async def test_guess_hardware_owners_multipan(hass: HomeAssistant) -> None:
             return_value=None,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.util.get_multiprotocol_addon_manager",
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
             return_value=multipan_addon_manager,
         ),
         patch(

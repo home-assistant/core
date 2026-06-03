@@ -1,7 +1,5 @@
 """Support for MQTT sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
@@ -27,6 +25,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_NAME,
+    CONF_OPTIONS,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
@@ -45,7 +44,6 @@ from .config import MQTT_RO_SCHEMA
 from .const import (
     CONF_EXPIRE_AFTER,
     CONF_LAST_RESET_VALUE_TEMPLATE,
-    CONF_OPTIONS,
     CONF_STATE_TOPIC,
     CONF_SUGGESTED_DISPLAY_PRECISION,
     PAYLOAD_NONE,

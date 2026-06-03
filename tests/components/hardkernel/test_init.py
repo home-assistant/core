@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.hardkernel.const import DOMAIN
-from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
+from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -95,7 +95,7 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.hardkernel.get_os_info",
-        return_value=None,
+        side_effect=HassioNotReadyError,
     ) as mock_get_os_info:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

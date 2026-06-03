@@ -1,7 +1,5 @@
 """Support for Hikvision event stream events represented as binary sensors."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -65,10 +63,6 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
     "Tamper Detection": BinarySensorEntityDescription(
         key="tamper_detection",
         device_class=BinarySensorDeviceClass.TAMPER,
-    ),
-    "Shelter Alarm": BinarySensorEntityDescription(
-        key="shelter_alarm",
-        translation_key="shelter_alarm",
     ),
     "Disk Full": BinarySensorEntityDescription(
         key="disk_full",

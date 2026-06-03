@@ -142,7 +142,11 @@ async def test_timeout_manufacturer_data(
     scan_step: Callable[[], Awaitable[None]],
     manufacturer_request_event: asyncio.Event,
 ) -> None:
-    """Test the flow aborts with no_devices_found when manufacturer data times out and only partial info is available."""
+    """Test the flow aborts with no_devices_found.
+
+    Specifically when manufacturer data times out and only partial info
+    is available.
+    """
 
     inject_bluetooth_service_info(hass, MISSING_PRODUCT_SERVICE_INFO)
 

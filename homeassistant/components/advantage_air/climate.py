@@ -1,7 +1,5 @@
 """Climate platform for Advantage Air integration."""
 
-from __future__ import annotations
-
 from decimal import Decimal
 import logging
 from typing import Any
@@ -173,7 +171,8 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the current target temperature."""
-        # If the system is in MyZone mode, and a zone is set, return that temperature instead.
+        # If the system is in MyZone mode, and a zone is set,
+        # return that temperature instead.
         if self._myzone and self.preset_mode == ADVANTAGE_AIR_MYZONE:
             return self._myzone["setTemp"]
         return self._ac["setTemp"]
@@ -298,7 +297,11 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
 
     @property
     def hvac_action(self) -> HVACAction | None:
-        """Return the HVAC action, inheriting from master AC if zone is open but idle if air is <= 5%."""
+        """Return the HVAC action.
+
+        Inherits from master AC if zone is open but idle if air
+        is <= 5%.
+        """
         if self._ac["state"] == ADVANTAGE_AIR_STATE_OFF:
             return HVACAction.OFF
         master_action = HVAC_ACTIONS.get(self._ac["mode"], HVACAction.OFF)

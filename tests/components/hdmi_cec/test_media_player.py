@@ -3,6 +3,7 @@
 from typing import Any
 
 from pycec.const import (
+    CMD_STANDBY,
     DEVICE_TYPE_NAMES,
     KEY_BACKWARD,
     KEY_FORWARD,
@@ -54,7 +55,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import MockHDMIDevice, assert_key_press_release
+from . import MockHDMIDevice, assert_cec_command, assert_key_press_release
 from .conftest import CecEntityCreator, HDMINetworkCreator
 
 
@@ -148,7 +149,12 @@ async def test_service_off(
         blocking=True,
     )
 
-    mock_hdmi_device.turn_off.assert_called_once_with()
+    mock_hdmi_device.turn_off.assert_not_called()
+    assert_cec_command(
+        mock_hdmi_device.send_command,
+        cmd=CMD_STANDBY,
+        dst=mock_hdmi_device.logical_address,
+    )
 
     state = hass.states.get("media_player.hdmi_3")
     assert state.state == STATE_OFF
@@ -186,7 +192,10 @@ async def test_service_off(
                 MPEF.STOP,
             ),
             marks=pytest.mark.xfail(
-                reason="Checking for the wrong attribute, should be checking `type_id`, is checking `type`."
+                reason=(
+                    "Checking for the wrong attribute, should be"
+                    " checking `type_id`, is checking `type`."
+                )
             ),
         ),
         pytest.param(
@@ -207,7 +216,10 @@ async def test_service_off(
                 MPEF.NEXT_TRACK,
             ),
             marks=pytest.mark.xfail(
-                reason="Checking for the wrong attribute, should be checking `type_id`, is checking `type`."
+                reason=(
+                    "Checking for the wrong attribute, should be"
+                    " checking `type_id`, is checking `type`."
+                )
             ),
         ),
         pytest.param(

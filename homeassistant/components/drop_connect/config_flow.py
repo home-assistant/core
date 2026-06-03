@@ -1,20 +1,18 @@
 """Config flow for drop_connect integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 
 from dropmqttapi.discovery import DropDiscovery
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import (
     CONF_COMMAND_TOPIC,
     CONF_DATA_TOPIC,
     CONF_DEVICE_DESC,
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_DEVICE_OWNER_ID,
     CONF_DEVICE_TYPE,
@@ -56,8 +54,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             f"{self._drop_discovery.hub_id}_{self._drop_discovery.device_id}"
         )
         if existing_entry is not None:
-            # Note: returning "invalid_discovery_info" here instead of "already_configured"
-            # allows discovery of additional device types.
+            # Note: returning "invalid_discovery_info" here
+            # instead of "already_configured" allows discovery
+            # of additional device types.
             return self.async_abort(reason="invalid_discovery_info")
 
         self.context.update({"title_placeholders": {"name": self._drop_discovery.name}})

@@ -56,7 +56,7 @@ async def test_async_unload_entry(
     result = await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert result is True
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_device_info(

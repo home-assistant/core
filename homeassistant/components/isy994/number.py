@@ -1,7 +1,5 @@
 """Support for ISY number entities."""
 
-from __future__ import annotations
-
 from dataclasses import replace
 from typing import Any
 
@@ -91,7 +89,6 @@ async def async_setup_entry(
             key=node.address,
             name=node.name,
             entity_registry_enabled_default=var_id in node.name,
-            native_unit_of_measurement=None,
             native_step=step,
             native_min_value=-min_max,
             native_max_value=min_max,
@@ -197,8 +194,9 @@ class ISYVariableNumberEntity(NumberEntity):
         self.entity_description = description
         self._change_handler: EventListener | None = None
 
-        # Two entities are created for each variable, one for current value and one for initial.
-        # Initial value entities are disabled by default
+        # Two entities are created for each variable, one for
+        # current value and one for initial. Initial value
+        # entities are disabled by default
         self._init_entity = init_entity
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info

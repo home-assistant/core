@@ -1,7 +1,5 @@
 """Todo platform for the Cookidoo integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from cookidoo_api import (
@@ -75,7 +73,10 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an ingredient to the To-do list.
 
-        Cookidoo ingredients can be changed in state, but not in summary or description. This is currently not possible to distinguish in home assistant and just fails silently.
+        Cookidoo ingredients can be changed in state, but not
+        in summary or description. This is currently not
+        possible to distinguish in Home Assistant and just
+        fails silently.
         """
         try:
             if TYPE_CHECKING:
@@ -101,7 +102,7 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
 
 
 class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
-    """A To-do List representation of the additional items in the Cookidoo Shopping List."""
+    """A To-do List representation of additional Cookidoo Shopping List items."""
 
     _attr_translation_key = "additional_item_list"
     _attr_supported_features = (

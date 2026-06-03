@@ -99,7 +99,7 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job(
 async def test_mix_global_timeout_freeze_and_zone_freeze_different_order(
     hass: HomeAssistant,
 ) -> None:
-    """Test a simple global timeout freeze inside an executor job before timeout was set."""
+    """Test global timeout freeze in executor job before timeout set."""
     timeout = TimeoutManager()
 
     def _some_sync_work():
@@ -131,10 +131,10 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_other_zone_inside_execu
                 await hass.async_add_executor_job(_some_sync_work)
 
 
-async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job_second_job_outside_zone_context(
+async def test_mix_global_timeout_freeze_and_zone_freeze_executor_2nd_outside_zone(
     hass: HomeAssistant,
 ) -> None:
-    """Test a simple global timeout freeze inside an executor job with second job outside of zone context."""
+    """Test global timeout freeze in executor with second job outside zone."""
     timeout = TimeoutManager()
 
     def _some_sync_work():

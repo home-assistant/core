@@ -1,7 +1,5 @@
 """iCloud account."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import operator
@@ -94,6 +92,7 @@ class IcloudAccount:
         self._retried_fetch = False
         self._config_entry = config_entry
 
+        self._unsub_fetch: CALLBACK_TYPE | None = None
         self.listeners: list[CALLBACK_TYPE] = []
 
     def setup(self) -> None:
@@ -295,9 +294,16 @@ class IcloudAccount:
             self._max_interval,
         )
 
+    def cancel_fetch(self) -> None:
+        """Cancel the scheduled fetch timer."""
+        if self._unsub_fetch is not None:
+            self._unsub_fetch()
+            self._unsub_fetch = None
+
     def _schedule_next_fetch(self) -> None:
+        self.cancel_fetch()
         if not self._config_entry.pref_disable_polling:
-            track_point_in_utc_time(
+            self._unsub_fetch = track_point_in_utc_time(
                 self.hass,
                 self.keep_alive,
                 utcnow() + timedelta(minutes=self._fetch_interval),

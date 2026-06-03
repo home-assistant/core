@@ -1,6 +1,6 @@
 """The tests for the Ring component."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -508,10 +508,9 @@ async def test_no_listen_start(
     ]
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migrate_create_device_id(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test migration creates new device id created."""
     entry = MockConfigEntry(

@@ -1,7 +1,5 @@
 """The Twinkly select component."""
 
-from __future__ import annotations
-
 import logging
 
 from ttls.client import TWINKLY_MODES

@@ -1,7 +1,5 @@
 """The tests for the hassio component."""
 
-from __future__ import annotations
-
 from typing import Any, Literal
 
 from aiohttp import hdrs, web

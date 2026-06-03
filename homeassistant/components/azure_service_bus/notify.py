@@ -1,7 +1,5 @@
 """Support for azure service bus notification."""
 
-from __future__ import annotations
-
 import json
 import logging
 from typing import Any
@@ -110,6 +108,7 @@ class ServiceBusNotificationService(BaseNotificationService):
         )
         try:
             await self._client.send_messages(queue_message)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ServiceBusError as err:
             _LOGGER.error(
                 "Could not send service bus notification to %s. %s",

@@ -553,10 +553,18 @@ async def test_controlling_state_via_topic(
                         "name": "test",
                         "state_topic": "test_light_color_temp/status",
                         "command_topic": "test_light_color_temp/set",
-                        "brightness_state_topic": "test_light_color_temp/brightness/status",
-                        "brightness_command_topic": "test_light_color_temp/brightness/set",
-                        "color_temp_state_topic": "test_light_color_temp/color_temp/status",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "brightness_state_topic": (
+                            "test_light_color_temp/brightness/status"
+                        ),
+                        "brightness_command_topic": (
+                            "test_light_color_temp/brightness/set"
+                        ),
+                        "color_temp_state_topic": (
+                            "test_light_color_temp/color_temp/status"
+                        ),
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
                         "color_temp_kelvin": False,
                     }
                 }
@@ -571,10 +579,18 @@ async def test_controlling_state_via_topic(
                         "name": "test",
                         "state_topic": "test_light_color_temp/status",
                         "command_topic": "test_light_color_temp/set",
-                        "brightness_state_topic": "test_light_color_temp/brightness/status",
-                        "brightness_command_topic": "test_light_color_temp/brightness/set",
-                        "color_temp_state_topic": "test_light_color_temp/color_temp/status",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "brightness_state_topic": (
+                            "test_light_color_temp/brightness/status"
+                        ),
+                        "brightness_command_topic": (
+                            "test_light_color_temp/brightness/set"
+                        ),
+                        "color_temp_state_topic": (
+                            "test_light_color_temp/color_temp/status"
+                        ),
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
                         "color_temp_kelvin": True,
                     }
                 }
@@ -1020,8 +1036,14 @@ async def test_brightness_from_rgb_controlling_scale(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_scale_rgb/set", "on", 0, False),
-            call("test_scale_rgb/rgb/set", "191,95,47", 0, False),
+            call("test_scale_rgb/set", "on", 0, False, message_expiry_interval=None),
+            call(
+                "test_scale_rgb/rgb/set",
+                "191,95,47",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1211,8 +1233,14 @@ async def test_sending_mqtt_commands_and_optimistic(
     await common.async_turn_on(hass, "light.test", effect="colorloop")
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_rgb/set", "on", 2, False),
-            call("test_light_rgb/effect/set", "colorloop", 2, False),
+            call("test_light_rgb/set", "on", 2, False, message_expiry_interval=None),
+            call(
+                "test_light_rgb/effect/set",
+                "colorloop",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1226,7 +1254,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_turn_off(hass, "light.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "test_light_rgb/set", "off", 2, False
+        "test_light_rgb/set", "off", 2, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("light.test")
@@ -1239,9 +1267,21 @@ async def test_sending_mqtt_commands_and_optimistic(
     )
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_rgb/set", "on", 2, False),
-            call("test_light_rgb/brightness/set", "10", 2, False),
-            call("test_light_rgb/rgb/set", "80,40,20", 2, False),
+            call("test_light_rgb/set", "on", 2, False, message_expiry_interval=None),
+            call(
+                "test_light_rgb/brightness/set",
+                "10",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
+            call(
+                "test_light_rgb/rgb/set",
+                "80,40,20",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1259,9 +1299,21 @@ async def test_sending_mqtt_commands_and_optimistic(
     )
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_rgb/set", "on", 2, False),
-            call("test_light_rgb/brightness/set", "20", 2, False),
-            call("test_light_rgb/rgbw/set", "80,40,20,10", 2, False),
+            call("test_light_rgb/set", "on", 2, False, message_expiry_interval=None),
+            call(
+                "test_light_rgb/brightness/set",
+                "20",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
+            call(
+                "test_light_rgb/rgbw/set",
+                "80,40,20,10",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1279,9 +1331,21 @@ async def test_sending_mqtt_commands_and_optimistic(
     )
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_rgb/set", "on", 2, False),
-            call("test_light_rgb/brightness/set", "40", 2, False),
-            call("test_light_rgb/rgbww/set", "80,40,20,10,8", 2, False),
+            call("test_light_rgb/set", "on", 2, False, message_expiry_interval=None),
+            call(
+                "test_light_rgb/brightness/set",
+                "40",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
+            call(
+                "test_light_rgb/rgbww/set",
+                "80,40,20,10,8",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1297,9 +1361,21 @@ async def test_sending_mqtt_commands_and_optimistic(
     await common.async_turn_on(hass, "light.test", brightness=50, hs_color=(359, 78))
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_rgb/set", "on", 2, False),
-            call("test_light_rgb/brightness/set", "50", 2, False),
-            call("test_light_rgb/hs/set", "359.0,78.0", 2, False),
+            call("test_light_rgb/set", "on", 2, False, message_expiry_interval=None),
+            call(
+                "test_light_rgb/brightness/set",
+                "50",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
+            call(
+                "test_light_rgb/hs/set",
+                "359.0,78.0",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1315,9 +1391,21 @@ async def test_sending_mqtt_commands_and_optimistic(
     await common.async_turn_on(hass, "light.test", brightness=60, xy_color=(0.2, 0.3))
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_rgb/set", "on", 2, False),
-            call("test_light_rgb/brightness/set", "60", 2, False),
-            call("test_light_rgb/xy/set", "0.2,0.3", 2, False),
+            call("test_light_rgb/set", "on", 2, False, message_expiry_interval=None),
+            call(
+                "test_light_rgb/brightness/set",
+                "60",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
+            call(
+                "test_light_rgb/xy/set",
+                "0.2,0.3",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1333,7 +1421,13 @@ async def test_sending_mqtt_commands_and_optimistic(
     await common.async_turn_on(hass, "light.test", color_temp_kelvin=8000)
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_rgb/color_temp/set", "125", 2, False),
+            call(
+                "test_light_rgb/color_temp/set",
+                "125",
+                2,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1379,8 +1473,14 @@ async def test_sending_mqtt_rgb_command_with_template(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_rgb/set", "on", 0, False),
-            call("test_light_rgb/rgb/set", "#ff8040", 0, False),
+            call("test_light_rgb/set", "on", 0, False, message_expiry_interval=None),
+            call(
+                "test_light_rgb/rgb/set",
+                "#ff8040",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1422,8 +1522,14 @@ async def test_sending_mqtt_rgbw_command_with_template(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_rgb/set", "on", 0, False),
-            call("test_light_rgb/rgbw/set", "#ff804020", 0, False),
+            call("test_light_rgb/set", "on", 0, False, message_expiry_interval=None),
+            call(
+                "test_light_rgb/rgbw/set",
+                "#ff804020",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1465,8 +1571,14 @@ async def test_sending_mqtt_rgbww_command_with_template(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_rgb/set", "on", 0, False),
-            call("test_light_rgb/rgbww/set", "#ff80402010", 0, False),
+            call("test_light_rgb/set", "on", 0, False, message_expiry_interval=None),
+            call(
+                "test_light_rgb/rgbww/set",
+                "#ff80402010",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1485,8 +1597,12 @@ async def test_sending_mqtt_rgbww_command_with_template(
                     light.DOMAIN: {
                         "name": "test",
                         "command_topic": "test_light_color_temp/set",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
-                        "color_temp_command_template": "{{ (1000 / value) | round(0) }}",
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
+                        "color_temp_command_template": (
+                            "{{ (1000 / value) | round(0) }}"
+                        ),
                         "color_temp_kelvin": False,
                         "payload_on": "on",
                         "payload_off": "off",
@@ -1502,7 +1618,9 @@ async def test_sending_mqtt_rgbww_command_with_template(
                     light.DOMAIN: {
                         "name": "test",
                         "command_topic": "test_light_color_temp/set",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
                         "color_temp_command_template": "{{ (0.5 * value) | round(0) }}",
                         "color_temp_kelvin": True,
                         "payload_on": "on",
@@ -1529,8 +1647,20 @@ async def test_sending_mqtt_color_temp_command_with_template(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_color_temp/set", "on", 0, False),
-            call("test_light_color_temp/color_temp/set", payload, 0, False),
+            call(
+                "test_light_color_temp/set",
+                "on",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call(
+                "test_light_color_temp/color_temp/set",
+                payload,
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -1571,15 +1701,17 @@ async def test_on_command_first(
     #    test_light/bright: 50
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/set", "ON", 0, False),
-            call("test_light/bright", "50", 0, False),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
+            call("test_light/bright", "50", 0, False, message_expiry_interval=None),
         ],
     )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1612,15 +1744,17 @@ async def test_on_command_last(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/bright", "50", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call("test_light/bright", "50", 0, False, message_expiry_interval=None),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
     )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1654,19 +1788,23 @@ async def test_on_command_brightness(
     # Should get the following MQTT messages.
     #    test_light/bright: 255
     mqtt_mock.async_publish.assert_called_once_with(
-        "test_light/bright", "255", 0, False
+        "test_light/bright", "255", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn on w/ brightness
     await common.async_turn_on(hass, "light.test", brightness=50)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", "50", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/bright", "50", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
@@ -1677,8 +1815,8 @@ async def test_on_command_brightness(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgb", "255,128,0", 0, False),
-            call("test_light/bright", "50", 0, False),
+            call("test_light/rgb", "255,128,0", 0, False, message_expiry_interval=None),
+            call("test_light/bright", "50", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1716,33 +1854,39 @@ async def test_on_command_brightness_scaled(
     # Should get the following MQTT messages.
     #    test_light/bright: 100
     mqtt_mock.async_publish.assert_called_once_with(
-        "test_light/bright", "100", 0, False
+        "test_light/bright", "100", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn on w/ brightness
     await common.async_turn_on(hass, "light.test", brightness=50)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", "20", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/bright", "20", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn on w/ max brightness
     await common.async_turn_on(hass, "light.test", brightness=255)
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test_light/bright", "100", 0, False
+        "test_light/bright", "100", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn on w/ min brightness
     await common.async_turn_on(hass, "light.test", brightness=1)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", "1", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/bright", "1", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
@@ -1753,8 +1897,8 @@ async def test_on_command_brightness_scaled(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgb", "255,128,0", 0, False),
-            call("test_light/bright", "1", 0, False),
+            call("test_light/rgb", "255,128,0", 0, False, message_expiry_interval=None),
+            call("test_light/bright", "1", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1790,8 +1934,10 @@ async def test_on_command_rgb(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgb", "127,127,127", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgb", "127,127,127", 0, False, message_expiry_interval=None
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1804,8 +1950,10 @@ async def test_on_command_rgb(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgb", "255,255,255", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgb", "255,255,255", 0, False, message_expiry_interval=None
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1818,8 +1966,8 @@ async def test_on_command_rgb(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgb", "1,1,1", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call("test_light/rgb", "1,1,1", 0, False, message_expiry_interval=None),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1827,15 +1975,17 @@ async def test_on_command_rgb(
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
 
     # Ensure color gets scaled with brightness.
     await common.async_turn_on(hass, "light.test", rgb_color=(255, 128, 0))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgb", "1,0,0", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call("test_light/rgb", "1,0,0", 0, False, message_expiry_interval=None),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1848,8 +1998,8 @@ async def test_on_command_rgb(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgb", "255,128,0", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call("test_light/rgb", "255,128,0", 0, False, message_expiry_interval=None),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1886,8 +2036,14 @@ async def test_on_command_rgbw(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbw", "127,127,127,127", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgbw",
+                "127,127,127,127",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1900,8 +2056,14 @@ async def test_on_command_rgbw(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbw", "255,255,255,255", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgbw",
+                "255,255,255,255",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1914,8 +2076,8 @@ async def test_on_command_rgbw(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbw", "1,1,1,1", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call("test_light/rgbw", "1,1,1,1", 0, False, message_expiry_interval=None),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1923,15 +2085,17 @@ async def test_on_command_rgbw(
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
 
     # Ensure color gets scaled with brightness.
     await common.async_turn_on(hass, "light.test", rgbw_color=(255, 128, 0, 16))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbw", "1,0,0,0", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call("test_light/rgbw", "1,0,0,0", 0, False, message_expiry_interval=None),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1944,8 +2108,14 @@ async def test_on_command_rgbw(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbw", "255,128,0,16", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgbw",
+                "255,128,0,16",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1982,8 +2152,14 @@ async def test_on_command_rgbww(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbww", "127,127,127,127,127", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgbww",
+                "127,127,127,127,127",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -1996,8 +2172,14 @@ async def test_on_command_rgbww(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbww", "255,255,255,255,255", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgbww",
+                "255,255,255,255,255",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -2010,8 +2192,10 @@ async def test_on_command_rgbww(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbww", "1,1,1,1,1", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgbww", "1,1,1,1,1", 0, False, message_expiry_interval=None
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -2019,15 +2203,19 @@ async def test_on_command_rgbww(
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
 
     # Ensure color gets scaled with brightness.
     await common.async_turn_on(hass, "light.test", rgbww_color=(255, 128, 0, 16, 32))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbww", "1,0,0,0,0", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgbww", "1,0,0,0,0", 0, False, message_expiry_interval=None
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -2040,8 +2228,14 @@ async def test_on_command_rgbww(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbww", "255,128,0,16,32", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgbww",
+                "255,128,0,16,32",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -2079,8 +2273,10 @@ async def test_on_command_rgb_template(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgb", "127/127/127", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgb", "127/127/127", 0, False, message_expiry_interval=None
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -2088,7 +2284,9 @@ async def test_on_command_rgb_template(
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -2100,7 +2298,9 @@ async def test_on_command_rgb_template(
                     "name": "test",
                     "command_topic": "test_light/set",
                     "rgbw_command_topic": "test_light/rgbw",
-                    "rgbw_command_template": "{{ red }}/{{ green }}/{{ blue }}/{{ white }}",
+                    "rgbw_command_template": (
+                        "{{ red }}/{{ green }}/{{ blue }}/{{ white }}"
+                    ),
                 }
             }
         }
@@ -2121,8 +2321,14 @@ async def test_on_command_rgbw_template(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbw", "127/127/127/127", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgbw",
+                "127/127/127/127",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -2130,7 +2336,9 @@ async def test_on_command_rgbw_template(
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -2165,8 +2373,14 @@ async def test_on_command_rgbww_template(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgbww", "127/127/127/127/127", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/rgbww",
+                "127/127/127/127/127",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -2174,7 +2388,9 @@ async def test_on_command_rgbww_template(
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -2193,10 +2409,14 @@ async def test_on_command_rgbww_template(
                     "on_command_type": "brightness",
                     "brightness_value_template": "{{ value_json.Dimmer }}",
                     "rgb_command_topic": "tasmota_B94927/cmnd/Color2",
-                    "rgb_value_template": "{{value_json.Color.split(',')[0:3]|join(',')}}",
+                    "rgb_value_template": (
+                        "{{value_json.Color.split(',')[0:3]|join(',')}}"
+                    ),
                     "white_command_topic": "tasmota_B94927/cmnd/White",
                     "white_scale": 100,
-                    "color_mode_value_template": "{% if value_json.White %} white {% else %} rgb {% endif %}",
+                    "color_mode_value_template": (
+                        "{% if value_json.White %} white {% else %} rgb {% endif %}"
+                    ),
                     "qos": "0",
                 }
             }
@@ -2222,7 +2442,13 @@ async def test_on_command_white(
     await common.async_turn_on(hass, "light.test", brightness=192)
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("tasmota_B94927/cmnd/Dimmer", "75", 0, False),
+            call(
+                "tasmota_B94927/cmnd/Dimmer",
+                "75",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -2231,7 +2457,13 @@ async def test_on_command_white(
     await common.async_turn_on(hass, "light.test", white=255)
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("tasmota_B94927/cmnd/White", "100", 0, False),
+            call(
+                "tasmota_B94927/cmnd/White",
+                "100",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -2240,7 +2472,13 @@ async def test_on_command_white(
     await common.async_turn_on(hass, "light.test", white=64)
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("tasmota_B94927/cmnd/White", "25", 0, False),
+            call(
+                "tasmota_B94927/cmnd/White",
+                "25",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -2249,7 +2487,13 @@ async def test_on_command_white(
     await common.async_turn_on(hass, "light.test")
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("tasmota_B94927/cmnd/Dimmer", "25", 0, False),
+            call(
+                "tasmota_B94927/cmnd/Dimmer",
+                "25",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -2257,7 +2501,7 @@ async def test_on_command_white(
 
     await common.async_turn_off(hass, "light.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_B94927/cmnd/POWER", "OFF", 0, False
+        "tasmota_B94927/cmnd/POWER", "OFF", 0, False, message_expiry_interval=None
     )
 
 
@@ -2608,8 +2852,14 @@ async def test_effect(
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/effect/set", "rainbow", 0, False),
-            call("test_light/set", "ON", 0, False),
+            call(
+                "test_light/effect/set",
+                "rainbow",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call("test_light/set", "ON", 0, False, message_expiry_interval=None),
         ],
         any_order=True,
     )
@@ -2617,7 +2867,9 @@ async def test_effect(
 
     await common.async_turn_off(hass, "light.test")
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", "OFF", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -2834,7 +3086,11 @@ async def test_discovery_update_light_topic_and_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "white":100, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "white":100, "fx":"cycle"}}'
+                    ),
                 )
             ],
             "on",
@@ -2885,7 +3141,11 @@ async def test_discovery_update_light_topic_and_template(
             [
                 (
                     "test_light_rgb/state2",
-                    '{"state2":{"state":"ON", "brightness":50, "ct":200, "white":50, "fx":"loop"}}',
+                    (
+                        '{"state2":{"state":"ON",'
+                        ' "brightness":50, "ct":200,'
+                        ' "white":50, "fx":"loop"}}'
+                    ),
                 )
             ],
             "on",
@@ -2899,15 +3159,27 @@ async def test_discovery_update_light_topic_and_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
                 (
                     "test_light_rgb/state1",
-                    '{"state2":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state2":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
                 (
                     "test_light_rgb/state2",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
             ],
             "on",
@@ -3092,7 +3364,11 @@ async def test_discovery_update_light_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "white":100, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "white":100, "fx":"cycle"}}'
+                    ),
                 )
             ],
             "on",
@@ -3143,7 +3419,11 @@ async def test_discovery_update_light_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state2":{"state":"ON", "brightness":50, "ct":200, "white":50, "fx":"loop"}}',
+                    (
+                        '{"state2":{"state":"ON",'
+                        ' "brightness":50, "ct":200,'
+                        ' "white":50, "fx":"loop"}}'
+                    ),
                 )
             ],
             "on",
@@ -3157,7 +3437,11 @@ async def test_discovery_update_light_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
             ],
             "on",
@@ -3651,8 +3935,20 @@ async def test_sending_mqtt_brightness_command_with_template(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_brightness/set", "on", 0, False),
-            call("test_light_brightness/brightness/set", "10", 0, False),
+            call(
+                "test_light_brightness/set",
+                "on",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call(
+                "test_light_brightness/brightness/set",
+                "10",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -3695,12 +3991,19 @@ async def test_sending_mqtt_effect_command_with_template(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_brightness/set", "on", 0, False),
+            call(
+                "test_light_brightness/set",
+                "on",
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
             call(
                 "test_light_brightness/effect/set",
                 '{ "effect": "colorloop" }',
                 0,
                 False,
+                message_expiry_interval=None,
             ),
         ],
         any_order=True,
@@ -3719,7 +4022,9 @@ async def test_sending_mqtt_effect_command_with_template(
                     "name": "test",
                     "command_topic": "test_light_hs/set",
                     "hs_command_topic": "test_light_hs/hs_color/set",
-                    "hs_command_template": '{"hue": {{ hue | int }}, "sat": {{ sat | int}}}',
+                    "hs_command_template": (
+                        '{"hue": {{ hue | int }}, "sat": {{ sat | int}}}'
+                    ),
                     "qos": 0,
                 }
             }
@@ -3739,8 +4044,14 @@ async def test_sending_mqtt_hs_command_with_template(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_hs/set", "ON", 0, False),
-            call("test_light_hs/hs_color/set", '{"hue": 30, "sat": 100}', 0, False),
+            call("test_light_hs/set", "ON", 0, False, message_expiry_interval=None),
+            call(
+                "test_light_hs/hs_color/set",
+                '{"hue": 30, "sat": 100}',
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -3782,8 +4093,14 @@ async def test_sending_mqtt_xy_command_with_template(
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light_xy/set", "ON", 0, False),
-            call("test_light_xy/xy_color/set", '{"Color": "9896,22479"}', 0, False),
+            call("test_light_xy/set", "ON", 0, False, message_expiry_interval=None),
+            call(
+                "test_light_xy/xy_color/set",
+                '{"Color": "9896,22479"}',
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -3902,6 +4219,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

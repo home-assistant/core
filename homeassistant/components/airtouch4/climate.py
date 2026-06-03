@@ -1,7 +1,5 @@
 """AirTouch 4 component to control of AirTouch 4 Climate Devices."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -160,7 +158,8 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         await self._airtouch.SetCoolingModeForAc(
             self._ac_number, HA_STATE_TO_AT[hvac_mode]
         )
-        # in case it isn't already, unless the HVAC mode was off, then the ac should be on
+        # in case it isn't already, unless the HVAC mode was off,
+        # then the ac should be on
         await self.async_turn_on()
         self._unit = self._airtouch.GetAcs()[self._ac_number]
         _LOGGER.debug("Setting operation mode of %s to %s", self._ac_number, hvac_mode)
@@ -248,7 +247,8 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac target hvac state."""
-        # there are other power states that aren't 'on' but still count as on (eg. 'Turbo')
+        # there are other power states that aren't 'on' but still
+        # count as on (eg. 'Turbo')
         is_off = self._unit.PowerState == "Off"
         if is_off:
             return HVACMode.OFF

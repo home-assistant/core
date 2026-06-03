@@ -1,7 +1,5 @@
 """Voice activity detection."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -206,7 +204,8 @@ class VoiceCommandSegmenter:
     ) -> bool:
         """Process an audio chunk using an external VAD.
 
-        A buffer is required if the VAD requires fixed-sized audio chunks (usually the case).
+        A buffer is required if the VAD requires fixed-sized audio
+        chunks (usually the case).
 
         Returns False when voice command is finished.
         """
@@ -295,7 +294,10 @@ def chunk_samples(
     bytes_per_chunk: int,
     leftover_chunk_buffer: AudioBuffer,
 ) -> Iterable[bytes]:
-    """Yield fixed-sized chunks from samples, keeping leftover bytes from previous call(s)."""
+    """Yield fixed-sized chunks from samples.
+
+    Keeps leftover bytes from previous call(s).
+    """
 
     if (len(leftover_chunk_buffer) + len(samples)) < bytes_per_chunk:
         # Extend leftover chunk, but not enough samples to complete it

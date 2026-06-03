@@ -743,7 +743,7 @@ async def test_subentry_flow_broadcast_update_error(
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
 ) -> None:
-    """Test subentry flow where broadcast bot encounter error while receiving messages."""
+    """Test subentry flow where broadcast bot errors receiving messages."""
 
     mock_broadcast_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)

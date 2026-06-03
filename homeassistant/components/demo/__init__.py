@@ -1,7 +1,5 @@
 """Set up the demo environment that mimics interaction with devices."""
 
-from __future__ import annotations
-
 import asyncio
 
 from homeassistant import config_entries, core as ha, setup

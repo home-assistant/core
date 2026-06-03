@@ -1,7 +1,5 @@
 """Config flow for Matter integration."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -290,10 +288,10 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         addon_info = await self._async_get_addon_info()
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             return await self.async_step_finish_addon_setup()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
+        if addon_info.state is AddonState.NOT_RUNNING:
             return await self.async_step_start_addon()
 
         return await self.async_step_install_addon()

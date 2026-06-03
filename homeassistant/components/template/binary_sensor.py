@@ -1,7 +1,5 @@
 """Support for exposing a templated binary sensor."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -15,23 +13,13 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_FRIENDLY_NAME_TEMPLATE,
-    CONF_ICON_TEMPLATE,
-    CONF_NAME,
-    CONF_SENSORS,
     CONF_STATE,
-    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_VALUE_TEMPLATE,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -56,8 +44,6 @@ from .helpers import (
     async_setup_template_preview,
 )
 from .schemas import (
-    TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     make_template_entity_common_modern_attributes_schema,
 )
@@ -70,10 +56,6 @@ CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
 CONF_AUTO_OFF = "auto_off"
 
-LEGACY_FIELDS = {
-    CONF_FRIENDLY_NAME_TEMPLATE: CONF_NAME,
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
 
 BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
     {
@@ -96,34 +78,6 @@ BINARY_SENSOR_CONFIG_ENTRY_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
-BINARY_SENSOR_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(ATTR_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-            vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-            vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
-            vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY.schema)
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
-)
-
-
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(
-            BINARY_SENSOR_LEGACY_YAML_SCHEMA
-        ),
-    }
-)
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -140,8 +94,6 @@ async def async_setup_platform(
         TriggerBinarySensorEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_SENSORS,
     )
 
 
@@ -178,8 +130,11 @@ class AbstractTemplateBinarySensor(
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 

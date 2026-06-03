@@ -1,7 +1,5 @@
 """Support for device tracking of Huawei LTE routers."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 
@@ -117,7 +115,8 @@ def _is_connected(host: _HostType | None) -> bool:
 
 def _is_us(host: _HostType) -> bool:
     """Try to determine if the host entry is us, the HA instance."""
-    # LAN host info entries have an "isLocalDevice" property, "1" / "0"; WLAN host list ones don't.
+    # LAN host info entries have an "isLocalDevice" property,
+    # "1" / "0"; WLAN host list ones don't.
     return cast(str, host.get("isLocalDevice", "0")) == "1"
 
 
@@ -211,7 +210,8 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         self._is_connected = _is_connected(host)
         if host is not None:
             # IpAddress can contain multiple semicolon separated addresses.
-            # Pick one for model sanity; e.g. the dhcp component to which it is fed, parses and expects to see just one.
+            # Pick one for model sanity; e.g. the dhcp component
+            # to which it is fed, parses and expects to see just one.
             self._ip_address = (host.get("IpAddress") or "").split(";", 2)[0] or None
             self._hostname = host.get("HostName")
             self._extra_state_attributes = {

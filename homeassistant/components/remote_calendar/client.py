@@ -9,7 +9,7 @@ async def get_calendar(
     username: str | None = None,
     password: str | None = None,
 ) -> Response:
-    """Make an HTTP GET request using Home Assistant's async HTTPX client with timeout."""
+    """Make an HTTP GET request using Home Assistant's async HTTPX client."""
     auth: Auth | None = None
     if username is not None and password is not None:
         auth = BasicAuth(username, password)

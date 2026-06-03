@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import BackupManagerError, ManagerBackup
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.backup.manager import AgentBackupStatus
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import (
@@ -319,8 +319,9 @@ async def test_websocket_non_admin_user(
         json={"result": "ok", "data": {}},
     )
 
-    # Should return the fields frontend needs (name, version, state, slug and ingress_url)
-    # but not options, as user is not admin and options can contain sensitive information
+    # Should return the fields frontend needs
+    # (name, version, state, slug and ingress_url) but not options,
+    # as user is not admin and options can contain sensitive information
     await websocket_client.send_json(
         {
             WS_ID: 1,

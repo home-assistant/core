@@ -184,7 +184,12 @@
           "name": "Transition"
         }
       },
-      "name": "Activate Hue scene"
+      "name": "Activate Hue scene",
+      "sections": {
+        "scene_customization": {
+          "name": "Scene customization"
+        }
+      }
     },
     "hue_activate_scene": {
       "description": "Activates a Hue scene stored in the Hue hub.",

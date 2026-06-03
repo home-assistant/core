@@ -10,12 +10,11 @@ import logging
 from altruistclient import AltruistClient, AltruistError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from .const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
 

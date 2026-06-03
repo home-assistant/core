@@ -1,30 +1,33 @@
 """Support for command line notification services."""
 
-from __future__ import annotations
-
 import logging
 import subprocess
 from typing import Any
 
-from homeassistant.components.notify import BaseNotificationService
+from homeassistant.components.notify import (
+    DOMAIN as NOTIFY_DOMAIN,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_COMMAND
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER
-from .utils import render_template_args
+from .const import CONF_COMMAND_TIMEOUT, DOMAIN, LOGGER
+from .utils import create_platform_yaml_not_supported_issue, render_template_args
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> CommandLineNotificationService | None:
     """Get the Command Line notification service."""
     if not discovery_info:
+        create_platform_yaml_not_supported_issue(hass, NOTIFY_DOMAIN)
         return None
 
     notify_config = discovery_info
@@ -64,8 +67,18 @@ class CommandLineNotificationService(BaseNotificationService):
                         proc.returncode,
                         command,
                     )
-            except subprocess.TimeoutExpired:
-                _LOGGER.error("Timeout for command: %s", command)
+            except subprocess.TimeoutExpired as err:
+                _LOGGER.debug("Timeout for command: %s", command)
                 kill_subprocess(proc)
-            except subprocess.SubprocessError:
-                _LOGGER.error("Error trying to exec command: %s", command)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="timeout_error",
+                    translation_placeholders={"command": command},
+                ) from err
+            except subprocess.SubprocessError as err:
+                _LOGGER.debug("Error trying to exec command: %s", command)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_error",
+                    translation_placeholders={"command": command, "error": str(err)},
+                ) from err

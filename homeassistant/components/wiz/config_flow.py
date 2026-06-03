@@ -1,7 +1,5 @@
 """Config flow for WiZ Platform."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -12,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.network import is_ip_address
@@ -22,8 +20,6 @@ from .discovery import async_discover_devices
 from .utils import _short_mac, name_from_bulb_type_and_mac
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DEVICE = "device"
 
 
 class WizConfigFlow(ConfigFlow, domain=DOMAIN):

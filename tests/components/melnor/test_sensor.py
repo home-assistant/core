@@ -1,7 +1,5 @@
 """Test the Melnor sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from freezegun import freeze_time

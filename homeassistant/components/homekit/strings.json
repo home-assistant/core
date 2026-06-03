@@ -25,12 +25,12 @@
         },
         "title": "Select the entity for the accessory"
       },
-      "advanced": {
+      "bridged_device_triggers": {
         "data": {
           "devices": "Devices (Triggers)"
         },
         "description": "Programmable switches are created for each selected device. When a device trigger fires, HomeKit can be configured to run an automation or scene.",
-        "title": "Advanced configuration"
+        "title": "Bridged device triggers"
       },
       "cameras": {
         "data": {
@@ -60,7 +60,7 @@
           "include_exclude_mode": "Inclusion mode",
           "mode": "HomeKit mode"
         },
-        "description": "HomeKit can be configured expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the \u201cDomains to include\u201d will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
+        "description": "HomeKit can be configured to expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the \u201cDomains to include\u201d will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
         "title": "Select mode and domains."
       },
       "yaml": {

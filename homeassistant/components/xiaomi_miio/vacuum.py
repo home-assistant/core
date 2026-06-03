@@ -1,7 +1,5 @@
 """Support for the Xiaomi vacuum cleaner robot."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 from typing import Any
@@ -200,6 +198,7 @@ class MiroboVacuum(
         else:
             try:
                 fan_speed_int = int(fan_speed)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ValueError as exc:
                 _LOGGER.error(
                     "Fan speed step not recognized (%s). Valid speeds are: %s",

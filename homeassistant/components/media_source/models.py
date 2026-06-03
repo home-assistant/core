@@ -1,7 +1,5 @@
 """Media Source models."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -27,11 +25,9 @@ class PlayMedia:
 class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
 
-    def __init__(
-        self, *, domain: str | None, identifier: str | None, **kwargs: Any
-    ) -> None:
+    def __init__(self, *, domain: str, identifier: str | None, **kwargs: Any) -> None:
         """Initialize media source browse media."""
-        media_content_id = f"{URI_SCHEME}{domain or ''}"
+        media_content_id = f"{URI_SCHEME}{domain}"
         if identifier:
             media_content_id += f"/{identifier}"
 
@@ -39,6 +35,17 @@ class BrowseMediaSource(BrowseMedia):
 
         self.domain = domain
         self.identifier = identifier
+
+
+class RootBrowseMediaSource(BrowseMedia):
+    """Represent the root media source browse node."""
+
+    domain: None = None
+    identifier: None = None
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize root media source browse media."""
+        super().__init__(media_content_id=URI_SCHEME, **kwargs)
 
 
 @dataclass(slots=True)
@@ -60,15 +67,13 @@ class MediaSourceItem:
                 uri += f"/{self.identifier}"
         return uri
 
-    async def async_browse(self) -> BrowseMediaSource:
+    async def async_browse(self) -> BrowseMediaSource | RootBrowseMediaSource:
         """Browse this item."""
         if self.domain is None:
             title = async_get_cached_translations(
                 self.hass, self.hass.config.language, "common", "media_source"
             ).get("component.media_source.common.sources_default", "Media Sources")
-            base = BrowseMediaSource(
-                domain=None,
-                identifier=None,
+            base = RootBrowseMediaSource(
                 media_class=MediaClass.APP,
                 media_content_type=MediaType.APPS,
                 title=title,

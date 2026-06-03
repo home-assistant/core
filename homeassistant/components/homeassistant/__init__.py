@@ -289,9 +289,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Service handler for reloading core config."""
         try:
             conf = await conf_util.async_hass_config_yaml(hass)
-        except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+        except (HomeAssistantError, FileNotFoundError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="core_config_reload_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # auth only processed during startup
         await core_config.async_process_ha_core_config(hass, conf.get(DOMAIN) or {})
@@ -409,7 +412,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     exposed_entities = ExposedEntities(hass)
     await exposed_entities.async_initialize()
     hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
-    async_set_stop_handler(hass, _async_stop)
+    async_set_stop_handler(hass)
 
     async def _async_check_deprecation(event: Event) -> None:
         """Check and create deprecation issues after startup."""
@@ -457,6 +460,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hass,
                 DOMAIN,
                 "unsupported_local_deps",
+                breaks_in_ha_version="2026.11.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
@@ -479,7 +483,11 @@ async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
 @callback
 def async_set_stop_handler(
     hass: HomeAssistant,
-    stop_handler: Callable[[HomeAssistant, bool], Coroutine[Any, Any, None]],
+    stop_handler: Callable[[HomeAssistant, bool], Coroutine[Any, Any, None]]
+    | None = None,
 ) -> None:
-    """Set function which is called by the stop and restart services."""
-    hass.data[DATA_STOP_HANDLER] = stop_handler
+    """Set function which is called by the stop and restart services.
+
+    If stop handler is omitted it will restore the default stop handler.
+    """
+    hass.data[DATA_STOP_HANDLER] = _async_stop if stop_handler is None else stop_handler

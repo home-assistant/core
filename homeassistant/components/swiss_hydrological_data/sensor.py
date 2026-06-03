@@ -1,7 +1,5 @@
 """Support for hydrological data from the Fed. Office for the Environment."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any

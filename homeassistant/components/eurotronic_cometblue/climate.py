@@ -1,7 +1,5 @@
 """Comet Blue climate integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -129,14 +127,16 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
 
         if self.preset_mode == PRESET_AWAY:
             raise ServiceValidationError(
-                "Cannot adjust TRV remotely, manually disable 'holiday' mode on TRV first"
+                "Cannot adjust TRV remotely, manually"
+                " disable 'holiday' mode on TRV first"
             )
 
         await self.coordinator.send_command(
             self.coordinator.device.set_temperature_async,
             {
                 "values": {
-                    # manual temperature always needs to be set, otherwise TRV will turn OFF
+                    # manual temperature always needs to be set,
+                    # otherwise TRV will turn OFF
                     "manualTemp": kwargs.get(ATTR_TEMPERATURE)
                     or self.target_temperature,
                     # other temperatures can be left unchanged by setting them to None

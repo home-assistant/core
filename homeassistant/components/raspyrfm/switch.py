@@ -1,7 +1,5 @@
 """Support for switches that can be controlled using the RaspyRFM rc module."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from raspyrfm_client import RaspyRFMClient
@@ -9,8 +7,8 @@ from raspyrfm_client.device_implementations.controlunit.actions import Action
 from raspyrfm_client.device_implementations.controlunit.controlunit_constants import (
     ControlUnitModel,
 )
-from raspyrfm_client.device_implementations.gateway.manufacturer.gateway_constants import (
-    GatewayModel,
+from raspyrfm_client.device_implementations.gateway.manufacturer import (
+    gateway_constants as _gw,
 )
 from raspyrfm_client.device_implementations.manufacturer_constants import Manufacturer
 import voluptuous as vol
@@ -30,6 +28,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+GatewayModel = _gw.GatewayModel
 
 CONF_GATEWAY_MANUFACTURER = "gateway_manufacturer"
 CONF_GATEWAY_MODEL = "gateway_model"

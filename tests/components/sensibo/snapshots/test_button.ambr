@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_button[load_platforms0][button.bedroom_reset_filter-entry]
+# name: test_button[load_platforms0][button.bedroom_bedroom_reset_filter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.bedroom_reset_filter',
+    'entity_id': 'button.bedroom_bedroom_reset_filter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button[load_platforms0][button.bedroom_reset_filter-state]
+# name: test_button[load_platforms0][button.bedroom_bedroom_reset_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bedroom Reset filter',
     }),
     'context': <ANY>,
-    'entity_id': 'button.bedroom_reset_filter',
+    'entity_id': 'button.bedroom_bedroom_reset_filter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button[load_platforms0][button.hallway_reset_filter-entry]
+# name: test_button[load_platforms0][button.hallway_hallway_reset_filter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.hallway_reset_filter',
+    'entity_id': 'button.hallway_hallway_reset_filter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,20 +86,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button[load_platforms0][button.hallway_reset_filter-state]
+# name: test_button[load_platforms0][button.hallway_hallway_reset_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hallway Reset filter',
     }),
     'context': <ANY>,
-    'entity_id': 'button.hallway_reset_filter',
+    'entity_id': 'button.hallway_hallway_reset_filter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button[load_platforms0][button.kitchen_reset_filter-entry]
+# name: test_button[load_platforms0][button.kitchen_kitchen_reset_filter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.kitchen_reset_filter',
+    'entity_id': 'button.kitchen_kitchen_reset_filter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -136,13 +136,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button[load_platforms0][button.kitchen_reset_filter-state]
+# name: test_button[load_platforms0][button.kitchen_kitchen_reset_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Kitchen Reset filter',
     }),
     'context': <ANY>,
-    'entity_id': 'button.kitchen_reset_filter',
+    'entity_id': 'button.kitchen_kitchen_reset_filter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

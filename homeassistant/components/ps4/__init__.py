@@ -1,7 +1,5 @@
 """Support for PlayStation 4 consoles."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 import os

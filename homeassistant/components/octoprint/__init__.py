@@ -1,7 +1,5 @@
 """Support for monitoring OctoPrint 3D printers."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 
@@ -220,6 +218,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) ->
         )
 
     if not hass.services.has_service(DOMAIN, SERVICE_CONNECT):
+        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
         hass.services.async_register(
             DOMAIN,
             SERVICE_CONNECT,
@@ -245,7 +244,7 @@ def async_get_client_for_service_call(
     if device_entry := device_registry.async_get(device_id):
         for entry_id in device_entry.config_entries:
             if entry := hass.config_entries.async_get_entry(entry_id):
-                if entry.domain == DOMAIN and entry.state == ConfigEntryState.LOADED:
+                if entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
                     return cast(OctoprintConfigEntry, entry).runtime_data.octoprint
 
     raise ServiceValidationError(

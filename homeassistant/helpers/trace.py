@@ -1,13 +1,11 @@
 """Helpers for script and condition tracing."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any
+from typing import Any, Literal, overload
 
 from homeassistant.core import ServiceResponse
 from homeassistant.util import dt as dt_util
@@ -24,6 +22,7 @@ class TraceElement:
         "_error",
         "_last_variables",
         "_result",
+        "_template_errors",
         "_timestamp",
         "_variables",
         "path",
@@ -37,6 +36,7 @@ class TraceElement:
         self._error: BaseException | None = None
         self.path: str = path
         self._result: dict[str, Any] | None = None
+        self._template_errors: list[str] | None = None
         self.reuse_by_child = False
         self._timestamp = dt_util.utcnow()
 
@@ -55,6 +55,23 @@ class TraceElement:
     def set_error(self, ex: BaseException | None) -> None:
         """Set error."""
         self._error = ex
+
+    def add_template_error(self, msg: str) -> None:
+        """Record a template error message.
+
+        Used to record template variable errors which would otherwise be logged
+        directly, so they are surfaced in the trace instead of spamming the log.
+        A single template render can emit more than one message, so they are
+        accumulated in a list.
+        """
+        if self._template_errors is None:
+            self._template_errors = []
+        self._template_errors.append(msg)
+
+    @property
+    def template_errors(self) -> list[str]:
+        """Return the recorded template error messages."""
+        return self._template_errors or []
 
     def set_result(self, **kwargs: Any) -> None:
         """Set result."""
@@ -92,6 +109,8 @@ class TraceElement:
             result["changed_variables"] = self._variables
         if self._error is not None:
             result["error"] = str(self._error) or self._error.__class__.__name__
+        if self._template_errors:
+            result["template_errors"] = self._template_errors
         if self._result is not None:
             result["result"] = self._result
         return result
@@ -120,6 +139,26 @@ trace_id_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 script_execution_cv: ContextVar[StopReason | None] = ContextVar(
     "script_execution_cv", default=None
 )
+# When set, template errors are recorded on the active TraceElement instead of
+# being logged directly
+record_template_errors_cv: ContextVar[bool] = ContextVar(
+    "record_template_errors_cv", default=False
+)
+
+
+@contextmanager
+def record_template_errors() -> Generator[None]:
+    """Record template errors in the active trace instead of logging them.
+
+    Used by consumers such as the subscribe_condition websocket command, which
+    re-evaluate a condition repeatedly and forward template errors to the client
+    via the trace, so the errors don't spam the log.
+    """
+    token = record_template_errors_cv.set(True)
+    try:
+        yield
+    finally:
+        record_template_errors_cv.reset(token)
 
 
 def trace_id_set(trace_id: tuple[str, str]) -> None:
@@ -191,8 +230,23 @@ def trace_append_element(
     trace[path].append(trace_element)
 
 
+@overload
+def trace_get(clear: Literal[True] = True) -> dict[str, deque[TraceElement]]: ...
+
+
+@overload
+def trace_get(clear: Literal[False]) -> dict[str, deque[TraceElement]] | None: ...
+
+
 def trace_get(clear: bool = True) -> dict[str, deque[TraceElement]] | None:
-    """Return the current trace."""
+    """Return the current trace.
+
+    When clear is True the trace is reset and a fresh (empty) trace is
+    unconditionally returned.
+
+    When clear is False, the current trace is returned without modification
+    if it exists, otherwise None is returned.
+    """
     if clear:
         trace_clear()
     return trace_cv.get()

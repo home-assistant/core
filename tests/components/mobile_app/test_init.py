@@ -486,7 +486,7 @@ async def test_cloudhook_change_listener_deletion(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
 ) -> None:
-    """Test cloudhook change listener removes cloudhook from config entry on deletion."""
+    """Test cloudhook listener removes cloudhook from entry on deletion."""
     webhook_id = "test-webhook-id"
     config_entry = MockConfigEntry(
         data={

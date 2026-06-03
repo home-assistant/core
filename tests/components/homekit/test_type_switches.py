@@ -889,7 +889,7 @@ async def test_valve_with_duration_characteristics(
 async def test_duration_characteristic_properties(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
-    """Test SetDuration and RemainingDuration characteristic properties from linked entity attributes."""
+    """Test duration characteristic properties from linked attributes."""
     entity_id = "switch.sprinkler"
     linked_duration_entity = "input_number.valve_duration"
     linked_end_time_entity = "sensor.valve_end_time"
@@ -1038,7 +1038,7 @@ async def test_duration_characteristic_properties(
 async def test_remaining_duration_characteristic_fallback(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
-    """Test remaining duration falls back to default run time only if valve is active."""
+    """Test remaining duration falls back to default only if valve active."""
     entity_id = "switch.sprinkler"
 
     hass.states.async_set(entity_id, STATE_OFF)
@@ -1067,7 +1067,8 @@ async def test_remaining_duration_characteristic_fallback(
     assert acc.char_in_use.value == 0
     assert acc.get_remaining_duration() == 0
 
-    # Case 2: Remaining duration should fall back to default duration when accessory is in use
+    # Case 2: Remaining duration should fall back to default duration when accessory is
+    # in use
     hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
     assert acc.char_in_use.value == 1

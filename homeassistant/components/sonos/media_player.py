@@ -1,11 +1,11 @@
 """Support to interface with Sonos players."""
 
-from __future__ import annotations
-
 import datetime
 from functools import partial
 import logging
+import os
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlparse
 
 from soco import SoCo, alarms
 from soco.core import (
@@ -37,10 +37,12 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
-from homeassistant.components.plex.services import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.plex.services import (  # pylint: disable=home-assistant-component-root-import
     process_plex_payload,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -90,6 +92,7 @@ SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
 ANNOUNCE_NOT_SUPPORTED_ERRORS: list[str] = ["globalError"]
+ANNOUNCE_AUDIOCLIP_SUPPORTED_FORMATS: frozenset[str] = frozenset({".mp3", ".wav"})
 
 
 async def async_setup_entry(
@@ -126,6 +129,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SHUFFLE_SET
@@ -309,7 +313,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self.soco.volume = int(round(volume * 100))
+        self.soco.volume = round(volume * 100)
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def set_shuffle(self, shuffle: bool) -> None:
@@ -459,6 +463,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if kwargs.get(ATTR_MEDIA_ANNOUNCE):
             volume = kwargs.get("extra", {}).get("volume")
+            ext = os.path.splitext(urlparse(media_id).path)[1].lower()
+            if ext and ext not in ANNOUNCE_AUDIOCLIP_SUPPORTED_FORMATS:
+                _LOGGER.warning(
+                    "Sonos AudioClip announce only supports MP3 and WAV; "
+                    "%s has extension %s and will be attempted as a clip anyway on %s",
+                    media_id,
+                    ext,
+                    self.speaker.zone_name,
+                )
             _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
                 assert self.speaker.websocket
@@ -808,6 +821,18 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_content_type,
         )
 
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the music library for media matching the query."""
+        return await media_browser.async_search_media(
+            self.hass,
+            self.media,
+            self.get_browse_image_url,
+            query,
+        )
+
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         speakers = []
@@ -841,15 +866,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group.
 
-        Coalesces all calls within UNJOIN_SERVICE_TIMEOUT to allow use of SonosSpeaker.unjoin_multi()
-        which optimizes the order in which speakers are removed from their groups.
-        Removing coordinators last better preserves playqueues on the speakers.
+        Coalesces all calls within UNJOIN_SERVICE_TIMEOUT to
+        allow use of SonosSpeaker.unjoin_multi() which
+        optimizes the order in which speakers are removed
+        from their groups. Removing coordinators last better
+        preserves playqueues on the speakers.
         """
         sonos_data = self.config_entry.runtime_data
         household_id = self.speaker.household_id
 
         async def async_process_unjoin(now: datetime.datetime) -> None:
-            """Process the unjoin with all remove requests within the coalescing period."""
+            """Process the unjoin with all remove requests."""
             unjoin_data = sonos_data.unjoin_data.pop(household_id)
             _LOGGER.debug(
                 "Processing unjoins for %s", [x.zone_name for x in unjoin_data.speakers]

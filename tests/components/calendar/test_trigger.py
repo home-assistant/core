@@ -7,8 +7,6 @@ and create events using a relative time offset and then advance the clock
 forward exercising the triggers.
 """
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -58,8 +56,33 @@ from tests.common import (
     async_mock_service,
     mock_device_registry,
 )
+from tests.components.common import assert_trigger_options_supported
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("calendar.event_started", {}, False, False),
+        ("calendar.event_ended", {}, False, False),
+    ],
+)
+async def test_calendar_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that calendar triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @dataclass
@@ -116,7 +139,7 @@ class LegacyTriggerFormat(TriggerFormat):
 
 @dataclass
 class TargetTriggerFormat(TriggerFormat):
-    """Target trigger format using platform: calendar.event_started/ended with target."""
+    """Target trigger format using event_started/ended."""
 
     id: str = "target"
 

@@ -1,7 +1,5 @@
 """Support for text entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from gardena_bluetooth.const import AquaContourContours, AquaContourPosition

@@ -1,7 +1,5 @@
 """Support for binary sensors through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -330,7 +328,10 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{attribute}_{attribute}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}"
+            f"_{capability}_{attribute}_{attribute}"
+        )
         if (
             entity_description.category_device_class
             and (category := get_main_component_category(device))

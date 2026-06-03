@@ -252,7 +252,7 @@ async def test_reauth_wrong_account(
     reason: str,
     scope: str,
 ) -> None:
-    """Test the reauthentication aborts, if user tries to reauthenticate with another account."""
+    """Test reauth aborts when user tries a different account."""
 
     mock_config_entry.add_to_hass(hass)
 

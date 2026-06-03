@@ -1,19 +1,16 @@
 """Support for the Hive switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 
 from apyhiveapi import Hive
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import ATTR_MODE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HiveConfigEntry, refresh_system
-from .const import ATTR_MODE
 from .entity import HiveEntity
 
 PARALLEL_UPDATES = 0

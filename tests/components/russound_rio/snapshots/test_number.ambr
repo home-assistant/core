@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[number.backyard_balance-entry]
+# name: test_all_entities[number.backyard_backyard_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.backyard_balance',
+    'entity_id': 'number.backyard_backyard_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.backyard_balance-state]
+# name: test_all_entities[number.backyard_backyard_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Backyard Balance',
@@ -51,14 +51,14 @@
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.backyard_balance',
+    'entity_id': 'number.backyard_backyard_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.backyard_bass-entry]
+# name: test_all_entities[number.backyard_backyard_bass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -77,7 +77,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.backyard_bass',
+    'entity_id': 'number.backyard_backyard_bass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -100,7 +100,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.backyard_bass-state]
+# name: test_all_entities[number.backyard_backyard_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Backyard Bass',
@@ -110,14 +110,14 @@
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.backyard_bass',
+    'entity_id': 'number.backyard_backyard_bass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.backyard_treble-entry]
+# name: test_all_entities[number.backyard_backyard_treble-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -136,7 +136,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.backyard_treble',
+    'entity_id': 'number.backyard_backyard_treble',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -159,7 +159,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.backyard_treble-state]
+# name: test_all_entities[number.backyard_backyard_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Backyard Treble',
@@ -169,14 +169,14 @@
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.backyard_treble',
+    'entity_id': 'number.backyard_backyard_treble',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.backyard_turn_on_volume-entry]
+# name: test_all_entities[number.backyard_backyard_turn_on_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -195,7 +195,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.backyard_turn_on_volume',
+    'entity_id': 'number.backyard_backyard_turn_on_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -218,7 +218,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.backyard_turn_on_volume-state]
+# name: test_all_entities[number.backyard_backyard_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Backyard Turn-on volume',
@@ -228,14 +228,14 @@
       'step': 2,
     }),
     'context': <ANY>,
-    'entity_id': 'number.backyard_turn_on_volume',
+    'entity_id': 'number.backyard_backyard_turn_on_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.0',
   })
 # ---
-# name: test_all_entities[number.bedroom_balance-entry]
+# name: test_all_entities[number.bedroom_bedroom_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -254,7 +254,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.bedroom_balance',
+    'entity_id': 'number.bedroom_bedroom_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -277,7 +277,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.bedroom_balance-state]
+# name: test_all_entities[number.bedroom_bedroom_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bedroom Balance',
@@ -287,14 +287,14 @@
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_balance',
+    'entity_id': 'number.bedroom_bedroom_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.bedroom_bass-entry]
+# name: test_all_entities[number.bedroom_bedroom_bass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -313,7 +313,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.bedroom_bass',
+    'entity_id': 'number.bedroom_bedroom_bass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -336,7 +336,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.bedroom_bass-state]
+# name: test_all_entities[number.bedroom_bedroom_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bedroom Bass',
@@ -346,14 +346,14 @@
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_bass',
+    'entity_id': 'number.bedroom_bedroom_bass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.bedroom_treble-entry]
+# name: test_all_entities[number.bedroom_bedroom_treble-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -372,7 +372,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.bedroom_treble',
+    'entity_id': 'number.bedroom_bedroom_treble',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -395,7 +395,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.bedroom_treble-state]
+# name: test_all_entities[number.bedroom_bedroom_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bedroom Treble',
@@ -405,14 +405,14 @@
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_treble',
+    'entity_id': 'number.bedroom_bedroom_treble',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.bedroom_turn_on_volume-entry]
+# name: test_all_entities[number.bedroom_bedroom_turn_on_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -431,7 +431,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.bedroom_turn_on_volume',
+    'entity_id': 'number.bedroom_bedroom_turn_on_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -454,7 +454,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.bedroom_turn_on_volume-state]
+# name: test_all_entities[number.bedroom_bedroom_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bedroom Turn-on volume',
@@ -464,7 +464,7 @@
       'step': 2,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_turn_on_volume',
+    'entity_id': 'number.bedroom_bedroom_turn_on_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -707,7 +707,7 @@
     'state': '40.0',
   })
 # ---
-# name: test_all_entities[number.living_room_balance-entry]
+# name: test_all_entities[number.living_room_living_room_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -726,7 +726,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.living_room_balance',
+    'entity_id': 'number.living_room_living_room_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -749,7 +749,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.living_room_balance-state]
+# name: test_all_entities[number.living_room_living_room_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living Room Balance',
@@ -759,14 +759,14 @@
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.living_room_balance',
+    'entity_id': 'number.living_room_living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.living_room_bass-entry]
+# name: test_all_entities[number.living_room_living_room_bass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -785,7 +785,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.living_room_bass',
+    'entity_id': 'number.living_room_living_room_bass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -808,7 +808,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.living_room_bass-state]
+# name: test_all_entities[number.living_room_living_room_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living Room Bass',
@@ -818,14 +818,14 @@
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.living_room_bass',
+    'entity_id': 'number.living_room_living_room_bass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.living_room_treble-entry]
+# name: test_all_entities[number.living_room_living_room_treble-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -844,7 +844,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.living_room_treble',
+    'entity_id': 'number.living_room_living_room_treble',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -867,7 +867,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.living_room_treble-state]
+# name: test_all_entities[number.living_room_living_room_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living Room Treble',
@@ -877,14 +877,14 @@
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.living_room_treble',
+    'entity_id': 'number.living_room_living_room_treble',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.living_room_turn_on_volume-entry]
+# name: test_all_entities[number.living_room_living_room_turn_on_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -903,7 +903,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.living_room_turn_on_volume',
+    'entity_id': 'number.living_room_living_room_turn_on_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -926,7 +926,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.living_room_turn_on_volume-state]
+# name: test_all_entities[number.living_room_living_room_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living Room Turn-on volume',
@@ -936,7 +936,7 @@
       'step': 2,
     }),
     'context': <ANY>,
-    'entity_id': 'number.living_room_turn_on_volume',
+    'entity_id': 'number.living_room_living_room_turn_on_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

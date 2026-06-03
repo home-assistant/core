@@ -1,10 +1,8 @@
 """Config flow support for Intergas InComfort integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from incomfortclient import InvalidGateway, InvalidHeaterList
 import voluptuous as vol
@@ -102,6 +100,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_host: str
 
+    @override
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -110,6 +109,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return InComfortOptionsFlowHandler()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -171,6 +171,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_HOST: self._discovered_host},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

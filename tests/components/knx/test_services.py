@@ -194,6 +194,18 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     assert untyped_event_1.data["data"] is True
     assert untyped_event_1.data["value"] is None
 
+    # remove event for non-registered address - raise error
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            "knx",
+            "event_register",
+            {"address": "4/4/4", "remove": True},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "service_event_register_ga_not_found"
+    assert exc_info.value.translation_placeholders == {"group_addresses": "4/4/4"}
+
 
 async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.exposure_register` service."""
@@ -243,7 +255,8 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         },
         blocking=True,
     )
-    # no attribute on first change wouldn't work because no attribute change since last test
+    # no attribute on first change wouldn't work because no
+    # attribute change since last test
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 30})
     await hass.async_block_till_done()
     await knx.assert_write(test_address, (30,))

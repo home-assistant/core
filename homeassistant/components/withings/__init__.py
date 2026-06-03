@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
 import contextlib

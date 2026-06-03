@@ -1,7 +1,5 @@
 """Support for Lutron scenes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pylutron import Button, Keypad, Lutron

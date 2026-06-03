@@ -1,7 +1,5 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -148,7 +146,8 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     PermobilSensorEntityDescription(
-        # Largest number of adjustemnts in a single 24h period, monotonically increasing, never resets
+        # Largest number of adjustments in a single 24h period,
+        # monotonically increasing, never resets
         value_fn=lambda data: data.records[RECORDS_SEATING[0]],
         available_fn=lambda data: RECORDS_SEATING[0] in data.records,
         key="record_adjustments",
@@ -157,7 +156,8 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     PermobilSensorEntityDescription(
-        # Record of largest distance travelled in a day, monotonically increasing, never resets
+        # Record of largest distance travelled in a day,
+        # monotonically increasing, never resets
         value_fn=lambda data: data.records[RECORDS_DISTANCE[0]],
         available_fn=lambda data: RECORDS_DISTANCE[0] in data.records,
         key="record_distance",

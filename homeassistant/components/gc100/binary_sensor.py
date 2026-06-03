@@ -1,7 +1,5 @@
 """Support for binary sensor using GC100."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (

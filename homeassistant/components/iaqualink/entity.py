@@ -1,7 +1,5 @@
 """Component to embed Aqualink devices."""
 
-from __future__ import annotations
-
 from iaqualink.device import AqualinkDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo

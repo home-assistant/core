@@ -1,7 +1,5 @@
 """Support for MAX! Thermostats via MAX! Cube."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -95,7 +93,8 @@ class MaxCubeClimate(ClimateEntity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         temp = self._device.min_temperature or MIN_TEMPERATURE
-        # OFF_TEMPERATURE (always off) a is valid temperature to maxcube but not to Home Assistant.
+        # OFF_TEMPERATURE (always off) is valid to maxcube
+        # but not to Home Assistant.
         # We use HVACMode.OFF instead to represent a turned off thermostat.
         return max(temp, MIN_TEMPERATURE)
 

@@ -20,7 +20,7 @@ async def async_setup_entry(
     config_entry: DynaliteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Record the async_add_entities function to add them later when received from Dynalite."""
+    """Record the async_add_entities function to add them later."""
 
     @callback
     def cover_from_device(device: Any, bridge: DynaliteBridge) -> CoverEntity:
@@ -86,7 +86,7 @@ class DynaliteCover(DynaliteBase, CoverEntity):
 
 
 class DynaliteCoverWithTilt(DynaliteCover):
-    """Representation of a Dynalite Channel as a Home Assistant Cover that uses up and down for tilt."""
+    """Representation of a Dynalite Channel as a Cover with tilt."""
 
     @property
     def current_cover_tilt_position(self) -> int:

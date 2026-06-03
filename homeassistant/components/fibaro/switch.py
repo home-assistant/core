@@ -1,7 +1,5 @@
 """Support for Fibaro switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyfibaro.fibaro_device import DeviceModel

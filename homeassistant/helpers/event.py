@@ -1,7 +1,5 @@
 """Helpers for listening to events."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
@@ -93,7 +91,7 @@ _TypedDictT = TypeVar("_TypedDictT", bound=Mapping[str, Any])
 
 
 @dataclass(slots=True, frozen=True)
-class _KeyedEventTracker(Generic[_TypedDictT]):
+class _KeyedEventTracker(Generic[_TypedDictT]):  # noqa: UP046
     """Class to track events by key."""
 
     key: HassKey[_KeyedEventData[_TypedDictT]]
@@ -117,7 +115,7 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
 
 
 @dataclass(slots=True, frozen=True)
-class _KeyedEventData(Generic[_TypedDictT]):
+class _KeyedEventData(Generic[_TypedDictT]):  # noqa: UP046
     """Class to track data for events by key."""
 
     listener: CALLBACK_TYPE

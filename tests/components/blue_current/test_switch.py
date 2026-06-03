@@ -108,7 +108,7 @@ async def test_toggle(
 async def test_setting_change(
     hass: HomeAssistant, config_entry: MockConfigEntry, entity_registry: EntityRegistry
 ) -> None:
-    """Test if the state of the switches are updated when an update message from the websocket comes in."""
+    """Test switch state updates from websocket messages."""
     integration = await init_integration(hass, config_entry, Platform.SWITCH)
     client_mock = integration[0]
 

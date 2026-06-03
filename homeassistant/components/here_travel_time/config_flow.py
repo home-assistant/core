@@ -1,7 +1,5 @@
 """Config flow for HERE Travel Time integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -90,6 +88,8 @@ def get_user_step_schema(data: Mapping[str, Any]) -> vol.Schema:
         travel_mode = TRAVEL_MODE_PUBLIC
     return vol.Schema(
         {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Optional(
                 CONF_NAME, default=data.get(CONF_NAME, DEFAULT_NAME)
             ): cv.string,

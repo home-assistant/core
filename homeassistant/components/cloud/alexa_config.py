@@ -1,7 +1,5 @@
 """Alexa configuration for Home Assistant Cloud."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from contextlib import suppress
@@ -34,7 +32,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, start
@@ -232,7 +229,8 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                     ALEXA_SETTINGS_VERSION,
                 )
                 if self._prefs.alexa_settings_version < 2 or (
-                    # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
+                    # Recover from a bug we had in 2023.5.0
+                    # where entities didn't get exposed
                     self._prefs.alexa_settings_version < 3
                     and not any(
                         settings.get("should_expose", False)
@@ -276,9 +274,6 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
     def _should_expose_legacy(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            return False
-
         entity_configs = self._prefs.alexa_entity_configs
         entity_config = entity_configs.get(entity_id, {})
         entity_expose: bool | None = entity_config.get(PREF_SHOULD_EXPOSE)
@@ -309,8 +304,6 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         """If an entity should be exposed."""
         entity_filter: EntityFilter = self._config[CONF_FILTER]
         if not entity_filter.empty_filter:
-            if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-                return False
             return entity_filter(entity_id)
 
         return async_should_expose(self.hass, CLOUD_ALEXA, entity_id)

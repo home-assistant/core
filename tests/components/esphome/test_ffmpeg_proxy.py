@@ -531,7 +531,7 @@ async def test_request_same_url_multiple_times(
     hass_client: ClientSessionGenerator,
     wav_file: str,
 ) -> None:
-    """Test that the ffmpeg process is restarted if the same URL is requested multiple times."""
+    """Test ffmpeg process is restarted if same URL requested again."""
     device_id = "1234"
 
     await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})

@@ -15,13 +15,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type MullvadConfigEntry = ConfigEntry[MullvadCoordinator]
+
 
 class MullvadCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Mullvad VPN data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: MullvadConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: MullvadConfigEntry) -> None:
         """Initialize the Mullvad coordinator."""
         super().__init__(
             hass,

@@ -154,8 +154,9 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert (
-            result["title"]
-            == f"Airzone {CONFIG_ID1[CONF_HOST]}:{CONFIG_ID1[CONF_PORT]} #{CONFIG_ID1[CONF_ID]}"
+            result["title"] == f"Airzone {CONFIG_ID1[CONF_HOST]}"
+            f":{CONFIG_ID1[CONF_PORT]}"
+            f" #{CONFIG_ID1[CONF_ID]}"
         )
         assert result["data"][CONF_HOST] == CONFIG_ID1[CONF_HOST]
         assert result["data"][CONF_PORT] == CONFIG_ID1[CONF_PORT]

@@ -1,7 +1,5 @@
 """Tests for the LG Infrared media player platform."""
 
-from __future__ import annotations
-
 from infrared_protocols.codes.lg.tv import LGTVCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,10 +21,10 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockInfraredEntity
-from .utils import check_availability_follows_ir_entity
-
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.common import assert_availability_follows_source_entity
+from tests.components.infrared import EMITTER_ENTITY_ID
+from tests.components.infrared.common import MockInfraredEmitterEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.lg_tv"
 
@@ -78,7 +76,7 @@ async def test_entities(
 @pytest.mark.usefixtures("init_integration")
 async def test_media_player_action_sends_correct_code(
     hass: HomeAssistant,
-    mock_infrared_entity: MockInfraredEntity,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     service: str,
     service_data: dict[str, bool],
     expected_code: LGTVCode,
@@ -91,8 +89,8 @@ async def test_media_player_action_sends_correct_code(
         blocking=True,
     )
 
-    assert len(mock_infrared_entity.send_command_calls) == 1
-    assert mock_infrared_entity.send_command_calls[0] == expected_code
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -100,4 +98,6 @@ async def test_media_player_availability_follows_ir_entity(
     hass: HomeAssistant,
 ) -> None:
     """Test media player becomes unavailable when IR entity is unavailable."""
-    await check_availability_follows_ir_entity(hass, MEDIA_PLAYER_ENTITY_ID)
+    await assert_availability_follows_source_entity(
+        hass, MEDIA_PLAYER_ENTITY_ID, EMITTER_ENTITY_ID
+    )

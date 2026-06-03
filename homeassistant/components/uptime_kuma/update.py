@@ -1,7 +1,5 @@
 """Update platform for the Uptime Kuma integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 
 from yarl import URL

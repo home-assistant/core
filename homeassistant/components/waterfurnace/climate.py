@@ -1,7 +1,5 @@
 """Support for WaterFurnace climate entity."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from waterfurnace.waterfurnace import WFException

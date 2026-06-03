@@ -128,7 +128,10 @@ async def test_initialization(
     mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
 ) -> None:
-    """Test the integration is initialized properly in _initialize, async_added_to_hass and __init__."""
+    """Test the integration is initialized properly.
+
+    Checks _initialize, async_added_to_hass and __init__.
+    """
     caplog.set_level(logging.DEBUG)
 
     # Setup entity
@@ -218,7 +221,7 @@ async def test_async_update_sources_availability(
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the playback_source WebSocket event updates available playback sources."""
+    """Test playback_source WebSocket event updates sources."""
     # Remove video sources to simplify test
     mock_mozart_client.get_remote_menu.return_value = {}
 
@@ -237,7 +240,8 @@ async def test_async_update_sources_availability(
         items=[TEST_SOURCE]
     )
 
-    # Send playback_source. The source is not actually used, so its attributes don't matter
+    # Send playback_source. The source is not actually
+    # used, so its attributes don't matter
     playback_source_callback(Source())
 
     assert mock_mozart_client.get_available_sources.call_count == 2
@@ -298,12 +302,15 @@ async def test_async_update_playback_error(
         mock_mozart_client.get_playback_error_notifications.call_args[0][0]
     )
 
-    # The async_dispatcher_send function seems to swallow exceptions, making pytest.raises unusable
+    # The async_dispatcher_send function seems to swallow
+    # exceptions, making pytest.raises unusable
     playback_error_callback(TEST_PLAYBACK_ERROR)
 
     assert (
-        "Exception in _async_update_playback_error when dispatching 'bang_olufsen_11111111_playback_error': (PlaybackError(error='Test error', item=None),)"
-        in caplog.text
+        "Exception in _async_update_playback_error when"
+        " dispatching"
+        " 'bang_olufsen_11111111_playback_error':"
+        " (PlaybackError(error='Test error', item=None),)" in caplog.text
     )
 
 
@@ -589,7 +596,8 @@ async def test_async_update_beolink_listener(
     # Called once for each entity during _initialize
     assert mock_mozart_client.get_beolink_listeners.call_count == 3
     # Called once for each entity during _initialize and
-    # once more during _async_update_beolink for the entity that has the callback associated with it.
+    # once more during _async_update_beolink for the entity
+    # that has the callback associated with it.
     assert mock_mozart_client.get_beolink_peers.call_count == 4
 
     # Main entity
@@ -850,7 +858,7 @@ async def test_async_select_source(
     audio_source_call: int,
     video_source_call: int,
 ) -> None:
-    """Test async_select_source with an invalid source and valid audio and video sources."""
+    """Test async_select_source with invalid/valid sources."""
     with expected_result:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
@@ -970,7 +978,7 @@ async def test_async_play_media_overlay_absolute_volume_uri(
     integration: None,
     mock_mozart_client: AsyncMock,
 ) -> None:
-    """Test async_play_media overlay with Home Assistant local URI and absolute volume."""
+    """Test async_play_media overlay with local URI."""
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     await hass.services.async_call(
@@ -1564,8 +1572,12 @@ async def test_async_beolink_join_invalid(
             [TEST_JID_3, TEST_JID_4],
             NotFoundException(),
             [
-                f"Unable to expand to {TEST_JID_3}. Is the device available on the network?",
-                f"Unable to expand to {TEST_JID_4}. Is the device available on the network?",
+                "Unable to expand to "
+                f"{TEST_JID_3}. Is the device "
+                "available on the network?",
+                "Unable to expand to "
+                f"{TEST_JID_4}. Is the device "
+                "available on the network?",
             ],
             2,
         ),
@@ -1607,7 +1619,8 @@ async def test_async_beolink_expand(
     for log_message in log_messages:
         assert log_message in caplog.text
 
-    # Called once during _initialize and once during async_beolink_expand for all_discovered
+    # Called once during _initialize and once during
+    # async_beolink_expand for all_discovered
     assert mock_mozart_client.get_beolink_peers.call_count == peers_call_count
 
     assert mock_mozart_client.post_beolink_expand.call_count == len(

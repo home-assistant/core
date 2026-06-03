@@ -1,7 +1,5 @@
 """Define fixtures for electric kiwi tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from time import time
 from unittest.mock import AsyncMock, patch

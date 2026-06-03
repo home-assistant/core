@@ -1,7 +1,5 @@
 """Support for Ecobee Send Message service."""
 
-from __future__ import annotations
-
 from homeassistant.components.notify import NotifyEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -26,7 +24,6 @@ class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
     """Implement the notification entity for the Ecobee thermostat."""
 
     _attr_name = None
-    _attr_has_entity_name = True
 
     def __init__(self, data: EcobeeData, thermostat_index: int) -> None:
         """Initialize the thermostat."""

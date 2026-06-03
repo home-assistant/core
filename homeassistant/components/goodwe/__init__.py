@@ -64,7 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
 async def async_check_port(
     hass: HomeAssistant, entry: GoodweConfigEntry, host: str
 ) -> Inverter:
-    """Check the communication port of the inverter, it may have changed after a firmware update."""
+    """Check the communication port of the inverter.
+
+    It may have changed after a firmware update.
+    """
     inverter, port = await GoodweFlowHandler.async_detect_inverter_port(host=host)
     family = type(inverter).__name__
     hass.config_entries.async_update_entry(

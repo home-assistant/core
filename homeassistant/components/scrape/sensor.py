@@ -1,13 +1,11 @@
 """Support for getting data from websites with scraping."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import CONF_STATE_CLASS
+from homeassistant.components.sensor import CONF_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
@@ -23,6 +21,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.template import _SENTINEL, Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -61,7 +60,17 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    discovery_info = cast(DiscoveryInfoType, discovery_info)
+    if discovery_info is None:
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/scrape/",
+            logger=_LOGGER,
+        )
+        return
+
     coordinator: ScrapeCoordinator = discovery_info["coordinator"]
     sensors_config: list[ConfigType] = discovery_info["configs"]
 

@@ -1,7 +1,5 @@
 """Message routing coordinators for handling NASweb push notifications."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
@@ -28,7 +26,10 @@ KEY_ZONES = "zones"
 
 
 class NotificationCoordinator:
-    """Coordinator redirecting push notifications for this integration to appropriate NASwebCoordinator."""
+    """Coordinator redirecting push notifications for this integration.
+
+    Redirects to appropriate NASwebCoordinator.
+    """
 
     def __init__(self) -> None:
         """Initialize coordinator."""
@@ -162,11 +163,15 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
             self.async_update_listeners()
 
     def _schedule_last_update_check(self) -> None:
-        """Schedule a task to trigger entities state update after `STATUS_UPDATE_MAX_TIME_INTERVAL`.
+        """Schedule a task to trigger entities state update.
 
-        This method schedules a task (`_handle_max_update_interval`) to be executed after
-        `STATUS_UPDATE_MAX_TIME_INTERVAL` seconds without status update, which enables entities
-        to change their state to unavailable. After each status update this task is rescheduled.
+        Triggers after `STATUS_UPDATE_MAX_TIME_INTERVAL`.
+        This method schedules a task
+        (`_handle_max_update_interval`) to be executed after
+        `STATUS_UPDATE_MAX_TIME_INTERVAL` seconds without
+        status update, which enables entities to change their
+        state to unavailable. After each status update this
+        task is rescheduled.
         """
         self._async_unsub_last_update_check()
         now = self._hass.loop.time()

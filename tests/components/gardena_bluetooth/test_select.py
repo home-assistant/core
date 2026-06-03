@@ -39,12 +39,12 @@ def mock_chars(mock_read_char_raw):
         pytest.param(
             AQUA_CONTOUR_SERVICE_INFO,
             {
-                AquaContourWatering.watering_active.uuid: AquaContourWatering.watering_active.encode(
-                    0
+                AquaContourWatering.watering_active.uuid: (
+                    AquaContourWatering.watering_active.encode(0)
                 ),
                 AquaContour.operation_mode.uuid: AquaContour.operation_mode.encode(0),
-                AquaContourPosition.active_position.uuid: AquaContourPosition.active_position.encode(
-                    0
+                AquaContourPosition.active_position.uuid: (
+                    AquaContourPosition.active_position.encode(0)
                 ),
             },
             id="aqua_contour",

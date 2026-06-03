@@ -1,7 +1,5 @@
 """Sensoterra devices."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum, auto
 

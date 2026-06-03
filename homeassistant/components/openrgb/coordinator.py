@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for OpenRGB."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
@@ -66,6 +64,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 DEFAULT_CLIENT_NAME,
             )
         except CONNECTION_ERRORS as err:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",

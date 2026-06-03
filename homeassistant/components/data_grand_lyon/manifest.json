@@ -1,0 +1,11 @@
+{
+  "domain": "data_grand_lyon",
+  "name": "Data Grand Lyon",
+  "codeowners": ["@Crocmagnon"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/data_grand_lyon",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "platinum",
+  "requirements": ["data-grand-lyon-ha==0.7.0"]
+}

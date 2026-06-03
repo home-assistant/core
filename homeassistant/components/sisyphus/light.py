@@ -1,7 +1,5 @@
 """Support for the light on the Sisyphus Kinetic Art Table."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

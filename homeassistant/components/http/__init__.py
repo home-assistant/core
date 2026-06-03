@@ -1,7 +1,5 @@
 """Support to serve the Home Assistant API as WSGI application."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Collection
 from dataclasses import dataclass

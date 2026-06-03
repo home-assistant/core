@@ -58,7 +58,7 @@ send_message:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -101,7 +101,7 @@ send_chat_action:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -195,7 +195,7 @@ send_photo:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -287,7 +287,7 @@ send_media_group:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -372,7 +372,7 @@ send_sticker:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -466,7 +466,7 @@ send_animation:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -560,7 +560,7 @@ send_video:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -645,7 +645,7 @@ send_voice:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -739,7 +739,7 @@ send_document:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -804,7 +804,7 @@ send_location:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -861,7 +861,7 @@ send_poll:
       selector:
         number:
           mode: box
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -913,7 +913,7 @@ edit_message:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -991,7 +991,7 @@ edit_message_media:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -1028,7 +1028,7 @@ edit_caption:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -1061,7 +1061,7 @@ edit_replymarkup:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -1108,7 +1108,7 @@ delete_message:
       example: "{{ trigger.event.data.message.message_id }}"
       selector:
         text:
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -1129,7 +1129,7 @@ leave_chat:
           filter:
             domain: notify
             integration: telegram_bot
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -1164,7 +1164,7 @@ set_message_reaction:
       required: false
       selector:
         boolean:
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:
@@ -1233,7 +1233,7 @@ send_message_draft:
             - "markdownv2"
             - "plain_text"
           translation_key: "parse_mode"
-    advanced:
+    additional_fields:
       collapsed: true
       fields:
         config_entry_id:

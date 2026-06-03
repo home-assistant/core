@@ -1,7 +1,5 @@
 """Platform for binary sensor integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -95,7 +93,10 @@ async def async_setup_entry(
 
 
 class SmartTubOnline(SmartTubOnboardSensorBase, BinarySensorEntity):
-    """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
+    """A binary sensor indicating whether the spa is online.
+
+    Indicates if it is connected to the cloud.
+    """
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     # This seems to be very noisy and not generally useful, so disable by default.

@@ -138,7 +138,9 @@ async def test_generate_data_service_structure_fields(
             "entity_id": TEST_ENTITY_ID,
             "structure": {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                     "required": True,
                     "selector": {"text": {}},
                 },
@@ -156,7 +158,8 @@ async def test_generate_data_service_structure_fields(
         blocking=True,
         return_response=True,
     )
-    # Arbitrary data returned by the mock entity (not determined by above schema in test)
+    # Arbitrary data returned by the mock entity
+    # (not determined by above schema in test)
     assert result["data"] == {
         "name": "Tracy Chen",
         "age": 30,
@@ -191,7 +194,9 @@ async def test_generate_data_service_structure_fields(
         (
             {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                     "selector": {"invalid-selector": {}},
                 },
             },
@@ -201,7 +206,9 @@ async def test_generate_data_service_structure_fields(
         (
             {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                     "selector": {
                         "text": {
                             "extra-config": False,
@@ -215,7 +222,9 @@ async def test_generate_data_service_structure_fields(
         (
             {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                 },
             },
             vol.Invalid,
@@ -227,7 +236,9 @@ async def test_generate_data_service_structure_fields(
         (
             {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                     "selector": {"text": {}},
                     "extra-fields": "Some extra fields",
                 },
@@ -238,7 +249,9 @@ async def test_generate_data_service_structure_fields(
         (
             {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                     "selector": "invalid-schema",
                 },
             },

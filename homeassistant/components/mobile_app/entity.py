@@ -1,7 +1,5 @@
 """An entity class for mobile_app."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -85,7 +83,8 @@ class MobileAppEntity(RestoreEntity):
         """Restore previous state."""
         config = self._config
 
-        # Only restore state if we don't have one already, since it can be set by a pending update
+        # Only restore state if we don't have one already,
+        # since it can be set by a pending update
         if config[ATTR_SENSOR_STATE] in (None, STATE_UNKNOWN):
             config[ATTR_SENSOR_STATE] = last_state.state
             config[ATTR_SENSOR_ATTRIBUTES] = {
@@ -111,7 +110,7 @@ class MobileAppEntity(RestoreEntity):
         """Restore any pending update for this entity."""
         entity_type = self._config[ATTR_SENSOR_TYPE]
         # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
+        # pylint: disable-next=home-assistant-use-runtime-data
         pending_updates = self.hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type]
         if update := pending_updates.pop(self._attr_unique_id, None):
             _LOGGER.debug(

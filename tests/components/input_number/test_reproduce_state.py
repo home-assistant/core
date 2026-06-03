@@ -52,7 +52,8 @@ async def test_reproducing_states(
     # Test setting state to number out of range
     await async_reproduce_state(hass, [State("input_number.test_number", "150")])
 
-    # The entity states should be unchanged after trying to set them to out-of-range number
+    # The entity states should be unchanged after trying to set
+    # them to out-of-range number
     assert hass.states.get("input_number.test_number").state == VALID_NUMBER2
 
     await async_reproduce_state(

@@ -1,7 +1,5 @@
 """Config flow for London Underground integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any
@@ -91,7 +89,9 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
                 await data.update()
         except Exception:
             _LOGGER.exception(
-                "Unexpected error trying to connect before importing config, aborting import "
+                "Unexpected error trying to connect"
+                " before importing config,"
+                " aborting import "
             )
             return self.async_abort(reason="cannot_connect")
 
@@ -103,7 +103,9 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
         lines = import_data.get(CONF_LINE, DEFAULT_LINES)
         if "London Overground" in lines:
             _LOGGER.warning(
-                "London Overground was removed from the configuration as the line has been divided and renamed"
+                "London Overground was removed from the"
+                " configuration as the line has been"
+                " divided and renamed"
             )
             lines.remove("London Overground")
         return self.async_create_entry(

@@ -1,7 +1,5 @@
 """Base UptimeRobot entity."""
 
-from __future__ import annotations
-
 from pyuptimerobot import UptimeRobotMonitor
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo

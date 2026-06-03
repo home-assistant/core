@@ -1,7 +1,5 @@
 """Config flow for TP-Link."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, Self, cast
@@ -131,7 +129,8 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if not updates:
             return None
         updates = {**entry.data, **updates}
-        # If the connection parameters have changed the credentials_hash will be invalid.
+        # If the connection parameters have changed the
+        # credentials_hash will be invalid.
         if new_connection_params:
             updates.pop(CONF_CREDENTIALS_HASH, None)
             _LOGGER.debug(
@@ -146,7 +145,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     def _update_config_if_entry_in_setup_error(
         self, entry: ConfigEntry, host: str, device: Device | None
     ) -> ConfigFlowResult | None:
-        """If discovery encounters a device that is in SETUP_ERROR or SETUP_RETRY update the device config."""
+        """Update device config if discovery finds a device in error state."""
         if entry.state not in (
             ConfigEntryState.SETUP_ERROR,
             ConfigEntryState.SETUP_RETRY,
@@ -216,7 +215,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._discovered_device, credentials
                 )
             except AuthenticationError:
-                pass  # Authentication exceptions should continue to the rest of the step
+                pass
             else:
                 self._discovered_device = device
                 return await self.async_step_discovery_confirm()
@@ -553,7 +552,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices = await async_discover_devices(self.hass)
         devices_name = {
             formatted_mac: (
-                f"{device.alias or mac_alias(device.mac)} {device.model} ({device.host}) {formatted_mac}"
+                f"{device.alias or mac_alias(device.mac)}"
+                f" {device.model} ({device.host})"
+                f" {formatted_mac}"
             )
             for formatted_mac, device in self._discovered_devices.items()
             if formatted_mac not in configured_devices

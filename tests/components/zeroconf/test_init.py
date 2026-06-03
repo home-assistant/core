@@ -220,15 +220,17 @@ async def test_setup_with_overly_long_url_and_name(
             hass.config,
             "location_name",
             (
-                "\u00dcBER \u00dcber German Umlaut long string long string long string long"
-                " string long string long string long string long string long string long"
-                " string long string long string long string long string long string long"
-                " string long string long string long string long string long string long"
-                " string long string long string long string long string long string long"
-                " string long string long string long string long string long string long"
-                " string long string long string long string long string long string long"
-                " string long string long string long string long string long string long"
-                " string long string long string long string long string"
+                "\u00dcBER \u00dcber German Umlaut long string"
+                " long string long string long string long string long string"
+                " long string long string long string long string long string"
+                " long string long string long string long string long string"
+                " long string long string long string long string long string"
+                " long string long string long string long string long string"
+                " long string long string long string long string long string"
+                " long string long string long string long string long string"
+                " long string long string long string long string long string"
+                " long string long string long string long string long string"
+                " long string long string long string long string"
             ),
         ),
         patch(

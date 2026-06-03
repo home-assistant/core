@@ -1,12 +1,10 @@
 """Platform for Husqvarna Automower base entity."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Concatenate, overload
 
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
@@ -37,18 +35,14 @@ ERROR_STATES = [
 ]
 
 
-_Entity = TypeVar("_Entity", bound="AutomowerBaseEntity")
-_P = ParamSpec("_P")
-
-
 @overload
-def handle_sending_exception(
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     _func: Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, None]]: ...
 
 
 @overload
-def handle_sending_exception(
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     *,
     poll_after_sending: bool = False,
 ) -> Callable[
@@ -57,7 +51,7 @@ def handle_sending_exception(
 ]: ...
 
 
-def handle_sending_exception(
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     _func: Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]] | None = None,
     *,
     poll_after_sending: bool = False,
@@ -85,8 +79,9 @@ def handle_sending_exception(
                 ) from exception
             else:
                 if poll_after_sending:
-                    # As there are no updates from the websocket for this attribute,
-                    # we need to wait until the command is executed and then poll the API.
+                    # As there are no updates from the websocket for
+                    # this attribute, we need to wait until the
+                    # command is executed and then poll the API.
                     await asyncio.sleep(EXECUTION_TIME_DELAY)
                     await self.coordinator.async_request_refresh()
 

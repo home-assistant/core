@@ -58,7 +58,7 @@ async def test_switch_update(
     assert len(mock_hub_configuration_prod_load_switch.mock_calls) == 1
     assert len(mock_hub_status_prod_load_switch.mock_calls) >= 2
 
-    entity = hass.states.get("switch.heizung_links")
+    entity = hass.states.get("switch.terasse_heizung_links")
     assert entity is not None
     assert entity == snapshot
 
@@ -86,7 +86,7 @@ async def test_switch_turn_on_and_off(
     assert len(mock_hub_configuration_prod_load_switch.mock_calls) == 1
     assert len(mock_hub_status_prod_load_switch.mock_calls) >= 1
 
-    entity = hass.states.get("switch.heizung_links")
+    entity = hass.states.get("switch.terasse_heizung_links")
     assert entity is not None
     assert entity.state == STATE_OFF
 
@@ -103,7 +103,7 @@ async def test_switch_turn_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("switch.heizung_links")
+        entity = hass.states.get("switch.terasse_heizung_links")
         assert entity is not None
         assert entity.state == STATE_ON
         assert len(mock_hub_status_prod_load_switch.mock_calls) == before
@@ -121,7 +121,7 @@ async def test_switch_turn_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("switch.heizung_links")
+        entity = hass.states.get("switch.terasse_heizung_links")
         assert entity is not None
         assert entity.state == STATE_OFF
         assert len(mock_hub_status_prod_load_switch.mock_calls) == before

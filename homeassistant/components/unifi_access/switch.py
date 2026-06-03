@@ -1,7 +1,5 @@
 """Switch platform for the UniFi Access integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from typing import Any

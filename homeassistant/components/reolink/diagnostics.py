@@ -1,7 +1,5 @@
 """Diagnostics support for Reolink."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -17,15 +15,15 @@ async def async_get_config_entry_diagnostics(
     host = reolink_data.host
     api = host.api
 
-    IPC_cam: dict[int, dict[str, Any]] = {}
+    ipc_cam: dict[int, dict[str, Any]] = {}
     for ch in api.channels:
-        IPC_cam[ch] = {}
-        IPC_cam[ch]["model"] = api.camera_model(ch)
-        IPC_cam[ch]["hardware version"] = api.camera_hardware_version(ch)
-        IPC_cam[ch]["firmware version"] = api.camera_sw_version(ch)
-        IPC_cam[ch]["encoding main"] = await api.get_encoding(ch)
+        ipc_cam[ch] = {}
+        ipc_cam[ch]["model"] = api.camera_model(ch)
+        ipc_cam[ch]["hardware version"] = api.camera_hardware_version(ch)
+        ipc_cam[ch]["firmware version"] = api.camera_sw_version(ch)
+        ipc_cam[ch]["encoding main"] = await api.get_encoding(ch)
         if (signal := api.wifi_signal(ch)) is not None and api.wifi_connection(ch):
-            IPC_cam[ch]["WiFi signal"] = signal
+            ipc_cam[ch]["WiFi signal"] = signal
 
     chimes: dict[int, dict[str, Any]] = {}
     for chime in api.chime_list:
@@ -52,7 +50,7 @@ async def async_get_config_entry_diagnostics(
         "stream protocol": api.protocol,
         "channels": api.channels,
         "stream channels": api.stream_channels,
-        "IPC cams": IPC_cam,
+        "IPC cams": ipc_cam,
         "Chimes": chimes,
         "capabilities": api.capabilities,
         "cmd list": host.update_cmd,

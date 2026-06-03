@@ -1,7 +1,5 @@
 """Support for Lutron Homeworks buttons."""
 
-from __future__ import annotations
-
 import asyncio
 
 from pyhomeworks.pyhomeworks import Homeworks

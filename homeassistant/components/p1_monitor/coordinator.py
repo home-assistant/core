@@ -1,7 +1,5 @@
 """Coordinator for the P1 Monitor integration."""
 
-from __future__ import annotations
-
 from typing import TypedDict
 
 from p1monitor import (

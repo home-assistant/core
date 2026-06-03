@@ -1,7 +1,5 @@
 """Support for Amcrest IP camera binary sensors."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
@@ -194,7 +192,8 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
         if self._api.available:
             # Send a command to the camera to test if we can still communicate with it.
-            # Override of Http.async_command() in __init__.py will set self._api.available
+            # Override of Http.async_command() in __init__.py will
+            # set self._api.available
             # accordingly.
             with suppress(AmcrestError):
                 await self._api.async_current_time

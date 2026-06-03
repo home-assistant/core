@@ -1,0 +1,12 @@
+{
+  "domain": "vistapool",
+  "name": "Vistapool",
+  "codeowners": ["@fdebrus"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/vistapool",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["aioaquarite"],
+  "quality_scale": "bronze",
+  "requirements": ["aioaquarite==0.4.0"]
+}

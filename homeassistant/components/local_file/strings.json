@@ -22,6 +22,9 @@
   "exceptions": {
     "file_path_not_accessible": {
       "message": "Path {file_path} is not accessible"
+    },
+    "not_readable_path": {
+      "message": "Path {file_path} is not readable"
     }
   },
   "options": {

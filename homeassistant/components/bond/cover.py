@@ -1,7 +1,5 @@
 """Support for Bond covers."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from bond_async import Action, DeviceType

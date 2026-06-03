@@ -4,13 +4,9 @@ This sets up a demo environment of features which are obscure or which represent
 incorrect behavior, and are thus not wanted in the demo integration.
 """
 
-from __future__ import annotations
-
 import datetime
 from functools import partial
 from random import random
-
-import voluptuous as vol
 
 from homeassistant.components.labs import (
     EventLabsUpdatedData,
@@ -36,7 +32,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.issue_registry import (
@@ -53,10 +49,13 @@ from homeassistant.util.unit_conversion import (
 )
 
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .services import async_setup_services
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
     Platform.FAN,
+    Platform.EVENT,
     Platform.IMAGE,
     Platform.INFRARED,
     Platform.LAWN_MOWER,
@@ -70,15 +69,6 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-SCHEMA_SERVICE_TEST_SERVICE_1 = vol.Schema(
-    {
-        vol.Required("field_1"): vol.Coerce(int),
-        vol.Required("field_2"): vol.In(["off", "auto", "cool"]),
-        vol.Optional("field_3"): vol.Coerce(int),
-        vol.Optional("field_4"): vol.In(["forwards", "reverse"]),
-    }
-)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the demo environment."""
@@ -88,24 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
     )
 
-    @callback
-    def service_handler(call: ServiceCall | None = None) -> ServiceResponse:
-        """Do nothing."""
-        return None
-
-    hass.services.async_register(
-        DOMAIN,
-        "test_service_1",
-        service_handler,
-        SCHEMA_SERVICE_TEST_SERVICE_1,
-        description_placeholders={
-            "meep_1": "foo",
-            "meep_2": "bar",
-            "meep_3": "beer",
-            "meep_4": "milk",
-            "meep_5": "https://example.com",
-        },
-    )
+    async_setup_services(hass)
 
     return True
 

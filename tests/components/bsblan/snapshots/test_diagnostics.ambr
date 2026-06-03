@@ -6,6 +6,11 @@
     ]),
     'device': dict({
       'MAC': '00:80:41:19:69:90',
+      'bus': 'BSB',
+      'busaddr': 66,
+      'busdest': 0,
+      'busdevices': None,
+      'buswritable': 1,
       'name': 'BSB-LAN',
       'uptime': 969402857,
       'version': '1.0.38-20200730234859',

@@ -1,7 +1,5 @@
 """Support for Subaru device tracker."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from subarulink.const import LATITUDE, LONGITUDE, TIMESTAMP

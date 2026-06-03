@@ -1,7 +1,5 @@
 """Text to speech support for OpenAI."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, Literal
@@ -17,11 +15,12 @@ from homeassistant.components.tts import (
     Voice,
 )
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CHAT_MODEL, CONF_PROMPT, CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED
+from .const import CONF_CHAT_MODEL, CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED
 from .entity import OpenAIBaseLLMEntity
 
 if TYPE_CHECKING:
@@ -51,7 +50,8 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
 
     _attr_supported_options = [ATTR_VOICE, ATTR_PREFERRED_FORMAT]
     # https://platform.openai.com/docs/guides/text-to-speech#supported-languages
-    # The model may also generate the audio in different languages but with lower quality
+    # The model may also generate the audio in different
+    # languages but with lower quality
     _attr_supported_languages = [
         "af-ZA",  # Afrikaans
         "ar-SA",  # Arabic

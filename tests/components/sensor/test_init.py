@@ -1,7 +1,5 @@
 """The test for sensor entity."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -642,7 +640,8 @@ async def test_translated_unit(
     with patch(
         "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
-            "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
+            "component.test.entity.sensor"
+            ".test_translation_key.unit_of_measurement": "Tests"
         },
     ):
         entity0 = MockSensor(
@@ -674,7 +673,8 @@ async def test_translated_unit_with_native_unit_raises(
     with patch(
         "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
-            "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
+            "component.test.entity.sensor"
+            ".test_translation_key.unit_of_measurement": "Tests"
         },
     ):
         entity0 = MockSensor(
@@ -700,12 +700,13 @@ async def test_translated_unit_with_native_unit_raises(
 async def test_unit_translation_key_without_platform_raises(
     hass: HomeAssistant,
 ) -> None:
-    """Test that unit translation key property raises if the entity has no platform yet."""
+    """Test unit translation key raises without platform."""
 
     with patch(
         "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
-            "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
+            "component.test.entity.sensor"
+            ".test_translation_key.unit_of_measurement": "Tests"
         },
     ):
         entity0 = MockSensor(
@@ -1612,7 +1613,8 @@ async def test_unit_conversion_priority_precision(
     assert float(state.state) == pytest.approx(custom_state)
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
 
-    # Set a display_precision, this should have priority over suggested_display_precision
+    # Set a display_precision, this should have priority over
+    # suggested_display_precision
     entity_registry.async_update_entity_options(
         entity0.entity_id,
         "sensor",
@@ -1717,7 +1719,8 @@ async def test_unit_conversion_priority_suggested_unit_change(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    # Registered entity -> Follow automatic unit conversion the first time the entity was seen
+    # Registered entity -> Follow automatic unit conversion the first
+    # time the entity was seen
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(original_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
@@ -3039,7 +3042,8 @@ async def test_suggested_unit_guard_invalid_unit(
 ) -> None:
     """Test suggested_unit_of_measurement guard.
 
-    An invalid suggested unit creates a log entry and the suggested unit will be ignored.
+    An invalid suggested unit creates a log entry and the suggested
+    unit will be ignored.
     """
     state_value = 10
     invalid_suggested_unit = "invalid_unit"
@@ -3060,8 +3064,8 @@ async def test_suggested_unit_guard_invalid_unit(
     assert not entity_registry.async_get("sensor.invalid")
 
     assert (
-        "Entity <class 'tests.components.sensor.common.MockSensor'> suggest an incorrect unit of measurement: invalid_unit"
-        in caplog.text
+        "Entity <class 'tests.components.sensor.common.MockSensor'>"
+        " suggest an incorrect unit of measurement: invalid_unit" in caplog.text
     )
 
 

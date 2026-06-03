@@ -42,12 +42,21 @@ DATA = {
     "reproduce_state": {
         "title": "Reproduce State",
         "docs": "https://developers.home-assistant.io/docs/core/platform/reproduce_state",
-        "extra": "You will now need to update the code to make sure that every attribute that can occur in the state will cause the right service to be called.",
+        "extra": (
+            "You will now need to update the code to"
+            " make sure that every attribute that can"
+            " occur in the state will cause the right"
+            " service to be called."
+        ),
     },
     "significant_change": {
         "title": "Significant Change",
         "docs": "https://developers.home-assistant.io/docs/core/platform/significant_change",
-        "extra": "You will now need to update the code to make sure that entities with different device classes are correctly considered.",
+        "extra": (
+            "You will now need to update the code to"
+            " make sure that entities with different"
+            " device classes are correctly considered."
+        ),
     },
 }
 
@@ -76,7 +85,10 @@ def print_relevant_docs(template: str, info: Info) -> None:
 
     if info.examples_added:
         print(
-            "Because some files already existed, we added the following example files. Please copy the relevant code to the existing files."
+            "Because some files already existed, we"
+            " added the following example files."
+            " Please copy the relevant code to the"
+            " existing files."
         )
         for file in info.examples_added:
             print(f"- {file}")

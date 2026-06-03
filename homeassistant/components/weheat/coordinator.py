@@ -42,13 +42,16 @@ class HeatPumpInfo(HeatPumpDiscovery.HeatPumpInfo):
         """Initialize the HeatPump object with the provided pump information.
 
         Args:
-            pump_info (HeatPumpDiscovery.HeatPumpInfo): An object containing the heat pump's discovery information, including:
+            pump_info (HeatPumpDiscovery.HeatPumpInfo):
+                An object containing the heat pump's discovery
+                information, including:
                 - uuid (str): Unique identifier for the heat pump.
                 - uuid (str): Unique identifier for the heat pump.
                 - device_name (str): Name of the heat pump device.
                 - model (str): Model of the heat pump.
                 - sn (str): Serial number of the heat pump.
-                - has_dhw (bool): Indicates if the heat pump has domestic hot water functionality.
+                - has_dhw (bool): Indicates if the heat pump
+                  has domestic hot water functionality.
 
         """
         super().__init__(

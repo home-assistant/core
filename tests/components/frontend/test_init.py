@@ -1158,7 +1158,7 @@ async def test_setup_with_development_pr_and_token(
     mock_github_api,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that setup succeeds when both development_pr and github_token are provided."""
+    """Test setup with both development_pr and github_token."""
     hass.config.config_dir = str(tmp_path)
 
     aioclient_mock.get(

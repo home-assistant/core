@@ -1,7 +1,5 @@
 """Support for BSH Home Connect appliances."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

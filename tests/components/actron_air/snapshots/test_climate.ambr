@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climate_entities[climate.living_room-entry]
+# name: test_climate_entities[climate.living_room_living_room-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -23,7 +23,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.living_room',
+    'entity_id': 'climate.living_room_living_room',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -46,7 +46,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_entities[climate.living_room-state]
+# name: test_climate_entities[climate.living_room_living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 50.0,
@@ -65,7 +65,7 @@
       'temperature': 24.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.living_room',
+    'entity_id': 'climate.living_room_living_room',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

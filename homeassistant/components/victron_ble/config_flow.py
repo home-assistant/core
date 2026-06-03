@@ -1,7 +1,5 @@
 """Config flow for Victron Bluetooth Low Energy integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -9,6 +7,7 @@ from typing import Any
 from victron_ble_ha_parser import VictronBluetoothDeviceData
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -103,6 +102,7 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"title": title},
             )
 
+        await bluetooth.async_request_active_scan(self.hass)
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address

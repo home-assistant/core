@@ -1,7 +1,5 @@
 """The tests for the calendar component."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
@@ -59,7 +57,10 @@ async def mock_setup_platform(
     mock_setup_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Fixture to setup platforms used in the test and fixtures are set up in the right order."""
+    """Fixture to set up platforms used in the test.
+
+    Ensures fixtures are set up in the right order.
+    """
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -575,18 +576,24 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
                 "start_date_time": "2023-06-22T04:30:00-06:00",
                 "end_date_time": "2023-06-22T04:30:00-06:00",
             },
-            "Expected end time to be after start time (2023-06-22 04:30:00-06:00, 2023-06-22 04:30:00-06:00)",
+            "Expected end time to be after start time"
+            " (2023-06-22 04:30:00-06:00,"
+            " 2023-06-22 04:30:00-06:00)",
         ),
         (
             {
                 "start_date_time": "2023-06-22T04:30:00",
                 "end_date_time": "2023-06-22T04:30:00",
             },
-            "Expected end time to be after start time (2023-06-22 04:30:00, 2023-06-22 04:30:00)",
+            "Expected end time to be after start time"
+            " (2023-06-22 04:30:00,"
+            " 2023-06-22 04:30:00)",
         ),
         (
             {"start_date_time": "2023-06-22", "end_date_time": "2023-06-22"},
-            "Expected end time to be after start time (2023-06-22 00:00:00, 2023-06-22 00:00:00)",
+            "Expected end time to be after start time"
+            " (2023-06-22 00:00:00,"
+            " 2023-06-22 00:00:00)",
         ),
         (
             {"start_date_time": "2023-06-22 10:00:00", "duration": "0"},

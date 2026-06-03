@@ -1,7 +1,5 @@
 """Tests for the Amber Electric Data Coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import date
 from unittest.mock import Mock, patch

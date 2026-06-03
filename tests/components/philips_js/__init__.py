@@ -130,7 +130,9 @@ MOCK_RECORDINGS_LIST = {
             "EventId": 47369,
             "EITVersion": 0,
             "RetentionInfo": -1,
-            "EventInfo": "This is another event info which is not rejected by codespell.",
+            "EventInfo": (
+                "This is another event info which is not rejected by codespell."
+            ),
             "EventExtendedInfo": "",
             "EventGenre": "8",
             "RecName": "Terra X",
@@ -170,7 +172,13 @@ MOCK_RECORDINGS_LIST = {
             "EventId": -1,
             "EITVersion": 0,
             "RetentionInfo": -1,
-            "EventInfo": "\n\nAlpine Ski-WM: Parallel-Event, Übertragung aus Méribel/Frankreich\n\n14:10: Biathlon-WM (AD): 20 km Einzel Männer, Übertragung aus Oberhof\nHD-Produktion",
+            "EventInfo": (
+                "\n\nAlpine Ski-WM: Parallel-Event,"
+                " Übertragung aus Méribel/Frankreich"
+                "\n\n14:10: Biathlon-WM (AD): 20 km Einzel"
+                " Männer, Übertragung aus Oberhof"
+                "\nHD-Produktion"
+            ),
             "EventExtendedInfo": "",
             "EventGenre": "4",
             "RecName": "ZDF HD 2023-02-18 00:46",

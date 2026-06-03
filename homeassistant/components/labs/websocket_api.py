@@ -1,7 +1,5 @@
 """Websocket API for the Home Assistant Labs integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol

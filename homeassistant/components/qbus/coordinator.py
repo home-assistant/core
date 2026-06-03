@@ -1,7 +1,5 @@
 """Qbus coordinator."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import cast
@@ -59,10 +57,7 @@ class QbusControllerCoordinator(DataUpdateCoordinator[QbusMqttDevice | None]):
         self._subscribed_to_controller_state = False
         self._controller: QbusMqttDevice | None = None
 
-        # Clean up when HA stops
-        self.config_entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
 
     async def _async_update_data(self) -> QbusMqttDevice | None:
         return self._controller
@@ -128,12 +123,10 @@ class QbusControllerCoordinator(DataUpdateCoordinator[QbusMqttDevice | None]):
             controller_state_topic,
         )
         self._subscribed_to_controller_state = True
-        self.config_entry.async_on_unload(
-            await mqtt.async_subscribe(
-                self.hass,
-                controller_state_topic,
-                self._controller_state_received,
-            )
+        await mqtt.async_subscribe(
+            self.hass,
+            controller_state_topic,
+            self._controller_state_received,
         )
 
     async def _controller_state_received(self, msg: ReceiveMessage) -> None:

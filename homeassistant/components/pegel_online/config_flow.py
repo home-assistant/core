@@ -1,7 +1,5 @@
 """Config flow for PEGELONLINE."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiopegelonline import CONNECT_ERRORS, PegelOnline

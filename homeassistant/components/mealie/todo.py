@@ -1,7 +1,5 @@
 """Todo platform for Mealie."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 
 from aiomealie import (

@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for AWS S3."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -10,10 +8,11 @@ from aiobotocore.client import AioBaseClient as S3Client
 from botocore.exceptions import BotoCoreError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_BUCKET, CONF_PREFIX, DOMAIN
+from .const import CONF_BUCKET, DOMAIN
 from .helpers import async_list_backups_from_s3
 
 SCAN_INTERVAL = timedelta(hours=6)

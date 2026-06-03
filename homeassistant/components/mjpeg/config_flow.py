@@ -1,7 +1,5 @@
 """Config flow to configure the MJPEG IP Camera integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any
@@ -59,6 +57,8 @@ def async_get_schema(
 
     if show_name:
         schema = {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(CONF_NAME, default=defaults.get(CONF_NAME)): str,
             **schema,
         }

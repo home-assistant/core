@@ -1,7 +1,5 @@
 """Config flow to configure the Sensor.Community integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from luftdaten import Luftdaten

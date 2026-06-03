@@ -4,8 +4,8 @@
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/edl21",
-  "integration_type": "hub",
+  "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["sml"],
-  "requirements": ["pysml==0.1.5"]
+  "requirements": ["pysml==0.1.7"]
 }

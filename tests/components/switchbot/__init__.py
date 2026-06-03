@@ -785,6 +785,81 @@ LOCK_ULTRA_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
+LOCK_VISION_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Vision",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\x6f\xc9\xa6\x0a\x00\x00\x2e\x00\x0c\x00\x00\x00\x00"
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80.\x00\x11i\x08"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Vision",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\x6f\xc9\xa6\x0a\x00\x00\x2e\x00\x0c\x00\x00\x00\x00"
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80.\x00\x11i\x08"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Vision"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+LOCK_VISION_PRO_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Vision Pro",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\xe6\x1aq\x03\x00\x003\x00\x0c\x00\x00\x00\x00"
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x803\x00\x11i\t"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Vision Pro",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\xe6\x1aq\x03\x00\x003\x00\x0c\x00\x00\x00\x00"
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x803\x00\x11i\t"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Vision Pro"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+LOCK_PRO_WIFI_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Pro Wifi",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xb0^\xfe\x0e\x02\x00=\x00\x08"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80=\x00\x10\xff\x90"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Pro Wifi",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xb0^\xfe\x0e\x02\x00=\x00\x08"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80=\x00\x10\xff\x90"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Pro Wifi"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
 AIR_PURIFIER_TABLE_US_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Air Purifier Table US",
     manufacturer_data={
@@ -1081,6 +1156,34 @@ RGBICWW_FLOOR_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
+PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Permanent Outdoor Light",
+    manufacturer_data={
+        2409: b'\xc0N0\xe0U\x9a\x85\x9e"\xd0\x00\x00\x00\x00\x00\x00\x12\x91\x00',
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb7"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Permanent Outdoor Light",
+        manufacturer_data={
+            2409: b'\xc0N0\xe0U\x9a\x85\x9e"\xd0\x00\x00\x00\x00\x00\x00\x12\x91\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb7"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Permanent Outdoor Light"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
 PLUG_MINI_EU_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Plug Mini (EU)",
     manufacturer_data={
@@ -1200,7 +1303,10 @@ GARAGE_DOOR_OPENER_SERVICE_INFO = BluetoothServiceInfoBleak(
 CLIMATE_PANEL_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Climate Panel",
     manufacturer_data={
-        2409: b"\xb0\xe9\xfe\x8e\x98Oi_\x06\x9a,\x00\x00\x00\x00\xe4\x00\x08\x04\x00\x01\x00\x00"
+        2409: (
+            b"\xb0\xe9\xfe\x8e\x98Oi_\x06\x9a,"
+            b"\x00\x00\x00\x00\xe4\x00\x08\x04\x00\x01\x00\x00"
+        )
     },
     service_data={
         "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 _\x00\x10\xf3\xd8@",
@@ -1212,7 +1318,10 @@ CLIMATE_PANEL_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(
         local_name="Climate Panel",
         manufacturer_data={
-            2409: b"\xb0\xe9\xfe\x8e\x98Oi_\x06\x9a,\x00\x00\x00\x00\xe4\x00\x08\x04\x00\x01\x00\x00"
+            2409: (
+                b"\xb0\xe9\xfe\x8e\x98Oi_\x06\x9a,"
+                b"\x00\x00\x00\x00\xe4\x00\x08\x04\x00\x01\x00\x00"
+            )
         },
         service_data={
             "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 _\x00\x10\xf3\xd8@"
@@ -1367,6 +1476,35 @@ KEYPAD_VISION_PRO_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Keypad Vision Pro"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+WEATHER_STATION_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Weather Station",
+    manufacturer_data={
+        2409: b"\xaa\xbb\xcc\xdd\xee\xff\x01\x50\x06\x9a\x23\x00\x00\x00\x00\x00",
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x50\x00\x10\x53\xb0"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Weather Station",
+        manufacturer_data={
+            2409: b"\xaa\xbb\xcc\xdd\xee\xff\x01\x50\x06\x9a\x23\x00\x00\x00\x00\x00",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x50\x00\x10\x53\xb0"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Weather Station"),
     time=0,
     connectable=True,
     tx_power=-127,

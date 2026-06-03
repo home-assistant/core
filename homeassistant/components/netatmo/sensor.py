@@ -1,7 +1,5 @@
 """Support for the Netatmo sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
@@ -128,16 +126,22 @@ def process_wifi(strength: StateType) -> str | None:
 class NetatmoSensorEntityDescription(SensorEntityDescription):
     """Describes Netatmo sensor entity."""
 
-    # For legacy sensors netatmo_name is set and is used as the translation_key!
-    # Legacy sensors are: weather, climate, switch and meter sensors, as they were the first ones implemented.
-    # For new sensors, translation_key should be set explicitly on key
-    # and netatmo_name should be used only to retrieve the value from the device.
-    # If the netatmo_name is not set, the key is used to retrieve the value from the device.
+    # For legacy sensors netatmo_name is set and is used as
+    # the translation_key! Legacy sensors are: weather,
+    # climate, switch and meter sensors, as they were the
+    # first ones implemented. For new sensors,
+    # translation_key should be set explicitly on key and
+    # netatmo_name should be used only to retrieve the value
+    # from the device. If the netatmo_name is not set, the
+    # key is used to retrieve the value from the device.
     netatmo_name: str | None = None
-    # Mark sensors whose last known native_value may be retained when fresh data is unavailable.
-    # This is intended for sensors where the last reported value remains useful, such as battery
-    # level or a last known state. This flag does not by itself keep the entity available; the
-    # entity may still become unavailable when the device is unreachable.
+    # Mark sensors whose last known native_value may be
+    # retained when fresh data is unavailable. This is
+    # intended for sensors where the last reported value
+    # remains useful, such as battery level or a last known
+    # state. This flag does not by itself keep the entity
+    # available; the entity may still become unavailable
+    # when the device is unreachable.
     is_sticky: bool | None = None
     value_fn: Callable[[StateType], StateType] = lambda x: x
 
@@ -652,8 +656,9 @@ class NetatmoBaseSensor(NetatmoModuleEntity, SensorEntity):
         super().__init__(netatmo_device, **kwargs)
         self.entity_description = description
 
-    # Legacy value retrieval for weather, climate, switch and meter sensors to prevent breaking changes,
-    # as they were the first ones implemented.
+    # Legacy value retrieval for weather, climate, switch
+    # and meter sensors to prevent breaking changes, as they
+    # were the first ones implemented.
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state (the legacy way)."""
@@ -720,8 +725,10 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoBaseSensor):
 class NetatmoLegacySensor(NetatmoBaseSensor):
     """Implementation of a Netatmo legacy sensor."""
 
-    # Legacy sensors are sensors that were implemented before the refactor (like climate, meter and switch)
-    # and that still use the old way (weather style) of retrieving values from the device,
+    # Legacy sensors are sensors that were implemented
+    # before the refactor (like climate, meter and switch)
+    # and that still use the old way (weather style) of
+    # retrieving values from the device,
 
     entity_description: NetatmoSensorEntityDescription
 
@@ -764,7 +771,11 @@ class NetatmoClimateBatterySensor(NetatmoLegacySensor):
         """Initialize the sensor."""
         super().__init__(netatmo_device, description=description)
 
-        self._attr_unique_id = f"{netatmo_device.parent_id}-{self.device.entity_id}-{self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{netatmo_device.parent_id}"
+            f"-{self.device.entity_id}"
+            f"-{self.entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, netatmo_device.parent_id)},
             name=netatmo_device.device.name,
@@ -812,9 +823,11 @@ class NetatmoSensor(NetatmoBaseSensor):
             ]
         )
 
-    # New sensor implementation optional netatmo_name to retrieve value from device, if not set key is used
-    # Value is set unavailable if device is not reachable except is_sticky,
-    # otherwise it is set to the processed value
+    # New sensor implementation optional netatmo_name to
+    # retrieve value from device, if not set key is used.
+    # Value is set unavailable if device is not reachable
+    # except is_sticky, otherwise it is set to the
+    # processed value
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""

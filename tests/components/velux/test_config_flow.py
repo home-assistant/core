@@ -1,13 +1,12 @@
 """Test the Velux config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest
 from pyvlx import PyVLXException
 
 from homeassistant.components.velux import DOMAIN
+from homeassistant.components.velux.const import PYVLX_FROM_CONFIG_FLOW
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -23,11 +22,8 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 )
 
 
-async def test_user_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_pyvlx: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow(hass: HomeAssistant, mock_pyvlx: AsyncMock) -> None:
     """Test starting a flow by user with valid values."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -53,8 +49,10 @@ async def test_user_flow(
     }
     assert not result["result"].unique_id
 
-    mock_pyvlx.disconnect.assert_called_once()
-    mock_pyvlx.connect.assert_called_once()
+    # The live connection must NOT be disconnected; it is handed off to setup.
+    mock_pyvlx.connect.assert_awaited_once()
+    mock_pyvlx.disconnect.assert_not_awaited()
+    assert hass.data[PYVLX_FROM_CONFIG_FLOW]["127.0.0.1"] is mock_pyvlx
 
 
 @pytest.mark.parametrize(
@@ -68,15 +66,11 @@ async def test_user_flow(
         (Exception("DUMMY"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_errors(
-    hass: HomeAssistant,
-    mock_pyvlx: AsyncMock,
-    exception: Exception,
-    error: str,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_pyvlx: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test starting a flow by user but with exceptions."""
-
     mock_pyvlx.connect.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
@@ -99,7 +93,10 @@ async def test_user_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
 
-    mock_pyvlx.connect.assert_called_once()
+    mock_pyvlx.connect.assert_awaited_once()
+    # On failure nothing is stored and no disconnect occurs.
+    mock_pyvlx.disconnect.assert_not_awaited()
+    assert hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).get("127.0.0.1") is None
 
     mock_pyvlx.connect.side_effect = None
 
@@ -114,10 +111,9 @@ async def test_user_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_duplicate_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test initialized flow with a duplicate entry."""
     mock_config_entry.add_to_hass(hass)
@@ -142,13 +138,11 @@ async def test_user_flow_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pyvlx: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyvlx: AsyncMock
 ) -> None:
     """Test that reauth flow works with valid credentials."""
-
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -169,8 +163,9 @@ async def test_reauth_flow(
 
     assert mock_config_entry.data[CONF_PASSWORD] == "New Password"
 
-    mock_pyvlx.connect.assert_called_once()
-    mock_pyvlx.disconnect.assert_called_once()
+    # The live connection must NOT be disconnected; it is handed off to setup.
+    mock_pyvlx.connect.assert_awaited_once()
+    mock_pyvlx.disconnect.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -212,8 +207,9 @@ async def test_reauth_errors(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": error}
 
-    mock_pyvlx.connect.assert_called_once()
-    mock_pyvlx.disconnect.assert_not_called()
+    mock_pyvlx.connect.assert_awaited_once()
+    mock_pyvlx.disconnect.assert_not_awaited()
+    assert hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).get("127.0.0.1") is None
 
     mock_pyvlx.connect.side_effect = None
 
@@ -226,15 +222,11 @@ async def test_reauth_errors(
     assert result["reason"] == "reauth_successful"
 
     assert mock_config_entry.data[CONF_PASSWORD] == "New Password"
+    mock_pyvlx.disconnect.assert_not_called()
 
-    mock_pyvlx.disconnect.assert_called_once()
 
-
-async def test_dhcp_discovery(
-    hass: HomeAssistant,
-    mock_pyvlx: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_discovery(hass: HomeAssistant, mock_pyvlx: AsyncMock) -> None:
     """Test we can setup from dhcp discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -260,8 +252,9 @@ async def test_dhcp_discovery(
     }
     assert result["result"].unique_id == "VELUX_KLF_ABCD"
 
-    mock_pyvlx.disconnect.assert_called()
-    mock_pyvlx.connect.assert_called()
+    mock_pyvlx.connect.assert_awaited_once()
+    mock_pyvlx.disconnect.assert_not_awaited()
+    assert hass.data[PYVLX_FROM_CONFIG_FLOW]["127.0.0.1"] is mock_pyvlx
 
 
 @pytest.mark.parametrize(
@@ -275,12 +268,9 @@ async def test_dhcp_discovery(
         (Exception("DUMMY"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_errors(
-    hass: HomeAssistant,
-    mock_pyvlx: AsyncMock,
-    exception: Exception,
-    error: str,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_pyvlx: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test we can setup from dhcp discovery."""
     result = await hass.config_entries.flow.async_init(
@@ -320,11 +310,11 @@ async def test_dhcp_discovery_errors(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_already_configured(
     hass: HomeAssistant,
     mock_pyvlx: AsyncMock,
     mock_discovered_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test dhcp discovery when already configured."""
     mock_discovered_config_entry.add_to_hass(hass)
@@ -338,11 +328,9 @@ async def test_dhcp_discovery_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discover_unique_id(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_pyvlx: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_pyvlx: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test dhcp discovery when already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -362,11 +350,9 @@ async def test_dhcp_discover_unique_id(
     assert mock_config_entry.unique_id == "VELUX_KLF_ABCD"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_not_loaded(
-    hass: HomeAssistant,
-    mock_pyvlx: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_pyvlx: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test dhcp discovery when entry with same host not loaded."""
     mock_config_entry.add_to_hass(hass)

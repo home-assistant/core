@@ -1,13 +1,12 @@
 """Config flow for Universal Devices ISY/IoX integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
+import aiohttp
 from aiohttp import CookieJar
 from pyisy import ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.configuration import Configuration
@@ -20,7 +19,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
@@ -36,13 +41,12 @@ from .const import (
     CONF_IGNORE_STRING,
     CONF_RESTORE_LIGHT_STATE,
     CONF_SENSOR_STRING,
-    CONF_TLS_VER,
     CONF_VAR_SENSOR_STRING,
     DEFAULT_IGNORE_STRING,
     DEFAULT_RESTORE_LIGHT_STATE,
     DEFAULT_SENSOR_STRING,
-    DEFAULT_TLS_VERSION,
     DEFAULT_VAR_SENSOR_STRING,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     HTTP_PORT,
     HTTPS_PORT,
@@ -65,7 +69,7 @@ def _data_schema(schema_input: dict[str, str]) -> vol.Schema:
             vol.Required(CONF_HOST, default=schema_input.get(CONF_HOST, "")): str,
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Optional(CONF_TLS_VER, default=DEFAULT_TLS_VERSION): vol.In([1.1, 1.2]),
+            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
         },
         extra=vol.ALLOW_EXTRA,
     )
@@ -79,7 +83,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     user = data[CONF_USERNAME]
     password = data[CONF_PASSWORD]
     host = urlparse(data[CONF_HOST])
-    tls_version = data.get(CONF_TLS_VER)
+    verify_ssl = data[CONF_VERIFY_SSL]
 
     if host.scheme == SCHEME_HTTP:
         https = False
@@ -90,7 +94,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     elif host.scheme == SCHEME_HTTPS:
         https = True
         port = host.port or HTTPS_PORT
-        session = aiohttp_client.async_get_clientsession(hass)
+        session = aiohttp_client.async_get_clientsession(hass, verify_ssl=verify_ssl)
     else:
         _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         raise InvalidHost
@@ -102,7 +106,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         user,
         password,
         use_https=https,
-        tls_ver=tls_version,
+        verify_ssl=verify_ssl,
         webroot=host.path,
         websession=session,
     )
@@ -113,6 +117,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except ISYInvalidAuthError as error:
         raise InvalidAuth from error
     except ISYConnectionError as error:
+        # pyisy chains the underlying aiohttp error via __cause__; ClientSSLError
+        # covers both protocol mismatch and certificate verification failures.
+        if isinstance(error.__cause__, aiohttp.ClientSSLError):
+            raise SslError from error
         raise CannotConnect from error
 
     try:
@@ -133,6 +141,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Universal Devices ISY/IoX."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the ISY/IoX config flow."""
@@ -158,6 +167,8 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except SslError:
+                errors["base"] = "ssl_error"
             except InvalidHost:
                 errors["base"] = "invalid_host"
             except InvalidAuth:
@@ -293,6 +304,8 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, new_data)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except SslError:
+                errors["base"] = "ssl_error"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
             else:
@@ -368,6 +381,10 @@ class InvalidHost(HomeAssistantError):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class SslError(HomeAssistantError):
+    """Error to indicate a TLS/SSL handshake failure."""
 
 
 class InvalidAuth(HomeAssistantError):

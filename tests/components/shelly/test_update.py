@@ -195,7 +195,8 @@ async def test_block_update_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Device communication error occurred while triggering OTA update for Test name",
+        match="Device communication error occurred while triggering"
+        " OTA update for Test name",
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
@@ -691,7 +692,8 @@ async def test_rpc_beta_update(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while triggering OTA update for Test name",
+            "Device communication error occurred while triggering"
+            " OTA update for Test name",
         ),
         (
             RpcCallError(-1, "error"),

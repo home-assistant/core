@@ -1,7 +1,5 @@
 """Tests for the flux_led component."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -189,7 +187,7 @@ async def test_coordinator_retry_right_away_on_discovery_already_setup(
 async def test_config_entry_fills_unique_id_with_directed_discovery(
     hass: HomeAssistant, discovery: dict[str, str], title: str
 ) -> None:
-    """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
+    """Test unique id is added if missing via directed discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=None, title=IP_ADDRESS
     )
@@ -292,7 +290,10 @@ async def test_unique_id_migrate_when_mac_discovered(
 async def test_unique_id_migrate_when_mac_discovered_via_discovery(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test unique id migrated when mac discovered via discovery and the mac address from dhcp was one off."""
+    """Test unique id migrated when mac discovered via discovery.
+
+    The mac address from dhcp was one off.
+    """
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={

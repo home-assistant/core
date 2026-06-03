@@ -1,7 +1,5 @@
 """Entity for Zigbee Home Automation."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from functools import partial
@@ -208,7 +206,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         await super().async_will_remove_from_hass()
         self.remove_future.set_result(True)
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_update(self) -> None:
         """Update the entity."""
         await self.entity_data.entity.async_update()

@@ -1,13 +1,11 @@
 """Support for the Tuya lights."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
 from tuya_device_handlers.definition.light import (
     FallbackColorDataMode,
-    TuyaLightDefinition,
+    LightDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -426,7 +424,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaLightEntityDescription,
-        definition: TuyaLightDefinition,
+        definition: LightDefinition,
     ) -> None:
         """Init TuyaHaLight."""
         super().__init__(device, device_manager, description)
@@ -536,7 +534,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        # If the light is currently in color mode, extract the brightness from the color data
+        # If the light is currently in color mode,
+        # extract the brightness from the color data
         if self.color_mode == ColorMode.HS and self._color_data_wrapper:
             hsv_data = self._read_wrapper(self._color_data_wrapper)
             return None if hsv_data is None else round(hsv_data[2])

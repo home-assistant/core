@@ -10,8 +10,6 @@ allows the tests to pause the worker thread before finalizing the stream
 so that it can inspect the output.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 import logging
@@ -122,13 +120,13 @@ class HLSSync:
         return False
 
     def bad_request(self):
-        """Intercept the HTTPBadRequest call so we know when the web handler is finished."""
+        """Intercept HTTPBadRequest to detect web handler completion."""
         self._num_finished += 1
         self.check_requests_ready()
         return self._original_bad_request()
 
     def not_found(self):
-        """Intercept the HTTPNotFound call so we know when the web handler is finished."""
+        """Intercept HTTPNotFound to detect web handler completion."""
         self._num_finished += 1
         self.check_requests_ready()
         return self._original_not_found()

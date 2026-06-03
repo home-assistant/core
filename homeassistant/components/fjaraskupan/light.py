@@ -1,7 +1,5 @@
 """Support for lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity

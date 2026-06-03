@@ -1,7 +1,5 @@
 """The Wolf SmartSet sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -175,7 +173,7 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
 
     @property
     def native_value(self) -> str | None:
-        """Return the state. Wolf Client is returning only changed values so we need to store old value here."""
+        """Return the state, storing old values for unchanged parameters."""
         if self.wolf_object.parameter_id in self.coordinator.data:
             new_state = self.coordinator.data[self.wolf_object.parameter_id]
             self.wolf_object.value_id = new_state[0]

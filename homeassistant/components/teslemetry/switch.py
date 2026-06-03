@@ -1,7 +1,5 @@
 """Switch platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -142,7 +140,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="guest_mode_enabled",
-        polling=False,
         unique_id="guest_mode_enabled",
         streaming_listener=lambda vehicle, callback: vehicle.listen_GuestModeEnabled(
             callback

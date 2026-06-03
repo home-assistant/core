@@ -65,12 +65,11 @@ async def test_full_flow(
     assert result["data"][CONF_AUTH_IMPLEMENTATION] == DOMAIN
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_duplicate_unique_id(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry,
 ) -> None:
     """Check that the config flow is aborted when an entry with the same ID exists."""
     first_entry = MockConfigEntry(

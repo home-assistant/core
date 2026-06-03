@@ -1,7 +1,5 @@
 """The OralB integration."""
 
-from __future__ import annotations
-
 import logging
 
 from oralb_ble import OralBBluetoothDeviceData, SensorUpdate

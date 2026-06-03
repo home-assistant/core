@@ -1,7 +1,5 @@
 """Intents for the light integration."""
 
-from __future__ import annotations
-
 import logging
 
 import voluptuous as vol
@@ -38,7 +36,11 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                 ),
                 "brightness": intent.IntentSlotInfo(
                     service_data_name=ATTR_BRIGHTNESS_PCT,
-                    description="The brightness percentage of the light between 0 and 100, where 0 is off and 100 is fully lit",
+                    description=(
+                        "The brightness percentage of the"
+                        " light between 0 and 100, where 0"
+                        " is off and 100 is fully lit"
+                    ),
                     value_schema=vol.All(vol.Coerce(int), vol.Range(0, 100)),
                 ),
             },

@@ -1,7 +1,5 @@
 """Support for the PRT Heatmiser thermostats using the V3 protocol."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

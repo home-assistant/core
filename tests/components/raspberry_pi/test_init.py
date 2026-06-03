@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
+from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
 from homeassistant.components.raspberry_pi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -112,7 +112,7 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.raspberry_pi.get_os_info",
-        return_value=None,
+        side_effect=HassioNotReadyError,
     ) as mock_get_os_info:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

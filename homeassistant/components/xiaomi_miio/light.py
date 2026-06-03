@@ -1,7 +1,5 @@
 """Support for Xiaomi Philips Lights."""
 
-from __future__ import annotations
-
 import asyncio
 import datetime
 from datetime import timedelta
@@ -245,6 +243,7 @@ async def async_setup_entry(
 
         for xiaomi_miio_service, method in SERVICE_TO_METHOD.items():
             schema = method.schema or XIAOMI_MIIO_SERVICE_SCHEMA
+            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
             hass.services.async_register(
                 DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema
             )
@@ -477,7 +476,8 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP_KELVIN in kwargs:
             _LOGGER.debug(
-                "Setting brightness and color temperature: %s %s%%, %s mireds, %s%% cct",
+                "Setting brightness and color temperature:"
+                " %s %s%%, %s mireds, %s%% cct",
                 brightness,
                 percent_brightness,
                 color_temp,

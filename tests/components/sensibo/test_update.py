@@ -1,7 +1,5 @@
 """The test for the sensibo update platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -42,5 +40,5 @@ async def test_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.hallway_firmware")
+    state = hass.states.get("update.hallway_hallway_firmware")
     assert state.state == STATE_OFF

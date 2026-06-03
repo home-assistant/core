@@ -1,7 +1,5 @@
 """The Control4 integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import json
 import logging
@@ -34,7 +32,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE, Platform.LIGHT, Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.CLIMATE, Platform.COVER, Platform.LIGHT, Platform.MEDIA_PLAYER]
 
 
 @dataclass
@@ -157,7 +155,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
                 config[CONF_HOST],
             )
             raise ConfigEntryNotReady(
-                f"Timeout getting UI configuration from Control4 controller at {config[CONF_HOST]}"
+                "Timeout getting UI configuration from"
+                f" Control4 controller at {config[CONF_HOST]}"
             ) from err
 
         ui_configuration = json.loads(ui_config_raw)

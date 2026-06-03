@@ -1,7 +1,5 @@
 """Test the Music Assistant integration init."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.enums import EventType

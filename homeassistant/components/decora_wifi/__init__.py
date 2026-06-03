@@ -1,7 +1,5 @@
 """The Leviton Decora Wi-Fi integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from dataclasses import dataclass
 

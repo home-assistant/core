@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[scene.scene-entry]
+# name: test_entities[scene.room_scene-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'scene',
     'entity_category': None,
-    'entity_id': 'scene.scene',
+    'entity_id': 'scene.room_scene',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,13 +36,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[scene.scene-state]
+# name: test_entities[scene.room_scene-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'scene',
     }),
     'context': <ANY>,
-    'entity_id': 'scene.scene',
+    'entity_id': 'scene.room_scene',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

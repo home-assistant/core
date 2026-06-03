@@ -97,7 +97,7 @@ async def test_turn_off(
 
 @pytest.mark.parametrize("node_fixture", ["mock_switch_unit"])
 async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None:
-    """Test if a switch entity is discovered from any (non-light) OnOf cluster device."""
+    """Test switch entity discovered from any (non-light) OnOff device."""
     # A switch entity should be discovered as fallback for ANY Matter device (endpoint)
     # that has the OnOff cluster and does not fall into an explicit discovery schema
     # by another platform (e.g. light, lock etc.).
@@ -122,7 +122,7 @@ async def test_numeric_switch(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test numeric switch entity is discovered and working using an Eve Thermo fixture ."""
+    """Test numeric switch entity using an Eve Thermo fixture."""
     state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
     assert state
     assert state.state == "off"
@@ -176,7 +176,7 @@ async def test_matter_exception_on_command(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test if a MatterError gets converted to HomeAssistantError by using a switch fixture."""
+    """Test MatterError converts to HomeAssistantError for switch."""
     state = hass.states.get("switch.mock_onoffpluginunit")
     assert state
     matter_client.send_device_command.side_effect = MatterError("Boom")

@@ -1,7 +1,5 @@
 """The yolink integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from typing import Any
@@ -72,8 +70,8 @@ class YoLinkHomeMessageListener(MessageListener):
             return
 
         device_coordinator.dev_online = True
-        if (loraInfo := msg_data.get(ATTR_LORA_INFO)) is not None:
-            device_coordinator.dev_net_type = loraInfo.get("devNetType")
+        if (lora_info := msg_data.get(ATTR_LORA_INFO)) is not None:
+            device_coordinator.dev_net_type = lora_info.get("devNetType")
         device_coordinator.async_set_updated_data(msg_data)
         # handling events
         if (

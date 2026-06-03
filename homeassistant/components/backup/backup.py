@@ -1,7 +1,5 @@
 """Local backup support for Core and Container installations."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 import json
 from pathlib import Path
@@ -13,7 +11,7 @@ from homeassistant.helpers.hassio import is_hassio
 
 from .agent import BackupAgent, LocalBackupAgent, OnProgressCallback
 from .const import DOMAIN, LOGGER
-from .models import AgentBackup, BackupNotFound
+from .models import AgentBackup, BackupNotFound, InvalidBackupFilename
 from .util import read_backup, suggested_filename
 
 
@@ -56,7 +54,13 @@ class CoreLocalBackupAgent(LocalBackupAgent):
             try:
                 backup = read_backup(backup_path)
                 backups[backup.backup_id] = (backup, backup_path)
-            except (OSError, TarError, json.JSONDecodeError, KeyError) as err:
+            except (
+                OSError,
+                TarError,
+                json.JSONDecodeError,
+                KeyError,
+                InvalidBackupFilename,
+            ) as err:
                 LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
         return backups
 
@@ -124,7 +128,14 @@ class CoreLocalBackupAgent(LocalBackupAgent):
 
     def get_new_backup_path(self, backup: AgentBackup) -> Path:
         """Return the local path to a new backup."""
-        return self._backup_dir / suggested_filename(backup)
+        candidate = self._backup_dir / suggested_filename(backup)
+        # suggested_filename does not strip separators; refuse paths that would
+        # land outside the backup directory.
+        if candidate.parent != self._backup_dir:
+            raise InvalidBackupFilename(
+                f"Refusing to write outside {self._backup_dir}: {candidate}"
+            )
+        return candidate
 
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Delete a backup file."""

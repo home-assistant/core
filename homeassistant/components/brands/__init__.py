@@ -1,7 +1,5 @@
 """The Brands integration."""
 
-from __future__ import annotations
-
 from collections import deque
 from http import HTTPStatus
 import logging
@@ -43,7 +41,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Brands integration."""
-    access_tokens: deque[str] = deque([], 2)
+    access_tokens: deque[str] = deque(maxlen=2)
     access_tokens.append(hex(_RND.getrandbits(256))[2:])
     hass.data[DOMAIN] = access_tokens
 

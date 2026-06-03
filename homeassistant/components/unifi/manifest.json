@@ -9,5 +9,5 @@
   "iot_class": "local_push",
   "loggers": ["aiounifi"],
   "quality_scale": "silver",
-  "requirements": ["aiounifi==90"]
+  "requirements": ["aiounifi==91"]
 }

@@ -1,7 +1,5 @@
 """Diagnostics support for Launch Library."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pylaunches.types import Event, Launch

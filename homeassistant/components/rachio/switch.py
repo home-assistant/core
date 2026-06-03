@@ -156,6 +156,7 @@ async def async_setup_entry(
     if not zone_entities:
         return
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_START_MULTIPLE_ZONES,
@@ -322,7 +323,8 @@ class RachioRainDelay(RachioSwitch):
                 KEY_RAIN_DELAY
             ] / 1000 > as_timestamp(now())
 
-        # If the controller was in a rain delay state during a reboot, this re-sets the timer
+        # If the controller was in a rain delay state during
+        # a reboot, this re-sets the timer
         if self._attr_is_on is True:
             delay_end = utc_from_timestamp(
                 self._controller.init_data[KEY_RAIN_DELAY] / 1000

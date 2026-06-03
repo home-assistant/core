@@ -1,7 +1,5 @@
 """Matter cover."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import IntEnum
 from math import floor
@@ -34,7 +32,9 @@ TYPE_MAP = {
     clusters.WindowCovering.Enums.Type.kRollerShade: CoverDeviceClass.SHADE,
     clusters.WindowCovering.Enums.Type.kRollerShade2Motor: CoverDeviceClass.SHADE,
     clusters.WindowCovering.Enums.Type.kRollerShadeExterior: CoverDeviceClass.SHADE,
-    clusters.WindowCovering.Enums.Type.kRollerShadeExterior2Motor: CoverDeviceClass.SHADE,
+    clusters.WindowCovering.Enums.Type.kRollerShadeExterior2Motor: (
+        CoverDeviceClass.SHADE
+    ),
     clusters.WindowCovering.Enums.Type.kAwning: CoverDeviceClass.AWNING,
     clusters.WindowCovering.Enums.Type.kDrapery: CoverDeviceClass.CURTAIN,
     clusters.WindowCovering.Enums.Type.kTiltBlindTiltOnly: CoverDeviceClass.BLIND,
@@ -43,7 +43,7 @@ TYPE_MAP = {
 
 
 class OperationalStatus(IntEnum):
-    """Currently ongoing operations enumeration for coverings, as defined in the Matter spec."""
+    """Ongoing operations enumeration for coverings per Matter spec."""
 
     COVERING_IS_CURRENTLY_NOT_MOVING = 0b00
     COVERING_IS_CURRENTLY_OPENING = 0b01
@@ -73,7 +73,7 @@ class MatterCover(MatterEntity, CoverEntity):
 
     @property
     def is_closed(self) -> bool | None:
-        """Return true if cover is closed, if there is no position report, return None."""
+        """Return true if cover is closed, None if no position."""
         if not self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
         ):

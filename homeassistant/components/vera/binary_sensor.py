@@ -1,7 +1,5 @@
 """Support for Vera binary sensors."""
 
-from __future__ import annotations
-
 import pyvera as veraApi
 
 from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity

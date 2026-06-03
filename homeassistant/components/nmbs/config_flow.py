@@ -7,6 +7,7 @@ from pyrail.models import StationDetails
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -16,13 +17,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import (
-    CONF_EXCLUDE_VIAS,
-    CONF_SHOW_ON_MAP,
-    CONF_STATION_FROM,
-    CONF_STATION_TO,
-    DOMAIN,
-)
+from .const import CONF_EXCLUDE_VIAS, CONF_STATION_FROM, CONF_STATION_TO, DOMAIN
 
 
 class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -82,7 +77,10 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
 
-                config_entry_name = f"Train from {station_from.standard_name} to {station_to.standard_name}"
+                config_entry_name = (
+                    f"Train from {station_from.standard_name}"
+                    f" to {station_to.standard_name}"
+                )
                 return self.async_create_entry(
                     title=config_entry_name,
                     data=user_input,

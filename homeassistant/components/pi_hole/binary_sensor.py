@@ -1,7 +1,5 @@
 """Support for getting status from a Pi-hole system."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any

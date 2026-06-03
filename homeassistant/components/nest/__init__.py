@@ -1,7 +1,5 @@
 """Support for Nest devices."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from http import HTTPStatus
@@ -73,6 +71,7 @@ from .media_source import (
     async_get_media_source_devices,
     async_get_transcoder,
 )
+from .services import async_setup_services
 from .types import DevicesAddedListener, NestConfigEntry, NestData
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,6 +116,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.http.register_view(NestEventMediaView(hass))
     hass.http.register_view(NestEventMediaThumbnailView(hass))
+    async_setup_services(hass)
     return True
 
 

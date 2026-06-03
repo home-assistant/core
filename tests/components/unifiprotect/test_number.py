@@ -1,7 +1,5 @@
 """Test the UniFi Protect number platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
@@ -328,6 +326,41 @@ async def test_chime_ring_volume_set_value(
         )
 
         mock_method.assert_called_once_with(doorbell, 80)
+
+
+async def test_chime_volume_set_value(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """Test setting overall chime volume calls public ring-settings API."""
+    _setup_chime_with_doorbell(chime, doorbell, volume=40)
+
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+
+    entity_id = "number.test_chime_volume"
+
+    with patch_ufp_method(
+        chime, "set_ring_settings_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {ATTR_ENTITY_ID: entity_id, "value": 75.0},
+            blocking=True,
+        )
+
+        mock_method.assert_called_once_with(
+            [
+                {
+                    "cameraId": doorbell.id,
+                    "volume": 75,
+                    "repeatTimes": 1,
+                    "ringtoneId": "test-ringtone-id",
+                }
+            ]
+        )
 
 
 async def test_chime_ring_volume_multiple_cameras(

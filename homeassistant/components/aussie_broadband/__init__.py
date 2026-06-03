@@ -1,7 +1,5 @@
 """The Aussie Broadband integration."""
 
-from __future__ import annotations
-
 from aiohttp import ClientError
 from aussiebb.asyncio import AussieBB
 from aussiebb.const import FETCH_TYPES

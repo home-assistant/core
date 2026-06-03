@@ -101,10 +101,9 @@ async def test_user_form(
 
 
 @pytest.mark.parametrize("discovery_info", [[NOT_HUE_BLE_DISCOVERY_INFO], []])
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_form_no_device(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    discovery_info: list[BluetoothServiceInfoBleak],
+    hass: HomeAssistant, discovery_info: list[BluetoothServiceInfoBleak]
 ) -> None:
     """Test user form with no devices."""
 
@@ -198,9 +197,9 @@ async def test_user_form_no_device(
         "unknown",
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_form_exception(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_return_device: BLEDevice | None,
     mock_scanner_count: int,
     mock_connect: Exception | None,
@@ -292,10 +291,8 @@ async def test_user_form_exception(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_bluetooth_discovery_aborts(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_bluetooth_discovery_aborts(hass: HomeAssistant) -> None:
     """Test bluetooth form aborts."""
 
     result = await hass.config_entries.flow.async_init(
@@ -307,10 +304,9 @@ async def test_bluetooth_discovery_aborts(
     assert result["reason"] == "discovery_unsupported"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_bluetooth_form_exception_already_set_up(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test bluetooth discovery form when device is already set up."""
 
@@ -325,10 +321,9 @@ async def test_bluetooth_form_exception_already_set_up(
     assert result["reason"] == "discovery_unsupported"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_form_exception_already_set_up(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test user form when device is already set up."""
 

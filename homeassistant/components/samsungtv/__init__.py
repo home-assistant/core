@@ -1,7 +1,5 @@
 """The Samsung TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Coroutine, Mapping
 from functools import partial
 from typing import Any
@@ -240,6 +238,10 @@ async def async_migrate_entry(
     """Migrate old entry."""
     version = config_entry.version
     minor_version = config_entry.minor_version
+
+    if version > 2:
+        # This means the user has downgraded from a future version
+        return False
 
     LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 

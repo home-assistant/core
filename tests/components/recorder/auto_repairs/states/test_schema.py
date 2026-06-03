@@ -117,8 +117,8 @@ async def test_validate_db_schema_fix_utf8_issue_state_attributes(
         in caplog.text
     )
     assert (
-        "Updating table state_attributes to character set utf8mb4 and collation utf8mb4_bin"
-        in caplog.text
+        "Updating table state_attributes to character set utf8mb4"
+        " and collation utf8mb4_bin" in caplog.text
     )
 
 

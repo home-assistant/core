@@ -4,7 +4,7 @@ rules:
   brands: done
   dependency-transparency: done
   common-modules: done
-  has-entity-name: done
+  has-entity-name: todo
   action-setup:
     status: done
     comment: |

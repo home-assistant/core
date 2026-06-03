@@ -1,7 +1,5 @@
 """Support for UK public transport data provided by transportapi.com."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging

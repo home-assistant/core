@@ -1,7 +1,5 @@
 """Support for AquaLogic sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 import voluptuous as vol

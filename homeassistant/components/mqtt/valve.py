@@ -1,7 +1,5 @@
 """Support for MQTT valve devices."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import Any
@@ -273,7 +271,7 @@ class MqttValve(MqttEntity, ValveEntity):
                     self._range, float(position_payload)
                 )
             except ValueError:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Ignoring non numeric payload '%s' received on topic '%s'",
                     position_payload,
                     msg.topic,
@@ -281,9 +279,9 @@ class MqttValve(MqttEntity, ValveEntity):
             else:
                 percentage_payload = min(max(percentage_payload, 0), 100)
                 self._attr_current_valve_position = percentage_payload
-                # Reset closing and opening if the valve is fully opened or fully closed
-                if state is None and percentage_payload in (0, 100):
-                    state = RESET_CLOSING_OPENING
+                # Reset opening/closing when a position update is received
+                # without an explicit opening/closing transitional state.
+                state = state or RESET_CLOSING_OPENING
                 position_set = True
         if state_payload and state is None and not position_set:
             _LOGGER.warning(
@@ -292,8 +290,6 @@ class MqttValve(MqttEntity, ValveEntity):
                 msg.topic,
                 state_payload,
             )
-            return
-        if state is None:
             return
         self._update_state(state)
 

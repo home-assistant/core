@@ -133,7 +133,7 @@ async def test_failures_parametrized(
     )
     await hass.async_block_till_done()
 
-    assert config_entry.state == expected
+    assert config_entry.state is expected
 
 
 async def test_firmware_error_twice(
@@ -651,7 +651,7 @@ async def test_cleanup_combined_with_NVR(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test cleanup of the device registry if IPC camera device was combined with the NVR device."""
+    """Test cleanup when IPC camera was combined with NVR device."""
     reolink_host.channels = [0]
     reolink_host.baichuan.mac_address.return_value = None
     entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
@@ -709,7 +709,7 @@ async def test_cleanup_hub_and_direct_connection(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test cleanup of the device registry if IPC camera device was connected directly and through the hub/NVR."""
+    """Test cleanup when IPC was connected directly and via NVR."""
     reolink_host.channels = [0]
     entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
     dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
@@ -959,7 +959,7 @@ async def test_baichuan_port_changed(
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test config_entry baichuan port update when it has changed during initial login."""
+    """Test baichuan port update when changed during initial login."""
     assert config_entry.data[CONF_BC_PORT] == TEST_BC_PORT
     reolink_host.baichuan.port = 8901
 

@@ -1,7 +1,5 @@
 """Support for interface with an LG webOS TV."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
@@ -256,7 +254,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             }
 
     def _update_sources(self) -> None:
-        """Update list of sources from current source, apps, inputs and configured list."""
+        """Update list of sources from current source and apps."""
         tv_state = self._client.tv_state
         source_list = self._source_list
         self._source_list = {}
@@ -364,7 +362,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     @cmd
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        tv_volume = int(round(volume * 100))
+        tv_volume = round(volume * 100)
         await self._client.set_volume(tv_volume)
 
     @cmd

@@ -1,7 +1,5 @@
 """Button platform for Airobot integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
@@ -85,6 +83,7 @@ class AirobotButton(AirobotEntity, ButtonEntity):
         """Handle the button press."""
         try:
             await self.entity_description.press_fn(self.coordinator)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AirobotConnectionError, AirobotTimeoutError:
             # Connection errors during reboot are expected as device restarts
             pass

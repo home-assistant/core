@@ -1,7 +1,5 @@
 """Tests for the ElevenLabs TTS entity."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from collections.abc import AsyncIterator, Iterator
@@ -16,7 +14,6 @@ import pytest
 
 from homeassistant.components import tts
 from homeassistant.components.elevenlabs.const import (
-    ATTR_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STYLE,
@@ -32,7 +29,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.tts import TTSAudioRequest
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODEL
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 
@@ -47,7 +44,10 @@ class _FakeResponse:
 
 
 class _AsyncByteStream:
-    """Async iterator that yields bytes and exposes response headers like ElevenLabs' stream."""
+    """Async iterator that yields bytes.
+
+    Exposes response headers like ElevenLabs' stream.
+    """
 
     def __init__(self, chunks: list[bytes], request_id: str | None = None) -> None:
         self._chunks = chunks
@@ -81,11 +81,12 @@ class _AsyncStreamResponse:
 
 @pytest.fixture
 def capture_stream_calls(monkeypatch: pytest.MonkeyPatch):
-    """Patches AsyncElevenLabs.text_to_speech.with_raw_response.stream and captures each call's kwargs.
+    """Patch text_to_speech.with_raw_response.stream, capture kwargs.
 
     Returns:
-      calls: list[dict] — kwargs passed into each stream() invocation
-      set_next_return(chunks, request_id): sets what the NEXT stream() call yields/returns
+      calls: list[dict] -- kwargs passed into each stream() invocation
+      set_next_return(chunks, request_id): sets what the NEXT
+          stream() call yields/returns
     """
     calls: list[dict] = []
     state = {"chunks": [b"X"], "request_id": "rid-1"}  # defaults; override per test
@@ -550,7 +551,8 @@ async def test_stream_tts_with_request_ids(
     """Test streaming TTS with request-id stitching."""
     calls, set_next_return, patch_stream = capture_stream_calls
 
-    # Access the TTS entity as in your existing tests; adjust if you use a fixture instead
+    # Access the TTS entity as in your existing tests;
+    # adjust if you use a fixture instead
     tts_entity = hass.data[tts.DOMAIN].get_entity("tts.elevenlabs_text_to_speech")
     patch_stream(tts_entity)
 

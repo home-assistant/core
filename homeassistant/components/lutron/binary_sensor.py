@@ -1,7 +1,5 @@
 """Support for Lutron Powr Savr occupancy sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -56,4 +54,4 @@ class LutronOccupancySensor(LutronDevice, BinarySensorEntity):
 
     def _update_attrs(self) -> None:
         """Update the state attributes."""
-        self._attr_is_on = self._lutron_device.state == OccupancyGroup.State.OCCUPIED
+        self._attr_is_on = self._lutron_device.state is OccupancyGroup.State.OCCUPIED

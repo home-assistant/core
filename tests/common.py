@@ -1,7 +1,5 @@
 """Test the helper method for writing tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import (
     AsyncGenerator,
@@ -25,12 +23,13 @@ import os
 import pathlib
 import time
 from types import FrameType, ModuleType
-from typing import Any, Literal, NoReturn
+from typing import TYPE_CHECKING, Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
+from paho.mqtt.client import MQTTMessage
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -101,6 +100,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, ulid as ulid_util, uuid as uuid_util
 from homeassistant.util.async_ import (
     _SHUTDOWN_RUN_CALLBACK_THREADSAFE,
@@ -122,6 +122,9 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
+
+if TYPE_CHECKING:
+    import paho.mqtt.client as mqtt
 
 __all__ = [
     "async_get_device_automation_capabilities",
@@ -322,7 +325,8 @@ async def async_test_home_assistant(
                 StoreWithoutWriteLoad,
             ),
             patch(
-                "homeassistant.helpers.storage.Store",  # Floor & label registry are different
+                # Floor & label registry are different
+                "homeassistant.helpers.storage.Store",
                 StoreWithoutWriteLoad,
             ),
             patch(
@@ -453,13 +457,9 @@ def async_fire_mqtt_message(
     payload: bytes | str,
     qos: int = 0,
     retain: bool = False,
+    properties: mqtt.Properties | None = None,
 ) -> None:
     """Fire the MQTT message."""
-    # Local import to avoid processing MQTT modules when running a testcase
-    # which does not use MQTT.
-
-    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
-
     from homeassistant.components.mqtt import MqttData  # noqa: PLC0415
 
     if isinstance(payload, str):
@@ -470,6 +470,7 @@ def async_fire_mqtt_message(
     msg.qos = qos
     msg.retain = retain
     msg.timestamp = time.monotonic()
+    msg.properties = properties
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client
@@ -765,7 +766,6 @@ def mock_device_registry(
     registry.deleted_devices = dr.DeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
-    dr.async_get.cache_clear()
     return registry
 
 
@@ -1176,8 +1176,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
     async def start_reconfigure_flow(
         self,
         hass: HomeAssistant,
-        *,
-        show_advanced_options: bool = False,
     ) -> ConfigFlowResult:
         """Start a reconfiguration flow."""
         if self.entry_id not in hass.config_entries._entries:
@@ -1189,7 +1187,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
             context={
                 "source": config_entries.SOURCE_RECONFIGURE,
                 "entry_id": self.entry_id,
-                "show_advanced_options": show_advanced_options,
             },
         )
 
@@ -1197,8 +1194,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
         self,
         hass: HomeAssistant,
         subentry_id: str,
-        *,
-        show_advanced_options: bool = False,
     ) -> ConfigFlowResult:
         """Start a subentry reconfiguration flow."""
         if self.entry_id not in hass.config_entries._entries:
@@ -1212,7 +1207,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
             context={
                 "source": config_entries.SOURCE_RECONFIGURE,
                 "subentry_id": subentry_id,
-                "show_advanced_options": show_advanced_options,
             },
         )
 
@@ -1254,7 +1248,7 @@ def patch_yaml_files(files_dict, endswith=True):
         if fname in files_dict:
             _LOGGER.debug("patch_yaml_files match %s", fname)
             res = StringIO(files_dict[fname])
-            setattr(res, "name", fname)
+            res.name = fname
             return res
 
         # Match using endswith
@@ -1262,7 +1256,7 @@ def patch_yaml_files(files_dict, endswith=True):
             if fname.endswith(ends):
                 _LOGGER.debug("patch_yaml_files end match %s: %s", ends, fname)
                 res = StringIO(files_dict[ends])
-                setattr(res, "name", fname)
+                res.name = fname
                 return res
 
         # Fallback for hass.components (i.e. services.yaml)
@@ -1450,12 +1444,12 @@ class MockEntity(entity.Entity):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled in the registry when first added."""
         return self._handle("entity_registry_enabled_default")
 
     @property
     def entity_registry_visible_default(self) -> bool:
-        """Return if the entity should be visible when first added to the entity registry."""
+        """Return if the entity should be visible in the registry when first added."""
         return self._handle("entity_registry_visible_default")
 
     @property
@@ -1631,7 +1625,8 @@ def mock_integration(
 
     def mock_import_platform(platform_name: str) -> NoReturn:
         raise ImportError(
-            f"Mocked unable to import platform '{integration.pkg_path}.{platform_name}'",
+            "Mocked unable to import platform"
+            f" '{integration.pkg_path}.{platform_name}'",
             name=f"{integration.pkg_path}.{platform_name}",
         )
 
@@ -1856,6 +1851,8 @@ def import_and_test_deprecated_alias(
     alias_name: str,
     replacement: Any,
     breaks_in_ha_version: str,
+    *,
+    replacement_name: str | None = None,
 ) -> None:
     """Import and test deprecated alias replaced by a value.
 
@@ -1865,7 +1862,9 @@ def import_and_test_deprecated_alias(
     - Assert the deprecated alias is included in the modules.__dir__()
     - Assert the deprecated alias is included in the modules.__all__()
     """
-    replacement_name = f"{replacement.__module__}.{replacement.__name__}"
+    replacement_name = (
+        replacement_name or f"{replacement.__module__}.{replacement.__name__}"
+    )
     value = import_deprecated_constant(module, alias_name)
     assert value == replacement
     assert (
@@ -2025,3 +2024,47 @@ def get_sensor_display_state(
         numerical_value = float(value)
         value = f"{numerical_value:z.{precision}f}"
     return value
+
+
+async def assert_platform_setup_creates_issue(
+    hass: HomeAssistant,
+    platform_domain: str,
+    integration_domain: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Assert that setting up a platform creates an issue."""
+    caplog.clear()
+    with assert_setup_component(1, platform_domain):
+        assert await async_setup_component(
+            hass,
+            platform_domain,
+            {platform_domain: {"platform": integration_domain}},
+        )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(platform_domain)) == 0
+    assert (
+        f"Configuring the {integration_domain} integration under the {platform_domain} platform key is not"
+        f" supported, it must be configured under its own {integration_domain} key instead"
+        in caplog.text
+    )
+
+    issue = issue_registry.async_get_issue(
+        "homeassistant",
+        f"platform_integration_no_support_{platform_domain}_{integration_domain}",
+    )
+
+    assert issue
+    assert issue.issue_domain == integration_domain
+    assert issue.learn_more_url is not None
+    assert issue.translation_key == "platform_config_not_supported"
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "platform_domain": platform_domain,
+        "integration_domain": integration_domain,
+        "platform_key": f"platform: {integration_domain}",
+        "yaml_example": f"```yaml\n{platform_domain}:\n  - platform: {integration_domain}\n```",
+    }

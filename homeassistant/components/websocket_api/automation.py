@@ -1,7 +1,5 @@
 """Automation related helper methods for the Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -184,7 +182,7 @@ def _get_automation_component_lookup_table(
     component_type: AutomationComponentType,
     component_descriptions: Mapping[str, Mapping[str, Any] | None],
 ) -> _AutomationComponentLookupTable:
-    """Get a dict of automation components keyed by domain, along with the total number of components.
+    """Get automation components keyed by domain with total count.
 
     Returns a cached object if available.
     """
@@ -231,7 +229,8 @@ def _async_get_automation_components_for_target(
 ) -> set[str]:
     """Get automation components (triggers/conditions/services) for a target.
 
-    Returns all components that can be used on any entity that are currently part of a target.
+    Returns all components that can be used on any entity
+    that are currently part of a target.
     """
     extracted = target_helpers.async_extract_referenced_entity_ids(
         hass,
@@ -254,7 +253,8 @@ def _async_get_automation_components_for_target(
     def _match_components(entities: set[str], check_entity_category: bool) -> None:
         for entity_id in entities:
             if lookup_table.component_count == len(matched_components):
-                # All automation components matched already, so we don't need to iterate further
+                # All automation components matched already,
+                # so we don't need to iterate further
                 break
 
             entity_info = entity_infos.get(entity_id)

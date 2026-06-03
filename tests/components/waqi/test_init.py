@@ -32,11 +32,11 @@ async def test_setup_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test migration from version 1 to version 2."""
     # Create a v1 config entry with conversation options and an entity
@@ -150,13 +150,15 @@ async def test_migration_from_v1(
             None,
             [
                 {
-                    "sensor_entity_id": "sensor.not_de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": (
+                        "sensor.not_de_jongweg_utrecht_air_quality_index"
+                    ),
                     "device_disabled_by": None,
                     "entity_disabled_by": None,
                     "device": 1,
                 },
                 {
-                    "sensor_entity_id": "sensor.de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": ("sensor.de_jongweg_utrecht_air_quality_index"),
                     "device_disabled_by": DeviceEntryDisabler.USER,
                     "entity_disabled_by": RegistryEntryDisabler.DEVICE,
                     "device": 0,
@@ -169,13 +171,15 @@ async def test_migration_from_v1(
             None,
             [
                 {
-                    "sensor_entity_id": "sensor.de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": ("sensor.de_jongweg_utrecht_air_quality_index"),
                     "device_disabled_by": DeviceEntryDisabler.USER,
                     "entity_disabled_by": RegistryEntryDisabler.DEVICE,
                     "device": 0,
                 },
                 {
-                    "sensor_entity_id": "sensor.not_de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": (
+                        "sensor.not_de_jongweg_utrecht_air_quality_index"
+                    ),
                     "device_disabled_by": None,
                     "entity_disabled_by": None,
                     "device": 1,
@@ -188,13 +192,15 @@ async def test_migration_from_v1(
             ConfigEntryDisabler.USER,
             [
                 {
-                    "sensor_entity_id": "sensor.de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": ("sensor.de_jongweg_utrecht_air_quality_index"),
                     "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
                     "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
                     "device": 0,
                 },
                 {
-                    "sensor_entity_id": "sensor.not_de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": (
+                        "sensor.not_de_jongweg_utrecht_air_quality_index"
+                    ),
                     "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
                     "entity_disabled_by": None,
                     "device": 1,

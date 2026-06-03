@@ -1,7 +1,5 @@
 """Support for Iskra."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
@@ -171,7 +169,10 @@ def get_counter_entity_description(
     index: int,
     entity_name: str,
 ) -> IskraSensorEntityDescription:
-    """Dynamically create IskraSensor object as energy meter's counters are customizable."""
+    """Dynamically create IskraSensor object.
+
+    Energy meter's counters are customizable.
+    """
 
     key = entity_name.format(index + 1)
 

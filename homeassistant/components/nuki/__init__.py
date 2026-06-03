@@ -1,10 +1,9 @@
 """The nuki component."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import web
 from pynuki import NukiBridge, NukiLock, NukiOpener
@@ -36,6 +35,15 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 
 def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
     return bridge.locks, bridge.openers
+
+
+def _get_bridge_data(
+    host: str, token: str, port: int, encrypted_token: bool
+) -> tuple[NukiBridge, list[NukiLock], list[NukiOpener], dict[str, Any]]:
+    """Get Nuki bridge and bridge data."""
+    bridge = NukiBridge(host, token, port, encrypted_token, DEFAULT_TIMEOUT)
+    locks, openers = _get_bridge_devices(bridge)
+    return bridge, locks, openers, bridge.info()
 
 
 async def _create_webhook(
@@ -155,23 +163,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool
         hass.config_entries.async_update_entry(entry, **params)
 
     try:
-        bridge = await hass.async_add_executor_job(
-            NukiBridge,
+        bridge, locks, openers, info = await hass.async_add_executor_job(
+            _get_bridge_data,
             entry.data[CONF_HOST],
             entry.data[CONF_TOKEN],
             entry.data[CONF_PORT],
             entry.data.get(CONF_ENCRYPT_TOKEN, True),
-            DEFAULT_TIMEOUT,
         )
-
-        locks, openers = await hass.async_add_executor_job(_get_bridge_devices, bridge)
     except InvalidCredentialsException as err:
         raise exceptions.ConfigEntryAuthFailed from err
     except RequestException as err:
         raise exceptions.ConfigEntryNotReady from err
 
     # Device registration for the bridge
-    info = bridge.info()
     bridge_id = parse_id(info["ids"]["hardwareId"])
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(

@@ -1,7 +1,5 @@
 """Support for sensors."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Final, cast
 
 from aiocomelit.api import ComelitSerialBridgeObject, ComelitVedoZoneObject
@@ -168,12 +166,12 @@ class ComelitVedoSensorEntity(
     @property
     def available(self) -> bool:
         """Sensor availability."""
-        return self._zone_object.human_status != AlarmZoneState.UNAVAILABLE
+        return self._zone_object.human_status is not AlarmZoneState.UNAVAILABLE
 
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        if (status := self._zone_object.human_status) == AlarmZoneState.UNKNOWN:
+        if (status := self._zone_object.human_status) is AlarmZoneState.UNKNOWN:
             return None
 
         return cast(str, status.value)

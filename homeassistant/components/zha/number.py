@@ -1,7 +1,5 @@
 """Support for ZHA AnalogOutput cluster."""
 
-from __future__ import annotations
-
 import functools
 import logging
 from typing import Any
@@ -80,7 +78,7 @@ class ZhaNumber(ZHAEntity, RestoreNumber):
         """Return the unit the value is expressed in."""
         return self.entity_data.entity.native_unit_of_measurement
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         await self.entity_data.entity.async_set_native_value(value=value)

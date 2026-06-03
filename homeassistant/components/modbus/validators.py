@@ -1,7 +1,5 @@
 """Validate Modbus configuration."""
 
-from __future__ import annotations
-
 from collections import namedtuple
 import logging
 import struct
@@ -166,7 +164,10 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     ):
         if entry[0] is None:
             if entry[1] == DEMANDED:
-                error = f"{name}: `{entry[2]}` missing, demanded with `{CONF_DATA_TYPE}: {data_type}`"
+                error = (
+                    f"{name}: `{entry[2]}` missing,"
+                    f" demanded with `{CONF_DATA_TYPE}: {data_type}`"
+                )
                 raise vol.Invalid(error)
         elif entry[1] == ILLEGAL:
             error = f"{name}: `{entry[2]}` illegal with `{CONF_DATA_TYPE}: {data_type}`"
@@ -182,7 +183,8 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         bytecount = count * 2
         if bytecount != size:
             raise vol.Invalid(
-                f"{name}: Size of structure is {size} bytes but `{CONF_COUNT}: {count}` is {bytecount} bytes"
+                f"{name}: Size of structure is {size} bytes"
+                f" but `{CONF_COUNT}: {count}` is {bytecount} bytes"
             )
     else:
         if data_type != DataType.STRING:
@@ -201,7 +203,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
 
 
 def hvac_fixedsize_reglist_validator(value: Any) -> list:
-    """Check the number of registers for target temp. and coerce it to a list, if valid."""
+    """Check the number of registers for target temp and coerce to a list."""
     if isinstance(value, int):
         value = [value] * len(HVACMode)
         return list(value)
@@ -216,7 +218,8 @@ def hvac_fixedsize_reglist_validator(value: Any) -> list:
             return list(value)
 
     raise vol.Invalid(
-        f"Invalid target temp register. Required type: integer, allowed 1 or list of {len(HVACMode)} registers"
+        "Invalid target temp register. Required type: integer,"
+        f" allowed 1 or list of {len(HVACMode)} registers"
     )
 
 
@@ -240,7 +243,10 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
     errors = []
     for key, value in config[CONF_FAN_MODE_VALUES].items():
         if value in fan_modes:
-            warn = f"Modbus fan mode {key} has a duplicate value {value}, not loaded, values must be unique!"
+            warn = (
+                f"Modbus fan mode {key} has a duplicate value"
+                f" {value}, not loaded, values must be unique!"
+            )
             _LOGGER.warning(warn)
             errors.append(key)
         else:
@@ -259,7 +265,7 @@ def not_zero_value(val: float, errMsg: str) -> float:
 
 
 def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> dict:
-    """Check for conflicts in scale/offset and ensure target/current temp scale/offset is set."""
+    """Check for conflicts in scale/offset and ensure target/current temp is set."""
     config_keys = [
         (CONF_SCALE, CONF_TARGET_TEMP_SCALE, CONF_CURRENT_TEMP_SCALE, DEFAULT_SCALE),
         (
@@ -273,10 +279,14 @@ def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> d
     for generic_key, target_key, current_key, default_value in config_keys:
         if generic_key in config and (target_key in config or current_key in config):
             raise vol.Invalid(
-                f"Cannot use both '{generic_key}' and temperature-specific parameters "
-                f"('{target_key}' or '{current_key}') in the same configuration. "
-                f"Either the '{generic_key}' parameter (which applies to both temperatures) "
-                "or the new temperature-specific parameters, but not both."
+                f"Cannot use both '{generic_key}' and"
+                " temperature-specific parameters"
+                f" ('{target_key}' or '{current_key}')"
+                " in the same configuration."
+                f" Either the '{generic_key}' parameter"
+                " (which applies to both temperatures)"
+                " or the new temperature-specific"
+                " parameters, but not both."
             )
         if generic_key in config:
             value = config.pop(generic_key)
@@ -297,7 +307,11 @@ def duplicate_swing_mode_validator(config: dict[str, Any]) -> dict:
     errors = []
     for key, value in config[CONF_SWING_MODE_VALUES].items():
         if value in swing_modes:
-            warn = f"Modbus swing mode {key} has a duplicate value {value}, not loaded, values must be unique!"
+            warn = (
+                f"Modbus swing mode {key} has a duplicate"
+                f" value {value}, not loaded,"
+                " values must be unique!"
+            )
             _LOGGER.warning(warn)
             errors.append(key)
         else:
@@ -318,7 +332,9 @@ def register_int_list_validator(value: Any) -> Any:
             return value
 
     raise vol.Invalid(
-        f"Invalid {CONF_ADDRESS} register for fan/swing mode. Required type: positive integer, allowed 1 or list of 1 register."
+        f"Invalid {CONF_ADDRESS} register for fan/swing mode."
+        " Required type: positive integer,"
+        " allowed 1 or list of 1 register."
     )
 
 
@@ -449,7 +465,8 @@ def check_config(hass: HomeAssistant, config: dict) -> dict:
                     "",
                     "",
                 ],
-                f"Modbus {hub[CONF_NAME]} contain no entities, causing instability, entry not loaded",
+                f"Modbus {hub[CONF_NAME]} contain no entities,"
+                " causing instability, entry not loaded",
             )
             del config[hub_inx]
             continue

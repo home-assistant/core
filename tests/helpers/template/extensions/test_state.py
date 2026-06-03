@@ -1,7 +1,5 @@
 """Test state functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from unittest.mock import patch
 
@@ -62,7 +60,10 @@ def test_referring_states_by_entity_id(hass: HomeAssistant) -> None:
 
 def test_iterating_all_states(hass: HomeAssistant) -> None:
     """Test iterating all states."""
-    tmpl_str = "{% for state in states | sort(attribute='entity_id') %}{{ state.state }}{% endfor %}"
+    tmpl_str = (
+        "{% for state in states | sort(attribute='entity_id') %}"
+        "{{ state.state }}{% endfor %}"
+    )
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", all_states=True)
@@ -165,7 +166,7 @@ def test_is_state_attr(hass: HomeAssistant) -> None:
 
     result = render(
         hass,
-        """{% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}""",
+        '{% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}',
     )
     assert result == "yes"
 
@@ -174,25 +175,30 @@ def test_is_state_attr(hass: HomeAssistant) -> None:
 
     result = render(
         hass,
-        """{% if "test.object" is is_state_attr("mode", "on") %}yes{% else %}no{% endif %}""",
+        '{% if "test.object" is is_state_attr("mode", "on") %}'
+        "yes{% else %}no{% endif %}",
     )
     assert result == "yes"
 
     result = render(
         hass,
-        """{{ ['test.object'] | select("is_state_attr", "mode", "on") | first | default }}""",
+        "{{ ['test.object']"
+        ' | select("is_state_attr", "mode", "on")'
+        " | first | default }}",
     )
     assert result == "test.object"
 
     result = render(
         hass,
-        """{% if is_state_attr("test.object", "exists", None) %}yes{% else %}no{% endif %}""",
+        '{% if is_state_attr("test.object", "exists", None) %}'
+        "yes{% else %}no{% endif %}",
     )
     assert result == "yes"
 
     result = render(
         hass,
-        """{% if is_state_attr("test.object", "noexist", None) %}yes{% else %}no{% endif %}""",
+        '{% if is_state_attr("test.object", "noexist", None) %}'
+        "yes{% else %}no{% endif %}",
     )
     assert result == "no"
 
@@ -205,7 +211,7 @@ def test_state_attr(hass: HomeAssistant) -> None:
 
     result = render(
         hass,
-        """{% if state_attr("test.object", "mode") == "on" %}yes{% else %}no{% endif %}""",
+        '{% if state_attr("test.object", "mode") == "on" %}yes{% else %}no{% endif %}',
     )
     assert result == "yes"
 
@@ -214,7 +220,7 @@ def test_state_attr(hass: HomeAssistant) -> None:
 
     result = render(
         hass,
-        """{% if "test.object" | state_attr("mode") == "on" %}yes{% else %}no{% endif %}""",
+        '{% if "test.object" | state_attr("mode") == "on" %}yes{% else %}no{% endif %}',
     )
     assert result == "yes"
 
@@ -413,7 +419,9 @@ async def test_state_attr_translated(
             "climate.test_platform_5678",
             "fan_mode",
             {
-                "component.test_platform.entity.climate.my_climate.state_attributes.fan_mode.state.auto": "Platform Automatic",
+                "component.test_platform.entity.climate"
+                ".my_climate.state_attributes"
+                ".fan_mode.state.auto": "Platform Automatic",
             },
             "Platform Automatic",
         ),
@@ -421,7 +429,9 @@ async def test_state_attr_translated(
             "climate.living_room",
             "fan_mode",
             {
-                "component.climate.entity_component._.state_attributes.fan_mode.state.auto": "Automatic",
+                "component.climate.entity_component"
+                "._.state_attributes"
+                ".fan_mode.state.auto": "Automatic",
             },
             "Automatic",
         ),
@@ -429,7 +439,9 @@ async def test_state_attr_translated(
             "climate.living_room",
             "hvac_action",
             {
-                "component.climate.entity_component._.state_attributes.hvac_action.state.heating": "Heating",
+                "component.climate.entity_component"
+                "._.state_attributes"
+                ".hvac_action.state.heating": "Heating",
             },
             "Heating",
         ),
@@ -538,7 +550,11 @@ def test_distance_function_with_1_coord(hass: HomeAssistant) -> None:
 def test_distance_function_with_2_coords(hass: HomeAssistant) -> None:
     """Test distance function with 2 coords."""
     _set_up_units(hass)
-    tpl = f'{{{{ distance("32.87336", "-117.22943", {hass.config.latitude}, {hass.config.longitude}) | round }}}}'
+    tpl = (
+        f'{{{{ distance("32.87336", "-117.22943",'
+        f" {hass.config.latitude}, {hass.config.longitude})"
+        f" | round }}}}"
+    )
     assert render(hass, tpl) == 187
 
 
@@ -682,21 +698,33 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     info = render_to_info(
         hass,
-        "{{ expand('test.object') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ expand('test.object')"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(info, "test.object", ["test.object"])
     assert info.rate_limit is None
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ expand('group.new_group')"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(info, "", ["group.new_group"])
     assert info.rate_limit is None
 
     info = render_to_info(
         hass,
-        "{{ expand(states.group) | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ expand(states.group)"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(info, "", [], ["group"])
     assert info.rate_limit == DOMAIN_STATES_RATE_LIMIT
@@ -716,14 +744,22 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ expand('group.new_group')"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(info, "test.object", {"group.new_group", "test.object"})
     assert info.rate_limit is None
 
     info = render_to_info(
         hass,
-        "{{ expand(states.group) | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ expand(states.group)"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(info, "test.object", {"test.object"}, ["group"])
     assert info.rate_limit == DOMAIN_STATES_RATE_LIMIT
@@ -732,7 +768,8 @@ async def test_expand(hass: HomeAssistant) -> None:
         hass,
         (
             "{{ expand('group.new_group', 'test.object')"
-            " | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(info, "test.object", {"test.object", "group.new_group"})
@@ -741,7 +778,8 @@ async def test_expand(hass: HomeAssistant) -> None:
         hass,
         (
             "{{ ['group.new_group', 'test.object'] | expand"
-            " | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(info, "test.object", {"test.object", "group.new_group"})
@@ -767,8 +805,11 @@ async def test_expand(hass: HomeAssistant) -> None:
     info = render_to_info(
         hass,
         (
-            "{{ states.group.power_sensors.attributes.entity_id | expand "
-            "| sort(attribute='entity_id') | map(attribute='state')|map('float')|sum  }}"
+            "{{ states.group.power_sensors.attributes"
+            ".entity_id | expand"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='state')"
+            "|map('float')|sum  }}"
         ),
     )
     assert_result_info(
@@ -797,7 +838,11 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     info = render_to_info(
         hass,
-        "{{ expand('light.grouped') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ expand('light.grouped')"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(
         info,
@@ -820,7 +865,11 @@ async def test_expand(hass: HomeAssistant) -> None:
     )
     info = render_to_info(
         hass,
-        "{{ expand('zone.test') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ expand('zone.test')"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(
         info,
@@ -836,7 +885,11 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     info = render_to_info(
         hass,
-        "{{ expand('zone.test') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ expand('zone.test')"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(
         info,
@@ -852,7 +905,11 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     info = render_to_info(
         hass,
-        "{{ expand('zone.test') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ expand('zone.test')"
+            " | sort(attribute='entity_id')"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(
         info,
@@ -892,13 +949,16 @@ def test_closest_function_to_coord(hass: HomeAssistant) -> None:
 
     result = render(
         hass,
-        f'{{{{ closest("{hass.config.latitude + 0.3}", {hass.config.longitude + 0.3}, states.test_domain).entity_id }}}}',
+        f'{{{{ closest("{hass.config.latitude + 0.3}",'
+        f" {hass.config.longitude + 0.3},"
+        f" states.test_domain).entity_id }}}}",
     )
     assert result == "test_domain.closest_zone"
 
     result = render(
         hass,
-        f'{{{{ (states.test_domain | closest("{hass.config.latitude + 0.3}", {hass.config.longitude + 0.3})).entity_id }}}}',
+        f'{{{{ (states.test_domain | closest("{hass.config.latitude + 0.3}",'
+        f" {hass.config.longitude + 0.3})).entity_id }}}}",
     )
     assert result == "test_domain.closest_zone"
 

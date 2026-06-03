@@ -1,7 +1,5 @@
 """Binary sensor support for Wireless Sensor Tags."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 from wirelesstagpy import SensorTag, constants as WT_CONSTANTS
 

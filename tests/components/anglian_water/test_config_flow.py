@@ -21,9 +21,9 @@ from .const import ACCESS_TOKEN, ACCOUNT_NUMBER, PASSWORD, USERNAME
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_multiple_account_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_anglian_water_authenticator: AsyncMock,
     mock_anglian_water_client: AsyncMock,
 ) -> None:
@@ -62,9 +62,9 @@ async def test_multiple_account_flow(
     assert result["result"].unique_id == ACCOUNT_NUMBER
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_single_account_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_anglian_water_authenticator: AsyncMock,
     mock_anglian_water_client: AsyncMock,
 ) -> None:
@@ -99,9 +99,9 @@ async def test_single_account_flow(
     assert result["result"].unique_id == ACCOUNT_NUMBER
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_configured(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_anglian_water_authenticator: AsyncMock,
     mock_anglian_water_client: AsyncMock,

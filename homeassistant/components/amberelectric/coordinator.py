@@ -1,7 +1,5 @@
 """Amber Electric Coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 
@@ -50,7 +48,7 @@ def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) ->
 
 
 class AmberUpdateCoordinator(DataUpdateCoordinator):
-    """AmberUpdateCoordinator - In charge of downloading the data for a site, which all the sensors read."""
+    """Coordinator in charge of downloading site data for all sensors."""
 
     config_entry: AmberConfigEntry
 

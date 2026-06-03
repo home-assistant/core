@@ -250,7 +250,7 @@ async def test_actions_cannot_connect_select(
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """When the client write method raises, ServiceValidationError('cannot_connect') is raised."""
+    """Test ServiceValidationError on client write failure."""
     client = mock_pooldose_client
     entity_id = "select.pool_device_ph_dosing_set"
     before = hass.states.get(entity_id)
@@ -281,7 +281,7 @@ async def test_actions_write_rejected_select(
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """When the client write method returns False, ServiceValidationError('write_rejected') is raised."""
+    """Test ServiceValidationError when write is rejected."""
     client = mock_pooldose_client
     entity_id = "select.pool_device_ph_dosing_set"
     before = hass.states.get(entity_id)

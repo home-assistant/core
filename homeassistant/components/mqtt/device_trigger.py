@@ -1,7 +1,5 @@
 """Provides device automations for MQTT."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
 import logging

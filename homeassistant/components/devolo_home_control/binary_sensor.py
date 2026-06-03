@@ -1,7 +1,5 @@
 """Platform for binary sensor integration."""
 
-from __future__ import annotations
-
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
@@ -31,7 +29,7 @@ async def async_setup_entry(
     entry: DevoloHomeControlConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Get all binary sensor and multi level sensor devices and setup them via config entry."""
+    """Get all binary sensor and multi level sensor devices."""
     entities: list[BinarySensorEntity] = []
 
     for gateway in entry.runtime_data:

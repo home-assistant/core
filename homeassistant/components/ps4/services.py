@@ -1,7 +1,5 @@
 """Support for PlayStation 4 consoles."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID

@@ -1,7 +1,5 @@
 """Base entity for the Fully Kiosk Browser integration."""
 
-from __future__ import annotations
-
 import json
 
 from yarl import URL
@@ -23,7 +21,9 @@ def valid_global_mac_address(mac: str | None) -> bool:
         return False
     try:
         first_octet = int(mac.split(":")[0], 16)
-        # If the second least-significant bit is set, it's a locally administered address, should not be used as an ID
+        # If the second least-significant bit is set, it's a
+        # locally administered address, should not be used as
+        # an ID
         return not bool(first_octet & 0x2)
     except ValueError:
         return False

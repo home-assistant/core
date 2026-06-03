@@ -163,7 +163,7 @@ async def test_setup_reload_service_when_async_process_component_config_fails(
 async def test_setup_reload_service_with_platform_that_provides_async_reset_platform(
     hass: HomeAssistant,
 ) -> None:
-    """Test setting up a reload service using a platform that has its own async_reset_platform."""
+    """Test reload service setup with platform's own async_reset_platform."""
     component_setup = AsyncMock(return_value=True)
 
     setup_called = []
@@ -217,7 +217,8 @@ async def test_async_integration_yaml_config(hass: HomeAssistant) -> None:
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         processed_config = await async_integration_yaml_config(hass, DOMAIN)
         assert processed_config == {DOMAIN: [{"name": "one"}, {"name": "two"}]}
-        # Test fetching yaml config does not raise when the raise_on_failure option is set
+        # Test fetching yaml config does not raise when
+        # the raise_on_failure option is set
         processed_config = await async_integration_yaml_config(
             hass, DOMAIN, raise_on_failure=True
         )
@@ -239,7 +240,8 @@ async def test_async_integration_failing_yaml_config(hass: HomeAssistant) -> Non
         # Test fetching yaml config does not raise without raise_on_failure option
         processed_config = await async_integration_yaml_config(hass, DOMAIN)
         assert processed_config is None
-        # Test fetching yaml config does not raise when the raise_on_failure option is set
+        # Test fetching yaml config does not raise when
+        # the raise_on_failure option is set
         with pytest.raises(ConfigValidationError):
             await async_integration_yaml_config(hass, DOMAIN, raise_on_failure=True)
 

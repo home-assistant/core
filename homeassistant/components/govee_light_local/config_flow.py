@@ -1,7 +1,5 @@
 """Config flow for Govee light local."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import logging

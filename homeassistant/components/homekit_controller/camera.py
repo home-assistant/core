@@ -1,7 +1,5 @@
 """Support for Homekit cameras."""
 
-from __future__ import annotations
-
 from aiohomekit.model import Accessory
 from aiohomekit.model.services import ServicesTypes
 

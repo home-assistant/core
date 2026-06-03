@@ -1,7 +1,5 @@
 """Support for ISY locks."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyisy.constants import ISY_VALUE_UNKNOWN

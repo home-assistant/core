@@ -1,7 +1,5 @@
 """Support for Solax inverter via local API."""
 
-from __future__ import annotations
-
 from solax.units import Units
 
 from homeassistant.components.sensor import (

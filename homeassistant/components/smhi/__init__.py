@@ -23,7 +23,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bool
 
     # Setting unique id where missing
     if entry.unique_id is None:
-        unique_id = f"{entry.data[CONF_LOCATION][CONF_LATITUDE]}-{entry.data[CONF_LOCATION][CONF_LONGITUDE]}"
+        unique_id = (
+            f"{entry.data[CONF_LOCATION][CONF_LATITUDE]}"
+            f"-{entry.data[CONF_LOCATION][CONF_LONGITUDE]}"
+        )
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     coordinator = SMHIDataUpdateCoordinator(hass, entry)

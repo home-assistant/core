@@ -1,7 +1,5 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from dataclasses import dataclass
 from typing import cast
@@ -576,7 +574,8 @@ DISCOVERY_SCHEMAS = [
                     command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=3,
                 ),
-                # External sensor (connected to device) with limit by floor sensor (2x sensors)
+                # External sensor (connected to device) with
+                # limit by floor sensor (2x sensors)
                 "External with floor limit": ZwaveValueID(
                     property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
                     command_class=CommandClass.SENSOR_MULTILEVEL,
@@ -1053,13 +1052,15 @@ DISCOVERY_SCHEMAS = [
         device_class_generic={"Thermostat"},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # Handle the different combinations of Binary Switch, Multilevel Switch and Color Switch
+    # Handle the different combinations of Binary Switch,
+    # Multilevel Switch and Color Switch
     # to create switches and/or (colored) lights. The goal is to:
     # - couple Color Switch CC with Multilevel Switch CC if possible
     # - couple Color Switch CC with Binary Switch CC as the first fallback
     # - use Color Switch CC standalone as the last fallback
     #
-    # Multilevel Switch CC (+ Color Switch CC) -> Dimmable light with or without color support.
+    # Multilevel Switch CC (+ Color Switch CC) -> Dimmable
+    # light with or without color support.
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,

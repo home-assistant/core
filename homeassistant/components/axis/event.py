@@ -1,7 +1,5 @@
 """Support for Axis event entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from axis.models.event import Event, EventTopic

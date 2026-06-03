@@ -1,10 +1,8 @@
 """Config flow to configure Renault component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from renault_api.const import AVAILABLE_LOCALES
@@ -18,7 +16,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, DOMAIN
+from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, CONF_LOGIN_TOKEN, DOMAIN
 from .renault_hub import RenaultHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,6 +65,9 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if login_success:
+                    if TYPE_CHECKING:
+                        assert self.renault_hub.login_token
+                    self.renault_config[CONF_LOGIN_TOKEN] = self.renault_hub.login_token
                     return await self.async_step_kamereon()
                 errors["base"] = "invalid_credentials"
             suggested_values = user_input
@@ -135,9 +136,14 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             if await self.renault_hub.attempt_login(
                 reauth_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
             ):
+                if TYPE_CHECKING:
+                    assert self.renault_hub.login_token
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                    data_updates={
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_LOGIN_TOKEN: self.renault_hub.login_token,
+                    },
                 )
             errors = {"base": "invalid_credentials"}
 

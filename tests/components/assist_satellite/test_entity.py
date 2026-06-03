@@ -588,7 +588,7 @@ async def test_vad_sensitivity_entity(
 async def test_pipeline_entity_not_found(
     hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
 ) -> None:
-    """Test that setting the pipeline entity id to a non-existent entity raises an error."""
+    """Test setting pipeline entity id to non-existent entity errors."""
     audio_stream = object()
 
     # Set to an entity that doesn't exist
@@ -601,7 +601,7 @@ async def test_pipeline_entity_not_found(
 async def test_vad_sensitivity_entity_not_found(
     hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
 ) -> None:
-    """Test that setting the vad sensitivity entity id to a non-existent entity raises an error."""
+    """Test setting vad sensitivity entity id to non-existent entity errors."""
     audio_stream = object()
 
     # Set to an entity that doesn't exist
@@ -807,7 +807,7 @@ async def test_start_conversation_reject_builtin_agent(
 async def test_start_conversation_default_preannounce(
     hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
 ) -> None:
-    """Test starting a conversation on a device with the default preannouncement sound."""
+    """Test starting a conversation with the default preannounce sound."""
 
     async def async_start_conversation(start_announcement):
         assert PREANNOUNCE_URL in start_announcement.preannounce_media_id

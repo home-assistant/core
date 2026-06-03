@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This charger is already configured",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unavailable_host": "Unable to connect to host"
     },
     "error": {
@@ -18,6 +19,17 @@
           "password": "The password to access your OpenEVSE charger",
           "username": "The username to access your OpenEVSE charger"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::openevse::config::step::auth::data_description::password%]",
+          "username": "[%key:component::openevse::config::step::auth::data_description::username%]"
+        },
+        "description": "The credentials for your OpenEVSE charger at {host} are no longer valid. Please enter your current username and password."
       },
       "user": {
         "data": {
@@ -152,6 +164,20 @@
       "vehicle_soc": {
         "name": "Vehicle state of charge"
       }
+    }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "Authentication failed while communicating with the charger."
+    },
+    "communication_error": {
+      "message": "Failed to communicate with the charger."
+    },
+    "invalid_value": {
+      "message": "Value {value} is invalid for the charger."
+    },
+    "unsupported_feature": {
+      "message": "The charger does not support this feature."
     }
   },
   "issues": {

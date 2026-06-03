@@ -1,7 +1,5 @@
 """Support for Hue sensors."""
 
-from __future__ import annotations
-
 from functools import partial
 from typing import Any
 
@@ -54,20 +52,24 @@ def _resource_valid(
 ) -> bool:
     """Return True if the resource is valid."""
     if isinstance(resource, GroupedLightLevel):
-        # filter out GroupedLightLevel sensors that are not linked to a valid group/parent
+        # filter out GroupedLightLevel sensors that are not linked
+        # to a valid group/parent
         if resource.owner.rtype not in (
             ResourceTypes.ROOM,
             ResourceTypes.ZONE,
             ResourceTypes.SERVICE_GROUP,
         ):
             return False
-        # guard against GroupedLightLevel without parent (should not happen, but just in case)
+        # guard against GroupedLightLevel without parent
+        # (should not happen, but just in case)
         parent_id = resource.owner.rid
         parent = api.groups.get(parent_id) or api.config.get(parent_id)
         if not parent:
             return False
-        # filter out GroupedLightLevel sensors that have only one member, because Hue creates one
-        # default grouped LightLevel sensor per zone/room, which is not useful to expose in HA
+        # filter out GroupedLightLevel sensors that have only one
+        # member, because Hue creates one default grouped
+        # LightLevel sensor per zone/room, which is not useful
+        # to expose in HA
         if len(parent.children) <= 1:
             return False
     # default/other checks can go here (none for now)
@@ -117,7 +119,7 @@ async def async_setup_entry(
     register_items(api.sensors.grouped_light_level, HueGroupedLightLevelSensor)
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueSensorBase(HueBaseEntity, SensorEntity):
     """Representation of a Hue sensor."""
 
@@ -133,7 +135,7 @@ class HueSensorBase(HueBaseEntity, SensorEntity):
         self.controller = controller
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueTemperatureSensor(HueSensorBase):
     """Representation of a Hue Temperature sensor."""
 
@@ -151,7 +153,7 @@ class HueTemperatureSensor(HueSensorBase):
         return round(self.resource.temperature.value, 1)
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueLightLevelSensor(HueSensorBase):
     """Representation of a Hue LightLevel (illuminance) sensor."""
 
@@ -180,9 +182,9 @@ class HueLightLevelSensor(HueSensorBase):
         }
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueGroupedLightLevelSensor(HueLightLevelSensor):
-    """Representation of a LightLevel (illuminance) sensor from a Hue GroupedLightLevel resource."""
+    """Representation of a LightLevel sensor from a Hue GroupedLightLevel resource."""
 
     controller: GroupedLightLevelController
     resource: GroupedLightLevel
@@ -205,7 +207,7 @@ class HueGroupedLightLevelSensor(HueLightLevelSensor):
         )
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueBatterySensor(HueSensorBase):
     """Representation of a Hue Battery sensor."""
 
@@ -231,7 +233,7 @@ class HueBatterySensor(HueSensorBase):
         return {"battery_state": self.resource.power_state.battery_state.value}
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueZigbeeConnectivitySensor(HueSensorBase):
     """Representation of a Hue ZigbeeConnectivity sensor."""
 

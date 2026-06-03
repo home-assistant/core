@@ -102,7 +102,9 @@
       },
       "progress": {
         "install_addon": "Please wait while the {addon_name} app installation finishes. This can take several minutes.",
-        "start_addon": "Please wait while the {addon_name} app start completes. This may take some seconds."
+        "install_zigbee_firmware": "Please wait while Zigbee-only firmware is installed on your {hardware_name}. This can take several minutes.",
+        "start_addon": "Please wait while the {addon_name} app start completes. This may take some seconds.",
+        "uninstall_multiprotocol_addon": "Please wait while the {addon_name} app is uninstalled."
       },
       "step": {
         "addon_installed_other_device": {

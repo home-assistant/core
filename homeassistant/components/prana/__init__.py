@@ -3,8 +3,6 @@
 Sets up the update coordinator and forwards platform setups.
 """
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import Platform

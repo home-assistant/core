@@ -18,6 +18,13 @@ description: Reviews GitHub pull requests and provides feedback comments. This i
 4. Ensure any existing review comments have been addressed.
 5. Generate constructive review comments in the CONSOLE. DO NOT POST TO GITHUB YOURSELF.
 
+## Verification:
+
+- After the review, run parallel subagents for each finding to double check it.
+- Spawn up to a maximum of 10 parallel subagents at a time.
+- Gather the results from the subagents and summarize them in the final review comments.
+
+
 ## IMPORTANT:
 - Just review. DO NOT make any changes
 - Be constructive and specific in your comments

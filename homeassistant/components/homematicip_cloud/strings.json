@@ -37,6 +37,31 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "chamber_degraded": {
+        "name": "Chamber degraded"
+      },
+      "cloud_connection": {
+        "name": "Cloud connection"
+      },
+      "raining": {
+        "name": "Raining"
+      }
+    },
+    "event": {
+      "button": {
+        "name": "Button {channel}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "long_press": "Long press",
+              "long_release": "Long release",
+              "short_release": "Short release"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "optical_signal_light": {
         "state_attributes": {

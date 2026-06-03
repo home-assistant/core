@@ -1,7 +1,5 @@
 """Config flow for Verisure integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -252,10 +250,12 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await self.hass.async_add_executor_job(
-                    self.verisure.validate_mfa, user_input[CONF_CODE]
-                )
-                await self.hass.async_add_executor_job(self.verisure.login)
+
+                def _validate_mfa_and_login() -> None:
+                    self.verisure.validate_mfa(user_input[CONF_CODE])
+                    self.verisure.login()
+
+                await self.hass.async_add_executor_job(_validate_mfa_and_login)
             except VerisureLoginError as ex:
                 LOGGER.debug("Could not log in to Verisure, %s", ex)
                 errors["base"] = "invalid_auth"

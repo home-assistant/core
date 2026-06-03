@@ -27,7 +27,7 @@ jobs:
       # - No PRs marked as no-stale
       # - No issues (-1)
       - name: 60 days stale PRs policy
-        uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
+        uses: actions/stale@eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899 # v10.3.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 60
@@ -55,11 +55,11 @@ jobs:
       - name: Generate app token
         id: token
         # Pinned to a specific version of the action for security reasons
-        # v1.7.0
-        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a
+        # v3.2.0
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
         with:
-          app_id: ${{ secrets.ISSUE_TRIAGE_APP_ID }} # zizmor: ignore[secrets-outside-env]
-          private_key: ${{ secrets.ISSUE_TRIAGE_APP_PEM }} # zizmor: ignore[secrets-outside-env]
+          app-id: ${{ secrets.ISSUE_TRIAGE_APP_ID }} # zizmor: ignore[secrets-outside-env]
+          private-key: ${{ secrets.ISSUE_TRIAGE_APP_PEM }} # zizmor: ignore[secrets-outside-env]
 
       # The 90 day stale policy for issues
       # Used for:
@@ -67,7 +67,7 @@ jobs:
       # - No issues marked as no-stale or help-wanted
       # - No PRs (-1)
       - name: 90 days stale issues
-        uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
+        uses: actions/stale@eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899 # v10.3.0
         with:
           repo-token: ${{ steps.token.outputs.token }}
           days-before-stale: 90
@@ -97,7 +97,7 @@ jobs:
       # - No Issues marked as no-stale or help-wanted
       # - No PRs (-1)
       - name: Needs more information stale issues policy
-        uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
+        uses: actions/stale@eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899 # v10.3.0
         with:
           repo-token: ${{ steps.token.outputs.token }}
           only-labels: "needs-more-information"

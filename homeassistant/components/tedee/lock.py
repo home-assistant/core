@@ -89,11 +89,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            super().available
-            and self._lock.is_connected
-            and self._lock.state != TedeeLockState.UNCALIBRATED
-        )
+        return super().available and self._lock.state != TedeeLockState.UNCALIBRATED
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door."""

@@ -1,7 +1,5 @@
 """Diagnostics support for Sunricher DALI."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data

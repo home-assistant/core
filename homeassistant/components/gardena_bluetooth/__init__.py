@@ -1,29 +1,17 @@
 """The Gardena Bluetooth integration."""
 
-from __future__ import annotations
-
 import logging
 
 from bleak.backends.device import BLEDevice
 from gardena_bluetooth.client import CachedConnection, Client
-from gardena_bluetooth.const import AquaContour, DeviceConfiguration, DeviceInformation
-from gardena_bluetooth.exceptions import (
-    CharacteristicNoAccess,
-    CharacteristicNotFound,
-    CommunicationFailure,
-)
-from gardena_bluetooth.parse import CharacteristicTime, ProductType
+from gardena_bluetooth.const import ProductType
 from gardena_bluetooth.scan import async_get_manufacturer_data
 
 from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
 from .coordinator import (
     DeviceUnavailable,
     GardenaBluetoothConfigEntry,
@@ -41,7 +29,6 @@ PLATFORMS: list[Platform] = [
     Platform.VALVE,
 ]
 LOGGER = logging.getLogger(__name__)
-TIMEOUT = 20.0
 DISCONNECT_DELAY = 5
 
 
@@ -59,15 +46,6 @@ def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
     return CachedConnection(DISCONNECT_DELAY, _device_lookup)
 
 
-async def _update_timestamp(client: Client, characteristics: CharacteristicTime):
-    try:
-        await client.update_timestamp(characteristics, dt_util.now())
-    except CharacteristicNotFound:
-        pass
-    except CharacteristicNoAccess:
-        LOGGER.debug("No access to update internal time")
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: GardenaBluetoothConfigEntry
 ) -> bool:
@@ -75,49 +53,30 @@ async def async_setup_entry(
 
     address = entry.data[CONF_ADDRESS]
 
-    mfg_data = await async_get_manufacturer_data({address})
+    try:
+        mfg_data = await async_get_manufacturer_data({address})
+    except TimeoutError as exc:
+        raise ConfigEntryNotReady("Unable to find product type") from exc
+
     product_type = mfg_data[address].product_type
-    if product_type == ProductType.UNKNOWN:
+    if product_type is ProductType.UNKNOWN:
         raise ConfigEntryNotReady("Unable to find product type")
 
     client = Client(get_connection(hass, address), product_type)
-    try:
-        chars = await client.get_all_characteristics()
-
-        sw_version = await client.read_char(DeviceInformation.firmware_version, None)
-        manufacturer = await client.read_char(DeviceInformation.manufacturer_name, None)
-        model = await client.read_char(DeviceInformation.model_number, None)
-
-        name = entry.title
-        name = await client.read_char(DeviceConfiguration.custom_device_name, name)
-        name = await client.read_char(AquaContour.custom_device_name, name)
-
-        await _update_timestamp(client, DeviceConfiguration.unix_timestamp)
-        await _update_timestamp(client, AquaContour.unix_timestamp)
-
-    except (TimeoutError, CommunicationFailure, DeviceUnavailable) as exception:
-        await client.disconnect()
-        raise ConfigEntryNotReady(
-            f"Unable to connect to device {address} due to {exception}"
-        ) from exception
-
-    device = DeviceInfo(
-        identifiers={(DOMAIN, address)},
-        connections={(dr.CONNECTION_BLUETOOTH, address)},
-        name=name,
-        sw_version=sw_version,
-        manufacturer=manufacturer,
-        model=model,
-    )
 
     coordinator = GardenaBluetoothCoordinator(
-        hass, entry, LOGGER, client, set(chars.keys()), device, address
+        hass,
+        entry,
+        LOGGER,
+        client,
+        address,
     )
+
+    await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await coordinator.async_refresh()
-
+    await coordinator.async_request_refresh()
     return True
 
 
@@ -125,7 +84,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: GardenaBluetoothConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.async_shutdown()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

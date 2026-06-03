@@ -20,7 +20,7 @@ async def test_switch_entity(
     """Tests switch entity."""
 
     device_name = "Switch Controller"
-    entity_key = "switch.switch_controller_test_entity_name"
+    entity_key = "switch.test_entity_room_switch_controller_test_entity_name"
     entity_type = "switch"
 
     mock_api.outlets = [

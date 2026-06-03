@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingEventEntityDescription(EventEntityDescription, Generic[RingDeviceT]):
+class RingEventEntityDescription(EventEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Base class for event entity description."""
 
     capability: RingCapability

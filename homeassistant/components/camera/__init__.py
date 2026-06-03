@@ -1,7 +1,5 @@
 """Component to interface with cameras."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Coroutine
@@ -447,7 +445,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.stream: Stream | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
-        self.access_tokens: collections.deque = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque(maxlen=2)
         self._warned_old_signature = False
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None
@@ -547,10 +545,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     ) -> None:
         """Handle the async WebRTC offer.
 
-        Async means that it could take some time to process the offer and responses/message
-        will be sent with the send_message callback.
-        This method is used by cameras with CameraEntityFeature.STREAM.
-        An integration overriding this method must also implement async_on_webrtc_candidate.
+        Async means that it could take some time to process
+        the offer and responses/message will be sent with the
+        send_message callback.
+        This method is used by cameras with
+        CameraEntityFeature.STREAM.
+        An integration overriding this method must also
+        implement async_on_webrtc_candidate.
 
         Integrations can override with a native WebRTC implementation.
         """
@@ -709,7 +710,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @callback
     def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
-        """Return the WebRTC client configuration and extend it with the registered ice servers."""
+        """Return the WebRTC client configuration.
+
+        Extend it with the registered ice servers.
+        """
         config = self._async_get_webrtc_client_configuration()
 
         ice_servers = async_get_ice_servers(self.hass)
@@ -1001,7 +1005,9 @@ async def async_handle_snapshot_service(
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
         raise HomeAssistantError(
-            f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+            f"Cannot write `{snapshot_file}`, no access to path;"
+            " `allowlist_external_dirs` may need to be adjusted"
+            " in `configuration.yaml`"
         )
 
     try:

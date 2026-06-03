@@ -1,7 +1,5 @@
 """Config flow for the Seko PoolDose integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -45,17 +43,17 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the host and return (serial_number, api_versions, errors)."""
         client = PooldoseClient(host, websession=async_get_clientsession(self.hass))
         client_status = await client.connect()
-        if client_status == RequestStatus.HOST_UNREACHABLE:
+        if client_status is RequestStatus.HOST_UNREACHABLE:
             return None, None, {"base": "cannot_connect"}
-        if client_status == RequestStatus.PARAMS_FETCH_FAILED:
+        if client_status is RequestStatus.PARAMS_FETCH_FAILED:
             return None, None, {"base": "params_fetch_failed"}
-        if client_status != RequestStatus.SUCCESS:
+        if client_status is not RequestStatus.SUCCESS:
             return None, None, {"base": "cannot_connect"}
 
         api_status, api_versions = client.check_apiversion_supported()
-        if api_status == RequestStatus.NO_DATA:
+        if api_status is RequestStatus.NO_DATA:
             return None, None, {"base": "api_not_set"}
-        if api_status == RequestStatus.API_VERSION_UNSUPPORTED:
+        if api_status is RequestStatus.API_VERSION_UNSUPPORTED:
             return None, api_versions, {"base": "api_not_supported"}
 
         device_info = client.device_info
@@ -122,8 +120,10 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_id="user",
                     data_schema=SCHEMA_DEVICE,
                     errors=errors,
-                    # Handle API version info for error display; pass version info when available
-                    # or None when api_versions is None to avoid displaying version details
+                    # Handle API version info for error display;
+                    # pass version info when available or None
+                    # when api_versions is None to avoid
+                    # displaying version details
                     description_placeholders={
                         "api_version_is": api_versions.get("api_version_is") or "",
                         "api_version_should": api_versions.get("api_version_should")
@@ -157,7 +157,8 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_id="reconfigure",
                     data_schema=SCHEMA_DEVICE,
                     errors=errors,
-                    # Handle API version info for error display identical to other steps
+                    # Handle API version info for error display
+                    # identical to other steps
                     description_placeholders={
                         "api_version_is": api_versions.get("api_version_is") or "",
                         "api_version_should": api_versions.get("api_version_should")
@@ -167,7 +168,8 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                     else None,
                 )
 
-            # Ensure new serial number matches the existing entry unique_id (serial number)
+            # Ensure new serial number matches the existing
+            # entry unique_id (serial number)
             if serial_number != self._get_reconfigure_entry().unique_id:
                 return self.async_abort(reason="wrong_device")
 

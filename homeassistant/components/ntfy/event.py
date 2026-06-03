@@ -1,7 +1,5 @@
 """Event platform for ntfy integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import TYPE_CHECKING
@@ -125,7 +123,8 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
             except NtfyHTTPError as e:
                 if self._attr_available:
                     _LOGGER.error(
-                        "Failed to connect to ntfy service due to a server error: %s (%s)",
+                        "Failed to connect to ntfy service"
+                        " due to a server error: %s (%s)",
                         e.error,
                         e.link,
                     )
@@ -145,7 +144,8 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
             except Exception:
                 if self._attr_available:
                     _LOGGER.exception(
-                        "Failed to connect to ntfy service due to an unexpected exception"
+                        "Failed to connect to ntfy service"
+                        " due to an unexpected exception"
                     )
                 self._attr_available = False
             finally:

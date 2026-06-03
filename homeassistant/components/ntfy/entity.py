@@ -1,7 +1,5 @@
 """Base entity for ntfy integration."""
 
-from __future__ import annotations
-
 from yarl import URL
 
 from homeassistant.config_entries import ConfigSubentry
@@ -28,7 +26,11 @@ class NtfyBaseEntity(Entity):
         """Initialize the entity."""
         self.topic = subentry.data[CONF_TOPIC]
 
-        self._attr_unique_id = f"{config_entry.entry_id}_{subentry.subentry_id}_{self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{config_entry.entry_id}"
+            f"_{subentry.subentry_id}"
+            f"_{self.entity_description.key}"
+        )
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,

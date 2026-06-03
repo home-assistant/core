@@ -1,7 +1,5 @@
 """Config flow for Risco integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -21,6 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -29,6 +28,7 @@ from .const import (
     CONF_COMMUNICATION_DELAY,
     CONF_CONCURRENCY,
     CONF_HA_STATES_TO_RISCO,
+    CONF_MORE_OPTIONS,
     CONF_RISCO_STATES_TO_HA,
     DEFAULT_ADVANCED_OPTIONS,
     DEFAULT_OPTIONS,
@@ -219,7 +219,8 @@ class RiscoOptionsFlowHandler(OptionsFlow):
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}
 
     def _options_schema(self) -> vol.Schema:
-        schema = vol.Schema(
+        self._data = {**DEFAULT_ADVANCED_OPTIONS, **self._data}
+        return vol.Schema(
             {
                 vol.Required(
                     CONF_CODE_ARM_REQUIRED, default=self._data[CONF_CODE_ARM_REQUIRED]
@@ -228,29 +229,34 @@ class RiscoOptionsFlowHandler(OptionsFlow):
                     CONF_CODE_DISARM_REQUIRED,
                     default=self._data[CONF_CODE_DISARM_REQUIRED],
                 ): bool,
+                vol.Required(CONF_MORE_OPTIONS): section(
+                    vol.Schema(
+                        {
+                            # Polling interval is user-configurable,
+                            # which is no longer allowed
+                            # pylint: disable-next=home-assistant-config-flow-polling-field
+                            vol.Required(
+                                CONF_SCAN_INTERVAL,
+                                default=self._data[CONF_SCAN_INTERVAL],
+                            ): int,
+                            vol.Required(
+                                CONF_CONCURRENCY,
+                                default=self._data[CONF_CONCURRENCY],
+                            ): int,
+                        }
+                    ),
+                    SectionConfig(collapsed=True),
+                ),
             }
         )
-        if self.show_advanced_options:
-            self._data = {**DEFAULT_ADVANCED_OPTIONS, **self._data}
-            schema = schema.extend(
-                {
-                    # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=hass-config-flow-polling-field
-                    vol.Required(
-                        CONF_SCAN_INTERVAL, default=self._data[CONF_SCAN_INTERVAL]
-                    ): int,
-                    vol.Required(
-                        CONF_CONCURRENCY, default=self._data[CONF_CONCURRENCY]
-                    ): int,
-                }
-            )
-        return schema
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+            user_input.update(more_options)
             self._data = {**self._data, **user_input}
             return await self.async_step_risco_to_ha()
 

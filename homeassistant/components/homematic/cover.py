@@ -1,7 +1,5 @@
 """Support for  HomeMatic covers."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.cover import (
@@ -120,7 +118,10 @@ class HMCover(HMDevice, CoverEntity):
 
 
 class HMGarage(HMCover):
-    """Represents a Homematic Garage cover. Homematic garage covers do not support position attributes."""
+    """Represents a Homematic Garage cover.
+
+    Homematic garage covers do not support position attributes.
+    """
 
     _attr_device_class = CoverDeviceClass.GARAGE
 

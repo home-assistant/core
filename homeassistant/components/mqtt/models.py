@@ -1,7 +1,5 @@
 """Models used by multiple MQTT modules."""
 
-from __future__ import annotations
-
 from ast import literal_eval
 import asyncio
 from collections import deque
@@ -11,9 +9,15 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
+from paho.mqtt.client import MQTTMessage
+
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.exceptions import ServiceValidationError, TemplateError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    TemplateError,
+)
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
@@ -26,8 +30,6 @@ from homeassistant.helpers.typing import (
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from paho.mqtt.client import MQTTMessage
-
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
@@ -42,6 +44,70 @@ class PayloadSentinel(StrEnum):
 
     NONE = "none"
     DEFAULT = "default"
+
+
+MAX_28BIT: int = 268435455
+
+
+class SubscriptionID:
+    """ID generator for wildcard subscriptions."""
+
+    _next_id: int = 2
+    _used_ids: set[int]
+    _available_ids: set[int]
+    _registered_subscriptions: dict[str, int]  # topic, subscription_id
+
+    def __init__(self) -> None:
+        """Initialize the Subscription Identifier generator."""
+        self._used_ids = set()
+        self._available_ids = set()
+        self._registered_subscriptions = {}
+
+    def _generate(self, topic: str) -> int:
+        """Generate a new subscription ID."""
+        if self._available_ids:
+            subscription_id = self._available_ids.pop()
+            self._used_ids.add(subscription_id)
+            self._registered_subscriptions[topic] = subscription_id
+            return subscription_id
+
+        subscription_id = self._next_id
+        if subscription_id > MAX_28BIT:
+            # pylint: disable-next=home-assistant-exception-message-with-translation
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mqtt_max_subscription_id_reached",
+            )
+        self._used_ids.add(subscription_id)
+        self._next_id += 1
+        self._registered_subscriptions[topic] = subscription_id
+        return subscription_id
+
+    def get_subscription_id(self, topic: str) -> int:
+        """Get a registered subscription ID."""
+        return self._registered_subscriptions[topic]
+
+    def get_or_generate(self, topic: str) -> int:
+        """Get an existing or generate a new subscription ID.
+
+        ID 0 is reserved.
+        ID 1 is used for non wildcard topics.
+        Generator starts at ID 2.
+        """
+        if topic in self._registered_subscriptions:
+            return self._registered_subscriptions[topic]
+        return self._generate(topic)
+
+    def release(self, topic: str) -> None:
+        """Release a Subscription Identifier to allow reuse."""
+        if (
+            (subscription_id := self._registered_subscriptions.pop(topic, None))
+            is not None
+            and subscription_id
+            and subscription_id in self._used_ids
+        ):
+            self._used_ids.remove(subscription_id)
+            self._available_ids.add(subscription_id)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -159,8 +225,11 @@ class MqttCommandTemplateException(ServiceValidationError):
         }
         entity_id_log = "" if entity_id is None else f" for entity '{entity_id}'"
         self._message = (
-            f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
-            f", template: '{command_template}' and payload: {value_log}"
+            f"{type(base_exception).__name__}:"
+            f" {base_exception} rendering"
+            f" template{entity_id_log}"
+            f", template: '{command_template}'"
+            f" and payload: {value_log}"
         )
 
     def __str__(self) -> str:
@@ -245,8 +314,12 @@ class MqttValueTemplateException(TemplateError):
         )
         payload_log = str(payload)
         self._message = (
-            f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
-            f", template: '{value_template}'{default_payload_log} and payload: {payload_log}"
+            f"{type(base_exception).__name__}:"
+            f" {base_exception} rendering"
+            f" template{entity_id_log}"
+            f", template: '{value_template}'"
+            f"{default_payload_log}"
+            f" and payload: {payload_log}"
         )
 
     def __str__(self) -> str:
@@ -423,6 +496,7 @@ class MqttData:
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: set[Subscription] = field(default_factory=set)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
+    subscription_id_generator: SubscriptionID = field(default_factory=SubscriptionID)
 
 
 @dataclass(slots=True)
@@ -435,10 +509,20 @@ class MqttComponentConfig:
     discovery_payload: MQTTDiscoveryPayload
 
 
+class MessageExpiryInterval(TypedDict, total=False):
+    """Hold the Message Expiry Interval."""
+
+    days: float
+    hours: float
+    minutes: float
+    seconds: float
+
+
 class DeviceMqttOptions(TypedDict, total=False):
     """Hold the shared MQTT specific options for an MQTT device."""
 
     qos: int
+    message_expiry_interval: MessageExpiryInterval
 
 
 class MqttDeviceData(TypedDict, total=False):

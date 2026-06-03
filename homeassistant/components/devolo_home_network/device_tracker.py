@@ -1,7 +1,5 @@
 """Platform for device tracker integration."""
 
-from __future__ import annotations
-
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import ConnectedStationInfo
 

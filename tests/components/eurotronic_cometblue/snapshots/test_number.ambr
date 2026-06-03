@@ -1,0 +1,184 @@
+# serializer version: 1
+# name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_comfort_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 28.5,
+      'min': 7.5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.comet_blue_aa_bb_cc_dd_ee_ff_comfort_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Comfort setpoint',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Comfort setpoint',
+    'platform': 'eurotronic_cometblue',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'comfort_setpoint',
+    'unique_id': 'aa:bb:cc:dd:ee:ff-comfort_setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_comfort_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Comfort setpoint',
+      'max': 28.5,
+      'min': 7.5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.5,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.comet_blue_aa_bb_cc_dd_ee_ff_comfort_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.0',
+  })
+# ---
+# name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_eco_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 28.5,
+      'min': 7.5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.comet_blue_aa_bb_cc_dd_ee_ff_eco_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Eco setpoint',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Eco setpoint',
+    'platform': 'eurotronic_cometblue',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eco_setpoint',
+    'unique_id': 'aa:bb:cc:dd:ee:ff-eco_setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_eco_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Eco setpoint',
+      'max': 28.5,
+      'min': 7.5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.5,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.comet_blue_aa_bb_cc_dd_ee_ff_eco_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.0',
+  })
+# ---
+# name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_setpoint_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 5.0,
+      'min': -5.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.comet_blue_aa_bb_cc_dd_ee_ff_setpoint_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint offset',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Setpoint offset',
+    'platform': 'eurotronic_cometblue',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'offset',
+    'unique_id': 'aa:bb:cc:dd:ee:ff-offset',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_setpoint_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature_delta',
+      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Setpoint offset',
+      'max': 5.0,
+      'min': -5.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.5,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.comet_blue_aa_bb_cc_dd_ee_ff_setpoint_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---

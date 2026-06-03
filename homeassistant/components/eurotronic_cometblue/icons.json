@@ -4,6 +4,17 @@
       "sync_time": {
         "default": "mdi:calendar-clock"
       }
+    },
+    "number": {
+      "comfort_setpoint": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "eco_setpoint": {
+        "default": "mdi:thermometer-chevron-down"
+      },
+      "offset": {
+        "default": "mdi:thermometer-check"
+      }
     }
   }
 }

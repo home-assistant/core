@@ -1,7 +1,5 @@
 """Config flow for the Victron VRM Solar Forecast integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -12,6 +10,7 @@ from victron_vrm.models import Site
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -21,7 +20,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN
+from .const import CONF_SITE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -235,7 +234,8 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except SiteNotFound:
-                # Site removed or no longer visible to the account; treat as cannot connect
+                # Site removed or no longer visible to the
+                # account; treat as cannot connect
                 errors["base"] = "site_not_found"
             except Exception:  # pragma: no cover - unexpected
                 _LOGGER.exception("Unexpected exception during reauth")

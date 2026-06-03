@@ -1,7 +1,5 @@
 """Select platform for Tessie integration."""
 
-from __future__ import annotations
-
 from itertools import chain
 
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
@@ -48,15 +46,13 @@ async def async_setup_entry(
                 TessieSeatHeaterSelectEntity(vehicle, key)
                 for vehicle in entry.runtime_data.vehicles
                 for key in SEAT_HEATERS
-                if key
-                in vehicle.data_coordinator.data  # not all vehicles have rear center or third row
+                if key in vehicle.data_coordinator.data
             ),
             (
                 TessieSeatCoolerSelectEntity(vehicle, key)
                 for vehicle in entry.runtime_data.vehicles
                 for key in SEAT_COOLERS
-                if key
-                in vehicle.data_coordinator.data  # not all vehicles have ventilated seats
+                if key in vehicle.data_coordinator.data
             ),
             (
                 TessieOperationSelectEntity(energysite)

@@ -17,13 +17,13 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
         api_port: int,
-        key: str,
+        key: str | None = None,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
 
         self._hostname = coordinator.data.system.hostname
-        self._key = f"{self._hostname}_{key}"
+        self._key = f"{self._hostname}_{key}" if key is not None else self._hostname
         self._configuration_url = (
             f"http://{self._hostname}:{api_port}/app/settings.html"
         )

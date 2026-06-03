@@ -1,7 +1,5 @@
 """Data update coordinator for AVM FRITZ!SmartHome devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -69,9 +67,15 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         try:
             await self.hass.async_add_executor_job(self.fritz.login)
         except RequestConnectionError as err:
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="connect_error",
+            ) from err
         except LoginError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="login_failed",
+            ) from err
 
         self.has_templates = await self.hass.async_add_executor_job(
             self.fritz.has_templates
@@ -190,7 +194,10 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 ex,
             )
             self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
-            raise UpdateFailed from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connect_error_reload",
+            ) from ex
 
         for device in new_data.devices.values():
             # create device registry entry for new main devices

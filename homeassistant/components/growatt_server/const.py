@@ -1,13 +1,12 @@
 """Define constants for the Growatt Server component."""
 
+from datetime import timedelta
+
 from homeassistant.const import Platform
 
+DEVICE_SCAN_INTERVAL = timedelta(hours=1)
+
 CONF_PLANT_ID = "plant_id"
-CONF_REGION = "region"
-
-
-# API key support
-CONF_API_KEY = "api_key"
 
 # Auth types for config flow
 AUTH_PASSWORD = "password"
@@ -67,3 +66,9 @@ BATT_MODE_GRID_FIRST = 2
 # Used to pass logged-in session from async_migrate_entry to async_setup_entry
 # to avoid double login() calls that trigger API rate limiting
 CACHED_API_KEY = "_cached_api_"
+
+# Supported device types for coordinator creation
+SUPPORTED_DEVICE_TYPES = ["inverter", "tlx", "storage", "mix", "min", "sph"]
+
+# Maps V1 API device type integers to coordinator device-type strings
+V1_DEVICE_TYPES: dict[int, str] = {5: "sph", 7: "min"}

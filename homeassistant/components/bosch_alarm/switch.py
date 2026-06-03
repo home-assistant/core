@@ -1,7 +1,5 @@
 """Support for Bosch Alarm Panel outputs and doors as switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
@@ -109,7 +107,8 @@ class PanelDoorEntity(BoschAlarmDoorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Run the on function."""
-        # If the door is currently cycling, we can't send it any other commands until it is done
+        # If the door is currently cycling, we can't send it
+        # any other commands until it is done
         if self._door.is_cycling():
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="incorrect_door_state"
@@ -118,7 +117,8 @@ class PanelDoorEntity(BoschAlarmDoorEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Run the off function."""
-        # If the door is currently cycling, we can't send it any other commands until it is done
+        # If the door is currently cycling, we can't send it
+        # any other commands until it is done
         if self._door.is_cycling():
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="incorrect_door_state"

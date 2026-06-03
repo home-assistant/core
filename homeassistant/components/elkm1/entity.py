@@ -1,7 +1,5 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from enum import Enum
 import logging
@@ -49,6 +47,23 @@ def create_elk_entities(
     return entities
 
 
+def generate_unique_id(prefix: str, element: Element) -> str:
+    """Generate a unique id."""
+    # unique_id starts with elkm1_ iff there is no prefix
+    # it starts with elkm1m_{prefix} iff there is a prefix
+    # this is to avoid a conflict between
+    # prefix=foo, name=bar  (which would be elkm1_foo_bar)
+    #   - and -
+    # prefix="", name="foo bar" (which would be elkm1_foo_bar also)
+    # we could have used elkm1__foo_bar for the latter, but that
+    # would have been a breaking change
+    if prefix != "":
+        uid_start = f"elkm1m_{prefix}"
+    else:
+        uid_start = "elkm1"
+    return f"{uid_start}_{element.default_name('_')}".lower()
+
+
 class ElkEntity(Entity):
     """Base class for all Elk entities."""
 
@@ -62,19 +77,7 @@ class ElkEntity(Entity):
         self._mac = elk_data.mac
         self._prefix = elk_data.prefix
         self._temperature_unit: str = elk_data.config["temperature_unit"]
-        # unique_id starts with elkm1_ iff there is no prefix
-        # it starts with elkm1m_{prefix} iff there is a prefix
-        # this is to avoid a conflict between
-        # prefix=foo, name=bar  (which would be elkm1_foo_bar)
-        #   - and -
-        # prefix="", name="foo bar" (which would be elkm1_foo_bar also)
-        # we could have used elkm1__foo_bar for the latter, but that
-        # would have been a breaking change
-        if self._prefix != "":
-            uid_start = f"elkm1m_{self._prefix}"
-        else:
-            uid_start = "elkm1"
-        self._unique_id = f"{uid_start}_{self._element.default_name('_')}".lower()
+        self._unique_id = generate_unique_id(self._prefix, element)
         self._attr_name = element.name
 
     @property

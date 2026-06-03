@@ -1,7 +1,5 @@
 """Test the Autarco init module."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from autarco import AutarcoAuthenticationError, AutarcoConnectionError

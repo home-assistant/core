@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["growattServer"],
   "quality_scale": "silver",
-  "requirements": ["growattServer==1.9.0"]
+  "requirements": ["growattServer==2.1.0"]
 }

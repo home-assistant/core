@@ -1,7 +1,5 @@
 """The Tankerkoenig update coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from math import ceil
@@ -72,14 +70,20 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                     station_id,
                     err,
                 )
-                raise ConfigEntryAuthFailed(err) from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_api_key",
+                ) from err
             except TankerkoenigConnectionError as err:
                 _LOGGER.debug(
                     "connection error occur during setup of station %s %s",
                     station_id,
                     err,
                 )
-                raise ConfigEntryNotReady(err) from err
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="connection_error",
+                ) from err
             except TankerkoenigError as err:
                 _LOGGER.error("Error when adding station %s %s", station_id, err)
                 continue
@@ -119,7 +123,8 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
         station_ids = list(self.stations)
 
         prices = {}
-        # The API seems to only return at most 10 results, so split the list in chunks of 10
+        # The API seems to only return at most 10 results,
+        # so split the list in chunks of 10
         # and merge it together.
         for index in range(ceil(len(station_ids) / 10)):
             stations = station_ids[index * 10 : (index + 1) * 10]

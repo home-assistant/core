@@ -1,6 +1,6 @@
 """Provides triggers for schedules."""
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
@@ -20,10 +20,7 @@ class ScheduleBackToBackTrigger(EntityTransitionTriggerBase):
     _to_states = {STATE_ON}
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state matches the expected ones."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
+        """Check that the origin matches and the next event changed."""
         from_next_event = from_state.attributes.get(ATTR_NEXT_EVENT)
         to_next_event = to_state.attributes.get(ATTR_NEXT_EVENT)
 

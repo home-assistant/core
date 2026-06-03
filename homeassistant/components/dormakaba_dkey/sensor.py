@@ -1,7 +1,5 @@
 """Dormakaba dKey integration sensor platform."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

@@ -1,10 +1,7 @@
 """Config flow for ZHA."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
-import collections
 from contextlib import suppress
 from enum import StrEnum
 import json
@@ -70,7 +67,8 @@ DECONZ_DOMAIN = "deconz"
 # The ZHA config flow takes different branches depending on if you are migrating to a
 # new adapter via discovery or setting it up from scratch
 
-# For the fast path, we automatically migrate everything and restore the most recent backup
+# For the fast path, we automatically migrate everything
+# and restore the most recent backup
 MIGRATION_STRATEGY_RECOMMENDED = "migration_strategy_recommended"
 MIGRATION_STRATEGY_ADVANCED = "migration_strategy_advanced"
 
@@ -650,23 +648,10 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose an automatic backup."""
-        if self.show_advanced_options:
-            # Always show the PAN IDs when in advanced mode
-            choices = [
-                _format_backup_choice(backup, pan_ids=True)
-                for backup in self._radio_mgr.backups
-            ]
-        else:
-            # Only show the PAN IDs for multiple backups taken on the same day
-            num_backups_on_date = collections.Counter(
-                backup.backup_time.date() for backup in self._radio_mgr.backups
-            )
-            choices = [
-                _format_backup_choice(
-                    backup, pan_ids=(num_backups_on_date[backup.backup_time.date()] > 1)
-                )
-                for backup in self._radio_mgr.backups
-            ]
+        choices = [
+            _format_backup_choice(backup, pan_ids=True)
+            for backup in self._radio_mgr.backups
+        ]
 
         if user_input is not None:
             index = choices.index(user_input[CHOOSE_AUTOMATIC_BACKUP])

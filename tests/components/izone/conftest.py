@@ -26,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_pizone_discovery_service() -> Mock:
     """Create a mock pizone discovery service."""
     disco = Mock()
-    disco.controllers = {}
+    disco.fetch_controllers = AsyncMock(return_value={})
     disco.start_discovery = AsyncMock()
     disco.close = AsyncMock()
     return disco
@@ -96,9 +96,9 @@ async def mock_discovery(
         "homeassistant.components.izone.discovery.pizone.discovery", autospec=True
     ) as mock_disco:
         mock_disco.return_value.start_discovery = AsyncMock()
-        mock_disco.return_value.controllers = {
-            mock_controller.device_uid: mock_controller
-        }
+        mock_disco.return_value.fetch_controllers = AsyncMock(
+            return_value={mock_controller.device_uid: mock_controller}
+        )
         mock_disco.return_value.close = AsyncMock()
         yield mock_disco
 

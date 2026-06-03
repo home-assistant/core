@@ -866,7 +866,9 @@ async def test_delay_template_invalid(
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error": "offset  should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+                    "error": (
+                        "offset  should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+                    )
                 }
             ],
         },
@@ -6447,7 +6449,10 @@ async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
     expected_trace = {
         "0": [
             {
-                "error": "TemplateError: Use of 'states' is not supported in limited templates"
+                "error": (
+                    "TemplateError: Use of 'states' is not"
+                    " supported in limited templates"
+                )
             }
         ],
     }

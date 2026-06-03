@@ -1,0 +1,54 @@
+[
+  {
+    "node_id": 200,
+    "general": {
+      "node_type": "BSRH",
+      "sub_type": 0,
+      "network_type": "RF",
+      "parent": 1,
+      "asso": 1,
+      "name": "New RH sensor",
+      "identify": 0
+    },
+    "ventilation": {
+      "state": "AUTO",
+      "time_state_remain": 0,
+      "time_state_end": 0,
+      "mode": "-",
+      "flow_lvl_tgt": null
+    },
+    "sensor": {
+      "co2": null,
+      "iaq_co2": null,
+      "rh": 55.0,
+      "iaq_rh": 70,
+      "temp": 21.0
+    }
+  },
+  {
+    "node_id": 201,
+    "general": {
+      "node_type": "VLVCO2",
+      "sub_type": 0,
+      "network_type": "RF",
+      "parent": 1,
+      "asso": 1,
+      "name": "New valve",
+      "identify": 0
+    },
+    "ventilation": {
+      "state": "AUTO",
+      "time_state_remain": 0,
+      "time_state_end": 0,
+      "mode": "-",
+      "flow_lvl_tgt": null
+    },
+    "sensor": {
+      "co2": 575,
+      "iaq_co2": 82,
+      "rh": null,
+      "iaq_rh": null,
+      "temp": 20.5
+    }
+  }
+]

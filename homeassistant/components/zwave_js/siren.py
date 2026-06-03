@@ -1,7 +1,5 @@
 """Support for Z-Wave controls using the siren platform."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from zwave_js_server.const.command_class.sound_switch import ToneID

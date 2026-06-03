@@ -215,6 +215,8 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         link_schema[vol.Required(CONF_CODE)] = vol.All(
             vol.Strip, vol.Length(max=PIN_LENGTH), vol.Coerce(int)
         )
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
 
         return self.async_show_form(

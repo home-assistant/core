@@ -60,7 +60,9 @@ async def test_calendar_events(
             CALENDAR_DOMAIN,
             SERVICE_GET_EVENTS,
             {
-                ATTR_ENTITY_ID: f"calendar.{serial_number}_auto_on_off_schedule_{identifier}",
+                ATTR_ENTITY_ID: (
+                    f"calendar.{serial_number}_auto_on_off_schedule_{identifier}"
+                ),
                 EVENT_START_DATETIME: test_time,
                 EVENT_END_DATETIME: test_time + timedelta(days=23),
             },
@@ -105,7 +107,10 @@ async def test_calendar_edge_cases(
         CALENDAR_DOMAIN,
         SERVICE_GET_EVENTS,
         {
-            ATTR_ENTITY_ID: f"calendar.{mock_lamarzocco.serial_number}_auto_on_off_schedule_{WAKE_UP_SLEEP_ENTRY_IDS[1].lower()}",
+            ATTR_ENTITY_ID: (
+                f"calendar.{mock_lamarzocco.serial_number}"
+                f"_auto_on_off_schedule_{WAKE_UP_SLEEP_ENTRY_IDS[1].lower()}"
+            ),
             EVENT_START_DATETIME: start_date,
             EVENT_END_DATETIME: end_date,
         },
@@ -149,7 +154,10 @@ async def test_no_calendar_events_global_disable(
         CALENDAR_DOMAIN,
         SERVICE_GET_EVENTS,
         {
-            ATTR_ENTITY_ID: f"calendar.{serial_number}_auto_on_off_schedule_{wake_up_sleep_entry_id.lower()}",
+            ATTR_ENTITY_ID: (
+                f"calendar.{serial_number}"
+                f"_auto_on_off_schedule_{wake_up_sleep_entry_id.lower()}"
+            ),
             EVENT_START_DATETIME: test_time,
             EVENT_END_DATETIME: test_time + timedelta(days=23),
         },

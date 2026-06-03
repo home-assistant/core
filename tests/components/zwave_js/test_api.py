@@ -518,7 +518,10 @@ async def test_node_alerts(
         assert len(msg["result"]["comments"]) == 2
         assert msg["result"]["comments"][1] == {
             "level": "warning",
-            "text": "This device is currently being interviewed and may not be fully operational.",
+            "text": (
+                "This device is currently being interviewed"
+                " and may not be fully operational."
+            ),
         }
 
     # Test with provisioned device
@@ -564,7 +567,10 @@ async def test_node_alerts(
         assert msg["result"]["comments"] == [
             {
                 "level": "info",
-                "text": "This device has been provisioned but is not yet included in the network.",
+                "text": (
+                    "This device has been provisioned but is"
+                    " not yet included in the network."
+                ),
             }
         ]
 
@@ -2551,7 +2557,7 @@ async def test_subscribe_rebuild_routes_progress_initial_value(
     nortek_thermostat,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test subscribe_rebuild_routes_progress command when rebuild routes in progress."""
+    """Test subscribe_rebuild_routes_progress when in progress."""
     entry = integration
     ws_client = await hass_ws_client(hass)
 
@@ -3519,10 +3525,8 @@ async def test_firmware_upload_view(
         )
 
         update_data = NodeFirmwareUpdateData(
-            "file", b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+            "file", b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", **expected_data
         )
-        for attr, value in expected_data.items():
-            setattr(update_data, attr, value)
 
         mock_controller_cmd.assert_not_called()
         assert mock_node_cmd.call_args[0][1:3] == (multisensor_6, [update_data])

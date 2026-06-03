@@ -1,7 +1,5 @@
 """Entity for PG LAB Electronics."""
 
-from __future__ import annotations
-
 from pypglab.device import Device as PyPGLabDevice
 from pypglab.entity import Entity as PyPGLabEntity
 
@@ -75,7 +73,10 @@ class PGLabEntity(PGLabBaseEntity):
         self._entity: PyPGLabEntity = pglab_entity
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe pypglab entity to be updated from mqtt when pypglab entity internal state change."""
+        """Subscribe pypglab entity to MQTT updates.
+
+        Triggered when pypglab entity internal state changes.
+        """
 
         # set the callback to be called when pypglab entity state is changed
         self._entity.set_on_state_callback(self.state_updated)

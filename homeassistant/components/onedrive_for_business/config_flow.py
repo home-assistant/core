@@ -1,7 +1,5 @@
 """Config flow for OneDrive for Business."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any, cast
@@ -146,7 +144,8 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 errors["base"] = "folder_creation_error"
             if not errors:
                 title = (
-                    f"{self.drive.owner.user.display_name}'s OneDrive ({self.drive.owner.user.email})"
+                    f"{self.drive.owner.user.display_name}'s"
+                    f" OneDrive ({self.drive.owner.user.email})"
                     if self.drive.owner
                     and self.drive.owner.user
                     and self.drive.owner.user.display_name

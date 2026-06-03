@@ -662,17 +662,27 @@
 # name: test_update_state[Dimmable Light][update.dimmable_light_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Dimmable Light Firmware',
+      'in_progress': False,
+      'installed_version': '1.0.0',
+      'latest_version': '1.0.1',
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 0>,
+      'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.dimmable_light_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Dimmer Switch][devices]

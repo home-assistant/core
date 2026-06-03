@@ -46,7 +46,10 @@ async def test_sensor(
 async def test_availability(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure that we mark the entities unavailable correctly.
+
+    Test when service is offline.
+    """
     await init_integration(hass, aioclient_mock)
 
     state = hass.states.get("sensor.home_humidity")

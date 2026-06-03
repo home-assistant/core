@@ -1,7 +1,5 @@
 """Platform for light integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from devolo_home_control_api.devices.zwave import Zwave
@@ -72,7 +70,8 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
                 round(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
             )
         elif self._binary_switch_property is not None:
-            # Turn on the light device to the latest known value. The value is known by the device itself.
+            # Turn on the light device to the latest known
+            # value. The value is known by the device itself.
             self._binary_switch_property.set(True)
         else:
             # If there is no binary switch attached to the device, turn it on to 100 %.

@@ -179,9 +179,7 @@ async def test_disabled_by_default_sensors(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_vacbot", "init_integration"
-)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_vacbot")
 @pytest.mark.parametrize(("device_fixture"), ["123"])
 async def test_legacy_sensors(
     hass: HomeAssistant,

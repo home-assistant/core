@@ -36,6 +36,7 @@ from anthropic.types import (
     ThinkingTypes,
     ToolSearchToolResultBlock,
     ToolUseBlock,
+    WebFetchToolResultBlock,
     WebSearchResultBlock,
     WebSearchToolResultBlock,
     WebSearchToolResultError,
@@ -46,6 +47,9 @@ from anthropic.types.text_editor_code_execution_tool_result_block import (
 )
 from anthropic.types.tool_search_tool_result_block import (
     Content as ToolSearchToolResultBlockContent,
+)
+from anthropic.types.web_fetch_tool_result_block import (
+    Content as WebFetchToolResultBlockContent,
 )
 
 model_list = [
@@ -636,6 +640,31 @@ def create_tool_search_result_block(
                 type="tool_search_tool_result",
                 tool_use_id=id,
                 content=results,
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_web_fetch_result_block(
+    index: int,
+    id: str,
+    results: WebFetchToolResultBlockContent,
+    caller: Caller | None = None,
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for web fetch results."""
+    if caller is None:
+        caller = DirectCaller(type="direct")
+
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=WebFetchToolResultBlock(
+                type="web_fetch_tool_result",
+                tool_use_id=id,
+                content=results,
+                caller=caller,
             ),
             index=index,
         ),

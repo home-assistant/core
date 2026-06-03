@@ -1,7 +1,5 @@
 """Tests for the WiiM media player via services and the state machine."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

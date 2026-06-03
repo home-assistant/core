@@ -77,8 +77,15 @@
         "data": {
           "enable_webhooks": "Enable webhooks",
           "extra_arguments": "Extra FFmpeg arguments",
-          "rtsp_transport": "RTSP transport mechanism",
-          "use_wallclock_as_timestamps": "Use wall clock as timestamps"
+          "rtsp_transport": "RTSP transport mechanism"
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "use_wallclock_as_timestamps": "Use wall clock as timestamps"
+            },
+            "name": "More options"
+          }
         },
         "title": "ONVIF device options"
       }

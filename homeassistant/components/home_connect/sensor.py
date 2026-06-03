@@ -600,7 +600,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):
-    """Sensor class for Home Connect sensors that reports information related to the running program."""
+    """Sensor class for Home Connect running program information."""
 
     async def async_added_to_hass(self) -> None:
         """Register listener."""
@@ -634,8 +634,9 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     @property
     def available(self) -> bool:
         """Return true if the sensor is available."""
-        # These sensors are only available if the program is running, paused or finished.
-        # Otherwise, some sensors report erroneous values.
+        # These sensors are only available if the program is
+        # running, paused or finished. Otherwise, some sensors
+        # report erroneous values.
         return super().available and self.program_running
 
     def update_native_value(self) -> None:

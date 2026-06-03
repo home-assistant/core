@@ -1,7 +1,5 @@
 """The Holiday integration."""
 
-from __future__ import annotations
-
 from functools import partial
 
 from holidays import country_holidays

@@ -1,7 +1,5 @@
 """Time platform for SmartThings."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import time
 
@@ -69,7 +67,12 @@ class SmartThingsDnDTime(SmartThingsEntity, TimeEntity):
         """Initialize the time entity."""
         super().__init__(client, device, {Capability.CUSTOM_DO_NOT_DISTURB_MODE})
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{Capability.CUSTOM_DO_NOT_DISTURB_MODE}_{entity_description.attribute}_{entity_description.attribute}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{MAIN}"
+            f"_{Capability.CUSTOM_DO_NOT_DISTURB_MODE}"
+            f"_{entity_description.attribute}"
+            f"_{entity_description.attribute}"
+        )
 
     async def async_set_value(self, value: time) -> None:
         """Set the time value."""
@@ -89,7 +92,9 @@ class SmartThingsDnDTime(SmartThingsEntity, TimeEntity):
             Command.SET_DO_NOT_DISTURB_MODE,
             {
                 **payload,
-                self.entity_description.attribute: f"{value.hour:02d}{value.minute:02d}",
+                self.entity_description.attribute: (
+                    f"{value.hour:02d}{value.minute:02d}"
+                ),
             },
         )
 

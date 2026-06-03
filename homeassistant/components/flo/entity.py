@@ -1,7 +1,5 @@
 """Base entity class for Flo entities."""
 
-from __future__ import annotations
-
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -12,7 +10,6 @@ from .coordinator import FloDeviceDataUpdateCoordinator
 class FloEntity(Entity):
     """A base class for Flo entities."""
 
-    _attr_force_update = False
     _attr_has_entity_name = True
     _attr_should_poll = False
 

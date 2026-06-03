@@ -1,7 +1,5 @@
 """Component providing basic support for Foscam IP cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from urllib.parse import quote
 

@@ -1,7 +1,5 @@
 """The nsw_fuel_station component."""
 
-from __future__ import annotations
-
 from nsw_fuel import FuelCheckClient
 
 from homeassistant.core import HomeAssistant

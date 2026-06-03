@@ -1,7 +1,5 @@
 """Calendar platform for Habitica integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import asdict
 from datetime import date, datetime, timedelta

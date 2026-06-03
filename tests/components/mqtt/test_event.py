@@ -191,7 +191,11 @@ async def test_setting_event_value_with_invalid_payload(
                     "name": "test",
                     "state_topic": "test-topic",
                     "event_types": ["press"],
-                    "value_template": '{"event_type": "press", "val": "{{ value_json.val | is_defined }}", "par": "{{ value_json.par }}"}',
+                    "value_template": (
+                        '{"event_type": "press",'
+                        ' "val": "{{ value_json.val | is_defined }}",'
+                        ' "par": "{{ value_json.par }}"}'
+                    ),
                 }
             }
         }
@@ -811,6 +815,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

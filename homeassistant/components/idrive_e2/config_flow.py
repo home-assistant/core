@@ -1,7 +1,5 @@
 """IDrive e2 config flow."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 
@@ -68,7 +66,10 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """First step: prompt for access_key and secret_access_key, then fetch region endpoint and buckets."""
+        """Prompt for access_key and secret_access_key.
+
+        Then fetch region endpoint and buckets.
+        """
         errors: dict[str, str] = {}
 
         if user_input is not None:

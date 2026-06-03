@@ -1,7 +1,5 @@
 """NextBus sensor."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 
@@ -32,7 +30,7 @@ async def async_setup_entry(
     coordinator_key = f"{entry_agency}-{entry_stop}"
 
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN].get(coordinator_key)
 
     async_add_entities(

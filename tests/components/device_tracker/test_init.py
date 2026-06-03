@@ -8,7 +8,12 @@ from unittest.mock import call, patch
 import pytest
 
 from homeassistant.components import device_tracker, zone
-from homeassistant.components.device_tracker import SourceType, const, legacy
+from homeassistant.components.device_tracker import (
+    SourceType,
+    TrackerEntity,
+    const,
+    legacy,
+)
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -19,11 +24,15 @@ from homeassistant.const import (
     CONF_PLATFORM,
     STATE_HOME,
     STATE_NOT_HOME,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, issue_registry as ir
+from homeassistant.helpers.discovery import DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -31,9 +40,13 @@ from . import common
 from .common import MockScanner, mock_legacy_device_tracker_setup
 
 from tests.common import (
+    MockModule,
+    MockPlatform,
     RegistryEntryWithDefaults,
     assert_setup_component,
     async_fire_time_changed,
+    mock_integration,
+    mock_platform,
     mock_registry,
     mock_restore_cache,
     patch_yaml_files,
@@ -729,3 +742,144 @@ def test_see_schema_allowing_ios_calls() -> None:
             "hostname": "beer",
         }
     )
+
+
+async def test_modern_platform_setup(hass: HomeAssistant) -> None:
+    """Test modern platform setup."""
+
+    test_domain = "test"
+
+    entity1 = TrackerEntity()
+    entity1.entity_id = "device_tracker.test1"
+    entity1._attr_source_type = SourceType.ROUTER
+
+    entity2 = TrackerEntity()
+    entity2.entity_id = "device_tracker.test2"
+    entity2._attr_location_name = "home"
+    entity2._attr_location_accuracy = 1
+    entity2._attr_latitude = 10.0
+    entity2._attr_longitude = 5.0
+    entity2._attr_source_type = SourceType.GPS
+
+    entity3 = TrackerEntity()
+    entity3.entity_id = "device_tracker.test3"
+    entity3._attr_location_name = "not_home"
+    entity3._attr_source_type = SourceType.ROUTER
+
+    async def async_setup_platform(
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> bool:
+        async_add_entities([entity1, entity2, entity3])
+        return True
+
+    async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass, "device_tracker", test_domain, {}, config
+            )
+        )
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(test_domain, async_setup=async_setup),
+    )
+    mock_platform(
+        hass,
+        f"{test_domain}.device_tracker",
+        MockPlatform(async_setup_platform=async_setup_platform),
+    )
+
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "device_tracker", {})
+    await async_setup_component(hass, test_domain, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity1.entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes == {"in_zones": [], "source_type": SourceType.ROUTER}
+
+    state = hass.states.get(entity2.entity_id)
+    assert state
+    assert state.state == STATE_HOME
+    assert state.attributes == {
+        "in_zones": [],
+        "source_type": SourceType.GPS,
+        "latitude": 10.0,
+        "longitude": 5.0,
+        "gps_accuracy": 1,
+    }
+
+    state = hass.states.get(entity3.entity_id)
+    assert state
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes == {
+        "in_zones": [],
+        "source_type": SourceType.ROUTER,
+    }
+
+
+async def test_unsupported_legacy_config_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unsupported legacy config creates issue."""
+
+    integration_domain = "test"
+
+    async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass, "device_tracker", integration_domain, {}, config
+            )
+        )
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(integration_domain, async_setup=async_setup),
+    )
+    mock_platform(
+        hass,
+        f"{integration_domain}.device_tracker",
+        MockPlatform(),
+    )
+
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(
+        hass,
+        device_tracker.DOMAIN,
+        {device_tracker.DOMAIN: {"platform": integration_domain, "something": "value"}},
+    )
+    await async_setup_component(hass, integration_domain, {})
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(device_tracker.DOMAIN)) == 0
+    assert (
+        f"The {integration_domain} platform for the {device_tracker.DOMAIN} integration does not support platform"
+        " setup, please remove it from your config" in caplog.text
+    )
+
+    issue = issue_registry.async_get_issue(
+        "homeassistant",
+        f"platform_integration_no_support_{device_tracker.DOMAIN}_{integration_domain}",
+    )
+
+    assert issue
+    assert issue.issue_domain == integration_domain
+    assert issue.learn_more_url is None
+    assert issue.translation_key == "platform_setup_not_supported"
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "platform_domain": device_tracker.DOMAIN,
+        "integration_domain": integration_domain,
+        "platform_key": f"platform: {integration_domain}",
+        "yaml_example": f"```yaml\n{device_tracker.DOMAIN}:\n  - platform: {integration_domain}\n```",
+    }

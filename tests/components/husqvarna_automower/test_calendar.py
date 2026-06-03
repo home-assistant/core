@@ -34,7 +34,7 @@ from tests.common import (
 )
 from tests.typing import ClientSessionGenerator
 
-TEST_ENTITY = "calendar.test_mower_1"
+TEST_ENTITY = "calendar.garden_test_mower_1"
 type GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
 
@@ -66,7 +66,7 @@ async def test_calendar_state_off(
 ) -> None:
     """State test of the calendar."""
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("calendar.test_mower_1")
+    state = hass.states.get("calendar.garden_test_mower_1")
     assert state is not None
     assert state.state == "off"
 
@@ -81,7 +81,7 @@ async def test_calendar_state_on(
 ) -> None:
     """State test of the calendar."""
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("calendar.test_mower_1")
+    state = hass.states.get("calendar.garden_test_mower_1")
     assert state is not None
     assert state.state == "on"
 
@@ -108,7 +108,7 @@ async def test_empty_calendar(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get("calendar.test_mower_1")
+    state = hass.states.get("calendar.garden_test_mower_1")
     assert state is not None
     assert state.state == "off"
     events = await get_events("2023-06-05T00:00:00", "2023-06-12T00:00:00")
@@ -143,7 +143,10 @@ async def test_calendar_snapshot(
         CALENDAR_DOMAIN,
         SERVICE_GET_EVENTS,
         {
-            ATTR_ENTITY_ID: ["calendar.test_mower_1", "calendar.test_mower_2"],
+            ATTR_ENTITY_ID: [
+                "calendar.garden_test_mower_1",
+                "calendar.garden_test_mower_2",
+            ],
             EVENT_START_DATETIME: start_date,
             EVENT_END_DATETIME: end_date,
         },

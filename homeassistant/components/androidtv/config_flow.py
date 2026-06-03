@@ -1,7 +1,5 @@
 """Config flow to configure the Android Debug Bridge integration."""
 
-from __future__ import annotations
-
 import logging
 import os
 from typing import Any
@@ -17,6 +15,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     ObjectSelector,
@@ -34,6 +33,7 @@ from .const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
+    CONF_MORE_OPTIONS,
     CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
@@ -99,19 +99,21 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                 ),
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Required(CONF_MORE_OPTIONS): section(
+                    vol.Schema(
+                        {
+                            vol.Optional(CONF_ADBKEY): str,
+                            vol.Optional(CONF_ADB_SERVER_IP): str,
+                            vol.Optional(
+                                CONF_ADB_SERVER_PORT,
+                                default=DEFAULT_ADB_SERVER_PORT,
+                            ): cv.port,
+                        }
+                    ),
+                    SectionConfig(collapsed=True),
+                ),
             },
         )
-
-        if self.show_advanced_options:
-            data_schema = data_schema.extend(
-                {
-                    vol.Optional(CONF_ADBKEY): str,
-                    vol.Optional(CONF_ADB_SERVER_IP): str,
-                    vol.Required(
-                        CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
-                    ): cv.port,
-                }
-            )
 
         return self.async_show_form(
             step_id="user",
@@ -157,6 +159,10 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
         error = None
 
         if user_input is not None:
+            user_input = user_input.copy()
+            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+            user_input.update(more_options)
+
             host = user_input[CONF_HOST]
             adb_key = user_input.get(CONF_ADBKEY)
             if CONF_ADB_SERVER_IP in user_input:

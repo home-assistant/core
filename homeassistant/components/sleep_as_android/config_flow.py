@@ -1,7 +1,5 @@
 """Config flow for the Sleep as Android integration."""
 
-from __future__ import annotations
-
 from homeassistant.helpers import config_entry_flow
 
 from .const import DOMAIN

@@ -1,7 +1,5 @@
 """Plugwise Climate component for Home Assistant."""
 
-from __future__ import annotations
-
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -27,6 +25,15 @@ from .util import plugwise_command
 
 ERROR_NO_SCHEDULE = "set_schedule_first"
 PARALLEL_UPDATES = 0
+
+
+def _check_for_schedule(active: bool, last_active: str | None) -> None:
+    """Raise a HAError when no thermostat schedule has been set."""
+    if not active and last_active is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=ERROR_NO_SCHEDULE,
+        )
 
 
 @dataclass
@@ -87,22 +94,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
-    _last_active_schedule: str | None = None
-    _previous_action_mode: str | None = HVACAction.HEATING.value
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added."""
-        await super().async_added_to_hass()
-
-        if extra_data := await self.async_get_last_extra_data():
-            plugwise_extra_data = PlugwiseClimateExtraStoredData.from_dict(
-                extra_data.as_dict()
-            )
-            self._last_active_schedule = plugwise_extra_data.last_active_schedule
-            self._previous_action_mode = (
-                plugwise_extra_data.previous_action_mode or HVACAction.HEATING.value
-            )
-
     def __init__(
         self,
         coordinator: PlugwiseDataUpdateCoordinator,
@@ -112,18 +103,18 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         super().__init__(coordinator, device_id)
         self._attr_unique_id = f"{device_id}-climate"
 
-        gateway_id: str = coordinator.api.gateway_id
+        self._api = coordinator.api
+        gateway_id: str = self._api.gateway_id
         self._gateway_data = coordinator.data[gateway_id]
+        self._last_active_schedule: str | None = None
         self._location = device_id
         if (location := self.device.get("location")) is not None:
             self._location = location
+        self._previous_action_mode = HVACAction.HEATING.value
 
         # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        if (
-            self.coordinator.api.cooling_present
-            and coordinator.api.smile.name != "Adam"
-        ):
+        if self._api.cooling_present and self._api.smile.name != "Adam":
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
@@ -142,10 +133,18 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             self.device["thermostat"]["resolution"], 0.1
         )
 
-    @property
-    def current_temperature(self) -> float:
-        """Return the current temperature."""
-        return self.device["sensors"]["temperature"]
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+
+        if extra_data := await self.async_get_last_extra_data():
+            plugwise_extra_data = PlugwiseClimateExtraStoredData.from_dict(
+                extra_data.as_dict()
+            )
+            self._last_active_schedule = plugwise_extra_data.last_active_schedule
+            self._previous_action_mode = (
+                plugwise_extra_data.previous_action_mode or HVACAction.HEATING.value
+            )
 
     @property
     def extra_restore_state_data(self) -> PlugwiseClimateExtraStoredData:
@@ -154,6 +153,11 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             last_active_schedule=self._last_active_schedule,
             previous_action_mode=self._previous_action_mode,
         )
+
+    @property
+    def current_temperature(self) -> float:
+        """Return the current temperature."""
+        return self.device["sensors"]["temperature"]
 
     @property
     def target_temperature(self) -> float:
@@ -199,7 +203,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         if self.device.get("available_schedules"):
             hvac_modes.append(HVACMode.AUTO)
 
-        if self.coordinator.api.cooling_present:
+        if self._api.cooling_present:
             if "regulation_modes" in self._gateway_data:
                 if "heating" in self._gateway_data["regulation_modes"]:
                     hvac_modes.append(HVACMode.HEAT)
@@ -249,79 +253,69 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         if mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(mode)
 
-        await self.coordinator.api.set_temperature(self._location, data)
+        await self._api.set_temperature(self._location, data)
 
-    def _regulation_mode_for_hvac(self, hvac_mode: HVACMode) -> str | None:
-        """Return the API regulation value for a manual HVAC mode, or None."""
+    def _regulation_mode_for_hvac(self, hvac_mode: HVACMode) -> str:
+        """Return the API regulation value for a manual HVAC mode, or None.
+
+        The function inputs are limited to the HVACModes HEAT and COOL.
+        """
         if hvac_mode == HVACMode.HEAT:
-            return HVACAction.HEATING.value
+            mode = HVACAction.HEATING.value
         if hvac_mode == HVACMode.COOL:
-            return HVACAction.COOLING.value
-        return None
+            mode = HVACAction.COOLING.value
+        return mode
 
     @plugwise_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode (off, heat, cool, heat_cool, or auto/schedule)."""
+        # Early exit if no mode change
         if hvac_mode == self.hvac_mode:
             return
 
-        api = self.coordinator.api
-        current_schedule = self.device.get("select_schedule")
-
-        # OFF: single API call
+        # Adam only: set to HVACMode.OFF
         if hvac_mode == HVACMode.OFF:
-            await api.set_regulation_mode(hvac_mode.value)
+            await self._api.set_regulation_mode(hvac_mode.value)
             return
 
-        # Manual mode (heat/cool/heat_cool) without a schedule: set regulation only
-        if (
-            current_schedule is None
-            and hvac_mode != HVACMode.AUTO
-            and (
-                regulation := self._regulation_mode_for_hvac(hvac_mode)
-                or self._previous_action_mode
-            )
-        ):
-            await api.set_regulation_mode(regulation)
-            return
+        current_schedule = self.device.get("select_schedule")
+        schedule_is_active = current_schedule not in (None, "off")
+        desired_schedule = (
+            current_schedule if schedule_is_active else self._last_active_schedule
+        )
+        # Adam only: transition from HVACMode.OFF
+        if self.hvac_mode == HVACMode.OFF:
+            if hvac_mode == HVACMode.AUTO:
+                _check_for_schedule(schedule_is_active, self._last_active_schedule)
+                await self._api.set_schedule_state(
+                    self._location, STATE_ON, desired_schedule
+                )
+                await self._api.set_regulation_mode(self._previous_action_mode)
+                return
 
-        # Manual mode: ensure regulation and turn off schedule when needed
-        if hvac_mode in (HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL):
-            regulation = self._regulation_mode_for_hvac(hvac_mode) or (
-                self._previous_action_mode
-                if self.hvac_mode in (HVACMode.HEAT_COOL, HVACMode.OFF)
-                else None
-            )
-            if regulation:
-                await api.set_regulation_mode(regulation)
-
-            if (
-                self.hvac_mode == HVACMode.OFF and current_schedule not in (None, "off")
-            ) or (self.hvac_mode == HVACMode.AUTO and current_schedule is not None):
-                await api.set_schedule_state(
+            # Transition to manual mode
+            if schedule_is_active:
+                await self._api.set_schedule_state(
                     self._location, STATE_OFF, current_schedule
                 )
+                self._last_active_schedule = current_schedule
+            regulation = self._regulation_mode_for_hvac(hvac_mode)
+            await self._api.set_regulation_mode(regulation)
             return
 
-        # AUTO: restore schedule and regulation
-        desired_schedule = current_schedule
-        if desired_schedule and desired_schedule != "off":
-            self._last_active_schedule = desired_schedule
-        elif desired_schedule == "off":
-            desired_schedule = self._last_active_schedule
-
-        if not desired_schedule:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=ERROR_NO_SCHEDULE,
+        # Common - transition from auto = schedule off
+        if self.hvac_mode == HVACMode.AUTO:
+            await self._api.set_schedule_state(
+                self._location, STATE_OFF, current_schedule
             )
+            self._last_active_schedule = current_schedule
+            return
 
-        if self._previous_action_mode:
-            if self.hvac_mode == HVACMode.OFF:
-                await api.set_regulation_mode(self._previous_action_mode)
-            await api.set_schedule_state(self._location, STATE_ON, desired_schedule)
+        # Common - transition to auto = schedule on
+        _check_for_schedule(schedule_is_active, self._last_active_schedule)
+        await self._api.set_schedule_state(self._location, STATE_ON, desired_schedule)
 
     @plugwise_command
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
-        await self.coordinator.api.set_preset(self._location, preset_mode)
+        await self._api.set_preset(self._location, preset_mode)

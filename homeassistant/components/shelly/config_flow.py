@@ -1,7 +1,5 @@
 """Config flow for Shelly integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
@@ -105,6 +103,7 @@ CONFIG_SCHEMA: Final = vol.Schema(
 
 BLE_SCANNER_OPTIONS = [
     BLEScannerMode.DISABLED,
+    BLEScannerMode.AUTO,
     BLEScannerMode.ACTIVE,
     BLEScannerMode.PASSIVE,
 ]
@@ -207,7 +206,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     host: str = ""
     port: int = DEFAULT_HTTP_PORT
@@ -238,7 +237,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             and isinstance(model_id, int)
             and (model_name := get_name_from_model_id(model_id))
         ):
-            # Remove spaces from model name (e.g., "Shelly 1 Mini Gen4" -> "Shelly1MiniGen4")
+            # Remove spaces from model name
+            # (e.g., "Shelly 1 Mini Gen4" -> "Shelly1MiniGen4")
             return f"{model_name.replace(' ', '')}-{mac}"
         return f"Shelly-{mac}"
 
@@ -409,11 +409,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_connect_and_get_info(
         self, host: str, port: int
     ) -> ConfigFlowResult | None:
-        """Connect to device, validate, and create entry or return None to continue flow.
+        """Connect to device, validate, and create entry or return None.
 
-        This helper consolidates the common logic between Zeroconf device selection
-        and manual entry flows. Returns a ConfigFlowResult if the flow should end
-        (create_entry or abort), or None if the flow should continue (e.g., to credentials).
+        This helper consolidates the common logic between
+        Zeroconf device selection and manual entry flows.
+        Returns a ConfigFlowResult if the flow should end
+        (create_entry or abort), or None if the flow should
+        continue (e.g., to credentials).
 
         Sets self.info, self.host, and self.port on success.
         """
@@ -687,7 +689,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         await self._async_discovered_mac(mac, host)
 
     async def _async_discovered_mac(self, mac: str, host: str) -> None:
-        """Abort and reconnect soon if the device with the mac address is already configured."""
+        """Abort and reconnect soon if the device with the mac is already configured."""
         if (
             current_entry := await self.async_set_unique_id(mac)
         ) and current_entry.data.get(CONF_HOST) == host:
@@ -916,7 +918,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult | None:
         """Provision WiFi credentials via BLE and wait for zeroconf discovery.
 
-        Returns the flow result to be stored in self._provision_result, or None if failed.
+        Returns the flow result to be stored in
+        self._provision_result, or None if failed.
         """
         # Provision WiFi via BLE using persistent connection
         try:
@@ -976,7 +979,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     state.port = DEFAULT_HTTP_PORT
                 else:
                     LOGGER.debug("BLE fallback also failed - provisioning unsuccessful")
-                    # Store failure info and return None - provision_done will handle redirect
+                    # Store failure info and return None
+                    # provision_done will handle redirect
                     return None
             else:
                 state.host, state.port = result

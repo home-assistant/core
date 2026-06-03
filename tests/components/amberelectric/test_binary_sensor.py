@@ -1,7 +1,5 @@
 """Test the Amber Electric Sensors."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 

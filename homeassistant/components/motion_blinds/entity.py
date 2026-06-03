@@ -1,7 +1,5 @@
 """Support for Motionblinds using their WLAN API."""
 
-from __future__ import annotations
-
 from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
 from motionblinds.motion_blinds import MotionBlind
 
@@ -135,7 +133,8 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
                 self._blind.angle == prev_angle for prev_angle in self._previous_angles
             )
         ):
-            # keep updating the position @self._update_interval_moving until the position does not change.
+            # keep updating the position @self._update_interval_moving
+            # until the position does not change.
             self._requesting_position = async_call_later(
                 self.hass,
                 self._update_interval_moving,
@@ -147,7 +146,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             self._requesting_position = None
 
     async def async_request_position_till_stop(self, delay: int | None = None) -> None:
-        """Request the position of the blind every self._update_interval_moving seconds until it stops moving."""
+        """Request the position of the blind at intervals until it stops moving."""
         if delay is None:
             delay = self._update_interval_moving
 

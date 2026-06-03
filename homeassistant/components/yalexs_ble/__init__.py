@@ -1,7 +1,5 @@
 """The Yale Access Bluetooth integration."""
 
-from __future__ import annotations
-
 from yalexs_ble import (
     AuthError,
     ConnectionInfo,
@@ -14,6 +12,7 @@ from yalexs_ble import (
 )
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
@@ -26,6 +25,7 @@ from .const import (
     CONF_LOCAL_NAME,
     CONF_SLOT,
     DEVICE_TIMEOUT,
+    DOMAIN,
 )
 from .models import YaleXSBLEData
 from .util import async_find_existing_service_info, bluetooth_callback_matcher
@@ -85,7 +85,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
         # If we are starting and the advertisement is not found, do not delay
         # the setup. We will wait for the advertisement to be found and then
         # discovery will trigger setup retry.
-        raise ConfigEntryNotReady("{local_name} ({address}) not advertising yet")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_not_advertising",
+            translation_placeholders={
+                "local_name": local_name,
+                "address": address,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
+        )
 
     entry.async_on_unload(
         bluetooth.async_register_callback(

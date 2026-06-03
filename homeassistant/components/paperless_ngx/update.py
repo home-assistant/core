@@ -1,7 +1,5 @@
 """Update platform for Paperless-ngx."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from pypaperless.exceptions import PaperlessConnectionError

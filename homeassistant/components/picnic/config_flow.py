@@ -1,7 +1,5 @@
 """Config flow for Picnic integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -195,12 +193,14 @@ class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         existing_entry = await self.async_set_unique_id(user_data["user_id"])
 
-        # Abort if we're adding a new config and the unique id is already in use, else create the entry
+        # Abort if we're adding a new config and the unique id
+        # is already in use, else create the entry
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title="Picnic", data=data)
 
-        # In case of re-auth, only continue if an exiting account exists with the same unique id
+        # In case of re-auth, only continue if an exiting
+        # account exists with the same unique id
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)

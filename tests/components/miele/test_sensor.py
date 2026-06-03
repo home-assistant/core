@@ -97,7 +97,8 @@ async def test_oven_temperatures_scenario(
 ) -> None:
     """Parametrized test for verifying temperature sensors for oven devices."""
 
-    # Initial state when the oven is created for the first time — no core probe entities yet
+    # Initial state when oven is created for the first time
+    # — no core probe entities yet
     check_sensor_state(hass, "sensor.oven_temperature", "unknown", 0)
     check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 0)
     check_sensor_state(hass, "sensor.oven_core_temperature", None, 0)
@@ -216,7 +217,7 @@ async def test_oven_core_probe_sensors_unknown_when_inactive(
     device_fixture: MieleDevices,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Oven food-probe (core) sensors must not expose API inactive sentinels as temperatures.
+    """Oven food-probe sensors must not expose API inactive sentinels.
 
     Miele uses raw value -32768 (centidegrees) when the probe is not in use. After the
     probe has reported a valid reading once, those entities must stay in the UI but
@@ -270,7 +271,7 @@ async def test_oven_core_probe_unknown_when_inactive_raw_scaled(
     device_fixture: MieleDevices,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Some ovens report int16-min as centidegrees (-32768 -> -327.68 °C); others as -3276800 raw (-32768 °C).
+    """Some ovens report int16-min differently; both must be unknown.
 
     Both must map to unknown, not a numeric sensor state.
     """
@@ -306,7 +307,7 @@ async def test_temperature_sensor_registry_lookup(
     device_fixture: MieleDevices,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that core temperature sensor is provided by the integration after looking up in entity registry."""
+    """Test core temperature sensor provided after entity registry lookup."""
 
     # Initial state, the oven is showing core temperature (probe)
     freezer.tick(timedelta(seconds=130))
@@ -391,7 +392,7 @@ async def test_laundry_wash_scenario(
     device_fixture: MieleDevices,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Parametrized test for verifying time sensors for wahsing machine devices when API glitches at program end."""
+    """Test time sensors for washing machine when API glitches at end."""
 
     step = 0
     freezer.move_to("2025-05-31T12:00:00+00:00")
@@ -408,7 +409,8 @@ async def test_laundry_wash_scenario(
     check_sensor_state(hass, "sensor.washing_machine_spin_speed", "unknown", step)
     # OFF -> remaining forced to unknown
     check_sensor_state(hass, "sensor.washing_machine_remaining_time", "unknown", step)
-    # OFF -> elapsed forced to unknown (some devices continue reporting last value of last cycle)
+    # OFF -> elapsed forced to unknown (some devices continue
+    # reporting last value of last cycle)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "unknown", step)
     check_sensor_state(hass, "sensor.washing_machine_start", "unknown", step)
     check_sensor_state(hass, "sensor.washing_machine_finish", "unknown", step)
@@ -456,7 +458,8 @@ async def test_laundry_wash_scenario(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # at this point, appliance is working, but it started reporting a value from last cycle, so it is forced to 0
+    # at this point, appliance is working, but it started reporting a
+    # value from last cycle, so it is forced to 0
     check_sensor_state(hass, "sensor.washing_machine_energy_consumption", "0", step)
     check_sensor_state(hass, "sensor.washing_machine_water_consumption", "0", step)
 
@@ -578,7 +581,8 @@ async def test_laundry_wash_scenario(
     check_sensor_state(hass, "sensor.washing_machine_spin_speed", "1200", step)
     # PROGRAM_ENDED -> remaining time forced to 0
     check_sensor_state(hass, "sensor.washing_machine_remaining_time", "0", step)
-    # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
+    # PROGRAM_ENDED -> elapsed time kept from last program
+    # (some devices immediately go to 0)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "109", step)
     check_sensor_state(
         hass, "sensor.washing_machine_start", "2025-05-31T12:18:00+00:00", step
@@ -586,7 +590,8 @@ async def test_laundry_wash_scenario(
     check_sensor_state(
         hass, "sensor.washing_machine_finish", "2025-05-31T14:15:00+00:00", step
     )
-    # consumption values now are reporting last known value, API might start reporting null object
+    # consumption values now report last known value,
+    # API might start reporting null object
     check_sensor_state(hass, "sensor.washing_machine_energy_consumption", "0.1", step)
     check_sensor_state(hass, "sensor.washing_machine_water_consumption", "7", step)
 
@@ -637,7 +642,7 @@ async def test_laundry_dry_scenario(
     device_fixture: MieleDevices,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Parametrized test for verifying time sensors for tumble dryer devices when API reports time value from last cycle, when device is off."""
+    """Test time sensors for tumble dryer when API reports stale time."""
 
     step = 0
     freezer.move_to("2025-05-31T12:00:00+00:00")
@@ -647,7 +652,8 @@ async def test_laundry_dry_scenario(
     check_sensor_state(hass, "sensor.tumble_dryer_program", "no_program", step)
     check_sensor_state(hass, "sensor.tumble_dryer_program_phase", "not_running", step)
     check_sensor_state(hass, "sensor.tumble_dryer_drying_step", "unknown", step)
-    # OFF -> elapsed, remaining forced to unknown (some devices continue reporting last value of last cycle)
+    # OFF -> elapsed, remaining forced to unknown (some devices
+    # continue reporting last value of last cycle)
     check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "unknown", step)
     check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "unknown", step)
     check_sensor_state(hass, "sensor.tumble_dryer_start", "unknown", step)
@@ -711,7 +717,8 @@ async def test_laundry_dry_scenario(
     check_sensor_state(hass, "sensor.tumble_dryer_drying_step", "normal", step)
     # PROGRAM_ENDED -> remaining time forced to 0
     check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "0", step)
-    # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
+    # PROGRAM_ENDED -> elapsed time kept from last program
+    # (some devices immediately go to 0)
     check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "20", step)
     check_sensor_state(
         hass, "sensor.tumble_dryer_start", "2025-05-31T12:10:00+00:00", step
@@ -862,7 +869,7 @@ def test_convert_temperature(
     index: int,
     expected: float | None,
 ) -> None:
-    """Cover _convert_temperature branches (sentinels, scaling, bounds, valid values)."""
+    """Cover _convert_temperature branches."""
     assert _convert_temperature(entries, index) == expected
 
 

@@ -227,7 +227,7 @@ async def test_event(
     mock_managed_streaming: Mock,
     event: str | None,
 ) -> None:
-    """Test listening to events from Hass. and getting an event with a newline in the state."""
+    """Test listening to events and getting an event with a newline."""
 
     hass.states.async_set("sensor.test_sensor", event)
 

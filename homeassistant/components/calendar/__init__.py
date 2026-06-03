@@ -1,7 +1,5 @@
 """Support for Calendar event device sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
@@ -152,7 +150,8 @@ def _has_min_duration(
             duration = end - start
             if duration < min_duration:
                 raise vol.Invalid(
-                    f"Expected minimum event duration of {min_duration} ({start}, {end})"
+                    "Expected minimum event duration"
+                    f" of {min_duration} ({start}, {end})"
                 )
         return obj
 
@@ -1058,17 +1057,20 @@ async def handle_calendar_event_subscribe(
 def _validate_timespan(
     values: dict[str, Any],
 ) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
-    """Parse a create event service call and convert the args ofr a create event entity call.
+    """Parse a create event service call.
 
-    This converts the input service arguments into a `start` and `end` date or date time. This
-    exists because service calls use `start_date` and `start_date_time` whereas the
-    normal entity methods can take either a `datetime` or `date` as a single `start` argument.
+    Convert the args for a create event entity call.
+    This converts the input service arguments into a
+    `start` and `end` date or date time. This exists because
+    service calls use `start_date` and `start_date_time`
+    whereas the normal entity methods can take either a
+    `datetime` or `date` as a single `start` argument.
     It also handles the other service call variations like "in days" as well.
     """
 
     if event_in := values.get(EVENT_IN):
         days = event_in.get(EVENT_IN_DAYS, 7 * event_in.get(EVENT_IN_WEEKS, 0))
-        today = datetime.date.today()
+        today = dt_util.now().date()
         return (
             today + datetime.timedelta(days=days),
             today + datetime.timedelta(days=days + 1),

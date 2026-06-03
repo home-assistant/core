@@ -1,7 +1,5 @@
 """Todo platform for the Habitica integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 import logging
 import math
@@ -342,7 +340,8 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
         which is a calculated value based on recurrence of the task.
         If a task is a yesterdaily, the due date is the last time
         a new day has been started. This allows to check off dailies from yesterday,
-        that have been completed but forgotten to mark as completed before resetting the dailies.
+        that have been completed but forgotten to mark as completed
+        before resetting the dailies.
         Changes of the date input field in Home Assistant will be ignored.
         """
         if TYPE_CHECKING:

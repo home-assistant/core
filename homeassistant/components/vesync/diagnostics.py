@@ -1,7 +1,5 @@
 """Diagnostics support for VeSync."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyvesync import VeSync

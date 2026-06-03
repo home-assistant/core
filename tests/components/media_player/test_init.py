@@ -169,7 +169,7 @@ async def test_get_image_http_log_credentials_redacted(
 
         resp = await client.get(state.attributes["entity_picture"])
 
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
     assert f"Error retrieving proxied image from {url}" not in caplog.text
     assert (
         "Error retrieving proxied image from "
@@ -585,7 +585,7 @@ async def test_get_async_get_browse_image_quoting(
 
 
 async def test_play_media_via_selector(hass: HomeAssistant) -> None:
-    """Test that play_media data under 'media' is remapped to top level keys for backward compatibility."""
+    """Test play_media data under 'media' is remapped for backward compat."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )

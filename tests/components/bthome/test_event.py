@@ -54,6 +54,26 @@ from tests.components.bluetooth import (
                 }
             ],
         ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x3b\x00\x01\x3b\x00\x02",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.test_device_18b2_command_1",
+                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Command 1",
+                    ATTR_EVENT_TYPE: "on",
+                },
+                {
+                    "entity": "event.test_device_18b2_command_2",
+                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Command 2",
+                    ATTR_EVENT_TYPE: "toggle",
+                },
+            ],
+        ),
     ],
 )
 async def test_v2_events(

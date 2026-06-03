@@ -23,7 +23,7 @@ from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F40
 
 
 async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
-    """Test migrating config entries from v1.1 to v1.2 to use the serial number as unique ID."""
+    """Test migrating config entries from v1.1 to v1.2 for serial unique ID."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,

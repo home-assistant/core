@@ -1,13 +1,12 @@
 """Support for Renault services."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -21,7 +20,6 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 ATTR_SCHEDULES = "schedules"
-ATTR_TEMPERATURE = "temperature"
 ATTR_VEHICLE = "vehicle"
 ATTR_WHEN = "when"
 

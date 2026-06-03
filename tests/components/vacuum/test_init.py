@@ -1,7 +1,5 @@
 """The tests for the Vacuum entity integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 import logging
 from typing import Any
@@ -629,7 +627,7 @@ async def test_vacuum_log_deprecated_battery_using_attr(
     is_built_in: bool,
     log_warnings: int,
 ) -> None:
-    """Test incorrectly using _attr_battery_* attribute does log issue and raise repair."""
+    """Test _attr_battery_* attribute logs issue and raises repair."""
 
     class MockLegacyVacuum(MockVacuum):
         """Mocked vacuum entity."""

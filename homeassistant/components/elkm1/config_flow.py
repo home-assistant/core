@@ -1,7 +1,5 @@
 """Config flow for Elk-M1 Control integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Self
 
@@ -12,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PREFIX,
@@ -33,8 +32,6 @@ from .discovery import (
     async_discover_devices,
     async_update_entry_from_discovery,
 )
-
-CONF_DEVICE = "device"
 
 NON_SECURE_PORT = 2101
 SECURE_PORT = 2601
@@ -122,7 +119,11 @@ def _make_url_from_data(data: dict[str, str]) -> str:
 
 
 def _get_protocol_from_url(url: str) -> str:
-    """Get protocol from URL. Returns the configured protocol from URL or the default secure protocol."""
+    """Get protocol from URL.
+
+    Returns the configured protocol from URL or the
+    default secure protocol.
+    """
     return next(
         (k for k, v in PROTOCOL_MAP.items() if url.startswith(v)),
         DEFAULT_SECURE_PROTOCOL,
@@ -238,15 +239,18 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during reconfiguration")
                 errors["base"] = "unknown"
             else:
-                # Discover the device at the provided address to obtain its MAC (unique_id)
+                # Discover the device at the provided address
+                # to obtain its MAC (unique_id)
                 device = await async_discover_device(
                     self.hass, validate_input_data[CONF_ADDRESS]
                 )
                 if device is not None and device.mac_address:
                     await self.async_set_unique_id(dr.format_mac(device.mac_address))
-                    self._abort_if_unique_id_mismatch()  # aborts if user tried to switch devices
+                    # aborts if user tried to switch devices
+                    self._abort_if_unique_id_mismatch()
                 else:
-                    # If we cannot confirm identity, keep existing behavior (don't block reconfigure)
+                    # If we cannot confirm identity, keep existing
+                    # behavior (don't block reconfigure)
                     await self.async_set_unique_id(reconfigure_entry.unique_id)
 
                 return self.async_update_reload_and_abort(

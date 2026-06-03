@@ -41,7 +41,7 @@ from mcp.shared.message import SessionMessage
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import llm
 
@@ -55,9 +55,6 @@ _LOGGER = logging.getLogger(__name__)
 # Streamable HTTP endpoint
 STREAMABLE_API = "/api/mcp"
 TIMEOUT = 60  # Seconds
-
-# Content types
-CONTENT_TYPE_JSON = "application/json"
 
 # Legacy SSE endpoint
 SSE_API = f"/{DOMAIN}/sse"

@@ -169,7 +169,8 @@ async def test_config_flow_unsigned_eula(
             user_input={CONF_CODE: MOCK_CODE},
         )
 
-    # Now the method should not raise an exception, and you can proceed with your assertions
+    # Now the method should not raise an exception, and you can
+    # proceed with your assertions
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == VALID_DATA
 

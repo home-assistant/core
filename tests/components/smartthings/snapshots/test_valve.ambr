@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[virtual_valve][valve.volvo-entry]
+# name: test_all_entities[virtual_valve][valve.theater_volvo-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.volvo',
+    'entity_id': 'valve.theater_volvo',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[virtual_valve][valve.volvo-state]
+# name: test_all_entities[virtual_valve][valve.theater_volvo-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -45,7 +45,7 @@
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.volvo',
+    'entity_id': 'valve.theater_volvo',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

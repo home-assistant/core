@@ -20,7 +20,8 @@ async def test_telegram_trigger(
     """Test telegram triggers firing."""
     await knx.setup_integration()
 
-    # "id" field added to action to test if `trigger_data` passed correctly in `async_attach_trigger`
+    # "id" field added to action to test if `trigger_data` passed
+    # correctly in `async_attach_trigger`
     assert await async_setup_component(
         hass,
         automation.DOMAIN,

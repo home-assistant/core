@@ -1,7 +1,5 @@
 """Support for DLNA DMR (Device Media Renderer)."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 import contextlib
@@ -263,7 +261,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         except KeyError, ValueError:
             bootid = None
 
-        if change == ssdp.SsdpChange.UPDATE:
+        if change is ssdp.SsdpChange.UPDATE:
             # This is an announcement that bootid is about to change
             if self._bootid is not None and self._bootid == bootid:
                 # Store the new value (because our old value matches) so that we
@@ -283,7 +281,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 await self._device_disconnect()
         self._bootid = bootid
 
-        if change == ssdp.SsdpChange.BYEBYE:
+        if change is ssdp.SsdpChange.BYEBYE:
             # Device is going away
             if self._device:
                 # Disconnect from gone device
@@ -292,7 +290,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             self._ssdp_connect_failed = False
 
         if (
-            change == ssdp.SsdpChange.ALIVE
+            change is ssdp.SsdpChange.ALIVE
             and not self._device
             and not self._ssdp_connect_failed
         ):
@@ -607,6 +605,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             return None
         return self._device.volume_level
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -620,6 +619,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             return None
         return self._device.is_volume_muted
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
@@ -627,24 +627,28 @@ class DlnaDmrEntity(MediaPlayerEntity):
         desired_mute = bool(mute)
         await self._device.async_mute_volume(desired_mute)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_media_pause(self) -> None:
         """Send pause command."""
         assert self._device is not None
         await self._device.async_pause()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_media_play(self) -> None:
         """Send play command."""
         assert self._device is not None
         await self._device.async_play()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_media_stop(self) -> None:
         """Send stop command."""
         assert self._device is not None
         await self._device.async_stop()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
@@ -652,6 +656,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         time = timedelta(seconds=position)
         await self._device.async_seek_rel_time(time)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -713,19 +718,21 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         # If already playing, or don't want to autoplay, no need to call Play
         autoplay = extra.get("autoplay", True)
-        if self._device.transport_state == TransportState.PLAYING or not autoplay:
+        if self._device.transport_state is TransportState.PLAYING or not autoplay:
             return
 
         # Play it
         await self._device.async_wait_for_can_play()
         await self.async_media_play()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         assert self._device is not None
         await self._device.async_previous()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_media_next_track(self) -> None:
         """Send next track command."""
@@ -741,11 +748,12 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not (play_mode := self._device.play_mode):
             return None
 
-        if play_mode == PlayMode.VENDOR_DEFINED:
+        if play_mode is PlayMode.VENDOR_DEFINED:
             return None
 
         return play_mode in (PlayMode.SHUFFLE, PlayMode.RANDOM)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
@@ -774,10 +782,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not (play_mode := self._device.play_mode):
             return None
 
-        if play_mode == PlayMode.VENDOR_DEFINED:
+        if play_mode is PlayMode.VENDOR_DEFINED:
             return None
 
-        if play_mode == PlayMode.REPEAT_ONE:
+        if play_mode is PlayMode.REPEAT_ONE:
             return RepeatMode.ONE
 
         if play_mode in (PlayMode.REPEAT_ALL, PlayMode.RANDOM):
@@ -785,6 +793,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         return RepeatMode.OFF
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
@@ -811,6 +820,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             return None
         return self._device.preset_names
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""

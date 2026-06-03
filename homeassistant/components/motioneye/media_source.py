@@ -1,7 +1,5 @@
 """motionEye Media Source Implementation."""
 
-from __future__ import annotations
-
 import logging
 from pathlib import PurePath
 from typing import cast
@@ -124,7 +122,7 @@ class MotionEyeMediaSource(MediaSource):
     def _get_config_or_raise(self, config_id: str) -> MotionEyeConfigEntry:
         """Get a config entry from a URL."""
         entry = self.hass.config_entries.async_get_entry(config_id)
-        if not entry or entry.state != ConfigEntryState.LOADED:
+        if not entry or entry.state is not ConfigEntryState.LOADED:
             raise MediaSourceError(f"Unable to find config entry with id: {config_id}")
         return entry
 

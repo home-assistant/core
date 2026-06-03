@@ -255,9 +255,10 @@ async def test_public_transport(hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.test_duration").attributes.get(ATTR_ATTRIBUTION)
-        == "http://creativecommons.org/licenses/by/3.0/it/,Some line names used in this product or service were edited to align with official transportation maps."
+    assert hass.states.get("sensor.test_duration").attributes.get(ATTR_ATTRIBUTION) == (
+        "http://creativecommons.org/licenses/by/3.0/it/,"
+        "Some line names used in this product or service were"
+        " edited to align with official transportation maps."
     )
     assert hass.states.get("sensor.test_distance").state == "1.883"
 

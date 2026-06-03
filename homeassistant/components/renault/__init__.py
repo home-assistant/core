@@ -1,10 +1,10 @@
 """Support for Renault devices."""
 
 import aiohttp
+from renault_api.exceptions import NotAuthenticatedException
 from renault_api.gigya.exceptions import GigyaException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -30,18 +30,10 @@ async def async_setup_entry(
     """Load a config entry."""
     renault_hub = RenaultHub(hass, config_entry.data[CONF_LOCALE])
     try:
-        login_success = await renault_hub.attempt_login(
-            config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
-        )
-    except (aiohttp.ClientConnectionError, GigyaException) as exc:
-        raise ConfigEntryNotReady from exc
-
-    if not login_success:
-        raise ConfigEntryAuthFailed
-
-    try:
         await renault_hub.async_initialise(config_entry)
-    except aiohttp.ClientError as exc:
+    except NotAuthenticatedException as exc:
+        raise ConfigEntryAuthFailed from exc
+    except (aiohttp.ClientError, GigyaException) as exc:
         raise ConfigEntryNotReady from exc
 
     config_entry.runtime_data = renault_hub

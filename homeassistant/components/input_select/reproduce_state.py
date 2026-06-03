@@ -1,7 +1,5 @@
 """Reproduce an Input select state."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable, Mapping
 import logging
@@ -49,7 +47,8 @@ async def _async_reproduce_state(
             DOMAIN, service, service_data, context=context, blocking=True
         )
 
-        # Remove ATTR_OPTIONS from service_data so we can reuse service_data in next call
+        # Remove ATTR_OPTIONS from service_data so we can
+        # reuse service_data in next call
         del service_data[ATTR_OPTIONS]
 
     # Call SERVICE_SELECT_OPTION

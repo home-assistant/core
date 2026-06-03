@@ -263,7 +263,7 @@ async def test_intent_errors(hass: HomeAssistant) -> None:
         {"name": {"value": "Bedroom humidifier"}, "humidity": {"value": "50"}},
         assistant=conversation.DOMAIN,
     )
-    assert result.response_type == IntentResponseType.ACTION_DONE
+    assert result.response_type is IntentResponseType.ACTION_DONE
 
     result = await async_handle(
         hass,
@@ -272,7 +272,7 @@ async def test_intent_errors(hass: HomeAssistant) -> None:
         {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "away"}},
         assistant=conversation.DOMAIN,
     )
-    assert result.response_type == IntentResponseType.ACTION_DONE
+    assert result.response_type is IntentResponseType.ACTION_DONE
 
     # Unexposing it should fail
     async_expose_entity(hass, conversation.DOMAIN, entity_id, False)
@@ -285,7 +285,7 @@ async def test_intent_errors(hass: HomeAssistant) -> None:
             {"name": {"value": "Bedroom humidifier"}, "humidity": {"value": "50"}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == MatchFailedReason.ASSISTANT
+    assert err.value.result.no_match_reason is MatchFailedReason.ASSISTANT
 
     with pytest.raises(MatchFailedError) as err:
         await async_handle(
@@ -295,7 +295,7 @@ async def test_intent_errors(hass: HomeAssistant) -> None:
             {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "away"}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == MatchFailedReason.ASSISTANT
+    assert err.value.result.no_match_reason is MatchFailedReason.ASSISTANT
 
     # Expose again to test other errors
     async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
@@ -328,7 +328,7 @@ async def test_intent_errors(hass: HomeAssistant) -> None:
             {"name": {"value": "does not exist"}, "humidity": {"value": "50"}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == MatchFailedReason.NAME
+    assert err.value.result.no_match_reason is MatchFailedReason.NAME
 
     with pytest.raises(MatchFailedError) as err:
         await async_handle(
@@ -338,4 +338,4 @@ async def test_intent_errors(hass: HomeAssistant) -> None:
             {"name": {"value": "does not exist"}, "mode": {"value": "away"}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == MatchFailedReason.NAME
+    assert err.value.result.no_match_reason is MatchFailedReason.NAME

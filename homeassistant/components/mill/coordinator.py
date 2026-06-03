@@ -1,7 +1,5 @@
 """Coordinator for the mill component."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import cast
@@ -57,6 +55,9 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
             update_method=mill_data_connection.fetch_heater_and_sensor_data,
             update_interval=update_interval,
         )
+
+
+type MillConfigEntry = ConfigEntry[MillDataUpdateCoordinator]
 
 
 class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):

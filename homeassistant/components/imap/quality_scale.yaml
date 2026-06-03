@@ -62,7 +62,7 @@ rules:
     comment: >
       The device class is a service. When removed, entities are removed as well.
   diagnostics: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow:
     status: todo

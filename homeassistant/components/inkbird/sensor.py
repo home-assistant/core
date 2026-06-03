@@ -1,7 +1,5 @@
 """Support for inkbird ble sensors."""
 
-from __future__ import annotations
-
 from inkbird_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -119,7 +117,9 @@ async def async_setup_entry(
             INKBIRDBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(entry.runtime_data.async_register_processor(processor))
+    entry.async_on_unload(
+        entry.runtime_data.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class INKBIRDBluetoothSensorEntity(

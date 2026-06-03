@@ -1,7 +1,5 @@
 """Support for Greenwave Reality (TCP Connected) lights."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import os

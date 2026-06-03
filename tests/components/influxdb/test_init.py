@@ -167,7 +167,7 @@ async def test_setup_config_full(
     full_config.update(config_update)
     full_config.update(config_ext)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == full_config
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
@@ -351,7 +351,7 @@ async def test_setup_minimal_config_no_connection_keys(
 
     entry = conf_entries[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == BASE_V1_CONFIG
 
     assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
@@ -396,7 +396,7 @@ async def test_setup_minimal_config_with_connection_keys(
 
     entry = conf_entries[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == config_base
 
     assert issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
@@ -1162,7 +1162,7 @@ async def test_event_listener_filtered_allowlist(
 async def test_event_listener_filtered_denylist(
     hass: HomeAssistant, mock_client, config_base, get_write_api, get_mock_call
 ) -> None:
-    """Test the event listener against a domain/glob denylist with an entity id allowlist."""
+    """Test event listener with domain/glob denylist and entity allowlist."""
     await _setup(hass, mock_client, config_base, get_write_api)
     write_api = get_write_api(mock_client)
 

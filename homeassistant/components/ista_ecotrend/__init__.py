@@ -1,7 +1,5 @@
 """The ista Ecotrend integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pyecotrend_ista import PyEcotrendIsta

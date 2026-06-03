@@ -1,7 +1,5 @@
 """Integration for OpenDisplay BLE e-paper displays."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 from dataclasses import dataclass

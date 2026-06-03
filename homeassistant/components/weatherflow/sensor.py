@@ -1,7 +1,5 @@
 """Sensors for the weatherflow integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -353,7 +351,9 @@ class WeatherFlowSensorEntity(SensorEntity):
 
         self._attr_unique_id = f"{device.serial_number}_{description.key}"
 
-        # In the case of the USA - we may want to have a suggested US unit which differs from the internal suggested units
+        # In the case of the USA - we may want to have a
+        # suggested US unit which differs from the internal
+        # suggested units
         if description.imperial_suggested_unit is not None and not is_metric:
             self._attr_suggested_unit_of_measurement = (
                 description.imperial_suggested_unit

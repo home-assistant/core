@@ -1,7 +1,5 @@
 """Adds config flow for Folder watcher."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import os
 from typing import Any

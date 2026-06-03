@@ -1,7 +1,5 @@
 """Scene Platform for Niko Home Control."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.scene import BaseScene

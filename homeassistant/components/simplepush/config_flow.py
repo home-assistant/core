@@ -1,7 +1,5 @@
 """Config flow for simplepush integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from simplepush import UnknownError, send
@@ -69,6 +67,8 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEVICE_KEY): str,
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): str,
                     vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED): str,

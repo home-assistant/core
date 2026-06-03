@@ -1,7 +1,5 @@
 """Support for Magic Home select."""
 
-from __future__ import annotations
-
 import asyncio
 
 from flux_led.aio import AIOWifiLedBulb
@@ -53,7 +51,7 @@ async def async_setup_entry(
     entry.data.get(CONF_NAME, entry.title)
     base_unique_id = entry.unique_id or entry.entry_id
 
-    if device.device_type == DeviceType.Switch:
+    if device.device_type is DeviceType.Switch:
         entities.append(FluxPowerStateSelect(coordinator.device, entry))
     if device.operating_modes:
         entities.append(

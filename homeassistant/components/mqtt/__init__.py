@@ -1,7 +1,5 @@
 """Support for MQTT message handling."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime
@@ -13,7 +11,13 @@ import voluptuous as vol
 from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DISCOVERY, CONF_PLATFORM, SERVICE_RELOAD
+from homeassistant.const import (
+    CONF_DISCOVERY,
+    CONF_PLATFORM,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    SERVICE_RELOAD,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigValidationError,
@@ -29,6 +33,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -46,10 +51,12 @@ from .client import (
     async_subscribe_internal,
     publish,
     subscribe,
+    try_connection,
 )
 from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA
 from .config_integration import CONFIG_SCHEMA_BASE
 from .const import (
+    ATTR_MESSAGE_EXPIRY_INTERVAL,
     ATTR_PAYLOAD,
     ATTR_QOS,
     ATTR_RETAIN,
@@ -74,6 +81,7 @@ from .const import (
     CONFIG_ENTRY_VERSION,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
+    DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
@@ -81,6 +89,8 @@ from .const import (
     ENTITY_PLATFORMS,
     ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
+    PROTOCOL_5,
+    PROTOCOL_311,
     TEMPLATE_ERRORS,
     Platform,
 )
@@ -240,6 +250,7 @@ MQTT_PUBLISH_SCHEMA = vol.Schema(
         vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(ATTR_MESSAGE_EXPIRY_INTERVAL): cv.positive_time_period_dict,
     },
     required=True,
 )
@@ -283,12 +294,13 @@ async def async_check_config_schema(
                     message = conf_util.format_schema_error(
                         hass, exc, domain, config, integration.documentation
                     )
+                    # pylint: disable-next=home-assistant-exception-message-with-translation
                     raise ServiceValidationError(
-                        message,
                         translation_domain=DOMAIN,
-                        translation_key="invalid_platform_config",
+                        translation_key="invalid_platform_config_message",
                         translation_placeholders={
                             "domain": domain,
+                            "message": message,
                         },
                     ) from exc
 
@@ -343,12 +355,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         evaluate_payload: bool = call.data.get(ATTR_EVALUATE_PAYLOAD, False)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
+        message_expiry_interval: int | None = (
+            int(call.data[ATTR_MESSAGE_EXPIRY_INTERVAL].total_seconds())
+            if ATTR_MESSAGE_EXPIRY_INTERVAL in call.data
+            else None
+        )
 
         if evaluate_payload:
             # Convert quoted binary literal to raw data
             payload = convert_outgoing_mqtt_payload(payload)
 
-        await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
+        await mqtt_data.client.async_publish(
+            msg_topic,
+            payload,
+            qos,
+            retain,
+            message_expiry_interval=message_expiry_interval,
+        )
 
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
@@ -386,6 +409,56 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             }
         ),
     )
+
+    async def _reload_config(call: ServiceCall) -> None:
+        """Reload the platforms."""
+        entry: ConfigEntry = next(iter(hass.config_entries.async_entries(DOMAIN)))
+        mqtt_data = hass.data[DATA_MQTT]
+
+        # Fetch updated manually configured items and validate
+        try:
+            config_yaml = await async_integration_yaml_config(
+                hass, DOMAIN, raise_on_failure=True
+            )
+        except ConfigValidationError as ex:
+            raise ServiceValidationError(
+                translation_domain=ex.translation_domain,
+                translation_key=ex.translation_key,
+                translation_placeholders=ex.translation_placeholders,
+            ) from ex
+
+        new_config: list[ConfigType] = config_yaml.get(DOMAIN, [])
+        platforms_used = platforms_from_config(new_config)
+        new_platforms = platforms_used - mqtt_data.platforms_loaded
+        await async_forward_entry_setup_and_setup_discovery(hass, entry, new_platforms)
+        # Check the schema before continuing reload
+        await async_check_config_schema(hass, config_yaml)
+
+        # Remove repair issues
+        _async_remove_mqtt_issues(hass, mqtt_data)
+
+        mqtt_data.config = new_config
+
+        # Reload the modern yaml platforms
+        mqtt_platforms = async_get_platforms(hass, DOMAIN)
+        tasks = [
+            create_eager_task(entity.async_remove())
+            for mqtt_platform in mqtt_platforms
+            for entity in list(mqtt_platform.entities.values())
+            if getattr(entity, "_discovery_data", None) is None
+            and mqtt_platform.config_entry
+            and mqtt_platform.domain in ENTITY_PLATFORMS
+        ]
+        await asyncio.gather(*tasks)
+
+        for component in mqtt_data.reload_handlers.values():
+            component()
+
+        # Fire event
+        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
     return True
 
 
@@ -425,6 +498,46 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     mqtt_data: MqttData
+
+    if (protocol := entry.data.get(CONF_PROTOCOL, PROTOCOL_311)) != PROTOCOL_5:
+        # Automatically migrate the broker protocol to v5 if possible
+        # Can be removed with HA Core 2027.1
+        new_entry_data = entry.data.copy()
+        new_entry_data[CONF_PROTOCOL] = PROTOCOL_5
+        # Try the connection with protocol version 5
+        # And update the protocol if successful
+        if await hass.async_add_executor_job(
+            try_connection,
+            {CONF_PORT: DEFAULT_PORT} | new_entry_data,
+        ):
+            hass.config_entries.async_update_entry(
+                entry,
+                data=new_entry_data,
+            )
+            ir.async_delete_issue(hass, DOMAIN, "protocol_5_migration")
+            _LOGGER.info(
+                "The MQTT protocol version was successfully updated to version 5"
+            )
+        else:
+            broker: str = entry.data[CONF_BROKER]
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "protocol_5_migration",
+                issue_domain=DOMAIN,
+                is_fixable=False,
+                breaks_in_ha_version="2027.1.0",
+                severity=IssueSeverity.WARNING,
+                learn_more_url="https://www.home-assistant.io/integrations/mqtt/"
+                "#mqtt-protocol",
+                data={
+                    "entry_id": entry.entry_id,
+                    "broker": broker,
+                    "protocol": protocol,
+                },
+                translation_placeholders={"broker": broker, "protocol": protocol},
+                translation_key="protocol_5_migration",
+            )
 
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""
@@ -480,54 +593,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await mqtt_data.client.async_connect(client_available)
 
     # setup platforms and discovery
-    async def _reload_config(call: ServiceCall) -> None:
-        """Reload the platforms."""
-        # Fetch updated manually configured items and validate
-        try:
-            config_yaml = await async_integration_yaml_config(
-                hass, DOMAIN, raise_on_failure=True
-            )
-        except ConfigValidationError as ex:
-            raise ServiceValidationError(
-                translation_domain=ex.translation_domain,
-                translation_key=ex.translation_key,
-                translation_placeholders=ex.translation_placeholders,
-            ) from ex
-
-        new_config: list[ConfigType] = config_yaml.get(DOMAIN, [])
-        platforms_used = platforms_from_config(new_config)
-        new_platforms = platforms_used - mqtt_data.platforms_loaded
-        await async_forward_entry_setup_and_setup_discovery(hass, entry, new_platforms)
-        # Check the schema before continuing reload
-        await async_check_config_schema(hass, config_yaml)
-
-        # Remove repair issues
-        _async_remove_mqtt_issues(hass, mqtt_data)
-
-        mqtt_data.config = new_config
-
-        # Reload the modern yaml platforms
-        mqtt_platforms = async_get_platforms(hass, DOMAIN)
-        tasks = [
-            create_eager_task(entity.async_remove())
-            for mqtt_platform in mqtt_platforms
-            for entity in list(mqtt_platform.entities.values())
-            if getattr(entity, "_discovery_data", None) is None
-            and mqtt_platform.config_entry
-            and mqtt_platform.domain in ENTITY_PLATFORMS
-        ]
-        await asyncio.gather(*tasks)
-
-        for component in mqtt_data.reload_handlers.values():
-            component()
-
-        # Fire event
-        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
-
     await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
-    # Setup reload service after all platforms have loaded
-    if not hass.services.has_service(DOMAIN, SERVICE_RELOAD):
-        async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
     # Setup discovery
     if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
         await discovery.async_start(

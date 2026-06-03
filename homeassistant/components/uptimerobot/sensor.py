@@ -1,7 +1,5 @@
 """UptimeRobot sensor platform."""
 
-from __future__ import annotations
-
 from pyuptimerobot import UptimeRobotMonitor
 
 from homeassistant.components.sensor import (

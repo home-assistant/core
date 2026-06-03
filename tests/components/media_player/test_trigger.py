@@ -15,9 +15,9 @@ from homeassistant.core import HomeAssistant
 from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
     assert_trigger_options_supported,
@@ -226,7 +226,7 @@ async def test_media_player_trigger_options_validation(
         ),
     ],
 )
-async def test_media_player_state_trigger_behavior_any(
+async def test_media_player_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
@@ -236,8 +236,8 @@ async def test_media_player_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the media player state trigger fires when any media player state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test media player state trigger fires for any state change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_media_players,
         trigger_target_config=trigger_target_config,
@@ -284,7 +284,7 @@ async def test_media_player_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the media player state trigger fires when the first media player changes to a specific state."""
+    """Test media player state trigger fires on first entity change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_media_players,
@@ -322,7 +322,7 @@ async def test_media_player_state_trigger_behavior_first(
         ),
     ],
 )
-async def test_media_player_state_trigger_behavior_last(
+async def test_media_player_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
@@ -332,8 +332,8 @@ async def test_media_player_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the media player state trigger fires when the last media player changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test media player state trigger fires when all entities have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_media_players,
         trigger_target_config=trigger_target_config,
@@ -369,7 +369,7 @@ async def test_media_player_state_trigger_behavior_last(
         ),
     ],
 )
-async def test_media_player_volume_trigger_behavior_any(
+async def test_media_player_volume_trigger_behavior_each(
     hass: HomeAssistant,
     target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
@@ -380,7 +380,7 @@ async def test_media_player_volume_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test the media_player volume triggers fire when any entity matches."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_media_players,
         trigger_target_config=trigger_target_config,
@@ -419,7 +419,7 @@ async def test_media_player_volume_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test the media_player volume crossed threshold trigger fires for the first matching entity."""
+    """Test volume crossed threshold trigger fires for first entity."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_media_players,
@@ -449,7 +449,7 @@ async def test_media_player_volume_trigger_behavior_first(
         ),
     ],
 )
-async def test_media_player_volume_trigger_behavior_last(
+async def test_media_player_volume_trigger_behavior_all(
     hass: HomeAssistant,
     target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
@@ -459,8 +459,8 @@ async def test_media_player_volume_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test the media_player volume crossed threshold trigger fires for the last matching entity."""
-    await assert_trigger_behavior_last(
+    """Test volume crossed threshold trigger fires for last entity."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_media_players,
         trigger_target_config=trigger_target_config,
@@ -533,7 +533,7 @@ async def test_media_player_trigger_ignores_limit_entity_with_wrong_unit(
 async def test_muted_trigger_ignores_entities_without_volume_attributes(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the muted trigger does not fire for entities without volume attributes."""
+    """Test muted trigger ignores entities without volume attributes."""
     entity_id = "media_player.no_volume"
     calls: list[str] = []
 
@@ -572,7 +572,7 @@ async def test_muted_trigger_ignores_entities_without_volume_attributes(
 async def test_muted_trigger_does_not_fire_on_losing_volume_attributes(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the trigger does not fire when a muted entity loses volume attributes."""
+    """Test trigger skips when muted entity loses volume attributes."""
     entity_id = "media_player.loses_volume"
     calls: list[str] = []
 
@@ -601,7 +601,7 @@ async def test_muted_trigger_does_not_fire_on_losing_volume_attributes(
 async def test_unmuted_trigger_does_not_fire_when_entity_gains_volume_attributes(
     hass: HomeAssistant,
 ) -> None:
-    """Test that media_player.unmuted does not fire when an entity gains volume attributes already-unmuted.
+    """Test unmuted trigger skips when entity gains volume attrs already-unmuted.
 
     `is_muted` defaults to False for a state without volume attributes, so a
     transition `(PLAYING, {})` -> `(PLAYING, {muted=False})` keeps `is_muted`

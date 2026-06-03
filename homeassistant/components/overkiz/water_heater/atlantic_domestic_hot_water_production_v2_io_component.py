@@ -207,8 +207,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         elif operation_mode == STATE_HEAT_PUMP:
             refresh_target_temp = False
             if self.is_state_performance:
-                # Switching from STATE_PERFORMANCE to STATE_HEAT_PUMP
-                #  changes the target temperature and requires a target temperature refresh
+                # Switching from STATE_PERFORMANCE to
+                # STATE_HEAT_PUMP changes the target temperature
+                # and requires a target temperature refresh
                 refresh_target_temp = True
 
             if self.is_boost_mode_on:
@@ -280,7 +281,8 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
 
         refresh_target_temp = False
         if self.is_state_performance:
-            # Switching from STATE_PERFORMANCE to BOOST requires a target temperature refresh
+            # Switching from STATE_PERFORMANCE to BOOST requires
+            # a target temperature refresh
             refresh_target_temp = True
 
         await self.executor.async_execute_command(

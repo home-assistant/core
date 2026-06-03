@@ -1,7 +1,5 @@
 """Support for the QNAP QSW sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime
@@ -359,7 +357,7 @@ class QswSensor(QswSensorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator, entry, type_id)
 
-        if description.name == UNDEFINED:
+        if description.name is UNDEFINED:
             self._attr_has_entity_name = True
         else:
             self._attr_name = f"{self.product} {description.name}"

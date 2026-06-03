@@ -48,7 +48,8 @@ async def test_system_health_info_storage_migration(
     assert await async_setup_component(hass, "lovelace", {})
     await hass.async_block_till_done()
     info = await get_system_health_info(hass, "lovelace")
-    # After migration: default dashboard (auto-gen) + migrated "lovelace" dashboard (storage with data)
+    # After migration: default dashboard (auto-gen) + migrated
+    # "lovelace" dashboard (storage with data)
     assert info == {"dashboards": 2, "mode": "storage", "resources": 0, "views": 0}
 
 

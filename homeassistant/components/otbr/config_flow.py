@@ -1,7 +1,5 @@
 """Config flow for the Open Thread Border Router integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, cast
@@ -215,7 +213,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     or current_url.port == config["port"]
                 ):
                     # Reload the entry since OTBR has restarted
-                    if current_entry.state == ConfigEntryState.LOADED:
+                    if current_entry.state is ConfigEntryState.LOADED:
                         assert current_entry.unique_id is not None
                         await self.hass.config_entries.async_reload(
                             current_entry.entry_id

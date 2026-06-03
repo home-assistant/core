@@ -1,7 +1,5 @@
 """Config flow to configure the eGauge integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError

@@ -99,7 +99,10 @@ async def test_async_get_provisioning_entry_from_device_id(
     )
     with pytest.raises(
         ValueError,
-        match=f"Device {non_zwave_device.id} is not from an existing zwave_js config entry",
+        match=(
+            f"Device {non_zwave_device.id} is not from an"
+            " existing zwave_js config entry"
+        ),
     ):
         await async_get_provisioning_entry_from_device_id(hass, non_zwave_device.id)
 

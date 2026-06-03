@@ -1,7 +1,5 @@
 """Support for button entity in wake on lan."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 from typing import Any
@@ -15,6 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONF_SECUREON_PASSWORD
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -27,6 +27,7 @@ async def async_setup_entry(
     broadcast_address: str | None = entry.options.get(CONF_BROADCAST_ADDRESS)
     broadcast_port: int | None = entry.options.get(CONF_BROADCAST_PORT)
     mac_address: str = entry.options[CONF_MAC]
+    secureon_password: str | None = entry.options.get(CONF_SECUREON_PASSWORD)
     name: str = entry.title
 
     async_add_entities(
@@ -34,6 +35,7 @@ async def async_setup_entry(
             WolButton(
                 name,
                 mac_address,
+                secureon_password,
                 broadcast_address,
                 broadcast_port,
             )
@@ -50,11 +52,13 @@ class WolButton(ButtonEntity):
         self,
         name: str,
         mac_address: str,
+        secureon_password: str | None,
         broadcast_address: str | None,
         broadcast_port: int | None,
     ) -> None:
         """Initialize the WOL button."""
         self._mac_address = mac_address
+        self._secureon_password = secureon_password
         self._broadcast_address = broadcast_address
         self._broadcast_port = broadcast_port
         self._attr_unique_id = dr.format_mac(mac_address)
@@ -72,12 +76,17 @@ class WolButton(ButtonEntity):
             service_kwargs["port"] = self._broadcast_port
 
         _LOGGER.debug(
-            "Send magic packet to mac %s (broadcast: %s, port: %s)",
+            "Send magic packet to mac %s (secureon: %s, broadcast: %s, port: %s)",
             self._mac_address,
+            self._secureon_password is not None,
             self._broadcast_address,
             self._broadcast_port,
         )
 
+        mac = self._mac_address
+        if self._secureon_password:
+            mac += f"/{self._secureon_password}"
+
         await self.hass.async_add_executor_job(
-            partial(wakeonlan.send_magic_packet, self._mac_address, **service_kwargs)
+            partial(wakeonlan.send_magic_packet, mac, **service_kwargs)
         )

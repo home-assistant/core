@@ -1,7 +1,6 @@
 """Support for Google Nest SDM climate devices."""
 
-from __future__ import annotations
-
+from datetime import timedelta
 from typing import Any, cast
 
 from google_nest_sdm.device import Device
@@ -69,7 +68,7 @@ FAN_MODE_MAP = {
 FAN_INV_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 FAN_INV_MODES = list(FAN_INV_MODE_MAP)
 
-MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
+MAX_FAN_DURATION = 43200  # 12 hours is the max in the SDM API
 MIN_TEMP = 10
 MAX_TEMP = 32
 MIN_TEMP_RANGE = 1.66667
@@ -345,4 +344,30 @@ class ThermostatEntity(ClimateEntity):
         except ApiException as err:
             raise HomeAssistantError(
                 f"Error setting {self.entity_id} fan mode to {fan_mode}: {err}"
+            ) from err
+
+    async def async_set_fan_timer(self, duration: timedelta) -> None:
+        """Set a short term fan timer."""
+        if not self.supported_features & ClimateEntityFeature.FAN_MODE:
+            raise HomeAssistantError(f"Entity {self.entity_id} does not support fan")
+
+        if self.hvac_mode == HVACMode.OFF:
+            raise HomeAssistantError(
+                f"Cannot turn on fan for {self.entity_id},"
+                " please set an HVAC mode (e.g. heat/cool) first"
+            )
+
+        seconds = int(duration.total_seconds())
+        if seconds <= 0 or seconds > MAX_FAN_DURATION:
+            raise ValueError(
+                f"Duration {seconds} for {self.entity_id} must be"
+                f" between 1 and {MAX_FAN_DURATION} seconds"
+            )
+
+        trait = self._device.traits[FanTrait.NAME]
+        try:
+            await trait.set_timer(FAN_INV_MODE_MAP[FAN_ON], duration=seconds)
+        except ApiException as err:
+            raise HomeAssistantError(
+                f"Error setting {self.entity_id} fan timer: {err}"
             ) from err

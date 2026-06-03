@@ -1,7 +1,5 @@
 """Config flow for PG LAB Electronics integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components import mqtt

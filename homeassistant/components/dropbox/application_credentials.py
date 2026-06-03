@@ -25,7 +25,10 @@ async def async_get_auth_implementation(
 
 
 class DropboxOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
-    """Custom Dropbox OAuth2 implementation to add the necessary authorize url parameters."""
+    """Custom Dropbox OAuth2 implementation.
+
+    Adds the necessary authorize url parameters.
+    """
 
     @property
     def extra_authorize_data(self) -> dict:

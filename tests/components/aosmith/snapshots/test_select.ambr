@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_state[True][select.my_water_heater_hot_water_plus_level-entry]
+# name: test_state[True][select.basement_my_water_heater_hot_water_plus_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -20,7 +20,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.my_water_heater_hot_water_plus_level',
+    'entity_id': 'select.basement_my_water_heater_hot_water_plus_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -43,7 +43,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_state[True][select.my_water_heater_hot_water_plus_level-state]
+# name: test_state[True][select.basement_my_water_heater_hot_water_plus_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My water heater Hot Water+ level',
@@ -55,7 +55,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.my_water_heater_hot_water_plus_level',
+    'entity_id': 'select.basement_my_water_heater_hot_water_plus_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

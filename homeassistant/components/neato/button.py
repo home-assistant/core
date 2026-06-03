@@ -1,7 +1,5 @@
 """Support for Neato buttons."""
 
-from __future__ import annotations
-
 from pybotvac import Robot
 
 from homeassistant.components.button import ButtonEntity

@@ -1,7 +1,5 @@
 """Diagnostics support for the Mastodon integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from mastodon.Mastodon import Account, Instance, InstanceV2, MastodonNotFoundError

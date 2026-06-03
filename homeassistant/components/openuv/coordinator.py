@@ -1,7 +1,5 @@
 """Define an update coordinator for OpenUV."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import datetime as dt
 from typing import Any, cast

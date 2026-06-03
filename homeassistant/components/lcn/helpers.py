@@ -1,7 +1,5 @@
 """Helpers for LCN component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from copy import deepcopy
@@ -204,7 +202,7 @@ def register_lcn_host_device(hass: HomeAssistant, config_entry: LcnConfigEntry) 
 def register_lcn_address_devices(
     hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
-    """Register LCN modules and groups defined in config_entry as devices in device registry.
+    """Register LCN modules and groups as devices.
 
     The name of all given device_connections is collected and the devices
     are updated.

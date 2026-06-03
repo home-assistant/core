@@ -1,7 +1,5 @@
 """Config flow to configure ZWaveMe integration."""
 
-from __future__ import annotations
-
 import logging
 
 from url_normalize import url_normalize

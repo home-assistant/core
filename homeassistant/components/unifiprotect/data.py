@@ -1,7 +1,5 @@
 """Base class for protect data."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable
@@ -323,7 +321,8 @@ class ProtectData:
             self._pending_camera_ids.remove(device.id)
             async_dispatcher_send(self._hass, self.channels_signal, device)
 
-        # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
+        # trigger update for all Cameras with LCD screens
+        # when NVR Doorbell settings updates
         if "doorbell_settings" in changed_data:
             _LOGGER.debug(
                 "Doorbell messages updated. Updating devices with LCD screens"

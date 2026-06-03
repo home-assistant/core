@@ -1,7 +1,5 @@
 """Shark IQ Wrapper."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import Any
 
@@ -139,9 +137,10 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     def activity(self) -> VacuumActivity | None:
         """Get the current vacuum state.
 
-        NB: Currently, we do not return an error state because they can be very, very stale.
-        In the app, these are (usually) handled by showing the robot as stopped and sending the
-        user a notification.
+        NB: Currently, we do not return an error state
+        because they can be very, very stale. In the app,
+        these are (usually) handled by showing the robot as
+        stopped and sending the user a notification.
         """
         if self.sharkiq.get_property_value(Properties.CHARGING_STATUS):
             return VacuumActivity.DOCKED

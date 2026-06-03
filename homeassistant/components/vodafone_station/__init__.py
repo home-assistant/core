@@ -37,6 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
     """Migrate old entry."""
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     if entry.version == 1 and entry.minor_version == 1:
         _LOGGER.debug(
             "Migrating from version %s.%s", entry.version, entry.minor_version

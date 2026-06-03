@@ -193,7 +193,7 @@ async def test_async_image_does_not_exist(hass: HomeAssistant) -> None:
 
 
 async def test_async_image_non_404_status_error(hass: HomeAssistant) -> None:
-    """Test _async_image_exists raises HomeAssistantError on non-404 HTTP status errors."""
+    """Test _async_image_exists raises HomeAssistantError on non-404 errors."""
     client = AsyncMock(spec=AsyncClient)
     client.stream.side_effect = HTTPStatusError(
         "Internal server error",

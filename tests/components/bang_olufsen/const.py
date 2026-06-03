@@ -48,27 +48,39 @@ TEST_NAME = f"{TEST_MODEL_BALANCE}-{TEST_SERIAL_NUMBER}"
 TEST_FRIENDLY_NAME = "Living room Balance"
 TEST_TYPE_NUMBER = "1111"
 TEST_ITEM_NUMBER = "1111111"
-TEST_JID_1 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER}@products.bang-olufsen.com"
+TEST_JID_1 = (
+    f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}"
+    f".{TEST_SERIAL_NUMBER}@products.bang-olufsen.com"
+)
 TEST_MEDIA_PLAYER_ENTITY_ID = "media_player.living_room_balance"
 
 TEST_FRIENDLY_NAME_2 = "Laundry room Core"
 TEST_SERIAL_NUMBER_2 = "22222222"
 TEST_NAME_2 = f"{TEST_MODEL_CORE}-{TEST_SERIAL_NUMBER_2}"
-TEST_JID_2 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_2}@products.bang-olufsen.com"
+TEST_JID_2 = (
+    f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}"
+    f".{TEST_SERIAL_NUMBER_2}@products.bang-olufsen.com"
+)
 TEST_MEDIA_PLAYER_ENTITY_ID_2 = "media_player.laundry_room_core"
 TEST_HOST_2 = "192.168.0.2"
 
 TEST_FRIENDLY_NAME_3 = "Bedroom Premiere"
 TEST_SERIAL_NUMBER_3 = "33333333"
 TEST_NAME_3 = f"{TEST_MODEL_PREMIERE}-{TEST_SERIAL_NUMBER_3}"
-TEST_JID_3 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_3}@products.bang-olufsen.com"
+TEST_JID_3 = (
+    f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}"
+    f".{TEST_SERIAL_NUMBER_3}@products.bang-olufsen.com"
+)
 TEST_MEDIA_PLAYER_ENTITY_ID_3 = "media_player.bedroom_premiere"
 TEST_HOST_3 = "192.168.0.3"
 
 TEST_FRIENDLY_NAME_4 = "Lounge room A5"
 TEST_SERIAL_NUMBER_4 = "44444444"
 TEST_NAME_4 = f"{TEST_MODEL_A5}-{TEST_SERIAL_NUMBER_4}"
-TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_4}@products.bang-olufsen.com"
+TEST_JID_4 = (
+    f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}"
+    f".{TEST_SERIAL_NUMBER_4}@products.bang-olufsen.com"
+)
 TEST_MEDIA_PLAYER_ENTITY_ID_4 = "media_player.lounge_room_a5"
 TEST_HOST_4 = "192.168.0.4"
 TEST_BATTERY_SENSOR_ENTITY_ID = "sensor.lounge_room_a5_battery"

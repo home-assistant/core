@@ -215,7 +215,10 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test fix flow for supervisor issue with multiple suggestions and choice requires confirmation."""
+    """Test fix flow for supervisor issue with multiple suggestions.
+
+    Tests suggestions requiring confirmation.
+    """
     mock_resolution_info(
         supervisor_client,
         issues=[
@@ -330,7 +333,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test confirmation skipped for fix flow for supervisor issue with one suggestion."""
+    """Test confirmation skipped for fix flow for supervisor issue."""
     mock_resolution_info(
         supervisor_client,
         issues=[
@@ -1245,7 +1248,7 @@ async def test_supervisor_issue_deprecated_arch_addon(
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test fix flow for supervisor issue for add-on using deprecated architecture or machine."""
+    """Test fix flow for supervisor issue for add-on with deprecated arch."""
     mock_resolution_info(
         supervisor_client,
         issues=[

@@ -1,7 +1,5 @@
 """Support for Somfy Heating Temperature Interface."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -61,13 +59,19 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     """Representation of Somfy Heating Temperature Interface.
 
     The thermostat has 3 ways of working:
-      - Auto: Switch to eco/comfort temperature on a schedule (day/hour of the day)
-      - Manual comfort: The thermostat use the temperature of the comfort setting (19°C degree by default)
-      - Manual eco: The thermostat use the temperature of the eco setting (17°C by default)
-      - Freeze protection: The thermostat use the temperature of the freeze protection (7°C by default)
+      - Auto: Switch to eco/comfort temperature on a
+        schedule (day/hour of the day)
+      - Manual comfort: The thermostat use the temperature
+        of the comfort setting (19 degrees by default)
+      - Manual eco: The thermostat use the temperature
+        of the eco setting (17 degrees by default)
+      - Freeze protection: The thermostat use the
+        temperature of the freeze protection (7 degrees
+        by default)
 
-    There's also the possibility to change the working mode, this can be used to change from a heated
-    floor to a cooling floor in the summer.
+    There's also the possibility to change the working
+    mode, this can be used to change from a heated floor
+    to a cooling floor in the summer.
     """
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS

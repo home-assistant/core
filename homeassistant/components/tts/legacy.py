@@ -1,7 +1,5 @@
 """Provide the legacy TTS service provider interface."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Coroutine, Mapping
 from functools import partial

@@ -124,7 +124,7 @@ async def test_tracker_mac_rotate(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_tracker_start_stale(hass: HomeAssistant) -> None:
-    """Test edge case where we find an existing stale record, and it expires before we see any more."""
+    """Test stale record expires before we see any more."""
     time.monotonic()
 
     await async_inject_broadcast(hass, MAC_RPA_VALID_1)

@@ -1,7 +1,5 @@
 """Support for Microsoft face recognition."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine
 import json
@@ -117,6 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             entities[g_id] = MicrosoftFaceGroupEntity(face, g_id, name)
             await component.async_add_entities([entities[g_id]])
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error("Can't create group '%s' with error: %s", g_id, err)
 
@@ -134,6 +133,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             entity = entities.pop(g_id)
             await component.async_remove_entity(entity.entity_id)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete group '%s' with error: %s", g_id, err)
 
@@ -147,6 +147,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             await face.call_api("post", f"persongroups/{g_id}/train")
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error("Can't train group '%s' with error: %s", g_id, err)
 
@@ -166,6 +167,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             face.store[g_id][name] = user_data["personId"]
             entities[g_id].async_write_ha_state()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error("Can't create person '%s' with error: %s", name, err)
 
@@ -184,6 +186,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             face.store[g_id].pop(name)
             entities[g_id].async_write_ha_state()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete person '%s' with error: %s", p_id, err)
 
@@ -207,6 +210,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 image.content,
                 binary=True,
             )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error(
                 "Can't add an image of a person '%s' with error: %s", p_id, err

@@ -1,7 +1,5 @@
 """Support for Awair sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, cast
 

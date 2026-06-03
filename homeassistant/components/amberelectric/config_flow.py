@@ -1,7 +1,5 @@
 """Config flow for the Amber Electric integration."""
 
-from __future__ import annotations
-
 import amberelectric
 from amberelectric.models.site import Site
 from amberelectric.models.site_status import SiteStatus
@@ -23,7 +21,8 @@ API_URL = "https://app.amber.com.au/developers"
 
 def generate_site_selector_name(site: Site) -> str:
     """Generate the name to show in the site drop down in the configuration flow."""
-    # For some reason the generated API key returns this as any, not a string. Thanks pydantic
+    # For some reason the generated API key returns this as any,
+    # not a string. Thanks pydantic
     nmi = str(site.nmi)
     if site.status == SiteStatus.CLOSED:
         if site.closed_on is None:

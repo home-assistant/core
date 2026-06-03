@@ -34,14 +34,16 @@ class KNXSelectorBase:
 
     def serialize(self) -> dict[str, Any]:
         """Serialize the selector to a dictionary."""
-        # don't use "name", "default", "optional" or "required" in base output
-        # as it will be overwritten by the parent keys attributes
-        # "schema" will be overwritten by knx serializer if `self.serialize_subschema` is True
+        # don't use "name", "default", "optional" or
+        # "required" in base output as it will be
+        # overwritten by the parent keys attributes
+        # "schema" will be overwritten by knx serializer
+        # if `self.serialize_subschema` is True
         raise NotImplementedError("Subclasses must implement this method.")
 
 
 class KNXSectionFlat(KNXSelectorBase):
-    """Generate a schema-neutral section with title and description for the following siblings."""
+    """Generate a schema-neutral section with title and description."""
 
     selector_type = "knx_section_flat"
     schema = vol.Schema(None)

@@ -183,7 +183,8 @@ async def test_adam_restore_state_climate(
     assert (state := hass.states.get("climate.living_room"))
     assert state.state == "heat"
 
-    # Verify a HomeAssistantError is raised setting a schedule with last_active_schedule = None
+    # Verify a HomeAssistantError is raised setting a schedule
+    # with last_active_schedule = None
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -272,6 +273,64 @@ async def test_adam_2_climate_snapshot(
 ) -> None:
     """Test Adam 2 climate snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating_off_schedule"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_adam_off_regulation_mode_change(
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test changing from regulation off mode."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("climate.living_room", "heat"),
+                PlugwiseClimateExtraStoredData(
+                    last_active_schedule=None,
+                    previous_action_mode="heating",
+                ).as_dict(),
+            ),
+            (
+                State("climate.bathroom", "heat"),
+                PlugwiseClimateExtraStoredData(
+                    last_active_schedule="Badkamer",
+                    previous_action_mode="heating",
+                ).as_dict(),
+            ),
+        ],
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("climate.living_room"))
+    assert state.state == "off"
+
+    # Verify a HomeAssistantError is raised setting a schedule from regulation-off-mode with last_active_schedule = None
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.AUTO},
+            blocking=True,
+        )
+
+    # Verify that the active schedule is turned off when transitioning from regulation-off-mode to a manual mode
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.bathroom", ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
+        "f871b8c4d63549319221e294e4f88074", STATE_OFF, "Badkamer"
+    )
 
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
@@ -381,7 +440,8 @@ async def test_adam_3_climate_entity_attributes(
             HVACMode.HEAT,
             HVACMode.COOL,
         ]
-        # Test setting regulation_mode to cooling, from off, ignoring the restored previous_action_mode
+        # Test setting regulation_mode to cooling, from off,
+        # ignoring the restored previous_action_mode
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -558,6 +618,26 @@ async def test_anna_climate_entity_climate_changes(
         STATE_OFF,
         "standaard",
     )
+
+    data = mock_smile_anna.async_update.return_value
+    data["3cb70739631c4d17a86b8b12e8a5161b"]["climate_mode"] = "heat"
+    with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.anna", ATTR_HVAC_MODE: HVACMode.AUTO},
+            blocking=True,
+        )
+        assert mock_smile_anna.set_schedule_state.call_count == 2
+        mock_smile_anna.set_schedule_state.assert_called_with(
+            "c784ee9fdab44e1395b8dee7d7a497d5",
+            STATE_ON,
+            "standaard",
+        )
 
     # Mock user deleting last schedule from app or browser
     data = mock_smile_anna.async_update.return_value

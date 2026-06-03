@@ -1,7 +1,5 @@
 """Support for WiiM Media Players."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
@@ -71,7 +69,7 @@ SUPPORT_WIIM_BASE = (
 
 
 def media_player_exception_wrap[
-    _WiimMediaPlayerEntityT: "WiimMediaPlayerEntity",
+    _WiimMediaPlayerEntityT: WiimMediaPlayerEntity,
     **_P,
     _R,
 ](
@@ -219,7 +217,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Update HA state from SDK's cache/HTTP poll attributes.
 
         This is the main method for updating this entity's HA attributes.
-        Crucially, it also handles propagating metadata to followers if this is a leader.
+        Crucially, it also handles propagating metadata to
+        followers if this is a leader.
         """
         LOGGER.debug(
             "Device %s: Updating HA state from SDK cache/HTTP poll",
@@ -350,14 +349,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     sdk_status_str,
                 )
             else:
-                self._device.playing_status = sdk_status
                 if sdk_status == SDKPlayingStatus.STOPPED:
                     LOGGER.debug(
-                        "Device %s: TransportState is STOPPED. Resetting media position and metadata",
+                        "Device %s: TransportState is STOPPED."
+                        " Resetting media position and metadata",
                         self.entity_id,
                     )
-                    self._device.current_position = 0
-                    self._device.current_track_duration = 0
                     self._attr_media_position_updated_at = None
                     self._attr_media_duration = None
                     self._attr_media_position = None
@@ -427,7 +424,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         ):
             self._transport_capabilities = None
             LOGGER.debug(
-                "Device %s: Follower transport capabilities unavailable, using base features",
+                "Device %s: Follower transport capabilities"
+                " unavailable, using base features",
                 self.entity_id,
             )
 

@@ -42,7 +42,7 @@ async def test_holiday_calendar_entity(
         CALENDAR_DOMAIN,
         SERVICE_GET_EVENTS,
         {
-            ATTR_ENTITY_ID: "calendar.workday_sensor_calendar",
+            ATTR_ENTITY_ID: "calendar.workday_sensor_de_bw_calendar",
             EVENT_START_DATETIME: dt_util.now(),
             EVENT_END_DATETIME: dt_util.now() + timedelta(days=10, hours=1),
         },
@@ -52,15 +52,15 @@ async def test_holiday_calendar_entity(
     assert {
         ATTR_END: "2023-01-02",
         ATTR_START: "2023-01-01",
-        EVENT_SUMMARY: "Workday Sensor",
-    } not in response["calendar.workday_sensor_calendar"]["events"]
+        EVENT_SUMMARY: "Workday Sensor DE BW",
+    } not in response["calendar.workday_sensor_de_bw_calendar"]["events"]
     assert {
         ATTR_END: "2023-01-04",
         ATTR_START: "2023-01-03",
-        EVENT_SUMMARY: "Workday Sensor",
-    } in response["calendar.workday_sensor_calendar"]["events"]
+        EVENT_SUMMARY: "Workday Sensor DE BW",
+    } in response["calendar.workday_sensor_de_bw_calendar"]["events"]
 
-    state = hass.states.get("calendar.workday_sensor_calendar")
+    state = hass.states.get("calendar.workday_sensor_de_bw_calendar")
     assert state is not None
     assert state.state == "off"
 
@@ -71,11 +71,11 @@ async def test_holiday_calendar_entity(
     await hass.async_block_till_done()
 
     # Binary sensor added to ensure same state for both entities
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state is not None
     assert state.state == "on"
 
-    state = hass.states.get("calendar.workday_sensor_calendar")
+    state = hass.states.get("calendar.workday_sensor_de_bw_calendar")
     assert state is not None
     assert state.state == "on"
 
@@ -83,10 +83,10 @@ async def test_holiday_calendar_entity(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state is not None
     assert state.state == "off"
 
-    state = hass.states.get("calendar.workday_sensor_calendar")
+    state = hass.states.get("calendar.workday_sensor_de_bw_calendar")
     assert state is not None
     assert state.state == "off"

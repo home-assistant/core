@@ -1,7 +1,5 @@
 """Define a config flow manager for AirVisual."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from typing import Any

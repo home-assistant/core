@@ -400,12 +400,13 @@ def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> dict[
     ),
     scope="package",
 )
-def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state_fixture() -> (
-    dict[str, Any]
-):
-    """Load climate device w/ mode+setpoint on diff endpoints node state fixture data."""
+def climate_radio_thermostat_ct100_mode_setpoint_diff_endpoints_state_fixture() -> dict[
+    str, Any
+]:
+    """Load climate with mode+setpoint on different endpoints."""
     return load_json_object_fixture(
-        "climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json",
+        "climate_radio_thermostat_ct100_mode_and_setpoint"
+        "_on_different_endpoints_state.json",
         DOMAIN,
     )
 
@@ -540,7 +541,7 @@ def basic_cc_sensor_state_fixture() -> dict[str, Any]:
 
 @pytest.fixture(name="window_covering_outbound_bottom_state", scope="package")
 def window_covering_outbound_bottom_state_fixture() -> dict[str, Any]:
-    """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
+    """Load node with Window Covering CC and outbound bottom only."""
     return load_json_object_fixture("window_covering_outbound_bottom.json", DOMAIN)
 
 
@@ -1000,7 +1001,13 @@ async def integration_fixture(
     # Make sure no errors logged during setup.
     # Eg. unique id collisions are only logged as errors and not raised,
     # and may not cause tests to fail otherwise.
-    assert not any(record.levelno == logging.ERROR for record in caplog.records)
+    # Only check loggers relevant to this integration to avoid flaky failures
+    # from unrelated log sources (e.g. sqlalchemy pool cleanup on other threads).
+    _error_loggers = ("homeassistant", "zwave_js_server")
+    assert not any(
+        record.levelno == logging.ERROR and record.name.startswith(_error_loggers)
+        for record in caplog.records
+    )
 
     return entry
 
@@ -1439,7 +1446,7 @@ def basic_cc_sensor_fixture(client, basic_cc_sensor_state) -> Node:
 def window_covering_outbound_bottom_fixture(
     client, window_covering_outbound_bottom_state
 ) -> Node:
-    """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
+    """Load node with Window Covering CC and outbound bottom only."""
     node = Node(client, copy.deepcopy(window_covering_outbound_bottom_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

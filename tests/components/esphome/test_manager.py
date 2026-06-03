@@ -1014,7 +1014,7 @@ async def test_connection_aborted_wrong_device(
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test we abort the connection if the unique id is a mac and neither name or mac match."""
+    """Test we abort if unique id is a mac and neither name nor mac match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -2588,7 +2588,7 @@ async def test_manager_handle_dynamic_encryption_key_device_set_key_fails(
     mock_esphome_device: MockESPHomeDeviceType,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test _handle_dynamic_encryption_key when noise_encryption_set_key returns False."""
+    """Test dynamic encryption key when set_key returns False."""
     mac_address = "11:22:33:44:55:aa"
     test_key_bytes = b"test_key_32_bytes_long_exactly!"
     mock_token_bytes.return_value = test_key_bytes
@@ -2658,7 +2658,7 @@ async def test_manager_handle_dynamic_encryption_key_connection_error(
     mock_esphome_device: MockESPHomeDeviceType,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test _handle_dynamic_encryption_key when noise_encryption_set_key raises APIConnectionError."""
+    """Test dynamic encryption key when set_key raises APIConnectionError."""
     mac_address = "11:22:33:44:55:aa"
     test_key_bytes = b"test_key_32_bytes_long_exactly!"
     mock_token_bytes.return_value = test_key_bytes
@@ -2708,7 +2708,8 @@ async def test_manager_handle_dynamic_encryption_key_connection_error(
     await device.mock_disconnect(True)
     await device.mock_connect()
 
-    # Verify key generation was attempted twice (once during setup, once during reconnect)
+    # Verify key generation was attempted twice
+    # (once during setup, once during reconnect)
     # This is expected because the first attempt failed with connection error
     assert mock_token_bytes.call_count == 2
     mock_token_bytes.assert_called_with(32)
@@ -2796,7 +2797,7 @@ async def test_no_zwave_proxy_subscribe_without_feature_flags(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test Z-Wave proxy request subscription is not registered without feature flags."""
+    """Test Z-Wave proxy subscription skipped without feature flags."""
     device_info = {
         "name": "test-device",
         "mac_address": "11:22:33:44:55:AA",
@@ -2902,7 +2903,7 @@ async def test_execute_service_response_type_optional_without_return(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test execute_service with SupportsResponseType.OPTIONAL when caller doesn't request response."""
+    """Test execute_service OPTIONAL when caller skips response."""
     service = UserService(
         name="optional_service",
         key=1,
@@ -2945,7 +2946,7 @@ async def test_execute_service_response_type_optional_with_return(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test execute_service with SupportsResponseType.OPTIONAL when caller requests response."""
+    """Test execute_service OPTIONAL when caller requests response."""
     service = UserService(
         name="optional_service",
         key=1,

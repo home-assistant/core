@@ -1,7 +1,5 @@
 """Data template classes for discovery used to generate additional data for setup."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import Enum
@@ -493,7 +491,7 @@ class FanValueMappingDataTemplate:
 
 @dataclass
 class ConfigurableFanValueMappingValueMix:
-    """Mixin data class for defining fan properties that change based on a device configuration option."""
+    """Mixin for fan properties that change based on device config."""
 
     configuration_option: ZwaveValueID
     configuration_value_to_fan_value_mapping: dict[int, FanValueMapping]

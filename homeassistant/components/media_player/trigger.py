@@ -1,6 +1,5 @@
 """Provides triggers for media players."""
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
@@ -50,10 +49,7 @@ class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
         )
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
+        """Check that the muted-state changed."""
         if not self._has_volume_attributes(to_state):
             return False
 

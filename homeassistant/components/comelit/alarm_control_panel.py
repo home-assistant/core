@@ -1,7 +1,5 @@
 """Support for Comelit VEDO system."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, cast
 
@@ -112,7 +110,7 @@ class ComelitAlarmEntity(
     @property
     def available(self) -> bool:
         """Return True if alarm is available."""
-        if self._area.human_status == AlarmAreaState.UNKNOWN:
+        if self._area.human_status is AlarmAreaState.UNKNOWN:
             return False
         return super().available
 
@@ -126,7 +124,7 @@ class ComelitAlarmEntity(
             self._area.human_status,
             self._area.armed,
         )
-        if self._area.human_status == AlarmAreaState.ARMED:
+        if self._area.human_status is AlarmAreaState.ARMED:
             if self._area.armed == ALARM_AREA_ARMED_STATUS[AWAY]:
                 return AlarmControlPanelState.ARMED_AWAY
             if self._area.armed == ALARM_AREA_ARMED_STATUS[NIGHT]:

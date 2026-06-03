@@ -48,3 +48,7 @@ VALLOX_CELL_STATE_TO_STR = {
     2: "Bypass",
     3: "Defrosting",
 }
+
+# The vallox_websocket_api client uses a hardcoded value of 65535 to
+# represent an indefinite duration.
+PROFILE_DURATION_INDEFINITE = 65535

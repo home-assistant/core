@@ -1,7 +1,5 @@
 """AVM FRITZ!Tools entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -54,6 +52,8 @@ class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
 
 class FritzBoxBaseEntity:
     """Fritz host entity base class."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, avm_wrapper: AvmWrapper, device_name: str) -> None:
         """Init device info class."""

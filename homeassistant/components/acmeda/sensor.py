@@ -1,7 +1,5 @@
 """Support for Acmeda Roller Blind Batteries."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback

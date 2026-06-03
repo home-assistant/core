@@ -1,7 +1,5 @@
 """Config flow for sensorpro ble integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from sensorpro_ble import SensorProBluetoothDeviceData as DeviceData

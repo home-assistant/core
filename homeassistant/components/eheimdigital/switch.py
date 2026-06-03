@@ -70,7 +70,7 @@ async def async_setup_entry(
     entry: EheimDigitalConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the callbacks for the coordinator so switches can be added as devices are found."""
+    """Set up callbacks for the coordinator to add switches as devices are found."""
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(

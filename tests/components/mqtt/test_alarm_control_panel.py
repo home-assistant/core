@@ -358,7 +358,9 @@ async def test_publish_mqtt_no_code(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("alarm/command", payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "alarm/command", payload, 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -435,7 +437,9 @@ async def test_publish_mqtt_with_code(
         {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "0123"},
         blocking=True,
     )
-    mqtt_mock.async_publish.assert_called_once_with("alarm/command", payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "alarm/command", payload, 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -508,7 +512,9 @@ async def test_publish_mqtt_with_remote_code(
         {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "1234"},
         blocking=True,
     )
-    mqtt_mock.async_publish.assert_called_once_with("alarm/command", payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "alarm/command", payload, 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -586,7 +592,9 @@ async def test_publish_mqtt_with_remote_code_text(
         {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "any_code"},
         blocking=True,
     )
-    mqtt_mock.async_publish.assert_called_once_with("alarm/command", payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "alarm/command", payload, 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -677,7 +685,9 @@ async def test_publish_mqtt_with_code_required_false(
         {ATTR_ENTITY_ID: "alarm_control_panel.test"},
         blocking=True,
     )
-    mqtt_mock.async_publish.assert_called_once_with("alarm/command", payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "alarm/command", payload, 0, False, message_expiry_interval=None
+    )
     mqtt_mock.reset_mock()
 
     # Wrong code provided, should publish
@@ -687,7 +697,9 @@ async def test_publish_mqtt_with_code_required_false(
         {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "abcd"},
         blocking=True,
     )
-    mqtt_mock.async_publish.assert_called_once_with("alarm/command", payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "alarm/command", payload, 0, False, message_expiry_interval=None
+    )
     mqtt_mock.reset_mock()
 
     # Correct code provided, should publish
@@ -697,7 +709,9 @@ async def test_publish_mqtt_with_code_required_false(
         {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "0123"},
         blocking=True,
     )
-    mqtt_mock.async_publish.assert_called_once_with("alarm/command", payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "alarm/command", payload, 0, False, message_expiry_interval=None
+    )
     mqtt_mock.reset_mock()
 
 
@@ -727,7 +741,11 @@ async def test_disarm_publishes_mqtt_with_template(
 
     await common.async_alarm_disarm(hass, "0123")
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/command", '{"action":"DISARM","code":"0123"}', 0, False
+        "alarm/command",
+        '{"action":"DISARM","code":"0123"}',
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
 
@@ -1447,6 +1465,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

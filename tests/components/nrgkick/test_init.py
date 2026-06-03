@@ -1,7 +1,5 @@
 """Tests for the NRGkick integration initialization."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from nrgkick_api import (

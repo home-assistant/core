@@ -1,6 +1,4 @@
-"""Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
-
-from __future__ import annotations
+"""Support for TMB Barcelona public transport."""
 
 from datetime import timedelta
 import logging

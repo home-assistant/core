@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.14
     hooks:
       - id: ruff-check
         args:
@@ -23,6 +23,7 @@ repos:
       - id: zizmor
         args:
           - --pedantic
+        exclude: ^\.github/workflows/.*\.lock\.yml$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -46,6 +47,7 @@ repos:
         additional_dependencies:
           - prettier@3.6.2
           - prettier-plugin-sort-json@4.2.0
+        exclude: ^\.github/workflows/.*\.lock\.yml$
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.6.0
     hooks:

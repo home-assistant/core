@@ -1,7 +1,5 @@
 """Support for madVR remote control."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import logging
 from typing import Any
@@ -54,6 +52,7 @@ class MadvrRemote(MadVREntity, RemoteEntity):
         _LOGGER.debug("Turning off")
         try:
             await self.madvr_client.power_off()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except (ConnectionError, NotImplementedError) as err:
             _LOGGER.error("Failed to turn off device %s", err)
 
@@ -63,6 +62,7 @@ class MadvrRemote(MadVREntity, RemoteEntity):
 
         try:
             await self.madvr_client.power_on(mac=self.coordinator.mac)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except (ConnectionError, NotImplementedError) as err:
             _LOGGER.error("Failed to turn on device %s", err)
 
@@ -71,5 +71,6 @@ class MadvrRemote(MadVREntity, RemoteEntity):
         _LOGGER.debug("adding command %s", command)
         try:
             await self.madvr_client.add_command_to_queue(command)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except (ConnectionError, NotImplementedError) as err:
             _LOGGER.error("Failed to send command %s", err)

@@ -1,7 +1,5 @@
 """Component to interface with various sensors that can be monitored."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Mapping
 from contextlib import suppress
@@ -302,7 +300,8 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         await super().async_internal_added_to_hass()
         if self.entity_category == EntityCategory.CONFIG:
             raise HomeAssistantError(
-                f"Entity {self.entity_id} cannot be added as the entity category is set to config"
+                f"Entity {self.entity_id} cannot be added as"
+                " the entity category is set to config"
             )
 
         if not self.registry_entry:
@@ -419,8 +418,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if suggested_unit_of_measurement is None and (
             unit_converter := UNIT_CONVERTERS.get(self.device_class)
         ):
-            # If the device class is not known by the unit system but has a unit converter,
-            # fall back to the unit suggested by the unit converter's unit class.
+            # If the device class is not known by the unit
+            # system but has a unit converter, fall back to
+            # the unit suggested by the unit converter's
+            # unit class.
             suggested_unit_of_measurement = self.hass.config.units.get_converted_unit(
                 unit_converter.UNIT_CLASS, self.__native_unit_of_measurement_compat
             )
@@ -460,9 +461,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             state_class = self.state_class
             if state_class != SensorStateClass.TOTAL:
                 raise ValueError(
-                    f"Entity {self.entity_id} ({type(self)}) with state_class {state_class}"
-                    " has set last_reset. Setting last_reset for entities with state_class"
-                    " other than 'total' is not supported. Please update your configuration"
+                    f"Entity {self.entity_id} ({type(self)})"
+                    f" with state_class {state_class}"
+                    " has set last_reset. Setting last_reset"
+                    " for entities with state_class"
+                    " other than 'total' is not supported."
+                    " Please update your configuration"
                     " if state_class is manually configured."
                 )
 
@@ -569,9 +573,13 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             if native_unit_of_measurement is not None:
                 raise ValueError(
-                    f"Sensor {type(self)} from integration '{self.platform.platform_name}' "
-                    f"has a translation key for unit_of_measurement '{unit_of_measurement}', "
-                    f"but also has a native_unit_of_measurement '{native_unit_of_measurement}'"
+                    f"Sensor {type(self)} from integration"
+                    f" '{self.platform.platform_name}' "
+                    "has a translation key for"
+                    f" unit_of_measurement '{unit_of_measurement}'"
+                    ", but also has a"
+                    " native_unit_of_measurement"
+                    f" '{native_unit_of_measurement}'"
                 )
             return unit_of_measurement
 
@@ -656,8 +664,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 return value.isoformat(timespec="seconds")
             except (AttributeError, OverflowError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has {device_class.value} device class "
-                    f"but provides state {value}:{type(value)} resulting in '{err}'"
+                    f"Invalid datetime: {self.entity_id}"
+                    f" has {device_class.value} device class"
+                    f" but provides state {value}:{type(value)}"
+                    f" resulting in '{err}'"
                 ) from err
 
         # Received a date value
@@ -775,9 +785,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             and native_unit_of_measurement not in units
         ):
             raise ValueError(
-                f"Sensor {self.entity_id} ({type(self)}) is using native unit of "
-                f"measurement '{native_unit_of_measurement}' which is not a valid unit "
-                f"for the state class ('{state_class}') it is using; expected one of {units};"
+                f"Sensor {self.entity_id} ({type(self)}) is"
+                " using native unit of measurement"
+                f" '{native_unit_of_measurement}' which is"
+                " not a valid unit for the state class"
+                f" ('{state_class}') it is using;"
+                f" expected one of {units};"
             )
 
         return value
@@ -796,15 +809,18 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _get_adjusted_display_precision(self) -> int | None:
         """Return the display precision for the sensor.
 
-        When the integration has specified a suggested display precision, it will be used.
-        If a unit conversion is needed, the display precision will be adjusted based on
-        the ratio from the native unit to the current one.
+        When the integration has specified a suggested display
+        precision, it will be used. If a unit conversion is needed,
+        the display precision will be adjusted based on the ratio
+        from the native unit to the current one.
 
-        When the integration does not specify a suggested display precision, a default
-        device class precision will be used from UNITS_PRECISION, and the final precision
-        will be adjusted based on the ratio from the default unit to the current one. It
-        will also be capped so that the extra precision (from the base unit) does not
-        exceed DEFAULT_PRECISION_LIMIT.
+        When the integration does not specify a suggested
+        display precision, a default device class precision will
+        be used from UNITS_PRECISION, and the final precision
+        will be adjusted based on the ratio from the default
+        unit to the current one. It will also be capped so that
+        the extra precision (from the base unit) does not exceed
+        DEFAULT_PRECISION_LIMIT.
         """
         display_precision = self.suggested_display_precision
         device_class = self.device_class

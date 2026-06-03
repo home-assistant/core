@@ -1,7 +1,5 @@
 """Ecovacs mower entity."""
 
-from __future__ import annotations
-
 import logging
 
 from deebot_client.capabilities import Capabilities, DeviceType

@@ -1,7 +1,5 @@
 """Class to hold all light accessories."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import Any
@@ -115,9 +113,10 @@ class Light(HomeAccessory):
         self.char_on = serv_light.configure_char(CHAR_ON, value=0)
 
         if self.brightness_supported:
-            # Initial value is set to 100 because 0 is a special value (off). 100 is
-            # an arbitrary non-zero value. It is updated immediately by async_update_state
-            # to set to the correct initial value.
+            # Initial value is set to 100 because 0 is a special
+            # value (off). 100 is an arbitrary non-zero value. It
+            # is updated immediately by async_update_state to set
+            # to the correct initial value.
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:

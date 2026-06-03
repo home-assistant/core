@@ -1,7 +1,5 @@
 """The Ubiquiti airOS integration."""
 
-from __future__ import annotations
-
 import logging
 
 from airos.airos6 import AirOS6
@@ -83,8 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
     ) as err:
         raise ConfigEntryAuthFailed from err
     except AirOSKeyDataMissingError as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryError("key_data_missing") from err
     except Exception as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryError("unknown") from err
 
     airos_class: type[AirOS8 | AirOS6] = (

@@ -1,7 +1,5 @@
 """Support for Belkin WeMo lights."""
 
-from __future__ import annotations
-
 import functools as ft
 from typing import Any, cast
 

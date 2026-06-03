@@ -1366,7 +1366,7 @@
     'state': '476',
   })
 # ---
-# name: test_entity[sensor.corridor_humidity-entry]
+# name: test_entity[sensor.corridor_corridor_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1382,7 +1382,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.corridor_humidity',
+    'entity_id': 'sensor.corridor_corridor_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1405,7 +1405,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entity[sensor.corridor_humidity-state]
+# name: test_entity[sensor.corridor_corridor_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
@@ -1415,7 +1415,7 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.corridor_humidity',
+    'entity_id': 'sensor.corridor_corridor_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

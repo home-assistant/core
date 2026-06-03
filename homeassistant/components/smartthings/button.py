@@ -1,7 +1,5 @@
 """Support for button entities through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -169,7 +167,11 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
         super().__init__(client, device, capabilities)
         self.entity_description = entity_description
         self.button_capability = capability
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{entity_description.key}_{entity_description.command}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}"
+            f"_{entity_description.key}"
+            f"_{entity_description.command}"
+        )
         if entity_description.command_identifier is not None:
             self._attr_unique_id += f"_{entity_description.command_identifier}"
 

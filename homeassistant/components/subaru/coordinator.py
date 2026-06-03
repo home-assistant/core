@@ -1,7 +1,5 @@
 """Data update coordinator for Subaru."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -85,7 +83,8 @@ async def _refresh_subaru_data(
     for vehicle in vehicle_info.values():
         vin = vehicle[VEHICLE_VIN]
 
-        # Optionally send an "update" remote command to vehicle (throttled with update_interval)
+        # Optionally send an "update" remote command to
+        # vehicle (throttled with update_interval)
         if config_entry.options.get(CONF_UPDATE_ENABLED, False):
             await _update_subaru(vehicle, controller)
 

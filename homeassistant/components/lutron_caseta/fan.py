@@ -1,7 +1,5 @@
 """Support for Lutron Caseta fans."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF

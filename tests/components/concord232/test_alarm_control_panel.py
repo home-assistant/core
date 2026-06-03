@@ -1,7 +1,5 @@
 """Tests for the Concord232 alarm control panel platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory

@@ -1,7 +1,5 @@
 """Onkyo coordinators."""
 
-from __future__ import annotations
-
 import asyncio
 from enum import StrEnum
 import logging
@@ -43,8 +41,8 @@ class Channel(StrEnum):
     SUBWOOFER_2 = "subwoofer_2"
 
 
-ChannelMutingData = dict[Channel, status.ChannelMuting.Param]
-ChannelMutingDesired = dict[Channel, command.ChannelMuting.Param]
+type ChannelMutingData = dict[Channel, status.ChannelMuting.Param]
+type ChannelMutingDesired = dict[Channel, command.ChannelMuting.Param]
 
 
 class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
@@ -69,8 +67,8 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
 
         self.manager = manager
 
-        self.data = ChannelMutingData()
-        self._desired = ChannelMutingDesired()
+        self.data: ChannelMutingData = {}
+        self._desired: ChannelMutingDesired = {}
 
         self._entities_added = False
 
@@ -162,6 +160,6 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
             self._desired = {
                 channel: desired
                 for channel, desired in self._desired.items()
-                if self.data[channel] != desired
+                if self.data[channel] is not desired
             }
             self.async_set_updated_data(self.data)

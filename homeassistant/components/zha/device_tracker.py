@@ -1,7 +1,5 @@
 """Support for the ZHA platform."""
 
-from __future__ import annotations
-
 import functools
 
 from homeassistant.components.device_tracker import ScannerEntity

@@ -93,7 +93,7 @@ async def test_off(hass: HomeAssistant, mock_powerwall) -> None:
 async def test_exception_on_powerwall_error(
     hass: HomeAssistant, mock_powerwall
 ) -> None:
-    """Ensure that an exception in the tesla_powerwall library causes a HomeAssistantError."""
+    """Ensure tesla_powerwall exception causes HomeAssistantError."""
 
     mock_powerwall.set_island_mode.side_effect = PowerwallError("Mock exception")
     with pytest.raises(HomeAssistantError, match="Setting off-grid operation to"):

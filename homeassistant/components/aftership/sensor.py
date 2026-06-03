@@ -1,7 +1,5 @@
 """Support for non-delivered packages recorded in AfterShip."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Final
 
@@ -58,6 +56,7 @@ async def async_setup_entry(
         )
         async_dispatcher_send(hass, UPDATE_TOPIC)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_ADD_TRACKING,
@@ -73,6 +72,7 @@ async def async_setup_entry(
         )
         async_dispatcher_send(hass, UPDATE_TOPIC)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_REMOVE_TRACKING,

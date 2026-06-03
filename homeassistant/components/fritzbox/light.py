@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!SmartHome lightbulbs."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from homeassistant.components.light import (
@@ -140,7 +138,8 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
                 )
             else:
                 LOGGER.debug(
-                    "device has no fullcolorsupport, using supported colors with 'setcolor'"
+                    "device has no fullcolorsupport,"
+                    " using supported colors with 'setcolor'"
                 )
                 # find supported hs values closest to what user selected
                 hue = min(

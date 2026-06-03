@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -18,7 +18,7 @@ def mock_disco() -> Mock:
     """Mock discovery service."""
     disco = Mock()
     disco.pi_disco = Mock()
-    disco.pi_disco.controllers = {}
+    disco.pi_disco.fetch_controllers = AsyncMock(return_value={})
     return disco
 
 
@@ -60,7 +60,7 @@ async def test_not_found(hass: HomeAssistant, mock_disco: Mock) -> None:
 
 async def test_found(hass: HomeAssistant, mock_disco: Mock) -> None:
     """Test not finding iZone controller."""
-    mock_disco.pi_disco.controllers["blah"] = object()
+    mock_disco.pi_disco.fetch_controllers = AsyncMock(return_value={"blah": object()})
 
     with (
         patch(

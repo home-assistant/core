@@ -1,7 +1,5 @@
 """The Bosch Alarm integration."""
 
-from __future__ import annotations
-
 from ssl import SSLError
 
 from bosch_alarm_mode2 import Panel

@@ -1,6 +1,4 @@
-"""Home Assistant component for accessing the Wallbox Portal API. The lock component creates a lock entity."""
-
-from __future__ import annotations
+"""Home Assistant component for accessing the Wallbox Portal API lock."""
 
 from typing import Any
 
@@ -54,7 +52,10 @@ class WallboxLock(WallboxEntity, LockEntity):
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        self._attr_unique_id = (
+            f"{description.key}"
+            f"-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        )
 
     @property
     def is_locked(self) -> bool:

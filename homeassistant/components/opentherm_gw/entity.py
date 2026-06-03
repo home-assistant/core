@@ -41,7 +41,11 @@ class OpenThermEntity(Entity):
         """Initialize the entity."""
         self.entity_description = description
         self._gateway = gw_hub
-        self._attr_unique_id = f"{gw_hub.hub_id}-{description.device_description.device_identifier}-{description.key}"
+        self._attr_unique_id = (
+            f"{gw_hub.hub_id}"
+            f"-{description.device_description.device_identifier}"
+            f"-{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (

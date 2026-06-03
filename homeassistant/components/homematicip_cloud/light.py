@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud lights."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -608,7 +606,7 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
 
 
 class HomematicipCombinationSignallingLight(HomematicipGenericEntity, LightEntity):
-    """Representation of the HomematicIP combination signalling device light (HmIP-MP3P)."""
+    """Representation of the HomematicIP combination signalling device light."""
 
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}

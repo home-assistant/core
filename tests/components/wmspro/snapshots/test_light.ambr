@@ -43,7 +43,7 @@
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.licht',
+    'entity_id': 'light.terrasse_licht',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

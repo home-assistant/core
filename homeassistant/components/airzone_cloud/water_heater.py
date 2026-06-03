@@ -1,7 +1,5 @@
 """Support for the Airzone Cloud water heater."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 from aioairzone_cloud.common import HotWaterOperation, TemperatureUnit

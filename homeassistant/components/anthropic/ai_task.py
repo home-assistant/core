@@ -1,7 +1,5 @@
 """AI Task integration for Anthropic."""
 
-from __future__ import annotations
-
 from json import JSONDecodeError
 import logging
 from typing import TYPE_CHECKING
@@ -17,6 +15,8 @@ from .entity import AnthropicBaseLLMEntity
 
 if TYPE_CHECKING:
     from . import AnthropicConfigEntry
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 

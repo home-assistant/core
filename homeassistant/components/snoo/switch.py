@@ -1,7 +1,5 @@
 """Support for Snoo Switches."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -82,6 +80,7 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
                 True,
             )
         except SnooCommandException as err:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_on_failed",
@@ -98,6 +97,7 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
                 False,
             )
         except SnooCommandException as err:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_off_failed",

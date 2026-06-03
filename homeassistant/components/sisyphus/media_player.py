@@ -1,7 +1,5 @@
 """Support for track controls on the Sisyphus Kinetic Art Table."""
 
-from __future__ import annotations
-
 import aiohttp
 from sisyphus_control import Track
 

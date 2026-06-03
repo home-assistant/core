@@ -1,7 +1,5 @@
 """Pushsafer platform for notify component."""
 
-from __future__ import annotations
-
 import base64
 from http import HTTPStatus
 import logging

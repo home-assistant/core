@@ -1,7 +1,5 @@
 """Coordinator for the PlayStation Network Integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta

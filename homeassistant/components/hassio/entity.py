@@ -1,29 +1,20 @@
 """Base for Hass.io entities."""
 
-from __future__ import annotations
+from collections.abc import Callable
 
-from typing import Any
-
-from aiohasupervisor.models.mounts import CIFSMountResponse, NFSMountResponse
+from aiohasupervisor.models import CIFSMountResponse, HostInfo, NFSMountResponse, OSInfo
+from aiohasupervisor.models.base import ContainerStats
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_SLUG,
-    CONTAINER_STATS,
-    DATA_KEY_ADDONS,
-    DATA_KEY_CORE,
-    DATA_KEY_HOST,
-    DATA_KEY_MOUNTS,
-    DATA_KEY_OS,
-    DATA_KEY_SUPERVISOR,
-    DOMAIN,
-)
+from .const import CONTAINER_STATS, DOMAIN
 from .coordinator import (
+    AddonData,
     HassioAddOnDataUpdateCoordinator,
     HassioMainDataUpdateCoordinator,
+    HassioStatsData,
     HassioStatsDataUpdateCoordinator,
 )
 
@@ -39,7 +30,7 @@ class HassioStatsEntity(CoordinatorEntity[HassioStatsDataUpdateCoordinator]):
         entity_description: EntityDescription,
         *,
         container_id: str,
-        data_key: str,
+        stats_fn: Callable[[HassioStatsData], ContainerStats | None],
         device_id: str,
         unique_id_prefix: str,
     ) -> None:
@@ -47,27 +38,25 @@ class HassioStatsEntity(CoordinatorEntity[HassioStatsDataUpdateCoordinator]):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._container_id = container_id
-        self._data_key = data_key
+        self._stats_fn = stats_fn
         self._attr_unique_id = f"{unique_id_prefix}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
 
     @property
+    def _stats(self) -> ContainerStats | None:
+        """Return the stats object for this entity's container."""
+        return self._stats_fn(self.coordinator.data)
+
+    @property
+    def stats(self) -> ContainerStats:
+        """Return the stats object, asserting it is available."""
+        assert self._stats is not None
+        return self._stats
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self._data_key == DATA_KEY_ADDONS:
-            return (
-                super().available
-                and DATA_KEY_ADDONS in self.coordinator.data
-                and self.entity_description.key
-                in (
-                    self.coordinator.data[DATA_KEY_ADDONS].get(self._container_id) or {}
-                )
-            )
-        return (
-            super().available
-            and self._data_key in self.coordinator.data
-            and self.entity_description.key in self.coordinator.data[self._data_key]
-        )
+        return super().available and self._stats is not None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to stats updates."""
@@ -94,24 +83,31 @@ class HassioAddonEntity(CoordinatorEntity[HassioAddOnDataUpdateCoordinator]):
         self,
         coordinator: HassioAddOnDataUpdateCoordinator,
         entity_description: EntityDescription,
-        addon: dict[str, Any],
+        addon: AddonData,
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._addon_slug = addon[ATTR_SLUG]
-        self._attr_unique_id = f"{addon[ATTR_SLUG]}_{entity_description.key}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, addon[ATTR_SLUG])})
+        self._addon_slug = addon.addon.slug
+        self._attr_unique_id = f"{addon.addon.slug}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, addon.addon.slug)})
+
+    @property
+    def addon_slug(self) -> str:
+        """Return the add-on slug."""
+        return self._addon_slug
+
+    @property
+    def addon_data(self) -> AddonData:
+        """Return the add-on data, asserting it is available."""
+        data = self.coordinator.data
+        assert self._addon_slug in data.addons
+        return data.addons[self._addon_slug]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            super().available
-            and DATA_KEY_ADDONS in self.coordinator.data
-            and self.entity_description.key
-            in self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})
-        )
+        return super().available and self._addon_slug in self.coordinator.data.addons
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to addon info updates."""
@@ -142,11 +138,13 @@ class HassioOSEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            super().available
-            and DATA_KEY_OS in self.coordinator.data
-            and self.entity_description.key in self.coordinator.data[DATA_KEY_OS]
-        )
+        return super().available and self.coordinator.data.os is not None
+
+    @property
+    def os(self) -> OSInfo:
+        """Return the OS info object, asserting it is available."""
+        assert self.coordinator.data.os is not None
+        return self.coordinator.data.os
 
 
 class HassioHostEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
@@ -166,13 +164,10 @@ class HassioHostEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "host")})
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            super().available
-            and DATA_KEY_HOST in self.coordinator.data
-            and self.entity_description.key in self.coordinator.data[DATA_KEY_HOST]
-        )
+    def host(self) -> HostInfo:
+        """Return the host info, asserting it is available."""
+        assert self.coordinator.data.host is not None
+        return self.coordinator.data.host
 
 
 class HassioSupervisorEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
@@ -191,16 +186,6 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator])
         self._attr_unique_id = f"home_assistant_supervisor_{entity_description.key}"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "supervisor")})
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            super().available
-            and DATA_KEY_SUPERVISOR in self.coordinator.data
-            and self.entity_description.key
-            in self.coordinator.data[DATA_KEY_SUPERVISOR]
-        )
-
 
 class HassioCoreEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Core."""
@@ -217,15 +202,6 @@ class HassioCoreEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
         self.entity_description = entity_description
         self._attr_unique_id = f"home_assistant_core_{entity_description.key}"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "core")})
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            super().available
-            and DATA_KEY_CORE in self.coordinator.data
-            and self.entity_description.key in self.coordinator.data[DATA_KEY_CORE]
-        )
 
 
 class HassioMountEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
@@ -251,9 +227,11 @@ class HassioMountEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
         self._mount = mount
 
     @property
+    def mount_name(self) -> str:
+        """Return the mount name."""
+        return self._mount.name
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            super().available
-            and self._mount.name in self.coordinator.data[DATA_KEY_MOUNTS]
-        )
+        return super().available and self.mount_name in self.coordinator.data.mounts

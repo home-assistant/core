@@ -191,7 +191,7 @@ async def test_device_name_from_structure(
     )
     await setup_platform()
 
-    temperature = hass.states.get("sensor.some_room_temperature")
+    temperature = hass.states.get("sensor.some_room_some_room_temperature")
     assert temperature is not None
     assert temperature.state == "25.2"
 

@@ -1,7 +1,5 @@
 """Component providing binary sensors for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 import dataclasses
 

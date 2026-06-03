@@ -1,7 +1,5 @@
 """CalDAV todo platform."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import date, datetime, timedelta
 from functools import partial
@@ -140,7 +138,7 @@ class WebDavTodoListEntity(TodoListEntity):
             )
             # refreshing async otherwise it would take too much time
             self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
-        except (requests.ConnectionError, DAVError) as err:
+        except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
@@ -152,7 +150,7 @@ class WebDavTodoListEntity(TodoListEntity):
             )
         except NotFoundError as err:
             raise HomeAssistantError(f"Could not find To-do item {uid}") from err
-        except (requests.ConnectionError, DAVError) as err:
+        except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
         vtodo = todo.icalendar_component  # type: ignore[attr-defined]
         vtodo["SUMMARY"] = item.summary or ""
@@ -176,7 +174,7 @@ class WebDavTodoListEntity(TodoListEntity):
             )
             # refreshing async otherwise it would take too much time
             self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
-        except (requests.ConnectionError, DAVError) as err:
+        except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
@@ -190,14 +188,14 @@ class WebDavTodoListEntity(TodoListEntity):
             items = await asyncio.gather(*tasks)
         except NotFoundError as err:
             raise HomeAssistantError("Could not find To-do item") from err
-        except (requests.ConnectionError, DAVError) as err:
+        except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
 
         # Run serially as some CalDAV servers do not support concurrent modifications
         for item in items:
             try:
                 await self.hass.async_add_executor_job(item.delete)
-            except (requests.ConnectionError, DAVError) as err:
+            except (requests.ConnectionError, requests.Timeout, DAVError) as err:
                 raise HomeAssistantError(f"CalDAV delete error: {err}") from err
         # refreshing async otherwise it would take too much time
         self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))

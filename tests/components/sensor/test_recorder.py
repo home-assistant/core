@@ -542,7 +542,7 @@ async def test_compile_hourly_statistics_with_some_same_last_updated_angle(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test compiling hourly statistics with the some of the same last updated value for measurement_angle.
+    """Test compiling stats with same last_updated for angle.
 
     If the last updated value is the same we will have a zero duration.
     """
@@ -1096,7 +1096,7 @@ async def test_compile_hourly_statistics_wrong_unit(
     caplog: pytest.LogCaptureFixture,
     attributes,
 ) -> None:
-    """Test compiling hourly statistics for sensor with unit not matching device class."""
+    """Test stats for sensor with unit not matching device class."""
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
@@ -1953,9 +1953,10 @@ async def test_compile_hourly_sum_statistics_negative_state(
     state = states[entity_id][offending_state].state
     last_updated = states[entity_id][offending_state].last_updated.isoformat()
     assert (
-        f"Entity {entity_id} {warning_1}has state class total_increasing, but its state "
-        f"is negative. Triggered by state {state} with last_updated set to {last_updated}."
-        in caplog.text
+        f"Entity {entity_id} {warning_1}has state class"
+        f" total_increasing, but its state "
+        f"is negative. Triggered by state {state}"
+        f" with last_updated set to {last_updated}." in caplog.text
     )
     assert warning_2 in caplog.text
 
@@ -2261,7 +2262,8 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     last_updated = states["sensor.test1"][6].last_updated.isoformat()
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
-        f"strictly increasing. Triggered by state {state} (previous state: {previous_state}) "
+        f"strictly increasing. Triggered by state {state}"
+        f" (previous state: {previous_state}) "
         f"with last_updated set to {last_updated}. Please create a bug report at "
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     ) in caplog.text
@@ -2689,7 +2691,7 @@ async def test_compile_hourly_statistics_unchanged_angle(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test compiling hourly statistics, with no changes during the hour for measurement_angle."""
+    """Test compiling hourly stats, no changes for measurement_angle."""
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
@@ -2864,7 +2866,7 @@ async def test_compile_hourly_statistics_unavailable_angle(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test compiling hourly statistics, with one sensor being unavailable for measurement_angle.
+    """Test hourly stats with one sensor unavailable for angle.
 
     sensor.test1 is unavailable and should not have statistics generated
     sensor.test2 should have statistics generated
@@ -4155,7 +4157,7 @@ async def test_compile_hourly_statistics_custom_equivalent_units(
     min: float,
     max: float,
 ) -> None:
-    """Test compiling hourly statistics where units change during an hour and the integration provides custom equivalent units."""
+    """Test stats where units change with custom equivalent units."""
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
@@ -4359,9 +4361,10 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     min,
     max,
 ) -> None:
-    """Test compiling hourly statistics where device class changes from one hour to the next.
+    """Test stats where device class changes between hours.
 
-    In this test, the device class is first None, then set to a specific device class.
+    In this test, the device class is first None, then set to a
+    specific device class.
 
     Changing device class may influence the unit class.
     """
@@ -4578,9 +4581,10 @@ async def test_compile_hourly_statistics_changing_device_class_2(
     min,
     max,
 ) -> None:
-    """Test compiling hourly statistics where device class changes from one hour to the next.
+    """Test stats where device class changes between hours.
 
-    In this test, the device class is first set to a specific device class, then set to None.
+    In this test, the device class is first set to a specific device
+    class, then set to None.
     """
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})

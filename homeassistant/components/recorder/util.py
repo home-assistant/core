@@ -1,7 +1,5 @@
 """SQLAlchemy util functions."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator, Sequence
 import contextlib
 from contextlib import contextmanager

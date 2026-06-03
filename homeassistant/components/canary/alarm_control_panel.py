@@ -1,7 +1,5 @@
 """Support for Canary alarm."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from canary.const import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT

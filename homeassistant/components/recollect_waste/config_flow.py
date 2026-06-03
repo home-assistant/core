@@ -1,7 +1,5 @@
 """Config flow for ReCollect Waste integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiorecollect.client import Client

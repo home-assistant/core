@@ -1,7 +1,5 @@
 """Music Assistant Switch platform."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 from music_assistant_client.client import MusicAssistantClient
@@ -75,7 +73,7 @@ async def async_setup_entry(
 
 
 class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchEntity):
-    """Representation of a Switch entity to control player provider dependent settings."""
+    """Representation of a Switch entity to control player settings."""
 
     def __init__(
         self,

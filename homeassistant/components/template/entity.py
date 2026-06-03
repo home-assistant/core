@@ -91,9 +91,11 @@ class AbstractTemplateEntity(Entity):
     ) -> None:
         """Set up a template that manages the main state of the entity.
 
-        Requires _state_option to be set on the inheriting class. _state_option represents
-        the configuration option that derives the state. E.g. Template weather entities main state option
-        is 'condition', where switch is 'state'.
+        Requires _state_option to be set on the inheriting
+        class. _state_option represents the configuration
+        option that derives the state. E.g. Template weather
+        entities main state option is 'condition', where
+        switch is 'state'.
         """
 
     @abstractmethod

@@ -12,7 +12,7 @@ from homeassistant.components.vivotek.const import (
     CONF_STREAM_PATH,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
@@ -40,22 +40,9 @@ USER_DATA = {
     CONF_STREAM_PATH: "/live.sdp",
 }
 
-IMPORT_DATA = {
-    CONF_IP_ADDRESS: "1.2.3.4",
-    CONF_USERNAME: "admin",
-    CONF_PASSWORD: "pass1234",
-    CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-    CONF_SSL: False,
-    CONF_VERIFY_SSL: True,
-    CONF_SECURITY_LEVEL: "admin",
-    CONF_STREAM_PATH: "/live.sdp",
-    CONF_FRAMERATE: DEFAULT_FRAMERATE,
-}
 
-
-async def test_full_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_vivotek_camera: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_vivotek_camera: AsyncMock) -> None:
     """Test full user initiated flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -83,9 +70,9 @@ async def test_full_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_exceptions(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_vivotek_camera: AsyncMock,
     exception: Exception,
     error: str,
@@ -155,76 +142,6 @@ async def test_duplicate_entry_mac(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {**USER_DATA, CONF_IP_ADDRESS: "1.1.1.1"}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_import_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_vivotek_camera: AsyncMock
-) -> None:
-    """Test import initiated flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_DATA
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"] == USER_DATA
-    assert result["options"] == {CONF_FRAMERATE: DEFAULT_FRAMERATE}
-    assert result["result"].unique_id == "11:22:33:44:55:66"
-
-
-@pytest.mark.parametrize(
-    ("exception", "reason"),
-    [
-        (VivotekCameraError, "cannot_connect"),
-        (Exception, "unknown"),
-    ],
-)
-async def test_import_flow_exceptions(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_vivotek_camera: AsyncMock,
-    exception: Exception,
-    reason: str,
-) -> None:
-    """Test import initiated flow with exceptions."""
-    mock_vivotek_camera.get_mac.side_effect = exception
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_DATA
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-
-
-async def test_import_flow_duplicate(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test import initiated flow."""
-    mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_DATA
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_import_flow_duplicate_mac(
-    hass: HomeAssistant,
-    mock_vivotek_camera: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test import initiated flow."""
-    mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={**IMPORT_DATA, CONF_IP_ADDRESS: "1.1.1.1"},
     )
 
     assert result["type"] is FlowResultType.ABORT

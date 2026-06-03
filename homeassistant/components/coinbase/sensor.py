@@ -1,7 +1,5 @@
 """Support for Coinbase sensors."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
@@ -159,7 +157,9 @@ class AccountSensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the sensor."""
         return {
-            ATTR_NATIVE_BALANCE: f"{self._native_balance} {self._coinbase_data.exchange_base}",
+            ATTR_NATIVE_BALANCE: (
+                f"{self._native_balance} {self._coinbase_data.exchange_base}"
+            ),
         }
 
     def update(self) -> None:

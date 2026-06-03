@@ -1,7 +1,5 @@
 """The test for the sql sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from pathlib import Path
 import sqlite3
@@ -15,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from homeassistant.components.recorder import CONF_DB_URL, Recorder
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -52,7 +51,11 @@ from . import (
     init_integration,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    async_fire_time_changed,
+)
 
 
 async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -71,7 +74,10 @@ async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None
 async def test_query_cte(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor with CTE."""
     options = {
-        CONF_QUERY: "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
+        CONF_QUERY: (
+            "WITH test AS (SELECT 1 AS row_num, 10 AS state)"
+            " SELECT state FROM test WHERE row_num = 1 LIMIT 1;"
+        ),
         CONF_COLUMN_NAME: "state",
     }
     await init_integration(hass, title="Select value SQL query CTE", options=options)
@@ -115,7 +121,10 @@ async def test_template_query(
 ) -> None:
     """Test the SQL sensor with a query template."""
     options = {
-        CONF_QUERY: "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+        CONF_QUERY: (
+            "SELECT {% if states('sensor.input1')=='on' %}"
+            " 5 {% else %} 6 {% endif %} as value"
+        ),
         CONF_COLUMN_NAME: "value",
         CONF_ADVANCED_OPTIONS: {
             CONF_VALUE_TEMPLATE: "{{ value | int }}",
@@ -196,9 +205,13 @@ async def test_broken_template_query_2(
     state = hass.states.get("sensor.count_tables")
     assert state.state == "0.005"
     assert (
-        "Error rendering query SELECT {{ states.sensor.input1.state | int / 1000}} as value"
-        " LIMIT 1;: ValueError: Template error: int got invalid input 'on' when rendering"
-        " template 'SELECT {{ states.sensor.input1.state | int / 1000}} as value LIMIT 1;'"
+        "Error rendering query SELECT"
+        " {{ states.sensor.input1.state | int / 1000}} as value"
+        " LIMIT 1;: ValueError: Template error: int got invalid"
+        " input 'on' when rendering"
+        " template 'SELECT"
+        " {{ states.sensor.input1.state | int / 1000}} as value"
+        " LIMIT 1;'"
         " but no default was specified" in caplog.text
     )
 
@@ -424,30 +437,19 @@ async def test_templates_with_yaml(
 
 
 async def test_config_from_old_yaml(
-    recorder_mock: Recorder, hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the SQL sensor from old yaml config does not create any entity."""
-    config = {
-        "sensor": {
-            "platform": "sql",
-            CONF_DB_URL: "sqlite://",
-            "queries": [
-                {
-                    CONF_NAME: "count_tables",
-                    CONF_QUERY: "SELECT 5 as value",
-                    CONF_COLUMN_NAME: "value",
-                }
-            ],
-        }
-    }
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.count_tables")
-    assert not state
-    issue = issue_registry.async_get_issue(DOMAIN, "sensor_platform_yaml_not_supported")
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    await assert_platform_setup_creates_issue(
+        hass,
+        SENSOR_DOMAIN,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
 
 
 @pytest.mark.parametrize(

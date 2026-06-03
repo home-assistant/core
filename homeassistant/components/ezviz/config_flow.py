@@ -1,7 +1,5 @@
 """Config flow for EZVIZ."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
@@ -124,17 +122,15 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         ezviz_client = EzvizClient(token=ezviz_token, timeout=ezviz_timeout)
 
-        # We need to wake hibernating cameras.
-        # First create EZVIZ API instance.
-        await self.hass.async_add_executor_job(ezviz_client.login)
+        def _login_wake_and_test() -> None:
+            # Login to create EZVIZ API instance.
+            ezviz_client.login()
+            # Wake hibernating camera.
+            ezviz_client.get_detection_sensibility(data[ATTR_SERIAL])
+            # Attempt an authenticated RTSP DESCRIBE request.
+            _test_camera_rtsp_creds(data)
 
-        # Secondly try to wake hybernating camera.
-        await self.hass.async_add_executor_job(
-            ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
-        )
-
-        # Thirdly attempts an authenticated RTSP DESCRIBE request.
-        await self.hass.async_add_executor_job(_test_camera_rtsp_creds, data)
+        await self.hass.async_add_executor_job(_login_wake_and_test)
 
         return self.async_create_entry(
             title=data[ATTR_SERIAL],

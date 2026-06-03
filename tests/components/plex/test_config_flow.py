@@ -12,7 +12,6 @@ import requests_mock
 
 from homeassistant.components.plex import config_flow
 from homeassistant.components.plex.const import (
-    AUTOMATIC_SETUP_STRING,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -20,7 +19,6 @@ from homeassistant.components.plex.const import (
     CONF_SERVER_IDENTIFIER,
     CONF_USE_EPISODE_ART,
     DOMAIN,
-    MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
     SERVERS,
 )
@@ -54,7 +52,7 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     with (
@@ -65,7 +63,8 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
         patch("plexauth.PlexAuth.token", return_value="BAD TOKEN"),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -75,7 +74,7 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
+        assert result["step_id"] == "website_auth"
         assert result["errors"][CONF_TOKEN] == "faulty_credentials"
 
 
@@ -85,7 +84,7 @@ async def test_bad_hostname(hass: HomeAssistant, mock_plex_calls) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     with (
@@ -97,7 +96,8 @@ async def test_bad_hostname(hass: HomeAssistant, mock_plex_calls) -> None:
         patch("plexauth.PlexAuth.token", return_value=MOCK_TOKEN),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -107,7 +107,7 @@ async def test_bad_hostname(hass: HomeAssistant, mock_plex_calls) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
+        assert result["step_id"] == "website_auth"
         assert result["errors"][CONF_HOST] == "not_found"
 
 
@@ -117,7 +117,7 @@ async def test_unknown_exception(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     with (
@@ -126,7 +126,8 @@ async def test_unknown_exception(hass: HomeAssistant) -> None:
         patch("plexauth.PlexAuth.token", return_value="MOCK_TOKEN"),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -151,7 +152,7 @@ async def test_no_servers_found(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     with (
@@ -159,7 +160,8 @@ async def test_no_servers_found(
         patch("plexauth.PlexAuth.token", return_value=MOCK_TOKEN),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -168,7 +170,7 @@ async def test_no_servers_found(
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
+        assert result["step_id"] == "website_auth"
         assert result["errors"]["base"] == "no_servers"
 
 
@@ -182,7 +184,7 @@ async def test_single_available_server(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     with (
@@ -190,7 +192,8 @@ async def test_single_available_server(
         patch("plexauth.PlexAuth.token", return_value=MOCK_TOKEN),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -226,7 +229,7 @@ async def test_multiple_servers_with_selection(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     requests_mock.get(
@@ -238,7 +241,8 @@ async def test_multiple_servers_with_selection(
         patch("plexauth.PlexAuth.token", return_value=MOCK_TOKEN),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -279,7 +283,7 @@ async def test_adding_last_unconfigured_server(
     plextv_resources_two_servers,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test automatically adding last unconfigured server when multiple servers on account."""
+    """Test auto-adding last unconfigured server with multiple."""
     MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -291,7 +295,7 @@ async def test_adding_last_unconfigured_server(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     requests_mock.get(
@@ -304,7 +308,8 @@ async def test_adding_last_unconfigured_server(
         patch("plexauth.PlexAuth.token", return_value=MOCK_TOKEN),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -350,7 +355,7 @@ async def test_all_available_servers_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     requests_mock.get("https://plex.tv/api/v2/user", text=plextv_account)
@@ -364,7 +369,8 @@ async def test_all_available_servers_configured(
         patch("plexauth.PlexAuth.token", return_value=MOCK_TOKEN),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -481,7 +487,7 @@ async def test_external_timed_out(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     with (
@@ -489,7 +495,8 @@ async def test_external_timed_out(hass: HomeAssistant) -> None:
         patch("plexauth.PlexAuth.token", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -510,7 +517,7 @@ async def test_callback_view(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     with (
@@ -518,7 +525,8 @@ async def test_callback_view(
         patch("plexauth.PlexAuth.token", return_value=MOCK_TOKEN),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -541,46 +549,33 @@ async def test_manual_config(hass: HomeAssistant, mock_plex_calls) -> None:
                 "some random message that doesn't match"
             )
 
-    # Basic mode
+    # Automatic setup
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert result["data_schema"] is None
-    hass.config_entries.flow.async_abort(result["flow_id"])
-
-    # Advanced automatic
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": True},
-    )
-
-    assert result["data_schema"] is not None
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user_advanced"
 
     with patch("plexauth.PlexAuth.initiate_auth"):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"setup_method": AUTOMATIC_SETUP_STRING}
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
         )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     hass.config_entries.flow.async_abort(result["flow_id"])
 
-    # Advanced manual
+    # Manual setup
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": True},
+        config_flow.DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["data_schema"] is not None
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user_advanced"
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"setup_method": MANUAL_SETUP_STRING}
+        result["flow_id"], user_input={"next_step_id": "manual_setup"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -673,14 +668,14 @@ async def test_manual_config_with_token(
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": True},
+        context={"source": SOURCE_USER},
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user_advanced"
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"setup_method": MANUAL_SETUP_STRING}
+        result["flow_id"], user_input={"next_step_id": "manual_setup"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -746,11 +741,17 @@ async def test_reauth(
     result = await entry.start_reauth_flow(hass)
     flow_id = result["flow_id"]
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with (
         patch("plexauth.PlexAuth.initiate_auth"),
         patch("plexauth.PlexAuth.token", return_value="BRAND_NEW_TOKEN"),
     ):
-        result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
+        )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -782,7 +783,7 @@ async def test_reauth_multiple_servers_available(
     plextv_resources_two_servers: str,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test setup and reauthorization of a Plex token when multiple servers are available."""
+    """Test Plex token reauthorization with multiple servers."""
     requests_mock.get(
         "https://plex.tv/api/v2/resources",
         text=plextv_resources_two_servers,
@@ -794,11 +795,17 @@ async def test_reauth_multiple_servers_available(
 
     flow_id = result["flow_id"]
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with (
         patch("plexauth.PlexAuth.initiate_auth"),
         patch("plexauth.PlexAuth.token", return_value="BRAND_NEW_TOKEN"),
     ):
-        result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
+        )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -826,16 +833,12 @@ async def test_client_request_missing(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
-    with (
-        patch("plexauth.PlexAuth.initiate_auth"),
-        patch("plexauth.PlexAuth.token", return_value=None),
-        pytest.raises(RuntimeError),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+    with pytest.raises(RuntimeError):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"next_step_id": "website_auth"}
         )
 
 
@@ -849,20 +852,16 @@ async def test_client_header_issues(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     with (
-        patch("plexauth.PlexAuth.initiate_auth"),
-        patch("plexauth.PlexAuth.token", return_value=None),
         patch(
             "homeassistant.helpers.http.current_request.get",
             return_value=MockRequest(),
         ),
-        pytest.raises(
-            RuntimeError,
-        ),
+        pytest.raises(RuntimeError),
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"next_step_id": "website_auth"}
         )

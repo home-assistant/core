@@ -131,7 +131,7 @@ async def test_fan_set_preset_mode_service(
     hass: HomeAssistant,
     mock_cloud_interface: AsyncMock,
 ) -> None:
-    """Tests whether the set preset mode service is called and correct api call is followed."""
+    """Test set preset mode service triggers correct api call."""
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -165,10 +165,11 @@ async def test_fan_set_percentage_zero_turns_off(
 @pytest.mark.parametrize(
     ("service_data", "expected_mode", "expected_speed"),
     [
-        # percentage=None, preset_mode=None -> defaults to previous speed > 75% (medium),
-        # previous mode > FanMode.inward
+        # percentage=None, preset_mode=None -> defaults to previous
+        # speed > 75% (medium), previous mode > FanMode.inward
         ({}, FanMode.inward, FanSpeed.medium),
-        # percentage=0, preset_mode=None -> default 25% (FanSpeed.sleep), previous mode (inward)
+        # percentage=0, preset_mode=None -> default 25%
+        # (FanSpeed.sleep), previous mode (inward)
         ({ATTR_PERCENTAGE: 0}, FanMode.inward, FanSpeed.sleep),
     ],
 )

@@ -1,7 +1,5 @@
 """Matter entity base class."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import functools
@@ -128,7 +126,8 @@ class MatterEntity(Entity):
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )
-        # mark endpoint postfix if the device has the primary attribute on multiple endpoints
+        # mark endpoint postfix if the device has the primary
+        # attribute on multiple endpoints
         if not self._endpoint.node.is_bridge_device and any(
             ep
             for ep in self._endpoint.node.endpoints.values()
@@ -214,8 +213,9 @@ class MatterEntity(Entity):
                 node_filter=self._endpoint.node.node_id,
             )
         )
-        # Subscribe to BridgedDeviceBasicInformation Reachable attribute (AttributeId: 17)
-        # for devices connected via a Matter bridge, to reflect real reachability status.
+        # Subscribe to BridgedDeviceBasicInformation Reachable
+        # attribute (AttributeId: 17) for devices connected via a
+        # Matter bridge, to reflect real reachability status.
         if self._endpoint.has_attribute(
             None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
         ):
@@ -230,6 +230,25 @@ class MatterEntity(Entity):
                         event_filter=EventType.ATTRIBUTE_UPDATED,
                         node_filter=self._endpoint.node.node_id,
                         attr_path_filter=reachable_attr_path,
+                    )
+                )
+        # If we are a composed device subscribe to the parent's Reachable attribute
+        if self._compose_parent is not None and self._compose_parent.has_attribute(
+            None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+        ):
+            parent_reachable_attr_path = create_attribute_path(
+                self._compose_parent.endpoint_id,
+                clusters.BridgedDeviceBasicInformation.Attributes.Reachable.cluster_id,
+                clusters.BridgedDeviceBasicInformation.Attributes.Reachable.attribute_id,
+            )
+            if parent_reachable_attr_path not in sub_paths:
+                sub_paths.append(parent_reachable_attr_path)
+                self._unsubscribes.append(
+                    self.matter_client.subscribe_events(
+                        callback=self._on_matter_event,
+                        event_filter=EventType.ATTRIBUTE_UPDATED,
+                        node_filter=self._compose_parent.node.node_id,
+                        attr_path_filter=parent_reachable_attr_path,
                     )
                 )
         # subscribe to FeatureMap attribute (as that can dynamically change)
@@ -257,9 +276,26 @@ class MatterEntity(Entity):
             name = f"{name} ({self._name_postfix})"
         return name
 
+    @cached_property
+    def _compose_parent(self) -> MatterEndpoint | None:
+        """Return the composed parent endpoint, if any."""
+        return self._endpoint.node.get_compose_parent(self._endpoint.endpoint_id)
+
     @callback
     def _get_bridged_reachable(self) -> bool:
         """Return reachability state for bridged endpoints, True if not applicable."""
+        # if we are the endpoint of a composed device, we have to check the
+        # parent endpoint's reachable attribute
+        if self._compose_parent is not None:
+            compose_parent_reachable = self._compose_parent.get_attribute_value(
+                None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+            )
+            # assume unreachable only if there is an attribute present that
+            # explicitly states reachable=false for the parent
+            if compose_parent_reachable is not None and not compose_parent_reachable:
+                return False
+        # check if our endpoint has a reachable attribute
+        # absence of reachable attribute is assumed as reachable (non-bridged devices)
         reachable = self.get_matter_attribute_value(
             clusters.BridgedDeviceBasicInformation.Attributes.Reachable
         )
@@ -344,7 +380,7 @@ class MatterEntity(Entity):
     ) -> Any:
         """Write an attribute(value) on the primary endpoint.
 
-        If matter_attribute is not provided, the primary attribute of the entity is used.
+        If matter_attribute is not provided, the primary attribute is used.
         """
         if matter_attribute is None:
             matter_attribute = self._entity_info.primary_attribute

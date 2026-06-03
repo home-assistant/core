@@ -1,7 +1,5 @@
 """The test for the sensibo number platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -48,7 +46,7 @@ async def test_number(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("number.hallway_temperature_calibration")
+    state = hass.states.get("number.hallway_hallway_temperature_calibration")
     assert state.state == "0.2"
 
 
@@ -58,7 +56,7 @@ async def test_number_set_value(
 ) -> None:
     """Test the Sensibo number service."""
 
-    state = hass.states.get("number.hallway_temperature_calibration")
+    state = hass.states.get("number.hallway_hallway_temperature_calibration")
     assert state.state == "0.1"
 
     mock_client.async_set_calibration.return_value = {"status": "failure"}
@@ -71,7 +69,7 @@ async def test_number_set_value(
             blocking=True,
         )
 
-    state = hass.states.get("number.hallway_temperature_calibration")
+    state = hass.states.get("number.hallway_hallway_temperature_calibration")
     assert state.state == "0.1"
 
     mock_client.async_set_calibration.return_value = {"status": "success"}
@@ -83,5 +81,5 @@ async def test_number_set_value(
         blocking=True,
     )
 
-    state = hass.states.get("number.hallway_temperature_calibration")
+    state = hass.states.get("number.hallway_hallway_temperature_calibration")
     assert state.state == "0.2"

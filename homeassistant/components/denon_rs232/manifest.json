@@ -1,6 +1,6 @@
 {
   "domain": "denon_rs232",
-  "name": "Denon RS232",
+  "name": "Denon RS-232",
   "codeowners": ["@balloob"],
   "config_flow": true,
   "dependencies": ["usb"],

@@ -1,7 +1,5 @@
 """Update platform for Supervisor."""
 
-from __future__ import annotations
-
 import re
 from typing import Any
 
@@ -15,22 +13,12 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ICON, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ADDONS_COORDINATOR,
-    ATTR_AUTO_UPDATE,
-    ATTR_VERSION,
-    ATTR_VERSION_LATEST,
-    DATA_KEY_ADDONS,
-    DATA_KEY_CORE,
-    DATA_KEY_OS,
-    DATA_KEY_SUPERVISOR,
-    MAIN_COORDINATOR,
-)
+from .const import ADDONS_COORDINATOR, ATTR_VERSION_LATEST, MAIN_COORDINATOR
+from .coordinator import AddonData
 from .entity import (
     HassioAddonEntity,
     HassioCoreEntity,
@@ -80,7 +68,7 @@ async def async_setup_entry(
             coordinator=addons_coordinator,
             entity_description=ENTITY_DESCRIPTION,
         )
-        for addon in addons_coordinator.data[DATA_KEY_ADDONS].values()
+        for addon in addons_coordinator.data.addons.values()
     )
 
     async_add_entities(entities)
@@ -110,29 +98,29 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     _version_before_update: str | None = None
 
     @property
-    def _addon_data(self) -> dict:
+    def _addon_data(self) -> AddonData:
         """Return the add-on data."""
-        return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug]
+        return self.coordinator.data.addons[self._addon_slug]
 
     @property
     def auto_update(self) -> bool:
         """Return true if auto-update is enabled for the add-on."""
-        return self._addon_data[ATTR_AUTO_UPDATE]
+        return self._addon_data.auto_update
 
     @property
     def title(self) -> str | None:
         """Return the title of the update."""
-        return self._addon_data[ATTR_NAME]
+        return self._addon_data.addon.name
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        return self._addon_data[ATTR_VERSION_LATEST]
+        return self._addon_data.addon.version_latest
 
     @property
     def installed_version(self) -> str | None:
         """Version installed and in use."""
-        return self._addon_data[ATTR_VERSION]
+        return self._addon_data.addon.version
 
     @property
     def in_progress(self) -> bool | None:
@@ -146,7 +134,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         """Return the icon of the add-on if any."""
         if not self.available:
             return None
-        if self._addon_data[ATTR_ICON]:
+        if self._addon_data.addon.icon:
             return f"/api/hassio/addons/{self._addon_slug}/icon"
         return None
 
@@ -161,7 +149,8 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
             return changelog
 
         regex_pattern = re.compile(
-            rf"^#* {re.escape(self.latest_version)}\n(?:^(?!#* {re.escape(self.installed_version)}).*\n)*",
+            rf"^#* {re.escape(self.latest_version)}\n"
+            rf"(?:^(?!#* {re.escape(self.installed_version)}).*\n)*",
             re.MULTILINE,
         )
         match = regex_pattern.search(changelog)
@@ -238,14 +227,16 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     _attr_title = "Home Assistant Operating System"
 
     @property
-    def latest_version(self) -> str:
+    def latest_version(self) -> str | None:
         """Return the latest version."""
-        return self.coordinator.data[DATA_KEY_OS][ATTR_VERSION_LATEST]
+        assert self.coordinator.data.os is not None
+        return self.coordinator.data.os.version_latest
 
     @property
-    def installed_version(self) -> str:
+    def installed_version(self) -> str | None:
         """Return the installed version."""
-        return self.coordinator.data[DATA_KEY_OS][ATTR_VERSION]
+        assert self.coordinator.data.os is not None
+        return self.coordinator.data.os.version
 
     @property
     def entity_picture(self) -> str | None:
@@ -256,7 +247,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         version = AwesomeVersion(self.latest_version)
-        if version.dev or version.strategy == AwesomeVersionStrategy.UNKNOWN:
+        if version.dev or version.strategy is AwesomeVersionStrategy.UNKNOWN:
             return "https://github.com/home-assistant/operating-system/commits/dev"
         return (
             f"https://github.com/home-assistant/operating-system/releases/tag/{version}"
@@ -295,25 +286,25 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
         return self._attr_in_progress
 
     @property
-    def latest_version(self) -> str:
+    def latest_version(self) -> str | None:
         """Return the latest version."""
-        return self.coordinator.data[DATA_KEY_SUPERVISOR][ATTR_VERSION_LATEST]
+        return self.coordinator.data.supervisor.version_latest
 
     @property
     def installed_version(self) -> str:
         """Return the installed version."""
-        return self.coordinator.data[DATA_KEY_SUPERVISOR][ATTR_VERSION]
+        return self.coordinator.data.supervisor.version
 
     @property
     def auto_update(self) -> bool:
         """Return true if auto-update is enabled for supervisor."""
-        return self.coordinator.data[DATA_KEY_SUPERVISOR][ATTR_AUTO_UPDATE]
+        return self.coordinator.data.supervisor.auto_update
 
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         version = AwesomeVersion(self.latest_version)
-        if version.dev or version.strategy == AwesomeVersionStrategy.UNKNOWN:
+        if version.dev or version.strategy is AwesomeVersionStrategy.UNKNOWN:
             return "https://github.com/home-assistant/supervisor/commits/main"
         return f"https://github.com/home-assistant/supervisor/releases/tag/{version}"
 
@@ -391,14 +382,14 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
     _attr_title = "Home Assistant Core"
 
     @property
-    def latest_version(self) -> str:
+    def latest_version(self) -> str | None:
         """Return the latest version."""
-        return self.coordinator.data[DATA_KEY_CORE][ATTR_VERSION_LATEST]
+        return self.coordinator.data.core.version_latest
 
     @property
-    def installed_version(self) -> str:
+    def installed_version(self) -> str | None:
         """Return the installed version."""
-        return self.coordinator.data[DATA_KEY_CORE][ATTR_VERSION]
+        return self.coordinator.data.core.version
 
     @property
     def entity_picture(self) -> str | None:
@@ -411,7 +402,8 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         version = AwesomeVersion(self.latest_version)
         if version.dev:
             return "https://github.com/home-assistant/core/commits/dev"
-        return f"https://{'rc' if version.beta else 'www'}.home-assistant.io/latest-release-notes/"
+        subdomain = "rc" if version.beta else "www"
+        return f"https://{subdomain}.home-assistant.io/latest-release-notes/"
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

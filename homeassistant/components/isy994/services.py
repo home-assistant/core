@@ -1,7 +1,5 @@
 """ISY Services and Commands."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyisy.constants import COMMAND_FRIENDLY_NAME
@@ -9,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_CODE,
     CONF_COMMAND,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
@@ -40,7 +39,6 @@ SERVICE_DELETE_ZWAVE_LOCK_USER_CODE = "delete_zwave_lock_user_code"
 CONF_PARAMETER = "parameter"
 CONF_PARAMETERS = "parameters"
 CONF_USER_NUM = "user_num"
-CONF_CODE = "code"
 CONF_VALUE = "value"
 CONF_INIT = "init"
 CONF_ISY = "isy"

@@ -1,7 +1,5 @@
 """Test area template functions."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -275,7 +273,7 @@ async def test_area_entities(
     )
 
     info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
-    assert_result_info(info, ["light.hue_5678", "light.hue_light"])
+    assert_result_info(info, ["light.hue_5678", "light.sensor_fake_hue_light"])
     assert info.rate_limit is None
 
 

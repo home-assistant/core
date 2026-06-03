@@ -1,7 +1,5 @@
 """Casper Glow integration select platform for dimming time."""
 
-from __future__ import annotations
-
 from pycasperglow import GlowState
 
 from homeassistant.components.select import SelectEntity

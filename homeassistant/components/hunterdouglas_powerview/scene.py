@@ -1,7 +1,5 @@
 """Support for Powerview scenes from a Powerview hub."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

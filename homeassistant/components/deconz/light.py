@@ -1,7 +1,5 @@
 """Support for deCONZ lights."""
 
-from __future__ import annotations
-
 from typing import Any, TypedDict, cast
 
 from pydeconz.interfaces.groups import GroupHandler

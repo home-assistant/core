@@ -1,11 +1,14 @@
 """Tests for iAquaLink config flow."""
 
+from typing import Any
 from unittest.mock import patch
 
+import httpx
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
 )
+import pytest
 
 from homeassistant.components.iaqualink import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -23,12 +26,15 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 )
 
 
-async def test_already_configured(
+async def _async_mock_login(self: Any) -> None:
+    """Mock a successful login."""
+
+
+async def test_single_instance_allowed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    config_data: dict[str, str],
 ) -> None:
-    """Test config flow when iaqualink component is already setup."""
+    """Test config flow aborts when an entry already exists."""
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -70,7 +76,7 @@ async def test_dhcp_discovery_starts_user_flow(
     with (
         patch(
             "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.async_setup_entry",
@@ -107,16 +113,26 @@ async def test_with_invalid_credentials(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_service_exception(
-    hass: HomeAssistant, config_data: dict[str, str]
+@pytest.mark.parametrize(
+    "raised_exception",
+    [
+        pytest.param(AqualinkServiceException, id="service"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(httpx.HTTPError("boom"), id="http"),
+    ],
+)
+async def test_cannot_connect_exception(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+    raised_exception: Exception | type[Exception],
 ) -> None:
-    """Test config flow encountering service exception."""
+    """Test config flow encountering a connection-related exception."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        side_effect=AqualinkServiceException,
+        side_effect=raised_exception,
     ):
         result = await flow.async_step_user(config_data)
 
@@ -131,10 +147,11 @@ async def test_with_existing_config(
     """Test config flow with existing configuration."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        return_value=None,
+        _async_mock_login,
     ):
         result = await flow.async_step_user(config_data)
 
@@ -169,8 +186,6 @@ async def test_reauth_success(hass: HomeAssistant, config_data: dict[str, str]) 
     )
     entry.add_to_hass(hass)
 
-    new_username = "updated@example.com"
-
     result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -180,7 +195,7 @@ async def test_reauth_success(hass: HomeAssistant, config_data: dict[str, str]) 
     with (
         patch(
             "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.config_entries.ConfigEntries.async_reload",
@@ -189,16 +204,18 @@ async def test_reauth_success(hass: HomeAssistant, config_data: dict[str, str]) 
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: new_username, CONF_PASSWORD: "new_password"},
+            {
+                CONF_USERNAME: config_data[CONF_USERNAME],
+                CONF_PASSWORD: "new_password",
+            },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert entry.title == new_username
+    assert entry.title == config_data[CONF_USERNAME]
     assert dict(entry.data) == {
         **config_data,
-        CONF_USERNAME: new_username,
         CONF_PASSWORD: "new_password",
     }
 
@@ -214,8 +231,6 @@ async def test_reconfigure_success(
     )
     entry.add_to_hass(hass)
 
-    new_username = "updated@example.com"
-
     result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -225,7 +240,7 @@ async def test_reconfigure_success(
     with (
         patch(
             "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.config_entries.ConfigEntries.async_reload",
@@ -234,16 +249,15 @@ async def test_reconfigure_success(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: new_username, CONF_PASSWORD: "new_password"},
+            {CONF_USERNAME: config_data[CONF_USERNAME], CONF_PASSWORD: "new_password"},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.title == new_username
+    assert entry.title == config_data[CONF_USERNAME]
     assert dict(entry.data) == {
         **config_data,
-        CONF_USERNAME: new_username,
         CONF_PASSWORD: "new_password",
     }
 
@@ -252,7 +266,10 @@ async def test_reauth_invalid_auth(
     hass: HomeAssistant, config_data: dict[str, str]
 ) -> None:
     """Test reauthentication with invalid credentials."""
-    entry = MockConfigEntry(domain=DOMAIN, data=config_data)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+    )
     entry.add_to_hass(hass)
 
     result = await entry.start_reauth_flow(hass)
@@ -271,18 +288,31 @@ async def test_reauth_invalid_auth(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+@pytest.mark.parametrize(
+    "raised_exception",
+    [
+        pytest.param(AqualinkServiceException, id="service"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(httpx.HTTPError("boom"), id="http"),
+    ],
+)
 async def test_reauth_cannot_connect(
-    hass: HomeAssistant, config_data: dict[str, str]
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+    raised_exception: Exception | type[Exception],
 ) -> None:
     """Test reauthentication when the service cannot be reached."""
-    entry = MockConfigEntry(domain=DOMAIN, data=config_data)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+    )
     entry.add_to_hass(hass)
 
     result = await entry.start_reauth_flow(hass)
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        side_effect=AqualinkServiceException,
+        side_effect=raised_exception,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

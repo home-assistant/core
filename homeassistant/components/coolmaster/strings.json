@@ -14,14 +14,23 @@
           "heat_cool": "Support automatic heat/cool mode",
           "host": "[%key:common::config_flow::data::host%]",
           "off": "Can be turned off",
-          "send_wakeup_prompt": "Send wakeup prompt",
           "swing_support": "Control swing mode"
         },
         "data_description": {
-          "host": "The hostname or IP address of your CoolMasterNet device.",
-          "send_wakeup_prompt": "Send the coolmaster unit an empty commaand before issuing any actual command. This is required for serial models."
+          "host": "The hostname or IP address of your CoolMasterNet device."
         },
-        "description": "Set up your CoolMasterNet connection details."
+        "description": "Set up your CoolMasterNet connection details.",
+        "sections": {
+          "more_options": {
+            "data": {
+              "send_wakeup_prompt": "Send wakeup prompt"
+            },
+            "data_description": {
+              "send_wakeup_prompt": "Send the coolmaster unit an empty command before issuing any actual command. This is required for serial models."
+            },
+            "name": "More options"
+          }
+        }
       }
     }
   },

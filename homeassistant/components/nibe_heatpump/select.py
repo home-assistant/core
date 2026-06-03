@@ -1,7 +1,5 @@
 """The Nibe Heat Pump select."""
 
-from __future__ import annotations
-
 from nibe.coil import Coil, CoilData
 
 from homeassistant.components.select import ENTITY_ID_FORMAT, SelectEntity

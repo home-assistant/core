@@ -1,7 +1,5 @@
 """The Liebherr integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime
 import logging
@@ -46,8 +44,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
     try:
         devices = await client.get_devices()
     except LiebherrAuthenticationError as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed("Invalid API key") from err
     except LiebherrConnectionError as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(f"Failed to connect to Liebherr API: {err}") from err
 
     # Create a coordinator for each device (may be empty if no devices)

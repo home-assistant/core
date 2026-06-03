@@ -1,7 +1,5 @@
 """Calendar platform for Mealie."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from aiomealie import Mealplan, MealplanEntryType

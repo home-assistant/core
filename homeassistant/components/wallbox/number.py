@@ -3,8 +3,6 @@
 The number component allows control of charging current.
 """
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import cast
@@ -109,7 +107,10 @@ class WallboxNumber(WallboxEntity, NumberEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._coordinator = coordinator
-        self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        self._attr_unique_id = (
+            f"{description.key}"
+            f"-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        )
 
     @property
     def native_max_value(self) -> float:

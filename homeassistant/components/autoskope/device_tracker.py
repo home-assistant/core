@@ -1,11 +1,9 @@
 """Support for Autoskope device tracking."""
 
-from __future__ import annotations
-
 from autoskope_client.constants import MANUFACTURER
 from autoskope_client.models import Vehicle
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -114,11 +112,6 @@ class AutoskopeDeviceTracker(
         if (vehicle := self._vehicle_data) and vehicle.position:
             return float(vehicle.position.longitude)
         return None
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device."""
-        return SourceType.GPS
 
     @property
     def location_accuracy(self) -> float:

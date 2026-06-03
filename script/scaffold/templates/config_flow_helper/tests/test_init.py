@@ -17,7 +17,7 @@ async def test_setup_and_remove_config_entry(
 ) -> None:
     """Test setting up and removing a config entry."""
     input_sensor_entity_id = "sensor.input"
-    NEW_DOMAIN_entity_id = f"{platform}.my_NEW_DOMAIN"
+    new_domain_entity_id = f"{platform}.my_NEW_DOMAIN"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -34,10 +34,10 @@ async def test_setup_and_remove_config_entry(
     await hass.async_block_till_done()
 
     # Check the entity is registered in the entity registry
-    assert entity_registry.async_get(NEW_DOMAIN_entity_id) is not None
+    assert entity_registry.async_get(new_domain_entity_id) is not None
 
     # Check the platform is setup correctly
-    state = hass.states.get(NEW_DOMAIN_entity_id)
+    state = hass.states.get(new_domain_entity_id)
     # TODO Check the state of the entity has changed as expected
     assert state.state == "unknown"
     assert state.attributes == {}
@@ -47,5 +47,5 @@ async def test_setup_and_remove_config_entry(
     await hass.async_block_till_done()
 
     # Check the state and entity registry entry are removed
-    assert hass.states.get(NEW_DOMAIN_entity_id) is None
-    assert entity_registry.async_get(NEW_DOMAIN_entity_id) is None
+    assert hass.states.get(new_domain_entity_id) is None
+    assert entity_registry.async_get(new_domain_entity_id) is None

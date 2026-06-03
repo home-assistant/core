@@ -1,7 +1,5 @@
 """AI Task integration for OpenAI."""
 
-from __future__ import annotations
-
 import base64
 from json import JSONDecodeError
 import logging

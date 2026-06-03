@@ -1,7 +1,5 @@
 """Support for the Netatmo cameras."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import Any, cast
@@ -12,6 +10,7 @@ from pyatmo.event import Event as NaEvent
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import ATTR_PERSONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -22,7 +21,6 @@ from .const import (
     ATTR_CAMERA_LIGHT_MODE,
     ATTR_EVENT_TYPE,
     ATTR_PERSON,
-    ATTR_PERSONS,
     CAMERA_LIGHT_MODES,
     CAMERA_TRIGGERS,
     CONF_URL_SECURITY,
@@ -44,6 +42,7 @@ from .const import (
 )
 from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
+from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +103,9 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         Camera.__init__(self)
         super().__init__(netatmo_device)
 
-        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = (
+            f"{netatmo_device.device.entity_id}-{device_type_to_str(self.device_type)}"
+        )
         self._light_state = None
 
         self._publishers.extend(
@@ -168,7 +169,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
             if event_type in [EVENT_TYPE_DISCONNECTION, EVENT_TYPE_OFF]:
                 _LOGGER.debug(
-                    "Camera %s has received %s event, turning off and idleing streaming",
+                    "Camera %s has received %s event,"
+                    " turning off and idleing streaming",
                     data["camera_id"],
                     event_type,
                 )
@@ -176,7 +178,9 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self._monitoring = False
             elif event_type in [EVENT_TYPE_CONNECTION, EVENT_TYPE_ON]:
                 _LOGGER.debug(
-                    "Camera %s has received %s event, turning on and enabling streaming if applicable",
+                    "Camera %s has received %s event,"
+                    " turning on and enabling streaming"
+                    " if applicable",
                     data["camera_id"],
                     event_type,
                 )
@@ -292,7 +296,10 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def get_video_url(self, video_id: str) -> str:
         """Get video url."""
         if self.device.is_local:
-            return f"{self.device.local_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
+            return (
+                f"{self.device.local_url}/vod/{video_id}"
+                f"/files/{self._quality}/index.m3u8"
+            )
         return f"{self.device.vpn_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
 
     def fetch_person_ids(self, persons: list[str | None]) -> list[str]:

@@ -1,7 +1,5 @@
 """The GitHub integration."""
 
-from __future__ import annotations
-
 from types import MappingProxyType
 
 from aiogithubapi import GitHubAPI

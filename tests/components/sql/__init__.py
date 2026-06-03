@@ -1,7 +1,5 @@
 """Tests for the sql component."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.recorder import CONF_DB_URL
@@ -65,7 +63,10 @@ ENTRY_CONFIG_WITH_VALUE_TEMPLATE = {
 }
 
 ENTRY_CONFIG_WITH_QUERY_TEMPLATE = {
-    CONF_QUERY: "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+    CONF_QUERY: (
+        "SELECT {% if states('sensor.input1')=='on' %}"
+        " 5 {% else %} 6 {% endif %} as value"
+    ),
     CONF_COLUMN_NAME: "value",
     CONF_ADVANCED_OPTIONS: {
         CONF_UNIT_OF_MEASUREMENT: "MiB",
@@ -146,7 +147,10 @@ ENTRY_CONFIG_INVALID_QUERY_3_OPT = {
 
 
 ENTRY_CONFIG_QUERY_READ_ONLY_CTE = {
-    CONF_QUERY: "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
+    CONF_QUERY: (
+        "WITH test AS (SELECT 1 AS row_num, 10 AS state)"
+        " SELECT state FROM test WHERE row_num = 1 LIMIT 1;"
+    ),
     CONF_COLUMN_NAME: "state",
     CONF_ADVANCED_OPTIONS: {
         CONF_UNIT_OF_MEASUREMENT: "MiB",
@@ -162,7 +166,10 @@ ENTRY_CONFIG_QUERY_NO_READ_ONLY = {
 }
 
 ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE = {
-    CONF_QUERY: "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;",
+    CONF_QUERY: (
+        "WITH test AS (SELECT state FROM states)"
+        " UPDATE states SET states.state = test.state;"
+    ),
     CONF_COLUMN_NAME: "size",
     CONF_ADVANCED_OPTIONS: {
         CONF_UNIT_OF_MEASUREMENT: "MiB",
@@ -170,7 +177,10 @@ ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE = {
 }
 
 ENTRY_CONFIG_QUERY_READ_ONLY_CTE_OPT = {
-    CONF_QUERY: "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
+    CONF_QUERY: (
+        "WITH test AS (SELECT 1 AS row_num, 10 AS state)"
+        " SELECT state FROM test WHERE row_num = 1 LIMIT 1;"
+    ),
     CONF_COLUMN_NAME: "state",
     CONF_ADVANCED_OPTIONS: {
         CONF_UNIT_OF_MEASUREMENT: "MiB",
@@ -186,7 +196,10 @@ ENTRY_CONFIG_QUERY_NO_READ_ONLY_OPT = {
 }
 
 ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE_OPT = {
-    CONF_QUERY: "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;",
+    CONF_QUERY: (
+        "WITH test AS (SELECT state FROM states)"
+        " UPDATE states SET states.state = test.state;"
+    ),
     CONF_COLUMN_NAME: "size",
     CONF_ADVANCED_OPTIONS: {
         CONF_UNIT_OF_MEASUREMENT: "MiB",
@@ -289,7 +302,10 @@ YAML_CONFIG_BINARY = {
     "sql": {
         CONF_DB_URL: "sqlite://",
         CONF_NAME: "Get Binary Value",
-        CONF_QUERY: "SELECT cast(x'd34324324230392032' as blob) as value, cast(x'd343aa' as blob) as test_attr",
+        CONF_QUERY: (
+            "SELECT cast(x'd34324324230392032' as blob) as value,"
+            " cast(x'd343aa' as blob) as test_attr"
+        ),
         CONF_COLUMN_NAME: "value",
         CONF_UNIQUE_ID: "unique_id_12345",
     }
@@ -321,8 +337,15 @@ YAML_CONFIG_ALL_TEMPLATES = {
         CONF_UNIT_OF_MEASUREMENT: "MiB/s",
         CONF_UNIQUE_ID: "unique_id_123456",
         CONF_VALUE_TEMPLATE: "{{ value }}",
-        CONF_ICON: '{% if states("sensor.input1")=="on" %} mdi:on {% else %} mdi:off {% endif %}',
-        CONF_PICTURE: '{% if states("sensor.input1")=="on" %} /local/picture1.jpg {% else %} /local/picture2.jpg {% endif %}',
+        CONF_ICON: (
+            '{% if states("sensor.input1")=="on" %}'
+            " mdi:on {% else %} mdi:off {% endif %}"
+        ),
+        CONF_PICTURE: (
+            '{% if states("sensor.input1")=="on" %}'
+            " /local/picture1.jpg"
+            " {% else %} /local/picture2.jpg {% endif %}"
+        ),
         CONF_AVAILABILITY: '{{ states("sensor.input2")=="on" }}',
         CONF_DEVICE_CLASS: SensorDeviceClass.DATA_RATE,
         CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -330,11 +353,11 @@ YAML_CONFIG_ALL_TEMPLATES = {
 }
 
 
-async def init_integration(  # pylint: disable=dangerous-default-value
+async def init_integration(
     hass: HomeAssistant,
     *,
     title: str = "Select value SQL query",
-    config: dict[str, Any] = {},
+    config: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
     entry_id: str = "1",
     source: str = SOURCE_USER,
@@ -349,7 +372,7 @@ async def init_integration(  # pylint: disable=dangerous-default-value
         title=title,
         domain=DOMAIN,
         source=source,
-        data=config,
+        data=config or {},
         options=options,
         entry_id=entry_id,
         version=2,

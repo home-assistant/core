@@ -1,7 +1,5 @@
 """OAuth2 implementations for Toon."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from homeassistant.core import HomeAssistant

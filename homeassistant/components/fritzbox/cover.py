@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!SmartHome cover devices."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.cover import (

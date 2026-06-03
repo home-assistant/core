@@ -1,6 +1,12 @@
 {
   "entity": {
     "light": {
+      "hue_grouped_light": {
+        "default": "mdi:lightbulb-group",
+        "state": {
+          "off": "mdi:lightbulb-group-off"
+        }
+      },
       "hue_light": {
         "state_attributes": {
           "effect": {
