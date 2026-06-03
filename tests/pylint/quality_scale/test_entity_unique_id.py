@@ -477,6 +477,46 @@ class MySensor(Entity):
         walker.walk(root_node)
 
 
+def test_subclass_nullifies_ancestor_value(
+    linter: UnittestLinter,
+    entity_unique_id_checker: EntityUniqueIdChecker,
+    tmp_path: Path,
+) -> None:
+    """Subclass assigning `_attr_unique_id = None` overrides a non-None ancestor."""
+    integration_dir = _make_integration(tmp_path)
+    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
+
+    astroid.parse(
+        """
+from homeassistant.helpers.entity import Entity
+
+class TestIntegrationBaseEntity(Entity):
+    _attr_unique_id = "fixed_id"
+""",
+        "homeassistant.components.test_integration.eui_entity",
+    )
+
+    root_node = _parse(
+        """
+from homeassistant.components.test_integration.eui_entity import TestIntegrationBaseEntity
+
+class MySensor(TestIntegrationBaseEntity):
+    _attr_unique_id = None
+""",
+        integration_dir,
+    )
+
+    class_node = next(
+        cls
+        for cls in root_node.nodes_of_class(nodes.ClassDef)
+        if cls.name == "MySensor"
+    )
+    walker = ASTWalker(linter)
+    walker.add_checker(entity_unique_id_checker)
+    with assert_adds_messages(linter, _expect_missing(class_node)):
+        walker.walk(root_node)
+
+
 def test_explicit_none_self_assign_fires(
     linter: UnittestLinter,
     entity_unique_id_checker: EntityUniqueIdChecker,

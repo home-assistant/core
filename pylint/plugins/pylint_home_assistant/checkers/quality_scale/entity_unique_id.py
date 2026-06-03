@@ -108,6 +108,26 @@ def _class_body_sets_attr_non_none(class_node: nodes.ClassDef) -> bool:
     return False
 
 
+def _class_body_nullifies_attr(class_node: nodes.ClassDef) -> bool:
+    """Return True if class body explicitly assigns ``_attr_unique_id = None``."""
+    for item in class_node.body:
+        match item:
+            case nodes.AnnAssign(
+                target=nodes.AssignName(name=name),
+                value=nodes.Const(value=None),
+            ) if name == _ATTR_NAME:
+                return True
+            case nodes.Assign(
+                targets=targets,
+                value=nodes.Const(value=None),
+            ) if any(
+                isinstance(t, nodes.AssignName) and t.name == _ATTR_NAME
+                for t in targets
+            ):
+                return True
+    return False
+
+
 def _stmt_is_target_assign(stmt: nodes.NodeNG) -> bool:
     """Return True if stmt is ``self._attr_unique_id = <non-None>``.
 
@@ -233,6 +253,8 @@ def _class_satisfies_rule(class_node: nodes.ClassDef) -> bool:
 
 def _unique_id_handled(class_node: nodes.ClassDef) -> bool:
     """Return True if the rule is satisfied by the class or any ancestor."""
+    if _class_body_nullifies_attr(class_node):
+        return False
     if _class_satisfies_rule(class_node):
         return True
     return any(
