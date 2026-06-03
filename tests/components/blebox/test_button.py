@@ -79,5 +79,6 @@ async def test_button_translation_key(
     state = hass.states.get(entity_id)
     assert state is not None
 
-    entity = er.async_get(hass).entities[entity_id]
+    entity = er.async_get(hass).async_get(entity_id)
+    assert entity is not None
     assert entity.translation_key == expected_translation_key
