@@ -206,15 +206,11 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn the receiver off."""
-        # Decide before awaiting: a state push can land while we await the
-        # write below, but switching this zone off never changes the others.
-        last_zone = not self._other_zones_on()
-        # Switch this zone off first (ZMOFF/Z2OFF/Z3OFF) so the receiver does
-        # not restore it the next time the chassis powers on.
+        # A zone-off leaves the chassis on, so stand it by ourselves when this
+        # is the last zone. Decided before the await, which can yield.
+        standby = bool(self._receiver.power) and not self._other_zones_on()
         await self._player.power_standby()
-        # A zone-off leaves the chassis (PW) awake. Once no zone is left on,
-        # send PWSTANDBY so the receiver actually powers down.
-        if last_zone:
+        if standby:
             await self._receiver.power_standby()
 
     async def async_set_volume_level(self, volume: float) -> None:

@@ -160,6 +160,8 @@ async def test_turn_on(
             [("Z2", "OFF"), ("PW", "STANDBY")],
             id="zone_2_last_zone",
         ),
+        # Chassis already in standby: do not send a redundant PWSTANDBY.
+        pytest.param(MAIN_ENTITY_ID, (), [("ZM", "OFF")], id="chassis_already_off"),
     ],
 )
 async def test_turn_off(
@@ -169,8 +171,9 @@ async def test_turn_off(
     active_zones: tuple[ZoneName, ...],
     expected_commands: list[tuple[str, str]],
 ) -> None:
-    """Test turning off a zone standbys the receiver once no zone is left on."""
+    """Test turning off a zone standbys the receiver only when needed."""
     state = _default_state()
+    state.power = bool(active_zones)
     for zone in ("main", "zone_2", "zone_3"):
         state.get_zone(zone).power = zone in active_zones
     mock_receiver.mock_state(state)
