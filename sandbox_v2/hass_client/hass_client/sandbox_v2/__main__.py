@@ -19,9 +19,9 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Sandbox v2 runtime process.",
     )
     parser.add_argument(
-        "--group",
+        "--name",
         required=True,
-        help="Sandbox group name (e.g. main, built-in, custom)",
+        help="Sandbox name, e.g. built-in / custom / main",
     )
     parser.add_argument(
         "--url",
@@ -52,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
     runtime = SandboxRuntime(
         url=args.url,
         token=args.token,
-        group=args.group,
+        group=args.name,
     )
     try:
         return asyncio.run(runtime.run())

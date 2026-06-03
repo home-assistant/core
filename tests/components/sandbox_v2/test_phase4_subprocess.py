@@ -36,7 +36,7 @@ async def _manager_fixture(hass: HomeAssistant):
             sys.executable,
             "-m",
             "hass_client.sandbox_v2",
-            "--group",
+            "--name",
             group,
             "--url",
             "ws://localhost:8123/api/websocket",

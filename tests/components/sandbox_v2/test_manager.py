@@ -106,7 +106,7 @@ async def test_multiple_groups_independent(hass: HomeAssistant) -> None:
             sys.executable,
             "-m",
             "hass_client.sandbox_v2",
-            "--group",
+            "--name",
             group,
             "--url",
             "ws://localhost:8123/api/websocket",
@@ -162,7 +162,7 @@ async def test_default_command_includes_token(
 
     builtin_argv = mgr._default_command("built-in")
     assert "token-built-in" in builtin_argv
-    assert "--group" in builtin_argv
+    assert "--name" in builtin_argv
     assert "built-in" in builtin_argv
 
 

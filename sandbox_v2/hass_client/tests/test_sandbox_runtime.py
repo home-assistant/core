@@ -24,13 +24,13 @@ def test_ready_marker_is_stable() -> None:
     assert READY_MARKER == "sandbox_v2:ready"
 
 
-def test_cli_parser_requires_group_url_and_token() -> None:
+def test_cli_parser_requires_name_url_and_token() -> None:
     """The CLI parser accepts the manager's argv and defaults log-level."""
     parser = _build_parser()
     args = parser.parse_args(
-        ["--group", "built-in", "--url", "ws://x", "--token", "t"]
+        ["--name", "built-in", "--url", "ws://x", "--token", "t"]
     )
-    assert args.group == "built-in"
+    assert args.name == "built-in"
     assert args.url == "ws://x"
     assert args.token == "t"
     assert args.log_level == "INFO"
