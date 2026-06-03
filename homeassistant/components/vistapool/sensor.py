@@ -17,7 +17,8 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
@@ -28,6 +29,7 @@ from .const import (
     PATH_HASPH,
     PATH_HASRX,
     PATH_HASUV,
+    SIGNAL_NEW_POOL,
 )
 from .coordinator import VistapoolDataUpdateCoordinator
 from .entity import VistapoolEntity
@@ -125,6 +127,39 @@ SENSOR_DESCRIPTIONS: tuple[VistapoolSensorEntityDescription, ...] = (
 )
 
 
+def _build_sensor_entities(
+    coordinator: VistapoolDataUpdateCoordinator,
+) -> list[VistapoolSensorEntity]:
+    """Build the sensor entities for a single pool."""
+    entities: list[VistapoolSensorEntity] = []
+    for description in SENSOR_DESCRIPTIONS:
+        if description.exists_path is not None and not coordinator.get_value(
+            description.exists_path
+        ):
+            continue
+        entities.append(VistapoolSensorEntity(coordinator, description))
+
+    # Electrolysis/hydrolysis: dynamic key based on hardware type
+    if coordinator.get_value(PATH_HASHIDRO):
+        is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
+        entities.append(
+            VistapoolSensorEntity(
+                coordinator,
+                VistapoolSensorEntityDescription(
+                    key="electrolysis" if is_electrolysis else "hydrolysis",
+                    translation_key=(
+                        "electrolysis" if is_electrolysis else "hydrolysis"
+                    ),
+                    native_unit_of_measurement="g/h",
+                    state_class=SensorStateClass.MEASUREMENT,
+                    value_path="hidro.current",
+                    value_fn=_convert_tenths,
+                ),
+            )
+        )
+    return entities
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: VistapoolConfigEntry,
@@ -132,35 +167,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up Vistapool sensors for every pool on the account."""
     entities: list[VistapoolSensorEntity] = []
-
     for coordinator in entry.runtime_data.coordinators.values():
-        for description in SENSOR_DESCRIPTIONS:
-            if description.exists_path is not None and not coordinator.get_value(
-                description.exists_path
-            ):
-                continue
-            entities.append(VistapoolSensorEntity(coordinator, description))
-
-        # Electrolysis/hydrolysis: dynamic key based on hardware type
-        if coordinator.get_value(PATH_HASHIDRO):
-            is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
-            entities.append(
-                VistapoolSensorEntity(
-                    coordinator,
-                    VistapoolSensorEntityDescription(
-                        key="electrolysis" if is_electrolysis else "hydrolysis",
-                        translation_key=(
-                            "electrolysis" if is_electrolysis else "hydrolysis"
-                        ),
-                        native_unit_of_measurement="g/h",
-                        state_class=SensorStateClass.MEASUREMENT,
-                        value_path="hidro.current",
-                        value_fn=_convert_tenths,
-                    ),
-                )
-            )
-
+        entities.extend(_build_sensor_entities(coordinator))
     async_add_entities(entities)
+
+    @callback
+    def _async_add_pool(coordinator: VistapoolDataUpdateCoordinator) -> None:
+        async_add_entities(_build_sensor_entities(coordinator))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_NEW_POOL, _async_add_pool)
+    )
 
 
 class VistapoolSensorEntity(VistapoolEntity, SensorEntity):
