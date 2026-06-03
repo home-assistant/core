@@ -15,7 +15,11 @@ from opendisplay import (
     OpenDisplayError,
 )
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_ble_device_from_address,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -83,9 +87,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
     if ble_device is None:
         raise ConfigEntryNotReady(
-            f"Could not find OpenDisplay device with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
-
     encryption_key = _get_encryption_key(entry)
 
     try:
