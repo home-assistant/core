@@ -325,7 +325,7 @@ async def test_area_temperature_sensor(
     area = area_registry.async_get_or_create("Area")
 
     # Test with no temperature sensor set
-    # Test with invalid area, area name and area id
+    # Test with invalid area, valid area name and valid area id
     for test in [("", None), (area.name, None), (area.id, None)]:
         # Test function
         info = render_to_info(hass, f'{{{{ area_temperature_sensor("{test[0]}") }}}}')
