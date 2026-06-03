@@ -1,7 +1,6 @@
 """Config flow for the Elke27 integration."""
 
 import asyncio
-from collections.abc import Mapping
 from dataclasses import asdict, is_dataclass
 from typing import Any
 

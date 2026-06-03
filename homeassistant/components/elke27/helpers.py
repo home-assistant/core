@@ -1,7 +1,5 @@
 """Shared entity helpers for the Elke27 integration."""
 
-from elke27_lib import PanelSnapshot
-
 from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
