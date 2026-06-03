@@ -81,8 +81,6 @@ SENSOR_DEFAULT_UNITS: dict[str, str] = {
     CONF_RADIATION: "µSv/h",
     CONF_NETWORK_TRAFFIC: "packets_per_second",
 }
-# Sensor types that require a unit per v15 spec
-SENSOR_REQUIRES_UNIT = frozenset(SENSOR_DEFAULT_UNITS.keys())
 
 CONF_MESSAGE = "message"
 CONF_TRIGGER_PERSON = "trigger_person"
@@ -90,7 +88,6 @@ CONF_ACTIVITIES = "activities"
 CONF_EVENTS_WINDOW_HOURS = "events_window_hours"
 
 CONF_TIMEZONE = "timezone"
-CONF_COUNTRY_CODE = "country_code"
 CONF_HINT = "hint"
 
 # Subentry type identifiers
