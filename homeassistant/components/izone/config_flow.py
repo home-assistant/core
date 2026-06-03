@@ -26,7 +26,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DATA_CONFIG, IZONE, TIMEOUT_DISCOVERY
+from .const import DATA_CONFIG, DOMAIN, TIMEOUT_DISCOVERY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ def async_note_integration_discovery(
         return
     discovery_flow.async_create_flow(
         hass,
-        IZONE,
+        DOMAIN,
         context={
             "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
             "unique_id": ctrl.device_uid,
@@ -103,7 +103,7 @@ def async_note_integration_discovery(
 def _async_blocks_runtime_integration_discovery(hass: HomeAssistant) -> bool:
     """Return True when an interactive setup flow should own the UI."""
     for flw in hass.config_entries.flow.async_progress_by_handler(
-        IZONE, include_uninitialized=True
+        DOMAIN, include_uninitialized=True
     ):
         src = flw["context"].get("source")
         if src == config_entries.SOURCE_USER:
@@ -124,7 +124,7 @@ def _flow_uid_for_matching(flow: ConfigFlow) -> str | None:
 # ---------------------------------------------------------------------------
 
 
-class IZoneConfigFlow(ConfigFlow, domain=IZONE):
+class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow: user, YAML import, HomeKit, and integration discovery."""
 
     VERSION = 2
@@ -397,7 +397,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         """Queue integration discovery (import fan-out or manual discovery pick)."""
         discovery_flow.async_create_flow(
             self.hass,
-            IZONE,
+            DOMAIN,
             context={
                 "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
                 "unique_id": uid,

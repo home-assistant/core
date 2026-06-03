@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
-from .const import DATA_CONFIG, IZONE
+from .const import DATA_CONFIG, DOMAIN
 from .discovery import async_start_discovery_service
 
 PLATFORMS = [Platform.CLIMATE]
@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the iZone component config."""
-    if conf := config.get(IZONE):
+    if conf := config.get(DOMAIN):
         hass.data[DATA_CONFIG] = conf
 
         hass.async_create_task(
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except OSError as err:
         raise ConfigEntryNotReady("iZone discovery service failed to start") from err
 
-    if entry.unique_id == IZONE:
+    if entry.unique_id == DOMAIN:
         # Legacy v1-migrated entry: resolve to a real controller UID at setup time.
         #
         # Doing this work here (rather than in async_migrate_entry) is intentional:
@@ -77,9 +77,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         excluded_uids: set[str] = set(conf.get(CONF_EXCLUDE, [])) if conf else set()
         configured_uids = {
             config_entry.unique_id
-            for config_entry in hass.config_entries.async_entries(IZONE)
+            for config_entry in hass.config_entries.async_entries(DOMAIN)
             if config_entry.entry_id != entry.entry_id
-            and config_entry.unique_id not in (None, IZONE)
+            and config_entry.unique_id not in (None, DOMAIN)
         }
         eligible = [
             controller
