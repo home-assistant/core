@@ -156,6 +156,38 @@ async def test_user_pools_snapshot_adds_new_pool(
     assert device_registry.async_get_device(identifiers={(DOMAIN, _SECOND_POOL_ID)})
 
 
+async def test_user_pools_snapshot_retries_new_pool_after_refresh_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a failed first refresh on a new pool is not orphaned and retries next snapshot."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_vistapool_client.get_pools.return_value = {
+        MOCK_POOL_ID: MOCK_POOL_NAME,
+        _SECOND_POOL_ID: _SECOND_POOL_NAME,
+    }
+    mock_vistapool_client.fetch_pool_data.side_effect = AquariteError("refresh failed")
+    snapshot_cb = mock_vistapool_client.subscribe_user_pools_resilient.call_args.args[0]
+    snapshot_cb([MOCK_POOL_ID, _SECOND_POOL_ID])
+    await hass.async_block_till_done()
+
+    assert set(mock_config_entry.runtime_data.coordinators) == {MOCK_POOL_ID}
+
+    mock_vistapool_client.fetch_pool_data.side_effect = None
+    mock_vistapool_client.fetch_pool_data.return_value = {}
+    snapshot_cb([MOCK_POOL_ID, _SECOND_POOL_ID])
+    await hass.async_block_till_done()
+
+    assert set(mock_config_entry.runtime_data.coordinators) == {
+        MOCK_POOL_ID,
+        _SECOND_POOL_ID,
+    }
+
+
 async def test_user_pools_snapshot_removes_stale_pool(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

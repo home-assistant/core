@@ -131,6 +131,21 @@ async def async_remove_config_entry_device(
     return not pool_ids.intersection(entry.runtime_data.coordinators)
 
 
+async def _async_initial_refresh(
+    coordinator: VistapoolDataUpdateCoordinator, *, first: bool
+) -> None:
+    """Populate coordinator data for a pool; raise if it would stay empty."""
+    if first:
+        await coordinator.async_config_entry_first_refresh()
+        return
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="update_failed",
+        )
+
+
 async def _async_add_coordinator(
     hass: HomeAssistant,
     entry: VistapoolConfigEntry,
@@ -144,16 +159,16 @@ async def _async_add_coordinator(
         hass, entry, entry.runtime_data.auth, entry.runtime_data.api, pool_id, pool_name
     )
     entry.runtime_data.coordinators[pool_id] = coordinator
-    if first:
-        await coordinator.async_config_entry_first_refresh()
-    else:
-        await coordinator.async_refresh()
     try:
-        await coordinator.subscribe()
-    except AquariteError as exc:
+        await _async_initial_refresh(coordinator, first=first)
+        try:
+            await coordinator.subscribe()
+        except AquariteError as exc:
+            raise ConfigEntryNotReady from exc
+    except ConfigEntryNotReady:
         del entry.runtime_data.coordinators[pool_id]
         await coordinator.async_shutdown()
-        raise ConfigEntryNotReady from exc
+        raise
     entry.async_on_unload(coordinator.async_shutdown)
     return coordinator
 
