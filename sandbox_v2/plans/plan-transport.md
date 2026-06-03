@@ -141,11 +141,22 @@ Struct↔dict / ListValue↔list helpers (`struct_to_dict` / `dict_to_struct`):
 `service_data`, `target`, state `attributes`, `capabilities`,
 flow `errors`/`context`, and the serialized voluptuous schema.
 
+**Decision (2026-06-03, ratified after T1's STATUS handoff): the registry is
+owned by the codec, not by `Channel.register`.** Each side builds a
+`type → (request_cls, result_cls)` map from its `_proto` module and
+constructs `ProtobufCodec(registry)` / `JsonCodec(registry)`. This preserves
+the plan's stated safety property — the concurrency-critical `Channel` core
+stays fully codec-agnostic; the codec is the only thing that knows about
+proto types.
+
+For responses to be decodable without per-call state, the proto `Frame`
+envelope carries `type` on response frames too (already a field in the
+envelope; populate it on the response side). The codec looks up the result
+class from `frame.type` on both encode and decode.
+
 Implications:
-- `Channel.register(type, handler)` gains the proto class pair so the channel
-  can deserialize `request` → message before calling the handler and serialize
-  the handler's return message → `result`. The pending-side `call()` similarly
-  takes/returns proto messages.
+- `Channel.register(type, handler)` does NOT change signature; codec
+  resolves the type → class pair internally.
 - `SandboxEntityDescription.from_payload(dict)` and the various
   `_*_from_payload` / `_marshal_result` helpers are replaced by proto
   construction; the dataclass either wraps or is supplanted by the proto type.
