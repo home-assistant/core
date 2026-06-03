@@ -1,5 +1,6 @@
 """Camera platform for Xthings Cloud."""
 
+import asyncio
 from typing import Any
 
 from ha_xthings_cloud import KvsSignalingClient
@@ -66,11 +67,9 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self._attr_supported_features = CameraEntityFeature.STREAM
         self._cached_image: bytes | None = None
         self._cached_snapshot_url: str | None = None
-        self._snapshot_task: Any | None = None
+        self._snapshot_task: asyncio.Task | None = None
         self._kvs_sessions: dict[str, Any] = {}
-        self._pending_candidates: dict[
-            str, list[tuple[str, str | None, int | None]]
-        ] = {}
+        self._pending_candidates: dict[str, list[RTCIceCandidateInit]] = {}
 
     @property
     def device_data(self) -> dict[str, Any]:
@@ -127,6 +126,17 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
     async def _async_fetch_image(self, url: str) -> bytes | None:
         return await self.coordinator.client.async_get_snapshot(url)
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up tasks and sessions when entity is removed."""
+        if self._snapshot_task and not self._snapshot_task.done():
+            self._snapshot_task.cancel()
+
+        for session_id in list(self._kvs_sessions):
+            self.close_webrtc_session(session_id)
+
+        self._pending_candidates.clear()
+        await super().async_will_remove_from_hass()
+
     # --- WebRTC support (HA 2024.1+ only) ---
 
     async def async_handle_async_webrtc_offer(
@@ -163,12 +173,12 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                         WebRTCCandidate(
                             candidate=RTCIceCandidateInit(
                                 candidate=cand.get("candidate", ""),
-                                sdp_mid=cand.get("sdpMid", ""),
-                                sdp_m_line_index=cand.get("sdpMLineIndex", 0),
+                                sdp_mid=cand.get("sdpMid"),
+                                sdp_m_line_index=cand.get("sdpMLineIndex"),
                             )
                         )
                     )
-                except (KeyError, ValueError, TypeError) as err:
+                except (ValueError, TypeError) as err:
                     LOGGER.debug(
                         "Failed to convert ICE candidate: %s, candidate data: %s",
                         err,
@@ -181,7 +191,11 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             )
 
             for cand in self._pending_candidates.pop(session_id, []):
-                await kvs_client.async_send_ice_candidate(*cand)
+                await kvs_client.async_send_ice_candidate(
+                    candidate=cand.candidate,
+                    sdp_mid=cand.sdp_mid,
+                    sdp_m_line_index=cand.sdp_m_line_index,
+                )
 
             if answer_sdp:
                 send_message(WebRTCAnswer(answer=answer_sdp))
@@ -208,9 +222,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 sdp_m_line_index=candidate.sdp_m_line_index,
             )
         else:
-            self._pending_candidates.setdefault(session_id, []).append(
-                (candidate.candidate, candidate.sdp_mid, candidate.sdp_m_line_index)
-            )
+            self._pending_candidates.setdefault(session_id, []).append(candidate)
             LOGGER.debug("KVS: Cached ICE candidate for session %s", session_id)
 
     def close_webrtc_session(self, session_id: str) -> None:

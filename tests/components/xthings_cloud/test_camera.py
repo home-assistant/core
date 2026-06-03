@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
+from webrtc_models import RTCIceCandidateInit
+
 from homeassistant.components.camera import WebRTCAnswer, WebRTCError, async_get_image
 from homeassistant.const import (
     STATE_UNAVAILABLE,
@@ -144,6 +146,125 @@ async def test_webrtc_offer(
         call_arg = mock_send_message.call_args[0][0]
         assert isinstance(call_arg, WebRTCAnswer)
         assert call_arg.answer == "mock_answer_sdp"
+
+
+async def test_webrtc_candidate_caching_and_flush(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test ICE candidate caching and flushing on offer."""
+    mock_api_client.async_get_camera_webrtc.return_value = {
+        "region": "us-east-1",
+        "channel_arn": "arn:aws:kinesisvideo:us-east-1:111111111111:channel/test/123",
+        "viewer": {
+            "AccessKeyId": "test",
+            "SecretAccessKey": "test",
+            "SessionToken": "test",
+        },
+    }
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
+        await setup_integration(hass, mock_config_entry)
+
+    camera_entity = None
+    for entity in hass.data[Platform.CAMERA].entities:
+        if entity.entity_id == "camera.front_door_camera":
+            camera_entity = entity
+            break
+    assert camera_entity is not None
+
+    session_id = "mock_session_id"
+    candidate = RTCIceCandidateInit(
+        candidate="mock_candidate_string",
+        sdp_mid="mock_sdp_mid",
+        sdp_m_line_index=0,
+    )
+
+    # Call async_on_webrtc_candidate before session exists
+    await camera_entity.async_on_webrtc_candidate(session_id, candidate)
+
+    assert session_id in camera_entity._pending_candidates
+    assert len(camera_entity._pending_candidates[session_id]) == 1
+
+    with patch(
+        "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
+    ) as mock_kvs_client_class:
+        mock_kvs_client = mock_kvs_client_class.return_value
+        mock_kvs_client.async_get_answer_sdp = AsyncMock(return_value="mock_answer_sdp")
+        mock_kvs_client.async_send_ice_candidate = AsyncMock()
+
+        await camera_entity.async_handle_async_webrtc_offer(
+            offer_sdp="mock_offer_sdp",
+            session_id=session_id,
+            send_message=MagicMock(),
+        )
+
+        # Verify candidate was flushed to KVS client
+        mock_kvs_client.async_send_ice_candidate.assert_called_once_with(
+            candidate="mock_candidate_string",
+            sdp_mid="mock_sdp_mid",
+            sdp_m_line_index=0,
+        )
+        assert session_id not in camera_entity._pending_candidates
+
+
+async def test_webrtc_session_cleanup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test WebRTC session cleanup clears cache and closes client."""
+    mock_api_client.async_get_camera_webrtc.return_value = {
+        "region": "us-east-1",
+        "channel_arn": "arn:aws:kinesisvideo:us-east-1:111111111111:channel/test/123",
+        "viewer": {
+            "AccessKeyId": "test",
+            "SecretAccessKey": "test",
+            "SessionToken": "test",
+        },
+    }
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
+        await setup_integration(hass, mock_config_entry)
+
+    camera_entity = None
+    for entity in hass.data[Platform.CAMERA].entities:
+        if entity.entity_id == "camera.front_door_camera":
+            camera_entity = entity
+            break
+    assert camera_entity is not None
+
+    session_id = "mock_session_id"
+    candidate = RTCIceCandidateInit(
+        candidate="mock_candidate_string",
+        sdp_mid="mock_sdp_mid",
+        sdp_m_line_index=0,
+    )
+
+    await camera_entity.async_on_webrtc_candidate(session_id, candidate)
+
+    with patch(
+        "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
+    ) as mock_kvs_client_class:
+        mock_kvs_client = mock_kvs_client_class.return_value
+        mock_kvs_client.async_get_answer_sdp = AsyncMock(return_value="mock_answer_sdp")
+        mock_kvs_client.async_close = AsyncMock()
+
+        await camera_entity.async_handle_async_webrtc_offer(
+            offer_sdp="mock_offer_sdp",
+            session_id=session_id,
+            send_message=MagicMock(),
+        )
+
+        assert session_id in camera_entity._kvs_sessions
+
+        # Test close_webrtc_session
+        camera_entity.close_webrtc_session(session_id)
+
+        assert session_id not in camera_entity._kvs_sessions
+        assert session_id not in camera_entity._pending_candidates
+
+        await hass.async_block_till_done()
+        mock_kvs_client.async_close.assert_called_once()
 
 
 async def test_webrtc_offer_kvs_error(
