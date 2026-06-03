@@ -80,9 +80,7 @@ async def async_setup_entry(
     """Set up Kii Audio media player entities."""
     coordinator = config_entry.runtime_data
     async_add_entities(
-        KiiAudioZoneMediaPlayer(coordinator, zone)
-        for zone in coordinator.data.get("zones", [])
-        if isinstance(zone, dict) and isinstance(zone.get("zoneId"), str)
+        KiiAudioZoneMediaPlayer(coordinator, zone) for zone in coordinator.data["zones"]
     )
 
 
@@ -117,19 +115,16 @@ class KiiAudioZoneMediaPlayer(
     @property
     def volume_level(self) -> float | None:
         """Return volume level, range 0..1."""
-        volume = self._audio.get("volume")
-        if isinstance(volume, bool) or not isinstance(volume, int | float):
+        try:
+            volume = float(self._audio["volume"])
+        except KeyError, TypeError, ValueError:
             return None
-        return max(
-            0.0,
-            min(1.0, (float(volume) - MIN_VOLUME) / (MAX_VOLUME - MIN_VOLUME)),
-        )
+        return max(0.0, min(1.0, (volume - MIN_VOLUME) / (MAX_VOLUME - MIN_VOLUME)))
 
     @property
     def is_volume_muted(self) -> bool | None:
         """Return whether the zone is muted."""
-        mute = self._audio.get("mute")
-        return mute if isinstance(mute, bool) else None
+        return self._audio.get("mute")
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Request a zone volume change."""
@@ -146,8 +141,9 @@ class KiiAudioZoneMediaPlayer(
     @property
     def source(self) -> str | None:
         """Return the active source."""
-        source = self._audio.get("source")
-        if not isinstance(source, str):
+        try:
+            source: str = self._audio["source"]
+        except KeyError:
             return None
         return SOURCE_NAMES.get(source, source)
 
@@ -165,20 +161,22 @@ class KiiAudioZoneMediaPlayer(
 
     async def async_volume_up(self) -> None:
         """Request a zone volume increase."""
-        volume = self._audio.get("volume")
-        if isinstance(volume, bool) or not isinstance(volume, int | float):
+        try:
+            volume = float(self._audio["volume"])
+        except KeyError, TypeError, ValueError:
             return
         await self.coordinator.async_set_zone_volume(
-            self._zone_id, min(MAX_VOLUME, float(volume) + VOLUME_STEP)
+            self._zone_id, min(MAX_VOLUME, volume + VOLUME_STEP)
         )
 
     async def async_volume_down(self) -> None:
         """Request a zone volume decrease."""
-        volume = self._audio.get("volume")
-        if isinstance(volume, bool) or not isinstance(volume, int | float):
+        try:
+            volume = float(self._audio["volume"])
+        except KeyError, TypeError, ValueError:
             return
         await self.coordinator.async_set_zone_volume(
-            self._zone_id, max(MIN_VOLUME, float(volume) - VOLUME_STEP)
+            self._zone_id, max(MIN_VOLUME, volume - VOLUME_STEP)
         )
 
     async def async_turn_on(self) -> None:
@@ -192,23 +190,20 @@ class KiiAudioZoneMediaPlayer(
     @property
     def _zone(self) -> dict[str, Any]:
         """Return the latest zone data."""
-        zones = self.coordinator.data.get("zones", [])
-        for zone in zones:
-            if isinstance(zone, dict) and zone.get("zoneId") == self._zone_id:
+        for zone in self.coordinator.data["zones"]:
+            if zone["zoneId"] == self._zone_id:
                 return zone
         return {}
 
     @property
     def _settings(self) -> dict[str, Any]:
         """Return the latest zone settings."""
-        settings = self._zone.get("settings")
-        return settings if isinstance(settings, dict) else {}
+        return self._zone.get("settings", {})
 
     @property
     def _audio(self) -> dict[str, Any]:
         """Return the latest zone audio settings."""
-        audio = self._settings.get("audio")
-        return audio if isinstance(audio, dict) else {}
+        return self._settings.get("audio", {})
 
     @property
     def _selectable_source_ids(self) -> list[str]:
@@ -228,14 +223,7 @@ class KiiAudioZoneMediaPlayer(
     @property
     def _has_kii_control(self) -> bool:
         """Return whether this zone has a Kii Control device."""
-        kiilink = self._zone.get("kiilink")
-        if not isinstance(kiilink, dict):
-            return False
-        devices = kiilink.get("devices")
-        if not isinstance(devices, list):
-            return False
+        devices = self._zone.get("kiilink", {}).get("devices", [])
         return any(
-            isinstance(device, dict)
-            and device.get("productId") == KII_CONTROL_PRODUCT_ID
-            for device in devices
+            device.get("productId") == KII_CONTROL_PRODUCT_ID for device in devices
         )

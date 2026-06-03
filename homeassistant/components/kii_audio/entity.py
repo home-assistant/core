@@ -10,25 +10,15 @@ from .coordinator import KiiAudioCoordinator
 
 def zone_name(zone: dict[str, Any]) -> str | None:
     """Return the configured zone name."""
-    settings = zone.get("settings")
-    if not isinstance(settings, dict):
-        return None
-    name = settings.get("zoneName")
-    return name if isinstance(name, str) else None
+    return zone.get("settings", {}).get("zoneName")
 
 
 def zone_model(zone: dict[str, Any]) -> str | None:
     """Return a model summary for devices in a Kii zone."""
-    devices = zone.get("devices")
-    if not isinstance(devices, list):
-        return None
-
-    models = []
-    for device in devices:
-        if not isinstance(device, dict):
-            continue
+    models: list[str] = []
+    for device in zone.get("devices", []):
         model = device.get("modelName")
-        if isinstance(model, str) and model and model not in models:
+        if model and model not in models:
             models.append(model)
 
     if not models:
