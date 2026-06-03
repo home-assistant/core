@@ -227,7 +227,9 @@ async def test_spaceapi_sensor_non_numeric_skipped(
     resp = await client.get(URL_API_SPACEAPI)
     data = await resp.json()
 
-    assert data["sensors"]["temperature"] == []
+    # The only configured sensor type resolves to nothing, so it is omitted
+    # entirely rather than emitting an empty array.
+    assert "sensors" not in data
 
 
 async def test_spaceapi_sensor_default_unit(

@@ -582,17 +582,22 @@ class APISpaceApiView(HomeAssistantView):
         spaceapi: dict[str, Any],
         entry: SpaceAPIConfigEntry,
     ) -> dict[str, list[_SensorEntry | _WindEntry]]:
-        """Build sensors dict including wind subentries."""
-        sensors: dict[str, list[str]] = spaceapi[CONF_SENSORS]
-        sensors_data: dict[str, list[_SensorEntry | _WindEntry]] = {
-            sensor_type: [
+        """Build sensors dict including wind subentries.
+
+        Sensor types that resolve to no values are omitted so the output never
+        contains empty arrays.
+        """
+        sensors: dict[str, list[str]] = spaceapi.get(CONF_SENSORS, {})
+        sensors_data: dict[str, list[_SensorEntry | _WindEntry]] = {}
+        for sensor_type, entity_ids in sensors.items():
+            entries: list[_SensorEntry | _WindEntry] = [
                 sd
                 for entity_id in entity_ids
                 if (sd := self.get_sensor_data(hass, sensor_type, entity_id))
                 is not None
             ]
-            for sensor_type, entity_ids in sensors.items()
-        }
+            if entries:
+                sensors_data[sensor_type] = entries
 
         wind_sensors: list[_SensorEntry | _WindEntry] = []
         for se in entry.subentries.values():
@@ -727,7 +732,7 @@ class APISpaceApiView(HomeAssistantView):
         if linked_spaces:
             data[ATTR_API_LINKED_SPACES] = linked_spaces
 
-        if isinstance(spaceapi.get(CONF_SENSORS), dict):
-            data[ATTR_API_SENSORS] = self._build_sensors(hass, spaceapi, entry)
+        if sensors := self._build_sensors(hass, spaceapi, entry):
+            data[ATTR_API_SENSORS] = sensors
 
         return self.json(data)
