@@ -28,6 +28,30 @@ async def test_upnp_sensors(
     assert hass.states.get("sensor.mock_name_upload_speed").state == "unknown"
     assert hass.states.get("sensor.mock_name_packet_download_speed").state == "unknown"
     assert hass.states.get("sensor.mock_name_packet_upload_speed").state == "unknown"
+    assert (
+        hass.states.get(
+            "sensor.mock_name_download_speed_without_rollover_handling"
+        ).state
+        == "unknown"
+    )
+    assert (
+        hass.states.get(
+            "sensor.mock_name_upload_speed_without_rollover_handling"
+        ).state
+        == "unknown"
+    )
+    assert (
+        hass.states.get(
+            "sensor.mock_name_packet_download_speed_without_rollover_handling"
+        ).state
+        == "unknown"
+    )
+    assert (
+        hass.states.get(
+            "sensor.mock_name_packet_upload_speed_without_rollover_handling"
+        ).state
+        == "unknown"
+    )
 
     # Second poll.
     mock_igd_device: IgdDevice = mock_config_entry.igd_device
@@ -45,6 +69,10 @@ async def test_upnp_sensors(
         kibibytes_per_sec_sent=20.0,
         packets_per_sec_received=30.0,
         packets_per_sec_sent=40.0,
+        kibibytes_per_sec_received_no_rollover=10.0,
+        kibibytes_per_sec_sent_no_rollover=20.0,
+        packets_per_sec_received_no_rollover=30.0,
+        packets_per_sec_sent_no_rollover=40.0,
         port_mapping_number_of_entries=0,
     )
 
@@ -62,3 +90,53 @@ async def test_upnp_sensors(
     assert hass.states.get("sensor.mock_name_upload_speed").state == "20.0"
     assert hass.states.get("sensor.mock_name_packet_download_speed").state == "30.0"
     assert hass.states.get("sensor.mock_name_packet_upload_speed").state == "40.0"
+    assert (
+        hass.states.get(
+            "sensor.mock_name_download_speed_without_rollover_handling"
+        ).state
+        == "10.0"
+    )
+    assert (
+        hass.states.get(
+            "sensor.mock_name_upload_speed_without_rollover_handling"
+        ).state
+        == "20.0"
+    )
+    assert (
+        hass.states.get(
+            "sensor.mock_name_packet_download_speed_without_rollover_handling"
+        ).state
+        == "30.0"
+    )
+    assert (
+        hass.states.get(
+            "sensor.mock_name_packet_upload_speed_without_rollover_handling"
+        ).state
+        == "40.0"
+    )
+
+
+async def test_upnp_sensors_disabled_by_default(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that "without rollover handling" sensors are disabled by default."""
+    assert (
+        hass.states.get("sensor.mock_name_download_speed_without_rollover_handling")
+        is None
+    )
+    assert (
+        hass.states.get("sensor.mock_name_upload_speed_without_rollover_handling")
+        is None
+    )
+    assert (
+        hass.states.get(
+            "sensor.mock_name_packet_download_speed_without_rollover_handling"
+        )
+        is None
+    )
+    assert (
+        hass.states.get(
+            "sensor.mock_name_packet_upload_speed_without_rollover_handling"
+        )
+        is None
+    )
