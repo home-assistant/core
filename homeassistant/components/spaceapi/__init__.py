@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ADDRESS,
+    CONF_COUNTRY_CODE,
     CONF_EMAIL,
     CONF_ENTITY_ID,
     CONF_LOCATION,
@@ -67,7 +68,6 @@ from .const import (
     CONF_AREA_SQUARE_METERS,
     CONF_CAM,
     CONF_CONTACT,
-    CONF_COUNTRY_CODE,
     CONF_DOOR_LOCKED,
     CONF_EVENTS_WINDOW_HOURS,
     CONF_FACEBOOK,
@@ -120,7 +120,6 @@ from .const import (
     CONF_WIND_SPEED,
     DOMAIN,
     SENSOR_DEFAULT_UNITS,
-    SENSOR_REQUIRES_UNIT,
     SENSOR_TYPES,
     SPACEAPI_COMPATIBILITY,
     SUBENTRY_LINK,
@@ -296,7 +295,12 @@ type SpaceAPIConfigEntry = ConfigEntry[SpaceAPIData]
 
 
 def _merge_config(entry: SpaceAPIConfigEntry) -> dict[str, Any]:
-    """Deep-merge entry.data and entry.options into a single config dict."""
+    """Merge entry.data and entry.options into a single config dict.
+
+    Top-level keys present in both as dicts are merged one level deep, with
+    option values overriding data values. Nested dicts beyond the first level
+    and non-dict values are replaced, not merged recursively.
+    """
     config: dict[str, Any] = dict(entry.data)
     for key, value in entry.options.items():
         if key in config and isinstance(config[key], dict) and isinstance(value, dict):
@@ -307,11 +311,14 @@ def _merge_config(entry: SpaceAPIConfigEntry) -> dict[str, Any]:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up SpaceAPI from YAML config (import path)."""
-    if DOMAIN not in config:
-        return True
+    """Set up SpaceAPI."""
+    # Register the view once for the lifetime of Home Assistant. Doing this in
+    # async_setup_entry would re-register the same route on every entry reload
+    # and raise on the duplicate URL.
+    hass.http.register_view(APISpaceApiView())
 
-    hass.async_create_task(_async_import_yaml(hass, config[DOMAIN]))
+    if DOMAIN in config:
+        hass.async_create_task(_async_import_yaml(hass, config[DOMAIN]))
     return True
 
 
@@ -345,7 +352,6 @@ async def _async_import_yaml(hass: HomeAssistant, conf: dict[str, Any]) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: SpaceAPIConfigEntry) -> bool:
     """Set up SpaceAPI from a config entry."""
     entry.runtime_data = SpaceAPIData(config=_merge_config(entry))
-    hass.http.register_view(APISpaceApiView(entry.entry_id))
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
@@ -367,12 +373,8 @@ class APISpaceApiView(HomeAssistantView):
 
     url = URL_API_SPACEAPI
     name = "api:spaceapi"
-
-    def __init__(self, entry_id: str) -> None:
-        """Initialize the SpaceAPI view."""
-        self.requires_auth = False
-        self.cors_allowed = True
-        self._entry_id = entry_id
+    requires_auth = False
+    cors_allowed = True
 
     @staticmethod
     def get_sensor_data(
@@ -400,14 +402,13 @@ class APISpaceApiView(HomeAssistantView):
                 ATTR_NAME: sensor_state.name,
                 ATTR_API_VALUE: state,
             }
-            # Unit: use entity's unit if present, else type default, skip if none available but required
+            # Unit: use the entity's unit if present, else fall back to the
+            # type default. Types without a default simply omit the unit.
             unit: str | None = sensor_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             if unit is None:
                 unit = SENSOR_DEFAULT_UNITS.get(sensor_type)
             if unit is not None:
                 sensor_data[ATTR_API_UNIT] = unit
-            elif sensor_type in SENSOR_REQUIRES_UNIT:
-                return None  # Skip rather than emit invalid data
 
         if ATTR_API_SENSOR_LOCATION in sensor_state.attributes:
             sensor_data[ATTR_LOCATION] = sensor_state.attributes[
@@ -513,16 +514,19 @@ class APISpaceApiView(HomeAssistantView):
         start_time = now - timedelta(
             hours=int(window_hours) if window_hours is not None else 24
         )
-        history = await get_recorder_instance(hass).async_add_executor_job(
-            get_significant_states,
-            hass,
-            start_time,
-            None,
-            list(activity_ids),
-            None,
-            False,
-            True,
-        )
+        # recorder is only an after_dependency, so it may not be loaded.
+        history: dict[str, Any] = {}
+        with suppress(KeyError):
+            history = await get_recorder_instance(hass).async_add_executor_job(
+                get_significant_states,
+                hass,
+                start_time,
+                None,
+                list(activity_ids),
+                None,
+                False,
+                True,
+            )
         events: list[_EventEntry] = []
         for entity_id, states in history.items():
             event_type = entity_id.split(".", 1)[1]
@@ -579,10 +583,9 @@ class APISpaceApiView(HomeAssistantView):
                 with suppress(ValueError):
                     wind_field: _WindField = {
                         ATTR_API_VALUE: float(field_state.state),
-                        ATTR_API_UNIT: field_state.attributes.get(
-                            ATTR_UNIT_OF_MEASUREMENT, ""
-                        ),
                     }
+                    if unit := field_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT):
+                        wind_field[ATTR_API_UNIT] = unit
                     wind_entry[field] = wind_field
                     if field == CONF_WIND_SPEED:
                         speed_state = field_state
@@ -604,9 +607,11 @@ class APISpaceApiView(HomeAssistantView):
         """Get SpaceAPI data."""
         hass = request.app[KEY_HASS]
 
-        entry = hass.config_entries.async_get_entry(self._entry_id)
-        if entry is None:
-            return self.json_message("Entry not found", 404)
+        # single_config_entry integration: there is at most one loaded entry.
+        entries = hass.config_entries.async_loaded_entries(DOMAIN)
+        if not entries:
+            return self.json_message("SpaceAPI not configured", 404)
+        entry = entries[0]
         spaceapi: dict[str, Any] = entry.runtime_data.config
 
         data: dict[str, Any] = {

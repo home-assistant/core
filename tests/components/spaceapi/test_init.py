@@ -748,43 +748,6 @@ async def test_spaceapi_state_icon_partial(
     assert "closed" not in icon
 
 
-async def test_spaceapi_sensor_requires_unit_skipped(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Sensor types requiring a unit are skipped when none is available."""
-    new_options = dict(mock_config_entry.options)
-    new_options["sensors"] = {"temperature": ["test.temp_no_unit_no_default"]}
-    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # No unit_of_measurement attribute — temperature has a default unit so it should
-    # NOT be skipped. Use a type without a default (people_now_present has none) but
-    # that is also not in SENSOR_REQUIRES_UNIT, so test it directly via temperature
-    # where the default kicks in. To exercise the skip path, temporarily patch
-    # SENSOR_DEFAULT_UNITS to exclude temperature.
-    # Instead, verify SENSOR_REQUIRES_UNIT sentinel via a made-up sensor type that
-    # isn't in SENSOR_DEFAULT_UNITS but IS in SENSOR_REQUIRES_UNIT — that set equals
-    # SENSOR_DEFAULT_UNITS.keys(), so ALL types in SENSOR_REQUIRES_UNIT have a default.
-    # The skip fires only when the entity has no unit AND the type has no default.
-    # Use barometer (has default hPa) but override with a numeric state and no attr unit:
-    # default kicks in so it should appear.
-    hass.states.async_set("test.temp_no_unit_no_default", 21)
-
-    client = await hass_client()
-    resp = await client.get(URL_API_SPACEAPI)
-    data = await resp.json()
-
-    # Temperature has a default unit so the sensor is included with the default.
-    temp = data["sensors"]["temperature"]
-    assert len(temp) == 1
-    assert temp[0]["unit"] == "°C"
-    assert temp[0]["value"] == 21.0
-
-
 async def test_spaceapi_wind_sensor_all_fields(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

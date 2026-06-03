@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_COUNTRY_CODE,
     CONF_EMAIL,
     CONF_ENTITY_ID,
     CONF_LOCATION,
@@ -49,7 +50,6 @@ from .const import (
     CONF_CAM,
     CONF_CARBONDIOXIDE,
     CONF_CONTACT,
-    CONF_COUNTRY_CODE,
     CONF_DOOR_LOCKED,
     CONF_EVENTS_WINDOW_HOURS,
     CONF_FACEBOOK,
