@@ -1,7 +1,5 @@
 """Pushbullet platform for sensor component."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_NAME, MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, callback
@@ -117,7 +115,8 @@ class PushBulletNotificationSensor(SensorEntity):
         """
         try:
             value = self.pb_provider.data[self.entity_description.key]
-            # Truncate state value to MAX_LENGTH_STATE_STATE while preserving full content in attributes
+            # Truncate state value to MAX_LENGTH_STATE_STATE
+            # while preserving full content in attributes
             if isinstance(value, str) and len(value) > MAX_LENGTH_STATE_STATE:
                 self._attr_native_value = value[: MAX_LENGTH_STATE_STATE - 3] + "..."
             else:

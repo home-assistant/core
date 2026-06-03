@@ -1,7 +1,5 @@
 """Binary sensor support for Apple TV."""
 
-from __future__ import annotations
-
 from pyatv.const import FeatureName, FeatureState, KeyboardFocusState
 from pyatv.interface import AppleTV, KeyboardListener
 
@@ -65,7 +63,7 @@ class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener
         # Listen to keyboard updates
         atv.keyboard.listener = self
         # Set initial state based on current focus state
-        self._update_state(atv.keyboard.text_focus_state == KeyboardFocusState.Focused)
+        self._update_state(atv.keyboard.text_focus_state is KeyboardFocusState.Focused)
 
     @callback
     def async_device_disconnected(self) -> None:
@@ -80,7 +78,7 @@ class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener
 
         This is a callback function from pyatv.interface.KeyboardListener.
         """
-        self._update_state(new_state == KeyboardFocusState.Focused)
+        self._update_state(new_state is KeyboardFocusState.Focused)
 
     def _update_state(self, new_state: bool) -> None:
         """Update and report."""

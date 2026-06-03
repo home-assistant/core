@@ -56,7 +56,7 @@
           "keepalive": "A value less than 90 seconds is advised.",
           "password": "The password to log in to your MQTT broker.",
           "port": "The port your MQTT broker listens to. For example 1883.",
-          "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
+          "protocol": "The MQTT protocol version that is used. Note that Home Assistant will silently change to version 5 if your broker supports it.",
           "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT broker's certificate.",
           "set_client_cert": "Enable and select **Next** to set a client certificate and private key to authenticate against your MQTT broker.",
           "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
@@ -197,9 +197,11 @@
             },
             "mqtt_settings": {
               "data": {
+                "message_expiry_interval": "Message Expiry Interval",
                 "qos": "QoS"
               },
               "data_description": {
+                "message_expiry_interval": "Retention time interval for published message.",
                 "qos": "The Quality of Service value the device's entities should use."
               },
               "name": "MQTT settings"
@@ -376,6 +378,7 @@
             "support_duration": "Duration support",
             "support_volume_set": "Set volume support",
             "supported_color_modes": "Supported color modes",
+            "timezone": "Time zone",
             "url_template": "URL template",
             "url_topic": "URL topic",
             "value_template": "Value template"
@@ -428,6 +431,7 @@
             "support_duration": "The siren supports setting a duration in second. The `duration` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_duration)",
             "support_volume_set": "The siren supports setting a volume. The `volume_level` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_volume_set)",
             "supported_color_modes": "A list of color modes supported by the light. Possible color modes are On/Off, Brightness, Color temperature, HS, XY, RGB, RGBW, RGBWW, White. Note that if On/Off or Brightness are used, that must be the only value in the list. [Learn more.]({url}#supported_color_modes)",
+            "timezone": "Set to a valid [IANA time zone identifier]({tz_abbr_url}). Do not set this option if the date/time structure is providing time zone information via the status update.",
             "url_template": "[Template]({value_templating_url}) to extract an URL from the received URL topic payload value. [Learn more.]({url}#url_template)",
             "url_topic": "The MQTT topic subscribed to receive messages containing the image URL. [Learn more.]({url}#url_topic)",
             "value_template": "Defines a [template]({value_templating_url}) to extract the {platform} entity value. [Learn more.]({url}#value_template)"
@@ -1090,14 +1094,23 @@
     "command_template_error": {
       "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."
     },
-    "invalid_platform_config": {
-      "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. See logs for more details."
+    "invalid_platform_config_message": {
+      "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. Message: {message}"
     },
     "invalid_publish_topic": {
       "message": "Unable to publish: topic template `{topic_template}` produced an invalid topic `{topic}` after rendering ({error})"
     },
     "mqtt_broker_error": {
       "message": "Error talking to MQTT: {error_message}."
+    },
+    "mqtt_max_subscription_id_reached": {
+      "message": "MQTT Subscription ID limit reached. Cannot generate more IDs to subscribe."
+    },
+    "mqtt_message_expiry_interval_not_supported": {
+      "message": "Publishing to topic {topic} with a Message Expiry Interval is not supported for protocol version {protocol}."
+    },
+    "mqtt_not_enabled_cannot_subscribe": {
+      "message": "Cannot subscribe to topic \"{topic}\" because MQTT is not enabled, make sure MQTT is set up correctly."
     },
     "mqtt_not_setup_cannot_publish": {
       "message": "Cannot publish to topic \"{topic}\", make sure MQTT is set up correctly."
@@ -1119,6 +1132,10 @@
     "invalid_platform_config": {
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/config/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
       "title": "Invalid config found for MQTT {domain} item"
+    },
+    "protocol_5_migration": {
+      "description": "The automatic migration to MQTT protocol version 5 failed. The currently configured protocol version for MQTT broker {broker} is {protocol}, but this protocol version is deprecated, and support for it will be removed.\n\nMake sure your broker supports protocol version 5. Update your MQTT broker's connection settings, and restart Home Assistant to fix this issue.",
+      "title": "MQTT protocol migration failed"
     },
     "subentry_migration_discovery": {
       "fix_flow": {
@@ -1212,6 +1229,7 @@
           "birth_topic": "Birth message topic",
           "discovery": "Enable discovery",
           "discovery_prefix": "Discovery prefix",
+          "discovery_qos": "Discovery QoS",
           "will_enable": "Enable will message",
           "will_payload": "Will message payload",
           "will_qos": "Will message QoS",
@@ -1226,6 +1244,7 @@
           "birth_topic": "The MQTT topic where Home Assistant will publish a \"birth\" message.",
           "discovery": "Option to enable MQTT automatic discovery.",
           "discovery_prefix": "The prefix of configuration topics the MQTT integration will subscribe to.",
+          "discovery_qos": "The quality of service for discovery subscriptions to your MQTT broker.",
           "will_enable": "When set, Home Assistant will ask your broker to publish a \"will\" message when MQTT is stopped or when it loses the connection to your broker.",
           "will_payload": "The message your MQTT broker \"will\" publish when the MQTT integration is stopped or when the connection is lost.",
           "will_qos": "The quality of service of the \"will\" message that is published by your MQTT broker.",
@@ -1441,6 +1460,8 @@
         "button": "[%key:component::button::title%]",
         "climate": "[%key:component::climate::title%]",
         "cover": "[%key:component::cover::title%]",
+        "date": "[%key:component::date::title%]",
+        "datetime": "[%key:component::datetime::title%]",
         "fan": "[%key:component::fan::title%]",
         "image": "[%key:component::image::title%]",
         "light": "[%key:component::light::title%]",
@@ -1452,6 +1473,7 @@
         "siren": "[%key:component::siren::title%]",
         "switch": "[%key:component::switch::title%]",
         "text": "[%key:component::text::title%]",
+        "time": "[%key:component::time::title%]",
         "valve": "[%key:component::valve::title%]",
         "water_heater": "[%key:component::water_heater::title%]"
       }
@@ -1532,6 +1554,10 @@
           "description": "If 'Payload' is a Python bytes literal, evaluate the bytes literal and publish the raw data.",
           "name": "Evaluate payload"
         },
+        "message_expiry_interval": {
+          "description": "Expires a publish message after the interval in case the device subscriber was temporarily offline, or the message was set as a retained message. Only supported with MQTT protocol version 5.0.",
+          "name": "Message Expiry Interval"
+        },
         "payload": {
           "description": "The payload to publish. Publishes an empty message if not provided.",
           "name": "Payload"
@@ -1549,7 +1575,12 @@
           "name": "Topic"
         }
       },
-      "name": "Publish"
+      "name": "Publish",
+      "sections": {
+        "publish_options": {
+          "name": "Publish options"
+        }
+      }
     },
     "reload": {
       "description": "Reloads MQTT entities from the YAML-configuration.",

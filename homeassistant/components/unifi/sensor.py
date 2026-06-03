@@ -4,8 +4,6 @@ Support for bandwidth sensors of network clients.
 Support for uptime sensors of network clients.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -152,7 +150,7 @@ def async_device_clients_value_fn(hub: UnifiHub, device: Device) -> int:
 
 @callback
 def async_device_uptime_value_fn(hub: UnifiHub, device: Device) -> datetime | None:
-    """Calculate the approximate time the device started (based on uptime returned from API, in seconds)."""
+    """Calculate the approximate time the device started."""
     if device.uptime <= 0:
         # Library defaults to 0 if uptime is not provided, e.g. when offline
         return None
@@ -163,7 +161,7 @@ def async_device_uptime_value_fn(hub: UnifiHub, device: Device) -> datetime | No
 def async_uptime_value_changed_fn(
     old: StateType | date | datetime | Decimal, new: datetime | float | str | None
 ) -> bool:
-    """Reject the new uptime value if it's too similar to the old one. Avoids unwanted fluctuation."""
+    """Reject new uptime if too similar to old. Avoids fluctuation."""
     if isinstance(old, datetime) and isinstance(new, datetime):
         return new != old and abs((new - old).total_seconds()) > 120
     return old is None or (new != old)
@@ -520,8 +518,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
     UnifiSensorEntityDescription[Clients, Client](
         key="Client uptime",
-        translation_key="client_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         allowed_fn=async_uptime_sensor_allowed_fn,
@@ -611,8 +608,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device uptime",
-        translation_key="device_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
@@ -730,7 +726,8 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         """
         description = self.entity_description
         obj = description.object_fn(self.api, self._obj_id)
-        # Update the value only if value is considered to have changed relative to its previous state
+        # Update the value only if value is considered to
+        # have changed relative to its previous state
         if description.value_changed_fn(
             self.native_value, (value := description.value_fn(self.hub, obj))
         ):

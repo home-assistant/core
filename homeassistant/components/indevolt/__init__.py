@@ -1,9 +1,10 @@
 """Home Assistant integration for indevolt device."""
 
-from __future__ import annotations
+from typing import Any
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -20,6 +21,28 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        # 1.1 -> 1.2: indevolt-api 1.8.3 changed IndevoltBattery.MAIN_HEATING_STATE
+        # from 9079 to 9080, so migrate affected unique IDs.
+        @callback
+        def migrate_unique_id(
+            entity_entry: er.RegistryEntry,
+        ) -> dict[str, Any] | None:
+            if entity_entry.unique_id.endswith("_9079"):
+                return {
+                    "new_unique_id": entity_entry.unique_id.removesuffix("_9079")
+                    + "_9080"
+                }
+            return None
+
+        await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
+        hass.config_entries.async_update_entry(entry, version=1, minor_version=2)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:
@@ -44,5 +67,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:
-    """Unload a config entry / clean up resources (when integration is removed / reloaded)."""
+    """Unload a config entry.
+
+    Clean up resources when integration is removed or reloaded.
+    """
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

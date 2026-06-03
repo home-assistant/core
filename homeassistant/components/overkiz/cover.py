@@ -1,7 +1,5 @@
 """Support for Overkiz covers - shutters etc."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -24,10 +22,11 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
@@ -61,7 +60,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     ##
     ## Overrides via UIWidget
     ##
-    # Needs override to support position (and remove support for tilt position which is not supported by this device)
+    # Needs override to support position (and remove support for
+    # tilt position which is not supported by this device)
     # uiClass is Pergola
     OverkizCoverDescription(
         key=UIWidget.PERGOLA_HORIZONTAL_AWNING,
@@ -120,7 +120,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(1, 0),
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override to support very specific tilt commands (rts:ExteriorVenetianBlindRTSComponent)
+    # Needs override to support very specific tilt commands
+    # (rts:ExteriorVenetianBlindRTSComponent)
     # uiClass is ExteriorVenetianBlind
     OverkizCoverDescription(
         key=UIWidget.UP_DOWN_EXTERIOR_VENETIAN_BLIND,
@@ -134,7 +135,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override to support very specific tilt commands (rts:VenetianBlindRTSComponent)
+    # Needs override to support very specific tilt commands
+    # (rts:VenetianBlindRTSComponent)
     # uiClass is VenetianBlind
     OverkizCoverDescription(
         key=UIWidget.UP_DOWN_VENETIAN_BLIND,
@@ -427,6 +429,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
+        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
+        stop_tilt_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
         key=UIClass.ROLLER_SHUTTER,
@@ -724,6 +729,37 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if command := self.entity_description.set_tilt_position_command:
             await self.executor.async_execute_command(command, position)
 
+    async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
+        """Move cover and tilt to a specific position.
+
+        Exposed as the `overkiz.set_cover_position_and_tilt`
+        service action. Uses the setClosureAndOrientation
+        command to move slats and closure in a single
+        instruction. Calling set_cover_position and
+        set_cover_tilt_position sequentially will cause the
+        motor to stop between commands on some devices (e.g.
+        Somfy DynamicExteriorVenetianBlind).
+        """
+        if not self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_set_position_and_tilt",
+            )
+
+        position = kwargs[ATTR_POSITION]
+        tilt_position = kwargs[ATTR_TILT_POSITION]
+
+        if self.entity_description.invert_position:
+            position = 100 - position
+        if self.entity_description.invert_tilt_position:
+            tilt_position = 100 - tilt_position
+
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CLOSURE_AND_ORIENTATION,
+            position,
+            tilt_position,
+        )
+
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if command := self.entity_description.open_tilt_command:
@@ -799,7 +835,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
     @property
     def moving_offset(self) -> int | None:
-        """Return the offset between the targeted position and the current one if the cover is moving."""
+        """Return the offset between targeted and current position."""
         moving_state = self.device.states.get(OverkizState.CORE_MOVING)
         if moving_state is None or moving_state.value_as_bool is not True:
             return None
@@ -816,6 +852,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         target_value = target_closure.value_as_int
 
         if current_value is None or target_value is None:
+            return None
+
+        if current_value in (_POSITION_MY, _POSITION_UNKNOWN):
             return None
 
         return current_value - target_value

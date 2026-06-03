@@ -1,7 +1,5 @@
 """Helpers to setup multi-factor auth module."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -144,9 +142,9 @@ def websocket_depose_mfa(
 
 def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
     """Convert result to JSON serializable dict."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
         return dict(result)
-    if result["type"] != data_entry_flow.FlowResultType.FORM:
+    if result["type"] is not data_entry_flow.FlowResultType.FORM:
         return result  # type: ignore[return-value]
 
     data = dict(result)

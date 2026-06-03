@@ -1,7 +1,5 @@
 """Support for Xiaomi Aqara sensors."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -63,7 +61,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "bed_activity": SensorEntityDescription(
         key="bed_activity",
         native_unit_of_measurement="μm",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "load_power": SensorEntityDescription(

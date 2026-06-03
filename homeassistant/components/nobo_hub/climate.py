@@ -1,10 +1,8 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
-from __future__ import annotations
-
 from typing import Any
 
-from pynobo import nobo
+from pynobo import PynoboError, nobo
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -17,8 +15,14 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_NAME, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_NAME,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -82,7 +86,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature_step = 1
+    _attr_target_temperature_step = PRECISION_WHOLE
     # Need to poll to get preset change when in HVACMode.AUTO
     _attr_should_poll = True
 
@@ -101,19 +105,19 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         self._read_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new target HVAC mode, if it's supported."""
-        if hvac_mode not in self.hvac_modes:
-            raise ValueError(
-                f"Zone {self._id} '{self._attr_name}' called with unsupported HVAC mode"
-                f" '{hvac_mode}'"
-            )
-        if hvac_mode == HVACMode.AUTO:
-            await self.async_set_preset_mode(PRESET_NONE)
-        elif hvac_mode == HVACMode.HEAT:
-            await self.async_set_preset_mode(PRESET_COMFORT)
+        """Set new target HVAC mode."""
+        preset = PRESET_COMFORT if hvac_mode == HVACMode.HEAT else PRESET_NONE
+        await self._apply_preset(preset, "set_hvac_mode_failed")
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new zone override."""
+        await self._apply_preset(preset_mode, "set_preset_mode_failed")
+
+    async def _apply_preset(
+        self,
+        preset_mode: str,
+        translation_key: str,
+    ) -> None:
         if preset_mode == PRESET_ECO:
             mode = nobo.API.OVERRIDE_MODE_ECO
         elif preset_mode == PRESET_AWAY:
@@ -122,21 +126,33 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
             mode = nobo.API.OVERRIDE_MODE_COMFORT
         else:  # PRESET_NONE
             mode = nobo.API.OVERRIDE_MODE_NORMAL
-        await self._nobo.async_create_override(
-            mode,
-            self._override_type,
-            nobo.API.OVERRIDE_TARGET_ZONE,
-            self._id,
-        )
+        try:
+            await self._nobo.async_create_override(
+                mode,
+                self._override_type,
+                nobo.API.OVERRIDE_TARGET_ZONE,
+                self._id,
+            )
+        except PynoboError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=translation_key,
+            ) from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TARGET_TEMP_LOW in kwargs:
             low = round(kwargs[ATTR_TARGET_TEMP_LOW])
             high = round(kwargs[ATTR_TARGET_TEMP_HIGH])
-            await self._nobo.async_update_zone(
-                self._id, temp_comfort_c=high, temp_eco_c=low
-            )
+            try:
+                await self._nobo.async_update_zone(
+                    self._id, temp_comfort_c=high, temp_eco_c=low
+                )
+            except PynoboError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="set_temperature_failed",
+                ) from err
 
     async def async_update(self) -> None:
         """Fetch new state data for this zone."""
@@ -144,7 +160,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
 
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. These are only local calls."""
+        """Copy the current hub state onto the entity attributes."""
         if self._id not in self._nobo.zones:
             # Zone removed via the Nobø app; mark unavailable.
             self._attr_available = False

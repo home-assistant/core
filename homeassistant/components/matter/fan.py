@@ -1,7 +1,5 @@
 """Matter Fan platform support."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -172,8 +170,10 @@ class MatterFan(MatterEntity, FanEntity):
         self._calculate_features()
 
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
-            # special case: the appliance has a dedicated Power switch on the OnOff cluster
-            # if the mains power is off - treat it as if the fan mode is off
+            # special case: the appliance has a dedicated Power
+            # switch on the OnOff cluster
+            # if the mains power is off - treat it as if the
+            # fan mode is off
             self._attr_preset_mode = None
             self._attr_percentage = 0
             return

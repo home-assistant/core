@@ -140,3 +140,21 @@ async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
+
+
+async def test_migrate_future_version_returns_false(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration failure for downgraded future config entry version."""
+    entry = MockConfigEntry(
+        domain="samsungtv",
+        data=ENTRYDATA_WEBSOCKET,
+        entry_id="sample-entry-id",
+        version=3,
+        minor_version=0,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR

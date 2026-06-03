@@ -390,7 +390,7 @@ async def test_setup_firmware_update_in_progress_prevents_silabs_warning(
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
 ) -> None:
-    """Test firmware update in progress prevents silabs firmware warning on setup failure."""
+    """Test firmware update prevents silabs warning on setup failure."""
     await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     config_entry.add_to_hass(hass)

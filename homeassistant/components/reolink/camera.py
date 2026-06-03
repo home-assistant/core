@@ -1,7 +1,5 @@
 """Component providing support for Reolink IP cameras."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

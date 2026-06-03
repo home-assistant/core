@@ -1,7 +1,5 @@
 """The opensky component."""
 
-from __future__ import annotations
-
 from aiohttp import BasicAuth
 from python_opensky import OpenSky
 from python_opensky.exceptions import OpenSkyError

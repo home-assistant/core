@@ -1,7 +1,5 @@
 """Legacy device tracker classes."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
@@ -39,10 +37,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery,
-    entity_registry as er,
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity_platform import (
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.event import (
     async_track_time_interval,
@@ -206,40 +203,7 @@ def see(
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
-@callback
-def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> None:
-    """Set up the legacy integration."""
-    # The tracker is loaded in the _async_setup_integration task so
-    # we create a future to avoid waiting on it here so that only
-    # async_platform_discovered will have to wait in the rare event
-    # a custom component still uses the legacy device tracker discovery.
-    tracker_future: asyncio.Future[DeviceTracker] = hass.loop.create_future()
-
-    async def async_platform_discovered(
-        p_type: str, info: dict[str, Any] | None
-    ) -> None:
-        """Load a platform."""
-        platform = await async_create_platform_type(hass, config, p_type, {})
-
-        if platform is None or platform.type != PLATFORM_TYPE_LEGACY:
-            return
-
-        tracker = await tracker_future
-        await platform.async_setup_legacy(hass, tracker, info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-    #
-    # Legacy and platforms load in a non-awaited tracked task
-    # to ensure device tracker setup can continue and config
-    # entry integrations are not waiting for legacy device
-    # tracker platforms to be set up.
-    #
-    hass.async_create_task(
-        _async_setup_integration(hass, config, tracker_future), eager_start=True
-    )
-
-
-async def _async_setup_integration(
+async def async_setup_integration(
     hass: HomeAssistant,
     config: ConfigType,
     tracker_future: asyncio.Future[DeviceTracker],
@@ -418,8 +382,8 @@ async def async_extract_config(
         if platform.type == PLATFORM_TYPE_LEGACY:
             legacy.append(platform)
         else:
-            raise ValueError(
-                f"Unable to determine type for {platform.name}: {platform.type}"
+            async_create_platform_config_not_supported_issue(
+                hass, platform.name, DOMAIN
             )
 
     return legacy

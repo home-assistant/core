@@ -1,7 +1,5 @@
 """Data update coordinator for RSS/Atom feeds."""
 
-from __future__ import annotations
-
 from calendar import timegm
 from datetime import datetime
 import html
@@ -20,7 +18,13 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MAX_ENTRIES, DEFAULT_SCAN_INTERVAL, DOMAIN, EVENT_FEEDREADER
+from .const import (
+    CONF_MAX_ENTRIES,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    EVENT_FEEDREADER,
+    USER_AGENT,
+)
 
 DELAY_SAVE = 30
 STORAGE_VERSION = 1
@@ -76,6 +80,7 @@ class FeedReaderCoordinator(
                 self.url,
                 etag=None if not self._feed else self._feed.get("etag"),
                 modified=None if not self._feed else self._feed.get("modified"),
+                agent=USER_AGENT,
             )
 
         feed = await self.hass.async_add_executor_job(_parse_feed)
@@ -187,7 +192,8 @@ class FeedReaderCoordinator(
             firstrun = True
             # Set last entry timestamp as epoch time if not available
             self._last_entry_timestamp = dt_util.utc_from_timestamp(0).timetuple()
-        # locally cache self._last_entry_timestamp so that entries published at identical times can be processed
+        # locally cache self._last_entry_timestamp so that
+        # entries published at identical times can be processed
         last_entry_timestamp = self._last_entry_timestamp
         for entry in self._feed.entries:
             if firstrun or (

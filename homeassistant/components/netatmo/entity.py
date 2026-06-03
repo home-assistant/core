@@ -1,7 +1,5 @@
 """Base class for Netatmo entities."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from typing import Any, cast
 
@@ -141,7 +139,7 @@ class NetatmoRoomEntity(NetatmoDeviceEntity):
             identifiers={(DOMAIN, self.device.entity_id)}
         ):
             # Uses legacy hass.data[DOMAIN] pattern
-            # pylint: disable-next=hass-use-runtime-data
+            # pylint: disable-next=home-assistant-use-runtime-data
             self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = device.id
 
     @property

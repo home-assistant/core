@@ -1,7 +1,5 @@
 """Support for Atlantic Pass APC Heating Control."""
 
-from __future__ import annotations
-
 from asyncio import sleep
 from typing import Any, cast
 
@@ -77,7 +75,8 @@ OVERKIZ_THERMAL_CONFIGURATION_TO_HVAC_MODE: dict[
 }
 
 
-# Those device depends on a main probe that choose the operating mode (heating, cooling, ...).
+# Those device depends on a main probe that choose the
+# operating mode (heating, cooling, ...).
 class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     """Representation of Atlantic Pass APC Heating And Cooling Zone Control."""
 
@@ -108,9 +107,11 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         # Those are available and tested presets on Shogun.
         self._attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
 
-        # Those APC Heating and Cooling probes depends on the zone control device (main probe).
-        # Only the base device (#1) can be used to get/set some states.
-        # Like to retrieve and set the current operating mode (heating, cooling, drying, off).
+        # Those APC Heating and Cooling probes depends on the
+        # zone control device (main probe). Only the base device
+        # (#1) can be used to get/set some states. Like to
+        # retrieve and set the current operating mode
+        # (heating, cooling, drying, off).
 
         self.zone_control_executor: OverkizExecutor | None = None
 
@@ -183,7 +184,8 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
 
-        # When ZoneControl action is heating/cooling but Zone is stopped, means the zone is idle.
+        # When ZoneControl action is heating/cooling but Zone is
+        # stopped, means the zone is idle.
         if (
             hvac_action := self.zone_control_hvac_action
         ) in HVAC_ACTION_TO_OVERKIZ_PROFILE_STATE and cast(
@@ -216,7 +218,8 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             self.executor.select_state(OverkizState.CORE_HEATING_ON_OFF),
         ) in (OverkizCommandParam.OFF, None)
 
-        # Device is Stopped, it means the air flux is flowing but its venting door is closed.
+        # Device is Stopped, it means the air flux is flowing
+        # but its venting door is closed.
         if (
             (device_hvac_mode == HVACMode.COOL and cooling_is_off)
             or (device_hvac_mode == HVACMode.HEAT and heating_is_off)

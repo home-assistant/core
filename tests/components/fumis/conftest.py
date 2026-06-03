@@ -1,7 +1,5 @@
 """Fixtures for the Fumis integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from contextlib import nullcontext
 from unittest.mock import MagicMock, patch

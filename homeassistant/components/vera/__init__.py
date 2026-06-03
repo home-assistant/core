@@ -1,7 +1,5 @@
 """Support for Vera devices."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import logging
@@ -66,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeraConfigEntry) -> bool
     try:
         all_devices = await hass.async_add_executor_job(controller.get_devices)
 
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         all_scenes = await hass.async_add_executor_job(controller.get_scenes)
     except RequestException as exception:
         # There was a network related error connecting to the Vera controller.

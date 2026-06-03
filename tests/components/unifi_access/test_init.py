@@ -1,7 +1,5 @@
 """Tests for the UniFi Access integration setup."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import ssl
 from unittest.mock import MagicMock, patch
@@ -76,7 +74,7 @@ async def test_setup_entry_ssl_context(
     verify_ssl: bool,
     expected_ssl_context_type: type,
 ) -> None:
-    """Test that a pre-warmed no-verify SSL context is passed when verify_ssl is False."""
+    """Test no-verify SSL context is passed when verify_ssl is False."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="UniFi Access",

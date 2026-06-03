@@ -1,11 +1,10 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 
-from __future__ import annotations
-
 from ast import literal_eval
 import asyncio
 import collections.abc
 from collections.abc import Callable
+import contextlib
 from datetime import timedelta
 from functools import lru_cache, partial
 import logging
@@ -25,6 +24,11 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.singleton import singleton
+from homeassistant.helpers.trace import (
+    record_template_errors_cv,
+    trace_stack_cv,
+    trace_stack_top,
+)
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
@@ -105,8 +109,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     @callback
     def _async_adjust_lru_sizes(_: Any) -> None:
         """Adjust the lru cache sizes."""
-        new_size = int(
-            round(hass.states.async_entity_ids_count() * ENTITY_COUNT_GROWTH_FACTOR)
+        new_size = round(
+            hass.states.async_entity_ids_count() * ENTITY_COUNT_GROWTH_FACTOR
         )
         for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
             # There is no typing for LRU
@@ -382,7 +386,8 @@ class Template:
 
         if len(render_result) > MAX_TEMPLATE_OUTPUT:
             raise TemplateError(
-                f"Template output exceeded maximum size of {MAX_TEMPLATE_OUTPUT} characters"
+                "Template output exceeded maximum size of"
+                f" {MAX_TEMPLATE_OUTPUT} characters"
             )
 
         render_result = render_result.strip()
@@ -454,7 +459,7 @@ class Template:
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except TimeoutError:
-            if template_render_thread.is_alive():
+            with contextlib.suppress(ValueError):
                 template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
@@ -627,6 +632,15 @@ def make_logging_undefined(
         return jinja2.StrictUndefined
 
     def _log_with_logger(level: int, msg: str) -> None:
+        # When a consumer such as the subscribe_condition websocket command has
+        # opted in, record the error on the active trace element instead of
+        # logging it, so repeated evaluations don't spam the log.
+        if record_template_errors_cv.get() and (
+            node := trace_stack_top(trace_stack_cv)
+        ):
+            node.add_template_error(msg)
+            return
+
         template, action = template_cv.get() or ("", "rendering or compiling")
         _LOGGER.log(
             level,
@@ -697,7 +711,7 @@ def _get_hass_loader(hass: HomeAssistant) -> HassLoader:
 
 
 class HassLoader(jinja2.BaseLoader):
-    """An in-memory jinja loader that keeps track of templates that need to be reloaded."""
+    """An in-memory jinja loader that tracks templates needing reload."""
 
     def __init__(self, sources: dict[str, str]) -> None:
         """Initialize an empty HassLoader."""

@@ -1,8 +1,7 @@
 """Commands part of Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
+from datetime import datetime, timedelta
 from functools import lru_cache, partial
 import json
 import logging
@@ -40,6 +39,7 @@ from homeassistant.helpers import (
     entity,
     target as target_helpers,
     template,
+    trace,
 )
 from homeassistant.helpers.condition import (
     async_from_config as async_condition_from_config,
@@ -57,6 +57,7 @@ from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
+    async_track_time_interval,
 )
 from homeassistant.helpers.json import (
     JSON_DUMP,
@@ -126,6 +127,7 @@ def async_register_commands(
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
+    async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
@@ -909,8 +911,8 @@ async def handle_get_triggers_for_target(
 ) -> None:
     """Handle get triggers for target command.
 
-    This command returns all triggers that can be used with any entities that are currently
-    part of a target.
+    This command returns all triggers that can be used
+    with any entities that are currently part of a target.
     """
     triggers = await async_get_triggers_for_target(
         hass, msg["target"], msg["expand_group"]
@@ -932,8 +934,8 @@ async def handle_get_conditions_for_target(
 ) -> None:
     """Handle get conditions for target command.
 
-    This command returns all conditions that can be used with any entities that are currently
-    part of a target.
+    This command returns all conditions that can be used
+    with any entities that are currently part of a target.
     """
     conditions = await async_get_conditions_for_target(
         hass, msg["target"], msg["expand_group"]
@@ -955,8 +957,8 @@ async def handle_get_services_for_target(
 ) -> None:
     """Handle get services for target command.
 
-    This command returns all services that can be used with any entities that are currently
-    part of a target.
+    This command returns all services that can be used
+    with any entities that are currently part of a target.
     """
     services = await async_get_services_for_target(
         hass, msg["target"], msg["expand_group"]
@@ -1025,16 +1027,132 @@ async def handle_test_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle test condition command."""
-    # Do static + dynamic validation of the condition
-    config = await async_validate_condition_config(hass, msg["condition"])
-    # Test the condition
-    condition = await async_condition_from_config(hass, config)
+    # Validating and instantiating the condition can fail on bad user input.
+    # Handle those errors here so they are reported to the client without being
+    # logged as unexpected errors by the default websocket error handler.
     try:
-        connection.send_result(
-            msg["id"], {"result": condition.async_check(variables=msg.get("variables"))}
+        # Do static + dynamic validation of the condition
+        config = await async_validate_condition_config(hass, msg["condition"])
+        condition = await async_condition_from_config(hass, config)
+    except vol.Invalid as err:
+        connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        return
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
         )
+        return
+
+    # Template errors (e.g. undefined variables) are recorded in the trace
+    # instead of being logged. Capture the trace and forward them to the client
+    # alongside the result.
+    condition_trace = trace.trace_get()
+    try:
+        with trace.record_template_errors():
+            check_result = condition.async_check(variables=msg.get("variables"))
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+    else:
+        result: dict[str, Any] = {"result": check_result}
+        if template_errors := [
+            template_error
+            for elements in condition_trace.values()
+            for element in elements
+            for template_error in element.template_errors
+        ]:
+            result["template_errors"] = template_errors
+        connection.send_result(msg["id"], result)
     finally:
         condition.async_unload()
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "subscribe_condition",
+        vol.Required("condition"): cv.CONDITION_SCHEMA,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_subscribe_condition(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe condition command."""
+    try:
+        condition_config = await async_validate_condition_config(hass, msg["condition"])
+        condition = await async_condition_from_config(hass, condition_config)
+    except vol.Invalid as err:
+        connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        return
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
+
+    event_data: dict[str, Any] = {}
+
+    @callback
+    def evaluate_condition(now: datetime | None) -> None:
+        """Forward events to websocket."""
+        nonlocal event_data
+        new_event_data: dict[str, Any]
+
+        condition_trace = trace.trace_get()
+        try:
+            with trace.record_template_errors():
+                new_event_data = {"result": condition.async_check()}
+        except HomeAssistantError as err:
+            new_event_data = {"error": str(err)}
+
+        # Template errors (e.g. undefined variables) are recorded in the trace
+        # instead of being logged. Forward them to the client so they are not
+        # lost, even when the condition still evaluated to a result.
+        if template_errors := [
+            template_error
+            for elements in condition_trace.values()
+            for element in elements
+            for template_error in element.template_errors
+        ]:
+            new_event_data["template_errors"] = template_errors
+
+        if new_event_data == event_data:
+            return
+        event_data = new_event_data
+        connection.send_event(msg["id"], event_data)
+
+    @callback
+    def unsubscribe() -> None:
+        """Unsubscribe from condition updates."""
+        condition.async_unload()
+        unsub()
+
+    unsub = async_track_time_interval(
+        hass,
+        evaluate_condition,
+        timedelta(seconds=1),
+        name="websocket_api_condition_subscription",
+    )
+    connection.subscriptions[msg["id"]] = unsubscribe
+    connection.send_result(msg["id"])
+    evaluate_condition(None)
 
 
 @decorators.websocket_command(

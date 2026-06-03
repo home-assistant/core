@@ -1,7 +1,5 @@
 """Config flow for Plex."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
@@ -41,7 +39,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
-    AUTOMATIC_SETUP_STRING,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -52,7 +49,6 @@ from .const import (
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
     X_PLEX_DEVICE_NAME,
     X_PLEX_PLATFORM,
@@ -117,41 +113,22 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-        errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if user_input is not None:
-            return await self._async_step_plex_website_auth()
-        if self.show_advanced_options:
-            return await self.async_step_user_advanced(errors=errors)
-        return self.async_show_form(
+        return self.async_show_menu(
             step_id="user",
-            errors=errors,
-            description_placeholders={"plex_server_url": "[plex.tv](https://plex.tv)"},
+            menu_options=["website_auth", "manual_setup"],
         )
 
-    async def async_step_user_advanced(
+    async def async_step_website_auth(
         self,
-        user_input: dict[str, str] | None = None,
+        user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
-        """Handle an advanced mode flow initialized by the user."""
-        if user_input is not None:
-            if user_input.get("setup_method") == MANUAL_SETUP_STRING:
-                self._manual = True
-                return await self.async_step_manual_setup()
-            return await self._async_step_plex_website_auth()
-
-        data_schema = vol.Schema(
-            {
-                vol.Required("setup_method", default=AUTOMATIC_SETUP_STRING): vol.In(
-                    [AUTOMATIC_SETUP_STRING, MANUAL_SETUP_STRING]
-                )
-            }
-        )
-        return self.async_show_form(
-            step_id="user_advanced", data_schema=data_schema, errors=errors
-        )
+        """Handle website authentication."""
+        if errors:
+            return self.async_show_form(step_id="website_auth", errors=errors)
+        return await self._async_step_plex_website_auth()
 
     async def async_step_manual_setup(
         self,
@@ -159,6 +136,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Begin manual configuration."""
+        self._manual = True
         if user_input is not None and errors is None:
             user_input.pop(CONF_URL, None)
             if host := user_input.get(CONF_HOST):
@@ -242,7 +220,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_manual_setup(
                     user_input=server_config, errors=errors
                 )
-            return await self.async_step_user(errors=errors)
+            return await self.async_step_website_auth(errors=errors)
 
         server_id = plex_server.machine_identifier
         url = plex_server.url_in_use

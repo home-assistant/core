@@ -1,7 +1,5 @@
 """Allow to set up simple automation rules via the config file."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable
@@ -1157,7 +1155,7 @@ async def _async_process_config(
         automations: list[BaseAutomationEntity],
         automation_configs: list[AutomationEntityConfig],
     ) -> tuple[set[int], set[int]]:
-        """Find matches between a list of automation entities and a list of configurations.
+        """Find matches between automation entities and configurations.
 
         An automation or configuration is only allowed to match at most once to handle
         the case of multiple automations with identical configuration.

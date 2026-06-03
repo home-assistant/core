@@ -1,7 +1,5 @@
 """Sensor platform for the GitHub integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any

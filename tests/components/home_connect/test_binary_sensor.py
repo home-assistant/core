@@ -50,7 +50,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -173,7 +173,7 @@ async def test_binary_sensors_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if binary sensor entities availability are based on the appliance connection state."""
+    """Test binary sensor availability based on appliance connection."""
     entity_ids = [
         "binary_sensor.washer_remote_control",
     ]

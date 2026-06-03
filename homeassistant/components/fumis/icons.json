@@ -99,6 +99,14 @@
       "wifi_signal_strength": {
         "default": "mdi:wifi"
       }
+    },
+    "switch": {
+      "eco_mode": {
+        "default": "mdi:leaf"
+      },
+      "timer": {
+        "default": "mdi:timer"
+      }
     }
   }
 }

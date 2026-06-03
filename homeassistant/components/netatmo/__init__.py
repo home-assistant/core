@@ -1,7 +1,5 @@
 """The Netatmo integration."""
 
-from __future__ import annotations
-
 import logging
 import secrets
 from typing import Any
@@ -62,7 +60,7 @@ MAX_WEBHOOK_RETRIES = 3
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Netatmo component."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data[DOMAIN] = {
         DATA_PERSONS: {},
         DATA_DEVICE_IDS: {},
@@ -164,6 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
         try:
             await entry.runtime_data.auth.async_addwebhook(webhook_url)
             _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
         else:
@@ -188,7 +187,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     else:
         entry.async_on_unload(async_at_started(hass, register_webhook))
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
 
     entry.async_on_unload(entry.add_update_listener(async_config_entry_updated))

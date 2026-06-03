@@ -6,8 +6,6 @@ the APIs are used to add one or more client credentials. Integrations may also
 provide credentials from yaml for backwards compatibility.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import Any, Protocol

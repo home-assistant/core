@@ -1,7 +1,5 @@
 """Component to interface with various media players."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from collections.abc import Callable
@@ -170,7 +168,9 @@ def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
     if ATTR_MEDIA in data and isinstance(data[ATTR_MEDIA], dict):
         if ATTR_MEDIA_CONTENT_TYPE in data or ATTR_MEDIA_CONTENT_ID in data:
             raise vol.Invalid(
-                f"Play media cannot contain '{ATTR_MEDIA}' and '{ATTR_MEDIA_CONTENT_ID}' or '{ATTR_MEDIA_CONTENT_TYPE}'"
+                f"Play media cannot contain '{ATTR_MEDIA}' and "
+                f"'{ATTR_MEDIA_CONTENT_ID}' or "
+                f"'{ATTR_MEDIA_CONTENT_TYPE}'"
             )
         media_data = data[ATTR_MEDIA]
 
@@ -1295,7 +1295,7 @@ class MediaPlayerImageView(HomeAssistantView):
             data, content_type = await player.async_get_media_image()
 
         if data is None:
-            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)

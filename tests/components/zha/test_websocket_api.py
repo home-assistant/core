@@ -1,7 +1,5 @@
 """Test ZHA WebSocket API."""
 
-from __future__ import annotations
-
 from binascii import unhexlify
 from collections.abc import Callable, Coroutine
 from copy import deepcopy
@@ -22,8 +20,12 @@ from zha.application.const import (
     ATTR_TYPE,
     CLUSTER_TYPE_IN,
 )
-from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
-from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device
+from zha.zigbee.device import (
+    ClusterBindEvent,
+    ClusterConfigureReportingEvent,
+    Device,
+    DeviceConfiguredEvent,
+)
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.profiles.zha
@@ -1181,10 +1183,12 @@ async def test_websocket_reconfigure(
     zha_device_proxy = get_zha_gateway_proxy(hass).get_device_proxy(zha_device.ieee)
 
     async def mock_reinterview(ieee: EUI64) -> None:
-        zha_device_proxy.handle_zha_channel_configure_reporting(
+        zha_device_proxy.handle_zha_cluster_configure_reporting(
             ClusterConfigureReportingEvent(
-                cluster_name="Window Covering",
+                device_ieee=zha_device_proxy.device.ieee,
+                endpoint_id=1,
                 cluster_id=258,
+                cluster_name="Window Covering",
                 attributes={
                     "current_position_lift_percentage": {
                         "min": 0,
@@ -1203,30 +1207,21 @@ async def test_websocket_reconfigure(
                         "status": "SUCCESS",
                     },
                 },
-                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0102",
-                event_type="zha_channel_message",
-                event="zha_channel_configure_reporting",
             )
         )
 
-        zha_device_proxy.handle_zha_channel_bind(
+        zha_device_proxy.handle_zha_cluster_bind(
             ClusterBindEvent(
-                cluster_name="Window Covering",
+                device_ieee=zha_device_proxy.device.ieee,
+                endpoint_id=1,
                 cluster_id=1,
+                cluster_name="Window Covering",
                 success=True,
-                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0012",
-                event_type="zha_channel_message",
-                event="zha_channel_bind",
             )
         )
 
-        zha_device_proxy.handle_zha_channel_cfg_done(
-            ClusterHandlerConfigurationComplete(
-                device_ieee="28:2c:02:bf:ff:ea:05:68",
-                unique_id="28:2c:02:bf:ff:ea:05:68",
-                event_type="zha_channel_message",
-                event="zha_channel_cfg_done",
-            )
+        zha_device_proxy.handle_zha_device_configured(
+            DeviceConfiguredEvent(device_ieee=zha_device_proxy.device.ieee)
         )
 
     with patch.object(

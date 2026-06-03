@@ -1,7 +1,5 @@
 """Provides triggers for temperature."""
 
-from __future__ import annotations
-
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE as CLIMATE_ATTR_CURRENT_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -42,7 +40,7 @@ TEMPERATURE_DOMAIN_SPECS = {
 
 
 class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
-    """Mixin for temperature triggers providing entity filtering, value extraction, and unit conversion."""
+    """Mixin for temperature triggers with filtering and conversion."""
 
     _base_unit = UnitOfTemperature.CELSIUS
     _domain_specs = TEMPERATURE_DOMAIN_SPECS

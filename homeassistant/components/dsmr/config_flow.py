@@ -1,7 +1,5 @@
 """Config flow for DSMR integration."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import partial
 from typing import Any
@@ -13,7 +11,6 @@ from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_tcp_dsmr_reader,
 )
 from dsmr_parser.objects import DSMRObject
-import serial
 import voluptuous as vol
 
 from homeassistant.components import usb
@@ -119,7 +116,7 @@ class DSMRConnection:
 
         try:
             transport, protocol = await asyncio.create_task(reader_factory())
-        except serial.SerialException, OSError:
+        except OSError:
             LOGGER.exception("Error connecting to DSMR")
             return False
 
@@ -128,7 +125,9 @@ class DSMRConnection:
                 async with asyncio.timeout(30):
                     await protocol.wait_closed()
             except TimeoutError:
-                # Timeout (no data received), close transport and return True (if telegram is empty, will result in CannotCommunicate error)
+                # Timeout (no data received), close transport
+                # and return True (if telegram is empty, will
+                # result in CannotCommunicate error)
                 transport.close()
                 await protocol.wait_closed()
         return True

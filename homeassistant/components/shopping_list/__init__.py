@@ -1,7 +1,5 @@
 """Support to manage a shopping list."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -102,6 +100,7 @@ async def async_setup_entry(
 
         try:
             item = [item for item in data.items if item["name"] == name][0]
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except IndexError:
             _LOGGER.error("Removing of item failed: %s cannot be found", name)
         else:
@@ -112,6 +111,7 @@ async def async_setup_entry(
         name = call.data[ATTR_NAME]
         try:
             await config_entry.runtime_data.async_complete(name)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NoMatchingShoppingListItem:
             _LOGGER.error("Completing of item failed: %s cannot be found", name)
 
@@ -122,6 +122,7 @@ async def async_setup_entry(
 
         try:
             item = [item for item in data.items if item["name"] == name][0]
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except IndexError:
             _LOGGER.error("Restoring of item failed: %s cannot be found", name)
         else:
@@ -146,39 +147,47 @@ async def async_setup_entry(
     data = config_entry.runtime_data = ShoppingData(hass)
     await data.async_load()
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_ITEM, add_item_service, schema=SERVICE_ITEM_SCHEMA
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SERVICE_REMOVE_ITEM, remove_item_service, schema=SERVICE_ITEM_SCHEMA
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SERVICE_COMPLETE_ITEM, complete_item_service, schema=SERVICE_ITEM_SCHEMA
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_INCOMPLETE_ITEM,
         incomplete_item_service,
         schema=SERVICE_ITEM_SCHEMA,
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_COMPLETE_ALL,
         complete_all_service,
         schema=SERVICE_LIST_SCHEMA,
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_INCOMPLETE_ALL,
         incomplete_all_service,
         schema=SERVICE_LIST_SCHEMA,
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_CLEAR_COMPLETED_ITEMS,
         clear_completed_items_service,
         schema=SERVICE_LIST_SCHEMA,
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SORT,

@@ -3,8 +3,6 @@
 This module defines and sets up the select entities for the MyNeomitis integration.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import Any

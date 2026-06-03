@@ -1,7 +1,5 @@
 """Offer reusable conditions."""
 
-from __future__ import annotations
-
 import abc
 from collections import deque
 from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
@@ -24,6 +22,7 @@ from typing import (
     TypedDict,
     Unpack,
     cast,
+    final,
     overload,
     override,
 )
@@ -294,10 +293,12 @@ _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
 class ConditionChecker(abc.ABC):
     """Base class for condition checkers."""
 
+    _set_up = False
+    _unloaded = False
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize condition checker."""
         self._hass = hass
-        self._unloaded = False
 
     def __call__(
         self, hass: HomeAssistant, variables: TemplateVarsType = None
@@ -317,23 +318,45 @@ class ConditionChecker(abc.ABC):
         except Exception:
             _LOGGER.exception("Error while unloading condition checker")
 
+    @final
     async def async_setup(self) -> None:
+        """Set up the condition checker.
+
+        Users of conditions do not need to call this method directly. It is called
+        automatically by async_from_config and async_conditions_from_config.
+        """
+        await self._async_setup()
+        self._set_up = True
+
+    async def _async_setup(self) -> None:  # noqa: B027
         """Set up the condition checker.
 
         Intended to be overridden in derived classes that need to do setup.
         """
 
+    @final
     def async_unload(self) -> None:
+        """Clean up any resources held by the checker.
+
+        Users of conditions must call this method when they are done with the
+        checker to ensure resources are released.
+        """
+        self._async_unload()
+        self._unloaded = True
+
+    def _async_unload(self) -> None:  # noqa: B027
         """Clean up any resources held by the checker.
 
         Intended to be overridden in derived classes that need to do unloading.
         """
-        self._unloaded = True
 
+    @final
     def async_check(
         self, *, variables: TemplateVarsType = None, **kwargs: Never
     ) -> bool | None:
         """Check the condition."""
+        if not self._set_up:
+            raise HomeAssistantError("Condition checker is not set up")
         with trace_condition(variables):
             result = self._async_check(variables=variables)
             condition_trace_update_result(result=result)
@@ -371,11 +394,10 @@ class CompoundConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._conditions = conditions
 
-    def async_unload(self) -> None:
+    def _async_unload(self) -> None:
         """Clean up child conditions."""
         for condition in self._conditions:
             condition.async_unload()
-        super().async_unload()
 
 
 class Condition(ConditionChecker):
@@ -519,9 +541,8 @@ class EntityConditionBase(Condition):
             self._valid_since.pop(entity_id, None)
 
     @override
-    async def async_setup(self) -> None:
+    async def _async_setup(self) -> None:
         """Set up state tracking for duration-based conditions."""
-        await super().async_setup()
         if not self._duration or not self._needs_duration_tracking:
             return
 
@@ -555,9 +576,8 @@ class EntityConditionBase(Condition):
         self._on_unload.append(unsub)
 
     @override
-    def async_unload(self) -> None:
+    def _async_unload(self) -> None:
         """Unsubscribe from listeners."""
-        super().async_unload()
         for cb in self._on_unload:
             cb()
         self._on_unload.clear()
@@ -756,7 +776,10 @@ class EntityNumericalConditionBase(EntityConditionBase):
             return None
 
     def _get_tracked_value(self, entity_state: State) -> Any:
-        """Get the tracked value from a state, with unit validation for state-based values."""
+        """Get the tracked value from a state.
+
+        Includes unit validation for state-based values.
+        """
         domain_spec = self._domain_specs[entity_state.domain]
         if domain_spec.value_source is None:
             if not self._is_valid_unit(
@@ -790,7 +813,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
         if lower_limit is None or upper_limit is None:
             # Entity not found or invalid number, don't trigger
             return False
-        between = lower_limit < value < upper_limit
+        between = lower_limit <= value <= upper_limit
         if self._threshold_type == NumericThresholdType.BETWEEN:
             return between
         return not between
@@ -1082,7 +1105,9 @@ async def async_from_config(
                     f"Error rendering condition enabled template: {err}"
                 ) from err
         if not enabled:
-            return DisabledConditionChecker(hass)
+            disabled_checker = DisabledConditionChecker(hass)
+            await disabled_checker.async_setup()
+            return disabled_checker
 
     condition_key: str = config[CONF_CONDITION]
     factory: Any = None
@@ -1115,14 +1140,15 @@ async def async_from_config(
     while isinstance(check_factory, ft.partial):
         check_factory = check_factory.func
 
+    checker: ConditionChecker | ConditionCheckerType
     if inspect.iscoroutinefunction(check_factory):
         checker = await factory(hass, config)
     else:
         checker = factory(config)
-    if isinstance(checker, ConditionChecker):
-        await checker.async_setup()
-        return checker
-    return LegacyConditionChecker(hass, cast(ConditionCheckerType, checker))
+    if not isinstance(checker, ConditionChecker):
+        checker = LegacyConditionChecker(hass, checker)
+    await checker.async_setup()
+    return checker
 
 
 async def async_and_from_config(

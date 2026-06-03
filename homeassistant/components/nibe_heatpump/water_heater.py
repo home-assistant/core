@@ -1,7 +1,5 @@
 """The Nibe Heat Pump sensors."""
 
-from __future__ import annotations
-
 from datetime import date
 
 from nibe.coil import Coil

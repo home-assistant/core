@@ -1,7 +1,5 @@
 """Support for interfacing to the SqueezeBox API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 import json
@@ -136,7 +134,8 @@ async def async_setup_entry(
         manufacturer = player.creator
         model_id = player.model_type
         sw_version = ""
-        # Why? so we nicely merge with a server and a player linked by a MAC server is not all info lost
+        # So we nicely merge with a server and a player
+        # linked by a MAC server is not all info lost
         if (
             server_device
             and (CONNECTION_NETWORK_MAC, format_mac(player.player_id))
@@ -764,8 +763,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add other Squeezebox players to this player's sync group.
 
-        If the other player is a member of a sync group, it will leave the current sync group
-        without asking.
+        If the other player is a member of a sync group,
+        it will leave the current sync group without asking.
         """
         ent_reg = er.async_get(self.hass)
         for other_player_entity_id in group_members:
@@ -800,7 +799,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     def get_synthetic_id_and_cache_url(self, url: str) -> str:
         """Cache a thumbnail URL and return a synthetic ID.
 
-        This enables us to proxy thumbnails for apps and favorites, as those do not have IDs.
+        This enables us to proxy thumbnails for apps and
+        favorites, as those do not have IDs.
         """
         synthetic_id = f"s_{ulid_now()}"
 

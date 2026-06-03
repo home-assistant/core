@@ -1,7 +1,5 @@
 """Support for Verisure alarm control panels."""
 
-from __future__ import annotations
-
 import asyncio
 
 from homeassistant.components.alarm_control_panel import (

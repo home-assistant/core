@@ -1,7 +1,5 @@
 """Support for sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
@@ -766,7 +764,9 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
                         if self.entity_description.key == TimerProperty.RUNNING
                         else (local_now + event_data)
                     )
-                    # The remain_time may change during the wash/dry operation depending on various reasons.
+                    # The remain_time may change during the
+                    # wash/dry operation depending on
+                    # various reasons.
                     # If there is a diff of more than 60sec, the new timestamp is used
                     if (
                         parse_native_value := dt_util.parse_datetime(
@@ -852,7 +852,8 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
         )
         next_update = local_now + self.entity_description.update_interval
         if self.coordinator.update_energy_at_time_of_day is not None:
-            # calculate next_update time by combining tomorrow and update_energy_at_time_of_day
+            # calculate next_update time by combining tomorrow
+            # and update_energy_at_time_of_day
             next_update = datetime.combine(
                 (next_update).date(),
                 self.coordinator.update_energy_at_time_of_day,
@@ -901,7 +902,9 @@ class ThinQEnumTempSensorEntity(ThinQEntity, SensorEntity):
         super().__init__(coordinator, entity_description, property_id)
 
         if self.data.options:
-            # some kimchi refrigerator's target temperature have data in the form of string with enum options.
+            # some kimchi refrigerator's target temperature
+            # have data in the form of string with enum
+            # options.
             # Set options to display the correct value in the UI.
             self._attr_options = self.data.options
             self._attr_device_class = SensorDeviceClass.ENUM

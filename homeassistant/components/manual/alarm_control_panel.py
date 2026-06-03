@@ -1,7 +1,5 @@
 """Support for manual alarms."""
 
-from __future__ import annotations
-
 import datetime
 from typing import Any
 
@@ -84,7 +82,9 @@ SUPPORTED_ARMING_STATE_TO_FEATURE = {
     AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
     AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
     AlarmControlPanelState.ARMED_VACATION: AlarmControlPanelEntityFeature.ARM_VACATION,
-    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+        AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    ),
 }
 
 ATTR_PREVIOUS_STATE = "previous_state"
@@ -422,6 +422,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             },
         )
 
+        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise ServiceValidationError(
             "Invalid alarm code provided",
             translation_domain=DOMAIN,

@@ -1,7 +1,5 @@
 """Utility meter from sensors providing raw data."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -17,12 +15,13 @@ from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
     _suggest_report_issue,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -48,6 +47,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -77,6 +77,7 @@ from .const import (
     DAILY,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
+    DOMAIN,
     HOURLY,
     MONTHLY,
     QUARTER_HOURLY,
@@ -214,9 +215,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
-        _LOGGER.error(
-            "This platform is not available to configure "
-            "from 'sensor:' in configuration.yaml"
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/utility_meter/",
+            logger=_LOGGER,
         )
         return
 
@@ -390,7 +395,8 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_native_unit_of_measurement = None
         self._period = meter_type
         if meter_type is not None:
-            # For backwards compatibility reasons we convert the period and offset into a cron pattern
+            # For backwards compatibility reasons we convert
+            # the period and offset into a cron pattern
             self._cron_pattern = PERIOD2CRON[meter_type].format(
                 minute=meter_offset.seconds % 3600 // 60,
                 hour=meter_offset.seconds // 3600,
@@ -431,7 +437,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     @staticmethod
     def _validate_state(state: State | None) -> Decimal | None:
-        """Parse the state as a Decimal if available. Throws DecimalException if the state is not a number."""
+        """Parse the state as a Decimal if available."""
         try:
             return (
                 None
@@ -457,7 +463,7 @@ class UtilityMeterSensor(RestoreSensor):
         if (
             not self._sensor_periodically_resetting
             and self._last_valid_state is not None
-        ):  # Fallback to old_state if sensor is periodically resetting but last_valid_state is None
+        ):
             return new_state_val - self._last_valid_state
 
         if (old_state_val := self._validate_state(old_state)) is not None:
@@ -544,9 +550,13 @@ class UtilityMeterSensor(RestoreSensor):
                 self._collecting()
             self._collecting = None
 
-        # Reset the last_valid_state during state change because if the last state before the tariff change was invalid,
-        # there is no way to know how much "adjustment" counts for which tariff. Therefore, we set the last_valid_state
-        # to None and let the fallback mechanism handle the case that the old state was valid
+        # Reset the last_valid_state during state change
+        # because if the last state before the tariff
+        # change was invalid, there is no way to know how
+        # much "adjustment" counts for which tariff.
+        # Therefore, we set the last_valid_state to None
+        # and let the fallback mechanism handle the case
+        # that the old state was valid
         self._last_valid_state = None
 
         _LOGGER.debug(

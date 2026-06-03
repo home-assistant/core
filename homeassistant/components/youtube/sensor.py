@@ -1,7 +1,5 @@
 """Support for YouTube Sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -23,6 +21,7 @@ from .const import (
     ATTR_THUMBNAIL,
     ATTR_TITLE,
     ATTR_TOTAL_VIEWS,
+    ATTR_VIDEO_COUNT,
     ATTR_VIDEO_ID,
 )
 from .coordinator import YouTubeConfigEntry
@@ -70,6 +69,17 @@ SENSOR_TYPES = [
         value_fn=lambda channel: channel[ATTR_TOTAL_VIEWS],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
         attributes_fn=None,
+    ),
+    YouTubeSensorEntityDescription(
+        key="videos",
+        translation_key="videos",
+        native_unit_of_measurement="videos",
+        state_class=SensorStateClass.TOTAL,
+        available_fn=lambda _: True,
+        value_fn=lambda channel: channel[ATTR_VIDEO_COUNT],
+        entity_picture_fn=lambda _: None,
+        attributes_fn=None,
+        icon="mdi:filmstrip-box-multiple",
     ),
 ]
 
