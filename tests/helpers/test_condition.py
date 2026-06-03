@@ -2286,7 +2286,7 @@ async def test_condition_template_error_logged_without_opt_in(
     assert "Template variable warning: 'no_such_variable' is undefined" in caplog.text
     condition_trace = trace.trace_get(clear=False)
     trace.trace_clear()
-    assert condition_trace[""][0].template_errors == ["'no_such_variable' is undefined"]
+    assert condition_trace[""][0].template_errors == []
 
 
 async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:
