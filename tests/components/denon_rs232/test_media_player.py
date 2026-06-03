@@ -131,22 +131,34 @@ async def test_turn_on(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "active_zones", "power_off_command"),
+    ("entity_id", "active_zones", "expected_commands"),
     [
         # Another zone stays on, so only this zone is switched off.
         pytest.param(
-            MAIN_ENTITY_ID, ("main", "zone_2"), ("ZM", "OFF"), id="main_with_zone_2_on"
+            MAIN_ENTITY_ID,
+            ("main", "zone_2"),
+            [("ZM", "OFF")],
+            id="main_with_zone_2_on",
         ),
         pytest.param(
             ZONE_2_ENTITY_ID,
             ("main", "zone_2"),
-            ("Z2", "OFF"),
+            [("Z2", "OFF")],
             id="zone_2_with_main_on",
         ),
-        # This is the last powered zone, so the whole receiver goes to standby.
-        pytest.param(MAIN_ENTITY_ID, ("main",), ("PW", "STANDBY"), id="main_last_zone"),
+        # This is the last powered zone: switch the zone off, then standby the
+        # chassis so the receiver does not restore the zone on next power-on.
         pytest.param(
-            ZONE_2_ENTITY_ID, ("zone_2",), ("PW", "STANDBY"), id="zone_2_last_zone"
+            MAIN_ENTITY_ID,
+            ("main",),
+            [("ZM", "OFF"), ("PW", "STANDBY")],
+            id="main_last_zone",
+        ),
+        pytest.param(
+            ZONE_2_ENTITY_ID,
+            ("zone_2",),
+            [("Z2", "OFF"), ("PW", "STANDBY")],
+            id="zone_2_last_zone",
         ),
     ],
 )
@@ -155,22 +167,25 @@ async def test_turn_off(
     mock_receiver: MockReceiver,
     entity_id: str,
     active_zones: tuple[ZoneName, ...],
-    power_off_command: tuple[str, str],
+    expected_commands: list[tuple[str, str]],
 ) -> None:
-    """Test turning off the last active zone standbys the whole receiver."""
+    """Test turning off a zone standbys the receiver once no zone is left on."""
     state = _default_state()
     for zone in ("main", "zone_2", "zone_3"):
         state.get_zone(zone).power = zone in active_zones
     mock_receiver.mock_state(state)
     await hass.async_block_till_done()
 
+    mock_receiver._send_command.reset_mock()
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert mock_receiver._send_command.await_args == call(*power_off_command)
+    assert mock_receiver._send_command.await_args_list == [
+        call(*command) for command in expected_commands
+    ]
 
 
 @pytest.mark.parametrize(
