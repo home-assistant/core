@@ -73,6 +73,9 @@ STALE_THRESHOLD_S_MIN: float = 120.0
 # GPS updates arrive (decay mechanism).
 STALE_THRESHOLD_S_MAX: float = 900.0
 
+# Maximum age of samples to consider for speed calculation.
+SPEED_WINDOW_MAX_AGE_S: float = 900.0
+
 # -- Type alias -----------------------------------------------------------------
 type ProximityConfigEntry = ConfigEntry["ProximityDataUpdateCoordinator"]
 
@@ -146,14 +149,15 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
     def __init__(self, hass: HomeAssistant, config_entry: ProximityConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.ignored_zone_ids: list[str] = config_entry.data[CONF_IGNORED_ZONES]
-        self.speed_threshold: float = config_entry.data.get(
+        conf = {**config_entry.data, **config_entry.options}
+        self.ignored_zone_ids: list[str] = conf[CONF_IGNORED_ZONES]
+        self.speed_threshold: float = conf.get(
             CONF_SPEED_THRESHOLD, DEFAULT_SPEED_THRESHOLD
         )
-        self.tolerance: int = config_entry.data[CONF_TOLERANCE]
-        self.tracked_entities: list[str] = config_entry.data[CONF_TRACKED_ENTITIES]
-        self.proximity_zone_id: str = config_entry.data[CONF_ZONE]
-        self.unit_of_measurement: str = config_entry.data.get(
+        self.tolerance: int = conf[CONF_TOLERANCE]
+        self.tracked_entities: list[str] = conf[CONF_TRACKED_ENTITIES]
+        self.proximity_zone_id: str = conf[CONF_ZONE]
+        self.unit_of_measurement: str = conf.get(
             CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
         )
         self.entity_mapping: dict[str, list[str]] = defaultdict(list)
@@ -221,7 +225,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     - offset,
                     stale_threshold_s,
                 )
-        stale_threshold_s = max(stale_threshold_s, STALE_THRESHOLD_S_MIN)
+        stale_threshold_s = max(stale_threshold_s, 0.0)
         self._decay_unsub = async_call_later(
             self.hass, stale_threshold_s, _decay_callback
         )
@@ -397,7 +401,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         now = samples[-1].timestamp
         total_period = min(
-            (now - samples[0].timestamp).total_seconds(), STALE_THRESHOLD_S_MAX
+            (now - samples[0].timestamp).total_seconds(), SPEED_WINDOW_MAX_AGE_S
         )
         if total_period <= 0:
             return None
@@ -410,7 +414,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 continue
 
             age = (now - samples[i].timestamp).total_seconds()
-            if age > STALE_THRESHOLD_S_MAX:
+            if age > SPEED_WINDOW_MAX_AGE_S:
                 continue
             weight = 1.0 - age / total_period
 
