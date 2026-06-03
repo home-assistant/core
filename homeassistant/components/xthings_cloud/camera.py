@@ -1,6 +1,5 @@
 """Camera platform for Xthings Cloud."""
 
-import contextlib
 from typing import Any
 
 from ha_xthings_cloud import KvsSignalingClient
@@ -64,12 +63,14 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             model=device_data.get("model", "Unknown"),
             sw_version=device_data.get("version"),
         )
-        self._attr_supported_features = CameraEntityFeature.STREAM
+        self._attr_supported_features = CameraEntityFeature.WEBRTC
         self._cached_image: bytes | None = None
         self._cached_snapshot_url: str | None = None
         self._snapshot_task: Any | None = None
         self._kvs_sessions: dict[str, Any] = {}
-        self._pending_candidates: dict[str, list[tuple[str, str | None, int | None]]] = {}
+        self._pending_candidates: dict[
+            str, list[tuple[str, str | None, int | None]]
+        ] = {}
 
     @property
     def device_data(self) -> dict[str, Any]:
@@ -86,7 +87,9 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
     @property
     def available(self) -> bool:
         """Return true if device is available."""
-        return self.coordinator.last_update_success and self.device_data.get("online", False)
+        return self.coordinator.last_update_success and self.device_data.get(
+            "online", False
+        )
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -131,35 +134,50 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
     ) -> None:
         """Handle WebRTC offer via KVS signaling."""
         try:
-            kvs_data = await self.coordinator.client.async_get_camera_webrtc(self._device_id)
+            kvs_data = await self.coordinator.client.async_get_camera_webrtc(
+                self._device_id
+            )
             region = kvs_data.get("region")
             channel_arn = kvs_data.get("channel_arn")
             viewer = kvs_data.get("viewer")
 
             if not all([region, channel_arn, viewer]):
-                send_message(WebRTCError(code="kvs_error", message="Invalid KVS credentials"))
+                send_message(
+                    WebRTCError(code="kvs_error", message="Invalid KVS credentials")
+                )
                 return
 
             session = async_get_clientsession(self.hass)
             kvs_client = KvsSignalingClient(
-                session=session, region=region,
-                channel_arn=channel_arn, credentials=viewer,
+                session=session,
+                region=region,
+                channel_arn=channel_arn,
+                credentials=viewer,
             )
             self._kvs_sessions[session_id] = kvs_client
 
             # Bridge: convert dict ICE candidates to HA WebRTCCandidate objects
             def _on_ice(cand: dict) -> None:
-                with contextlib.suppress(Exception):
-                    send_message(WebRTCCandidate(
-                        candidate=RTCIceCandidateInit(
-                            candidate=cand.get("candidate", ""),
-                            sdp_mid=cand.get("sdpMid", ""),
-                            sdp_m_line_index=cand.get("sdpMLineIndex", 0),
+                try:
+                    send_message(
+                        WebRTCCandidate(
+                            candidate=RTCIceCandidateInit(
+                                candidate=cand.get("candidate", ""),
+                                sdp_mid=cand.get("sdpMid", ""),
+                                sdp_m_line_index=cand.get("sdpMLineIndex", 0),
+                            )
                         )
-                    ))
+                    )
+                except (KeyError, ValueError, TypeError) as err:
+                    LOGGER.debug(
+                        "Failed to convert ICE candidate: %s, candidate data: %s",
+                        err,
+                        cand,
+                    )
 
             answer_sdp = await kvs_client.async_get_answer_sdp(
-                offer_sdp, on_ice_candidate=_on_ice,
+                offer_sdp,
+                on_ice_candidate=_on_ice,
             )
 
             for cand in self._pending_candidates.pop(session_id, []):
@@ -168,11 +186,15 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             if answer_sdp:
                 send_message(WebRTCAnswer(answer=answer_sdp))
             else:
-                send_message(WebRTCError(code="kvs_error", message="No answer SDP from KVS"))
+                send_message(
+                    WebRTCError(code="kvs_error", message="No answer SDP from KVS")
+                )
 
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             LOGGER.exception("KVS WebRTC failed: %s", err)
-            send_message(WebRTCError(code="kvs_error", message="WebRTC negotiation failed"))
+            send_message(
+                WebRTCError(code="kvs_error", message="WebRTC negotiation failed")
+            )
 
     async def async_on_webrtc_candidate(
         self, session_id: str, candidate: RTCIceCandidateInit
@@ -183,7 +205,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             await kvs_client.async_send_ice_candidate(
                 candidate=candidate.candidate,
                 sdp_mid=candidate.sdp_mid,
-                sdp_mline_index=candidate.sdp_m_line_index,
+                sdp_m_line_index=candidate.sdp_m_line_index,
             )
         else:
             self._pending_candidates.setdefault(session_id, []).append(
