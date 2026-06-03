@@ -1,7 +1,5 @@
 """Component providing select entities for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
@@ -10,6 +8,7 @@ from typing import Any
 
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import (
+    NVR,
     Camera,
     ChimeType,
     DoorbellMessageType,
@@ -22,22 +21,27 @@ from uiprotect.data import (
     MountType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
+    PublicHdrMode,
     RecordingMode,
     Sensor,
     Viewer,
 )
+from uiprotect.exceptions import GlobalAlarmManagerError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import TYPE_EMPTY_VALUE
+from .const import DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
+    ProtectNVREntity,
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
@@ -181,11 +185,15 @@ async def _set_paired_camera(obj: Light | Sensor | Doorlock, camera_id: str) -> 
 async def _set_doorbell_message(obj: Camera, message: str) -> None:
     if message.startswith(DoorbellMessageType.CUSTOM_MESSAGE.value):
         message = message.rsplit(":", maxsplit=1)[-1]
-        await obj.set_lcd_text(DoorbellMessageType.CUSTOM_MESSAGE, text=message)
+        await obj.set_lcd_message_public(
+            DoorbellMessageType.CUSTOM_MESSAGE, text=message
+        )
     elif message == TYPE_EMPTY_VALUE:
+        # Public API has no endpoint to clear the LCD message; fall back to
+        # the non-deprecated legacy helper.
         await obj.set_lcd_text(None)
     else:
-        await obj.set_lcd_text(DoorbellMessageType(message))
+        await obj.set_lcd_message_public(DoorbellMessageType(message))
 
 
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
@@ -201,6 +209,18 @@ async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
     else:
         slot = int(patrol_slot)
         await obj.ptz_patrol_start_public(slot=slot)
+
+
+_HDR_MODE_MAP = {
+    "auto": PublicHdrMode.AUTO,
+    "always": PublicHdrMode.ON,
+    "off": PublicHdrMode.OFF,
+}
+
+
+async def _set_hdr_mode(obj: Camera, mode: str) -> None:
+    """Set HDR mode via the public API."""
+    await obj.set_hdr_mode_public(_HDR_MODE_MAP[mode])
 
 
 PTZ_PATROL_DESCRIPTION = ProtectSelectEntityDescription[Camera](
@@ -255,14 +275,14 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_set_method="set_chime_type",
         ufp_perm=PermRequired.WRITE,
     ),
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Camera](
         key="hdr_mode",
         translation_key="hdr_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_hdr",
         ufp_options=HDR_MODES,
         ufp_value="hdr_mode_display",
-        ufp_set_method="set_hdr_mode",
+        ufp_set_method_fn=_set_hdr_mode,
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -326,7 +346,6 @@ VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Viewer](
         key="viewer",
         translation_key="liveview",
-        entity_category=None,
         ufp_options_fn=_get_viewer_options,
         ufp_value_fn=_get_viewer_current,
         ufp_set_method_fn=_set_liveview,
@@ -378,6 +397,14 @@ async def async_setup_entry(
         if camera.feature_flags.is_ptz and camera.is_adopted_by_us:
             patrols = data.ptz_patrols.get(camera.id, [])
             entities.append(ProtectPTZPatrolSelect(data, camera, patrols))
+
+    api = data.api
+    if (
+        api.has_public_bootstrap
+        and api.public_bootstrap.arm_mode is not None
+        and api.public_bootstrap.arm_profiles
+    ):
+        entities.append(ProtectNVRArmProfileSelect(data, device=api.bootstrap.nvr))
 
     async_add_entities(entities)
 
@@ -500,3 +527,62 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
         unifi_value = self._hass_to_unifi_options[option]
         await _set_ptz_patrol(self.device, unifi_value)
         # State will be updated via websocket when active_patrol_slot changes
+
+
+class ProtectNVRArmProfileSelect(ProtectNVREntity, SelectEntity):
+    """UniFi Protect NVR arm profile select entity."""
+
+    _attr_translation_key = "nvr_arm_profile"
+    _attr_current_option: str | None = None
+    _state_attrs = ("_attr_available", "_attr_options", "_attr_current_option")
+
+    def __init__(self, data: ProtectData, device: NVR) -> None:
+        """Initialize the NVR arm profile select entity."""
+        self._id_to_name: dict[str, str] = {}
+        self._name_to_id: dict[str, str] = {}
+        super().__init__(data, device, EntityDescription(key="nvr_arm_profile"))
+        self._refresh_arm_profile_state()
+
+    @callback
+    def _refresh_arm_profile_state(self) -> None:
+        """Update options and current option from the public bootstrap cache."""
+        api = self.data.api
+        pb = api.public_bootstrap if api.has_public_bootstrap else None
+        arm_mode = pb.arm_mode if pb is not None else None
+
+        if pb is None or arm_mode is None:
+            self._attr_available = False
+            self._attr_options = []
+            self._attr_current_option = None
+            return
+
+        # Always append a short id suffix so every option label is unique
+        # and stable even if another profile with the same name is added later.
+        self._id_to_name = {}
+        self._name_to_id = {}
+        for pid, profile in pb.arm_profiles.items():
+            label = f"{profile.name} ({pid[-6:]})"
+            self._id_to_name[pid] = label
+            self._name_to_id[label] = pid
+        self._attr_options = sorted(self._name_to_id)
+        profile_id = arm_mode.arm_profile_id
+        self._attr_current_option = (
+            self._id_to_name.get(profile_id) if profile_id else None
+        )
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        self._refresh_arm_profile_state()
+
+    @async_ufp_instance_command
+    async def async_select_option(self, option: str) -> None:
+        """Change the currently active arm profile."""
+        profile_id = self._name_to_id[option]
+        try:
+            await self.data.api.set_current_arm_profile_public(profile_id)
+        except GlobalAlarmManagerError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="global_alarm_manager",
+            ) from err

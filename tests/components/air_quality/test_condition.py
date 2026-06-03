@@ -114,21 +114,21 @@ _UGM3_THRESHOLD = {
         ("air_quality.is_smoke_detected", {}, True, True),
         ("air_quality.is_smoke_cleared", {}, True, True),
         # Numerical conditions with unit conversion (μg/m³ base)
-        ("air_quality.is_co_value", _UGM3_THRESHOLD, True, False),
-        ("air_quality.is_ozone_value", _UGM3_THRESHOLD, True, False),
-        ("air_quality.is_voc_value", _UGM3_THRESHOLD, True, False),
-        ("air_quality.is_no_value", _UGM3_THRESHOLD, True, False),
-        ("air_quality.is_no2_value", _UGM3_THRESHOLD, True, False),
-        ("air_quality.is_so2_value", _UGM3_THRESHOLD, True, False),
+        ("air_quality.is_co_value", _UGM3_THRESHOLD, True, True),
+        ("air_quality.is_ozone_value", _UGM3_THRESHOLD, True, True),
+        ("air_quality.is_voc_value", _UGM3_THRESHOLD, True, True),
+        ("air_quality.is_no_value", _UGM3_THRESHOLD, True, True),
+        ("air_quality.is_no2_value", _UGM3_THRESHOLD, True, True),
+        ("air_quality.is_so2_value", _UGM3_THRESHOLD, True, True),
         # Numerical conditions with unit conversion (ppb base)
-        ("air_quality.is_voc_ratio_value", _PPB_THRESHOLD, True, False),
+        ("air_quality.is_voc_ratio_value", _PPB_THRESHOLD, True, True),
         # Numerical conditions without unit conversion
-        ("air_quality.is_co2_value", _PLAIN_THRESHOLD, True, False),
-        ("air_quality.is_pm1_value", _PLAIN_THRESHOLD, True, False),
-        ("air_quality.is_pm25_value", _PLAIN_THRESHOLD, True, False),
-        ("air_quality.is_pm4_value", _PLAIN_THRESHOLD, True, False),
-        ("air_quality.is_pm10_value", _PLAIN_THRESHOLD, True, False),
-        ("air_quality.is_n2o_value", _PLAIN_THRESHOLD, True, False),
+        ("air_quality.is_co2_value", _PLAIN_THRESHOLD, True, True),
+        ("air_quality.is_pm1_value", _PLAIN_THRESHOLD, True, True),
+        ("air_quality.is_pm25_value", _PLAIN_THRESHOLD, True, True),
+        ("air_quality.is_pm4_value", _PLAIN_THRESHOLD, True, True),
+        ("air_quality.is_pm10_value", _PLAIN_THRESHOLD, True, True),
+        ("air_quality.is_n2o_value", _PLAIN_THRESHOLD, True, True),
     ],
 )
 async def test_air_quality_condition_options_validation(
@@ -494,7 +494,10 @@ async def test_air_quality_numerical_no_unit_condition_behavior_any(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test air quality numerical conditions without unit conversion and 'any' behavior."""
+    """Test air quality numerical conditions.
+
+    Without unit conversion and 'any' behavior.
+    """
     await assert_condition_behavior_any(
         hass,
         target_entities=target_sensors,
@@ -557,7 +560,10 @@ async def test_air_quality_numerical_no_unit_condition_behavior_all(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test air quality numerical conditions without unit conversion and 'all' behavior."""
+    """Test air quality numerical conditions.
+
+    Without unit conversion and 'all' behavior.
+    """
     await assert_condition_behavior_all(
         hass,
         target_entities=target_sensors,

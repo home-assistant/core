@@ -1,7 +1,5 @@
 """Adds config flow for GIOS."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import TYPE_CHECKING, Any
 

@@ -1,7 +1,5 @@
 """Support for IKEA Tradfri."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from pytradfri import Gateway, RequestError
@@ -167,7 +165,8 @@ def remove_stale_devices(
             continue
 
         if device_id is None or device_id not in all_device_ids:
-            # If device_id is None an invalid device entry was found for this config entry.
+            # If device_id is None an invalid device entry
+            # was found for this config entry.
             # If the device_id is not in existing device ids it's a stale device entry.
             # Remove config entry from this device entry in either case.
             device_registry.async_update_device(
@@ -239,7 +238,8 @@ def migrate_config_entry_and_identifiers(
         # Loop through list of config_entry_ids for device
         config_entry_ids = device.config_entries
         for config_entry_id in config_entry_ids:
-            # Check that the config entry in list is not the device's primary config entry
+            # Check that the config entry in list is not
+            # the device's primary config entry
             if config_entry_id == device.primary_config_entry:
                 continue
 

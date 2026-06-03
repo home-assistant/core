@@ -1,7 +1,5 @@
 """Support for MQTT JSON lights."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, Any, cast

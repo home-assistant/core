@@ -1,7 +1,5 @@
 """Support for Yamaha Receivers."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -409,6 +407,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         """Set the current scene."""
         try:
             self.zctrl.scene = scene
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AssertionError:
             _LOGGER.warning("Scene '%s' does not exist!", scene)
 

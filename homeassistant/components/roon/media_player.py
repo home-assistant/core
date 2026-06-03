@@ -1,7 +1,5 @@
 """MediaPlayer platform for Roon integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 
@@ -209,7 +207,7 @@ class RoonDevice(MediaPlayerEntity):
         return volume
 
     def _parse_now_playing(self, player_data):
-        """Parse now playing data to determine title, artist, position, duration and artwork."""
+        """Parse now playing data for title, artist, position, etc."""
         now_playing = {
             "title": None,
             "artist": None,

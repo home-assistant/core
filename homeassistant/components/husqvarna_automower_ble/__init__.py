@@ -1,13 +1,12 @@
 """The Husqvarna Autoconnect Bluetooth integration."""
 
-from __future__ import annotations
-
 from automower_ble.mower import Mower
 from automower_ble.protocol import ResponseResult
 from bleak import BleakError
 from bleak_retry_connector import close_stale_connections_by_address, get_device
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
@@ -53,11 +52,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
             )
         if response_result != ResponseResult.OK:
             raise ConfigEntryNotReady(
-                f"Unable to connect to device {address}, mower returned {response_result}"
+                f"Unable to connect to device {address}, "
+                f"mower returned {response_result}"
             )
     except (TimeoutError, BleakError) as exception:
         raise ConfigEntryNotReady(
-            f"Unable to connect to device {address} due to {exception}"
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "address": address,
+                "error": str(exception) or type(exception).__name__,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         ) from exception
 
     LOGGER.debug("connected and paired")

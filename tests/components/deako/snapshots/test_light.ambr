@@ -162,8 +162,8 @@
 # name: test_light_setup_with_device[light.some_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 1,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'brightness': None,
+      'color_mode': None,
       'friendly_name': 'some device',
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -175,6 +175,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---

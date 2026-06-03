@@ -329,7 +329,7 @@ async def test_default_entity_and_device_name(
 
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
-        data={mqtt.CONF_BROKER: "mock-broker"},
+        data={mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_PROTOCOL: "5"},
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
@@ -464,8 +464,8 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
 
 

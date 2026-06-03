@@ -1,7 +1,5 @@
 """Support for binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, cast
@@ -45,7 +43,7 @@ BINARY_SENSOR_TYPES: Final[tuple[ComelitBinarySensorEntityDescription, ...]] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on_fn=lambda obj: cast(ComelitVedoAreaObject, obj).anomaly,
         available_fn=lambda obj: (
-            cast(ComelitVedoAreaObject, obj).human_status != AlarmAreaState.UNKNOWN
+            cast(ComelitVedoAreaObject, obj).human_status is not AlarmAreaState.UNKNOWN
         ),
     ),
     ComelitBinarySensorEntityDescription(
@@ -69,7 +67,7 @@ BINARY_SENSOR_TYPES: Final[tuple[ComelitBinarySensorEntityDescription, ...]] = (
         object_type=ALARM_ZONE,
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on_fn=lambda obj: (
-            cast(ComelitVedoZoneObject, obj).human_status == AlarmZoneState.FAULTY
+            cast(ComelitVedoZoneObject, obj).human_status is AlarmZoneState.FAULTY
         ),
         available_fn=lambda obj: (
             cast(ComelitVedoZoneObject, obj).human_status

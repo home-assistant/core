@@ -1,6 +1,4 @@
-"""Config flow for the Denon RS232 integration."""
-
-from __future__ import annotations
+"""Config flow for the Denon RS-232 integration."""
 
 from typing import Any
 
@@ -65,7 +63,7 @@ async def _async_attempt_connect(port: str, model_key: str) -> str | None:
 
 
 class DenonRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Denon RS232."""
+    """Handle a config flow for Denon RS-232."""
 
     VERSION = 1
 

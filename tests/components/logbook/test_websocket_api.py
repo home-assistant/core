@@ -59,7 +59,7 @@ from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
-    """Return listeners without final write listeners since we are not testing for these."""
+    """Return listeners without final write listeners."""
     return {
         key: value
         for key, value in listeners.items()
@@ -121,7 +121,7 @@ async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
 async def _async_mock_entity_with_broken_logbook_platform(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> er.RegistryEntry:
-    """Mock an integration that provides an entity that are described by the logbook that raises."""
+    """Mock an integration with an entity that raises in logbook."""
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_hass(hass)
     entry = entity_registry.async_get_or_create(
@@ -189,8 +189,8 @@ async def test_get_events(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -309,8 +309,8 @@ async def test_get_events_entities_filtered_away(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -475,8 +475,8 @@ async def test_get_events_with_device_ids(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
 
@@ -588,8 +588,8 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "automation", "script")
         ]
     )
     await async_setup_component(
@@ -784,8 +784,8 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "automation", "script")
         ]
     )
     await async_setup_component(
@@ -985,8 +985,8 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "automation", "script")
         ]
     )
     await async_setup_component(
@@ -1178,8 +1178,8 @@ async def test_subscribe_unsubscribe_logbook_stream(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1487,8 +1487,8 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1583,12 +1583,12 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
 async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test subscribe/unsubscribe logbook stream with specific entities and an end_time."""
+    """Test logbook stream with specific entities and an end_time."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1691,8 +1691,8 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1765,8 +1765,8 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1866,8 +1866,8 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
@@ -1995,8 +1995,8 @@ async def test_logbook_stream_match_multiple_entities(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     entry = await _async_mock_entity_with_logbook_platform(hass, entity_registry)
@@ -2109,8 +2109,8 @@ async def test_logbook_stream_match_multiple_entities_one_with_broken_logbook_pl
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     entry = await _async_mock_entity_with_broken_logbook_platform(hass, entity_registry)
@@ -2247,8 +2247,8 @@ async def test_live_stream_with_one_second_commit_interval(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
@@ -2337,8 +2337,8 @@ async def test_subscribe_disconnected(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     await async_wait_recording_done(hass)
@@ -2396,8 +2396,8 @@ async def test_stream_consumer_stop_processing(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     await async_wait_recording_done(hass)
@@ -2462,8 +2462,8 @@ async def test_recorder_is_far_behind(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     await async_wait_recording_done(hass)
@@ -2541,12 +2541,12 @@ async def test_recorder_is_far_behind(
 async def test_subscribe_all_entities_are_continuous(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test subscribe/unsubscribe logbook stream with entities that are always filtered."""
+    """Test logbook stream with always-filtered entities."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     await async_wait_recording_done(hass)
@@ -2559,6 +2559,7 @@ async def test_subscribe_all_entities_are_continuous(
                     entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: "any"}
                 )
                 hass.states.async_set("counter.any", state)
+                hass.states.async_set("image.any", state)
                 hass.states.async_set("proximity.any", state)
 
     # We will compare event subscriptions after closing the websocket connection,
@@ -2573,7 +2574,7 @@ async def test_subscribe_all_entities_are_continuous(
             "id": 7,
             "type": "logbook/event_stream",
             "start_time": now.isoformat(),
-            "entity_ids": ["sensor.uom", "counter.any", "proximity.any"],
+            "entity_ids": ["sensor.uom", "counter.any", "image.any", "proximity.any"],
         }
     )
 
@@ -2601,12 +2602,12 @@ async def test_subscribe_all_entities_are_continuous(
 async def test_subscribe_all_entities_have_uom_multiple(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test logbook stream with specific request for multiple entities that are always filtered."""
+    """Test logbook stream for multiple always-filtered entities."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     await async_wait_recording_done(hass)
@@ -2664,8 +2665,8 @@ async def test_subscribe_entities_some_have_uom_multiple(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     await async_wait_recording_done(hass)
@@ -2771,8 +2772,8 @@ async def test_logbook_stream_ignores_forced_updates(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -2886,12 +2887,12 @@ async def test_subscribe_all_entities_are_continuous_with_device(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test subscribe/unsubscribe logbook stream with entities that are always filtered and a device."""
+    """Test logbook stream with always-filtered entities and device."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
     await async_wait_recording_done(hass)
@@ -2908,6 +2909,7 @@ async def test_subscribe_all_entities_are_continuous_with_device(
                     entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: "any"}
                 )
                 hass.states.async_set("counter.any", state)
+                hass.states.async_set("image.any", state)
                 hass.states.async_set("proximity.any", state)
         hass.bus.async_fire("mock_event", {"device_id": device.id})
         hass.bus.async_fire("mock_event", {"device_id": device2.id})
@@ -2924,7 +2926,7 @@ async def test_subscribe_all_entities_are_continuous_with_device(
             "id": 7,
             "type": "logbook/event_stream",
             "start_time": now.isoformat(),
-            "entity_ids": ["sensor.uom", "counter.any", "proximity.any"],
+            "entity_ids": ["sensor.uom", "counter.any", "image.any", "proximity.any"],
             "device_ids": [device.id, device2.id],
         }
     )
@@ -2992,8 +2994,8 @@ async def test_live_stream_with_changed_state_change(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
 
@@ -3114,6 +3116,11 @@ async def test_live_stream_with_changed_state_change(
             0,  # Counter is an always continuous domain
         ),
         (
+            "image.map0",
+            {},
+            0,  # Image is an always continuous domain
+        ),
+        (
             "zone.home",
             {},
             1,  # Zone is not an always continuous domain
@@ -3129,12 +3136,12 @@ async def test_consistent_stream_and_recorder_filtering(
     attributes: dict,
     result_count: int,
 ) -> None:
-    """Test that the logbook live stream and get_events apis use consistent filtering rules."""
+    """Test logbook stream and get_events use consistent filtering."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -3227,8 +3234,8 @@ async def test_logbook_stream_user_id_from_parent_context(
     """
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await hass.async_block_till_done()
@@ -3280,8 +3287,8 @@ async def test_logbook_stream_user_id_from_parent_context_filtered(
     """
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await hass.async_block_till_done()
@@ -3345,8 +3352,8 @@ async def test_logbook_stream_parent_context_bridges_historical_to_live(
     """
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await hass.async_block_till_done()
@@ -3460,8 +3467,8 @@ async def test_logbook_get_events_user_id_from_parent_context(
     """
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await hass.async_block_till_done()
@@ -3494,7 +3501,7 @@ async def test_logbook_get_events_user_id_from_parent_context(
 async def test_logbook_get_events_user_id_from_parent_context_filtered(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test user attribution from parent context in historical logbook with entity filter.
+    """Test user attribution from parent context with entity filter.
 
     Uses logbook/get_events with entity_ids, which triggers the filtered
     SQL query path. The query must also fetch parent context rows so that
@@ -3502,8 +3509,8 @@ async def test_logbook_get_events_user_id_from_parent_context_filtered(
     """
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await hass.async_block_till_done()
@@ -3549,8 +3556,8 @@ async def test_logbook_stream_live_parent_service_call_only(
     """
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await hass.async_block_till_done()

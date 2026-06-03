@@ -1,7 +1,5 @@
 """Support for ADS light sources."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import pyads
@@ -108,7 +106,8 @@ class AdsLight(AdsEntity, LightEntity):
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
         self._attr_color_mode = next(iter(self._attr_supported_color_modes))
 
-        # Set color temperature range (static config values take precedence over defaults)
+        # Set color temperature range
+        # (static config values take precedence over defaults)
         if ads_var_color_temp_kelvin is not None:
             self._attr_min_color_temp_kelvin = (
                 min_color_temp_kelvin

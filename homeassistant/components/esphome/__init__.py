@@ -1,7 +1,5 @@
 """Support for esphome devices."""
 
-from __future__ import annotations
-
 import logging
 
 from aioesphomeapi import APIClient, APIConnectionError
@@ -17,6 +15,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
     __version__ as ha_version,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -80,7 +79,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if "usb" in hass.config.components:
         async_register_serial_port_scanner(hass, _async_scan_serial_ports)
-        serial_proxy.set_hass_loop(hass.loop)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP,
+            serial_proxy.register_serialx_transport(hass.loop),
+        )
 
     return True
 
@@ -179,13 +181,15 @@ async def _async_clear_dynamic_encryption_key(
         # Clear the encryption key on the device by passing an empty key
         if not await cli.noise_encryption_set_key(b""):
             _LOGGER.debug(
-                "Could not clear dynamic encryption key for ESPHome device %s: Device rejected key removal",
+                "Could not clear dynamic encryption key for"
+                " ESPHome device %s: Device rejected key removal",
                 entry.unique_id,
             )
             return
     except APIConnectionError as exc:
         _LOGGER.debug(
-            "Could not connect to ESPHome device %s to clear dynamic encryption key: %s",
+            "Could not connect to ESPHome device %s to clear"
+            " dynamic encryption key: %s",
             entry.unique_id,
             exc,
         )

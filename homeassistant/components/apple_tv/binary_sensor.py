@@ -1,13 +1,11 @@
 """Binary sensor support for Apple TV."""
 
-from __future__ import annotations
-
 from pyatv.const import FeatureName, FeatureState, KeyboardFocusState
 from pyatv.interface import AppleTV, KeyboardListener
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_NAME
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -23,23 +21,33 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load Apple TV binary sensor based on a config entry."""
-    # apple_tv config entries always have a unique id
     manager = config_entry.runtime_data
-    cb: CALLBACK_TYPE
+    added = False
 
+    @callback
     def setup_entities(atv: AppleTV) -> None:
+        nonlocal added
+        if added:
+            return
         if atv.features.in_state(FeatureState.Available, FeatureName.TextFocusState):
             assert config_entry.unique_id is not None
             name: str = config_entry.data[CONF_NAME]
             async_add_entities(
                 [AppleTVKeyboardFocused(name, config_entry.unique_id, manager)]
             )
-            cb()
+            added = True
 
-    cb = async_dispatcher_connect(
-        hass, f"{SIGNAL_CONNECTED}_{config_entry.unique_id}", setup_entities
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{SIGNAL_CONNECTED}_{config_entry.unique_id}", setup_entities
+        )
     )
-    config_entry.async_on_unload(cb)
+
+    # The manager may have already connected (and dispatched SIGNAL_CONNECTED)
+    # before this platform was forwarded, in which case the signal above was
+    # missed; handle that case directly.
+    if manager.atv is not None:
+        setup_entities(manager.atv)
 
 
 class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener):
@@ -55,7 +63,7 @@ class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener
         # Listen to keyboard updates
         atv.keyboard.listener = self
         # Set initial state based on current focus state
-        self._update_state(atv.keyboard.text_focus_state == KeyboardFocusState.Focused)
+        self._update_state(atv.keyboard.text_focus_state is KeyboardFocusState.Focused)
 
     @callback
     def async_device_disconnected(self) -> None:
@@ -70,7 +78,7 @@ class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener
 
         This is a callback function from pyatv.interface.KeyboardListener.
         """
-        self._update_state(new_state == KeyboardFocusState.Focused)
+        self._update_state(new_state is KeyboardFocusState.Focused)
 
     def _update_state(self, new_state: bool) -> None:
         """Update and report."""

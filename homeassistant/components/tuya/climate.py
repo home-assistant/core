@@ -1,12 +1,10 @@
 """Support for Tuya Climate."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, cast
 
 from tuya_device_handlers.definition.climate import (
-    TuyaClimateDefinition,
+    ClimateDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.helpers.homeassistant import (
@@ -31,10 +29,12 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
+from .util import get_temperature_unit
 
 _TUYA_TO_HA_HVACMODE_MAPPINGS = {
     TuyaClimateHVACMode.OFF: HVACMode.OFF,
@@ -139,12 +139,15 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     _attr_name = None
     _attr_target_temperature_step = 1.0
 
+    _current_temp_unit: UnitOfTemperature | None = None
+    _set_temp_unit: UnitOfTemperature | None = None
+
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaClimateEntityDescription,
-        definition: TuyaClimateDefinition,
+        definition: ClimateDefinition,
     ) -> None:
         """Determine which values to use."""
         super().__init__(device, device_manager, description)
@@ -158,6 +161,15 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._switch_wrapper = definition.switch_wrapper
         self._target_humidity_wrapper = definition.target_humidity_wrapper
         self._attr_temperature_unit = definition.temperature_unit
+
+        if self._current_temperature:
+            self._current_temp_unit = get_temperature_unit(
+                device, self._current_temperature.native_unit
+            )
+        if self._set_temperature:
+            self._set_temp_unit = get_temperature_unit(
+                device, self._set_temperature.native_unit
+            )
 
         # Get integer type data for the dpcode to set temperature, use
         # it to define min, max & step temperatures
@@ -190,9 +202,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine preset modes (ignore if empty options)
         if definition.preset_wrapper and definition.preset_wrapper.options:
-            self._attr_hvac_modes.append(description.switch_only_hvac_mode)
             self._attr_preset_modes = definition.preset_wrapper.options
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            if description.switch_only_hvac_mode not in self._attr_hvac_modes:
+                self._attr_hvac_modes.append(description.switch_only_hvac_mode)
 
         # Determine dpcode to use for setting the humidity
         if definition.target_humidity_wrapper:
@@ -263,14 +276,26 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self._async_send_wrapper_updates(
-            self._set_temperature, kwargs[ATTR_TEMPERATURE]
-        )
+        value = kwargs[ATTR_TEMPERATURE]
+        if self._set_temp_unit and self._set_temp_unit != self.temperature_unit:
+            value = TemperatureConverter.convert(
+                value, self.temperature_unit, self._set_temp_unit
+            )
+        await self._async_send_wrapper_updates(self._set_temperature, value)
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._read_wrapper(self._current_temperature)
+        value = self._read_wrapper(self._current_temperature)
+        if (
+            value is not None
+            and self._current_temp_unit
+            and self._current_temp_unit != self.temperature_unit
+        ):
+            return TemperatureConverter.convert(
+                value, self._current_temp_unit, self.temperature_unit
+            )
+        return value
 
     @property
     def current_humidity(self) -> int | None:
@@ -280,7 +305,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
-        return self._read_wrapper(self._set_temperature)
+        value = self._read_wrapper(self._set_temperature)
+        if (
+            value is not None
+            and self._set_temp_unit
+            and self._set_temp_unit != self.temperature_unit
+        ):
+            return TemperatureConverter.convert(
+                value, self._set_temp_unit, self.temperature_unit
+            )
+        return value
 
     @property
     def target_humidity(self) -> int | None:

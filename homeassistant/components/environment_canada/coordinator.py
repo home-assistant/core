@@ -1,13 +1,11 @@
 """Coordinator for the Environment Canada (EC) component."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import xml.etree.ElementTree as ET
 
-from env_canada import ECAirQuality, ECRadar, ECWeather, ECWeatherUpdateFailed, ec_exc
+from env_canada import ECAirQuality, ECMap, ECWeather, ECWeatherUpdateFailed, ec_exc
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,7 +17,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type ECConfigEntry = ConfigEntry[ECRuntimeData]
-type ECDataType = ECAirQuality | ECRadar | ECWeather
+type ECDataType = ECAirQuality | ECMap | ECWeather
 
 
 @dataclass
@@ -27,7 +25,7 @@ class ECRuntimeData:
     """Class to hold EC runtime data."""
 
     aqhi_coordinator: ECDataUpdateCoordinator[ECAirQuality]
-    radar_coordinator: ECDataUpdateCoordinator[ECRadar]
+    radar_coordinator: ECDataUpdateCoordinator[ECMap]
     weather_coordinator: ECDataUpdateCoordinator[ECWeather]
 
 

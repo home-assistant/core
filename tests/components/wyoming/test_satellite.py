@@ -1,13 +1,10 @@
 """Test Wyoming satellite."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import io
-import tempfile
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 import wave
 
 import pytest
@@ -820,6 +817,57 @@ async def test_on_pipeline_event_ignores_disconnected_client(
         assert not mock_client.error_event.is_set()
 
 
+async def test_run_start_without_tts(
+    hass: HomeAssistant,
+) -> None:
+    """Test RUN_START event without tts_output does not crash.
+
+    Regression test for https://github.com/home-assistant/core/issues/165734
+    """
+    events: list[Event] = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE, end_stage=PipelineStage.TTS
+        ).event(),
+    ]
+
+    pipeline_event = asyncio.Event()
+
+    def _async_pipeline_from_audio_stream(*args: Any, **kwargs: Any) -> None:
+        pipeline_event.set()
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(events),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            wraps=_async_pipeline_from_audio_stream,
+        ) as mock_run_pipeline,
+    ):
+        await setup_config_entry(hass)
+
+        async with asyncio.timeout(1):
+            await pipeline_event.wait()
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
+
+        # Fire RUN_START without tts_output (TTS not configured)
+        # must not raise KeyError
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.RUN_START,
+                {"pipeline": "test", "language": "en"},
+            )
+        )
+
+
 async def test_announce_raises_when_client_disconnected(
     hass: HomeAssistant,
 ) -> None:
@@ -1460,7 +1508,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_started_event.wait()
             timer_started = mock_client.timer_started
@@ -1482,7 +1530,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_updated_event.wait()
             timer_updated = mock_client.timer_updated
@@ -1500,7 +1548,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_updated_event.wait()
             timer_updated = mock_client.timer_updated
@@ -1522,7 +1570,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_updated_event.wait()
             timer_updated = mock_client.timer_updated
@@ -1544,7 +1592,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_updated_event.wait()
             timer_updated = mock_client.timer_updated
@@ -1561,7 +1609,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_cancelled_event.wait()
             timer_cancelled = mock_client.timer_cancelled
@@ -1581,7 +1629,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_started_event.wait()
             timer_started = mock_client.timer_started
@@ -1598,7 +1646,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_finished_event.wait()
             timer_finished = mock_client.timer_finished
@@ -1616,8 +1664,13 @@ async def test_announce(
         # Don't create a URL
         return media_id
 
+    # Raw PCM audio that the mocked ffmpeg process will return
+    pcm_audio = bytes(22050 * 2)  # 1 sec of silence at 22050 Hz, 16-bit mono
+
+    mock_proc = MagicMock()
+    mock_proc.stdout.read = AsyncMock(side_effect=[pcm_audio, b""])
+
     with (
-        tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as temp_wav_file,
         patch(
             "homeassistant.components.wyoming.data.load_wyoming_info",
             return_value=SATELLITE_INFO,
@@ -1630,16 +1683,11 @@ async def test_announce(
             "homeassistant.components.assist_satellite.entity.async_process_play_media_url",
             new=async_process_play_media_url,
         ),
+        patch(
+            "asyncio.create_subprocess_exec",
+            return_value=mock_proc,
+        ),
     ):
-        # Use test WAV data for media
-        with wave.open(temp_wav_file.name, "wb") as wav_file:
-            wav_file.setframerate(22050)
-            wav_file.setsampwidth(2)
-            wav_file.setnchannels(1)
-            wav_file.writeframes(bytes(22050 * 2))  # 1 sec
-
-        temp_wav_file.seek(0)
-
         entry = await setup_config_entry(hass)
         device: SatelliteDevice = entry.runtime_data.device
         assert device is not None
@@ -1666,14 +1714,13 @@ async def test_announce(
                 "announce",
                 {
                     "entity_id": satellite_entry.entity_id,
-                    "media_id": temp_wav_file.name,
+                    "media_id": "test.wav",
                 },
                 blocking=True,
             ),
             "wyoming_satellite_announce",
         )
 
-        # Wait for audio to come from ffmpeg
         async with asyncio.timeout(1):
             await mock_client.tts_audio_start_event.wait()
             await mock_client.tts_audio_chunk_event.wait()

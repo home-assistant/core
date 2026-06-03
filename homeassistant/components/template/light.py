@@ -1,7 +1,5 @@
 """Support for Template lights."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 import logging
@@ -22,24 +20,13 @@ from homeassistant.components.light import (
     DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
     filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_EFFECT,
-    CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
-    CONF_LIGHTS,
-    CONF_NAME,
-    CONF_RGB,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import CONF_EFFECT, CONF_HS, CONF_NAME, CONF_RGB, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -59,7 +46,6 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_schema,
 )
@@ -70,62 +56,27 @@ _LOGGER = logging.getLogger(__name__)
 
 # Legacy
 ATTR_COLOR_TEMP = "color_temp"
-CONF_COLOR_ACTION = "set_color"
-CONF_COLOR_TEMPLATE = "color_template"
 
-CONF_HS = "hs"
 CONF_HS_ACTION = "set_hs"
-CONF_HS_TEMPLATE = "hs_template"
 CONF_RGB_ACTION = "set_rgb"
-CONF_RGB_TEMPLATE = "rgb_template"
 CONF_RGBW = "rgbw"
 CONF_RGBW_ACTION = "set_rgbw"
-CONF_RGBW_TEMPLATE = "rgbw_template"
 CONF_RGBWW = "rgbww"
 CONF_RGBWW_ACTION = "set_rgbww"
-CONF_RGBWW_TEMPLATE = "rgbww_template"
 CONF_EFFECT_ACTION = "set_effect"
 CONF_EFFECT_LIST = "effect_list"
-CONF_EFFECT_LIST_TEMPLATE = "effect_list_template"
-CONF_EFFECT_TEMPLATE = "effect_template"
 CONF_LEVEL = "level"
 CONF_LEVEL_ACTION = "set_level"
-CONF_LEVEL_TEMPLATE = "level_template"
 CONF_MAX_MIREDS = "max_mireds"
-CONF_MAX_MIREDS_TEMPLATE = "max_mireds_template"
 CONF_MIN_MIREDS = "min_mireds"
-CONF_MIN_MIREDS_TEMPLATE = "min_mireds_template"
 CONF_OFF_ACTION = "turn_off"
 CONF_ON_ACTION = "turn_on"
 CONF_SUPPORTS_TRANSITION = "supports_transition"
-CONF_SUPPORTS_TRANSITION_TEMPLATE = "supports_transition_template"
 CONF_TEMPERATURE_ACTION = "set_temperature"
 CONF_TEMPERATURE = "temperature"
-CONF_TEMPERATURE_TEMPLATE = "temperature_template"
-CONF_WHITE_VALUE_ACTION = "set_white_value"
-CONF_WHITE_VALUE = "white_value"
-CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
-
-LEGACY_FIELDS = {
-    CONF_COLOR_ACTION: CONF_HS_ACTION,
-    CONF_COLOR_TEMPLATE: CONF_HS,
-    CONF_EFFECT_LIST_TEMPLATE: CONF_EFFECT_LIST,
-    CONF_EFFECT_TEMPLATE: CONF_EFFECT,
-    CONF_HS_TEMPLATE: CONF_HS,
-    CONF_LEVEL_TEMPLATE: CONF_LEVEL,
-    CONF_MAX_MIREDS_TEMPLATE: CONF_MAX_MIREDS,
-    CONF_MIN_MIREDS_TEMPLATE: CONF_MIN_MIREDS,
-    CONF_RGB_TEMPLATE: CONF_RGB,
-    CONF_RGBW_TEMPLATE: CONF_RGBW,
-    CONF_RGBWW_TEMPLATE: CONF_RGBWW,
-    CONF_SUPPORTS_TRANSITION_TEMPLATE: CONF_SUPPORTS_TRANSITION,
-    CONF_TEMPERATURE_TEMPLATE: CONF_TEMPERATURE,
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-    CONF_WHITE_VALUE_TEMPLATE: CONF_WHITE_VALUE,
-}
 
 DEFAULT_NAME = "Template Light"
 
@@ -171,49 +122,6 @@ LIGHT_YAML_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(make_template_entity_common_modern_schema(LIGHT_DOMAIN, DEFAULT_NAME).schema)
 
-LIGHT_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Exclusive(CONF_COLOR_ACTION, "hs_legacy_action"): cv.SCRIPT_SCHEMA,
-            vol.Exclusive(CONF_COLOR_TEMPLATE, "hs_legacy_template"): cv.template,
-            vol.Exclusive(CONF_HS_ACTION, "hs_legacy_action"): cv.SCRIPT_SCHEMA,
-            vol.Exclusive(CONF_HS_TEMPLATE, "hs_legacy_template"): cv.template,
-            vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_RGB_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGBW_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_RGBW_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGBWW_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_RGBWW_TEMPLATE): cv.template,
-            vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
-            vol.Inclusive(CONF_EFFECT_LIST_TEMPLATE, "effect"): cv.template,
-            vol.Inclusive(CONF_EFFECT_TEMPLATE, "effect"): cv.template,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
-            vol.Optional(CONF_MAX_MIREDS_TEMPLATE): cv.template,
-            vol.Optional(CONF_MIN_MIREDS_TEMPLATE): cv.template,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SUPPORTS_TRANSITION_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_TEMPERATURE_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        }
-    ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
-)
-
-PLATFORM_SCHEMA = vol.All(
-    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
-    cv.removed(CONF_WHITE_VALUE_ACTION),
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    LIGHT_PLATFORM_SCHEMA.extend(
-        {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LIGHT_LEGACY_YAML_SCHEMA)}
-    ),
-)
-
 LIGHT_CONFIG_ENTRY_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
@@ -234,8 +142,6 @@ async def async_setup_platform(
         TriggerLightEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_LIGHTS,
         script_options=SCRIPT_FIELDS,
     )
 
@@ -361,8 +267,11 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(  # pylint: disable=super-init-not-called
         self, name: str, config: dict[str, Any]
     ) -> None:

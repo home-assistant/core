@@ -1,7 +1,5 @@
 """Adds config flow for Time & Date integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -10,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import PlatformData
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -24,7 +23,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_DISPLAY_OPTIONS, DOMAIN, OPTION_TYPES
+from .const import DOMAIN, OPTION_TYPES
 from .sensor import TimeDateSensor
 
 _LOGGER = logging.getLogger(__name__)

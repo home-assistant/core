@@ -1,7 +1,5 @@
 """Button platform for the Pterodactyl integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -98,7 +96,9 @@ class PterodactylButtonEntity(PterodactylEntity, ButtonEntity):
             )
         except PterodactylConnectionError as err:
             raise HomeAssistantError(
-                f"Failed to send action '{self.entity_description.key}': Connection error"
+                "Failed to send action"
+                f" '{self.entity_description.key}':"
+                " Connection error"
             ) from err
         except PterodactylAuthorizationError as err:
             raise HomeAssistantError(

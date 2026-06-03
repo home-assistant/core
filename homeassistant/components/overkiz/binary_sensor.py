@@ -1,7 +1,5 @@
 """Support for Overkiz binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
@@ -98,7 +96,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizBinarySensorDescription(
         key=OverkizState.IO_OPERATING_MODE_CAPABILITIES,
-        name="Energy Demand Status",
+        name="Energy demand status",
         device_class=BinarySensorDeviceClass.HEAT,
         value_fn=lambda state: (
             cast(dict, state).get(OverkizCommandParam.ENERGY_DEMAND_STATUS) == 1

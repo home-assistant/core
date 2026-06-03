@@ -20,7 +20,8 @@ from tests.components.bluetooth import generate_ble_device
 
 OPENDISPLAY_MANUFACTURER_ID = 9286  # 0x2446
 
-# V1 advertisement payload (14 bytes): battery_mv=3700, temperature_c=25.0, loop_counter=1
+# V1 advertisement payload (14 bytes):
+# battery_mv=3700, temperature_c=25.0, loop_counter=1
 V1_ADVERTISEMENT_DATA = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x82\x72\x11"
 
 TEST_ADDRESS = "AA:BB:CC:DD:EE:FF"
