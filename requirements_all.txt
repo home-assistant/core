@@ -133,7 +133,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.5.6
+actron-neo-api==0.5.12
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -212,7 +212,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.5
+aioautomower==2.7.6
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -285,7 +285,7 @@ aioharmony==1.0.8
 aiohasupervisor==0.4.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.36.0
+aiohomeconnect==0.36.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -474,7 +474,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.6.5
+airos==0.6.8
 
 # homeassistant.components.airpatrol
 airpatrol==0.1.0
@@ -1269,7 +1269,7 @@ hole==0.9.0
 holidays==0.97
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260527.3
+home-assistant-frontend==20260527.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.6.1
@@ -1278,7 +1278,7 @@ home-assistant-intents==2026.6.1
 homekit-audio-proxy==1.2.1
 
 # homeassistant.components.gentex_homelink
-homelink-integration-api==0.0.1
+homelink-integration-api==0.0.5
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.12.0
@@ -2228,6 +2228,9 @@ pyialarm==2.2.0
 # homeassistant.components.icloud
 pyicloud==2.4.1
 
+# homeassistant.components.imou
+pyimouapi==1.2.7
+
 # homeassistant.components.insteon
 pyinsteon==1.6.4
 
@@ -2259,7 +2262,7 @@ pyiss==1.0.1
 pyisy==3.6.1
 
 # homeassistant.components.itach
-pyitachip2ir==0.0.7
+pyitachip2ir2==0.0.8
 
 # homeassistant.components.ituran
 pyituran==0.1.5
@@ -2887,7 +2890,7 @@ renault-api==0.5.11
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.20.0
+reolink-aio==0.20.1
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.0.1
@@ -3320,7 +3323,7 @@ volkszaehler==0.4.0
 volvocarsapi==0.4.3
 
 # homeassistant.components.verisure
-vsure==2.6.7
+vsure==2.7.0
 
 # homeassistant.components.vasttrafik
 vtjp==0.2.1
