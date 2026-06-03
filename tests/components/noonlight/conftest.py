@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from httpx import Response
 import pytest
 import respx
@@ -28,6 +30,22 @@ from tests.common import MockConfigEntry
 
 # Base URL for the sandbox environment the test entries target.
 SANDBOX = "https://api-sandbox.noonlight.com"
+
+
+@pytest.fixture(autouse=True)
+def _isolate_audit_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep the integration's raw audit-log writes out of the repo tree.
+
+    The coordinator appends an audit JSONL file under
+    ``hass.config.path(".storage", ...)`` which, in tests, resolves into
+    ``tests/testing_config`` and would dirty the working tree. Redirect it to
+    the per-test ``tmp_path`` (an absolute path wins the ``hass.config.path``
+    join) so nothing is left behind.
+    """
+    monkeypatch.setattr(
+        "homeassistant.components.noonlight.coordinator.AUDIT_FILE_TEMPLATE",
+        str(tmp_path / "noonlight_audit_{entry_id}.jsonl"),
+    )
 
 
 @pytest.fixture
