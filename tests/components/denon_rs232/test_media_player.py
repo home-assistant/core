@@ -77,7 +77,6 @@ async def test_only_active_zones_are_created(
 @pytest.mark.parametrize(
     ("zone", "entity_id", "initial_entity_state"),
     [
-        ("main", MAIN_ENTITY_ID, STATE_ON),
         ("zone_2", ZONE_2_ENTITY_ID, STATE_ON),
         ("zone_3", ZONE_3_ENTITY_ID, STATE_OFF),
     ],
@@ -105,10 +104,44 @@ async def test_zone_state_updates(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
+async def test_main_tracks_chassis_power(
+    hass: HomeAssistant,
+    mock_receiver: MockReceiver,
+) -> None:
+    """Test the main entity tracks chassis power, independent of the main zone.
+
+    Turning on a zone wakes the chassis while the main zone (ZM) stays off, so
+    the main entity must follow the chassis (PW) power state.
+    """
+    assert hass.states.get(MAIN_ENTITY_ID).state == STATE_ON
+
+    # Main zone off but chassis still on (e.g. a zone is keeping it awake):
+    # the main entity stays on.
+    state = _default_state()
+    state.main_zone.power = False
+    mock_receiver.mock_state(state)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MAIN_ENTITY_ID).state == STATE_ON
+
+    # Chassis in standby: the main entity turns off.
+    state = _default_state()
+    state.power = False
+    mock_receiver.mock_state(state)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MAIN_ENTITY_ID).state == STATE_OFF
+
+    mock_receiver.mock_state(None)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MAIN_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
 @pytest.mark.parametrize(
     ("zone", "entity_id", "power_on_command", "power_off_command"),
     [
-        ("main", MAIN_ENTITY_ID, ("ZM", "ON"), ("ZM", "OFF")),
+        ("main", MAIN_ENTITY_ID, ("PW", "ON"), ("PW", "STANDBY")),
         ("zone_2", ZONE_2_ENTITY_ID, ("Z2", "ON"), ("Z2", "OFF")),
         ("zone_3", ZONE_3_ENTITY_ID, ("Z1", "ON"), ("Z1", "OFF")),
     ],

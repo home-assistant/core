@@ -161,12 +161,16 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
     @callback
     def _async_update_from_player(self) -> None:
         """Update entity attributes from the shared player object."""
-        if self._player.power is None:
+        # The main entity represents the receiver as a whole, so its power
+        # tracks the chassis (PW). The main zone (ZM), Zone 2 (Z2) and the
+        # chassis are independent scopes: turning on a zone wakes the chassis
+        # while ZM stays off, so only the chassis power reflects "is the
+        # receiver on".
+        power = self._receiver.power if self._is_main else self._player.power
+        if power is None:
             self._attr_state = None
         else:
-            self._attr_state = (
-                MediaPlayerState.ON if self._player.power else MediaPlayerState.OFF
-            )
+            self._attr_state = MediaPlayerState.ON if power else MediaPlayerState.OFF
 
         source = self._player.input_source
         self._attr_source = INPUT_SOURCE_DENON_TO_HA.get(source) if source else None
@@ -190,11 +194,22 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the receiver on."""
-        await self._player.power_on()
+        # For the main entity, power the chassis (PWON) rather than just the
+        # main zone (ZMON) so the receiver wakes regardless of zone state.
+        if self._is_main:
+            await self._receiver.power_on()
+        else:
+            await self._player.power_on()
 
     async def async_turn_off(self) -> None:
         """Turn the receiver off."""
-        await self._player.power_standby()
+        # For the main entity, send a full chassis standby (PWSTANDBY). A bare
+        # ZMOFF is a no-op when another zone is keeping the chassis awake, which
+        # leaves the receiver stuck on.
+        if self._is_main:
+            await self._receiver.power_standby()
+        else:
+            await self._player.power_standby()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
