@@ -6,6 +6,7 @@ from homeassistant.components import sensor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
 from tests.common import MockConfigEntry
 
@@ -56,11 +57,13 @@ async def test_sensor_states(
         entity.unique_id: entity.entity_id for entity in sensor_entities
     }
 
-    expires_state = hass.states.get(
-        entity_ids_by_unique_id["ff:ff:ff:ff:ff:fe_expires"]
+    expires_entry = next(
+        entity
+        for entity in sensor_entities
+        if entity.unique_id == "ff:ff:ff:ff:ff:fe_expires"
     )
-    assert expires_state is not None
-    assert expires_state.state == "2026-06-01T10:05:00+00:00"
+    assert expires_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(expires_entry.entity_id) is None
 
     interface_state = hass.states.get(
         entity_ids_by_unique_id["ff:ff:ff:ff:ff:fe_interface"]

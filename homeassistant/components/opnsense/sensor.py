@@ -1,7 +1,7 @@
 """Sensor platform for OPNsense routers."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,6 +32,7 @@ SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
         name="Expires",
         data_key="expires",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
     ),
     OPNsenseSensorDescription(
         key="interface",
@@ -139,6 +140,8 @@ class OPNsenseSensorEntity(
                 return value
             if isinstance(value, str):
                 return dt_util.parse_datetime(value)
+            if isinstance(value, (int, float)):
+                return dt_util.utcnow() + timedelta(seconds=value)
             return None
 
         if isinstance(value, str):
