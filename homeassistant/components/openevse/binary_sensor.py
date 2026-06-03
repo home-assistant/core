@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_SERIAL_NUMBER, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -109,11 +109,14 @@ class OpenEVSEBinarySensor(
         self._attr_unique_id = f"{identifier}-{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, unique_id)} if unique_id else None,
             identifiers={(DOMAIN, identifier)},
             manufacturer="OpenEVSE",
-            serial_number=unique_id,
         )
+        if unique_id:
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (CONNECTION_NETWORK_MAC, unique_id)
+            }
+            self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     @property
     def is_on(self) -> bool | None:
