@@ -1323,23 +1323,16 @@ async def test_replace_unavailable_at_startup(
     assert state.state == expected_state
 
 
-@pytest.mark.parametrize(
-    ("replace_unavailable", "expected_state"),
-    [
-        (True, "0.00"),
-        (False, STATE_UNKNOWN),
-    ],
-)
+@pytest.mark.parametrize("replace_unavailable", [True, False])
 async def test_replace_unavailable_at_startup_unknown(
     hass: HomeAssistant,
     replace_unavailable: bool,
-    expected_state: str,
 ) -> None:
-    """Test STATE_UNKNOWN handling at startup with replace_unavailable option.
+    """Test STATE_UNKNOWN handling at startup is independent of replace_unavailable.
     
-    When the source is STATE_UNKNOWN during startup:
-    - With replace_unavailable=True: derivative should output 0.00
-    - With replace_unavailable=False: derivative should output STATE_UNKNOWN
+    When the source is STATE_UNKNOWN during startup, the derivative sensor should
+    always output STATE_UNKNOWN, regardless of the replace_unavailable setting.
+    The replace_unavailable option only affects STATE_UNAVAILABLE.
     """
     source_id = "sensor.energy"
     await _setup_derivative_sensor_with_initial_source_state(
@@ -1351,7 +1344,7 @@ async def test_replace_unavailable_at_startup_unknown(
 
     state = hass.states.get("sensor.power")
     assert state is not None
-    assert state.state == expected_state
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_replace_unavailable_recovery(hass: HomeAssistant) -> None:
