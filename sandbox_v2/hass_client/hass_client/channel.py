@@ -103,9 +103,15 @@ class Frame:
         return cls(FrameKind.PUSH, id=0, type=msg_type, payload=payload)
 
     @classmethod
-    def ok_response(cls, call_id: int, result: Any) -> Frame:
-        """Build a success response frame."""
-        return cls(FrameKind.RESPONSE, id=call_id, ok=True, result=result)
+    def ok_response(cls, call_id: int, result: Any, msg_type: str = "") -> Frame:
+        """Build a success response frame.
+
+        ``msg_type`` is carried so a stateless codec (the protobuf one) can
+        look up the result message class on encode + decode.
+        """
+        return cls(
+            FrameKind.RESPONSE, id=call_id, type=msg_type, ok=True, result=result
+        )
 
     @classmethod
     def error_response(
@@ -114,11 +120,13 @@ class Frame:
         error: str,
         error_type: str | None,
         error_data: dict[str, Any] | None = None,
+        msg_type: str = "",
     ) -> Frame:
         """Build a failure response frame."""
         return cls(
             FrameKind.RESPONSE,
             id=call_id,
+            type=msg_type,
             ok=False,
             error=error,
             error_type=error_type,
@@ -412,9 +420,7 @@ class Channel:
                 try:
                     data = await self._transport.read_frame()
                 except FrameTooLargeError as err:
-                    _LOGGER.error(
-                        "channel %s: %s; aborting channel", self._name, err
-                    )
+                    _LOGGER.error("channel %s: %s; aborting channel", self._name, err)
                     return
                 if data is None:
                     return
@@ -438,9 +444,7 @@ class Channel:
                 for future in self._pending.values():
                     if not future.done():
                         future.set_exception(
-                            ChannelClosedError(
-                                f"channel {self._name!r} stream ended"
-                            )
+                            ChannelClosedError(f"channel {self._name!r} stream ended")
                         )
                 self._pending.clear()
                 for task in list(self._inflight):
@@ -480,6 +484,7 @@ class Channel:
                         frame.id,
                         f"no handler for {frame.type!r}",
                         "ChannelUnknownType",
+                        msg_type=frame.type,
                     )
                 )
             )
@@ -491,9 +496,7 @@ class Channel:
 
     def _spawn_handler(self, coro: Coroutine[Any, Any, Any]) -> None:
         """Start a handler task and track it for cancellation on close."""
-        task = asyncio.create_task(
-            coro, name=f"sandbox_v2[{self._name}]:dispatch"
-        )
+        task = asyncio.create_task(coro, name=f"sandbox_v2[{self._name}]:dispatch")
         self._inflight.add(task)
         task.add_done_callback(self._inflight.discard)
 
@@ -534,6 +537,7 @@ class Channel:
                     str(err) or err.__class__.__name__,
                     err.__class__.__name__,
                     error_data_for(err),
+                    msg_type=msg_type,
                 )
                 with contextlib.suppress(Exception):
                     await self._write(frame)
@@ -541,7 +545,7 @@ class Channel:
             if self._closed:
                 return
             with contextlib.suppress(Exception):
-                await self._write(Frame.ok_response(call_id, result))
+                await self._write(Frame.ok_response(call_id, result, msg_type))
 
 
 __all__ = [

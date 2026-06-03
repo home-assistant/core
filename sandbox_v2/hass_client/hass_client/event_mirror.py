@@ -40,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 
+from ._proto import sandbox_v2_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
 from .protocol import MSG_FIRE_EVENT
@@ -101,25 +102,22 @@ class EventMirror:
             return
         if not self.approved.approves_event(event_type):
             return
-        payload: dict[str, Any] = {
-            "event_type": event_type,
-            "event_data": _to_json_safe(dict(event.data)),
-        }
-        if event.context is not None:
-            payload["context_id"] = event.context.id
+        msg = pb.FireEvent(event_type=event_type)
+        msg.event_data.update(_to_json_safe(dict(event.data)))
+        # Forward only the context id — never parent_id / user_id.
+        if event.context is not None and event.context.id:
+            msg.context_id = event.context.id
         asyncio.create_task(  # noqa: RUF006
-            self._push(payload),
+            self._push(msg),
             name=f"sandbox_v2:fire_event:{event_type}",
         )
 
-    async def _push(self, payload: dict[str, Any]) -> None:
+    async def _push(self, msg: pb.FireEvent) -> None:
         assert self._channel is not None
         try:
-            await self._channel.push(MSG_FIRE_EVENT, payload)
+            await self._channel.push(MSG_FIRE_EVENT, msg)
         except Exception:
-            _LOGGER.exception(
-                "EventMirror: forward failed for %s", payload["event_type"]
-            )
+            _LOGGER.exception("EventMirror: forward failed for %s", msg.event_type)
 
 
 def _to_json_safe(value: Any) -> Any:

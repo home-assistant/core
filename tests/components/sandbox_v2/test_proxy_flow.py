@@ -3,13 +3,15 @@
 import asyncio
 from collections.abc import Iterator
 import contextlib
-from typing import Any, cast
+from typing import cast
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
 from homeassistant.components.sandbox_v2.channel import Channel
 from homeassistant.components.sandbox_v2.manager import SandboxManager
+from homeassistant.components.sandbox_v2.messages import struct_to_dict
 from homeassistant.components.sandbox_v2.router import SandboxFlowRouter
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -23,11 +25,11 @@ from tests.common import MockModule, mock_integration
 class _SandboxStub:
     """Tiny sandbox-side dispatcher backed by a script of canned responses."""
 
-    def __init__(self, responses: list[dict[str, Any]]) -> None:
+    def __init__(self, responses: list[pb.FlowResult]) -> None:
         self._responses = responses
-        self.init_calls: list[dict[str, Any]] = []
-        self.step_calls: list[dict[str, Any]] = []
-        self.abort_calls: list[dict[str, Any]] = []
+        self.init_calls: list[pb.FlowInit] = []
+        self.step_calls: list[pb.FlowStep] = []
+        self.abort_calls: list[pb.FlowAbort] = []
 
     def attach(self, channel: Channel) -> None:
         channel.register("sandbox_v2/flow_init", self._flow_init)
@@ -36,31 +38,31 @@ class _SandboxStub:
         channel.register("sandbox_v2/entry_setup", self._entry_setup)
         channel.register("sandbox_v2/entry_unload", self._entry_unload)
 
-    async def _flow_init(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def _flow_init(self, payload: pb.FlowInit) -> pb.FlowResult:
         self.init_calls.append(payload)
         return self._pop()
 
-    async def _flow_step(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def _flow_step(self, payload: pb.FlowStep) -> pb.FlowResult:
         self.step_calls.append(payload)
         return self._pop()
 
-    async def _flow_abort(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def _flow_abort(self, payload: pb.FlowAbort) -> pb.FlowAbortResult:
         self.abort_calls.append(payload)
-        return {}
+        return pb.FlowAbortResult()
 
-    async def _entry_setup(self, _payload: dict[str, Any]) -> dict[str, Any]:
-        return {"ok": True}
+    async def _entry_setup(self, _payload: pb.EntrySetup) -> pb.EntrySetupResult:
+        return pb.EntrySetupResult(ok=True)
 
-    async def _entry_unload(self, _payload: dict[str, Any]) -> dict[str, Any]:
-        return {"ok": True}
+    async def _entry_unload(self, _payload: pb.EntryUnload) -> pb.EntryUnloadResult:
+        return pb.EntryUnloadResult(ok=True)
 
-    def _pop(self) -> dict[str, Any]:
+    def _pop(self) -> pb.FlowResult:
         return self._responses.pop(0)
 
 
 @contextlib.contextmanager
 def _wired_sandbox(
-    manager: FakeSandboxManager, *, group: str, responses: list[dict[str, Any]]
+    manager: FakeSandboxManager, *, group: str, responses: list[pb.FlowResult]
 ) -> Iterator[_SandboxStub]:
     """Wire a sandbox stub onto a fresh in-memory channel pair."""
     main_channel, sandbox_channel = make_channel_pair(
@@ -102,22 +104,23 @@ async def test_full_flow_user_to_create_entry(
 ) -> None:
     """A user-initiated flow that asks for input then creates an entry."""
     mock_integration(hass, MockModule("test_proxy_full"))
+    create_entry = pb.FlowResult(
+        type=FlowResultType.CREATE_ENTRY.value,
+        flow_id="sandbox-flow-1",
+        handler="test_proxy_full",
+        title="Proxy Title",
+    )
+    create_entry.data.update({"host": "1.2.3.4"})
     responses = [
         # Response to flow_init — show a form
-        {
-            "type": FlowResultType.FORM.value,
-            "flow_id": "sandbox-flow-1",
-            "handler": "test_proxy_full",
-            "step_id": "user",
-        },
+        pb.FlowResult(
+            type=FlowResultType.FORM.value,
+            flow_id="sandbox-flow-1",
+            handler="test_proxy_full",
+            step_id="user",
+        ),
         # Response to flow_step — create the entry
-        {
-            "type": FlowResultType.CREATE_ENTRY.value,
-            "flow_id": "sandbox-flow-1",
-            "handler": "test_proxy_full",
-            "title": "Proxy Title",
-            "data": {"host": "1.2.3.4"},
-        },
+        create_entry,
     ]
 
     with (
@@ -144,12 +147,13 @@ async def test_full_flow_user_to_create_entry(
         assert result["title"] == "Proxy Title"
 
     assert len(stub.init_calls) == 1
-    assert stub.init_calls[0]["handler"] == "test_proxy_full"
-    assert stub.init_calls[0]["context"]["source"] == SOURCE_USER
-    assert stub.init_calls[0]["data"] is None
+    assert stub.init_calls[0].handler == "test_proxy_full"
+    assert struct_to_dict(stub.init_calls[0].context)["source"] == SOURCE_USER
+    # proto: a USER-source init carries no `data` field (was `data is None`).
+    assert not stub.init_calls[0].HasField("data")
     assert len(stub.step_calls) == 1
-    assert stub.step_calls[0]["flow_id"] == "sandbox-flow-1"
-    assert stub.step_calls[0]["user_input"] == {"host": "1.2.3.4"}
+    assert stub.step_calls[0].flow_id == "sandbox-flow-1"
+    assert struct_to_dict(stub.step_calls[0].user_input) == {"host": "1.2.3.4"}
 
     # The new ConfigEntry is tagged with the sandbox group via the
     # ConfigEntry.sandbox first-class field (Phase 17 — keeps the tag
@@ -167,20 +171,21 @@ async def test_form_with_errors_reshows(
 ) -> None:
     """A form returned with `errors` is shown as a fresh form on main."""
     mock_integration(hass, MockModule("test_proxy_errors"))
+    reshow = pb.FlowResult(
+        type=FlowResultType.FORM.value,
+        flow_id="sandbox-flow-err",
+        handler="test_proxy_errors",
+        step_id="user",
+    )
+    reshow.errors.update({"host": "invalid_host"})
     responses = [
-        {
-            "type": FlowResultType.FORM.value,
-            "flow_id": "sandbox-flow-err",
-            "handler": "test_proxy_errors",
-            "step_id": "user",
-        },
-        {
-            "type": FlowResultType.FORM.value,
-            "flow_id": "sandbox-flow-err",
-            "handler": "test_proxy_errors",
-            "step_id": "user",
-            "errors": {"host": "invalid_host"},
-        },
+        pb.FlowResult(
+            type=FlowResultType.FORM.value,
+            flow_id="sandbox-flow-err",
+            handler="test_proxy_errors",
+            step_id="user",
+        ),
+        reshow,
     ]
 
     with (
@@ -208,12 +213,12 @@ async def test_abort_is_propagated(
     """An ABORT from the sandbox surfaces as an abort on main."""
     mock_integration(hass, MockModule("test_proxy_abort"))
     responses = [
-        {
-            "type": FlowResultType.ABORT.value,
-            "flow_id": "sandbox-flow-abort",
-            "handler": "test_proxy_abort",
-            "reason": "already_configured",
-        }
+        pb.FlowResult(
+            type=FlowResultType.ABORT.value,
+            flow_id="sandbox-flow-abort",
+            handler="test_proxy_abort",
+            reason="already_configured",
+        )
     ]
 
     with (

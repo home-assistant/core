@@ -22,9 +22,11 @@ import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.components.sandbox_v2 import schema_bridge
+from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
 from homeassistant.components.sandbox_v2.bridge import SandboxBridge
 from homeassistant.components.sandbox_v2.channel import Channel
 from homeassistant.components.sandbox_v2.manager import SandboxManager
+from homeassistant.components.sandbox_v2.messages import struct_to_dict
 from homeassistant.components.sandbox_v2.router import SandboxFlowRouter
 from homeassistant.components.sandbox_v2.schema_bridge import reconstruct_schema
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -40,11 +42,11 @@ from tests.common import MockConfigEntry, MockModule, mock_integration
 class _SandboxStub:
     """Tiny script-driven sandbox dispatcher for proxy-flow tests."""
 
-    def __init__(self, responses: list[dict[str, Any]]) -> None:
+    def __init__(self, responses: list[pb.FlowResult]) -> None:
         self._responses = responses
-        self.init_calls: list[dict[str, Any]] = []
-        self.step_calls: list[dict[str, Any]] = []
-        self.unload_calls: list[dict[str, Any]] = []
+        self.init_calls: list[pb.FlowInit] = []
+        self.step_calls: list[pb.FlowStep] = []
+        self.unload_calls: list[pb.EntryUnload] = []
 
     def attach(self, channel: Channel) -> None:
         channel.register("sandbox_v2/flow_init", self._flow_init)
@@ -53,31 +55,31 @@ class _SandboxStub:
         channel.register("sandbox_v2/entry_setup", self._entry_setup)
         channel.register("sandbox_v2/entry_unload", self._entry_unload)
 
-    async def _flow_init(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def _flow_init(self, payload: pb.FlowInit) -> pb.FlowResult:
         self.init_calls.append(payload)
         return self._pop()
 
-    async def _flow_step(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def _flow_step(self, payload: pb.FlowStep) -> pb.FlowResult:
         self.step_calls.append(payload)
         return self._pop()
 
-    async def _flow_abort(self, _payload: dict[str, Any]) -> dict[str, Any]:
-        return {}
+    async def _flow_abort(self, _payload: pb.FlowAbort) -> pb.FlowAbortResult:
+        return pb.FlowAbortResult()
 
-    async def _entry_setup(self, _payload: dict[str, Any]) -> dict[str, Any]:
-        return {"ok": True}
+    async def _entry_setup(self, _payload: pb.EntrySetup) -> pb.EntrySetupResult:
+        return pb.EntrySetupResult(ok=True)
 
-    async def _entry_unload(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def _entry_unload(self, payload: pb.EntryUnload) -> pb.EntryUnloadResult:
         self.unload_calls.append(payload)
-        return {"ok": True}
+        return pb.EntryUnloadResult(ok=True)
 
-    def _pop(self) -> dict[str, Any]:
+    def _pop(self) -> pb.FlowResult:
         return self._responses.pop(0)
 
 
 @contextlib.contextmanager
 def _wired_sandbox(
-    manager: FakeSandboxManager, *, group: str, responses: list[dict[str, Any]]
+    manager: FakeSandboxManager, *, group: str, responses: list[pb.FlowResult]
 ) -> Iterator[_SandboxStub]:
     main_channel, sandbox_channel = make_channel_pair(
         name_a=f"main-{group}", name_b=f"sandbox-{group}"
@@ -216,15 +218,14 @@ async def test_flow_form_renders_reconstructed_schema(
     serialized_schema = [
         {"name": "host", "type": "string", "required": True},
     ]
-    responses = [
-        {
-            "type": FlowResultType.FORM.value,
-            "flow_id": "sandbox-flow-schema",
-            "handler": "phase14_schema",
-            "step_id": "user",
-            "data_schema": serialized_schema,
-        },
-    ]
+    form = pb.FlowResult(
+        type=FlowResultType.FORM.value,
+        flow_id="sandbox-flow-schema",
+        handler="phase14_schema",
+        step_id="user",
+    )
+    form.data_schema.extend(serialized_schema)
+    responses = [form]
 
     with (
         _wired_sandbox(manager, group="built-in", responses=responses),
@@ -263,9 +264,9 @@ async def test_register_service_with_schema_validates_on_main(
     main_channel.start()
     sandbox_channel.start()
 
-    seen: list[dict[str, Any]] = []
+    seen: list[pb.CallService] = []
 
-    async def _on_call_service(payload: dict[str, Any]) -> Any:
+    async def _on_call_service(payload: pb.CallService) -> Any:
         seen.append(payload)
         return None
 
@@ -275,17 +276,18 @@ async def test_register_service_with_schema_validates_on_main(
         {"name": "host", "type": "string", "required": True},
     ]
 
+    register_service = pb.RegisterService(
+        domain="phase14_svc",
+        service="do_thing",
+        supports_response="none",
+    )
+    register_service.schema.extend(schema_payload)
+
     try:
         result = await sandbox_channel.call(
-            "sandbox_v2/register_service",
-            {
-                "domain": "phase14_svc",
-                "service": "do_thing",
-                "supports_response": "none",
-                "schema": schema_payload,
-            },
+            "sandbox_v2/register_service", register_service
         )
-        assert result["installed"] is True
+        assert result.installed is True
 
         with pytest.raises(vol.Invalid):
             await hass.services.async_call(
@@ -297,7 +299,7 @@ async def test_register_service_with_schema_validates_on_main(
             "phase14_svc", "do_thing", {"host": "1.2.3.4"}, blocking=True
         )
         assert len(seen) == 1
-        assert seen[0]["service_data"] == {"host": "1.2.3.4"}
+        assert struct_to_dict(seen[0].service_data) == {"host": "1.2.3.4"}
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -314,15 +316,14 @@ async def test_unique_id_propagates_to_proxy_context(
 ) -> None:
     """A sandbox-side ``unique_id`` is mirrored onto the proxy's context."""
     mock_integration(hass, MockModule("phase14_unique"))
-    responses = [
-        {
-            "type": FlowResultType.FORM.value,
-            "flow_id": "sandbox-flow-uid",
-            "handler": "phase14_unique",
-            "step_id": "user",
-            "context": {"source": SOURCE_USER, "unique_id": "abc-123"},
-        }
-    ]
+    form = pb.FlowResult(
+        type=FlowResultType.FORM.value,
+        flow_id="sandbox-flow-uid",
+        handler="phase14_unique",
+        step_id="user",
+    )
+    form.context.update({"source": SOURCE_USER, "unique_id": "abc-123"})
+    responses = [form]
 
     with (
         _wired_sandbox(manager, group="built-in", responses=responses),
@@ -349,24 +350,22 @@ async def test_duplicate_unique_id_aborts_second_flow(
 ) -> None:
     """A second flow with the same propagated unique_id aborts on main."""
     mock_integration(hass, MockModule("phase14_duplicate"))
-    responses_a = [
-        {
-            "type": FlowResultType.FORM.value,
-            "flow_id": "sandbox-flow-dup-a",
-            "handler": "phase14_duplicate",
-            "step_id": "user",
-            "context": {"source": SOURCE_USER, "unique_id": "dup-1"},
-        }
-    ]
-    responses_b = [
-        {
-            "type": FlowResultType.FORM.value,
-            "flow_id": "sandbox-flow-dup-b",
-            "handler": "phase14_duplicate",
-            "step_id": "user",
-            "context": {"source": SOURCE_USER, "unique_id": "dup-1"},
-        }
-    ]
+    form_a = pb.FlowResult(
+        type=FlowResultType.FORM.value,
+        flow_id="sandbox-flow-dup-a",
+        handler="phase14_duplicate",
+        step_id="user",
+    )
+    form_a.context.update({"source": SOURCE_USER, "unique_id": "dup-1"})
+    responses_a = [form_a]
+    form_b = pb.FlowResult(
+        type=FlowResultType.FORM.value,
+        flow_id="sandbox-flow-dup-b",
+        handler="phase14_duplicate",
+        step_id="user",
+    )
+    form_b.context.update({"source": SOURCE_USER, "unique_id": "dup-1"})
+    responses_b = [form_b]
 
     with (
         _wired_sandbox(manager, group="built-in", responses=responses_a + responses_b),
@@ -432,7 +431,7 @@ async def test_async_unload_consults_router_for_sandboxed_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
     # The sandbox saw exactly one entry_unload call.
     assert len(stub.unload_calls) == 1
-    assert stub.unload_calls[0]["entry_id"] == entry.entry_id
+    assert stub.unload_calls[0].entry_id == entry.entry_id
 
 
 async def test_async_unload_falls_through_for_non_sandboxed_entry(

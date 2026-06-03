@@ -30,7 +30,9 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.data_entry_flow import FlowResultType
 
+from ._proto import sandbox_v2_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
+from .messages import dict_to_struct, listvalue_to_list, struct_to_dict
 from .schema_bridge import reconstruct_schema
 
 if TYPE_CHECKING:
@@ -105,18 +107,21 @@ class SandboxFlowProxy(ConfigFlow):
                 # framework's first call passes the initial data; for a
                 # USER source this is None. Everything else (REAUTH,
                 # DISCOVERY, …) gets its discovery payload here.
-                payload: dict[str, Any] = {
-                    "handler": self._handler_key,
-                    "context": dict(self.context),
-                    "data": user_input,
-                }
-                result = await channel.call("sandbox_v2/flow_init", payload)
-                self._sandbox_flow_id = result.get("flow_id")
-            else:
-                result = await channel.call(
-                    "sandbox_v2/flow_step",
-                    {"flow_id": self._sandbox_flow_id, "user_input": user_input},
+                request = pb.FlowInit(
+                    handler=self._handler_key,
+                    context=dict_to_struct(dict(self.context)),
                 )
+                if user_input is not None:
+                    request.data.CopyFrom(dict_to_struct(user_input))
+                result = await channel.call("sandbox_v2/flow_init", request)
+                self._sandbox_flow_id = (
+                    result.flow_id if result.HasField("flow_id") else None
+                )
+            else:
+                step = pb.FlowStep(flow_id=self._sandbox_flow_id)
+                if user_input is not None:
+                    step.user_input.CopyFrom(dict_to_struct(user_input))
+                result = await channel.call("sandbox_v2/flow_step", step)
         except ChannelClosedError:
             self._terminated = True
             _LOGGER.warning(
@@ -139,7 +144,7 @@ class SandboxFlowProxy(ConfigFlow):
         await self._apply_remote_context(result)
         return self._adapt_result(result, step_id)
 
-    async def _apply_remote_context(self, result: dict[str, Any]) -> None:
+    async def _apply_remote_context(self, result: pb.FlowResult) -> None:
         """Mirror ``unique_id`` (and other context bits) onto our own flow.
 
         The sandbox's :meth:`ConfigFlow.async_set_unique_id` mutates the
@@ -149,9 +154,9 @@ class SandboxFlowProxy(ConfigFlow):
         (it raises :class:`AbortFlow` for an in-progress collision,
         which the flow framework turns into an ABORT result).
         """
-        remote = result.get("context")
-        if not isinstance(remote, dict):
+        if not result.HasField("context"):
             return
+        remote = struct_to_dict(result.context)
         if "unique_id" not in remote:
             return
         unique_id = remote["unique_id"]
@@ -162,24 +167,35 @@ class SandboxFlowProxy(ConfigFlow):
         # id; that's exactly the duplicate-rejection signal we want.
         await self.async_set_unique_id(unique_id)
 
-    def _adapt_result(self, result: dict[str, Any], step_id: str) -> ConfigFlowResult:
-        """Translate a sandbox-side FlowResult dict into a main-side one.
+    def _adapt_result(self, result: pb.FlowResult, step_id: str) -> ConfigFlowResult:
+        """Translate a sandbox-side ``FlowResult`` message into a main-side one.
 
         The sandbox's ``flow_id`` and ``handler`` are replaced with main's
         view (so HA's frontend / FlowManager keep tracking the proxy
         flow), and CREATE_ENTRY data is tagged with the sandbox group so
         the setup interceptor knows where to route the entry.
         """
-        result_type = FlowResultType(result["type"])
+        result_type = FlowResultType(result.type)
+        placeholders = (
+            struct_to_dict(result.description_placeholders)
+            if result.HasField("description_placeholders")
+            else None
+        )
 
         if result_type is FlowResultType.CREATE_ENTRY:
-            entry_data = dict(result.get("data") or {})
+            entry_data = struct_to_dict(result.data)
             self._terminated = True
             create_result = self.async_create_entry(
-                title=result.get("title") or self._handler_key,
+                title=(
+                    result.title
+                    if result.HasField("title") and result.title
+                    else self._handler_key
+                ),
                 data=entry_data,
-                description=result.get("description"),
-                description_placeholders=result.get("description_placeholders"),
+                description=(
+                    result.description if result.HasField("description") else None
+                ),
+                description_placeholders=placeholders,
             )
             # Tag the FlowResult so the framework's entry constructor in
             # ``ConfigEntriesFlowManager.async_finish_flow`` reads it into
@@ -191,25 +207,30 @@ class SandboxFlowProxy(ConfigFlow):
         if result_type is FlowResultType.ABORT:
             self._terminated = True
             return self.async_abort(
-                reason=result.get("reason", "sandbox_aborted"),
-                description_placeholders=result.get("description_placeholders"),
+                reason=(
+                    result.reason if result.HasField("reason") else "sandbox_aborted"
+                ),
+                description_placeholders=placeholders,
             )
 
         if result_type is FlowResultType.FORM:
-            data_schema = reconstruct_schema(result.get("data_schema"))
-            if data_schema is None and result.get("_has_data_schema"):
+            data_schema = reconstruct_schema(listvalue_to_list(result.data_schema))
+            if data_schema is None and result.has_data_schema:
                 _LOGGER.debug(
                     "Sandbox %r returned a FORM with an unserialisable"
                     " data_schema; rendering schema-less",
                     self._sandbox_group,
                 )
+            errors = (
+                struct_to_dict(result.errors) if result.HasField("errors") else None
+            )
             return self.async_show_form(
-                step_id=result.get("step_id", step_id),
+                step_id=result.step_id if result.HasField("step_id") else step_id,
                 data_schema=data_schema,
-                errors=result.get("errors") or None,
-                description_placeholders=result.get("description_placeholders"),
-                last_step=result.get("last_step"),
-                preview=result.get("preview"),
+                errors=errors or None,
+                description_placeholders=placeholders,
+                last_step=result.last_step if result.HasField("last_step") else None,
+                preview=result.preview if result.HasField("preview") else None,
             )
 
         # Any other type (MENU, EXTERNAL_STEP, SHOW_PROGRESS, …) is
@@ -255,7 +276,7 @@ class SandboxFlowProxy(ConfigFlow):
 async def _safe_abort(channel: Any, flow_id: str, group: str, handler: str) -> None:
     """Fire ``flow_abort`` on the sandbox and swallow errors."""
     try:
-        await channel.call("sandbox_v2/flow_abort", {"flow_id": flow_id})
+        await channel.call("sandbox_v2/flow_abort", pb.FlowAbort(flow_id=flow_id))
     except (ChannelClosedError, ChannelRemoteError) as err:
         _LOGGER.debug("Sandbox %r flow_abort for %s failed: %s", group, handler, err)
 

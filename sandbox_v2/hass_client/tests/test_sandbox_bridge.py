@@ -20,8 +20,11 @@ from collections.abc import AsyncGenerator, Generator
 import tempfile
 from typing import Any
 
-from hass_client.channel import Channel, ChannelRemoteError
+from hass_client._proto import sandbox_v2_pb2 as pb
+from hass_client.channel import Channel, ChannelRemoteError, JsonCodec
+from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.flow_runner import FlowRunner
+from hass_client.messages import struct_to_dict
 from hass_client.sandbox_bridge import ChannelSandboxBridge
 import pytest
 import voluptuous as vol
@@ -283,8 +286,26 @@ def _make_channel_pair() -> tuple[Channel, Channel]:
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
     return (
-        Channel(reader_a, _LoopbackWriter(reader_b), name="main"),  # type: ignore[arg-type]
-        Channel(reader_b, _LoopbackWriter(reader_a), name="sandbox"),  # type: ignore[arg-type]
+        Channel(
+            reader_a, _LoopbackWriter(reader_b), name="main", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
+        Channel(
+            reader_b, _LoopbackWriter(reader_a), name="sandbox", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
+    )
+
+
+def _make_json_channel_pair() -> tuple[Channel, Channel]:
+    """Build a JSON-codec channel pair for off-registry handlers.
+
+    Used for handlers whose payload/error types aren't in the proto
+    registry (e.g. ``vol.Invalid`` over an ad-hoc ``test/bad`` route).
+    """
+    reader_a = asyncio.StreamReader()
+    reader_b = asyncio.StreamReader()
+    return (
+        Channel(reader_a, _LoopbackWriter(reader_b), name="main", codec=JsonCodec()),  # type: ignore[arg-type]
+        Channel(reader_b, _LoopbackWriter(reader_a), name="sandbox", codec=JsonCodec()),  # type: ignore[arg-type]
     )
 
 
@@ -294,16 +315,19 @@ async def test_channel_bridge_maps_store_rpcs() -> None:
     saved: dict[str, Any] = {}
     removed: list[str] = []
 
-    async def _on_save(payload: dict[str, Any]) -> dict[str, bool]:
-        saved[payload["key"]] = payload["data"]
-        return {"ok": True}
+    async def _on_save(msg: pb.StoreSave) -> pb.StoreSaveResult:
+        saved[msg.key] = struct_to_dict(msg.data)
+        return pb.StoreSaveResult(ok=True)
 
-    async def _on_load(payload: dict[str, Any]) -> dict[str, Any] | None:
-        return saved.get(payload["key"])
+    async def _on_load(msg: pb.StoreLoad) -> pb.StoreLoadResult:
+        result = pb.StoreLoadResult()
+        if msg.key in saved:
+            result.data.update(saved[msg.key])
+        return result
 
-    async def _on_remove(payload: dict[str, Any]) -> dict[str, bool]:
-        removed.append(payload["key"])
-        return {"ok": True}
+    async def _on_remove(msg: pb.StoreRemove) -> pb.StoreRemoveResult:
+        removed.append(msg.key)
+        return pb.StoreRemoveResult(ok=True)
 
     main.register("sandbox_v2/store_save", _on_save)
     main.register("sandbox_v2/store_load", _on_load)
@@ -317,6 +341,9 @@ async def test_channel_bridge_maps_store_rpcs() -> None:
         await bridge.async_store_save("wire", dict(wrapped))
 
         assert saved["wire"]["data"] == {"k": "v"}
+        # ``async_store_load`` returns a plain dict (struct_to_dict of the
+        # wrapped envelope); Struct round-trips numbers as float but ``==``
+        # still holds against the saved dict.
         assert await bridge.async_store_load("wire") == saved["wire"]
 
         await bridge.async_store_remove("wire")
@@ -332,7 +359,9 @@ async def test_client_channel_serializes_vol_invalid() -> None:
     Mirror of the main-side channel test — confirms the client channel's
     ``error_data_for`` serialization feeds the error frame.
     """
-    main, sandbox = _make_channel_pair()
+    # ``vol.Invalid`` and the ad-hoc ``test/bad`` route aren't in the proto
+    # registry, so this pair rides the JSON codec rather than ProtobufCodec.
+    main, sandbox = _make_json_channel_pair()
 
     async def _bad(_payload: Any) -> None:
         raise vol.Invalid("expected int", path=["options", "count"])

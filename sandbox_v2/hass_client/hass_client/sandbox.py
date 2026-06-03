@@ -19,7 +19,7 @@ channel — see Phase 9's :meth:`SandboxRuntime._handle_shutdown`).
 """
 
 import asyncio
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 import contextlib
 import json
 import logging
@@ -34,8 +34,10 @@ from homeassistant.core import CoreState
 from homeassistant.helpers import json as json_helper, restore_state
 from homeassistant.helpers.sandbox_context import current_sandbox
 
+from ._proto import sandbox_v2_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
+from .codec_protobuf import ProtobufCodec
 from .entity_bridge import EntityBridge
 from .entry_runner import EntryRunner
 from .event_mirror import EventMirror
@@ -128,9 +130,7 @@ class SandboxRuntime:
             with contextlib.suppress(NotImplementedError):
                 loop.add_signal_handler(sig, self._shutdown.set)
 
-        _LOGGER.info(
-            "sandbox_v2 runtime ready (group=%s url=%s)", self.group, self.url
-        )
+        _LOGGER.info("sandbox_v2 runtime ready (group=%s url=%s)", self.group, self.url)
 
         # Set up the HA instance + flow runner before the marker so the
         # first manager call after the handshake cannot race.
@@ -224,7 +224,7 @@ class SandboxRuntime:
         """Open a :class:`Channel` over stdin/stdout for the manager."""
         return await _open_stdio_channel(name=self.group)
 
-    async def _handle_shutdown(self, _payload: Mapping[str, Any] | None) -> dict[str, Any]:
+    async def _handle_shutdown(self, _payload: object) -> pb.ShutdownResult:
         """Phase 9: unload entries, flush restore state, then exit cleanly.
 
         Runs inside the channel dispatcher so the reply is written before
@@ -238,7 +238,7 @@ class SandboxRuntime:
             asyncio.get_running_loop().call_soon(self._shutdown.set)
         return summary
 
-    async def _run_graceful_shutdown(self) -> dict[str, Any]:
+    async def _run_graceful_shutdown(self) -> pb.ShutdownResult:
         """Unload every loaded entry and snapshot RestoreEntity state.
 
         Phase 12 fires ``EVENT_HOMEASSISTANT_FINAL_WRITE`` and waits for
@@ -258,11 +258,7 @@ class SandboxRuntime:
         """
         flow_runner = self._flow_runner
         if flow_runner is None:
-            return {
-                "ok": True,
-                "unloaded": 0,
-                "restore_state": None,
-            }
+            return pb.ShutdownResult(ok=True, unloaded=0)
 
         hass = flow_runner.hass
         unloaded = 0
@@ -288,11 +284,9 @@ class SandboxRuntime:
             hass.bus.async_fire_internal(EVENT_HOMEASSISTANT_FINAL_WRITE)
             await hass.async_block_till_done()
         except Exception:
-            _LOGGER.exception(
-                "sandbox %s: FINAL_WRITE flush failed", self.group
-            )
+            _LOGGER.exception("sandbox %s: FINAL_WRITE flush failed", self.group)
 
-        restore_payload: dict[str, Any] | None = None
+        result = pb.ShutdownResult(ok=True, unloaded=unloaded)
         try:
             restore_data = restore_state.async_get(hass)
             stored = restore_data.async_get_stored_states()
@@ -307,20 +301,12 @@ class SandboxRuntime:
                     "key": restore_state.STORAGE_KEY,
                     "data": [item.as_dict() for item in stored],
                 }
-                _mode, json_bytes = json_helper.prepare_save_json(
-                    wrapped, encoder=None
-                )
-                restore_payload = json.loads(json_bytes)
+                _mode, json_bytes = json_helper.prepare_save_json(wrapped, encoder=None)
+                result.restore_state.update(json.loads(json_bytes))
         except Exception:
-            _LOGGER.exception(
-                "sandbox %s: restore-state collect failed", self.group
-            )
+            _LOGGER.exception("sandbox %s: restore-state collect failed", self.group)
 
-        return {
-            "ok": True,
-            "unloaded": unloaded,
-            "restore_state": restore_payload,
-        }
+        return result
 
 
 async def _load_restore_state(hass: Any) -> None:
@@ -360,12 +346,12 @@ async def _open_stdio_channel(*, name: str) -> Channel:
         os.fdopen(sys.stdout.fileno(), "wb"),
     )
     writer = asyncio.StreamWriter(transport, protocol, reader=None, loop=loop)
-    return Channel(reader, writer, name=name)
+    return Channel(reader, writer, name=name, codec=ProtobufCodec())
 
 
-async def _handle_ping(_payload: object) -> dict[str, str]:
+async def _handle_ping(_payload: object) -> pb.PingResult:
     """Health-check handler — manager-side polling uses this round-trip."""
-    return {"pong": "sandbox_v2"}
+    return pb.PingResult(pong="sandbox_v2")
 
 
 __all__ = ["SandboxRuntime"]

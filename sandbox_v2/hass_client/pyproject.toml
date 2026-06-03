@@ -13,6 +13,7 @@ authors = [{ name = "Paulus Schoutsen" }]
 dependencies = [
   "aiohttp>=3.11.0",
   "homeassistant",
+  "protobuf==6.32.0",
 ]
 
 [project.optional-dependencies]

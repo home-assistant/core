@@ -24,8 +24,13 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
 from homeassistant.components.sandbox_v2.bridge import SandboxBridge
 from homeassistant.components.sandbox_v2.channel import Channel
+from homeassistant.components.sandbox_v2.messages import (
+    make_entity_description,
+    struct_to_dict,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -379,39 +384,34 @@ async def test_phase13_proxy_smoke(
     """Each Phase-13 proxy registers, accepts state, and translates a method."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
 
-    calls: list[dict[str, Any]] = []
+    calls: list[pb.CallService] = []
 
-    async def _on_call_service(payload: dict[str, Any]) -> Any:
+    async def _on_call_service(payload: pb.CallService) -> Any:
         calls.append(payload)
         return None
 
     sandbox_channel.register("sandbox_v2/call_service", _on_call_service)
 
     sandbox_entity_id = f"{domain}.synthetic"
-    payload = {
-        "entry_id": entry.entry_id,
-        "domain": domain,
-        "sandbox_entity_id": sandbox_entity_id,
-        "unique_id": f"sandbox-{domain}",
-        "supported_features": register_extras.get("supported_features", 0),
-        "capabilities": register_extras.get("capabilities", {}),
-        "initial_state": state_value,
-        "initial_attributes": dict(state_attrs),
-    }
+    payload = make_entity_description(
+        entry_id=entry.entry_id,
+        domain=domain,
+        sandbox_entity_id=sandbox_entity_id,
+        unique_id=f"sandbox-{domain}",
+        supported_features=register_extras.get("supported_features", 0),
+        capabilities=register_extras.get("capabilities", {}),
+        initial_state=state_value,
+        initial_attributes=dict(state_attrs),
+    )
 
     try:
         result = await sandbox_channel.call("sandbox_v2/register_entity", payload)
         # State must round-trip through the cache.
-        await sandbox_channel.push(
-            "sandbox_v2/state_changed",
-            {
-                "sandbox_entity_id": sandbox_entity_id,
-                "new_state": {
-                    "state": state_value,
-                    "attributes": dict(state_attrs),
-                },
-            },
+        state_changed = pb.StateChanged(
+            sandbox_entity_id=sandbox_entity_id, state=state_value
         )
+        state_changed.attributes.update(dict(state_attrs))
+        await sandbox_channel.push("sandbox_v2/state_changed", state_changed)
         # Let the state push run.
         for _ in range(20):
             await asyncio.sleep(0)
@@ -423,12 +423,12 @@ async def test_phase13_proxy_smoke(
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert result["entity_id"].startswith(f"{domain}.")
-    state = hass.states.get(result["entity_id"])
+    assert result.entity_id.startswith(f"{domain}.")
+    state = hass.states.get(result.entity_id)
     assert state is not None, f"state machine missing entry for {domain}"
 
     if method_name is not None:
         assert len(calls) == 1, f"{domain}: expected one call_service RPC"
-        assert calls[0]["domain"] == domain
-        assert calls[0]["service"] == expected_service
-        assert calls[0]["target"] == {"entity_id": [sandbox_entity_id]}
+        assert calls[0].domain == domain
+        assert calls[0].service == expected_service
+        assert struct_to_dict(calls[0].target) == {"entity_id": [sandbox_entity_id]}

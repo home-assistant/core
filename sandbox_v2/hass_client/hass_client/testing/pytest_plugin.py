@@ -202,14 +202,10 @@ async def async_setup_inprocess_sandbox(
     # Mirror what the integration's ``_on_channel_ready`` does when the
     # real ``SandboxProcess`` opens its channel — register the bridge.
     data.channels[group] = mgr_channel
-    data.bridges[group] = async_create_bridge(
-        hass, group=group, channel=mgr_channel
-    )
+    data.bridges[group] = async_create_bridge(hass, group=group, channel=mgr_channel)
     mgr_channel.start()
 
-    return InProcessSandbox(
-        group=group, runtime=runtime, runtime_task=runtime_task
-    )
+    return InProcessSandbox(group=group, runtime=runtime, runtime_task=runtime_task)
 
 
 def _one_shot_channel_factory(channel: Any):
@@ -219,9 +215,7 @@ def _one_shot_channel_factory(channel: Any):
     async def factory() -> Any:
         nonlocal used
         if used:
-            raise RuntimeError(
-                "in-process SandboxRuntime asked for a second channel"
-            )
+            raise RuntimeError("in-process SandboxRuntime asked for a second channel")
         used = True
         return channel
 

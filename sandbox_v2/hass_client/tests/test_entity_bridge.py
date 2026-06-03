@@ -17,9 +17,12 @@ import tempfile
 from typing import Any
 from unittest.mock import MagicMock
 
+from hass_client._proto import sandbox_v2_pb2 as pb
 from hass_client.channel import Channel
+from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.entity_bridge import EntityBridge
 from hass_client.flow_runner import FlowRunner
+from hass_client.messages import struct_to_dict
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
@@ -51,8 +54,12 @@ def _make_channel_pair() -> tuple[Channel, Channel]:
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
     return (
-        Channel(reader_a, _LoopbackWriter(reader_b), name="main"),  # type: ignore[arg-type]
-        Channel(reader_b, _LoopbackWriter(reader_a), name="sandbox"),  # type: ignore[arg-type]
+        Channel(
+            reader_a, _LoopbackWriter(reader_b), name="main", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
+        Channel(
+            reader_b, _LoopbackWriter(reader_a), name="sandbox", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
     )
 
 
@@ -151,11 +158,11 @@ async def test_bridge_includes_device_info_in_register_payload(
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
-    register_calls: list[dict[str, Any]] = []
+    register_calls: list[pb.EntityDescription] = []
 
-    async def _on_register(payload: dict[str, Any]) -> dict[str, str]:
-        register_calls.append(payload)
-        return {"entity_id": "demo.with_device_main"}
+    async def _on_register(msg: pb.EntityDescription) -> pb.RegisterEntityResult:
+        register_calls.append(msg)
+        return pb.RegisterEntityResult(entity_id="demo.with_device_main")
 
     main.register("sandbox_v2/register_entity", _on_register)
     main.start()
@@ -195,11 +202,10 @@ async def test_bridge_includes_device_info_in_register_payload(
         await asyncio.sleep(0)
 
     assert len(register_calls) == 1
-    device_info = register_calls[0].get("device_info")
-    assert device_info is not None
-    assert device_info["identifiers"] == [["demo", "dev-1"]]
-    assert device_info["name"] == "Demo Device"
-    assert device_info["manufacturer"] == "Acme"
+    device_info = register_calls[0].info.device_info
+    assert [(p.key, p.value) for p in device_info.identifiers] == [("demo", "dev-1")]
+    assert device_info.name == "Demo Device"
+    assert device_info.manufacturer == "Acme"
 
     await bridge.async_stop()
 
@@ -211,15 +217,15 @@ async def test_bridge_emits_register_and_state_pushes(
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
-    register_calls: list[dict[str, Any]] = []
-    state_calls: list[dict[str, Any]] = []
+    register_calls: list[pb.EntityDescription] = []
+    state_calls: list[pb.StateChanged] = []
 
-    async def _on_register(payload: dict[str, Any]) -> dict[str, str]:
-        register_calls.append(payload)
-        return {"entity_id": "demo.lamp_main"}
+    async def _on_register(msg: pb.EntityDescription) -> pb.RegisterEntityResult:
+        register_calls.append(msg)
+        return pb.RegisterEntityResult(entity_id="demo.lamp_main")
 
-    async def _on_state(payload: dict[str, Any]) -> None:
-        state_calls.append(payload)
+    async def _on_state(msg: pb.StateChanged) -> None:
+        state_calls.append(msg)
 
     main.register("sandbox_v2/register_entity", _on_register)
     main.register("sandbox_v2/state_changed", _on_state)
@@ -257,12 +263,12 @@ async def test_bridge_emits_register_and_state_pushes(
         await asyncio.sleep(0)
 
     assert len(register_calls) == 1
-    payload = register_calls[0]
-    assert payload["unique_id"] == "demo-lamp"
-    assert payload["domain"] == "demo"
-    assert payload["sandbox_entity_id"] == "demo.lamp"
-    assert payload["entry_id"] == "fake-entry-id"
-    assert payload["initial_state"] == "off"
+    msg = register_calls[0]
+    assert msg.unique_id == "demo-lamp"
+    assert msg.domain == "demo"
+    assert msg.sandbox_entity_id == "demo.lamp"
+    assert msg.entry_id == "fake-entry-id"
+    assert msg.initial.state == "off"
 
     # A subsequent state change becomes a state_changed push.
     new_state = State(entity.entity_id, "on", {"brightness": 200})
@@ -281,16 +287,14 @@ async def test_bridge_emits_register_and_state_pushes(
         await asyncio.sleep(0)
 
     assert len(state_calls) == 1
-    assert state_calls[0]["sandbox_entity_id"] == "demo.lamp"
-    assert state_calls[0]["new_state"]["state"] == "on"
-    assert state_calls[0]["new_state"]["attributes"]["brightness"] == 200
+    assert state_calls[0].sandbox_entity_id == "demo.lamp"
+    assert state_calls[0].state == "on"
+    assert struct_to_dict(state_calls[0].attributes)["brightness"] == 200
 
     await bridge.async_stop()
 
 
-async def _register_initial(
-    bridge: EntityBridge, hass: Any, entity: Entity
-) -> None:
+async def _register_initial(bridge: EntityBridge, hass: Any, entity: Entity) -> None:
     """Drive the first state-change so ``entity`` is tracked + registered."""
     now = datetime.now(tz=datetime.now().astimezone().tzinfo)
     hass.bus.async_fire(
@@ -320,11 +324,11 @@ async def test_entity_registry_update_resends_registration(
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
-    register_calls: list[dict[str, Any]] = []
+    register_calls: list[pb.EntityDescription] = []
 
-    async def _on_register(payload: dict[str, Any]) -> dict[str, str]:
-        register_calls.append(payload)
-        return {"entity_id": "demo.lamp_main"}
+    async def _on_register(msg: pb.EntityDescription) -> pb.RegisterEntityResult:
+        register_calls.append(msg)
+        return pb.RegisterEntityResult(entity_id="demo.lamp_main")
 
     main.register("sandbox_v2/register_entity", _on_register)
     main.start()
@@ -350,8 +354,8 @@ async def test_entity_registry_update_resends_registration(
         await asyncio.sleep(0)
 
     assert len(register_calls) == 2
-    assert register_calls[1]["name"] == "Renamed Lamp"
-    assert register_calls[1]["sandbox_entity_id"] == "demo.lamp"
+    assert register_calls[1].info.description.name == "Renamed Lamp"
+    assert register_calls[1].sandbox_entity_id == "demo.lamp"
 
     # Let the resend coroutine settle past its await so the description
     # hash is recorded before the next event fires.
@@ -377,11 +381,11 @@ async def test_device_registry_update_resends_linked_entities(
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
-    register_calls: list[dict[str, Any]] = []
+    register_calls: list[pb.EntityDescription] = []
 
-    async def _on_register(payload: dict[str, Any]) -> dict[str, str]:
-        register_calls.append(payload)
-        return {"entity_id": "demo.lamp_main"}
+    async def _on_register(msg: pb.EntityDescription) -> pb.RegisterEntityResult:
+        register_calls.append(msg)
+        return pb.RegisterEntityResult(entity_id="demo.lamp_main")
 
     main.register("sandbox_v2/register_entity", _on_register)
     main.start()
@@ -436,7 +440,7 @@ async def test_device_registry_update_resends_linked_entities(
     bridge.register(sandbox)
     await _register_initial(bridge, hass, entity)
     assert len(register_calls) == 1
-    assert register_calls[0]["device_info"]["sw_version"] == "1.0"
+    assert register_calls[0].info.device_info.sw_version == "1.0"
 
     # Firmware bump: the entity now reports a new sw_version and the device
     # registry fires its updated event.
@@ -451,6 +455,6 @@ async def test_device_registry_update_resends_linked_entities(
         await asyncio.sleep(0)
 
     assert len(register_calls) == 2
-    assert register_calls[1]["device_info"]["sw_version"] == "2.0"
+    assert register_calls[1].info.device_info.sw_version == "2.0"
 
     await bridge.async_stop()

@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
+from homeassistant.core import Context
 
 from . import SandboxProxyEntity
 
@@ -26,13 +27,16 @@ class SandboxNotifyEntity(SandboxProxyEntity, NotifyEntity):
         )
 
     def sandbox_apply_state(
-        self, state: str | None, attributes: dict[str, Any]
+        self,
+        state: str | None,
+        attributes: dict[str, Any],
+        context: Context | None = None,
     ) -> None:
         """Mirror ``__last_notified_isoformat`` for state computation."""
         if state is not None:
             # pylint: disable-next=attribute-defined-outside-init
             self._NotifyEntity__last_notified_isoformat = state
-        super().sandbox_apply_state(state, attributes)
+        super().sandbox_apply_state(state, attributes, context)
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Forward send_message."""

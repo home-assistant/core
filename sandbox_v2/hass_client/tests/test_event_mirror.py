@@ -4,10 +4,13 @@ import asyncio
 import tempfile
 from typing import Any
 
+from hass_client._proto import sandbox_v2_pb2 as pb
 from hass_client.approved_domains import ApprovedDomains
 from hass_client.channel import Channel
+from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.event_mirror import EventMirror
 from hass_client.flow_runner import FlowRunner
+from hass_client.messages import struct_to_dict
 import pytest
 
 
@@ -32,8 +35,12 @@ def _make_channel_pair() -> tuple[Channel, Channel]:
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
     return (
-        Channel(reader_a, _LoopbackWriter(reader_b), name="main"),  # type: ignore[arg-type]
-        Channel(reader_b, _LoopbackWriter(reader_a), name="sandbox"),  # type: ignore[arg-type]
+        Channel(
+            reader_a, _LoopbackWriter(reader_b), name="main", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
+        Channel(
+            reader_b, _LoopbackWriter(reader_a), name="sandbox", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
     )
 
 
@@ -67,10 +74,10 @@ async def test_owned_domain_event_is_forwarded(
 ) -> None:
     """``zha_event`` reaches main when ``zha`` is approved."""
     main, sandbox = channels
-    forwarded: list[dict[str, Any]] = []
+    forwarded: list[pb.FireEvent] = []
 
-    async def _on_fire(payload: dict[str, Any]) -> None:
-        forwarded.append(payload)
+    async def _on_fire(msg: pb.FireEvent) -> None:
+        forwarded.append(msg)
 
     main.register("sandbox_v2/fire_event", _on_fire)
     main.start()
@@ -86,8 +93,8 @@ async def test_owned_domain_event_is_forwarded(
     await _wait_until(lambda: bool(forwarded))
 
     assert len(forwarded) == 1
-    assert forwarded[0]["event_type"] == "zha_event"
-    assert forwarded[0]["event_data"]["command"] == "on"
+    assert forwarded[0].event_type == "zha_event"
+    assert struct_to_dict(forwarded[0].event_data)["command"] == "on"
 
     await mirror.async_stop()
 
@@ -97,10 +104,10 @@ async def test_unapproved_event_is_dropped(
 ) -> None:
     """Events outside the approved-domain set don't cross the bridge."""
     main, sandbox = channels
-    forwarded: list[dict[str, Any]] = []
+    forwarded: list[pb.FireEvent] = []
 
-    async def _on_fire(payload: dict[str, Any]) -> None:
-        forwarded.append(payload)
+    async def _on_fire(msg: pb.FireEvent) -> None:
+        forwarded.append(msg)
 
     main.register("sandbox_v2/fire_event", _on_fire)
     main.start()
@@ -128,10 +135,10 @@ async def test_internal_events_are_skipped(
 ) -> None:
     """``state_changed`` / ``service_registered`` are owned by other mirrors."""
     main, sandbox = channels
-    forwarded: list[dict[str, Any]] = []
+    forwarded: list[pb.FireEvent] = []
 
-    async def _on_fire(payload: dict[str, Any]) -> None:
-        forwarded.append(payload)
+    async def _on_fire(msg: pb.FireEvent) -> None:
+        forwarded.append(msg)
 
     main.register("sandbox_v2/fire_event", _on_fire)
     main.start()

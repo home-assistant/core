@@ -26,8 +26,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 
+from ._proto import sandbox_v2_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
+from .messages import make_entity_description
 from .protocol import MSG_REGISTER_ENTITY, MSG_STATE_CHANGED, MSG_UNREGISTER_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
@@ -198,11 +200,16 @@ class EntityBridge:
         if payload is None:
             return
         new_hash = _payload_hash(payload)
+        initial_state = None
+        initial_attributes = None
         if hasattr(new_state, "state"):
-            payload["initial_state"] = new_state.state
-            payload["initial_attributes"] = dict(new_state.attributes)
+            initial_state = new_state.state
+            initial_attributes = dict(new_state.attributes)
         try:
-            await self._channel.call(MSG_REGISTER_ENTITY, payload)
+            await self._channel.call(
+                MSG_REGISTER_ENTITY,
+                _to_entity_description(payload, initial_state, initial_attributes),
+            )
         except Exception:
             _LOGGER.exception("EntityBridge: register failed for %s", entity_id)
             return
@@ -228,12 +235,17 @@ class EntityBridge:
         new_hash = _payload_hash(payload)
         if self._last_hash.get(entity_id) == new_hash:
             return
+        initial_state = None
+        initial_attributes = None
         state = self.hass.states.get(entity_id)
         if state is not None:
-            payload["initial_state"] = state.state
-            payload["initial_attributes"] = dict(state.attributes)
+            initial_state = state.state
+            initial_attributes = dict(state.attributes)
         try:
-            await self._channel.call(MSG_REGISTER_ENTITY, payload)
+            await self._channel.call(
+                MSG_REGISTER_ENTITY,
+                _to_entity_description(payload, initial_state, initial_attributes),
+            )
         except Exception:
             _LOGGER.exception("EntityBridge: resend failed for %s", entity_id)
             return
@@ -242,15 +254,17 @@ class EntityBridge:
     async def _push_state(self, entity_id: str, new_state: Any) -> None:
         if self._channel is None:
             return
-        payload = {
-            "sandbox_entity_id": entity_id,
-            "new_state": {
-                "state": new_state.state,
-                "attributes": dict(new_state.attributes),
-            },
-        }
+        msg = pb.StateChanged(sandbox_entity_id=entity_id)
+        if new_state.state is not None:
+            msg.state = new_state.state
+        msg.attributes.update(dict(new_state.attributes))
+        # Forward only the context id — never parent_id / user_id. Main
+        # resolves it to a Context attributed to the sandbox system user.
+        context = getattr(new_state, "context", None)
+        if context is not None and context.id:
+            msg.context_id = context.id
         try:
-            await self._channel.push(MSG_STATE_CHANGED, payload)
+            await self._channel.push(MSG_STATE_CHANGED, msg)
         except Exception:
             _LOGGER.exception("EntityBridge: state push failed for %s", entity_id)
 
@@ -259,12 +273,34 @@ class EntityBridge:
             return
         try:
             await self._channel.call(
-                MSG_UNREGISTER_ENTITY, {"sandbox_entity_id": entity_id}
+                MSG_UNREGISTER_ENTITY, pb.UnregisterEntity(sandbox_entity_id=entity_id)
             )
         except Exception:
-            _LOGGER.exception(
-                "EntityBridge: unregister failed for %s", entity_id
-            )
+            _LOGGER.exception("EntityBridge: unregister failed for %s", entity_id)
+
+
+def _to_entity_description(
+    payload: dict[str, Any],
+    initial_state: str | None,
+    initial_attributes: dict[str, Any] | None,
+) -> pb.EntityDescription:
+    """Build the typed ``EntityDescription`` message from a describe dict."""
+    return make_entity_description(
+        entry_id=payload["entry_id"],
+        domain=payload["domain"],
+        sandbox_entity_id=payload["sandbox_entity_id"],
+        unique_id=payload.get("unique_id"),
+        name=payload.get("name"),
+        icon=payload.get("icon"),
+        has_entity_name=bool(payload.get("has_entity_name", False)),
+        entity_category=payload.get("entity_category"),
+        device_class=payload.get("device_class"),
+        supported_features=int(payload.get("supported_features") or 0),
+        capabilities=payload.get("capabilities"),
+        initial_state=initial_state,
+        initial_attributes=initial_attributes,
+        device_info=payload.get("device_info"),
+    )
 
 
 def _payload_hash(payload: dict[str, Any]) -> str:

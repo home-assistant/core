@@ -4,7 +4,9 @@ from typing import cast
 
 import pytest
 
+from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
 from homeassistant.components.sandbox_v2.manager import SandboxManager
+from homeassistant.components.sandbox_v2.messages import struct_to_dict
 from homeassistant.components.sandbox_v2.proxy_flow import SandboxFlowProxy
 from homeassistant.components.sandbox_v2.router import SandboxFlowRouter
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigFlowContext
@@ -105,11 +107,11 @@ async def test_async_setup_entry_routes_to_sandbox(
     main-side entry state.
     """
     channel_a, channel_b = make_channel_pair()
-    received: list[dict[str, object]] = []
+    received: list[pb.EntrySetup] = []
 
-    async def _entry_setup(payload: dict[str, object]) -> dict[str, object]:
+    async def _entry_setup(payload: pb.EntrySetup) -> pb.EntrySetupResult:
         received.append(payload)
-        return {"ok": True}
+        return pb.EntrySetupResult(ok=True)
 
     channel_b.register("sandbox_v2/entry_setup", _entry_setup)
     channel_a.start()
@@ -132,11 +134,11 @@ async def test_async_setup_entry_routes_to_sandbox(
     assert result is True
     assert manager.start_calls == ["built-in"]
     assert len(received) == 1
-    assert received[0]["domain"] == "test_entry"
-    assert received[0]["title"] == "Test"
+    assert received[0].domain == "test_entry"
+    assert received[0].title == "Test"
     # Sandbox group is carried as a first-class ConfigEntry field now;
     # entry.data on the wire is exactly what the integration sees.
-    assert received[0]["data"] == {}
+    assert struct_to_dict(received[0].data) == {}
 
 
 async def test_async_setup_entry_marks_setup_error_on_failure(
@@ -145,8 +147,8 @@ async def test_async_setup_entry_marks_setup_error_on_failure(
     """A sandbox refusing entry_setup propagates as SETUP_ERROR."""
     channel_a, channel_b = make_channel_pair()
 
-    async def _entry_setup(_payload: dict[str, object]) -> dict[str, object]:
-        return {"ok": False, "reason": "boom"}
+    async def _entry_setup(_payload: pb.EntrySetup) -> pb.EntrySetupResult:
+        return pb.EntrySetupResult(ok=False, reason="boom")
 
     channel_b.register("sandbox_v2/entry_setup", _entry_setup)
     channel_a.start()

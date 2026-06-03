@@ -28,9 +28,11 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 
+from ._proto import sandbox_v2_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
 from .classifier import SandboxAssignment, classify
 from .manager import SandboxManager
+from .messages import dict_to_struct
 from .protocol import MSG_ENTRY_SETUP, MSG_ENTRY_UNLOAD
 from .proxy_flow import SandboxFlowProxy
 
@@ -129,8 +131,10 @@ class SandboxFlowRouter:
             )
             return False
 
-        if not result.get("ok"):
-            reason = result.get("reason") or "sandbox refused setup"
+        if not result.ok:
+            reason = (
+                result.reason if result.HasField("reason") else "sandbox refused setup"
+            )
             entry._async_set_state(  # noqa: SLF001
                 self._hass, ConfigEntryState.SETUP_ERROR, reason
             )
@@ -153,7 +157,7 @@ class SandboxFlowRouter:
             return True
         try:
             result = await sandbox.channel.call(
-                MSG_ENTRY_UNLOAD, {"entry_id": entry.entry_id}
+                MSG_ENTRY_UNLOAD, pb.EntryUnload(entry_id=entry.entry_id)
             )
         except ChannelClosedError, ChannelRemoteError:
             _LOGGER.exception(
@@ -167,7 +171,7 @@ class SandboxFlowRouter:
             bridge = self._data.bridges.get(group)
             if bridge is not None:
                 await bridge.async_unload_entry(entry)
-        return bool(result.get("ok", True))
+        return result.ok
 
     async def _assignment_for_new_flow(self, handler_key: str) -> SandboxAssignment:
         """Decide where a new flow for ``handler_key`` should run.
@@ -183,23 +187,25 @@ class SandboxFlowRouter:
         return classify(integration)
 
 
-def _entry_setup_payload(entry: ConfigEntry) -> dict[str, Any]:
-    """Build the wire payload for ``sandbox_v2/entry_setup``.
+def _entry_setup_payload(entry: ConfigEntry) -> pb.EntrySetup:
+    """Build the typed ``EntrySetup`` message for ``sandbox_v2/entry_setup``.
 
     Surfaces the small subset of entry fields the integration's
     ``async_setup_entry`` reads.
     """
-    return {
-        "entry_id": entry.entry_id,
-        "domain": entry.domain,
-        "title": entry.title,
-        "data": dict(entry.data),
-        "options": dict(entry.options),
-        "source": entry.source,
-        "unique_id": entry.unique_id,
-        "version": entry.version,
-        "minor_version": entry.minor_version,
-    }
+    msg = pb.EntrySetup(
+        entry_id=entry.entry_id,
+        domain=entry.domain,
+        title=entry.title,
+        data=dict_to_struct(dict(entry.data)),
+        options=dict_to_struct(dict(entry.options)),
+        source=entry.source,
+        version=entry.version,
+        minor_version=entry.minor_version,
+    )
+    if entry.unique_id is not None:
+        msg.unique_id = entry.unique_id
+    return msg
 
 
 __all__ = ["SandboxFlowRouter"]

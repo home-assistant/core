@@ -17,6 +17,7 @@ from enum import IntFlag
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.const import EntityCategory
+from homeassistant.core import Context
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -117,13 +118,24 @@ class SandboxProxyEntity(Entity):
             self.async_write_ha_state()
 
     def sandbox_apply_state(
-        self, state: str | None, attributes: dict[str, Any]
+        self,
+        state: str | None,
+        attributes: dict[str, Any],
+        context: Context | None = None,
     ) -> None:
-        """Update the cache from a sandbox push, and notify HA."""
+        """Update the cache from a sandbox push, and notify HA.
+
+        ``context`` is the main-side authoritative Context the bridge resolved
+        from the sandbox's ``context_id`` (attributed to the sandbox system
+        user, never carrying a sandbox-supplied parent_id / user_id). When
+        absent the entity writes with its own context as before.
+        """
         self._state_cache = dict(attributes)
         if state is not None:
             self._state_cache["state"] = state
         if self.hass is not None:
+            if context is not None:
+                self.async_set_context(context)
             self.async_write_ha_state()
 
     def sandbox_set_available(self, available: bool) -> None:

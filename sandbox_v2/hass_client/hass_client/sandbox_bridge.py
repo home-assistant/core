@@ -20,7 +20,9 @@ from typing import Any
 from homeassistant.helpers import json as json_helper
 from homeassistant.util.json import SerializationError
 
+from ._proto import sandbox_v2_pb2 as pb
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
+from .messages import dict_to_struct, struct_to_dict
 from .protocol import MSG_STORE_LOAD, MSG_STORE_REMOVE, MSG_STORE_SAVE
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,23 +48,16 @@ class ChannelSandboxBridge:
         or ``None`` when main has no data / the channel is unavailable.
         """
         try:
-            wrapped = await self._channel.call(MSG_STORE_LOAD, {"key": key})
+            result = await self._channel.call(MSG_STORE_LOAD, pb.StoreLoad(key=key))
         except ChannelClosedError:
             _LOGGER.warning("sandbox store[%s]: channel closed mid-load", key)
             return None
         except ChannelRemoteError as err:
             _LOGGER.warning("sandbox store[%s] load failed: %s", key, err)
             return None
-        if wrapped is None:
+        if not result.HasField("data"):
             return None
-        if not isinstance(wrapped, dict):
-            _LOGGER.error(
-                "sandbox store[%s]: main returned non-dict (%s)",
-                key,
-                type(wrapped).__name__,
-            )
-            return None
-        return wrapped
+        return struct_to_dict(result.data)
 
     async def async_store_save(self, key: str, data: Any) -> None:
         """Push the wrapped payload to main instead of writing to disk.
@@ -84,7 +79,9 @@ class ChannelSandboxBridge:
             _LOGGER.exception("sandbox store[%s]: payload not serialisable", key)
             return
         try:
-            await self._channel.call(MSG_STORE_SAVE, {"key": key, "data": payload})
+            await self._channel.call(
+                MSG_STORE_SAVE, pb.StoreSave(key=key, data=dict_to_struct(payload))
+            )
         except ChannelClosedError:
             _LOGGER.warning("sandbox store[%s]: channel closed mid-save", key)
         except ChannelRemoteError as err:
@@ -93,7 +90,7 @@ class ChannelSandboxBridge:
     async def async_store_remove(self, key: str) -> None:
         """Unlink ``key`` on main, not on local disk."""
         try:
-            await self._channel.call(MSG_STORE_REMOVE, {"key": key})
+            await self._channel.call(MSG_STORE_REMOVE, pb.StoreRemove(key=key))
         except ChannelClosedError:
             _LOGGER.warning("sandbox store[%s]: channel closed mid-remove", key)
         except ChannelRemoteError as err:

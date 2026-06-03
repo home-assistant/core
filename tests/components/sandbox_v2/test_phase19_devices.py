@@ -4,11 +4,13 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
 from homeassistant.components.sandbox_v2.bridge import (
     SandboxBridge,
     SandboxEntityDescription,
 )
 from homeassistant.components.sandbox_v2.channel import Channel, ChannelRemoteError
+from homeassistant.components.sandbox_v2.messages import make_entity_description
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -51,20 +53,18 @@ def _register_payload(
     sandbox_entity_id: str = "light.kitchen",
     unique_id: str = "sandbox-kitchen",
     device_info: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    payload: dict[str, Any] = {
-        "entry_id": entry.entry_id,
-        "domain": "light",
-        "sandbox_entity_id": sandbox_entity_id,
-        "unique_id": unique_id,
-        "supported_features": 0,
-        "capabilities": {"supported_color_modes": ["onoff"]},
-        "initial_state": "on",
-        "initial_attributes": {"color_mode": "onoff"},
-    }
-    if device_info is not None:
-        payload["device_info"] = device_info
-    return payload
+) -> pb.EntityDescription:
+    return make_entity_description(
+        entry_id=entry.entry_id,
+        domain="light",
+        sandbox_entity_id=sandbox_entity_id,
+        unique_id=unique_id,
+        supported_features=0,
+        capabilities={"supported_color_modes": ["onoff"]},
+        initial_state="on",
+        initial_attributes={"color_mode": "onoff"},
+        device_info=device_info,
+    )
 
 
 async def test_register_entity_creates_device_entry(
@@ -98,7 +98,7 @@ async def test_register_entity_creates_device_entry(
     # The DeviceEntry must be linked to the sandboxed config entry.
     assert entry.entry_id in device.config_entries
     # The main-side entity_registry entry has device_id set to that DeviceEntry.
-    er_entry = er.async_get(hass).async_get(result["entity_id"])
+    er_entry = er.async_get(hass).async_get(result.entity_id)
     assert er_entry is not None
     assert er_entry.device_id == device.id
 
@@ -184,7 +184,7 @@ async def test_area_assignment_propagates_to_proxy(
     refreshed_device = dr.async_get(hass).async_get(device.id)
     assert refreshed_device is not None
     assert refreshed_device.area_id == area.id
-    er_entry = er.async_get(hass).async_get(result["entity_id"])
+    er_entry = er.async_get(hass).async_get(result.entity_id)
     assert er_entry is not None
     assert er_entry.device_id == device.id
 
@@ -207,21 +207,21 @@ async def test_invalid_device_info_surfaces_remote_error(
         await sandbox_channel.close()
 
 
-async def test_description_from_payload_reconstructs_typed_device_info() -> None:
-    """``SandboxEntityDescription.from_payload`` rebuilds set/tuple shapes."""
-    description = SandboxEntityDescription.from_payload(
-        {
-            "entry_id": "abc",
-            "domain": "sensor",
-            "sandbox_entity_id": "sensor.temp",
-            "device_info": {
+async def test_description_from_proto_reconstructs_typed_device_info() -> None:
+    """``SandboxEntityDescription.from_proto`` rebuilds set/tuple shapes."""
+    description = SandboxEntityDescription.from_proto(
+        make_entity_description(
+            entry_id="abc",
+            domain="sensor",
+            sandbox_entity_id="sensor.temp",
+            device_info={
                 "identifiers": [["foo", "1"], ["foo", "2"]],
                 "connections": [["mac", "00:11:22"]],
                 "via_device": ["parent_domain", "parent-1"],
                 "entry_type": "service",
                 "name": "Thermo",
             },
-        }
+        )
     )
     assert description.device_info is not None
     info = description.device_info

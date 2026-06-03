@@ -6,12 +6,17 @@ from typing import Any
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
 from homeassistant.components.sandbox_v2.bridge import (
     SandboxBridge,
     SandboxEntityDescription,
     _translate_remote_error,
 )
 from homeassistant.components.sandbox_v2.channel import Channel, ChannelRemoteError
+from homeassistant.components.sandbox_v2.messages import (
+    make_entity_description,
+    struct_to_dict,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
@@ -56,19 +61,19 @@ async def test_register_entity_creates_proxy_and_returns_entity_id(
     """A ``register_entity`` push creates a live proxy on the right domain."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
 
-    payload = {
-        "entry_id": entry.entry_id,
-        "domain": "light",
-        "sandbox_entity_id": "light.kitchen",
-        "unique_id": "sandbox-kitchen",
-        "name": "Kitchen",
-        "supported_features": 0,
-        "capabilities": {"supported_color_modes": ["onoff"]},
-        "initial_state": STATE_ON,
+    payload = make_entity_description(
+        entry_id=entry.entry_id,
+        domain="light",
+        sandbox_entity_id="light.kitchen",
+        unique_id="sandbox-kitchen",
+        name="Kitchen",
+        supported_features=0,
+        capabilities={"supported_color_modes": ["onoff"]},
+        initial_state=STATE_ON,
         # Light requires color_mode when ON, so feed it through the
         # initial cache to keep state_attributes from raising.
-        "initial_attributes": {"color_mode": "onoff"},
-    }
+        initial_attributes={"color_mode": "onoff"},
+    )
 
     try:
         result = await sandbox_channel.call("sandbox_v2/register_entity", payload)
@@ -76,8 +81,8 @@ async def test_register_entity_creates_proxy_and_returns_entity_id(
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert result["entity_id"].startswith("light.")
-    state = hass.states.get(result["entity_id"])
+    assert result.entity_id.startswith("light.")
+    state = hass.states.get(result.entity_id)
     assert state is not None
     assert state.state == STATE_ON
     # The bridge tracks the proxy by its sandbox-side entity_id.
@@ -101,17 +106,17 @@ async def test_register_entity_prefixes_unique_id_with_source_domain(
     entry_b = MockConfigEntry(domain="demo_b", title="B")
     entry_b.add_to_hass(hass)
 
-    def _payload(entry_id: str, sandbox_entity_id: str) -> dict[str, Any]:
-        return {
-            "entry_id": entry_id,
-            "domain": "light",
-            "sandbox_entity_id": sandbox_entity_id,
-            "unique_id": "1",
-            "supported_features": 0,
-            "capabilities": {"supported_color_modes": ["onoff"]},
-            "initial_state": STATE_ON,
-            "initial_attributes": {"color_mode": "onoff"},
-        }
+    def _payload(entry_id: str, sandbox_entity_id: str) -> pb.EntityDescription:
+        return make_entity_description(
+            entry_id=entry_id,
+            domain="light",
+            sandbox_entity_id=sandbox_entity_id,
+            unique_id="1",
+            supported_features=0,
+            capabilities={"supported_color_modes": ["onoff"]},
+            initial_state=STATE_ON,
+            initial_attributes={"color_mode": "onoff"},
+        )
 
     try:
         result_a = await sandbox_channel.call(
@@ -125,13 +130,13 @@ async def test_register_entity_prefixes_unique_id_with_source_domain(
         await sandbox_channel.close()
 
     # Both proxies landed as distinct entities.
-    assert result_a["entity_id"] != result_b["entity_id"]
-    assert hass.states.get(result_a["entity_id"]) is not None
-    assert hass.states.get(result_b["entity_id"]) is not None
+    assert result_a.entity_id != result_b.entity_id
+    assert hass.states.get(result_a.entity_id) is not None
+    assert hass.states.get(result_b.entity_id) is not None
 
     # Registry rows carry the domain-prefixed unique_ids, not a bare "1".
-    assert entity_registry.async_get(result_a["entity_id"]).unique_id == "demo_a:1"
-    assert entity_registry.async_get(result_b["entity_id"]).unique_id == "demo_b:1"
+    assert entity_registry.async_get(result_a.entity_id).unique_id == "demo_a:1"
+    assert entity_registry.async_get(result_b.entity_id).unique_id == "demo_b:1"
 
 
 async def test_register_entity_upsert_updates_name_in_place(
@@ -140,18 +145,18 @@ async def test_register_entity_upsert_updates_name_in_place(
     """A re-sent registration updates the proxy without adding a duplicate."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
 
-    def _payload(name: str) -> dict[str, Any]:
-        return {
-            "entry_id": entry.entry_id,
-            "domain": "light",
-            "sandbox_entity_id": "light.lamp",
-            "unique_id": "lamp",
-            "name": name,
-            "supported_features": 0,
-            "capabilities": {"supported_color_modes": ["onoff"]},
-            "initial_state": STATE_ON,
-            "initial_attributes": {"color_mode": "onoff"},
-        }
+    def _payload(name: str) -> pb.EntityDescription:
+        return make_entity_description(
+            entry_id=entry.entry_id,
+            domain="light",
+            sandbox_entity_id="light.lamp",
+            unique_id="lamp",
+            name=name,
+            supported_features=0,
+            capabilities={"supported_color_modes": ["onoff"]},
+            initial_state=STATE_ON,
+            initial_attributes={"color_mode": "onoff"},
+        )
 
     try:
         first = await sandbox_channel.call(
@@ -165,11 +170,11 @@ async def test_register_entity_upsert_updates_name_in_place(
         await sandbox_channel.close()
 
     # Same entity_id back, single tracked proxy — no duplicate created.
-    assert first["entity_id"] == second["entity_id"]
+    assert first.entity_id == second.entity_id
     assert len(bridge._entities) == 1
     proxy = bridge._entities["light.lamp"]
     assert proxy._attr_name == "New Name"
-    state = hass.states.get(second["entity_id"])
+    state = hass.states.get(second.entity_id)
     assert state is not None
     assert state.attributes["friendly_name"] == "New Name"
 
@@ -182,22 +187,22 @@ async def test_register_entity_upsert_refreshes_device(
     """A re-sent registration with new device_info updates the device entry."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
 
-    def _payload(sw_version: str) -> dict[str, Any]:
-        return {
-            "entry_id": entry.entry_id,
-            "domain": "light",
-            "sandbox_entity_id": "light.lamp",
-            "unique_id": "lamp",
-            "supported_features": 0,
-            "capabilities": {"supported_color_modes": ["onoff"]},
-            "initial_state": STATE_ON,
-            "initial_attributes": {"color_mode": "onoff"},
-            "device_info": {
+    def _payload(sw_version: str) -> pb.EntityDescription:
+        return make_entity_description(
+            entry_id=entry.entry_id,
+            domain="light",
+            sandbox_entity_id="light.lamp",
+            unique_id="lamp",
+            supported_features=0,
+            capabilities={"supported_color_modes": ["onoff"]},
+            initial_state=STATE_ON,
+            initial_attributes={"color_mode": "onoff"},
+            device_info={
                 "identifiers": [["demo", "dev-1"]],
                 "name": "Lamp Device",
                 "sw_version": sw_version,
             },
-        }
+        )
 
     try:
         await sandbox_channel.call("sandbox_v2/register_entity", _payload("1.0"))
@@ -223,37 +228,30 @@ async def test_state_changed_push_updates_proxy(
     """A subsequent ``state_changed`` push updates the proxy's cache."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
 
-    register = {
-        "entry_id": entry.entry_id,
-        "domain": "light",
-        "sandbox_entity_id": "light.lamp",
-        "unique_id": "sandbox-lamp",
-        "supported_features": 0,
+    register = make_entity_description(
+        entry_id=entry.entry_id,
+        domain="light",
+        sandbox_entity_id="light.lamp",
+        unique_id="sandbox-lamp",
+        supported_features=0,
         # Brightness color mode so the light surfaces ``brightness`` as
         # a first-class attribute when on.
-        "capabilities": {"supported_color_modes": ["brightness"]},
-        "initial_state": "off",
-        "initial_attributes": {},
-    }
+        capabilities={"supported_color_modes": ["brightness"]},
+        initial_state="off",
+        initial_attributes={},
+    )
     try:
         result = await sandbox_channel.call("sandbox_v2/register_entity", register)
-        await sandbox_channel.push(
-            "sandbox_v2/state_changed",
-            {
-                "sandbox_entity_id": "light.lamp",
-                "new_state": {
-                    "state": STATE_ON,
-                    "attributes": {"brightness": 250, "color_mode": "brightness"},
-                },
-            },
-        )
+        state_changed = pb.StateChanged(sandbox_entity_id="light.lamp", state=STATE_ON)
+        state_changed.attributes.update({"brightness": 250, "color_mode": "brightness"})
+        await sandbox_channel.push("sandbox_v2/state_changed", state_changed)
         # Give the push handler a tick to land.
         for _ in range(20):
-            state = hass.states.get(result["entity_id"])
+            state = hass.states.get(result.entity_id)
             if state is not None and state.state == STATE_ON:
                 break
             await asyncio.sleep(0)
-        state = hass.states.get(result["entity_id"])
+        state = hass.states.get(result.entity_id)
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -271,30 +269,30 @@ async def test_proxy_method_translates_to_call_service(
 ) -> None:
     """Calling ``light.turn_on`` on a proxy fires one ``call_service`` RPC."""
     _bridge, main_channel, sandbox_channel = await _wire(hass)
-    calls: list[dict[str, Any]] = []
+    calls: list[pb.CallService] = []
 
-    async def _on_call_service(payload: dict[str, Any]) -> Any:
+    async def _on_call_service(payload: pb.CallService) -> Any:
         calls.append(payload)
         return None
 
     sandbox_channel.register("sandbox_v2/call_service", _on_call_service)
 
-    register = {
-        "entry_id": entry.entry_id,
-        "domain": "light",
-        "sandbox_entity_id": "light.bedroom",
-        "unique_id": "sandbox-bedroom",
-        "supported_features": 0,
-        "capabilities": {"supported_color_modes": ["onoff"]},
-        "initial_state": "off",
-        "initial_attributes": {},
-    }
+    register = make_entity_description(
+        entry_id=entry.entry_id,
+        domain="light",
+        sandbox_entity_id="light.bedroom",
+        unique_id="sandbox-bedroom",
+        supported_features=0,
+        capabilities={"supported_color_modes": ["onoff"]},
+        initial_state="off",
+        initial_attributes={},
+    )
     try:
         result = await sandbox_channel.call("sandbox_v2/register_entity", register)
         await hass.services.async_call(
             "light",
             "turn_on",
-            {"entity_id": result["entity_id"]},
+            {"entity_id": result.entity_id},
             blocking=True,
         )
     finally:
@@ -302,9 +300,9 @@ async def test_proxy_method_translates_to_call_service(
         await sandbox_channel.close()
 
     assert len(calls) == 1
-    assert calls[0]["domain"] == "light"
-    assert calls[0]["service"] == "turn_on"
-    assert calls[0]["target"] == {"entity_id": ["light.bedroom"]}
+    assert calls[0].domain == "light"
+    assert calls[0].service == "turn_on"
+    assert struct_to_dict(calls[0].target) == {"entity_id": ["light.bedroom"]}
 
 
 async def test_proxy_method_batches_concurrent_calls(
@@ -312,9 +310,9 @@ async def test_proxy_method_batches_concurrent_calls(
 ) -> None:
     """Many entities targeted in one tick coalesce into one ``call_service``."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
-    calls: list[dict[str, Any]] = []
+    calls: list[pb.CallService] = []
 
-    async def _on_call_service(payload: dict[str, Any]) -> Any:
+    async def _on_call_service(payload: pb.CallService) -> Any:
         calls.append(payload)
         return None
 
@@ -323,16 +321,16 @@ async def test_proxy_method_batches_concurrent_calls(
     sandbox_ids = []
     try:
         for idx in range(5):
-            register = {
-                "entry_id": entry.entry_id,
-                "domain": "light",
-                "sandbox_entity_id": f"light.bulb_{idx}",
-                "unique_id": f"sandbox-bulb-{idx}",
-                "supported_features": 0,
-                "capabilities": {"supported_color_modes": ["onoff"]},
-                "initial_state": "off",
-                "initial_attributes": {},
-            }
+            register = make_entity_description(
+                entry_id=entry.entry_id,
+                domain="light",
+                sandbox_entity_id=f"light.bulb_{idx}",
+                unique_id=f"sandbox-bulb-{idx}",
+                supported_features=0,
+                capabilities={"supported_color_modes": ["onoff"]},
+                initial_state="off",
+                initial_attributes={},
+            )
             await sandbox_channel.call("sandbox_v2/register_entity", register)
             sandbox_ids.append(f"light.bulb_{idx}")
 
@@ -348,9 +346,9 @@ async def test_proxy_method_batches_concurrent_calls(
         await sandbox_channel.close()
 
     assert len(calls) == 1
-    assert calls[0]["domain"] == "light"
-    assert calls[0]["service"] == "turn_on"
-    assert sorted(calls[0]["target"]["entity_id"]) == sorted(sandbox_ids)
+    assert calls[0].domain == "light"
+    assert calls[0].service == "turn_on"
+    assert sorted(struct_to_dict(calls[0].target)["entity_id"]) == sorted(sandbox_ids)
 
 
 async def test_proxy_method_exception_translated(
@@ -371,16 +369,16 @@ async def test_proxy_method_exception_translated(
 
     main_channel.call = _fake_call  # type: ignore[method-assign]
 
-    register = {
-        "entry_id": entry.entry_id,
-        "domain": "light",
-        "sandbox_entity_id": "light.error",
-        "unique_id": "sandbox-error",
-        "supported_features": 0,
-        "capabilities": {"supported_color_modes": ["onoff"]},
-        "initial_state": "off",
-        "initial_attributes": {},
-    }
+    register = make_entity_description(
+        entry_id=entry.entry_id,
+        domain="light",
+        sandbox_entity_id="light.error",
+        unique_id="sandbox-error",
+        supported_features=0,
+        capabilities={"supported_color_modes": ["onoff"]},
+        initial_state="off",
+        initial_attributes={},
+    )
     try:
         # Register goes through the call path too, so register before we
         # patch out the channel.
@@ -390,7 +388,7 @@ async def test_proxy_method_exception_translated(
 
     # We need to test the bridge's direct call path; build the proxy by
     # hand instead of going through register_entity.
-    description = SandboxEntityDescription.from_payload(register)
+    description = SandboxEntityDescription.from_proto(register)
     proxy_cls = bridge._build_proxy(description).__class__
     proxy = proxy_cls(bridge, description)
 
@@ -495,11 +493,11 @@ async def test_register_entity_for_unknown_entry_raises(
         with pytest.raises(ChannelRemoteError):
             await sandbox_channel.call(
                 "sandbox_v2/register_entity",
-                {
-                    "entry_id": "no-such-entry",
-                    "domain": "light",
-                    "sandbox_entity_id": "light.ghost",
-                },
+                make_entity_description(
+                    entry_id="no-such-entry",
+                    domain="light",
+                    sandbox_entity_id="light.ghost",
+                ),
             )
     finally:
         await main_channel.close()
@@ -521,31 +519,31 @@ async def test_register_entity_auto_loads_domain_component(
     try:
         result = await sandbox_channel.call(
             "sandbox_v2/register_entity",
-            {
-                "entry_id": entry.entry_id,
-                "domain": "switch",
-                "sandbox_entity_id": "switch.outlet",
-                "unique_id": "sandbox-outlet",
-                "supported_features": 0,
-                "capabilities": {},
-                "initial_state": "off",
-                "initial_attributes": {},
-            },
+            make_entity_description(
+                entry_id=entry.entry_id,
+                domain="switch",
+                sandbox_entity_id="switch.outlet",
+                unique_id="sandbox-outlet",
+                supported_features=0,
+                capabilities={},
+                initial_state="off",
+                initial_attributes={},
+            ),
         )
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert result["entity_id"].startswith("switch.")
+    assert result.entity_id.startswith("switch.")
     assert "switch" in hass.config.components
 
 
 async def test_register_service_installs_forwarder(hass: HomeAssistant) -> None:
     """A sandbox-registered service appears on main and forwards calls back."""
     _bridge, main_channel, sandbox_channel = await _wire(hass)
-    seen_calls: list[dict[str, Any]] = []
+    seen_calls: list[pb.CallService] = []
 
-    async def _on_call_service(payload: dict[str, Any]) -> Any:
+    async def _on_call_service(payload: pb.CallService) -> Any:
         seen_calls.append(payload)
         return None
 
@@ -554,13 +552,13 @@ async def test_register_service_installs_forwarder(hass: HomeAssistant) -> None:
     try:
         result = await sandbox_channel.call(
             "sandbox_v2/register_service",
-            {
-                "domain": "phase6_demo",
-                "service": "do_thing",
-                "supports_response": "none",
-            },
+            pb.RegisterService(
+                domain="phase6_demo",
+                service="do_thing",
+                supports_response="none",
+            ),
         )
-        assert result["installed"] is True
+        assert result.installed is True
         assert hass.services.has_service("phase6_demo", "do_thing")
 
         await hass.services.async_call(
@@ -571,9 +569,9 @@ async def test_register_service_installs_forwarder(hass: HomeAssistant) -> None:
         await sandbox_channel.close()
 
     assert len(seen_calls) == 1
-    assert seen_calls[0]["domain"] == "phase6_demo"
-    assert seen_calls[0]["service"] == "do_thing"
-    assert seen_calls[0]["service_data"] == {"foo": "bar"}
+    assert seen_calls[0].domain == "phase6_demo"
+    assert seen_calls[0].service == "do_thing"
+    assert struct_to_dict(seen_calls[0].service_data) == {"foo": "bar"}
 
 
 async def test_register_service_skips_existing_handler(
@@ -590,17 +588,17 @@ async def test_register_service_skips_existing_handler(
     try:
         result = await sandbox_channel.call(
             "sandbox_v2/register_service",
-            {
-                "domain": "phase6_local",
-                "service": "noop",
-                "supports_response": "none",
-            },
+            pb.RegisterService(
+                domain="phase6_local",
+                service="noop",
+                supports_response="none",
+            ),
         )
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert result["installed"] is False
+    assert result.installed is False
     # The existing handler is still in place — the bridge didn't replace it.
     assert hass.services.has_service("phase6_local", "noop")
 
@@ -614,23 +612,23 @@ async def test_unregister_service_removes_forwarder(
     try:
         await sandbox_channel.call(
             "sandbox_v2/register_service",
-            {
-                "domain": "phase6_demo",
-                "service": "stop",
-                "supports_response": "none",
-            },
+            pb.RegisterService(
+                domain="phase6_demo",
+                service="stop",
+                supports_response="none",
+            ),
         )
         assert hass.services.has_service("phase6_demo", "stop")
 
         result = await sandbox_channel.call(
             "sandbox_v2/unregister_service",
-            {"domain": "phase6_demo", "service": "stop"},
+            pb.UnregisterService(domain="phase6_demo", service="stop"),
         )
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert result["removed"] is True
+    assert result.removed is True
     assert not hass.services.has_service("phase6_demo", "stop")
 
 
@@ -647,13 +645,9 @@ async def test_fire_event_lands_on_main_bus(hass: HomeAssistant) -> None:
     hass.bus.async_listen("zha_event", _on_zha)
 
     try:
-        await sandbox_channel.push(
-            "sandbox_v2/fire_event",
-            {
-                "event_type": "zha_event",
-                "event_data": {"command": "on", "device_ieee": "0a:0b:0c"},
-            },
-        )
+        fire_event = pb.FireEvent(event_type="zha_event")
+        fire_event.event_data.update({"command": "on", "device_ieee": "0a:0b:0c"})
+        await sandbox_channel.push("sandbox_v2/fire_event", fire_event)
         # Give the push handler a tick to run.
         for _ in range(20):
             if received:

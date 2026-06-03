@@ -3,6 +3,7 @@
 from typing import Any
 
 from homeassistant.components.event import ATTR_EVENT_TYPE, EventEntity
+from homeassistant.core import Context
 from homeassistant.util import dt as dt_util
 
 from . import SandboxProxyEntity
@@ -24,7 +25,10 @@ class SandboxEventEntity(SandboxProxyEntity, EventEntity):
         return list(self.description.capabilities.get("event_types") or [])
 
     def sandbox_apply_state(
-        self, state: str | None, attributes: dict[str, Any]
+        self,
+        state: str | None,
+        attributes: dict[str, Any],
+        context: Context | None = None,
     ) -> None:
         """Replay the sandbox-side event into the EventEntity fields."""
         # pylint: disable=attribute-defined-outside-init
@@ -37,4 +41,4 @@ class SandboxEventEntity(SandboxProxyEntity, EventEntity):
             event_attrs = dict(attributes)
             self._EventEntity__last_event_type = event_attrs.pop(ATTR_EVENT_TYPE, None)
             self._EventEntity__last_event_attributes = event_attrs or None
-        super().sandbox_apply_state(state, attributes)
+        super().sandbox_apply_state(state, attributes, context)

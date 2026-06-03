@@ -23,6 +23,7 @@ from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from ._proto import sandbox_v2_pb2 as pb
 from .auth import async_issue_sandbox_access_token
 from .bridge import SandboxBridge, async_create_bridge
 from .channel import Channel
@@ -59,18 +60,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _issue_token(group: str) -> str:
         return await async_issue_sandbox_access_token(hass, group)
 
-    async def _on_shutdown_reply(group: str, reply: dict[str, Any]) -> None:
+    async def _on_shutdown_reply(group: str, reply: Any) -> None:
         """Persist the sandbox's restore-state snapshot (Phase 9).
 
         The runtime ships its ``RestoreEntity`` state in the shutdown
-        reply rather than via the sandbox store bridge (the reader task
-        is busy dispatching the shutdown handler — a re-entrant store_save
-        would deadlock). We route the payload through the bridge's
-        store server so it lands at the same path the next run's
-        warm-load reads from.
+        reply (a ``ShutdownResult``) rather than via the sandbox store
+        bridge (the reader task is busy dispatching the shutdown handler —
+        a re-entrant store_save would deadlock). We route the payload
+        through the bridge's store server so it lands at the same path the
+        next run's warm-load reads from.
         """
-        restore_state = reply.get("restore_state")
-        if not isinstance(restore_state, dict):
+        if not reply.HasField("restore_state"):
             return
         bridge = data.bridges.get(group)
         if bridge is None:
@@ -82,7 +82,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         try:
             await bridge._handle_store_save(  # noqa: SLF001 — internal write path
-                {"key": "core.restore_state", "data": restore_state}
+                pb.StoreSave(key="core.restore_state", data=reply.restore_state)
             )
         except Exception:
             _LOGGER.exception(

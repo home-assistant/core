@@ -26,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 
+from ._proto import sandbox_v2_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
 from .protocol import MSG_REGISTER_SERVICE, MSG_UNREGISTER_SERVICE
@@ -92,17 +93,17 @@ class ServiceMirror:
         if key in self._mirrored:
             return
         supports_response = _supports_response(self.hass, domain, service)
-        payload: dict[str, Any] = {
-            "domain": domain,
-            "service": service,
-            "supports_response": supports_response,
-        }
+        msg = pb.RegisterService(
+            domain=domain,
+            service=service,
+            supports_response=supports_response,
+        )
         schema = _service_schema(self.hass, domain, service)
-        if schema is not None:
-            payload["schema"] = schema
+        if schema:
+            msg.schema.extend(schema)
         self._mirrored.add(key)
         asyncio.create_task(  # noqa: RUF006
-            self._push_register(payload, key),
+            self._push_register(msg, key),
             name=f"sandbox_v2:register_service:{domain}.{service}",
         )
 
@@ -116,36 +117,36 @@ class ServiceMirror:
         if key not in self._mirrored:
             return
         self._mirrored.discard(key)
-        payload = {"domain": domain, "service": service}
+        msg = pb.UnregisterService(domain=domain, service=service)
         asyncio.create_task(  # noqa: RUF006
-            self._push_unregister(payload),
+            self._push_unregister(msg),
             name=f"sandbox_v2:unregister_service:{domain}.{service}",
         )
 
     async def _push_register(
-        self, payload: dict[str, Any], key: tuple[str, str]
+        self, msg: pb.RegisterService, key: tuple[str, str]
     ) -> None:
         assert self._channel is not None
         try:
-            await self._channel.call(MSG_REGISTER_SERVICE, payload)
+            await self._channel.call(MSG_REGISTER_SERVICE, msg)
         except Exception:
             _LOGGER.exception(
                 "ServiceMirror: register failed for %s.%s",
-                payload["domain"],
-                payload["service"],
+                msg.domain,
+                msg.service,
             )
             # Roll back the mirrored bookkeeping so a retry can succeed.
             self._mirrored.discard(key)
 
-    async def _push_unregister(self, payload: dict[str, Any]) -> None:
+    async def _push_unregister(self, msg: pb.UnregisterService) -> None:
         assert self._channel is not None
         try:
-            await self._channel.call(MSG_UNREGISTER_SERVICE, payload)
+            await self._channel.call(MSG_UNREGISTER_SERVICE, msg)
         except Exception:
             _LOGGER.exception(
                 "ServiceMirror: unregister failed for %s.%s",
-                payload["domain"],
-                payload["service"],
+                msg.domain,
+                msg.service,
             )
 
 

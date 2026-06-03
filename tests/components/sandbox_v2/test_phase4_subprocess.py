@@ -57,7 +57,7 @@ async def test_subprocess_handshake_and_ping(manager: SandboxManager) -> None:
     assert channel is not None
 
     result = await asyncio.wait_for(channel.call("sandbox_v2/ping", None), timeout=5.0)
-    assert result == {"pong": "sandbox_v2"}
+    assert result.pong == "sandbox_v2"
 
     await manager.async_stop("built-in")
     assert sandbox.state == "stopped"

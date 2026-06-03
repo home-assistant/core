@@ -16,6 +16,7 @@ import sys
 
 import pytest
 
+from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
 from homeassistant.components.sandbox_v2.manager import (
     SandboxConfig,
     SandboxManager,
@@ -93,12 +94,13 @@ async def test_graceful_shutdown_falls_through_to_sigterm_on_timeout(
             sys.executable,
             "-c",
             (
-                "import sys, time, struct, json;"
-                # Length-prefixed Ready push frame — the manager's
-                # StreamTransport reads this and flips to "running".
-                "body = json.dumps("
-                "{'type': 'sandbox_v2/ready', 'payload': None}"
-                ").encode();"
+                "import sys, time, struct;"
+                "from hass_client._proto import sandbox_v2_pb2 as pb;"
+                # Length-prefixed protobuf Ready push frame — the manager's
+                # ProtobufCodec decodes this and flips to "running".
+                "frame = pb.Frame(id=0, type='sandbox_v2/ready');"
+                "frame.request = pb.Ready().SerializeToString();"
+                "body = frame.SerializeToString();"
                 "sys.stdout.buffer.write(struct.pack('>I', len(body)) + body);"
                 "sys.stdout.buffer.flush();"
                 # Just sleep — stdin is wired to the manager but we never read.
@@ -172,9 +174,9 @@ async def test_on_shutdown_reply_callback_is_invoked(
     hass_client-side ``test_shutdown`` suite — here we only pin that
     the callback wiring fires.
     """
-    replies: list[tuple[str, dict]] = []
+    replies: list[tuple[str, pb.ShutdownResult]] = []
 
-    async def _on_shutdown_reply(group: str, reply: dict) -> None:
+    async def _on_shutdown_reply(group: str, reply: pb.ShutdownResult) -> None:
         replies.append((group, reply))
 
     def _factory(group: str) -> list[str]:
@@ -205,7 +207,8 @@ async def test_on_shutdown_reply_callback_is_invoked(
     assert len(replies) == 1
     group, reply = replies[0]
     assert group == "built-in"
-    assert reply["ok"] is True
-    assert reply["unloaded"] == 0
+    assert reply.ok is True
+    assert reply.unloaded == 0
     # No integration was loaded → no RestoreEntity → no snapshot.
-    assert reply["restore_state"] is None
+    # proto: optional field unset (was `restore_state is None`).
+    assert not reply.HasField("restore_state")

@@ -31,37 +31,35 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
+from ._proto import sandbox_v2_pb2 as pb
 from .channel import Channel
+from .messages import struct_to_dict
 from .schema_bridge import serialize_schema
 
 _LOGGER = logging.getLogger(__name__)
 
 
-# Fields we copy verbatim from the integration's FlowResult onto the wire.
-# Anything not listed here is either skipped (``progress_task``,
-# ``data_schema``) or has bespoke handling below.
-_SAFE_RESULT_FIELDS = (
-    "type",
+# Scalar optional-string fields copied verbatim from the integration's
+# FlowResult onto the proto. Dynamic dicts (data / options / errors /
+# description_placeholders / context) and data_schema get bespoke handling in
+# ``_marshal_result``. Result types beyond FORM / CREATE_ENTRY / ABORT carry no
+# extra fields (e.g. menu_options) — the main-side proxy only supports those
+# three and aborts noisily on anything else.
+_SCALAR_STRING_FIELDS = (
     "flow_id",
     "handler",
     "step_id",
-    "errors",
-    "description_placeholders",
-    "description",
-    "last_step",
-    "preview",
     "reason",
     "title",
+    "description",
+)
+
+# Dynamic dict fields → Struct fields of the same name on the proto.
+_STRUCT_FIELDS = (
     "data",
     "options",
-    "subentries",
-    "version",
-    "minor_version",
-    "menu_options",
-    "url",
-    "progress_action",
-    "translation_domain",
-    "context",
+    "errors",
+    "description_placeholders",
 )
 
 
@@ -121,36 +119,35 @@ class FlowRunner:
                 flow_manager.async_abort(progress["flow_id"])
         await self.hass.async_block_till_done()
 
-    async def _handle_flow_init(self, payload: Mapping[str, Any]) -> dict[str, Any]:
-        handler = payload["handler"]
-        context = dict(payload.get("context") or {})
-        data = payload.get("data")
+    async def _handle_flow_init(self, msg: pb.FlowInit) -> pb.FlowResult:
+        context = struct_to_dict(msg.context)
+        data = struct_to_dict(msg.data) if msg.HasField("data") else None
         result = await self.hass.config_entries.flow.async_init(
-            handler, context=context, data=data
+            msg.handler, context=context, data=data
         )
         return _marshal_result(result, self.hass.config_entries.flow)
 
-    async def _handle_flow_step(self, payload: Mapping[str, Any]) -> dict[str, Any]:
-        flow_id = payload["flow_id"]
-        user_input = payload.get("user_input")
+    async def _handle_flow_step(self, msg: pb.FlowStep) -> pb.FlowResult:
+        user_input = (
+            struct_to_dict(msg.user_input) if msg.HasField("user_input") else None
+        )
         result = await self.hass.config_entries.flow.async_configure(
-            flow_id, user_input
+            msg.flow_id, user_input
         )
         return _marshal_result(result, self.hass.config_entries.flow)
 
-    async def _handle_flow_abort(self, payload: Mapping[str, Any]) -> dict[str, Any]:
-        flow_id = payload["flow_id"]
+    async def _handle_flow_abort(self, msg: pb.FlowAbort) -> pb.FlowAbortResult:
         with contextlib.suppress(UnknownFlow):
             # Idempotent — main may have already given up on the flow.
-            self.hass.config_entries.flow.async_abort(flow_id)
-        return {}
+            self.hass.config_entries.flow.async_abort(msg.flow_id)
+        return pb.FlowAbortResult()
 
 
 def _marshal_result(
     result: Mapping[str, Any],
     flow_manager: ConfigEntriesFlowManager | None = None,
-) -> dict[str, Any]:
-    """Strip a FlowResult down to JSON-serialisable fields.
+) -> pb.FlowResult:
+    """Marshal a FlowResult into the typed ``FlowResult`` message.
 
     ``data_schema`` is rendered via :func:`serialize_schema` (Phase 14) —
     the wire payload carries the same list-of-fields shape
@@ -159,16 +156,32 @@ def _marshal_result(
     carries ``unique_id`` once the integration calls
     :meth:`ConfigFlow.async_set_unique_id`) is pulled out of the live
     flow when the result type doesn't already include it.
+
+    Only FORM / CREATE_ENTRY / ABORT fields are carried — the main-side proxy
+    supports only those three and aborts noisily on anything else, so
+    ``menu_options`` / ``subentries`` / ``url`` / … are intentionally dropped.
     """
-    out: dict[str, Any] = {}
-    for key in _SAFE_RESULT_FIELDS:
-        if key not in result:
-            continue
-        out[key] = _to_json_safe(result[key])
-    if "data_schema" in result and result["data_schema"] is not None:
+    out = pb.FlowResult(type=_flow_type_value(result["type"]))
+    for key in _SCALAR_STRING_FIELDS:
+        value = result.get(key)
+        if value is not None:
+            setattr(out, key, str(value))
+    if result.get("version") is not None:
+        out.version = int(result["version"])
+    if result.get("minor_version") is not None:
+        out.minor_version = int(result["minor_version"])
+    if result.get("last_step") is not None:
+        out.last_step = bool(result["last_step"])
+    if result.get("preview") is not None:
+        out.preview = str(result["preview"])
+    for key in _STRUCT_FIELDS:
+        value = result.get(key)
+        if isinstance(value, Mapping):
+            getattr(out, key).update(_to_json_safe(dict(value)))
+    if result.get("data_schema") is not None:
         serialized = serialize_schema(result["data_schema"])
         if serialized is not None:
-            out["data_schema"] = serialized
+            out.data_schema.extend(serialized)
         else:
             # voluptuous_serialize couldn't render it; flag the gap so the
             # proxy still surfaces a (schema-less) form rather than abort.
@@ -179,12 +192,15 @@ def _marshal_result(
                 " schema-less form",
                 result["data_schema"],
             )
-            out["_has_data_schema"] = True
-    # FORM / SHOW_PROGRESS / EXTERNAL_STEP results don't include the
-    # flow's context (only CREATE_ENTRY does). Look it up so the proxy
-    # can mirror ``unique_id`` into its own ``self.context`` and let
-    # main's duplicate detection fire.
-    if "context" not in out and flow_manager is not None:
+            out.has_data_schema = True
+    context_value = result.get("context")
+    if isinstance(context_value, Mapping):
+        out.context.update(_to_json_safe(dict(context_value)))
+    elif flow_manager is not None:
+        # FORM / SHOW_PROGRESS / EXTERNAL_STEP results don't include the
+        # flow's context (only CREATE_ENTRY does). Look it up so the proxy
+        # can mirror ``unique_id`` into its own ``self.context`` and let
+        # main's duplicate detection fire.
         flow_id = result.get("flow_id")
         if isinstance(flow_id, str):
             try:
@@ -194,8 +210,15 @@ def _marshal_result(
             if partial is not None:
                 ctx = partial.get("context")
                 if isinstance(ctx, Mapping):
-                    out["context"] = _to_json_safe(ctx)
+                    out.context.update(_to_json_safe(dict(ctx)))
     return out
+
+
+def _flow_type_value(value: Any) -> str:
+    """Return the string value of a FlowResult ``type`` (enum or string)."""
+    if isinstance(value, FlowResultType):
+        return value.value
+    return str(value)
 
 
 def _to_json_safe(value: Any) -> Any:

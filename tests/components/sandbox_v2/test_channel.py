@@ -68,7 +68,7 @@ async def test_from_transport_round_trips() -> None:
 @pytest.fixture(name="channels")
 async def _channels_fixture() -> tuple:
     """Return a paired Channel + Channel, both started, both auto-cleaned."""
-    channel_a, channel_b = make_channel_pair()
+    channel_a, channel_b = make_channel_pair(use_json=True)
     channel_a.start()
     channel_b.start()
     yield channel_a, channel_b
@@ -221,7 +221,7 @@ async def test_concurrency_cap_queues_excess_handlers() -> None:
     and observes the last one waiting until one of the first two
     finishes.
     """
-    channel_a, channel_b = make_channel_pair(max_inflight_b=2)
+    channel_a, channel_b = make_channel_pair(max_inflight_b=2, use_json=True)
     channel_a.start()
     channel_b.start()
     started: list[asyncio.Event] = [asyncio.Event() for _ in range(3)]

@@ -43,7 +43,13 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
+from homeassistant.core import (
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, json as json_helper
 from homeassistant.helpers.entity_component import DATA_INSTANCES, EntityComponent
@@ -53,8 +59,11 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file_atomic
 
+from ._proto import sandbox_v2_pb2 as pb
+from .auth import async_get_or_create_sandbox_user
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
 from .const import UNIQUE_ID_SEPARATOR
+from .messages import dict_to_struct, listvalue_to_list, struct_to_dict
 from .protocol import (
     MSG_CALL_SERVICE,
     MSG_FIRE_EVENT,
@@ -95,23 +104,42 @@ class SandboxEntityDescription:
     device_id: str | None = None
 
     @classmethod
-    def from_payload(cls, payload: Mapping[str, Any]) -> SandboxEntityDescription:
-        """Build a description from the wire payload."""
+    def from_proto(cls, msg: pb.EntityDescription) -> SandboxEntityDescription:
+        """Build a description from the typed ``EntityDescription`` message.
+
+        Flattens the nested ``EntityInfo`` / ``InitialState`` sub-messages back
+        into the flat shape the proxy entities consume.
+        """
+        description = msg.info.description
+        initial = msg.initial
+        device_info = (
+            _deserialise_device_info(msg.info.device_info)
+            if msg.info.HasField("device_info")
+            else None
+        )
         return cls(
-            entry_id=payload["entry_id"],
-            domain=payload["domain"],
-            sandbox_entity_id=payload["sandbox_entity_id"],
-            unique_id=payload.get("unique_id"),
-            name=payload.get("name"),
-            icon=payload.get("icon"),
-            has_entity_name=bool(payload.get("has_entity_name", False)),
-            entity_category=payload.get("entity_category"),
-            device_class=payload.get("device_class"),
-            supported_features=int(payload.get("supported_features") or 0),
-            capabilities=dict(payload.get("capabilities") or {}),
-            initial_state=payload.get("initial_state"),
-            initial_attributes=dict(payload.get("initial_attributes") or {}),
-            device_info=_deserialise_device_info(payload.get("device_info")),
+            entry_id=msg.entry_id,
+            domain=msg.domain,
+            sandbox_entity_id=msg.sandbox_entity_id,
+            unique_id=msg.unique_id if msg.HasField("unique_id") else None,
+            name=description.name if description.HasField("name") else None,
+            icon=description.icon if description.HasField("icon") else None,
+            has_entity_name=msg.has_entity_name,
+            entity_category=(
+                description.entity_category
+                if description.HasField("entity_category")
+                else None
+            ),
+            device_class=(
+                description.device_class
+                if description.HasField("device_class")
+                else None
+            ),
+            supported_features=description.supported_features,
+            capabilities=struct_to_dict(initial.capabilities),
+            initial_state=initial.state if initial.HasField("state") else None,
+            initial_attributes=struct_to_dict(initial.attributes),
+            device_info=device_info,
         )
 
 
@@ -244,6 +272,13 @@ class SandboxBridge:
 
         self._store_server = _SandboxStoreServer(hass, group)
 
+        # Context security: the sandbox only ever sends a context_id (a
+        # string). Main resolves it to its own authoritative Context, never
+        # honouring a sandbox-supplied parent_id / user_id. Resolved contexts
+        # are cached so a repeated id maps to one stable Context.
+        self._system_user_id: str | None = None
+        self._contexts: dict[str, Context] = {}
+
         channel.register(MSG_REGISTER_ENTITY, self._handle_register_entity)
         channel.register(MSG_UNREGISTER_ENTITY, self._handle_unregister_entity)
         channel.register(MSG_STATE_CHANGED, self._handle_state_changed)
@@ -290,17 +325,17 @@ class SandboxBridge:
         return_response: bool,
     ) -> Any:
         """Send one ``sandbox_v2/call_service`` RPC and translate errors."""
-        payload: dict[str, Any] = {
-            "domain": domain,
-            "service": service,
-            "target": target,
-            "service_data": service_data,
-            "return_response": return_response,
-        }
+        request = pb.CallService(
+            domain=domain,
+            service=service,
+            target=dict_to_struct(target),
+            service_data=dict_to_struct(service_data),
+            return_response=return_response,
+        )
         if context_id is not None:
-            payload["context_id"] = context_id
+            request.context_id = context_id
         try:
-            return await self.channel.call(MSG_CALL_SERVICE, payload)
+            return await self.channel.call(MSG_CALL_SERVICE, request)
         except ChannelRemoteError as err:
             raise _translate_remote_error(err) from err
         except ChannelClosedError as err:
@@ -308,10 +343,35 @@ class SandboxBridge:
                 f"Sandbox {self.group!r} channel closed mid-call"
             ) from err
 
+    async def _async_system_user_id(self) -> str:
+        """Return (and cache) the sandbox group's system-user id."""
+        if self._system_user_id is None:
+            user = await async_get_or_create_sandbox_user(self.hass, self.group)
+            self._system_user_id = user.id
+        return self._system_user_id
+
+    async def _resolve_context(self, context_id: str | None) -> Context:
+        """Resolve a sandbox-supplied context_id to an authoritative Context.
+
+        The sandbox can never set ``parent_id`` / ``user_id`` on the wire —
+        main owns that. A context_id main has already resolved reuses the same
+        Context; an unseen id (or no id) mints a fresh Context attributed to
+        the sandbox's system user, with no ``parent_id``.
+        """
+        user_id = await self._async_system_user_id()
+        if context_id is None:
+            return Context(user_id=user_id)
+        existing = self._contexts.get(context_id)
+        if existing is not None:
+            return existing
+        context = Context(id=context_id, user_id=user_id)
+        self._contexts[context_id] = context
+        return context
+
     async def _handle_register_entity(
-        self, payload: Mapping[str, Any]
-    ) -> dict[str, Any]:
-        description = SandboxEntityDescription.from_payload(payload)
+        self, msg: pb.EntityDescription
+    ) -> pb.RegisterEntityResult:
+        description = SandboxEntityDescription.from_proto(msg)
         entry = self.hass.config_entries.async_get_entry(description.entry_id)
         if entry is None:
             raise HomeAssistantError(
@@ -353,12 +413,12 @@ class SandboxBridge:
         existing = self._entities.get(description.sandbox_entity_id)
         if existing is not None:
             existing.sandbox_update_description(description)
-            return {"entity_id": existing.entity_id or ""}
+            return pb.RegisterEntityResult(entity_id=existing.entity_id or "")
         proxy = self._build_proxy(description)
         platform = self._ensure_platform(entry, description.domain)
         await platform.async_add_entities([proxy])
         self._entities[description.sandbox_entity_id] = proxy
-        return {"entity_id": proxy.entity_id or ""}
+        return pb.RegisterEntityResult(entity_id=proxy.entity_id or "")
 
     async def _ensure_domain_loaded(self, domain: str) -> None:
         """Make sure the domain's :class:`EntityComponent` is loaded on main."""
@@ -370,36 +430,39 @@ class SandboxBridge:
         await async_setup_component(self.hass, domain, {})
 
     async def _handle_unregister_entity(
-        self, payload: Mapping[str, Any]
-    ) -> dict[str, Any]:
-        sandbox_entity_id = payload["sandbox_entity_id"]
+        self, msg: pb.UnregisterEntity
+    ) -> pb.UnregisterEntityResult:
+        sandbox_entity_id = msg.sandbox_entity_id
         proxy = self._entities.pop(sandbox_entity_id, None)
         if proxy is None:
-            return {"ok": True}
+            return pb.UnregisterEntityResult(ok=True)
         entity_id = getattr(proxy, "entity_id", None)
         if not entity_id:
-            return {"ok": True}
+            return pb.UnregisterEntityResult(ok=True)
         domain = entity_id.split(".", 1)[0]
         component: EntityComponent[Any] | None = self.hass.data.get(
             DATA_INSTANCES, {}
         ).get(domain)
         if component is not None:
             await component.async_remove_entity(entity_id)
-        return {"ok": True}
+        return pb.UnregisterEntityResult(ok=True)
 
-    async def _handle_state_changed(self, payload: Mapping[str, Any]) -> None:
-        sandbox_entity_id = payload["sandbox_entity_id"]
-        proxy = self._entities.get(sandbox_entity_id)
+    async def _handle_state_changed(self, msg: pb.StateChanged) -> None:
+        proxy = self._entities.get(msg.sandbox_entity_id)
         if proxy is None:
             return
-        new_state = payload.get("new_state") or {}
-        state_str = new_state.get("state")
-        attributes = dict(new_state.get("attributes") or {})
-        proxy.sandbox_apply_state(state_str, attributes)
+        state_str = msg.state if msg.HasField("state") else None
+        attributes = struct_to_dict(msg.attributes)
+        context = (
+            await self._resolve_context(msg.context_id)
+            if msg.HasField("context_id")
+            else None
+        )
+        proxy.sandbox_apply_state(state_str, attributes, context)
 
     async def _handle_register_service(
-        self, payload: Mapping[str, Any]
-    ) -> dict[str, Any]:
+        self, msg: pb.RegisterService
+    ) -> pb.RegisterServiceResult:
         """Mirror a sandbox-registered service onto main's service registry.
 
         The handler that gets installed forwards every call back over
@@ -414,9 +477,9 @@ class SandboxBridge:
         already owns the slot) we skip the install — the existing
         handler stays in charge.
         """
-        domain = str(payload["domain"]).lower()
-        service = str(payload["service"]).lower()
-        supports_response = _parse_supports_response(payload.get("supports_response"))
+        domain = msg.domain.lower()
+        service = msg.service.lower()
+        supports_response = _parse_supports_response(msg.supports_response)
         if self.hass.services.has_service(domain, service):
             _LOGGER.debug(
                 "SandboxBridge[%s]: %s.%s already on main, not replacing",
@@ -424,10 +487,10 @@ class SandboxBridge:
                 domain,
                 service,
             )
-            return {"ok": True, "installed": False}
+            return pb.RegisterServiceResult(ok=True, installed=False)
 
         forwarder = _build_service_forwarder(self, domain, service, supports_response)
-        schema = reconstruct_schema(payload.get("schema"))
+        schema = reconstruct_schema(listvalue_to_list(msg.schema))
         self.hass.services.async_register(
             domain,
             service,
@@ -436,52 +499,56 @@ class SandboxBridge:
             supports_response=supports_response,
         )
         self._mirrored_services.add((domain, service))
-        return {"ok": True, "installed": True}
+        return pb.RegisterServiceResult(ok=True, installed=True)
 
     async def _handle_unregister_service(
-        self, payload: Mapping[str, Any]
-    ) -> dict[str, Any]:
-        domain = str(payload["domain"]).lower()
-        service = str(payload["service"]).lower()
+        self, msg: pb.UnregisterService
+    ) -> pb.UnregisterServiceResult:
+        domain = msg.domain.lower()
+        service = msg.service.lower()
         key = (domain, service)
         if key not in self._mirrored_services:
-            return {"ok": True, "removed": False}
+            return pb.UnregisterServiceResult(ok=True, removed=False)
         self._mirrored_services.discard(key)
         if self.hass.services.has_service(domain, service):
             self.hass.services.async_remove(domain, service)
-        return {"ok": True, "removed": True}
+        return pb.UnregisterServiceResult(ok=True, removed=True)
 
-    async def _handle_store_load(
-        self, payload: Mapping[str, Any]
-    ) -> dict[str, Any] | None:
+    async def _handle_store_load(self, msg: pb.StoreLoad) -> pb.StoreLoadResult:
         """Serve a sandbox-side ``Store.async_load`` (Phase 8)."""
-        return await self._store_server.async_load(_require_key(payload))
+        data = await self._store_server.async_load(_validate_key(msg.key))
+        result = pb.StoreLoadResult()
+        if data is not None:
+            result.data.update(data)
+        return result
 
-    async def _handle_store_save(self, payload: Mapping[str, Any]) -> dict[str, Any]:
+    async def _handle_store_save(self, msg: pb.StoreSave) -> pb.StoreSaveResult:
         """Persist a sandbox-side ``Store.async_save`` flush (Phase 8)."""
-        data = payload.get("data")
-        if not isinstance(data, dict):
-            raise HomeAssistantError("store_save: missing 'data' dict")
-        await self._store_server.async_save(_require_key(payload), data)
-        return {"ok": True}
+        await self._store_server.async_save(
+            _validate_key(msg.key), struct_to_dict(msg.data)
+        )
+        return pb.StoreSaveResult(ok=True)
 
-    async def _handle_store_remove(self, payload: Mapping[str, Any]) -> dict[str, Any]:
+    async def _handle_store_remove(self, msg: pb.StoreRemove) -> pb.StoreRemoveResult:
         """Drop the on-disk file for a sandbox-side ``Store.async_remove``."""
-        await self._store_server.async_remove(_require_key(payload))
-        return {"ok": True}
+        await self._store_server.async_remove(_validate_key(msg.key))
+        return pb.StoreRemoveResult(ok=True)
 
-    async def _handle_fire_event(self, payload: Mapping[str, Any]) -> None:
+    async def _handle_fire_event(self, msg: pb.FireEvent) -> None:
         """Re-fire a sandbox-side event on main's bus.
 
-        The sandbox tags every push with ``event_type`` + ``event_data``;
-        the context is reconstructed minimally so listeners on main see a
-        consistent ``Context`` shape (the sandbox's own context id is
-        forwarded but not honoured by main's user resolution — that's
-        intentional for v2).
+        The sandbox tags every push with ``event_type`` + ``event_data`` and,
+        optionally, a ``context_id``. Main resolves that id to an
+        authoritative Context attributed to the sandbox's system user — the
+        sandbox can never inject a ``parent_id`` / ``user_id``.
         """
-        event_type = str(payload["event_type"])
-        event_data = payload.get("event_data") or {}
-        self.hass.bus.async_fire(event_type, dict(event_data))
+        event_data = struct_to_dict(msg.event_data)
+        context = (
+            await self._resolve_context(msg.context_id)
+            if msg.HasField("context_id")
+            else None
+        )
+        self.hass.bus.async_fire(msg.event_type, event_data, context=context)
 
     def _ensure_platform(self, entry: ConfigEntry, domain: str) -> EntityPlatform:
         key = (entry.entry_id, domain)
@@ -542,8 +609,8 @@ class SandboxBridge:
 _STORE_KEY_FORBIDDEN = ("/", "\\", "\x00")
 
 
-def _require_key(payload: Mapping[str, Any]) -> str:
-    """Extract + validate a ``key`` field from a store payload.
+def _validate_key(key: str) -> str:
+    """Validate a store ``key`` from the wire.
 
     Defends the host filesystem from a compromised sandbox: a key must
     be a non-empty string with no path separators, no null bytes, and
@@ -551,8 +618,7 @@ def _require_key(payload: Mapping[str, Any]) -> str:
     :class:`HomeAssistantError`, which the channel framework turns into
     a remote-error frame for the sandbox.
     """
-    key = payload.get("key")
-    if not isinstance(key, str) or not key:
+    if not key:
         raise HomeAssistantError("store request: missing 'key'")
     if any(ch in key for ch in _STORE_KEY_FORBIDDEN):
         raise HomeAssistantError(f"store request: invalid key {key!r}")
@@ -628,33 +694,50 @@ class _SandboxStoreServer:
             return
 
 
-def _deserialise_device_info(value: Any) -> dict[str, Any] | None:
-    """Rebuild a ``DeviceInfo`` TypedDict from the wire payload.
+_DEVICE_INFO_STR_FIELDS = (
+    "name",
+    "manufacturer",
+    "model",
+    "model_id",
+    "sw_version",
+    "hw_version",
+    "serial_number",
+    "suggested_area",
+    "configuration_url",
+    "default_name",
+    "default_manufacturer",
+    "default_model",
+    "translation_key",
+)
 
-    The sandbox-side serialiser flattens sets and tuples to lists of
-    two-element lists; this reverses that so
-    :func:`device_registry.async_get_or_create` sees the shapes its
-    validators expect. ``entry_type`` is rebuilt as a
-    :class:`DeviceEntryType` enum value.
+
+def _deserialise_device_info(info: pb.DeviceInfo) -> dict[str, Any] | None:
+    """Rebuild a ``DeviceInfo`` TypedDict from the typed proto.
+
+    ``identifiers`` / ``connections`` come back as sets of tuples and
+    ``via_device`` as a tuple — the shapes
+    :func:`device_registry.async_get_or_create` validates. ``entry_type`` is
+    rebuilt as a :class:`DeviceEntryType` enum value.
     """
-    if not value or not isinstance(value, Mapping):
-        return None
     out: dict[str, Any] = {}
-    for key, raw in value.items():
-        if raw is None:
-            out[key] = None
-        elif key in ("identifiers", "connections") and isinstance(raw, list):
-            out[key] = {tuple(item) for item in raw if isinstance(item, list)}
-        elif key == "via_device" and isinstance(raw, list):
-            out[key] = tuple(raw)
-        elif key == "entry_type" and isinstance(raw, str):
-            try:
-                out[key] = dr.DeviceEntryType(raw)
-            except ValueError:
-                _LOGGER.debug("register_entity: unknown entry_type %r — dropping", raw)
-        else:
-            out[key] = raw
-    return out
+    if info.identifiers:
+        out["identifiers"] = {(pair.key, pair.value) for pair in info.identifiers}
+    if info.connections:
+        out["connections"] = {(pair.key, pair.value) for pair in info.connections}
+    if info.HasField("via_device"):
+        out["via_device"] = (info.via_device.key, info.via_device.value)
+    if info.entry_type:
+        try:
+            out["entry_type"] = dr.DeviceEntryType(info.entry_type)
+        except ValueError:
+            _LOGGER.debug(
+                "register_entity: unknown entry_type %r — dropping", info.entry_type
+            )
+    for field_name in _DEVICE_INFO_STR_FIELDS:
+        value = getattr(info, field_name)
+        if value:
+            out[field_name] = value
+    return out or None
 
 
 def _parse_supports_response(value: Any) -> SupportsResponse:
@@ -685,16 +768,17 @@ def _build_service_forwarder(
     """
 
     async def _forward(call: ServiceCall) -> Any:
-        payload: dict[str, Any] = {
-            "domain": domain,
-            "service": service,
-            "service_data": dict(call.data),
-            "target": _target_from_call(call),
-            "return_response": call.return_response,
-            "context_id": call.context.id if call.context is not None else None,
-        }
+        request = pb.CallService(
+            domain=domain,
+            service=service,
+            service_data=dict_to_struct(dict(call.data)),
+            target=dict_to_struct(_target_from_call(call)),
+            return_response=call.return_response,
+        )
+        if call.context is not None:
+            request.context_id = call.context.id
         try:
-            response = await bridge.channel.call(MSG_CALL_SERVICE, payload)
+            response = await bridge.channel.call(MSG_CALL_SERVICE, request)
         except ChannelRemoteError as err:
             raise _translate_remote_error(err) from err
         except ChannelClosedError as err:
@@ -703,9 +787,9 @@ def _build_service_forwarder(
             ) from err
         if supports_response is SupportsResponse.NONE:
             return None
-        if isinstance(response, Mapping):
-            return response.get("response", response)
-        return response
+        if response.HasField("response"):
+            return struct_to_dict(response.response.data)
+        return None
 
     return _forward
 

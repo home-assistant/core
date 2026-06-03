@@ -22,8 +22,10 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
 from homeassistant.components.sandbox_v2.bridge import SandboxBridge
 from homeassistant.components.sandbox_v2.channel import Channel, ChannelRemoteError
+from homeassistant.components.sandbox_v2.messages import struct_to_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -48,26 +50,25 @@ def _store_path(hass: HomeAssistant, group: str, key: str) -> Path:
 async def test_store_save_writes_to_namespaced_path(hass: HomeAssistant) -> None:
     """A save lands at ``.storage/sandbox_v2/<group>/<key>`` on main."""
     _bridge, main_channel, sandbox_channel = await _wire(hass, group="built-in")
-    payload = {
+    wrapped = {
+        "version": 1,
+        "minor_version": 1,
         "key": "phase8_demo",
-        "data": {
-            "version": 1,
-            "minor_version": 1,
-            "key": "phase8_demo",
-            "data": {"hello": "world"},
-        },
+        "data": {"hello": "world"},
     }
+    save = pb.StoreSave(key="phase8_demo")
+    save.data.update(wrapped)
     try:
-        result = await sandbox_channel.call("sandbox_v2/store_save", payload)
+        result = await sandbox_channel.call("sandbox_v2/store_save", save)
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert result == {"ok": True}
+    assert result.ok
     path = _store_path(hass, "built-in", "phase8_demo")
     assert path.is_file()
     # The file holds the wrapped Store payload verbatim.
-    assert json.loads(path.read_text(encoding="utf-8")) == payload["data"]
+    assert json.loads(path.read_text(encoding="utf-8")) == wrapped
 
 
 async def test_store_load_returns_saved_payload(hass: HomeAssistant) -> None:
@@ -79,18 +80,18 @@ async def test_store_load_returns_saved_payload(hass: HomeAssistant) -> None:
         "key": "phase8_demo",
         "data": {"counter": 42},
     }
+    save = pb.StoreSave(key="phase8_demo")
+    save.data.update(wrapped)
     try:
-        await sandbox_channel.call(
-            "sandbox_v2/store_save", {"key": "phase8_demo", "data": wrapped}
-        )
+        await sandbox_channel.call("sandbox_v2/store_save", save)
         loaded = await sandbox_channel.call(
-            "sandbox_v2/store_load", {"key": "phase8_demo"}
+            "sandbox_v2/store_load", pb.StoreLoad(key="phase8_demo")
         )
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert loaded == wrapped
+    assert struct_to_dict(loaded.data) == wrapped
 
 
 async def test_store_load_missing_key_returns_none(hass: HomeAssistant) -> None:
@@ -98,42 +99,41 @@ async def test_store_load_missing_key_returns_none(hass: HomeAssistant) -> None:
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     try:
         loaded = await sandbox_channel.call(
-            "sandbox_v2/store_load", {"key": "never_saved"}
+            "sandbox_v2/store_load", pb.StoreLoad(key="never_saved")
         )
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert loaded is None
+    # proto: a missing key returns a StoreLoadResult with no `data` field set.
+    assert not loaded.HasField("data")
 
 
 async def test_store_remove_unlinks_file(hass: HomeAssistant) -> None:
     """``store_remove`` removes the on-disk file."""
     _bridge, main_channel, sandbox_channel = await _wire(hass)
+    save = pb.StoreSave(key="to_remove")
+    save.data.update(
+        {
+            "version": 1,
+            "minor_version": 1,
+            "key": "to_remove",
+            "data": {"x": 1},
+        }
+    )
     try:
-        await sandbox_channel.call(
-            "sandbox_v2/store_save",
-            {
-                "key": "to_remove",
-                "data": {
-                    "version": 1,
-                    "minor_version": 1,
-                    "key": "to_remove",
-                    "data": {"x": 1},
-                },
-            },
-        )
+        await sandbox_channel.call("sandbox_v2/store_save", save)
         path = _store_path(hass, "built-in", "to_remove")
         assert path.is_file()
 
         result = await sandbox_channel.call(
-            "sandbox_v2/store_remove", {"key": "to_remove"}
+            "sandbox_v2/store_remove", pb.StoreRemove(key="to_remove")
         )
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert result == {"ok": True}
+    assert result.ok
     assert not _store_path(hass, "built-in", "to_remove").exists()
 
 
@@ -142,13 +142,13 @@ async def test_store_remove_missing_key_is_noop(hass: HomeAssistant) -> None:
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     try:
         result = await sandbox_channel.call(
-            "sandbox_v2/store_remove", {"key": "phantom"}
+            "sandbox_v2/store_remove", pb.StoreRemove(key="phantom")
         )
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert result == {"ok": True}
+    assert result.ok
 
 
 @pytest.mark.parametrize(
@@ -166,7 +166,9 @@ async def test_store_rejects_path_traversal(hass: HomeAssistant, bad_key: str) -
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     try:
         with pytest.raises(ChannelRemoteError):
-            await sandbox_channel.call("sandbox_v2/store_load", {"key": bad_key})
+            await sandbox_channel.call(
+                "sandbox_v2/store_load", pb.StoreLoad(key=bad_key)
+            )
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -177,7 +179,7 @@ async def test_store_rejects_missing_key(hass: HomeAssistant) -> None:
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     try:
         with pytest.raises(ChannelRemoteError):
-            await sandbox_channel.call("sandbox_v2/store_load", {})
+            await sandbox_channel.call("sandbox_v2/store_load", pb.StoreLoad(key=""))
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -193,13 +195,13 @@ async def test_store_groups_are_isolated(hass: HomeAssistant) -> None:
         "key": "shared_key",
         "data": {"side": "built-in"},
     }
+    save = pb.StoreSave(key="shared_key")
+    save.data.update(wrapped)
     try:
-        await sandbox_a.call(
-            "sandbox_v2/store_save", {"key": "shared_key", "data": wrapped}
-        )
+        await sandbox_a.call("sandbox_v2/store_save", save)
         # The custom-group bridge cannot see built-in's data.
         loaded_custom = await sandbox_b.call(
-            "sandbox_v2/store_load", {"key": "shared_key"}
+            "sandbox_v2/store_load", pb.StoreLoad(key="shared_key")
         )
     finally:
         await main_a.close()
@@ -207,7 +209,8 @@ async def test_store_groups_are_isolated(hass: HomeAssistant) -> None:
         await main_b.close()
         await sandbox_b.close()
 
-    assert loaded_custom is None
+    # proto: the custom group has no entry, so `data` is unset.
+    assert not loaded_custom.HasField("data")
     assert _store_path(hass, "built-in", "shared_key").is_file()
     assert not _store_path(hass, "custom", "shared_key").exists()
 
@@ -221,10 +224,10 @@ async def test_store_survives_bridge_restart(hass: HomeAssistant) -> None:
         "key": "persistent",
         "data": {"survives": True},
     }
+    save = pb.StoreSave(key="persistent")
+    save.data.update(wrapped)
     try:
-        await sandbox_a.call(
-            "sandbox_v2/store_save", {"key": "persistent", "data": wrapped}
-        )
+        await sandbox_a.call("sandbox_v2/store_save", save)
     finally:
         await main_a.close()
         await sandbox_a.close()
@@ -232,9 +235,11 @@ async def test_store_survives_bridge_restart(hass: HomeAssistant) -> None:
     # Bring up a fresh bridge for the same group on a new channel pair.
     _bridge2, main_b, sandbox_b = await _wire(hass, group="built-in")
     try:
-        loaded = await sandbox_b.call("sandbox_v2/store_load", {"key": "persistent"})
+        loaded = await sandbox_b.call(
+            "sandbox_v2/store_load", pb.StoreLoad(key="persistent")
+        )
     finally:
         await main_b.close()
         await sandbox_b.close()
 
-    assert loaded == wrapped
+    assert struct_to_dict(loaded.data) == wrapped

@@ -28,9 +28,7 @@ def test_ready_msg_type_is_stable() -> None:
 def test_cli_parser_requires_name_url_and_token() -> None:
     """The CLI parser accepts the manager's argv and defaults log-level."""
     parser = _build_parser()
-    args = parser.parse_args(
-        ["--name", "built-in", "--url", "ws://x", "--token", "t"]
-    )
+    args = parser.parse_args(["--name", "built-in", "--url", "ws://x", "--token", "t"])
     assert args.name == "built-in"
     assert args.url == "ws://x"
     assert args.token == "t"

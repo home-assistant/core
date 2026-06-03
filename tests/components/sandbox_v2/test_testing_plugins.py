@@ -80,7 +80,7 @@ async def test_inprocess_plugin_round_trips_ping(
     data = hass.data[DATA_SANDBOX_V2]
     channel = data.channels[DEFAULT_GROUP]
     result = await asyncio.wait_for(channel.call("sandbox_v2/ping", None), timeout=2.0)
-    assert result == {"pong": "sandbox_v2"}
+    assert result.pong == "sandbox_v2"
 
 
 async def test_inprocess_plugin_returns_existing_sandbox_on_ensure_started(

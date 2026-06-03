@@ -13,7 +13,8 @@ Provides:
 
 import asyncio
 
-from homeassistant.components.sandbox_v2.channel import Channel
+from homeassistant.components.sandbox_v2.channel import Channel, JsonCodec
+from homeassistant.components.sandbox_v2.codec_protobuf import ProtobufCodec
 
 
 class _LoopbackWriter:
@@ -47,12 +48,18 @@ def make_channel_pair(
     name_b: str = "b",
     max_inflight_a: int | None = None,
     max_inflight_b: int | None = None,
+    use_json: bool = False,
 ) -> tuple[Channel, Channel]:
     """Return two channels connected to each other in-memory.
 
     ``max_inflight_a`` / ``max_inflight_b`` override the per-side
     handler concurrency cap when set; otherwise the channel's default
     applies. Useful for exercising the bounded-semaphore path.
+
+    The pair speaks protobuf by default (production parity, so real
+    handlers receive typed messages). ``use_json=True`` falls back to the
+    registry-free :class:`JsonCodec` for channel-core tests that drive
+    synthetic message types with plain dict payloads.
     """
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
@@ -64,8 +71,10 @@ def make_channel_pair(
     kwargs_b: dict[str, int] = (
         {"max_inflight": max_inflight_b} if max_inflight_b is not None else {}
     )
-    channel_a = Channel(reader_a, writer_a, name=name_a, **kwargs_a)  # type: ignore[arg-type]
-    channel_b = Channel(reader_b, writer_b, name=name_b, **kwargs_b)  # type: ignore[arg-type]
+    codec_a = JsonCodec() if use_json else ProtobufCodec()
+    codec_b = JsonCodec() if use_json else ProtobufCodec()
+    channel_a = Channel(reader_a, writer_a, name=name_a, codec=codec_a, **kwargs_a)  # type: ignore[arg-type]
+    channel_b = Channel(reader_b, writer_b, name=name_b, codec=codec_b, **kwargs_b)  # type: ignore[arg-type]
     return channel_a, channel_b
 
 

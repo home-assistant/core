@@ -11,8 +11,10 @@ import asyncio
 import tempfile
 from typing import Any
 
+from hass_client._proto import sandbox_v2_pb2 as pb
 from hass_client.approved_domains import ApprovedDomains
 from hass_client.channel import Channel
+from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.flow_runner import FlowRunner
 from hass_client.service_mirror import ServiceMirror
 import pytest
@@ -41,8 +43,12 @@ def _make_channel_pair() -> tuple[Channel, Channel]:
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
     return (
-        Channel(reader_a, _LoopbackWriter(reader_b), name="main"),  # type: ignore[arg-type]
-        Channel(reader_b, _LoopbackWriter(reader_a), name="sandbox"),  # type: ignore[arg-type]
+        Channel(
+            reader_a, _LoopbackWriter(reader_b), name="main", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
+        Channel(
+            reader_b, _LoopbackWriter(reader_a), name="sandbox", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
     )
 
 
@@ -76,11 +82,11 @@ async def test_register_service_pushes_to_main(
 ) -> None:
     """An approved-domain service registration becomes one push to main."""
     main, sandbox = channels
-    register_calls: list[dict[str, Any]] = []
+    register_calls: list[pb.RegisterService] = []
 
-    async def _on_register(payload: dict[str, Any]) -> dict[str, bool]:
-        register_calls.append(payload)
-        return {"ok": True, "installed": True}
+    async def _on_register(msg: pb.RegisterService) -> pb.RegisterServiceResult:
+        register_calls.append(msg)
+        return pb.RegisterServiceResult(ok=True, installed=True)
 
     main.register("sandbox_v2/register_service", _on_register)
     main.start()
@@ -103,9 +109,9 @@ async def test_register_service_pushes_to_main(
     await _wait_until(lambda: bool(register_calls))
 
     assert len(register_calls) == 1
-    assert register_calls[0]["domain"] == "phase6_demo"
-    assert register_calls[0]["service"] == "do_thing"
-    assert register_calls[0]["supports_response"] == "none"
+    assert register_calls[0].domain == "phase6_demo"
+    assert register_calls[0].service == "do_thing"
+    assert register_calls[0].supports_response == "none"
 
     await mirror.async_stop()
 
@@ -115,11 +121,11 @@ async def test_unapproved_domain_is_rejected(
 ) -> None:
     """A service for an un-approved domain never reaches main."""
     main, sandbox = channels
-    register_calls: list[dict[str, Any]] = []
+    register_calls: list[pb.RegisterService] = []
 
-    async def _on_register(payload: dict[str, Any]) -> dict[str, bool]:
-        register_calls.append(payload)
-        return {"ok": True, "installed": True}
+    async def _on_register(msg: pb.RegisterService) -> pb.RegisterServiceResult:
+        register_calls.append(msg)
+        return pb.RegisterServiceResult(ok=True, installed=True)
 
     main.register("sandbox_v2/register_service", _on_register)
     main.start()
@@ -152,16 +158,18 @@ async def test_unregister_service_propagates(
 ) -> None:
     """Removing a mirrored service pushes ``unregister_service`` to main."""
     main, sandbox = channels
-    register_calls: list[dict[str, Any]] = []
-    unregister_calls: list[dict[str, Any]] = []
+    register_calls: list[pb.RegisterService] = []
+    unregister_calls: list[pb.UnregisterService] = []
 
-    async def _on_register(payload: dict[str, Any]) -> dict[str, bool]:
-        register_calls.append(payload)
-        return {"ok": True, "installed": True}
+    async def _on_register(msg: pb.RegisterService) -> pb.RegisterServiceResult:
+        register_calls.append(msg)
+        return pb.RegisterServiceResult(ok=True, installed=True)
 
-    async def _on_unregister(payload: dict[str, Any]) -> dict[str, bool]:
-        unregister_calls.append(payload)
-        return {"ok": True, "removed": True}
+    async def _on_unregister(
+        msg: pb.UnregisterService,
+    ) -> pb.UnregisterServiceResult:
+        unregister_calls.append(msg)
+        return pb.UnregisterServiceResult(ok=True, removed=True)
 
     main.register("sandbox_v2/register_service", _on_register)
     main.register("sandbox_v2/unregister_service", _on_unregister)
@@ -182,7 +190,7 @@ async def test_unregister_service_propagates(
     await _wait_until(lambda: bool(unregister_calls))
 
     assert len(unregister_calls) == 1
-    assert unregister_calls[0]["domain"] == "phase6_demo"
-    assert unregister_calls[0]["service"] == "go"
+    assert unregister_calls[0].domain == "phase6_demo"
+    assert unregister_calls[0].service == "go"
 
     await mirror.async_stop()

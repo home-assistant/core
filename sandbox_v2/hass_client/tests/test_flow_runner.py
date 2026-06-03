@@ -12,8 +12,11 @@ import tempfile
 from types import ModuleType
 from typing import Any
 
+from hass_client._proto import sandbox_v2_pb2 as pb
 from hass_client.channel import Channel
+from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.flow_runner import FlowRunner
+from hass_client.messages import dict_to_struct, listvalue_to_list, struct_to_dict
 import pytest
 import voluptuous as vol
 
@@ -42,8 +45,12 @@ def _make_channel_pair() -> tuple[Channel, Channel]:
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
     return (
-        Channel(reader_a, _LoopbackWriter(reader_b), name="main"),  # type: ignore[arg-type]
-        Channel(reader_b, _LoopbackWriter(reader_a), name="sandbox"),  # type: ignore[arg-type]
+        Channel(
+            reader_a, _LoopbackWriter(reader_b), name="main", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
+        Channel(
+            reader_b, _LoopbackWriter(reader_a), name="sandbox", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
     )
 
 
@@ -94,9 +101,9 @@ async def _runner_fixture() -> FlowRunner:
             "homeassistant.components.phase4_demo.config_flow"
         )
         runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_demo"] = fake_module
-        runner.hass.data[ha_loader.DATA_COMPONENTS][
-            "phase4_demo.config_flow"
-        ] = fake_flow_module
+        runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_demo.config_flow"] = (
+            fake_flow_module
+        )
         runner.hass.config.components.add("phase4_demo")
         try:
             yield runner
@@ -118,21 +125,20 @@ async def test_flow_init_returns_form(
     main.start()
     sandbox.start()
 
-    result = await main.call(
-        "sandbox_v2/flow_init",
-        {"handler": "phase4_demo", "context": {"source": "user"}, "data": None},
-    )
+    init_msg = pb.FlowInit(handler="phase4_demo")
+    init_msg.context.update({"source": "user"})
+    result = await main.call("sandbox_v2/flow_init", init_msg)
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result.type == "form"
+    assert result.step_id == "user"
     # Phase 14: data_schema rides as the same list-of-fields shape
     # voluptuous_serialize.convert produces, so the proxy on main can
     # rebuild a usable vol.Schema (or hand the list straight to the
     # frontend).
-    assert result["data_schema"] == [
+    assert listvalue_to_list(result.data_schema) == [
         {"name": "host", "type": "string", "required": True}
     ]
-    assert result.get("_has_data_schema") is not True
+    assert result.has_data_schema is not True
 
 
 async def test_flow_step_creates_entry(
@@ -144,18 +150,16 @@ async def test_flow_step_creates_entry(
     main.start()
     sandbox.start()
 
-    init_result = await main.call(
-        "sandbox_v2/flow_init",
-        {"handler": "phase4_demo", "context": {"source": "user"}, "data": None},
-    )
-    step_result = await main.call(
-        "sandbox_v2/flow_step",
-        {"flow_id": init_result["flow_id"], "user_input": {"host": "1.2.3.4"}},
-    )
+    init_msg = pb.FlowInit(handler="phase4_demo")
+    init_msg.context.update({"source": "user"})
+    init_result = await main.call("sandbox_v2/flow_init", init_msg)
+    step_msg = pb.FlowStep(flow_id=init_result.flow_id)
+    step_msg.user_input.CopyFrom(dict_to_struct({"host": "1.2.3.4"}))
+    step_result = await main.call("sandbox_v2/flow_step", step_msg)
 
-    assert step_result["type"] == "create_entry"
-    assert step_result["title"] == "Demo 1.2.3.4"
-    assert step_result["data"] == {"host": "1.2.3.4"}
+    assert step_result.type == "create_entry"
+    assert step_result.title == "Demo 1.2.3.4"
+    assert struct_to_dict(step_result.data) == {"host": "1.2.3.4"}
 
 
 async def test_flow_step_validation_error_returns_form(
@@ -167,17 +171,15 @@ async def test_flow_step_validation_error_returns_form(
     main.start()
     sandbox.start()
 
-    init_result = await main.call(
-        "sandbox_v2/flow_init",
-        {"handler": "phase4_demo", "context": {"source": "user"}, "data": None},
-    )
-    step_result = await main.call(
-        "sandbox_v2/flow_step",
-        {"flow_id": init_result["flow_id"], "user_input": {"host": "bad"}},
-    )
+    init_msg = pb.FlowInit(handler="phase4_demo")
+    init_msg.context.update({"source": "user"})
+    init_result = await main.call("sandbox_v2/flow_init", init_msg)
+    step_msg = pb.FlowStep(flow_id=init_result.flow_id)
+    step_msg.user_input.CopyFrom(dict_to_struct({"host": "bad"}))
+    step_result = await main.call("sandbox_v2/flow_step", step_msg)
 
-    assert step_result["type"] == "form"
-    assert step_result["errors"] == {"host": "invalid_host"}
+    assert step_result.type == "form"
+    assert struct_to_dict(step_result.errors) == {"host": "invalid_host"}
 
 
 async def test_flow_init_marshals_unique_id(
@@ -189,17 +191,12 @@ async def test_flow_init_marshals_unique_id(
     main.start()
     sandbox.start()
 
-    result = await main.call(
-        "sandbox_v2/flow_init",
-        {
-            "handler": "phase4_demo",
-            "context": {"source": "user", "unique_id": "demo-abc"},
-            "data": None,
-        },
-    )
+    init_msg = pb.FlowInit(handler="phase4_demo")
+    init_msg.context.update({"source": "user", "unique_id": "demo-abc"})
+    result = await main.call("sandbox_v2/flow_init", init_msg)
 
-    assert result["type"] == "form"
-    assert result.get("context", {}).get("unique_id") == "demo-abc"
+    assert result.type == "form"
+    assert struct_to_dict(result.context).get("unique_id") == "demo-abc"
 
 
 async def test_flow_abort_is_idempotent(
@@ -212,6 +209,8 @@ async def test_flow_abort_is_idempotent(
     sandbox.start()
 
     result = await main.call(
-        "sandbox_v2/flow_abort", {"flow_id": "not-a-real-flow-id"}
+        "sandbox_v2/flow_abort", pb.FlowAbort(flow_id="not-a-real-flow-id")
     )
-    assert result == {}
+    # FlowAbortResult is an empty message (was `result == {}` on the dict wire).
+    assert isinstance(result, pb.FlowAbortResult)
+    assert result.SerializeToString() == b""

@@ -56,7 +56,7 @@ def classify_domain_sync(domain: str) -> str | None:
         return GROUP_CUSTOM
     try:
         manifest = json.loads(manifest_path.read_text())
-    except (OSError, json.JSONDecodeError):
+    except OSError, json.JSONDecodeError:
         return None
     if manifest.get("integration_type") == "system":
         return None

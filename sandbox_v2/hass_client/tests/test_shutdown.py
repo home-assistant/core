@@ -16,7 +16,10 @@ These tests exercise:
 import asyncio
 from typing import Any
 
+from hass_client._proto import sandbox_v2_pb2 as pb
 from hass_client.channel import Channel
+from hass_client.codec_protobuf import ProtobufCodec
+from hass_client.messages import struct_to_dict
 from hass_client.protocol import MSG_SHUTDOWN, MSG_STORE_LOAD, MSG_STORE_SAVE
 from hass_client.sandbox import SandboxRuntime
 import pytest
@@ -49,8 +52,12 @@ def _make_channel_pair() -> tuple[Channel, Channel]:
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
     return (
-        Channel(reader_a, _LoopbackWriter(reader_b), name="main"),  # type: ignore[arg-type]
-        Channel(reader_b, _LoopbackWriter(reader_a), name="sandbox"),  # type: ignore[arg-type]
+        Channel(
+            reader_a, _LoopbackWriter(reader_b), name="main", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
+        Channel(
+            reader_b, _LoopbackWriter(reader_a), name="sandbox", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
     )
 
 
@@ -93,7 +100,7 @@ async def _runtime_pair_fixture():
             runtime.request_shutdown()
             try:
                 await asyncio.wait_for(task, timeout=2.0)
-            except (TimeoutError, Exception):  # noqa: BLE001
+            except TimeoutError, Exception:  # noqa: BLE001
                 task.cancel()
         await main_channel.close()
 
@@ -105,14 +112,14 @@ async def test_shutdown_handler_returns_summary_and_exits(
     """``sandbox_v2/shutdown`` replies with a summary and the runtime exits 0."""
     _runtime, main_channel, task = runtime_pair
 
-    result = await asyncio.wait_for(
-        main_channel.call(MSG_SHUTDOWN, None), timeout=5.0
-    )
+    result = await asyncio.wait_for(main_channel.call(MSG_SHUTDOWN, None), timeout=5.0)
 
-    assert result["ok"] is True
-    assert result["unloaded"] == 0
-    # No entries → no live RestoreEntity → restore_state stays None.
-    assert result["restore_state"] is None
+    assert result.ok is True
+    assert result.unloaded == 0
+    # No entries → no live RestoreEntity → restore_state stays unset.
+    # Proto-forced: old ``result["restore_state"] is None`` becomes a
+    # presence check on the optional field.
+    assert not result.HasField("restore_state")
 
     # The runtime sets its shutdown event right after replying — wait for
     # ``run()`` to return on its own; no SIGTERM should be needed.
@@ -143,13 +150,11 @@ async def test_shutdown_returns_restore_state_payload(
         last_seen=dt_util.utcnow(),
     )
 
-    reply = await asyncio.wait_for(
-        main_channel.call(MSG_SHUTDOWN, None), timeout=5.0
-    )
+    reply = await asyncio.wait_for(main_channel.call(MSG_SHUTDOWN, None), timeout=5.0)
 
-    assert reply["ok"] is True
-    restore_payload = reply["restore_state"]
-    assert isinstance(restore_payload, dict)
+    assert reply.ok is True
+    assert reply.HasField("restore_state")
+    restore_payload = struct_to_dict(reply.restore_state)
     assert restore_payload["version"] == restore_state.STORAGE_VERSION
     assert restore_payload["key"] == restore_state.STORAGE_KEY
     entity_ids = [item["state"]["entity_id"] for item in restore_payload["data"]]
@@ -177,10 +182,8 @@ async def test_shutdown_fires_final_write_event(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, _on_final_write)
 
-    reply = await asyncio.wait_for(
-        main_channel.call(MSG_SHUTDOWN, None), timeout=5.0
-    )
-    assert reply["ok"] is True
+    reply = await asyncio.wait_for(main_channel.call(MSG_SHUTDOWN, None), timeout=5.0)
+    assert reply.ok is True
     assert len(fired) == 1
     capsys.readouterr()
 
@@ -200,10 +203,11 @@ async def test_shutdown_flushes_pending_delay_save(
     runtime, main_channel, _task = runtime_pair
     hass = runtime._flow_runner.hass  # noqa: SLF001
 
-    saves: list[dict[str, Any]] = []
+    saves: list[pb.StoreSave] = []
 
-    async def _on_store_save(payload: dict[str, Any]) -> None:
-        saves.append(payload)
+    async def _on_store_save(msg: pb.StoreSave) -> pb.StoreSaveResult:
+        saves.append(msg)
+        return pb.StoreSaveResult(ok=True)
 
     main_channel.register(MSG_STORE_SAVE, _on_store_save)
 
@@ -214,15 +218,13 @@ async def test_shutdown_flushes_pending_delay_save(
     store = _storage.Store(hass, 1, "phase12_test")
     store.async_delay_save(lambda: {"pending": True}, 3600)
 
-    reply = await asyncio.wait_for(
-        main_channel.call(MSG_SHUTDOWN, None), timeout=5.0
-    )
-    assert reply["ok"] is True
+    reply = await asyncio.wait_for(main_channel.call(MSG_SHUTDOWN, None), timeout=5.0)
+    assert reply.ok is True
 
-    save_keys = [save["key"] for save in saves]
+    save_keys = [save.key for save in saves]
     assert "phase12_test" in save_keys
-    saved = next(save for save in saves if save["key"] == "phase12_test")
-    assert saved["data"]["data"] == {"pending": True}
+    saved = next(save for save in saves if save.key == "phase12_test")
+    assert struct_to_dict(saved.data)["data"] == {"pending": True}
     capsys.readouterr()
 
 
@@ -233,9 +235,10 @@ async def test_run_warm_loads_restore_state_on_startup(
     main_channel, sandbox_channel = _make_channel_pair()
     load_calls: list[str] = []
 
-    async def _on_load(payload: dict[str, Any]) -> dict[str, Any] | None:
-        load_calls.append(payload["key"])
-        return None
+    async def _on_load(msg: pb.StoreLoad) -> pb.StoreLoadResult:
+        load_calls.append(msg.key)
+        # Empty result = cache miss (old ``return None``).
+        return pb.StoreLoadResult()
 
     main_channel.register(MSG_STORE_LOAD, _on_load)
     main_channel.start()

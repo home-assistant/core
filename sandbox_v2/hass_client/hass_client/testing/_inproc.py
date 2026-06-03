@@ -49,9 +49,7 @@ class _LoopbackWriter:
         """No-op — :meth:`close` is synchronous for the loopback."""
 
 
-def make_inproc_channel_pair(
-    *, group: str
-) -> tuple[Any, ClientChannel]:
+def make_inproc_channel_pair(*, group: str) -> tuple[Any, ClientChannel]:
     """Return ``(manager_channel, runtime_channel)`` joined in-memory.
 
     The manager-side channel is the one the HA integration's
@@ -67,8 +65,12 @@ def make_inproc_channel_pair(
     # Lazy import: the manager-side Channel lives in the HA integration
     # tree. Importing it eagerly would couple the testing helper to a
     # component that may not be loaded.
+    from hass_client.codec_protobuf import ProtobufCodec as ClientCodec  # noqa: PLC0415
     from homeassistant.components.sandbox_v2.channel import (  # noqa: PLC0415
         Channel as MgrChannel,
+    )
+    from homeassistant.components.sandbox_v2.codec_protobuf import (  # noqa: PLC0415
+        ProtobufCodec as MgrCodec,
     )
 
     reader_a = asyncio.StreamReader()
@@ -77,8 +79,12 @@ def make_inproc_channel_pair(
     # writer_b writes → reader_a feeds (manager reads what runtime wrote)
     writer_a = _LoopbackWriter(reader_b)
     writer_b = _LoopbackWriter(reader_a)
-    mgr_channel = MgrChannel(reader_a, writer_a, name=f"mgr:{group}")
-    rt_channel = ClientChannel(reader_b, writer_b, name=f"rt:{group}")
+    # Each side builds its own ProtobufCodec from its own _proto mirror; the
+    # wire is identical, so the two are fully interoperable.
+    mgr_channel = MgrChannel(reader_a, writer_a, name=f"mgr:{group}", codec=MgrCodec())
+    rt_channel = ClientChannel(
+        reader_b, writer_b, name=f"rt:{group}", codec=ClientCodec()
+    )
     return mgr_channel, rt_channel
 
 

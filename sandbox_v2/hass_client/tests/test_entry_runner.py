@@ -9,7 +9,9 @@ import tempfile
 from types import ModuleType
 from typing import Any
 
+from hass_client._proto import sandbox_v2_pb2 as pb
 from hass_client.channel import Channel
+from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.entry_runner import EntryRunner
 from hass_client.flow_runner import FlowRunner
 import pytest
@@ -39,8 +41,12 @@ def _make_channel_pair() -> tuple[Channel, Channel]:
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
     return (
-        Channel(reader_a, _LoopbackWriter(reader_b), name="main"),  # type: ignore[arg-type]
-        Channel(reader_b, _LoopbackWriter(reader_a), name="sandbox"),  # type: ignore[arg-type]
+        Channel(
+            reader_a, _LoopbackWriter(reader_b), name="main", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
+        Channel(
+            reader_b, _LoopbackWriter(reader_a), name="sandbox", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
     )
 
 
@@ -95,13 +101,11 @@ async def test_entry_setup_calls_integration_setup_entry(
     module.DOMAIN = "phase5_demo"
     module.async_setup_entry = _async_setup_entry  # type: ignore[attr-defined]
     module.async_unload_entry = _async_unload_entry  # type: ignore[attr-defined]
-    config_flow_module = ModuleType(
-        "homeassistant.components.phase5_demo.config_flow"
-    )
+    config_flow_module = ModuleType("homeassistant.components.phase5_demo.config_flow")
     runner.hass.data[ha_loader.DATA_COMPONENTS]["phase5_demo"] = module
-    runner.hass.data[ha_loader.DATA_COMPONENTS][
-        "phase5_demo.config_flow"
-    ] = config_flow_module
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase5_demo.config_flow"] = (
+        config_flow_module
+    )
     runner.hass.config.components.add("phase5_demo")
 
     integration = ha_loader.Integration(
@@ -125,20 +129,19 @@ async def test_entry_setup_calls_integration_setup_entry(
     )
     runner.hass.data[ha_loader.DATA_INTEGRATIONS]["phase5_demo"] = integration
 
-    payload = {
-        "entry_id": "test_entry_id_5",
-        "domain": "phase5_demo",
-        "title": "Demo",
-        "data": {"host": "1.2.3.4"},
-        "options": {},
-        "source": "user",
-        "unique_id": None,
-        "version": 1,
-        "minor_version": 1,
-    }
+    payload = pb.EntrySetup(
+        entry_id="test_entry_id_5",
+        domain="phase5_demo",
+        title="Demo",
+        source="user",
+        version=1,
+        minor_version=1,
+    )
+    payload.data.update({"host": "1.2.3.4"})
     result = await main.call("sandbox_v2/entry_setup", payload)
 
-    assert result == {"ok": True}
+    assert result.ok
+    assert not result.HasField("reason")
     assert len(setup_calls) == 1
     assert setup_calls[0].entry_id == "test_entry_id_5"
     assert setup_calls[0].data["host"] == "1.2.3.4"
@@ -153,21 +156,18 @@ async def test_entry_setup_reports_failure_reason(
     main.start()
     sandbox.start()
 
-    payload = {
-        "entry_id": "missing_entry_id",
-        "domain": "phase5_missing",
-        "title": "Missing",
-        "data": {},
-        "options": {},
-        "source": "user",
-        "unique_id": None,
-        "version": 1,
-        "minor_version": 1,
-    }
+    payload = pb.EntrySetup(
+        entry_id="missing_entry_id",
+        domain="phase5_missing",
+        title="Missing",
+        source="user",
+        version=1,
+        minor_version=1,
+    )
 
     result = await main.call("sandbox_v2/entry_setup", payload)
-    assert result["ok"] is False
-    assert "reason" in result
+    assert result.ok is False
+    assert result.HasField("reason")
 
 
 async def test_call_service_dispatches_through_services(
@@ -186,15 +186,11 @@ async def test_call_service_dispatches_through_services(
 
     runner.hass.services.async_register("test_call", "do_it", _svc_handler)
 
-    result = await main.call(
-        "sandbox_v2/call_service",
-        {
-            "domain": "test_call",
-            "service": "do_it",
-            "target": {},
-            "service_data": {"hello": "world"},
-        },
-    )
+    call_msg = pb.CallService(domain="test_call", service="do_it")
+    call_msg.service_data.update({"hello": "world"})
+    result = await main.call("sandbox_v2/call_service", call_msg)
 
-    assert result is None
+    # No return_response: proto result has no `response` field set (was
+    # `result is None` on the dict wire).
+    assert not result.HasField("response")
     assert seen == [{"hello": "world"}]

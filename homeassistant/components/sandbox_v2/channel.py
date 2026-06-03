@@ -128,9 +128,15 @@ class Frame:
         return cls(FrameKind.PUSH, id=0, type=msg_type, payload=payload)
 
     @classmethod
-    def ok_response(cls, call_id: int, result: Any) -> Frame:
-        """Build a success response frame."""
-        return cls(FrameKind.RESPONSE, id=call_id, ok=True, result=result)
+    def ok_response(cls, call_id: int, result: Any, msg_type: str = "") -> Frame:
+        """Build a success response frame.
+
+        ``msg_type`` is carried so a stateless codec (the protobuf one) can
+        look up the result message class on encode + decode.
+        """
+        return cls(
+            FrameKind.RESPONSE, id=call_id, type=msg_type, ok=True, result=result
+        )
 
     @classmethod
     def error_response(
@@ -139,11 +145,13 @@ class Frame:
         error: str,
         error_type: str | None,
         error_data: dict[str, Any] | None = None,
+        msg_type: str = "",
     ) -> Frame:
         """Build a failure response frame."""
         return cls(
             FrameKind.RESPONSE,
             id=call_id,
+            type=msg_type,
             ok=False,
             error=error,
             error_type=error_type,
@@ -514,6 +522,7 @@ class Channel:
                         frame.id,
                         f"no handler for {frame.type!r}",
                         "ChannelUnknownType",
+                        msg_type=frame.type,
                     )
                 )
             )
@@ -566,6 +575,7 @@ class Channel:
                     str(err) or err.__class__.__name__,
                     err.__class__.__name__,
                     error_data_for(err),
+                    msg_type=msg_type,
                 )
                 with contextlib.suppress(Exception):
                     await self._write(frame)
@@ -573,7 +583,7 @@ class Channel:
             if self._closed:
                 return
             with contextlib.suppress(Exception):
-                await self._write(Frame.ok_response(call_id, result))
+                await self._write(Frame.ok_response(call_id, result, msg_type))
 
 
 __all__ = [

@@ -20,10 +20,12 @@ from dataclasses import dataclass
 import logging
 import sys
 import time
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
+from .codec_protobuf import ProtobufCodec
 from .protocol import MSG_READY, MSG_SHUTDOWN
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +38,9 @@ DEFAULT_SHUTDOWN_GRACE = 10.0
 
 CommandFactory = Callable[[str], list[str]]
 TokenFactory = Callable[[str], Awaitable[str]]
-ShutdownReplyCallback = Callable[[str, dict], Awaitable[None]]
+# The reply is a protobuf ``ShutdownResult``; typed loosely to keep the
+# manager free of a proto import.
+ShutdownReplyCallback = Callable[[str, Any], Awaitable[None]]
 
 
 class SandboxV2Error(Exception):
@@ -236,7 +240,7 @@ class SandboxProcess:
         callback = self._on_shutdown_reply
         if callback is not None:
             try:
-                await callback(self.group, reply or {})
+                await callback(self.group, reply)
             except Exception:
                 _LOGGER.exception(
                     "Sandbox %s on_shutdown_reply callback raised", self.group
@@ -378,7 +382,7 @@ class SandboxProcess:
         """
         assert proc.stdout is not None
         assert proc.stdin is not None
-        return Channel(proc.stdout, proc.stdin, name=self.group)
+        return Channel(proc.stdout, proc.stdin, name=self.group, codec=ProtobufCodec())
 
     async def _drain_stream(
         self, stream: asyncio.StreamReader | None, name: str

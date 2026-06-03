@@ -1860,6 +1860,9 @@ proliphix==0.4.1
 # homeassistant.components.prometheus
 prometheus-client==0.21.0
 
+# homeassistant.components.sandbox_v2
+protobuf==6.32.0
+
 # homeassistant.components.prowl
 prowlpy==1.1.5
 

@@ -35,7 +35,7 @@ def serialize_schema(schema: Any) -> list[dict[str, Any]] | None:
         rendered = voluptuous_serialize.convert(
             schema, custom_serializer=cv.custom_serializer
         )
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
     if not isinstance(rendered, list):
         return None

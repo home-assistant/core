@@ -19,7 +19,6 @@ batcher behaviour does not.
 from __future__ import annotations
 
 import time
-from typing import Any
 
 from hass_client.testing.pytest_plugin import (
     DEFAULT_GROUP,
@@ -28,6 +27,11 @@ from hass_client.testing.pytest_plugin import (
 )
 import pytest
 
+from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
+from homeassistant.components.sandbox_v2.messages import (
+    make_entity_description,
+    struct_to_dict,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
@@ -85,10 +89,11 @@ async def test_area_call_against_200_lights_completes_under_budget(
 
     # Watch the sandbox-side call_service handler so we can prove the
     # batcher coalesced N entity invocations into one RPC.
-    received: list[dict[str, Any]] = []
+    received: list[pb.CallService] = []
 
-    async def _on_call_service(payload: dict[str, Any]) -> None:
+    async def _on_call_service(payload: pb.CallService) -> pb.CallServiceResult:
         received.append(payload)
+        return pb.CallServiceResult()
 
     # Replace the runtime's handler — we want our own bookkeeping for the
     # benchmark, not the runtime's normal dispatch.
@@ -100,19 +105,19 @@ async def test_area_call_against_200_lights_completes_under_budget(
     # us assign it to the perf area.
     entity_ids: list[str] = []
     for index in range(_LIGHT_COUNT):
-        payload = {
-            "entry_id": entry.entry_id,
-            "domain": "light",
-            "sandbox_entity_id": f"light.bench_{index:03d}",
-            "unique_id": f"bench-{index:03d}",
-            "name": f"Bench {index:03d}",
-            "supported_features": 0,
-            "capabilities": {"supported_color_modes": ["onoff"]},
-            "initial_state": STATE_OFF,
-            "initial_attributes": {"color_mode": "onoff"},
-        }
+        payload = make_entity_description(
+            entry_id=entry.entry_id,
+            domain="light",
+            sandbox_entity_id=f"light.bench_{index:03d}",
+            unique_id=f"bench-{index:03d}",
+            name=f"Bench {index:03d}",
+            supported_features=0,
+            capabilities={"supported_color_modes": ["onoff"]},
+            initial_state=STATE_OFF,
+            initial_attributes={"color_mode": "onoff"},
+        )
         result = await runtime_channel.call("sandbox_v2/register_entity", payload)
-        entity_id = result["entity_id"]
+        entity_id = result.entity_id
         entity_ids.append(entity_id)
         entity_registry.async_update_entity(entity_id, area_id=area.id)
 
@@ -145,7 +150,7 @@ async def test_area_call_against_200_lights_completes_under_budget(
     assert 1 <= len(received) <= 2, received
     flattened: list[str] = []
     for payload in received:
-        targets = payload["target"]["entity_id"]
+        targets = struct_to_dict(payload.target)["entity_id"]
         flattened.extend(targets if isinstance(targets, list) else [targets])
     assert sorted(flattened) == sorted(entity_ids)
 
