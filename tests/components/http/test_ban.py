@@ -80,7 +80,7 @@ async def test_access_from_banned_ip(
 async def test_unban(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
-    """Test clean bans."""
+    """Test unbanning IP addresses."""
     app = web.Application()
     app[KEY_HASS] = hass
     setup_bans(hass, app, 5)
