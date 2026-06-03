@@ -42,6 +42,7 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
     """The B Route update coordinator."""
 
     device_info_data: BRouteDeviceInfo
+    _port_locked: bool = False
 
     def __init__(
         self,
@@ -108,6 +109,10 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
 
         def fetch_with_reopen() -> BRouteData:
             try:
+                if self._port_locked:
+                    _LOGGER.info("Serial port was previously locked. Reopening session")
+                    self.api.open()
+                    self._port_locked = False
                 return self._get_data()
             except MomongaNeedToReopen:
                 _LOGGER.info(
@@ -119,7 +124,10 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
 
         try:
             return await self.hass.async_add_executor_job(fetch_with_reopen)
-        except (MomongaError, RuntimeError) as error:
+        except (
+            MomongaError,
+            RuntimeError,  # The momonga library raises RuntimeError for session/comm failures
+        ) as error:
             _LOGGER.warning(
                 "Route-B poll failed. Attempting to force-close the serial port to "
                 "prevent lockup"
@@ -129,6 +137,9 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
                 _LOGGER.info(
                     "Serial port closed cleanly; ready for the next polling cycle"
                 )
+                self._port_locked = False
             except Exception:
+                # If close fails, mark the port as locked so the next cycle attempts a fresh open
+                self._port_locked = True
                 _LOGGER.exception("Could not close serial port")
             raise UpdateFailed(error) from error
