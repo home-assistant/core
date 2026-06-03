@@ -108,7 +108,7 @@ def _get_entry_for_device(call: ServiceCall) -> OpenDisplayConfigEntry:
     if entry is None or entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="device_not_found",
+            translation_key="config_entry_not_found",
             translation_placeholders={"address": mac_address},
         )
 
@@ -170,7 +170,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
     if ble_device is None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="device_not_found",
+            translation_key="config_entry_not_found",
             translation_placeholders={"address": address},
         )
 
