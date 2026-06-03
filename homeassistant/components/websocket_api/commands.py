@@ -1053,7 +1053,7 @@ async def handle_test_condition(
     # alongside the result.
     condition_trace = trace.trace_get()
     try:
-        with trace.record_template_errors():
+        with trace.suppress_template_error_logging():
             check_result = condition.async_check(variables=msg.get("variables"))
     except HomeAssistantError as err:
         connection.send_error(
@@ -1117,7 +1117,7 @@ async def handle_subscribe_condition(
 
         condition_trace = trace.trace_get()
         try:
-            with trace.record_template_errors():
+            with trace.suppress_template_error_logging():
                 new_event_data = {"result": condition.async_check()}
         except HomeAssistantError as err:
             new_event_data = {"error": str(err)}
