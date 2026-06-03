@@ -105,6 +105,25 @@ Every check has a code following the
 | `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
 | `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
+| `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
+| `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
+| `E7405` | [`home-assistant-action-swallowed-exception`](#e7405-home-assistant-action-swallowed-exception) | Action handler must not swallow exceptions |
+| `W7414` | [`home-assistant-service-registered-in-setup-entry`](#w7414-home-assistant-service-registered-in-setup-entry) | Services should be registered in `async_setup`, not `async_setup_entry` |
+| `W7417` | [`home-assistant-exception-not-translated`](#w7417-home-assistant-exception-not-translated) | `HomeAssistantError` should use `translation_key`/`translation_domain` |
+| `W7419` | [`home-assistant-exception-message-with-translation`](#w7419-home-assistant-exception-message-with-translation) | Don't pass a positional message when `translation_key` is set |
+| `E7406` | [`home-assistant-exception-translation-key-missing`](#e7406-home-assistant-exception-translation-key-missing) | Translation key not found in `strings.json` exceptions section |
+| `E7408` | [`home-assistant-exception-translation-key-domain-mismatch`](#e7408-home-assistant-exception-translation-key-domain-mismatch) | Only one of `translation_key` / `translation_domain` is set |
+| `E7418` | [`home-assistant-exception-placeholder-mismatch`](#e7418-home-assistant-exception-placeholder-mismatch) | Translation placeholders in code don't match `strings.json` |
+| `E7409` | [`home-assistant-mdi-icon-not-found`](#e7409-home-assistant-mdi-icon-not-found) | MDI icon string does not exist in the Material Design Icons set |
+| `E7410` | [`home-assistant-mdi-icon-json-not-found`](#e7410-home-assistant-mdi-icon-json-not-found) | MDI icon in `icons.json` does not exist in the Material Design Icons set |
+| `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
+| `W7409` | [`home-assistant-test-non-deterministic`](#w7409-home-assistant-test-non-deterministic) | Test contains `if`/`match` creating non-deterministic execution |
+| `W7410` | [`home-assistant-missing-reauthentication-flow`](#w7410-home-assistant-missing-reauthentication-flow) | Config flow should implement `async_step_reauth` |
+| `W7411` | [`home-assistant-missing-parallel-updates`](#w7411-home-assistant-missing-parallel-updates) | Platform module should define `PARALLEL_UPDATES` |
+| `W7412` | [`home-assistant-missing-diagnostics`](#w7412-home-assistant-missing-diagnostics) | Integration diagnostics module should implement a diagnostics function |
+| `W7413` | [`home-assistant-missing-config-entry-unloading`](#w7413-home-assistant-missing-config-entry-unloading) | Integration should implement `async_unload_entry` |
+| `W7415` | [`home-assistant-sequential-executor-jobs`](#w7415-home-assistant-sequential-executor-jobs) | Sequential `async_add_executor_job` calls should be grouped |
+| `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
 
 
 ## `home_assistant_logger` checker
@@ -435,3 +454,204 @@ The helper is implemented as
 `functools.partial(datetime.datetime.now, UTC)` and avoids the global
 lookup of `UTC` on every call, while keeping the codebase consistent in
 how the current UTC time is obtained.
+
+
+## `home_assistant_entity_description_defaults` checker
+
+Detects fields in `EntityDescription` (and subclasses) that are explicitly
+set to their default value.
+
+### `C7412`: `home-assistant-entity-description-redundant-default`
+
+An EntityDescription field is set equal to a default already declared
+anywhere in the class hierarchy; the assignment can be removed. Only the
+literal defaults `None`, `True`, and `False` are checked; other default
+values are not flagged.
+
+
+## `home_assistant_duplicate_const` checker
+
+Detects constants in integration modules that duplicate one already exported
+from `homeassistant.const` with the same value.
+
+### `C7413`: `home-assistant-duplicate-const`
+
+Import the constant from `homeassistant.const` instead of redefining it.
+
+
+## `home_assistant_actions_swallowed_exceptions` checker
+
+Detects action handlers that catch exceptions without re-raising. Swallowed
+exceptions are not surfaced to the user.
+
+### `E7405`: `home-assistant-action-swallowed-exception`
+
+Action handlers must re-raise so the user is notified of the failure.
+The checker detects empty `except` blocks, blocks that only log,
+`contextlib.suppress(...)`, and equivalent patterns on decorators. It does
+not validate the *type* of exception being raised; a separate rule covers
+that.
+
+
+## `home_assistant_actions_service_registration` checker
+
+Detects services registered inside `async_setup_entry` rather than
+`async_setup`.
+
+### `W7414`: `home-assistant-service-registered-in-setup-entry`
+
+Services should be registered in `async_setup` so they are available for
+automation validation even when no config entry is loaded. Registrations
+inside helper functions that are called from `async_setup_entry` are
+caught too.
+
+See the [action-setup quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup).
+
+
+## `home_assistant_exception_translations` checker
+
+Ensures `HomeAssistantError` and its subclasses use the translation system
+(`translation_domain`, `translation_key`) instead of hardcoded English
+strings. Also verifies that referenced translation keys exist in the
+integration's `strings.json` and that placeholders match.
+
+### `W7417`: `home-assistant-exception-not-translated`
+
+A `HomeAssistantError` subclass is raised with a hardcoded message; use
+`translation_domain` and `translation_key` instead. Quality-scale-gated.
+
+### `W7419`: `home-assistant-exception-message-with-translation`
+
+Don't pass a positional message argument when `translation_key` is also set;
+the translation system supplies the message.
+
+### `E7406`: `home-assistant-exception-translation-key-missing`
+
+The translation key referenced from code is missing from `strings.json`
+under the `exceptions` section.
+
+### `E7408`: `home-assistant-exception-translation-key-domain-mismatch`
+
+Both `translation_key` and `translation_domain` must be set together; only
+one of the two was provided.
+
+### `E7418`: `home-assistant-exception-placeholder-mismatch`
+
+The placeholders passed in code (e.g. `translation_placeholders={...}`)
+don't match the `{placeholder}` slots in the `strings.json` message.
+
+
+## `home_assistant_mdi_icons` checker
+
+Validates that `mdi:` icon references in code and `icons.json` refer to
+icons that actually exist in the Material Design Icons set.
+
+### `E7409`: `home-assistant-mdi-icon-not-found`
+
+MDI icon reference in Python code does not exist in the Material Design
+Icons set.
+
+### `E7410`: `home-assistant-mdi-icon-json-not-found`
+
+MDI icon reference in `icons.json` does not exist in the Material Design
+Icons set.
+
+
+## `home_assistant_tests_redundant_usefixtures` checker
+
+Detects `@pytest.mark.usefixtures(...)` decorators that duplicate a fixture
+already applied module-wide, either through a module-level `pytestmark`
+or via `autouse=True` on a fixture defined in a parent `conftest.py`.
+
+### `R7403`: `home-assistant-tests-redundant-usefixtures`
+
+Drop the redundant `@pytest.mark.usefixtures` decorator; the fixture is
+already applied to every test in the module.
+
+
+## `home_assistant_test_determinism` checker
+
+`if` and `match` statements inside test functions create non-deterministic
+execution paths: some branches may never run, silently hiding failures.
+
+### `W7409`: `home-assistant-test-non-deterministic`
+
+Test function contains an `if` or `match` statement. Use
+`@pytest.mark.parametrize` to cover cases explicitly, or split into separate
+test functions. `if` statements have several exemptions: guard clauses
+(`return`/`raise`/`pytest.skip`/`pytest.xfail`/`pytest.fail`),
+conditions that reference a function parameter, and branches that contain
+no `assert`. `match` statements have no exemptions.
+
+
+## `home_assistant_reauthentication_flow` checker
+
+Quality-scale-gated checker for the
+[`reauthentication-flow`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/reauthentication-flow)
+Silver rule. Fires only when the integration claims the rule as `done`.
+
+### `W7410`: `home-assistant-missing-reauthentication-flow`
+
+Integration's `config_flow.py` should implement `async_step_reauth`.
+
+
+## `home_assistant_parallel_updates` checker
+
+Quality-scale-gated checker for the
+[`parallel-updates`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/parallel-updates)
+Silver rule. Fires only when the integration claims the rule as `done`.
+
+### `W7411`: `home-assistant-missing-parallel-updates`
+
+Platform module should define a module-level `PARALLEL_UPDATES` constant.
+
+
+## `home_assistant_diagnostics` checker
+
+Quality-scale-gated checker for the
+[`diagnostics`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/diagnostics)
+Gold rule. Fires only when the integration claims the rule as `done`.
+
+### `W7412`: `home-assistant-missing-diagnostics`
+
+Integration's `diagnostics.py` should implement
+`async_get_config_entry_diagnostics` or `async_get_device_diagnostics`.
+
+
+## `home_assistant_config_entry_unloading` checker
+
+Quality-scale-gated checker for the
+[`config-entry-unloading`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-entry-unloading)
+Silver rule. Fires only when the integration claims the rule as `done`.
+
+### `W7413`: `home-assistant-missing-config-entry-unloading`
+
+Integration's `__init__.py` should implement `async_unload_entry`.
+
+
+## `home_assistant_sequential_executor_jobs` checker
+
+Detects consecutive `async_add_executor_job` calls in integration modules
+that could be grouped into a single executor job.
+
+### `W7415`: `home-assistant-sequential-executor-jobs`
+
+Two or more `async_add_executor_job` calls appearing as consecutive
+statements (uninterrupted by control flow such as `if`/`try`/`with`/`for`)
+should be combined into a single executor job that performs all the work,
+avoiding unnecessary context switches back to the event loop between
+blocking calls. The rule applies to integration modules only.
+
+
+## `home_assistant_has_entity_name` checker
+
+Quality-scale-gated checker for the
+[`has-entity-name`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/has-entity-name)
+Bronze rule. Fires only when the integration claims the rule as `done`.
+
+### `W7416`: `home-assistant-missing-has-entity-name`
+
+Entity class should statically guarantee `_attr_has_entity_name = True`:
+either set at class level, set unconditionally at the top of a method, or
+supplied by an `entity_description` whose class sets `has_entity_name = True`.
+Conditional patterns are rejected.
