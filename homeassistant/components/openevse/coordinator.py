@@ -63,7 +63,11 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.charger.update()
         except TimeoutError as error:
             raise UpdateFailed(
-                f"Timeout communicating with charger: {error}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
             ) from error
         except AuthenticationError as error:
-            raise ConfigEntryAuthFailed("Invalid credentials for charger") from error
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from error
