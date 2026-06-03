@@ -285,7 +285,10 @@ class IpBanManager:
             str(ban.ip_address): {ATTR_BANNED_AT: ban.banned_at.isoformat()}
             for ban in self.ip_bans_lookup.values()
         }
-        yaml_util.save_yaml(self.path, ip_bans)
+        try:
+            yaml_util.save_yaml(self.path, ip_bans)
+        except OSError as exc:
+            _LOGGER.error("Failed to save IP bans to file: %s", exc)
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
