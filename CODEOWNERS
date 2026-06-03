@@ -501,6 +501,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
 /tests/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
 /homeassistant/components/entur_public_transport/ @hfurubotten @SanderBlom
+/homeassistant/components/envertech_evt800/ @daniel-bergmann-00
+/tests/components/envertech_evt800/ @daniel-bergmann-00
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50 @roberty99
@@ -623,8 +625,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/generic_hygrostat/ @Shulyaka
 /homeassistant/components/geniushub/ @manzanotti
 /tests/components/geniushub/ @manzanotti
-/homeassistant/components/gentex_homelink/ @niaexa @ryanjones-gentex
-/tests/components/gentex_homelink/ @niaexa @ryanjones-gentex
+/homeassistant/components/gentex_homelink/ @Gentex-Corporation/Homelink @rjones-gentex
+/tests/components/gentex_homelink/ @Gentex-Corporation/Homelink @rjones-gentex
 /homeassistant/components/geo_json_events/ @exxamalte
 /tests/components/geo_json_events/ @exxamalte
 /homeassistant/components/geo_location/ @home-assistant/core
@@ -838,6 +840,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/imgw_pib/ @bieniu
 /homeassistant/components/immich/ @mib1185
 /tests/components/immich/ @mib1185
+/homeassistant/components/imou/ @Imou-OpenPlatform
+/tests/components/imou/ @Imou-OpenPlatform
 /homeassistant/components/improv_ble/ @emontnemery
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
