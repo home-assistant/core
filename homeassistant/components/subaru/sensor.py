@@ -27,9 +27,8 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import get_device_info
 from .const import (
-    API_GEN_2,
-    API_GEN_3,
-    API_GEN_4,
+    GEN_2_AND_NEWER,
+    GEN_3_AND_NEWER,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_HEALTH,
@@ -238,10 +237,10 @@ def create_vehicle_sensors(
     sensor_descriptions_to_add = []
     sensor_descriptions_to_add.extend(SAFETY_SENSORS)
 
-    if vehicle_info[VEHICLE_API_GEN] in [API_GEN_2, API_GEN_3, API_GEN_4]:
+    if vehicle_info[VEHICLE_API_GEN] in GEN_2_AND_NEWER:
         sensor_descriptions_to_add.extend(API_GEN_2_SENSORS)
 
-    if vehicle_info[VEHICLE_API_GEN] in [API_GEN_3, API_GEN_4]:
+    if vehicle_info[VEHICLE_API_GEN] in GEN_3_AND_NEWER:
         sensor_descriptions_to_add.extend(API_GEN_3_SENSORS)
 
     if vehicle_info[VEHICLE_HAS_EV]:
@@ -290,6 +289,7 @@ class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity)
         if (
             self.entity_description.key == sc.AVG_FUEL_CONSUMPTION
             and isinstance(current_value, (int, float))
+            and current_value > 0
             and self.hass.config.units == METRIC_SYSTEM
         ):
             return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)

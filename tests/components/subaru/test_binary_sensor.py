@@ -10,6 +10,7 @@ from homeassistant.components.subaru.binary_sensor import (
     BINARY_SENSORS,
     EV_PLUG_BINARY_SENSOR,
     MIL_TRANSLATION_KEYS,
+    OVERALL_HEALTH_BINARY_SENSOR,
 )
 from homeassistant.components.subaru.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -79,10 +80,15 @@ async def test_no_binary_sensors_for_g1(
         vehicle_list=[TEST_VIN_1_G1],
         vehicle_data=VEHICLE_DATA[TEST_VIN_1_G1],
     )
-    for desc in BINARY_SENSORS:
+    # All BINARY_SENSORS plus the overall health rollup and the EV plug —
+    # nothing should be created for a Gen1 vehicle.
+    expected_absent_keys = [desc.key for desc in BINARY_SENSORS]
+    expected_absent_keys.append(OVERALL_HEALTH_BINARY_SENSOR.key)
+    expected_absent_keys.append(EV_PLUG_BINARY_SENSOR.key)
+    for key in expected_absent_keys:
         assert (
             entity_registry.async_get_entity_id(
-                BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_1_G1, desc.key)
+                BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_1_G1, key)
             )
             is None
         )

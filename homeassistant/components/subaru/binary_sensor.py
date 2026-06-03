@@ -16,9 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_info
 from .const import (
-    API_GEN_2,
-    API_GEN_3,
-    API_GEN_4,
+    GEN_2_AND_NEWER,
     VEHICLE_API_GEN,
     VEHICLE_FEATURES,
     VEHICLE_HAS_EV,
@@ -263,7 +261,7 @@ async def async_setup_entry(
     entities: list[SubaruBinarySensor] = []
     for info in vehicle_info.values():
         # Doors/windows/locks/health are only reported on Gen2+ vehicles.
-        if info[VEHICLE_API_GEN] not in (API_GEN_2, API_GEN_3, API_GEN_4):
+        if info[VEHICLE_API_GEN] not in GEN_2_AND_NEWER:
             continue
         descriptions: list[SubaruBinarySensorEntityDescription] = list(BINARY_SENSORS)
         descriptions.append(OVERALL_HEALTH_BINARY_SENSOR)
