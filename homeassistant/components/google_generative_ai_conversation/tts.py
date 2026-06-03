@@ -183,8 +183,9 @@ class GoogleGenerativeAITextToSpeechEntity(
     @cached_property
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
+        voice = self.subentry.data.get(ATTR_VOICE) or self._supported_voices[0].voice_id
         return {
-            ATTR_VOICE: self._supported_voices[0].voice_id,
+            ATTR_VOICE: voice,
         }
 
     async def async_get_tts_audio(
