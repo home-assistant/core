@@ -50,7 +50,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.openevse_mock_config_restart_wifi-entry]
+# name: test_entities[button.openevse_mock_config_restart_wi_fi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.openevse_mock_config_restart_wifi',
+    'entity_id': 'button.openevse_mock_config_restart_wi_fi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,12 +72,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Restart WiFi',
+    'object_id_base': 'Restart Wi-Fi',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Restart WiFi',
+    'original_name': 'Restart Wi-Fi',
     'platform': 'openevse',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,14 +87,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.openevse_mock_config_restart_wifi-state]
+# name: test_entities[button.openevse_mock_config_restart_wi_fi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'openevse_mock_config Restart WiFi',
+      'friendly_name': 'openevse_mock_config Restart Wi-Fi',
     }),
     'context': <ANY>,
-    'entity_id': 'button.openevse_mock_config_restart_wifi',
+    'entity_id': 'button.openevse_mock_config_restart_wi_fi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

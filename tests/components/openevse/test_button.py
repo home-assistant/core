@@ -41,7 +41,7 @@ async def test_entities(
     ("entity_id", "method_name"),
     [
         pytest.param(
-            "button.openevse_mock_config_restart_wifi",
+            "button.openevse_mock_config_restart_wi_fi",
             "restart_wifi",
             id="restart_wifi",
         ),
@@ -135,7 +135,7 @@ async def test_press_raises(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.openevse_mock_config_restart_wifi",
+                ATTR_ENTITY_ID: "button.openevse_mock_config_restart_wi_fi",
             },
             blocking=True,
         )

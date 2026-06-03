@@ -67,7 +67,7 @@
         "name": "Restart EVSE"
       },
       "restart_wifi": {
-        "name": "Restart WiFi"
+        "name": "Restart Wi-Fi"
       }
     },
     "number": {
