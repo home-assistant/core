@@ -75,15 +75,51 @@ def _iter_raises(body: list[nodes.NodeNG]) -> Iterator[nodes.Raise]:
             yield from _iter_raises(handler.body)
 
 
+def _iter_calls(body: list[nodes.NodeNG]) -> Iterator[nodes.Call]:
+    """Yield Call nodes from a function body, not descending into nested defs."""
+    for child in body:
+        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
+            continue
+        if isinstance(child, nodes.Call):
+            yield child
+        yield from _iter_calls(list(child.get_children()))
+
+
+def _called_function_raises_ha_error(call: nodes.Call) -> bool:
+    """Return True if the function being called raises HomeAssistantError.
+
+    Only inspects one level deep — a helper that itself delegates further
+    is not followed, to keep inference cost bounded and avoid recursion.
+    """
+    try:
+        for inferred in call.func.infer():
+            if not isinstance(inferred, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
+                continue
+            for raise_node in _iter_raises(inferred.body):
+                if raise_node.exc is None:
+                    continue
+                if _is_ha_error(raise_node.exc):
+                    return True
+    except astroid.exceptions.InferenceError:
+        return False
+    return False
+
+
 def _raises_ha_error(body: list[nodes.NodeNG]) -> bool:
-    """Return True if the body raises a HomeAssistantError subclass."""
+    """Return True if the body raises a HomeAssistantError subclass.
+
+    Direct ``raise`` statements are checked first; if none qualify, calls
+    in the body are inspected one level deep to detect helper methods
+    (e.g., a custom ``_async_send_command``) that translate library
+    errors into ``HomeAssistantError``.
+    """
     for raise_node in _iter_raises(body):
         if raise_node.exc is None:
             # Bare re-raise — type unknown, doesn't satisfy the rule.
             continue
         if _is_ha_error(raise_node.exc):
             return True
-    return False
+    return any(_called_function_raises_ha_error(call) for call in _iter_calls(body))
 
 
 class ActionExceptionsChecker(BaseChecker):
@@ -95,13 +131,17 @@ class ActionExceptionsChecker(BaseChecker):
         "W7423": (
             "Action handler '%s' should raise HomeAssistantError (or a "
             "subclass) so library failures are surfaced to the user, or "
-            "be wrapped in a decorator that translates exceptions",
+            "be wrapped in a decorator that translates exceptions "
+            "(integration claims the 'action-exceptions' quality scale "
+            "rule as done/exempt)",
             "home-assistant-action-missing-ha-exception",
             "Used when an action handler (service handler or platform "
             "entity action like async_turn_on) neither raises a "
-            "HomeAssistantError subclass nor is wrapped in a decorator. "
-            "A raw library exception escaping the handler is shown to "
-            "the user as an opaque traceback.",
+            "HomeAssistantError subclass nor is wrapped in a decorator, "
+            "while the integration's quality_scale.yaml marks the "
+            "'action-exceptions' rule as done or exempt. A raw library "
+            "exception escaping the handler is shown to the user as an "
+            "opaque traceback.",
         ),
     }
     options = ()
