@@ -1,7 +1,5 @@
 """Config flow for the SpaceAPI integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -288,7 +286,7 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
             **entry.options.get(CONF_CONTACT, {}),
             CONF_EMAIL: user_input[CONF_EMAIL],
         }
-        return self.async_update_reload_and_abort(
+        return self.async_update_and_abort(
             entry,
             title=user_input[CONF_SPACE],
             data_updates={
