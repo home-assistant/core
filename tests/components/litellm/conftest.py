@@ -53,18 +53,9 @@ def conversation_subentry_data(enable_assist: bool) -> dict[str, Any]:
 
 
 @pytest.fixture
-def ai_task_data_subentry_data() -> dict[str, Any]:
-    """Mock AI task subentry data."""
-    return {
-        CONF_MODEL: "gpt-4",
-    }
-
-
-@pytest.fixture
 def mock_config_entry(
     hass: HomeAssistant,
     conversation_subentry_data: dict[str, Any],
-    ai_task_data_subentry_data: dict[str, Any],
 ) -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
@@ -80,13 +71,6 @@ def mock_config_entry(
                 subentry_id="ABCDEF",
                 subentry_type="conversation",
                 title="gpt-3.5-turbo",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data=ai_task_data_subentry_data,
-                subentry_id="ABCDEG",
-                subentry_type="ai_task_data",
-                title="gpt-4",
                 unique_id=None,
             ),
         ],
@@ -127,25 +111,13 @@ async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
 
 @pytest.fixture
 def mock_models(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the `/model/info` proxy endpoint.
-
-    `gpt-4` reports structured-output support, `gpt-3.5-turbo` does not.
-    """
+    """Mock the `/model/info` proxy endpoint."""
     aioclient_mock.get(
         MODEL_INFO_URL,
         json={
             "data": [
-                {
-                    "model_name": "gpt-3.5-turbo",
-                    "model_info": {"mode": "chat"},
-                },
-                {
-                    "model_name": "gpt-4",
-                    "model_info": {
-                        "mode": "chat",
-                        "supports_response_schema": True,
-                    },
-                },
+                {"model_name": "gpt-3.5-turbo", "model_info": {"mode": "chat"}},
+                {"model_name": "gpt-4", "model_info": {"mode": "chat"}},
             ]
         },
     )

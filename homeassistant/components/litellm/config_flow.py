@@ -33,10 +33,6 @@ from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
-# Capability flag reported by the LiteLLM proxy `/model/info` endpoint for
-# models that can return structured output (JSON schema with strict mode).
-SUPPORTS_RESPONSE_SCHEMA = "supports_response_schema"
-
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect to the proxy."""
@@ -54,13 +50,11 @@ def _normalize_url(url: str) -> str:
     return url
 
 
-async def _get_models(
-    hass: HomeAssistant, url: str, api_key: str | None
-) -> dict[str, dict[str, Any]]:
-    """Fetch available models and their capabilities from the LiteLLM proxy.
+async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> list[str]:
+    """Fetch the available model names from the LiteLLM proxy.
 
-    Prefers `/model/info` (which exposes capability flags) and falls back to the
-    plain OpenAI `/models` list when the proxy does not implement it.
+    Prefers `/model/info` and falls back to the plain OpenAI `/models` list when
+    the proxy does not implement it.
     """
     session = async_get_clientsession(hass)
     headers: dict[str, str] = {}
@@ -77,10 +71,7 @@ async def _get_models(
             raise InvalidAuth
         if response.status == 200:
             payload = await response.json()
-            return {
-                model["model_name"]: model.get("model_info") or {}
-                for model in payload.get("data", [])
-            }
+            return [model["model_name"] for model in payload.get("data", [])]
 
         response = await session.get(
             f"{url}/models", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
@@ -89,7 +80,7 @@ async def _get_models(
             raise InvalidAuth
         response.raise_for_status()
         payload = await response.json()
-        return {model["id"]: {} for model in payload.get("data", [])}
+        return [model["id"] for model in payload.get("data", [])]
     except (TimeoutError, aiohttp.ClientError) as err:
         raise CannotConnect from err
 
@@ -105,10 +96,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
-        return {
-            "conversation": ConversationFlowHandler,
-            "ai_task_data": AITaskDataFlowHandler,
-        }
+        return {"conversation": ConversationFlowHandler}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -148,12 +136,18 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class LiteLLMSubentryFlowHandler(ConfigSubentryFlow):
-    """Handle subentry flow for LiteLLM."""
+class ConversationFlowHandler(ConfigSubentryFlow):
+    """Handle conversation subentry flow."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
-        self.models: dict[str, dict[str, Any]] = {}
+        self.models: list[str] = []
+        self.options: dict[str, Any] = {}
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == SOURCE_USER
 
     async def _fetch_models(self) -> None:
         """Fetch models from the LiteLLM proxy."""
@@ -161,20 +155,6 @@ class LiteLLMSubentryFlowHandler(ConfigSubentryFlow):
         self.models = await _get_models(
             self.hass, entry.data[CONF_URL], entry.data.get(CONF_API_KEY)
         )
-
-
-class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
-    """Handle conversation subentry flow."""
-
-    def __init__(self) -> None:
-        """Initialize the subentry flow."""
-        super().__init__()
-        self.options: dict[str, Any] = {}
-
-    @property
-    def _is_new(self) -> bool:
-        """Return if this is a new subentry."""
-        return self.source == SOURCE_USER
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -264,88 +244,6 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
                         ),
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
-                    ),
-                }
-            ),
-        )
-
-
-class AITaskDataFlowHandler(LiteLLMSubentryFlowHandler):
-    """Handle AI task subentry flow."""
-
-    def __init__(self) -> None:
-        """Initialize the subentry flow."""
-        super().__init__()
-        self.options: dict[str, Any] = {}
-
-    @property
-    def _is_new(self) -> bool:
-        """Return if this is a new subentry."""
-        return self.source == SOURCE_USER
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """User flow to create an AI task."""
-        self.options = {}
-        return await self.async_step_init(user_input)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Handle reconfiguration of an AI task."""
-        self.options = self._get_reconfigure_subentry().data.copy()
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Manage AI task configuration."""
-        if self._get_entry().state is not ConfigEntryState.LOADED:
-            return self.async_abort(reason="entry_not_loaded")
-
-        if user_input is not None:
-            if self._is_new:
-                return self.async_create_entry(
-                    title=user_input[CONF_MODEL], data=user_input
-                )
-            return self.async_update_and_abort(
-                self._get_entry(),
-                self._get_reconfigure_subentry(),
-                data=user_input,
-            )
-
-        try:
-            await self._fetch_models()
-        except InvalidAuth:
-            return self.async_abort(reason="invalid_auth")
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        # Prefer models that report structured-output support. When the proxy
-        # does not expose the capability for any model, fall back to all models.
-        structured = {
-            model: info
-            for model, info in self.models.items()
-            if info.get(SUPPORTS_RESPONSE_SCHEMA)
-        }
-        models = structured or self.models
-
-        options = [SelectOptionDict(value=model, label=model) for model in models]
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_MODEL, default=self.options.get(CONF_MODEL)
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=options, mode=SelectSelectorMode.DROPDOWN, sort=True
-                        ),
                     ),
                 }
             ),

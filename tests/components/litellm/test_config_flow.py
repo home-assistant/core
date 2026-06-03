@@ -225,63 +225,33 @@ async def test_create_conversation_agent_no_control(
     }
 
 
-@pytest.mark.usefixtures("mock_models")
-async def test_create_ai_task(
-    hass: HomeAssistant,
-    mock_openai_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test creating an AI Task lists only structured-output models."""
-    await setup_integration(hass, mock_config_entry)
-
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "ai_task_data"),
-        context={"source": SOURCE_USER},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["data_schema"].schema["model"].config["options"] == [
-        {"value": "gpt-4", "label": "gpt-4"},
-    ]
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {CONF_MODEL: "gpt-4"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "gpt-4"
-    assert result["data"] == {CONF_MODEL: "gpt-4"}
-
-
-async def test_ai_task_fallback_lists_all_models(
+async def test_conversation_agent_models_fallback(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test AI Task lists all models when /model/info is unavailable."""
+    """Test the model list falls back to /models when /model/info is unavailable."""
     aioclient_mock.get(MODEL_INFO_URL, status=404)
     aioclient_mock.get(
         MODELS_URL,
-        json={"data": [{"id": "gpt-3.5-turbo"}, {"id": "gpt-4"}]},
+        json={"data": [{"id": "gpt-4o"}, {"id": "gpt-5"}]},
     )
 
     await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "ai_task_data"),
+        (mock_config_entry.entry_id, "conversation"),
         context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert (
-        result["data_schema"].schema["model"].config["options"]
-        == CONVERSATION_MODEL_OPTIONS
-    )
+    assert result["data_schema"].schema["model"].config["options"] == [
+        {"value": "gpt-4o", "label": "gpt-4o"},
+        {"value": "gpt-5", "label": "gpt-5"},
+    ]
 
 
-@pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_data"])
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
@@ -294,7 +264,6 @@ async def test_subentry_exceptions(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    subentry_type: str,
     exception: Exception,
     reason: str,
 ) -> None:
@@ -307,7 +276,7 @@ async def test_subentry_exceptions(
         side_effect=exception,
     ):
         result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, subentry_type),
+            (mock_config_entry.entry_id, "conversation"),
             context={"source": SOURCE_USER},
         )
 
@@ -348,41 +317,15 @@ async def test_reconfigure_conversation_agent(
     assert subentry.data[CONF_LLM_HASS_API] == ["assist"]
 
 
-@pytest.mark.usefixtures("mock_models")
-async def test_reconfigure_ai_task(
-    hass: HomeAssistant,
-    mock_openai_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfiguring an AI task."""
-    await setup_integration(hass, mock_config_entry)
-
-    subentry_id = get_subentry_id(mock_config_entry, "ai_task_data")
-
-    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {CONF_MODEL: "gpt-4"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-
-@pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_data"])
 async def test_reconfigure_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    subentry_type: str,
 ) -> None:
     """Test reconfiguring aborts when the main entry is not loaded."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, subentry_type),
+        (mock_config_entry.entry_id, "conversation"),
         context={"source": SOURCE_USER},
     )
 

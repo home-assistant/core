@@ -35,9 +35,11 @@ async def test_load_unload_entry(
     [
         (
             AuthenticationError(
-                response=httpx.Response(status_code=None, request=""),
+                response=httpx.Response(
+                    status_code=401, request=httpx.Request("GET", "http://localhost")
+                ),
                 body=None,
-                message=None,
+                message="invalid api key",
             ),
             ConfigEntryState.SETUP_ERROR,
         ),

@@ -68,7 +68,7 @@ rules:
     comment: devices are created via subentries, not discovered dynamically
   entity-category:
     status: exempt
-    comment: conversation and AI task entities do not use entity categories
+    comment: the conversation entity does not use entity categories
   entity-device-class:
     status: exempt
     comment: no suitable device class for the conversation entity
