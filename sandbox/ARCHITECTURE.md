@@ -144,10 +144,18 @@ that issues `sandbox/flow_init` / `flow_step` / `flow_abort` RPCs and re-issues
 each marshalled `FlowResult` as native `async_show_form` /
 `async_create_entry` / `async_abort`. Inside the sandbox the integration's real
 `ConfigFlow` runs in a `_SandboxFlowManager` that short-circuits CREATE_ENTRY —
-**main is the canonical owner of the `ConfigEntry`**. On the final
-`create_entry`, the proxy attaches `sandbox=<group>` to the `ConfigFlowResult`;
-the framework reads it into `ConfigEntry.sandbox`, and the next `async_setup`
-round-trips an `entry_setup` RPC.
+**main is the canonical owner of the `ConfigEntry`**.
+
+**Main alone decides the group, and the sandbox never controls how its data is
+stored or routed.** The group is computed by main's `classify()` and passed to
+the proxy's constructor; on the final `create_entry`, the main-side proxy sets
+`create_result["sandbox"]` to *its own* (main-determined) group, overwriting
+anything in the sandbox's reply — and the wire `FlowResult` has no group/sandbox
+field for the sandbox to populate in the first place. The framework reads that
+main-set value into `ConfigEntry.sandbox`, and the next `async_setup`
+round-trips an `entry_setup` RPC. A compromised sandbox can shape its own
+flow's forms and validation, but it cannot influence which group it lands in,
+where its entry is persisted, or any other main-side storage/routing decision.
 
 `data_schema` round-trips losslessly: it serialises via `voluptuous_serialize`
 and the main side rebuilds the **real** `Selector` / `data_entry_flow.section`
@@ -211,12 +219,25 @@ field, so callers on main see the local-entity error shape.
 
 **Service & event mirroring.** After `async_setup_entry` succeeds, the entry's
 domain joins a refcounted `ApprovedDomains` set that gates both mirrors.
-`ServiceMirror` forwards `register_service` (with the serialised schema, so bad
-input is rejected on main without a round-trip) and installs a forwarder that
-refuses to clobber an existing handler. `EventMirror` forwards only
-`<approved_domain>_*` events via `sandbox/fire_event`; main re-fires them so
-automations react as if the integration ran locally. `context_id` rides the
-wire; richer cross-bridge `Context` propagation is post-v2.
+`ServiceMirror` forwards `register_service` and installs a forwarder that
+refuses to clobber an existing handler. The serialised service schema is a
+best-effort optimisation (it lets main reject bad input without a round-trip);
+any schema that doesn't survive serialisation degrades to no-schema on main and
+the sandbox validates the call itself — a service is never dropped just because
+its schema is exotic. `EventMirror` forwards only `<approved_domain>_*` events
+via `sandbox/fire_event`; main re-fires them so automations react as if the
+integration ran locally.
+
+**Context: the sandbox echoes ids, it never authors `Context`.** Only a
+`context_id` (a string) crosses the wire — never `parent_id` or `user_id`. The
+intended model (see [follow-up](#13-out-of-scope--future-work)) is that main
+keeps a cache of the context ids it has issued; when a sandbox event/state
+arrives carrying an id main recognises, main restores the *original* `Context`
+(with its real `parent_id` / `user_id`) from that cache, so a user-initiated
+action's attribution survives the round-trip. An unrecognised id gets a fresh
+main-owned `Context` with no fabricated parentage. Either way the sandbox cannot
+invent a `parent_id` or impersonate a `user_id` — it can only hand back an id
+main already minted.
 
 ## 9. Store routing
 
@@ -240,14 +261,21 @@ isolation-by-construction (one channel per group).
 
 ## 10. Auth
 
-The issuance helper creates a dedicated **system user per group** and hands the
-subprocess a plain system-user access token, freshly minted on each spawn.
-There is **no scope restriction** on the token: with no websocket path open in
-either direction, the token's reach equals v1's, and a speculative scope
-mechanism was reverted from core HA rather than carried unused. Scope
-enforcement is a green-field redesign for whenever the sandbox→main websocket
-lands; the prior thinking is preserved (SUPERSEDED) in
-[`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md).
+The sandbox is **not an authenticated principal inside HA** — it never opens a
+connection back to main and never acts on main's behalf, so it needs no
+credential to call into HA. The `--token` the manager passes today is therefore
+**unused** (it rides the CLI only as forward-compat for a future websocket) and
+is slated to be dropped until that consumer exists, by the same reasoning that
+reverted the speculative scope mechanism (preserved SUPERSEDED in
+[`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md)).
+
+The per-group **system user** has one live use: it is the `user_id` main
+attributes a sandbox-originated `Context` to when minting a fresh one. Under the
+context model in §8 (restore from a seen id; otherwise a fresh main-owned
+context with no fabricated parentage), even that attribution may not need a
+dedicated per-group user. Both — dropping the unused token and reconsidering the
+per-group system user — are tracked in
+[`plans/plan-auth-context.md`](plans/plan-auth-context.md).
 
 Opt-in data sharing (state stream, entity/area registry) into the sandbox is a
 future feature; the locked-down default (everything off) stands, with the
@@ -283,7 +311,7 @@ waits on the websocket transport). See
 - **WebSocket transport** — the seam is ready; lands with the share-states connection work.
 - **State-sharing opt-in consumer** + main-side filtering ([`docs/design-share-states.md`](docs/design-share-states.md)); would let the lockdown helpers (§3) return to sandboxes.
 - **Cross-sandbox in-process dependencies** — ESPHome serial / BLE proxy, and IR/RF command flows, where one integration depends on another's in-process surface across a sandbox boundary.
-- **Richer `Context` propagation** across the bridge (parent_id / user_id), beyond today's `context_id`-only wire.
+- **Context restoration from seen ids** (§8) + **dropping the unused sandbox token / reconsidering the per-group system user** (§10) — both in [`plans/plan-auth-context.md`](plans/plan-auth-context.md). The wire deliberately carries `context_id` only, never `parent_id` / `user_id`, so the sandbox can never fabricate attribution.
 - **Query-shaped RPCs** for `calendar` / `todo` / `weather` server-side queries.
 - **pip/egress validation** for custom-integration dependencies in the container (§7).
 
