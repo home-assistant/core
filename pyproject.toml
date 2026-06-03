@@ -55,7 +55,7 @@ dependencies = [
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
   "lru-dict==1.4.1",
-  "PyJWT==2.12.1",
+  "PyJWT==2.13.0",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==48.0.0",
   "Pillow==12.2.0",
