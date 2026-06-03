@@ -511,7 +511,8 @@ def _create_handle_webhook(
         ]
         if device_mac not in registered_device_macs:
             _LOGGER.debug(
-                "Received data for unknown entity from switchbot webhook: %s", data
+                "Received data for an unregistered webhook entity from SwitchBot Webhook: %s",
+                data,
             )
             return
 
