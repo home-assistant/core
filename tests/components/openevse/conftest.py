@@ -90,6 +90,12 @@ def mock_charger() -> Generator[MagicMock]:
         # System diagnostic sensors
         charger.uptime = 86400  # 1 day in seconds
         charger.freeram = 50000
+        # Binary sensors
+        charger.divert_active = False
+        charger.using_ethernet = False
+        charger.shaper_active = False
+        charger.has_limit = False
+        charger.mqtt_connected = False
         yield charger
 
 
