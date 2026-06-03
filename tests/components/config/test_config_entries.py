@@ -2078,6 +2078,97 @@ async def test_get_single(
     }
 
 
+async def test_get_single_includes_state_write_debounce_option(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test get_single includes debounce option metadata for opt-in integrations."""
+
+    class DebounceConfigFlow(ConfigFlow):
+        """Config flow that opts in to debounce system option."""
+
+        state_write_debounce_system_option_default = 45
+
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+    mock_integration(hass, MockModule("debounce_test"))
+
+    with mock_config_flow("debounce_test", DebounceConfigFlow):
+        entry = MockConfigEntry(
+            domain="debounce_test",
+            state=core_ce.ConfigEntryState.LOADED,
+        )
+        entry.add_to_hass(hass)
+
+        await ws_client.send_json_auto_id(
+            {
+                "type": "config_entries/get_single",
+                "entry_id": entry.entry_id,
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    config_entry = response["result"]["config_entry"]
+    assert config_entry["supports_state_write_debounce_system_option"] is True
+    assert config_entry[core_ce.CONF_STATE_WRITE_DEBOUNCE_INTERVAL] == 45
+
+
+async def test_update_state_write_debounce_option(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test state write debounce option can be updated for opt-in integrations."""
+
+    class DebounceConfigFlow(ConfigFlow):
+        """Config flow that opts in to debounce system option."""
+
+        state_write_debounce_system_option_default = 45
+
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+    mock_integration(hass, MockModule("debounce_test"))
+
+    with mock_config_flow("debounce_test", DebounceConfigFlow):
+        entry = MockConfigEntry(domain="debounce_test")
+        entry.add_to_hass(hass)
+
+        await ws_client.send_json_auto_id(
+            {
+                "type": "config_entries/update",
+                "entry_id": entry.entry_id,
+                core_ce.CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 60,
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    config_entry = response["result"]["config_entry"]
+    assert config_entry[core_ce.CONF_STATE_WRITE_DEBOUNCE_INTERVAL] == 60
+    assert entry.options[core_ce.CONF_STATE_WRITE_DEBOUNCE_INTERVAL] == 60
+
+
+async def test_update_state_write_debounce_option_not_supported(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test state write debounce option update is rejected if integration does not opt in."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/update",
+            "entry_id": entry.entry_id,
+            core_ce.CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 60,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
 async def test_update_prefrences(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

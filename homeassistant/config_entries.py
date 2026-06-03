@@ -21,7 +21,7 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self, TypedDict, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Self, TypedDict, cast
 
 from async_interrupt import interrupt
 from propcache.api import cached_property
@@ -139,6 +139,11 @@ SAVE_DELAY = 1
 DISCOVERY_COOLDOWN = 1
 
 SETUP_RETRY_MAX_WAIT = 600  # 10 minutes
+
+CONF_STATE_WRITE_DEBOUNCE_INTERVAL = "state_write_debounce_interval"
+DEFAULT_STATE_WRITE_DEBOUNCE_INTERVAL = 30
+STATE_WRITE_DEBOUNCE_INTERVAL_MIN = 0
+STATE_WRITE_DEBOUNCE_INTERVAL_MAX = 300
 
 ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
 UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
@@ -413,6 +418,7 @@ class ConfigEntry[_DataT = Any]:
     supports_remove_device: bool | None
     _supports_options: bool | None
     _supports_reconfigure: bool | None
+    _state_write_debounce_system_option_default: int | None
     _supported_subentry_types: dict[str, dict[str, bool]] | None
     update_listeners: list[UpdateListenerType]
     _async_cancel_retry_setup: Callable[[], Any] | None
@@ -525,6 +531,9 @@ class ConfigEntry[_DataT = Any]:
         # Supports reconfigure
         _setter(self, "_supports_reconfigure", None)
 
+        # State write debounce system option default
+        _setter(self, "_state_write_debounce_system_option_default", None)
+
         # Supports subentries
         _setter(self, "_supported_subentry_types", None)
 
@@ -615,6 +624,19 @@ class ConfigEntry[_DataT = Any]:
         return self._supports_reconfigure or False
 
     @property
+    def state_write_debounce_system_option_default(self) -> int | None:
+        """Return the default state write debounce interval for this entry."""
+        if self._state_write_debounce_system_option_default is None and (
+            handler := HANDLERS.get(self.domain)
+        ):
+            object.__setattr__(
+                self,
+                "_state_write_debounce_system_option_default",
+                handler.async_get_state_write_debounce_system_option_default(self),
+            )
+        return self._state_write_debounce_system_option_default
+
+    @property
     def supported_subentry_types(self) -> dict[str, dict[str, bool]]:
         """Return supported subentry types."""
         if self._supported_subentry_types is None and (
@@ -676,6 +698,14 @@ class ConfigEntry[_DataT = Any]:
             ),
             "num_subentries": len(self.subentries),
         }
+        if (default := self.state_write_debounce_system_option_default) is not None:
+            value = self.options.get(CONF_STATE_WRITE_DEBOUNCE_INTERVAL, default)
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                value = default
+            elif not isinstance(value, int):
+                value = int(value)
+            json_repr["supports_state_write_debounce_system_option"] = True
+            json_repr[CONF_STATE_WRITE_DEBOUNCE_INTERVAL] = value
         return json_fragment(json_bytes(json_repr))
 
     def clear_storage_cache(self) -> None:
@@ -2990,6 +3020,8 @@ class ConfigEntryBaseFlow(
 class ConfigFlow(ConfigEntryBaseFlow):
     """Base class for config flows with some helpers."""
 
+    state_write_debounce_system_option_default: ClassVar[int | None] = None
+
     def __init_subclass__(cls, *, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)
@@ -3015,6 +3047,14 @@ class ConfigFlow(ConfigEntryBaseFlow):
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return cls.async_get_options_flow is not ConfigFlow.async_get_options_flow
+
+    @classmethod
+    @callback
+    def async_get_state_write_debounce_system_option_default(
+        cls, config_entry: ConfigEntry
+    ) -> int | None:
+        """Return the default state write debounce interval for this handler."""
+        return cls.state_write_debounce_system_option_default
 
     @classmethod
     @callback

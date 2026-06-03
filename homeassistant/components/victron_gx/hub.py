@@ -16,7 +16,11 @@ from victron_mqtt import (
     VictronEnum,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
+    DEFAULT_STATE_WRITE_DEBOUNCE_INTERVAL,
+    ConfigEntry,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -30,13 +34,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.redact import async_redact_data
 
-from .const import (
-    CONF_INSTALLATION_ID,
-    CONF_SERIAL,
-    CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
-    DEFAULT_STATE_WRITE_DEBOUNCE_INTERVAL,
-    DOMAIN,
-)
+from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -495,6 +495,13 @@ async def config_entry_get_single(
         vol.Optional("title"): str,
         vol.Optional("pref_disable_new_entities"): bool,
         vol.Optional("pref_disable_polling"): bool,
+        vol.Optional(config_entries.CONF_STATE_WRITE_DEBOUNCE_INTERVAL): vol.All(
+            vol.Coerce(int),
+            vol.Range(
+                min=config_entries.STATE_WRITE_DEBOUNCE_INTERVAL_MIN,
+                max=config_entries.STATE_WRITE_DEBOUNCE_INTERVAL_MAX,
+            ),
+        ),
     }
 )
 @websocket_api.async_response
@@ -512,6 +519,25 @@ async def config_entry_update(
     entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
     if entry is None:
         return
+
+    debounce_interval = changes.pop(
+        config_entries.CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
+        None,
+    )
+    if debounce_interval is not None:
+        if entry.state_write_debounce_system_option_default is None:
+            connection.send_error(
+                msg["id"],
+                websocket_api.ERR_INVALID_FORMAT,
+                "State write debounce interval not supported by this integration",
+            )
+            return
+        if "options" in changes:
+            options = dict(changes["options"])
+        else:
+            options = dict(entry.options)
+        options[config_entries.CONF_STATE_WRITE_DEBOUNCE_INTERVAL] = debounce_interval
+        changes["options"] = options
 
     old_disable_polling = entry.pref_disable_polling
 
