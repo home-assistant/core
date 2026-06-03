@@ -77,7 +77,7 @@ The design choices and the failure modes of v1 they fix are recorded in
                           │                                         │
                           │  subprocess.Popen                       │  Channel
                           │  python -m hass_client.sandbox_v2       │  (JSON lines over
-                          │  --group … --url … --token …            │   stdin/stdout)
+                          │  --name … --url … --token …             │   stdin/stdout)
                           ▼                                         │
 ┌──────────────────────────── Sandbox subprocess ──────────────────────────────────────┐
 │  sandbox_v2/hass_client/hass_client/sandbox.py                                       │
@@ -146,7 +146,7 @@ is:
 
 ```
 python -m hass_client.sandbox_v2 \
-    --group <group> \
+    --name <name> \
     --url ws://localhost:8123/api/websocket \
     --token <sandbox access token>
 ```
@@ -237,8 +237,12 @@ ensures the sandbox is running, and round-trips an `entry_setup` RPC.
 
 The flow proxy serialises `data_schema` via `voluptuous_serialize`
 ([`schema_bridge.py`](../homeassistant/components/sandbox_v2/schema_bridge.py))
-and rebuilds a permissive `vol.Schema` on main so frontend forms render
-field hints (Phase 14). The sandbox flow's `flow.context["unique_id"]`
+and rebuilds a `vol.Schema` on main so frontend forms render correctly
+(Phase 14). The reconstruction rebuilds the real `Selector` /
+`data_entry_flow.section` objects, so when the flow manager re-serialises
+main's schema for the frontend it reproduces the sandbox's original list
+verbatim — selectors keep their widget instead of degrading to plain text
+boxes. The sandbox flow's `flow.context["unique_id"]`
 rides in every marshalled `FlowResult` and the proxy applies it via
 `async_set_unique_id`, so main's duplicate-detection guard fires for
 collisions (Phase 14).
@@ -262,13 +266,19 @@ sandbox's bus and, on each entity's first appearance, pushes
 `sandbox_v2/register_entity` to main with:
 
 - `entry_id`, `domain`, `sandbox_entity_id`
-- `unique_id`, `name`, `icon`, `has_entity_name`
+- `unique_id` (prefixed on main with the source domain, `<domain>:<unique_id>`,
+  so two integrations in one group can't collide), `name`, `icon`,
+  `has_entity_name`
 - `entity_category`, `device_class`, `supported_features`
 - `capability_attributes` (`supported_color_modes`, color temp range, …)
 - the initial `state` + `attributes`
 
-Subsequent updates push `sandbox_v2/state_changed` (state + attributes
-only — no re-registration).
+Subsequent **state** updates push `sandbox_v2/state_changed` (state +
+attributes only). `register_entity` is an **upsert**: post-setup changes to
+name / icon / category / capabilities / device_info arrive as
+entity- and device-registry-updated events, which re-send
+`register_entity` so main refreshes the existing proxy in place (no
+duplicate entity).
 
 ### Main side
 
@@ -287,10 +297,13 @@ Proxy method calls (e.g., `async_turn_on`) translate into
 `(domain, service, service_data)` calls into one multi-entity RPC — so
 a 200-light area call pays one RPC, not 200.
 
-Exception translation maps sandbox-side `vol.Invalid` →
-`TypeError` and `ServiceNotFound` / `ServiceValidationError` →
-`HomeAssistantError`, so callers on main see the local-entity error
-shape rather than a raw remote error.
+Exception translation rebuilds sandbox-side `vol.Invalid` /
+`vol.MultipleInvalid` as the real exception (with its `.path`) from a
+structured `error_data` field on the error frame, and maps
+`ServiceNotFound` / `ServiceValidationError` → `HomeAssistantError`, so
+callers on main see the local-entity error shape rather than a raw remote
+error. (Frames without `error_data` fall back to the older class-name
+mapping, where `vol.Invalid` → `TypeError`.)
 
 ### Domains shipped
 

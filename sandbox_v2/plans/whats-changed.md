@@ -40,31 +40,31 @@
   routes via a `current_sandbox` ContextVar in `homeassistant/helpers/`. No
   user-visible API change; internal-only. (`plan-sandbox-context.md`, A1
   `d0bbd340289` + A2 `4c85363668b`)
-- [ ] **Runtime CLI flag `--group` → `--name`** on
-  `python -m hass_client.sandbox_v2`. (`plan-fidelity-batch.md` #2)
-- [ ] **`built-in` group locked down** — these integrations now run on **main**,
+- [x] **Runtime CLI flag `--group` → `--name`** on
+  `python -m hass_client.sandbox_v2`. (`plan-fidelity-batch.md` #2 `969834845b4`)
+- [x] **`built-in` group locked down** — these integrations now run on **main**,
   not in a sandbox (they read data they don't own): `template`, `group`,
   `homekit`, `min_max`, `statistics`, `trend`, `threshold`, `derivative`,
   `integration`, `utility_meter`, `filter`, `mold_indicator`, `bayesian`,
   `generic_thermostat`, `generic_hygrostat`, `switch_as_x`, `history_stats`,
-  `proximity`. (`research/builtin-lockdown-breakage.md`, point 1)
-- [ ] **Proxy entity unique_ids are now prefixed with the source integration
+  `proximity`. (`research/builtin-lockdown-breakage.md`, point 1 `f66e7e40344`)
+- [x] **Proxy entity unique_ids are now prefixed with the source integration
   domain** (`<domain>:<unique_id>`) to avoid collisions across integrations in a
-  group. Pre-release → no migration. (`plan-fidelity-batch.md` #5)
+  group. Pre-release → no migration. (`plan-fidelity-batch.md` #5 `3833290b165`)
 
 ## For integration authors
 - [ ] **Custom (HACS) integrations are fetched at startup.** Main pushes the git
   URL + pinned commit sha; the sandbox clones it before setup. No persistent
   code on disk → sandboxes are wipe-and-restart safe. (`plan-ephemeral-sources.md`)
-- [ ] **Config-flow forms render faithfully.** Selectors and sections now
+- [x] **Config-flow forms render faithfully.** Selectors and sections now
   survive the sandbox round-trip (previously some collapsed to plain inputs).
-  (`plan-fidelity-batch.md` #4)
-- [ ] **Entity & device info updates propagate.** Changing an entity's name,
+  (`plan-fidelity-batch.md` #4 `94804369825`)
+- [x] **Entity & device info updates propagate.** Changing an entity's name,
   icon, capabilities, or device info after setup now reflects on main (the
-  registration is idempotent + watches registry-updated events). (`plan-fidelity-batch.md` #6)
-- [ ] **Validation errors keep their shape.** A `vol.Invalid` raised by a
+  registration is idempotent + watches registry-updated events). (`plan-fidelity-batch.md` #6 `c5c7e4adcb5`)
+- [x] **Validation errors keep their shape.** A `vol.Invalid` raised by a
   sandboxed service handler now surfaces on main as a real `vol.Invalid` with
-  its `.path`, instead of a flattened `TypeError`. (`plan-fidelity-batch.md` #7)
+  its `.path`, instead of a flattened `TypeError`. (`plan-fidelity-batch.md` #7 `fd05b17a25b`)
 - [ ] If your integration genuinely needs other integrations' state under
   lockdown, it must run on main (see the breaking-changes list) — a scoped
   opt-in is future work (`docs/design-share-states.md`).

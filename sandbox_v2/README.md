@@ -40,7 +40,7 @@ uv run pytest
 # Run the runtime by hand against a local HA (debugging only — the
 # manager normally spawns the subprocess for you).
 uv run python -m hass_client.sandbox_v2 \
-    --group built-in \
+    --name built-in \
     --url ws://localhost:8123/api/websocket \
     --token <scoped sandbox token>
 ```
