@@ -170,16 +170,16 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         except VerisureLoginError:
             LOGGER.debug("Cookie expired, acquiring new cookies")
             await self._async_refresh_session_after_auth_failure()
-        except (VerisureRequestError, VerisureResponseError) as ex:
-            LOGGER.warning(
-                "Verisure unreachable or server error during cookie refresh, %s", ex
-            )
-            raise UpdateFailed("Unable to update cookie - Verisure unreachable") from ex
         except VerisureRateLimitError as ex:
             LOGGER.warning("Verisure rate limited during cookie refresh, %s", ex)
             raise UpdateFailed(
                 "Unable to update cookie - Verisure rate limited"
             ) from ex
+        except (VerisureRequestError, VerisureResponseError) as ex:
+            LOGGER.warning(
+                "Verisure unreachable or server error during cookie refresh, %s", ex
+            )
+            raise UpdateFailed("Unable to update cookie - Verisure unreachable") from ex
         except VerisureError as ex:
             raise UpdateFailed("Unable to update cookie") from ex
         try:

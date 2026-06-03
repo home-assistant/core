@@ -135,14 +135,24 @@ async def test_async_update_data_cookie_read_uses_password_login(
     mock_verisure_session.login.assert_called_once()
 
 
-async def test_async_update_data_unreachable_raises_update_failed(
+@pytest.mark.parametrize(
+    ("exc", "match"),
+    [
+        (RequestError("offline"), "Verisure unreachable"),
+        (ResponseError(503, "server error"), "Verisure unreachable"),
+        (RateLimitError("rate limited"), "Verisure rate limited"),
+    ],
+)
+async def test_async_update_data_transient_update_cookie_raises_update_failed(
     coordinator: VerisureDataUpdateCoordinator,
     mock_verisure_session: MagicMock,
+    exc: Exception,
+    match: str,
 ) -> None:
-    """Network or server errors during cookie refresh raise UpdateFailed."""
-    mock_verisure_session.update_cookie.side_effect = RequestError("offline")
+    """Transient failures during cookie refresh raise UpdateFailed."""
+    mock_verisure_session.update_cookie.side_effect = exc
 
-    with pytest.raises(UpdateFailed, match="Verisure unreachable"):
+    with pytest.raises(UpdateFailed, match=match):
         await coordinator._async_update_data()
 
 
