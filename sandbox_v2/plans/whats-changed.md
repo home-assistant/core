@@ -36,9 +36,10 @@
   was in tree. Existing auth stores with `scopes` keys on refresh tokens load
   silently (the field is dropped on read). Re-introduces when the sandbox→main
   WS transport lands and needs scoping. (`plan-strip-auth-scopes.md`)
-- [ ] **`install_remote_store` monkey-patch removed.** Sandbox Store IO now
+- [x] **`install_remote_store` monkey-patch removed.** Sandbox Store IO now
   routes via a `current_sandbox` ContextVar in `homeassistant/helpers/`. No
-  user-visible API change; internal-only. (`plan-sandbox-context.md`)
+  user-visible API change; internal-only. (`plan-sandbox-context.md`, A1
+  `d0bbd340289` + A2 `4c85363668b`)
 - [ ] **Runtime CLI flag `--group` → `--name`** on
   `python -m hass_client.sandbox_v2`. (`plan-fidelity-batch.md` #2)
 - [ ] **`built-in` group locked down** — these integrations now run on **main**,
