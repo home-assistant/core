@@ -459,7 +459,6 @@ class AuthManager:
         token_type: str | None = None,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
         credential: models.Credentials | None = None,
-        scopes: frozenset[str] | None = None,
     ) -> models.RefreshToken:
         """Create a new refresh token for a user."""
         if not user.is_active:
@@ -515,7 +514,6 @@ class AuthManager:
             access_token_expiration,
             expire_at,
             credential,
-            scopes,
         )
 
     @callback

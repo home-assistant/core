@@ -1,5 +1,13 @@
 # Auth-scoping decision (Phase 7)
 
+> **SUPERSEDED 2026-06-03 by `plans/plan-strip-auth-scopes.md`.** No
+> consumer of this mechanism ever shipped (the sandbox→main WebSocket was
+> not wired up). The `RefreshToken.scopes` field and dispatcher
+> enforcement were reverted from core HA; the sandbox now uses a plain
+> system-user token. The design below is preserved as a historical record
+> so the next attempt (when the WS transport actually lands) has prior
+> thinking to reuse.
+
 > **Decision:** sandbox tokens are scoped `RefreshToken`s. The
 > `scopes` set lives on `RefreshToken` itself (no subclass, no new
 > token type); the websocket dispatcher enforces it per command via a

@@ -1,20 +1,13 @@
-"""Scoped auth tokens for sandbox runtimes (Phase 7).
+"""Auth tokens for sandbox runtimes.
 
 Each sandbox group runs against a dedicated system user; the access token
-the manager hands to the subprocess is issued from a refresh token whose
-``scopes`` set restricts the websocket API to the ``sandbox_v2/``
-namespace plus a short allow-list (e.g. ``auth/current_user``). The
-websocket dispatcher enforces the scope per command — see
-``homeassistant.components.websocket_api.connection._scope_allows``.
-
-The sandbox does not currently open a websocket back to main, but the
-scoped token is still issued and passed on the CLI so that:
-
-* the manager and runtime agree on a real credential rather than a
-  placeholder, and
-* the opt-in subscription consumer designed in
-  ``sandbox_v2/docs/design-share-states.md`` inherits the same scope
-  without a separate code path.
+the manager hands to the subprocess is issued from that user's refresh
+token. The token is a plain system-user credential — there is no scope
+restriction. The sandbox does not currently open a websocket back to main,
+so no enforcement surface exists; scope enforcement is deferred until the
+sandbox→main connection actually lands (see
+``sandbox_v2/docs/auth-scoping-decision.md``, kept as a historical design
+record for that future work).
 """
 
 import logging
@@ -23,21 +16,6 @@ from homeassistant.auth.models import RefreshToken, User
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
-
-# Websocket-API scopes granted to sandbox tokens.
-#
-# Entries ending in ``/`` are prefix grants — ``sandbox_v2/`` permits any
-# ``sandbox_v2/...`` command. Plain entries are exact matches. Keep this
-# allow-list minimal: every entry is a public API surface a sandboxed
-# integration would otherwise be unable to call, so adding to it widens
-# the trust boundary.
-SANDBOX_TOKEN_SCOPES: frozenset[str] = frozenset(
-    {
-        "sandbox_v2/",
-        # Lets the sandbox confirm which user it authenticated as.
-        "auth/current_user",
-    }
-)
 
 # Marker stored on the system user's name + refresh_token client_id so the
 # manager can recognise (and reuse) an existing sandbox credential across
@@ -66,39 +44,34 @@ async def async_get_or_create_sandbox_user(hass: HomeAssistant, group: str) -> U
 
 
 async def async_issue_sandbox_access_token(hass: HomeAssistant, group: str) -> str:
-    """Issue a scoped access token for the sandbox runtime of ``group``.
+    """Issue an access token for the sandbox runtime of ``group``.
 
-    Reuses the dedicated system user across calls; rotates the refresh
-    token on each call so a restart hands the subprocess a fresh
-    credential. The returned JWT is the access token the runtime should
-    pass on the websocket ``auth`` message.
+    Reuses the dedicated system user and its refresh token across calls;
+    the access token is freshly minted each call so a restart hands the
+    subprocess a fresh credential. The returned JWT is the access token
+    the runtime should pass on the websocket ``auth`` message.
     """
     user = await async_get_or_create_sandbox_user(hass, group)
-    refresh_token = await _get_or_create_sandbox_refresh_token(hass, user, group)
+    refresh_token = await _get_or_create_sandbox_refresh_token(hass, user)
     return hass.auth.async_create_access_token(refresh_token)
 
 
 async def _get_or_create_sandbox_refresh_token(
-    hass: HomeAssistant, user: User, group: str
+    hass: HomeAssistant, user: User
 ) -> RefreshToken:
-    """Return (or create) the sandbox refresh token for ``group``.
+    """Return (or create) the sandbox refresh token for ``user``.
 
-    Sandbox users are ``system_generated`` so their tokens are
-    ``TOKEN_TYPE_SYSTEM`` and do not carry a ``client_id``. We identify
-    a group's token by matching the ``scopes`` set against
-    :data:`SANDBOX_TOKEN_SCOPES`; on first use, we create one.
+    Sandbox users are ``system_generated`` and only ever get a single
+    refresh token, so we identify it by that one-token-per-user invariant:
+    reuse the existing token if present, otherwise create one.
     """
-    for token in user.refresh_tokens.values():
-        if token.scopes == SANDBOX_TOKEN_SCOPES:
-            return token
-    return await hass.auth.async_create_refresh_token(
-        user,
-        scopes=SANDBOX_TOKEN_SCOPES,
-    )
+    tokens = list(user.refresh_tokens.values())
+    if tokens:
+        return tokens[0]
+    return await hass.auth.async_create_refresh_token(user)
 
 
 __all__ = [
-    "SANDBOX_TOKEN_SCOPES",
     "async_get_or_create_sandbox_user",
     "async_issue_sandbox_access_token",
 ]

@@ -1,23 +1,12 @@
-"""Phase 7 tests for the sandbox_v2 scoped-auth helpers."""
+"""Tests for the sandbox_v2 auth helpers."""
 
 import pytest
 
 from homeassistant.components.sandbox_v2.auth import (
-    SANDBOX_TOKEN_SCOPES,
     async_get_or_create_sandbox_user,
     async_issue_sandbox_access_token,
 )
 from homeassistant.core import HomeAssistant
-
-
-async def test_sandbox_token_scopes_allowlist() -> None:
-    """The scope set covers `sandbox_v2/*` plus the minimum auth allow-list."""
-    assert "sandbox_v2/" in SANDBOX_TOKEN_SCOPES
-    assert "auth/current_user" in SANDBOX_TOKEN_SCOPES
-    # The set should not pull in broader auth surface like sign_path.
-    assert "auth/sign_path" not in SANDBOX_TOKEN_SCOPES
-    # No service-call shortcut.
-    assert "call_service" not in SANDBOX_TOKEN_SCOPES
 
 
 async def test_get_or_create_user_is_idempotent(hass: HomeAssistant) -> None:
@@ -35,20 +24,19 @@ async def test_get_or_create_user_is_idempotent(hass: HomeAssistant) -> None:
 async def test_issue_token_returns_valid_access_token(
     hass: HomeAssistant, group: str
 ) -> None:
-    """The issued access token is a JWT that validates back to a scoped refresh token."""
+    """The issued access token is a JWT that validates back to a system-user token."""
     token = await async_issue_sandbox_access_token(hass, group)
     assert isinstance(token, str)
     assert token  # not empty
 
     refresh = hass.auth.async_validate_access_token(token)
     assert refresh is not None
-    assert refresh.scopes == SANDBOX_TOKEN_SCOPES
     assert refresh.user.system_generated is True
     assert refresh.user.name == f"Sandbox v2: {group}"
 
 
 async def test_issue_token_reuses_refresh_token(hass: HomeAssistant) -> None:
-    """Second call reuses the existing scoped refresh token (no churn)."""
+    """Second call reuses the existing refresh token (no churn)."""
     token_a = await async_issue_sandbox_access_token(hass, "built-in")
     token_b = await async_issue_sandbox_access_token(hass, "built-in")
 
@@ -58,6 +46,9 @@ async def test_issue_token_reuses_refresh_token(hass: HomeAssistant) -> None:
     assert refresh_a is not None
     assert refresh_b is not None
     assert refresh_a.id == refresh_b.id
+
+    # The one-token-per-system-user invariant the helper relies on.
+    assert len(refresh_a.user.refresh_tokens) == 1
 
 
 async def test_per_group_users_are_distinct(hass: HomeAssistant) -> None:

@@ -284,6 +284,36 @@ hook. The "monkey-patch the storage module" tension is closed.
 
 ---
 
+## plan-strip-auth-scopes — revert the Phase-7 `RefreshToken.scopes` mechanism
+
+**Why.** Phase 7 added `RefreshToken.scopes` + a websocket-dispatcher
+`_scope_allows` check across four core HA files
+(`auth/models.py`, `auth/__init__.py`, `auth/auth_store.py`,
+`websocket_api/connection.py`) plus a persisted `scopes` key in the
+on-disk auth store. It was built for a sandbox→main websocket that was
+never wired up, so no code path ever exercised the scope check
+end-to-end — the feature was asserted only by an isolated dispatcher
+test. Phase 20 had already deleted the `share_*` opt-in that paired with
+scope-as-deny, leaving scopes guarding a non-existent attack surface.
+That's permanent core surface for zero current value.
+
+**What landed.** The whole `scopes` mechanism reverted from core HA. The
+sandbox still gets a dedicated system user per group and an access token
+freshly minted on each spawn — only the scoping disappears.
+`_get_or_create_sandbox_refresh_token` now identifies the token by the
+one-token-per-system-user invariant instead of matching a scope set.
+Back-compat: the auth-store load path pops a legacy `scopes` key if
+present (option A — silent drop, no storage-version bump), covered by a
+regression test; v2 is unreleased so the only on-disk scoped tokens are
+dev machines on this branch.
+
+**Outcome.** Core HA's auth surface is back to its pre-Phase-7 shape; the
+v2 core-HA touch list shrinks from four surfaces to three.
+[`auth-scoping-decision.md`](auth-scoping-decision.md) is kept as a
+SUPERSEDED design record for the eventual re-introduction.
+
+---
+
 ## Still open
 
 These are the items that survived Phase 17 — see
@@ -298,6 +328,14 @@ for the per-failure-category remediation table.
   entity_id alignment constraint, the `share/subscribe_*` protocol,
   the main-side filter, and the open questions. The actual consumer
   is owed in a future phase against that design.
+- **Re-introduce scope enforcement on the sandbox token.**
+  `plan-strip-auth-scopes` reverted the Phase-7 `RefreshToken.scopes`
+  mechanism because no consumer shipped. When the WS transport
+  ([`../plans/plan-transport.md`](../plans/plan-transport.md) T4) ships
+  the share-states subscription, the sandbox token needs scope
+  enforcement again — reuse [`auth-scoping-decision.md`](auth-scoping-decision.md)'s
+  design (prefix-grant + exact-match grammar) as the starting point,
+  this time with a real consumer forcing the shape.
 - **v1 removal. DONE (2026-05-28).** The numeric gate (Phase 11) was
   cleared by Phase 17; v1 was removed ahead of the "shipped a stable
   release" condition, relying on git history for rollback.

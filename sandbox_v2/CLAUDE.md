@@ -34,9 +34,10 @@ second condition), as a deliberate call relying on git history for rollback.
   forwarding via the shared `sandbox_v2/call_service` channel) is
   the protocol every entity proxy uses.
 - [`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md) —
-  why `scopes` lives on `RefreshToken` itself, the
-  `_scope_allows` grammar, and what's deferred until the sandbox
-  websocket back to main is wired up.
+  **SUPERSEDED.** The Phase-7 `RefreshToken.scopes` mechanism it
+  describes was reverted from core HA (`plans/plan-strip-auth-scopes.md`);
+  the sandbox now uses a plain system-user token. Kept as the design
+  record for whenever the sandbox→main websocket actually lands.
 - [`docs/design-share-states.md`](docs/design-share-states.md) —
   design for the post-v2 state-sharing consumer that replaces the
   Phase 7 `share_*` flags Phase 20 deleted. Covers entity_id
@@ -58,7 +59,7 @@ The HA Core side of the integration lives at
 
 ## Core HA files modified (high-review surface)
 
-v2 touches four core HA files. Each is intentional, small, and was
+v2 touches three core HA surfaces. Each is intentional, small, and was
 introduced by a specific phase — see the matching STATUS file for
 the rationale.
 
@@ -77,9 +78,6 @@ the rationale.
   `EntityComponent.async_register_remote_platform`. Sandbox-built
   `EntityPlatform` instances attach without re-discovering the
   local integration. **Phase 5.**
-- `homeassistant/auth/models.py` + `auth/__init__.py` +
-  `auth/auth_store.py` + `components/websocket_api/connection.py` —
-  optional `RefreshToken.scopes` + dispatcher enforcement. **Phase 7.**
 - `homeassistant/helpers/sandbox_context.py` (NEW) +
   `homeassistant/helpers/storage.py` — the `current_sandbox`
   `ContextVar` + `SandboxBridge` `Protocol`, read by `Store`'s IO

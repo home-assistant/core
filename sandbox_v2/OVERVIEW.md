@@ -44,7 +44,7 @@ inside the sandbox.
 | Transport | Live websocket connection back to main | JSON-line `Channel` over the subprocess's stdin/stdout |
 | Entity bridge | Bespoke `sandbox/update_state` + `sandbox/entity_command_result` (Option A) | Shared `sandbox_v2/call_service` (Option B) — see [`docs/entity-bridge-decision.md`](docs/entity-bridge-decision.md) |
 | Config flow | Forwarded through host integration | Runs inside the sandbox; main owns the canonical `ConfigEntry` store |
-| Auth | System-user token, full HA scope | Scoped `RefreshToken` (`{"sandbox_v2/", "auth/current_user"}`); dispatcher rejects out-of-scope calls |
+| Auth | System-user token, full HA scope | System-user token (scope enforcement deferred until the sandbox→main connection lands) |
 | Data sharing | Sandbox sees all of main's state | Default locked-down; opt-in state/registry/area sharing per group is a future feature ([`docs/design-share-states.md`](docs/design-share-states.md)) |
 | Store routing | None — sandbox writes to its own tempdir | The `current_sandbox` contextvar makes `Store` IO proxy to main; main writes to `<config>/.storage/sandbox_v2/<group>/<key>` |
 | Shutdown | Best-effort | Graceful `sandbox_v2/shutdown` round-trip; sandbox unloads entries + dumps `RestoreEntity` state; main persists it for next boot |
@@ -148,7 +148,7 @@ is:
 python -m hass_client.sandbox_v2 \
     --group <group> \
     --url ws://localhost:8123/api/websocket \
-    --token <scoped sandbox access token>
+    --token <sandbox access token>
 ```
 
 The runtime prints `sandbox_v2:ready` on stdout once its
@@ -354,24 +354,27 @@ domain by virtue of registering light entities). `ServiceMirror` and
   carrying a richer `Context` shape across the bridge is post-v2
   work.
 
-## Scoped auth & opt-in data sharing
-
-`RefreshToken` gains an optional `scopes: frozenset[str] | None` field
-([`homeassistant/auth/models.py`](../homeassistant/auth/models.py)). The
-websocket dispatcher
-([`websocket_api/connection.py`](../homeassistant/components/websocket_api/connection.py))
-checks each incoming command via a module-level `_scope_allows` helper
-that matches prefix grants (`sandbox_v2/`) and exact-match entries
-(`auth/current_user`); unscoped tokens (`scopes is None`) are
-unaffected.
+## Sandbox auth & opt-in data sharing
 
 The sandbox issuance helper
 ([`auth.py`](../homeassistant/components/sandbox_v2/auth.py)) creates a
-dedicated system user per group and a scoped refresh token with
-`scopes = {"sandbox_v2/", "auth/current_user"}`. Result: a
-sandboxed integration cannot call `light.turn_on`, `auth/sign_path`,
-or any other non-`sandbox_v2/` command — the dispatcher rejects with
-`ERR_UNAUTHORIZED` before the handler runs.
+dedicated system user per group and hands the subprocess a plain
+system-user access token, freshly minted from that user's refresh
+token on each spawn. There is **no scope restriction** on the token.
+
+Scope enforcement is **deferred until the sandbox→main websocket
+connection actually lands.** Phase 7 originally shipped a
+`RefreshToken.scopes` field plus a websocket-dispatcher `_scope_allows`
+check, but no consumer ever exercised it (the sandbox never opened a
+connection back to main), so `plan-strip-auth-scopes.md` reverted the
+whole mechanism from core HA. The posture is unchanged in practice —
+with no WS path open in either direction, the sandbox token's reach is
+the same as v1's. When the WS transport ships
+([`plans/plan-transport.md`](plans/plan-transport.md) T4), scope
+enforcement is a green-field redesign with a real consumer in hand;
+the prior thinking is preserved in
+[`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md)
+(marked SUPERSEDED).
 
 Opt-in data sharing (state stream, entity registry, area registry)
 into the sandbox is a future feature. Phase 7 added unwired
@@ -381,9 +384,6 @@ because no consumer existed and replaced the surface with a design doc
 locked-down posture stays — defaults are everything-off; the opt-in
 subscription consumer lands behind whatever config surface the design
 doc settles on.
-
-The full decision rationale for the auth side lives in
-[`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md).
 
 ## Store routing
 
@@ -536,7 +536,7 @@ deferred, and what it flagged for the next phase. For a quick map:
 | Config flow | [`router.py`](../homeassistant/components/sandbox_v2/router.py), [`proxy_flow.py`](../homeassistant/components/sandbox_v2/proxy_flow.py) | [`flow_runner.py`](hass_client/hass_client/flow_runner.py) |
 | Entity bridge | [`bridge.py`](../homeassistant/components/sandbox_v2/bridge.py), [`entity/`](../homeassistant/components/sandbox_v2/entity/) | [`entry_runner.py`](hass_client/hass_client/entry_runner.py), [`entity_bridge.py`](hass_client/hass_client/entity_bridge.py) |
 | Service/event mirror | [`bridge.py`](../homeassistant/components/sandbox_v2/bridge.py) | [`service_mirror.py`](hass_client/hass_client/service_mirror.py), [`event_mirror.py`](hass_client/hass_client/event_mirror.py), [`approved_domains.py`](hass_client/hass_client/approved_domains.py) |
-| Auth scopes | [`auth.py`](../homeassistant/components/sandbox_v2/auth.py), `homeassistant/auth/models.py`, `homeassistant/components/websocket_api/connection.py` | — |
+| Auth | [`auth.py`](../homeassistant/components/sandbox_v2/auth.py) (plain system-user token) | — |
 | Store routing | [`bridge.py`](../homeassistant/components/sandbox_v2/bridge.py) (`_SandboxStoreServer`), `homeassistant/helpers/sandbox_context.py`, `homeassistant/helpers/storage.py` | [`sandbox_bridge.py`](hass_client/hass_client/sandbox_bridge.py) |
 | Shutdown | [`__init__.py`](../homeassistant/components/sandbox_v2/__init__.py) (`_on_stop`), `manager.py` | [`sandbox.py`](hass_client/hass_client/sandbox.py) (`_run_graceful_shutdown`) |
 | Test infra | — | [`testing/`](hass_client/hass_client/testing/), [`run_compat.py`](run_compat.py) |

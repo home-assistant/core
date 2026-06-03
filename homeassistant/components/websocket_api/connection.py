@@ -44,22 +44,6 @@ type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]]
 type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
 
 
-def _scope_allows(scopes: frozenset[str], type_: str) -> bool:
-    """Return True if ``type_`` is allowed by the connection's scope set.
-
-    A scope entry ending in ``/`` is a prefix grant
-    (e.g. ``"sandbox_v2/"`` permits any ``sandbox_v2/...`` command).
-    Other entries must match the command type exactly.
-    """
-    for scope in scopes:
-        if scope.endswith("/"):
-            if type_.startswith(scope):
-                return True
-        elif type_ == scope:
-            return True
-    return False
-
-
 class ActiveConnection:
     """Handle an active websocket client connection."""
 
@@ -72,7 +56,6 @@ class ActiveConnection:
         "logger",
         "refresh_token_id",
         "remote",
-        "scopes",
         "send_message",
         "subscriptions",
         "supported_features",
@@ -94,7 +77,6 @@ class ActiveConnection:
         self.send_message = send_message
         self.user = user
         self.refresh_token_id = refresh_token.id if refresh_token else None
-        self.scopes = refresh_token.scopes if refresh_token else None
         self.remote = remote
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
@@ -254,20 +236,6 @@ class ActiveConnection:
                     cur_id, const.ERR_UNKNOWN_COMMAND, "Unknown command."
                 )
             )
-            return
-
-        if (scopes := self.scopes) is not None and not _scope_allows(scopes, type_):
-            self.logger.info(
-                "Rejecting %s — not in connection scope %s", type_, sorted(scopes)
-            )
-            self.send_message(
-                messages.error_message(
-                    cur_id,
-                    const.ERR_UNAUTHORIZED,
-                    f"Command {type_!r} is not in the connection's allowed scope.",
-                )
-            )
-            self.last_id = cur_id
             return
 
         handler, schema = handler_schema

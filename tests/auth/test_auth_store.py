@@ -277,6 +277,52 @@ async def test_dont_change_expire_at_on_load(
     assert token2.expire_at == 1724133771.079745
 
 
+async def test_loading_drops_legacy_scopes_key(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test a refresh token persisted with the legacy ``scopes`` key loads.
+
+    The reverted Phase-7 sandbox auth-scoping mechanism wrote a ``scopes``
+    list onto refresh tokens. ``RefreshToken`` no longer accepts that field,
+    so the load path must silently drop it instead of erroring.
+    """
+    hass_storage[auth_store.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "credentials": [],
+            "users": [
+                {
+                    "id": "system-id",
+                    "is_active": True,
+                    "is_owner": True,
+                    "name": "Sandbox v2: built-in",
+                    "system_generated": True,
+                },
+            ],
+            "refresh_tokens": [
+                {
+                    "access_token_expiration": 1800.0,
+                    "client_id": None,
+                    "created_at": "2018-10-03T13:43:19.774637+00:00",
+                    "id": "scoped-token-id",
+                    "jwt_key": "some-key",
+                    "token": "some-token",
+                    "token_type": "system",
+                    "user_id": "system-id",
+                    "scopes": ["sandbox_v2/", "auth/current_user"],
+                },
+            ],
+        },
+    }
+
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+
+    users = await store.async_get_users()
+    token = next(iter(users[0].refresh_tokens.values()))
+    assert not hasattr(token, "scopes")
+
+
 async def test_loading_does_not_write_right_away(
     hass: HomeAssistant, hass_storage: dict[str, Any], freezer: FrozenDateTimeFactory
 ) -> None:

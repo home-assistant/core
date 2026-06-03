@@ -373,7 +373,7 @@
             <a href="#entity-bridge">The entity bridge (Option&nbsp;B)</a>
           </li>
           <li><a href="#mirrors">Service &amp; event mirroring</a></li>
-          <li><a href="#auth">Scoped auth &amp; opt-in data sharing</a></li>
+          <li><a href="#auth">Sandbox auth &amp; opt-in data sharing</a></li>
           <li>
             <a href="#store"
               >Store routing &mdash; <code>current_sandbox</code></a
@@ -428,7 +428,7 @@
         through a public, deliberately-added hook &mdash;
         <code>EntityComponent.async_register_remote_platform</code>,
         <code>ConfigEntries.router</code>, <code>ConfigEntry.sandbox</code>,
-        <code>RefreshToken.scopes</code>. The PR diff is slightly larger; the
+        <code>current_sandbox</code>. The PR diff is slightly larger; the
         maintenance story is dramatically smaller.
       </div>
 
@@ -767,7 +767,7 @@
             fill="#fcd34d"
             font-size="9.5"
           >
-            _scope_allows(scopes, type)
+            no scope enforcement
           </text>
           <text
             x="151"
@@ -776,7 +776,7 @@
             fill="#fcd34d"
             font-size="9.5"
           >
-            rejects out-of-scope cmds
+            deferred until the
           </text>
           <text
             x="151"
@@ -785,7 +785,7 @@
             fill="#fcd34d"
             font-size="9.5"
           >
-            at ERR_UNAUTHORIZED
+            WS transport lands
           </text>
 
           <!-- auth issuance -->
@@ -824,7 +824,7 @@
             fill="#fcd34d"
             font-size="9.5"
           >
-            scopes = {sandbox_v2/,
+            plain system-user
           </text>
           <text
             x="355"
@@ -833,7 +833,7 @@
             fill="#fcd34d"
             font-size="9.5"
           >
-            auth/current_user}
+            access token
           </text>
 
           <!-- file-system tag -->
@@ -1464,7 +1464,7 @@
       <pre><code>python -m hass_client.sandbox_v2 \
     --group &lt;group&gt; \
     --url ws://localhost:8123/api/websocket \
-    --token &lt;scoped sandbox access token&gt; \
+    --token &lt;sandbox access token&gt; \
     [--share-states] [--share-entity-registry] [--share-areas]</code></pre>
 
       <p>
@@ -1986,68 +1986,47 @@
       </p>
 
       <!-- ======================================================== -->
-      <h2 id="auth">9. Scoped auth &amp; opt-in data sharing</h2>
+      <h2 id="auth">9. Sandbox auth &amp; opt-in data sharing</h2>
 
       <p>
-        A subprocess running arbitrary integration code &mdash; especially
-        custom integrations from HACS &mdash; needs a token the platform itself
-        treats as restricted. Bolting per-command checks onto individual
-        handlers leaves the rest of the API surface fully reachable; the
-        enforcement has to live where every command passes through.
+        Each sandbox group runs against a dedicated system user. The manager
+        hands the subprocess a plain system-user access token, freshly minted
+        from that user's refresh token on every spawn. There is
+        <strong>no scope restriction</strong> on the token today.
       </p>
 
-      <h3>The decision: <code>scopes</code> on <code>RefreshToken</code></h3>
-
-      <p><code>RefreshToken</code> grows a single optional field:</p>
-
-      <pre><code># homeassistant/auth/models.py
-@dataclass
-class RefreshToken:
-    ...
-    scopes: frozenset[str] | None = None   # None = today's full-privilege behaviour</code></pre>
-
-      <p>
-        Any non-<code>None</code> value is enforced by the websocket dispatcher
-        via a module-level helper:
-      </p>
-
-      <pre><code>def _scope_allows(scopes: frozenset[str], type_: str) -> bool:
-    for scope in scopes:
-        if scope.endswith("/"):
-            if type_.startswith(scope):
-                return True
-        elif type_ == scope:
-            return True
-    return False</code></pre>
+      <div class="callout">
+        <strong>Scope enforcement is deferred.</strong> Phase&nbsp;7 originally
+        shipped a <code>RefreshToken.scopes</code> field plus a
+        websocket-dispatcher <code>_scope_allows</code> check that rejected any
+        command outside <code>{"sandbox_v2/", "auth/current_user"}</code> with
+        <code>ERR_UNAUTHORIZED</code>. But the sandbox never opened a websocket
+        back to main, so no code path ever exercised the check end-to-end
+        &mdash; it guarded a non-existent attack surface.
+        <code>plan-strip-auth-scopes</code> reverted the whole mechanism from
+        core HA (four files: <code>auth/models.py</code>,
+        <code>auth/__init__.py</code>, <code>auth/auth_store.py</code>,
+        <code>websocket_api/connection.py</code>). With no WS path open in
+        either direction, the sandbox token's reach is the same as v1's; the
+        posture is unchanged in practice.
+      </div>
 
       <p>
-        Sandbox tokens get exactly
-        <code>{"sandbox_v2/", "auth/current_user"}</code> &mdash; one prefix
-        grant for the namespace, one exact-match so the runtime can confirm
-        which user it authenticated as. A compromised integration cannot call
-        <code>light.turn_on</code>, <code>auth/sign_path</code>, or any other
-        non-<code>sandbox_v2/</code> command &mdash; the dispatcher rejects with
-        <code>ERR_UNAUTHORIZED</code> before the handler runs.
-      </p>
-
-      <h3>Why not a subclass?</h3>
-      <p>
-        The first draft was a <code>SandboxAccessToken</code> subclass with its
-        own <code>token_type</code>. Rejected because token-type fan-out
-        propagates everywhere (<code>auth/__init__.py</code>,
-        <code>auth_store.py</code>, anywhere that switches on
-        <code>TOKEN_TYPE_*</code>) and because "is a sandbox" is orthogonal to
-        "is scoped" &mdash; a future "OAuth client scoped to
-        <code>calendar/*</code>" would want the same shape but isn't a sandbox.
-        The optional-attribute approach is small, backwards-compatible (every
-        existing token loads with <code>scopes=None</code>), and reusable.
+        When the sandbox&rarr;main websocket transport actually lands, scope
+        enforcement is a green-field redesign with a real consumer in hand. The
+        prior thinking &mdash; the optional-field-on-<code>RefreshToken</code>
+        decision, the prefix-grant + exact-match grammar, and why a token
+        subclass was rejected &mdash; is preserved in
+        <code>docs/auth-scoping-decision.md</code> (marked SUPERSEDED) as the
+        starting point for that work.
       </p>
 
       <h3>Data sharing &mdash; the positive opt-in</h3>
 
       <p>
-        Auth-scope-as-deny ("can't call X") is paired with a positive opt-in for
-        shared <em>data</em>. <code>SandboxGroupConfig</code> ships three knobs:
+        Independently of the token's reach, data sharing <em>into</em> the
+        sandbox is a positive opt-in. <code>SandboxGroupConfig</code> ships
+        three knobs:
       </p>
 
       <table>
@@ -2361,6 +2340,12 @@ class RefreshToken:
             system user; <code>SandboxGroupConfig</code> with the three sharing
             knobs. The riskiest phase from a security-review angle &mdash;
             written up at length in <code>docs/auth-scoping-decision.md</code>.
+            <strong
+              >The <code>scopes</code> mechanism was later reverted</strong
+            >
+            (<code>plan-strip-auth-scopes</code>) because no consumer ever
+            opened the connection it guarded; the per-group system-user token
+            stays.
           </p>
         </div>
 
@@ -2645,11 +2630,10 @@ class RefreshToken:
             </td>
           </tr>
           <tr>
-            <td>Auth scopes</td>
+            <td>Auth</td>
             <td>
-              <code>components/sandbox_v2/auth.py</code>,
-              <code>auth/models.py</code>,
-              <code>components/websocket_api/connection.py</code>
+              <code>components/sandbox_v2/auth.py</code>
+              (plain system-user token)
             </td>
             <td>&mdash;</td>
           </tr>
@@ -2707,15 +2691,6 @@ class RefreshToken:
           &mdash;
           <code>EntityComponent.async_register_remote_platform</code>
           (Phase&nbsp;5).
-        </li>
-        <li>
-          <strong
-            ><code>homeassistant/auth/models.py</code> +
-            <code>auth/__init__.py</code> + <code>auth/auth_store.py</code> +
-            <code>components/websocket_api/connection.py</code></strong
-          >
-          &mdash; optional <code>RefreshToken.scopes</code> + dispatcher
-          enforcement (Phase&nbsp;7).
         </li>
       </ul>
 
