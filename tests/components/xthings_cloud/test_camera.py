@@ -9,6 +9,7 @@ from webrtc_models import RTCIceCandidateInit
 from homeassistant.components.camera import WebRTCAnswer, WebRTCError, async_get_image
 from homeassistant.components.xthings_cloud.camera import (
     MAX_CLOSED_WEBRTC_SESSIONS,
+    MAX_PENDING_ICE_CANDIDATES,
     MAX_PENDING_WEBRTC_SESSIONS,
 )
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -385,6 +386,35 @@ async def test_webrtc_pending_candidate_sessions_are_globally_limited(
         f"mock_session_id_{MAX_PENDING_WEBRTC_SESSIONS}"
         in camera_entity._pending_candidates
     )
+
+
+async def test_webrtc_pending_candidates_are_limited_per_session(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+    caplog,
+) -> None:
+    """Test pending WebRTC candidates are limited per session."""
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
+        await setup_integration(hass, mock_config_entry)
+
+    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
+    assert camera_entity is not None
+
+    candidate = RTCIceCandidateInit(
+        candidate="mock_candidate_string",
+        sdp_mid="mock_sdp_mid",
+        sdp_m_line_index=0,
+    )
+    session_id = "mock_session_id"
+
+    for _ in range(MAX_PENDING_ICE_CANDIDATES + 1):
+        await camera_entity.async_on_webrtc_candidate(session_id, candidate)
+
+    assert len(camera_entity._pending_candidates[session_id]) == (
+        MAX_PENDING_ICE_CANDIDATES
+    )
+    assert "KVS: Dropped ICE candidate, cache limit reached" in caplog.text
 
 
 async def test_webrtc_offer_kvs_error(

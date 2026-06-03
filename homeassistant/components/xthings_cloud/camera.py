@@ -126,6 +126,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         super()._handle_coordinator_update()
 
     async def _async_update_snapshot(self, snapshot_url: str) -> None:
+        """Fetch a new snapshot and update the cache."""
         image = await self._async_fetch_image(snapshot_url)
         if image:
             self._cached_image = image
