@@ -282,6 +282,7 @@ async def test_webrtc_session_cleanup(
     ) as mock_kvs_client_class:
         mock_kvs_client = mock_kvs_client_class.return_value
         mock_kvs_client.async_get_answer_sdp = AsyncMock(return_value="mock_answer_sdp")
+        mock_kvs_client.async_send_ice_candidate = AsyncMock()
         mock_kvs_client.async_close = AsyncMock()
 
         await camera_entity.async_handle_async_webrtc_offer(
