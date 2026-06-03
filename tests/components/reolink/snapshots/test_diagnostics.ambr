@@ -12,10 +12,12 @@
     }),
     'Baichuan connection': 'tcp',
     'Baichuan fallbacks': list([
+      'GetPtzCurPos',
     ]),
     'Baichuan only': False,
     'Baichuan port': 5678,
     'Broken cmds': list([
+      'GetManualRec',
     ]),
     'Chimes': dict({
       '12345678': dict({
