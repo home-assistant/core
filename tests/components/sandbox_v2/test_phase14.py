@@ -18,7 +18,9 @@ from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
+import voluptuous_serialize
 
+from homeassistant import data_entry_flow
 from homeassistant.components.sandbox_v2 import schema_bridge
 from homeassistant.components.sandbox_v2.bridge import SandboxBridge
 from homeassistant.components.sandbox_v2.channel import Channel
@@ -28,6 +30,7 @@ from homeassistant.components.sandbox_v2.schema_bridge import reconstruct_schema
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResultType
+from homeassistant.helpers import config_validation as cv, selector
 
 from ._helpers import FakeSandboxManager, make_channel_pair
 
@@ -155,6 +158,54 @@ def test_reconstruct_schema_handles_select_options() -> None:
     assert schema({"mode": "fast"}) == {"mode": "fast"}
     with pytest.raises(vol.Invalid):
         schema({"mode": "nope"})
+
+
+def test_reconstruct_schema_round_trips_selectors_and_sections() -> None:
+    """Selectors + a section survive serialize → reconstruct → re-serialize.
+
+    The flow manager re-serialises main's reconstructed schema for the
+    frontend, so the reconstruction must reproduce the sandbox's original
+    list verbatim — otherwise selectors degrade to plain text boxes.
+    """
+    original = vol.Schema(
+        {
+            vol.Required("mode"): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=["fast", "slow"])
+            ),
+            vol.Optional("count", default=5): selector.NumberSelector(
+                selector.NumberSelectorConfig(min=0, max=10)
+            ),
+            vol.Required("advanced"): data_entry_flow.section(
+                vol.Schema(
+                    {
+                        vol.Optional("retries", default=3): selector.NumberSelector(
+                            selector.NumberSelectorConfig(min=1, max=5)
+                        ),
+                    }
+                ),
+                {"collapsed": True},
+            ),
+        }
+    )
+
+    serialized = voluptuous_serialize.convert(
+        original, custom_serializer=cv.custom_serializer
+    )
+    reconstructed = reconstruct_schema(serialized)
+    assert reconstructed is not None
+    re_serialized = voluptuous_serialize.convert(
+        reconstructed, custom_serializer=cv.custom_serializer
+    )
+
+    # Round-trip is lossless: the re-serialised list equals the original.
+    assert re_serialized == serialized
+    # And the selector/section types survived (not collapsed to passthrough).
+    by_name = {entry["name"]: entry for entry in re_serialized}
+    assert "selector" in by_name["mode"]
+    assert "select" in by_name["mode"]["selector"]
+    assert "selector" in by_name["count"]
+    assert by_name["advanced"]["type"] == "expandable"
+    assert by_name["advanced"]["expanded"] is False
 
 
 async def test_flow_form_renders_reconstructed_schema(

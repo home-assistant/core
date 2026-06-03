@@ -12,16 +12,24 @@ so:
   same list back through :func:`voluptuous_serialize.convert` for the
   frontend.
 
-The reconstruction is intentionally permissive: the sandbox runs the
-real validator on the actual call, so main only needs enough structure
-for forms to render and obviously-broken input to be caught. Unknown
-field types fall through to a pass-through validator.
+Selectors and expandable sections are rebuilt as the **real**
+:class:`selector.Selector` / :class:`data_entry_flow.section` objects, so
+when the flow manager re-serialises main's reconstructed schema for the
+frontend it reproduces the sandbox's original list verbatim (the form
+renders with the right widget instead of a bare text box). Only genuinely
+unknown field types fall through to a pass-through validator.
 """
 
 from collections.abc import Iterable
+import logging
 from typing import Any
 
 import voluptuous as vol
+
+from homeassistant import data_entry_flow
+from homeassistant.helpers import selector
+
+_LOGGER = logging.getLogger(__name__)
 
 _SCHEMA_TYPES_BY_NAME: dict[str, type] = {
     "string": str,
@@ -58,8 +66,30 @@ def reconstruct_schema(
 
 
 def _validator_from_entry(entry: dict[str, Any]) -> Any:
-    """Best-effort inverse of :func:`voluptuous_serialize.convert` per field."""
+    """Inverse of :func:`voluptuous_serialize.convert` per field.
+
+    Rebuilds the real object where re-serialising it has to reproduce the
+    original (selectors, sections) and falls back to a pass-through for
+    anything we can't faithfully reconstruct.
+    """
+    # A selector field carries its config under ``selector`` (no ``type``);
+    # rebuild the real Selector so it re-serialises to the same shape.
+    if "selector" in entry:
+        try:
+            return selector.selector(entry["selector"])
+        except vol.Invalid:
+            _LOGGER.warning(
+                "Could not rebuild selector from %r; using pass-through",
+                entry["selector"],
+            )
+            return _passthrough
     type_name = entry.get("type")
+    if type_name == "expandable":
+        # An ``data_entry_flow.section`` — rebuild it with its nested schema
+        # so the frontend still renders the collapsible section.
+        nested = reconstruct_schema(entry.get("schema")) or vol.Schema({})
+        collapsed = not entry.get("expanded", True)
+        return data_entry_flow.section(nested, {"collapsed": collapsed})
     if type_name in _SCHEMA_TYPES_BY_NAME:
         return _SCHEMA_TYPES_BY_NAME[type_name]
     if type_name == "select":
@@ -67,9 +97,9 @@ def _validator_from_entry(entry: dict[str, Any]) -> Any:
         values = _select_values(options)
         if values:
             return vol.In(values)
-    # Selectors, expandable sections, constants, datetime/format — the
-    # sandbox owns the strict validator; on main, accept any value so the
-    # caller's payload reaches the sandbox-side handler.
+    # Constants, datetime/format, and other shapes we don't reconstruct —
+    # the sandbox owns the strict validator; on main, accept any value so
+    # the caller's payload reaches the sandbox-side handler.
     return _passthrough
 
 

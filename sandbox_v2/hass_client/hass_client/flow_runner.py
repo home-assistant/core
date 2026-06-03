@@ -172,6 +172,13 @@ def _marshal_result(
         else:
             # voluptuous_serialize couldn't render it; flag the gap so the
             # proxy still surfaces a (schema-less) form rather than abort.
+            # Log the schema's repr at warning so the lossy fallback is
+            # visible rather than silently swallowing a real form.
+            _LOGGER.warning(
+                "Could not serialize data_schema %r; main will render a"
+                " schema-less form",
+                result["data_schema"],
+            )
             out["_has_data_schema"] = True
     # FORM / SHOW_PROGRESS / EXTERNAL_STEP results don't include the
     # flow's context (only CREATE_ENTRY does). Look it up so the proxy
