@@ -33,6 +33,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CoreState
 from homeassistant.helpers import json as json_helper, restore_state
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.sandbox_context import current_sandbox
 
 from .approved_domains import ApprovedDomains
 from .channel import Channel
@@ -42,6 +43,7 @@ from .event_mirror import EventMirror
 from .flow_runner import FlowRunner
 from .protocol import MSG_SHUTDOWN
 from .remote_store import RemoteStore, install_remote_store
+from .sandbox_bridge import ChannelSandboxBridge
 from .service_mirror import ServiceMirror
 
 _LOGGER = logging.getLogger(__name__)
@@ -159,7 +161,35 @@ class SandboxRuntime:
 
         self._channel = await self._channel_factory()
         uninstall_remote_store: Callable[[], None] | None = None
+        sandbox_token: Any = None
         if self._channel is not None:
+            # Route every `Store` IO to main via `current_sandbox`. The
+            # contextvar is read at call time by `Store.async_load/save/
+            # remove`, so it reaches Stores no matter how they imported the
+            # class — including the helpers that captured the original
+            # `Store` at module load (restore_state, the registries). It is
+            # set BEFORE the warm-load and before any handler registers, so
+            # every coroutine the runtime spawns inherits it (asyncio copies
+            # the context at `create_task` time).
+            #
+            # Ordering caveat (see the plan's touch-points audit): registries
+            # whose `Store` is constructed AND first loaded inside
+            # `FlowRunner.create` already ran their `async_load` against the
+            # sandbox tempdir before this point, so they keep their local
+            # file backing. `restore_state`'s `async_load` runs *after* this
+            # set, so it routes to main — which is what we want. If a future
+            # refactor moves a registry's first `async_load` to straddle this
+            # line, that registry would silently start routing to main.
+            assert current_sandbox.get() is None, (
+                "current_sandbox already set — two sandbox runtimes sharing "
+                "one event loop? (see plan Risk #3)"
+            )
+            sandbox_token = current_sandbox.set(ChannelSandboxBridge(self._channel))
+            # Phase A1 keeps `install_remote_store` alongside the contextvar
+            # (both paths active). The contextvar branch is the first line of
+            # each `Store` IO method, so it serves the IO; the rebinding is
+            # the legacy path A2 deletes once A1 bakes on dev.
+            #
             # Patch `homeassistant.helpers.storage.Store` BEFORE any
             # integration imports it: every entry_setup that arrives
             # below will instantiate Stores that route to main. Registries
@@ -201,6 +231,9 @@ class SandboxRuntime:
                 await self._channel.close()
             if uninstall_remote_store is not None:
                 uninstall_remote_store()
+            if sandbox_token is not None:
+                # Tidy test isolation; in prod the process exits anyway.
+                current_sandbox.reset(sandbox_token)
             await self._flow_runner.async_stop()
             if cleanup_tempdir is not None:
                 cleanup_tempdir.cleanup()

@@ -32,6 +32,7 @@ from homeassistant.util.file import WriteError, write_utf8_file, write_utf8_file
 from homeassistant.util.hass_dict import HassKey
 
 from . import json as json_helper
+from .sandbox_context import current_sandbox
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -357,6 +358,14 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             # We make a copy because code might assume it's safe to mutate loaded data
             # and we don't want that to mess with what we're trying to store.
             data = deepcopy(data)
+        elif sandbox := current_sandbox.get():
+            # A sandbox runtime routes Store IO to main instead of local
+            # disk. Fetch the wrapped envelope from the bridge; the migration
+            # block below runs unchanged regardless of whether the dict came
+            # from disk or from the bridge (design choice B).
+            data = await sandbox.async_store_load(self.key)
+            if data is None:
+                return None
         elif cache := self._manager.async_fetch(self.key):
             exists, data = cache
             if not exists:
@@ -469,6 +478,16 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             "key": self.key,
             "data": data,
         }
+
+        if sandbox := current_sandbox.get():
+            # A sandbox runtime routes the wrapped envelope to main; the
+            # bridge owns the serialise + transport. Bypass the local-disk
+            # write machinery (write lock, manager cache, final-write
+            # listener) entirely.
+            wrapped = self._data
+            self._data = None
+            await sandbox.async_store_save(self.key, wrapped)
+            return
 
         if self.hass.state is CoreState.stopping:
             self._async_ensure_final_write_listener()
@@ -626,6 +645,11 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         self._manager.async_invalidate(self.key)
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
+
+        if sandbox := current_sandbox.get():
+            # A sandbox runtime unlinks on main, not on local disk.
+            await sandbox.async_store_remove(self.key)
+            return
 
         with suppress(FileNotFoundError):
             await self.hass.async_add_executor_job(os.unlink, self.path)
