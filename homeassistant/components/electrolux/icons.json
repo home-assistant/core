@@ -31,14 +31,98 @@
       "appliance_state": {
         "default": "mdi:information-outline"
       },
+      "bottomoven_appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "bottomoven_display_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "bottomoven_food_probe_state": {
+        "default": "mdi:thermometer-probe"
+      },
+      "bottomoven_food_probe_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
+      "cycle_phase": {
+        "default": "mdi:animation-play"
+      },
+      "display_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "extracavity_appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "extracavity_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "filter_state_air": {
+        "default": "mdi:air-filter"
+      },
+      "filter_state_water": {
+        "default": "mdi:filter"
+      },
       "food_probe_state": {
         "default": "mdi:thermometer-probe"
       },
       "food_probe_temperature": {
         "default": "mdi:thermometer-probe"
       },
+      "freezer_appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "fridge_appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "hob_hood_window_notification": {
+        "default": "mdi:window-open-variant"
+      },
       "remote_control": {
         "default": "mdi:remote"
+      },
+      "sound_volume": {
+        "default": "mdi:volume-high"
+      },
+      "upperoven_appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "upperoven_display_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "upperoven_food_probe_state": {
+        "default": "mdi:thermometer-probe"
+      },
+      "upperoven_food_probe_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
+      "water_hardness": {
+        "default": "mdi:water"
+      },
+      "wm_ad_tank_a_det_loaded": {
+        "default": "mdi:beaker"
+      },
+      "wm_ad_tank_b_det_loaded": {
+        "default": "mdi:beaker"
+      },
+      "wm_ad_tank_b_soft_loaded": {
+        "default": "mdi:beaker-plus"
+      },
+      "wm_eco_level": {
+        "default": "mdi:leaf"
+      },
+      "wm_tank_a_det_load_for_nominal_weight": {
+        "default": "mdi:scale-balance"
+      },
+      "wm_tank_a_reserve": {
+        "default": "mdi:flask-outline"
+      },
+      "wm_tank_b_det_load_for_nominal_weight": {
+        "default": "mdi:scale-balance"
+      },
+      "wm_tank_b_reserve": {
+        "default": "mdi:flask-outline"
+      },
+      "wm_water_usage": {
+        "default": "mdi:water"
       }
     }
   }
