@@ -111,10 +111,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.version > PowersensorConfigFlow.VERSION:
         return False
 
-    if entry.version == 1:
-        hass.config_entries.async_update_entry(
-            entry, data={CFG_ROLES: {}}, version=2, minor_version=2
-        )
-
+    # update version unconditionally, given that all versions less than the current require this
+    # update and the only way to reach this code is by giving a config entry with version less than
+    # the current version.
+    hass.config_entries.async_update_entry(
+        entry,
+        data={CFG_ROLES: {}},
+        version=PowersensorConfigFlow.VERSION,
+        minor_version=PowersensorConfigFlow.MINOR_VERSION,
+    )
     _LOGGER.debug("Upgraded config to %s.%s", entry.version, entry.minor_version)
     return True

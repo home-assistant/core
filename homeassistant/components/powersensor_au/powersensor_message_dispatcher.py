@@ -120,9 +120,6 @@ class PowersensorMessageDispatcher:
         scan) and sensors (found when a plug relays a now_relaying_for message,
         which the library converts to a device_found internally).
 
-        The library uses the key "device_type:" (trailing colon) — this is a
-        known typo in the library that we accommodate here.
-
         Note: the library drops the role when converting now_relaying_for →
         device_found (_add_device only receives the type string), so
         event.get("role") is always None for sensors.  We fall back to the
@@ -141,7 +138,7 @@ class PowersensorMessageDispatcher:
         """
         mac = event.get("mac")
         # note: library has trailing colon, that may change in the future.
-        device_type = event.get("device_type:") or event.get("device_type")
+        device_type = event.get("device_type")
         if mac is None:
             return
 

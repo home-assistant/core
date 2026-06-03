@@ -106,10 +106,10 @@ async def test_setup_devices_start_failure_raises_config_entry_not_ready(
     )
 
 
-async def test_migrate_entry_v1_to_current(
+async def test_migrate_entry(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test config-entry migration from v1 to the current version."""
+    """Test config-entry migration from v1 to the current version, reject new and accept current."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"0123456789ab": {}},

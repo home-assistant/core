@@ -60,7 +60,7 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         sensor_roles = {}
         for sensor_mac in dispatcher.sensors:
-            role = entry.data.get(CFG_ROLES, {}).get(sensor_mac, ROLE_UNKNOWN)
+            role = entry.data.get(CFG_ROLES, {}).get(sensor_mac) or ROLE_UNKNOWN
             sel = selector(
                 {
                     "select": {

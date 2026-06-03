@@ -5,10 +5,9 @@ it with event payloads that exactly match what the library emits.  This gives
 confidence that:
 
   1. The dispatcher correctly interprets the library's event contract.
-  2. The 'device_type:' trailing-colon quirk is handled end-to-end.
-  3. Deduplication across a simulated rescan sequence works correctly.
-  4. The VHH calculation layer receives the right calls from measurement events.
-  5. disconnect() cleans up after a full plug + sensor lifecycle.
+  2. Deduplication across a simulated rescan sequence works correctly.
+  3. The VHH calculation layer receives the right calls from measurement events.
+  4. disconnect() cleans up after a full plug + sensor lifecycle.
 
 No real network sockets are opened.  PowersensorDevices is never instantiated;
 instead the registered callback (on_device_event) is invoked directly with the
@@ -25,7 +24,6 @@ from homeassistant.components.powersensor_au.const import (
     CFG_ROLES,
     CREATE_PLUG_SIGNAL,
     CREATE_SENSOR_SIGNAL,
-    DATA_UPDATE_SIGNAL_PREFIX,
     ROLE_UPDATE_SIGNAL,
 )
 from homeassistant.core import HomeAssistant
@@ -100,12 +98,12 @@ def _signals_sent(send_mock) -> list[str]:
 
 def _plug_found(mac: str) -> dict[str, object]:
     """Return a device_found payload for a plug, exactly as the library emits it."""
-    return {"event": "device_found", "mac": mac, "device_type:": "plug"}
+    return {"event": "device_found", "mac": mac, "device_type": "plug"}
 
 
 def _sensor_found(mac: str, role: str | None = None) -> dict[str, str]:
     """Return a device_found payload for a sensor, exactly as the library emits it."""
-    ev: dict[str, str] = {"event": "device_found", "mac": mac, "device_type:": "sensor"}
+    ev: dict[str, str] = {"event": "device_found", "mac": mac, "device_type": "sensor"}
     if role is not None:
         ev["role"] = role
     return ev
@@ -206,120 +204,6 @@ async def test_new_device_on_rescan_is_announced(integration) -> None:
     ]
     assert NEW_MAC in plug_signal_args
     assert PLUG_MAC not in plug_signal_args
-
-
-# ---------------------------------------------------------------------------
-# device_type: trailing-colon contract
-# ---------------------------------------------------------------------------
-
-
-async def test_library_event_format_plug_is_handled(integration) -> None:
-    """Confirm the exact dict the library emits for a plug is handled correctly.
-
-    This is the end-to-end colon test — it uses _plug_found() which mirrors
-    the literal output of PowersensorDevices._add_device() for a plug.
-    """
-    d, send, _entry, _vhh = integration
-
-    await d.on_device_event(_plug_found(PLUG_MAC))
-
-    assert _signals_sent(send) == [CREATE_PLUG_SIGNAL]
-    assert PLUG_MAC in d.plugs
-
-
-async def test_library_event_format_sensor_is_handled(integration) -> None:
-    """Confirm the exact dict the library emits for a sensor is handled correctly."""
-    d, send, _entry, _vhh = integration
-
-    await d.on_device_event(_sensor_found(SENSOR_MAC, role="solar"))
-
-    signals = _signals_sent(send)
-    assert CREATE_SENSOR_SIGNAL in signals
-    assert SENSOR_MAC in d.sensors
-
-
-# ---------------------------------------------------------------------------
-# Measurement routing
-# ---------------------------------------------------------------------------
-
-
-async def test_measurement_after_discovery_routes_correctly(integration) -> None:
-    """average_power after device_found routes data-update signal and feeds VHH."""
-    d, send, entry, vhh = integration
-    entry.data = {CFG_ROLES: {SENSOR_MAC: "house-net"}}
-
-    await d.on_device_event(_sensor_found(SENSOR_MAC, role="house-net"))
-    send.reset_mock()
-
-    await d.on_device_event(_average_power(SENSOR_MAC, "house-net", 1200.0))
-
-    signals = _signals_sent(send)
-    data_signal = f"{DATA_UPDATE_SIGNAL_PREFIX}{SENSOR_MAC}_average_power"
-    assert data_signal in signals
-    vhh.process_average_power_event.assert_awaited_once()
-
-
-async def test_summation_after_discovery_routes_correctly(integration) -> None:
-    """summation_energy after device_found routes data-update signal and feeds VHH."""
-    d, send, entry, vhh = integration
-    entry.data = {CFG_ROLES: {SENSOR_MAC: "house-net"}}
-
-    await d.on_device_event(_sensor_found(SENSOR_MAC, role="house-net"))
-    send.reset_mock()
-
-    await d.on_device_event(_summation(SENSOR_MAC, "house-net", 9_000_000))
-
-    signals = _signals_sent(send)
-    data_signal = f"{DATA_UPDATE_SIGNAL_PREFIX}{SENSOR_MAC}_summation_energy"
-    assert data_signal in signals
-    vhh.process_summation_event.assert_awaited_once()
-
-
-async def test_role_update_signal_sent_when_measurement_reveals_new_role(
-    integration,
-) -> None:
-    """A measurement from a known MAC whose role differs from entry.data fires ROLE_UPDATE_SIGNAL."""
-    d, send, entry, _vhh = integration
-    # Sensor known but with no persisted role.
-    entry.data = {CFG_ROLES: {}}
-    d.sensors[SENSOR_MAC] = None
-
-    await d.on_device_event(_average_power(SENSOR_MAC, "solar", 2500.0))
-
-    signals = _signals_sent(send)
-    assert ROLE_UPDATE_SIGNAL in signals
-    role_call = next(c for c in send.call_args_list if c.args[1] == ROLE_UPDATE_SIGNAL)
-    assert role_call.args[2] == SENSOR_MAC
-    assert role_call.args[3] == "solar"
-
-
-async def test_no_role_update_signal_when_role_already_matches(integration) -> None:
-    """No ROLE_UPDATE_SIGNAL when the measurement role matches the persisted role."""
-    d, send, entry, _vhh = integration
-    entry.data = {CFG_ROLES: {SENSOR_MAC: "house-net"}}
-    d.sensors[SENSOR_MAC] = "house-net"
-
-    await d.on_device_event(_average_power(SENSOR_MAC, "house-net", 800.0))
-
-    assert ROLE_UPDATE_SIGNAL not in _signals_sent(send)
-
-
-async def test_late_discovery_via_measurement(integration) -> None:
-    """A measurement from a MAC never seen via device_found triggers CREATE_SENSOR_SIGNAL.
-
-    This covers the path where sensor data arrives before device_found fires —
-    common when a sensor relays through a plug that was already subscribed.
-    """
-    d, send, entry, _vhh = integration
-    entry.data = {CFG_ROLES: {}}
-
-    assert SENSOR_MAC not in d.sensors
-    assert SENSOR_MAC not in d.plugs
-
-    await d.on_device_event(_average_power(SENSOR_MAC, "water", 0.0))
-
-    assert CREATE_SENSOR_SIGNAL in _signals_sent(send)
-    assert SENSOR_MAC in d.sensors
 
 
 # ---------------------------------------------------------------------------

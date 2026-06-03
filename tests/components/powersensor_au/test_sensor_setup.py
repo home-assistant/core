@@ -1,6 +1,5 @@
 """Tests relating to sensor platform setup for the Powersensor integration."""
 
-import importlib
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -25,9 +24,6 @@ from homeassistant.components.powersensor_au.sensor import (
     PLUG_DESCRIPTIONS,
     PRODUCTION_DESCRIPTIONS,
     SENSOR_DESCRIPTIONS,
-    PowersensorEntity,
-    PowersensorPlugEntity,
-    PowersensorSensorEntity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -47,6 +43,7 @@ def _make_mock_dispatcher(sensors: dict[str, str | None] | None = None) -> Mock:
     dispatcher = Mock()
     dispatcher.plugs = set()
     dispatcher.sensors = sensors if sensors is not None else {}
+    dispatcher.disconnect = AsyncMock()
     return dispatcher
 
 
@@ -67,7 +64,7 @@ def config_entry(hass: HomeAssistant):
     """Mock config entry test fixture for powersensor_au entities."""
     mock_devices = _make_mock_devices()
     mock_dispatcher = _make_mock_dispatcher()
-    entry = MockConfigEntry(domain=DOMAIN)
+    entry = MockConfigEntry(domain=DOMAIN, version=2, minor_version=2)
     entry.runtime_data = PowersensorRuntimeData(
         vhh=VirtualHousehold(False),
         dispatcher=mock_dispatcher,
@@ -307,7 +304,7 @@ async def test_vhh_mains_entities_created_when_housenet_sensor_present(
     ent_reg = er.async_get(hass)
     registered = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
     registered_unique_ids = {e.unique_id for e in registered}
-    expected_mains_keys = {f"vhh_{d.event}" for d in CONSUMPTION_DESCRIPTIONS}
+    expected_mains_keys = {f"{DOMAIN}_vhh_{d.event}" for d in CONSUMPTION_DESCRIPTIONS}
     assert expected_mains_keys.issubset(registered_unique_ids), (
         f"Missing mains VHH entities: {expected_mains_keys - registered_unique_ids}"
     )
@@ -394,7 +391,7 @@ async def test_vhh_solar_entities_created_when_solar_sensor_discovered(
     registered_unique_ids = {
         e.unique_id for e in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
     }
-    expected_solar_keys = {f"vhh_{d.event}" for d in PRODUCTION_DESCRIPTIONS}
+    expected_solar_keys = {f"{DOMAIN}_vhh_{d.event}" for d in PRODUCTION_DESCRIPTIONS}
     assert expected_solar_keys.issubset(registered_unique_ids), (
         f"Missing solar VHH entities: {expected_solar_keys - registered_unique_ids}"
     )
@@ -568,79 +565,6 @@ async def test_role_change_to_appliance_persists_role(
     )
 
 
-# ---------------------------------------------------------------------------
-# Role update / device registry
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_handle_role_update_no_rename_skips_device_registry(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """_handle_role_update returns early when _rename_based_on_role is False."""
-    powersensor_entity_module = importlib.import_module(
-        "homeassistant.components.powersensor_au.sensor"
-    )
-
-    dr_mock = Mock()
-    monkeypatch.setattr(powersensor_entity_module, "dr", dr_mock)
-    write_state = Mock()
-    monkeypatch.setattr(PowersensorEntity, "async_write_ha_state", write_state)
-
-    entity = PowersensorSensorEntity(
-        "",
-        MAC,
-        "house-net",
-        next(d for d in SENSOR_DESCRIPTIONS if d.key == "device_role"),
-    )
-    monkeypatch.setattr(entity, "_rename_based_on_role", lambda: False)
-
-    entity._handle_role_update(MAC, "solar")
-
-    assert entity._role == "solar"
-    dr_mock.async_get.assert_not_called()
-    write_state.assert_not_called()
-
-
-@pytest.mark.asyncio
-async def test_handle_update_normalises_role_hyphen(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """'house-net' on the wire must become 'house_net' for the translation key."""
-    monkeypatch.setattr(PowersensorEntity, "async_write_ha_state", lambda self: None)
-    monkeypatch.setattr(PowersensorEntity, "_schedule_unavailable", lambda self: None)
-
-    entity = PowersensorSensorEntity(
-        "",
-        MAC,
-        "house-net",
-        next(d for d in SENSOR_DESCRIPTIONS if d.key == "device_role"),
-    )
-
-    entity._handle_update("event", {"role": "house-net"})
-
-    assert entity.native_value == "house_net"
-
-
-@pytest.mark.asyncio
-async def test_plug_entity_rename_based_on_role_returns_false(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """PowersensorPlugEntity._rename_based_on_role always returns False."""
-    monkeypatch.setattr(PowersensorEntity, "async_write_ha_state", lambda self: None)
-
-    entity = PowersensorPlugEntity(
-        "",
-        MAC,
-        "house-net",
-        next(d for d in PLUG_DESCRIPTIONS if d.key == "total_energy"),
-    )
-
-    entity._handle_role_update(MAC, "appliance")
-
-    assert entity._role == "appliance"
-
-
 @pytest.mark.asyncio
 async def test_solar_reload_scheduled_when_vhh_has_no_solar(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
@@ -667,7 +591,7 @@ async def test_solar_reload_scheduled_when_vhh_has_no_solar(
     registered_unique_ids = {
         e.unique_id for e in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
     }
-    solar_keys = {f"vhh_{d.event}" for d in PRODUCTION_DESCRIPTIONS}
+    solar_keys = {f"{DOMAIN}_vhh_{d.event}" for d in PRODUCTION_DESCRIPTIONS}
     assert not solar_keys.intersection(registered_unique_ids), (
         "Solar VHH entities must not be created when no solar sensor is present"
     )

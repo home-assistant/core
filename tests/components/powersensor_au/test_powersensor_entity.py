@@ -360,7 +360,7 @@ async def test_powersensor_household_entity_missing_message_key_is_ignored(
 async def test_powersensor_household_entity_unique_id_uses_event(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """PowersensorHouseholdEntity unique_id is 'vhh_<event>' for each description.
+    """PowersensorHouseholdEntity unique_id is '{DOMAIN}_vhh_<event>' for each description.
 
     Confirms that unique IDs don't collide between entities that happen to share
     the same message_key but listen to different VHH events.
@@ -372,7 +372,7 @@ async def test_powersensor_household_entity_unique_id_uses_event(
         entity = PowersensorHouseholdEntity(vhh, desc)
         uid = entity.unique_id
         assert uid not in seen_ids, f"Duplicate unique_id: {uid}"
-        assert uid == f"vhh_{desc.event}"
+        assert uid == f"{DOMAIN}_vhh_{desc.event}"
         seen_ids.add(uid)
 
 
@@ -414,7 +414,7 @@ async def test_powersensor_sensor_handle_role_update(
     """Test that a role update triggers device-registry and state writes.
 
     Verifies that:
-    - The device registry is queried and updated when the role changes.
+    - async_get_or_create is called unconditionally (no async_get_device lookup).
     - The entity's translation key is updated to match the new role.
 
     Note: async_added_to_hass() is not called here because dispatcher
@@ -425,10 +425,8 @@ async def test_powersensor_sensor_handle_role_update(
         "homeassistant.components.powersensor_au.sensor"
     )
 
-    device = Mock()
     device_registry = Mock()
-    device_registry.async_get_device.return_value = device
-    device_registry.async_get_or_create.return_value = device
+    device_registry.async_get_or_create.return_value = Mock()
 
     dr_mock = Mock()
     dr_mock.async_get.return_value = device_registry
@@ -449,6 +447,7 @@ async def test_powersensor_sensor_handle_role_update(
     entity._handle_role_update(MAC, "solar")
 
     assert dr_mock.async_get.call_count == 1
+    assert device_registry.async_get_device.call_count == 0
     assert device_registry.async_get_or_create.call_count == 1
     assert entity.device_info["translation_key"] == "solar_sensor"
     write_state.assert_called_once()
@@ -564,3 +563,80 @@ async def test_volts_to_battery_pct(hass: HomeAssistant) -> None:
     assert _volts_to_battery_pct(5.0) == 100.0
     # Midpoint.
     assert abs(_volts_to_battery_pct(3.725) - 50.0) < 0.01
+
+
+# ---------------------------------------------------------------------------
+# Role update edge cases
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_handle_role_update_no_rename_skips_device_registry(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """_handle_role_update skips the device registry when _rename_based_on_role returns False."""
+    powersensor_entity_module = importlib.import_module(
+        "homeassistant.components.powersensor_au.sensor"
+    )
+
+    dr_mock = Mock()
+    monkeypatch.setattr(powersensor_entity_module, "dr", dr_mock)
+    write_state = Mock()
+    monkeypatch.setattr(PowersensorEntity, "async_write_ha_state", write_state)
+
+    entity = PowersensorSensorEntity(
+        "",
+        MAC,
+        "house-net",
+        next(d for d in SENSOR_DESCRIPTIONS if d.key == "device_role"),
+    )
+    monkeypatch.setattr(entity, "_rename_based_on_role", lambda: False)
+
+    entity._handle_role_update(MAC, "solar")
+
+    assert entity._role == "solar"
+    dr_mock.async_get.assert_not_called()
+    write_state.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_handle_update_normalises_role_hyphen(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """'house-net' on the wire must become 'house_net' for the state translation key."""
+    monkeypatch.setattr(PowersensorEntity, "async_write_ha_state", lambda self: None)
+    monkeypatch.setattr(PowersensorEntity, "_schedule_unavailable", lambda self: None)
+
+    entity = PowersensorSensorEntity(
+        "",
+        MAC,
+        "house-net",
+        next(d for d in SENSOR_DESCRIPTIONS if d.key == "device_role"),
+    )
+
+    entity._handle_update("event", {"role": "house-net"})
+
+    assert entity.native_value == "house_net"
+
+
+@pytest.mark.asyncio
+async def test_plug_entity_rename_based_on_role_returns_false(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """PowersensorPlugEntity._rename_based_on_role always returns False.
+
+    Plugs have a fixed role (ROLE_APPLIANCE) and a fixed device translation key,
+    so role updates must never trigger a device registry rename.
+    """
+    monkeypatch.setattr(PowersensorEntity, "async_write_ha_state", lambda self: None)
+
+    entity = PowersensorPlugEntity(
+        "",
+        MAC,
+        "house-net",
+        next(d for d in PLUG_DESCRIPTIONS if d.key == "total_energy"),
+    )
+
+    entity._handle_role_update(MAC, "appliance")
+
+    assert entity._role == "appliance"

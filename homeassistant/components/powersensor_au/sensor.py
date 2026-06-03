@@ -491,15 +491,13 @@ class PowersensorEntity(SensorEntity):
             return
 
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(identifiers={(DOMAIN, self._mac)})
         info = self.device_info
-        if device is not None:
-            device_registry.async_get_or_create(
-                config_entry_id=self._config_entry_id,
-                identifiers=device.identifiers,
-                translation_key=info.get("translation_key"),
-                translation_placeholders=info.get("translation_placeholders"),
-            )
+        device_registry.async_get_or_create(
+            config_entry_id=self._config_entry_id,
+            identifiers={(DOMAIN, self._mac)},
+            translation_key=info.get("translation_key"),
+            translation_placeholders=info.get("translation_placeholders"),
+        )
         self.async_write_ha_state()
 
     @callback
@@ -631,7 +629,7 @@ class PowersensorHouseholdEntity(SensorEntity):
         self.entity_description: PowersensorVirtualHouseholdSensorEntityDescription = (
             description
         )
-        self._attr_unique_id = f"vhh_{description.event}"
+        self._attr_unique_id = f"{DOMAIN}_vhh_{description.event}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -732,7 +730,7 @@ async def async_setup_entry(
             )
             for e in new_entities:
                 role_entities_added.add((mac_address, e.entity_description.key))
-            async_add_entities(new_entities, True)
+            async_add_entities(new_entities, False)
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, handle_role_update)
@@ -757,7 +755,7 @@ async def async_setup_entry(
             if e.entity_description.supported_roles is not None:
                 role_entities_added.add((sensor_mac, e.entity_description.key))
 
-        async_add_entities(new_sensors, True)
+        async_add_entities(new_sensors, False)
 
         if sensor_role in (ROLE_HOUSENET, ROLE_SOLAR):
             async_dispatcher_send(hass, UPDATE_VHH_SIGNAL)
@@ -779,7 +777,7 @@ async def async_setup_entry(
                 PowersensorPlugEntity(entry_id, plug_mac, ROLE_APPLIANCE, desc)
                 for desc in PLUG_DESCRIPTIONS
             ],
-            True,
+            False,
         )
 
     entry.async_on_unload(

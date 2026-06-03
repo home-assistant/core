@@ -91,7 +91,7 @@ async def test_device_found_plug_sends_create_plug_signal(
     d = patched_dispatcher
 
     await d.on_device_event(
-        {"event": "device_found", "mac": MAC, "device_type:": "plug"}
+        {"event": "device_found", "mac": MAC, "device_type": "plug"}
     )
 
     d._send.assert_called_once_with(d._hass, CREATE_PLUG_SIGNAL, MAC)
@@ -105,10 +105,10 @@ async def test_device_found_plug_deduplicates_on_rescan(
     d = patched_dispatcher
 
     await d.on_device_event(
-        {"event": "device_found", "mac": MAC, "device_type:": "plug"}
+        {"event": "device_found", "mac": MAC, "device_type": "plug"}
     )
     await d.on_device_event(
-        {"event": "device_found", "mac": MAC, "device_type:": "plug"}
+        {"event": "device_found", "mac": MAC, "device_type": "plug"}
     )
 
     d._send.assert_called_once_with(d._hass, CREATE_PLUG_SIGNAL, MAC)
@@ -120,7 +120,7 @@ async def test_device_found_plug_missing_mac_is_ignored(
     """A device_found event with no MAC is silently dropped."""
     d = patched_dispatcher
 
-    await d.on_device_event({"event": "device_found", "device_type:": "plug"})
+    await d.on_device_event({"event": "device_found", "device_type": "plug"})
 
     d._send.assert_not_called()
 
@@ -132,7 +132,7 @@ async def test_device_found_plug_calls_subscribe(
     d = patched_dispatcher
 
     await d.on_device_event(
-        {"event": "device_found", "mac": MAC, "device_type:": "plug"}
+        {"event": "device_found", "mac": MAC, "device_type": "plug"}
     )
 
     mock_devices.subscribe.assert_called_once_with(MAC)
@@ -153,7 +153,7 @@ async def test_device_found_sensor_sends_create_sensor_signal(
         {
             "event": "device_found",
             "mac": MAC,
-            "device_type:": "sensor",
+            "device_type": "sensor",
             "role": "house-net",
         }
     )
@@ -173,7 +173,7 @@ async def test_device_found_sensor_role_unknown_normalised_to_none(
         {
             "event": "device_found",
             "mac": MAC,
-            "device_type:": "sensor",
+            "device_type": "sensor",
             "role": ROLE_UNKNOWN,
         }
     )
@@ -189,7 +189,7 @@ async def test_device_found_sensor_falls_back_to_persisted_role(
     d._entry.data = {CFG_ROLES: {MAC: "solar"}}
 
     await d.on_device_event(
-        {"event": "device_found", "mac": MAC, "device_type:": "sensor"}
+        {"event": "device_found", "mac": MAC, "device_type": "sensor"}
     )
 
     d._send.assert_called_once_with(d._hass, CREATE_SENSOR_SIGNAL, MAC, "solar")
@@ -205,7 +205,7 @@ async def test_device_found_sensor_deduplicates_on_rescan(
         {
             "event": "device_found",
             "mac": MAC,
-            "device_type:": "sensor",
+            "device_type": "sensor",
             "role": "house-net",
         }
     )
@@ -213,7 +213,7 @@ async def test_device_found_sensor_deduplicates_on_rescan(
         {
             "event": "device_found",
             "mac": MAC,
-            "device_type:": "sensor",
+            "device_type": "sensor",
             "role": "house-net",
         }
     )
@@ -231,7 +231,7 @@ async def test_device_found_sensor_calls_subscribe(
         {
             "event": "device_found",
             "mac": MAC,
-            "device_type:": "sensor",
+            "device_type": "sensor",
             "role": "house-net",
         }
     )
@@ -505,25 +505,3 @@ async def test_disconnect_with_no_devices_is_noop(patched_dispatcher) -> None:
     assert not d.sensors
 
     await d.disconnect()  # must not raise
-
-
-# ---------------------------------------------------------------------------
-# device_type trailing-colon quirk
-# ---------------------------------------------------------------------------
-
-
-async def test_device_found_sensor_colon_key_is_recognised(
-    patched_dispatcher,
-) -> None:
-    """The 'device_type:' key (with trailing colon) is correctly handled for sensors.
-
-    Companion to the plug colon test — confirms both device types work, not
-    just plugs.
-    """
-    d = patched_dispatcher
-
-    await d.on_device_event(
-        {"event": "device_found", "mac": MAC, "device_type:": "sensor", "role": "water"}
-    )
-
-    d._send.assert_called_once_with(d._hass, CREATE_SENSOR_SIGNAL, MAC, "water")

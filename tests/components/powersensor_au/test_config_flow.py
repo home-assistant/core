@@ -482,9 +482,10 @@ async def test_user_already_configured(
 ) -> None:
     """Test that a second user-initiated flow aborts when an entry already exists.
 
-    The integration uses single_config_entry + _abort_if_unique_id_configured()
-    as its duplicate guard. The flow should abort with 'already_configured' when
-    a config entry with the same unique ID (DOMAIN) already exists.
+    With single_config_entry=true in the manifest, the HA framework aborts any
+    new flow with 'single_instance_allowed' when an entry for the domain already
+    exists. The _abort_if_unique_id_configured() call in _async_prepare_setup
+    provides an additional guard for the unique-ID path.
     """
     # Complete a first flow so an entry exists.
     result = await hass.config_entries.flow.async_init(
@@ -563,6 +564,58 @@ async def test_reconfigure_sensor_disappears_between_form_and_submit(
     assert result["reason"] == "roles_applied"
     # cafebabe disappeared — its name hit the None guard, no signal fired
     assert signal_fired == []
+
+
+@pytest.mark.parametrize("check_translations", [None])
+async def test_reconfigure_none_role_shown_as_unknown_in_form(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, def_config_entry
+) -> None:
+    """Test that a None-persisted role is normalised to ROLE_UNKNOWN in the form.
+
+    When a sensor's role was previously set to 'unknown' it is stored as None
+    in CFG_ROLES.  The reconfigure form must display ROLE_UNKNOWN as the
+    suggested_value (not None), otherwise the select selector has no matching
+    option and the UI default is undefined.
+    """
+    # Persist None for a sensor MAC to simulate a previously-unknown role.
+    none_mac = "aabbccddeeff"
+    object.__setattr__(
+        def_config_entry,
+        "data",
+        {"roles": {none_mac: None}},
+    )
+    def_config_entry.runtime_data.dispatcher.sensors[none_mac] = None
+
+    def my_entry(_):
+        return def_config_entry
+
+    monkeypatch.setattr(hass.config_entries, "async_get_entry", my_entry)
+    monkeypatch.setattr(
+        hass.config_entries, "async_update_entry", lambda *a, **kw: True
+    )
+    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": def_config_entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    # The schema keys are vol.Optional instances; find the one for none_mac.
+    schema = result["data_schema"].schema if result["data_schema"] is not None else []
+
+    sensor_name = f"Powersensor Sensor ({none_mac})"
+    matching_keys = [k for k in schema if getattr(k, "schema", None) == sensor_name]
+    assert matching_keys, f"No schema key found for sensor name '{sensor_name}'"
+
+    key = matching_keys[0]
+    suggested = (key.description or {}).get("suggested_value")
+    assert suggested == ROLE_UNKNOWN, (
+        f"Expected suggested_value='{ROLE_UNKNOWN}' for a None-persisted role, got {suggested!r}"
+    )
 
 
 async def test_user_flow_aborts_when_already_in_progress(hass: HomeAssistant) -> None:
