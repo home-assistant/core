@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from ha_xthings_cloud import XthingsCloudApiError
 from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceCandidateInit
 
@@ -71,6 +72,33 @@ async def test_camera_image(
     assert image.content == b"image_data"
     mock_api_client.async_get_snapshot.assert_called_once_with(
         "https://example.com/snapshot.jpg"
+    )
+
+
+async def test_camera_image_fetch_error_keeps_cached_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test camera image fetch errors keep serving cached image."""
+    mock_api_client.async_get_snapshot.return_value = b"image_data"
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
+        await setup_integration(hass, mock_config_entry)
+
+    image = await async_get_image(hass, "camera.front_door_camera")
+    assert image.content == b"image_data"
+
+    get_device_by_id(mock_api_client, "dev_camera_001")["status"][
+        "snapshot_url"
+    ] = "https://example.com/new_snapshot.jpg"
+    mock_api_client.async_get_snapshot.side_effect = XthingsCloudApiError(
+        "Request failed"
+    )
+
+    image = await async_get_image(hass, "camera.front_door_camera")
+    assert image.content == b"image_data"
+    mock_api_client.async_get_snapshot.assert_called_with(
+        "https://example.com/new_snapshot.jpg"
     )
 
 
@@ -185,6 +213,7 @@ async def test_webrtc_candidate_caching_and_flush(
         mock_kvs_client = mock_kvs_client_class.return_value
         mock_kvs_client.async_get_answer_sdp = AsyncMock(return_value="mock_answer_sdp")
         mock_kvs_client.async_send_ice_candidate = AsyncMock()
+        mock_kvs_client.async_close = AsyncMock()
 
         await camera_entity.async_handle_async_webrtc_offer(
             offer_sdp="mock_offer_sdp",
@@ -202,6 +231,14 @@ async def test_webrtc_candidate_caching_and_flush(
         # Re-send candidate after session is established to verify direct send
         await camera_entity.async_on_webrtc_candidate(session_id, candidate)
         assert mock_kvs_client.async_send_ice_candidate.call_count == 2
+
+        mock_kvs_client.async_send_ice_candidate.side_effect = RuntimeError(
+            "Send failed"
+        )
+        await camera_entity.async_on_webrtc_candidate(session_id, candidate)
+
+        await hass.async_block_till_done()
+        mock_kvs_client.async_close.assert_called_once()
 
 
 async def test_webrtc_session_cleanup(

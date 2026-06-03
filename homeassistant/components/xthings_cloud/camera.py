@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any
 
-from ha_xthings_cloud import KvsSignalingClient
+from ha_xthings_cloud import KvsSignalingClient, XthingsCloudApiError
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
@@ -23,6 +23,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER
 from .coordinator import XthingsCloudCoordinator
+
+
+# Bound WebRTC caches to avoid unbounded memory growth from delayed candidates.
+MAX_PENDING_ICE_CANDIDATES = 50
+MAX_CLOSED_WEBRTC_SESSIONS = 100
 
 
 async def async_setup_entry(
@@ -125,7 +130,11 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             self.async_write_ha_state()
 
     async def _async_fetch_image(self, url: str) -> bytes | None:
-        return await self.coordinator.client.async_get_snapshot(url)
+        try:
+            return await self.coordinator.client.async_get_snapshot(url)
+        except XthingsCloudApiError as err:
+            LOGGER.debug("Failed to fetch camera snapshot from %s: %s", url, err)
+        return None
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up tasks and sessions when entity is removed."""
@@ -248,14 +257,18 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
 
         kvs_client = self._kvs_sessions.get(session_id)
         if kvs_client:
-            await kvs_client.async_send_ice_candidate(
-                candidate=candidate.candidate,
-                sdp_mid=candidate.sdp_mid,
-                sdp_m_line_index=candidate.sdp_m_line_index,
-            )
+            try:
+                await kvs_client.async_send_ice_candidate(
+                    candidate=candidate.candidate,
+                    sdp_mid=candidate.sdp_mid,
+                    sdp_m_line_index=candidate.sdp_m_line_index,
+                )
+            except Exception as err:  # noqa: BLE001
+                LOGGER.warning("Failed to send ICE candidate: %s", err)
+                self.close_webrtc_session(session_id)
         else:
             candidates = self._pending_candidates.setdefault(session_id, [])
-            if len(candidates) < 50:
+            if len(candidates) < MAX_PENDING_ICE_CANDIDATES:
                 candidates.append(candidate)
                 LOGGER.debug("KVS: Cached ICE candidate for session %s", session_id)
             else:
@@ -272,7 +285,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         # Track closed sessions to prevent late candidates from leaking memory
         self._closed_sessions.add(session_id)
         # Prevent closed sessions set from growing indefinitely
-        if len(self._closed_sessions) > 100:
+        if len(self._closed_sessions) > MAX_CLOSED_WEBRTC_SESSIONS:
             # Remove an arbitrary element if limit is exceeded
             self._closed_sessions.pop()
 
