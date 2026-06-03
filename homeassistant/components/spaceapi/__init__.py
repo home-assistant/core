@@ -284,11 +284,19 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+# The /api/spaceapi endpoint is unauthenticated. Cache the recorder-backed
+# events for this many seconds so frequent polling cannot hammer the database;
+# events feed a multi-hour window, so a minute of staleness is irrelevant.
+EVENTS_CACHE_TTL = 60
+
+
 @dataclass
 class SpaceAPIData:
     """Runtime data for the SpaceAPI integration."""
 
     config: dict[str, Any]
+    events_cache: list[_EventEntry] | None = None
+    events_cache_expires: float = 0.0
 
 
 type SpaceAPIConfigEntry = ConfigEntry[SpaceAPIData]
@@ -502,6 +510,25 @@ class APISpaceApiView(HomeAssistantView):
                     break
         return state
 
+    async def _get_cached_events(
+        self,
+        hass: HomeAssistant,
+        entry: SpaceAPIConfigEntry,
+    ) -> list[_EventEntry]:
+        """Return events, caching the recorder query for EVENTS_CACHE_TTL seconds.
+
+        The cache lives on runtime_data, so it is reset automatically whenever
+        the config entry is updated.
+        """
+        runtime = entry.runtime_data
+        now = hass.loop.time()
+        if runtime.events_cache is not None and now < runtime.events_cache_expires:
+            return runtime.events_cache
+        events = await self._build_events(hass, runtime.config)
+        runtime.events_cache = events
+        runtime.events_cache_expires = now + EVENTS_CACHE_TTL
+        return events
+
     async def _build_events(
         self,
         hass: HomeAssistant,
@@ -636,7 +663,7 @@ class APISpaceApiView(HomeAssistantView):
                 data[attr] = spaceapi[conf]
 
         if spaceapi.get(CONF_ACTIVITIES):
-            data[ATTR_API_EVENTS] = await self._build_events(hass, spaceapi)
+            data[ATTR_API_EVENTS] = await self._get_cached_events(hass, entry)
 
         links = [
             {

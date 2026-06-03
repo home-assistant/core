@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 from types import MappingProxyType
+from unittest.mock import patch
 
 from aiohttp.test_utils import TestClient
 import pytest
@@ -665,6 +666,40 @@ async def test_spaceapi_events_no_activities_key_absent(
     data = await resp.json()
 
     assert "events" not in data
+
+
+async def test_spaceapi_events_cached(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The recorder is queried at most once per TTL; expiry triggers a refresh."""
+    new_options = dict(mock_config_entry.options)
+    new_options["activities"] = ["sensor.workshop"]
+    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
+
+    hass.states.async_set("sensor.workshop", "active")
+    await async_wait_recording_done(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.spaceapi.get_significant_states",
+        return_value={},
+    ) as mock_states:
+        await client.get(URL_API_SPACEAPI)
+        # Second request within the TTL window is served from the cache.
+        await client.get(URL_API_SPACEAPI)
+        assert mock_states.call_count == 1
+
+        # Forcing expiry makes the next request hit the recorder again.
+        mock_config_entry.runtime_data.events_cache_expires = 0
+        await client.get(URL_API_SPACEAPI)
+        assert mock_states.call_count == 2
 
 
 async def test_spaceapi_state_trigger_person(
