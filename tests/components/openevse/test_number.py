@@ -77,25 +77,25 @@ async def test_set_value(
             AuthenticationError("bad creds"),
             ConfigEntryAuthFailed,
             "authentication_error",
-            {"error": "bad creds"},
+            None,
         ),
         (
             TimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
-            {"error": "timed out"},
+            None,
         ),
         (
             ServerTimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
-            {"error": "timed out"},
+            None,
         ),
         (
             ParseJSONError("bad json"),
             HomeAssistantError,
             "communication_error",
-            {"error": "bad json"},
+            None,
         ),
         (
             UnsupportedFeature("old firmware"),
@@ -107,7 +107,7 @@ async def test_set_value(
             ContentTypeError(MagicMock(), (), message="bad content"),
             HomeAssistantError,
             "communication_error",
-            {"error": "bad content"},
+            None,
         ),
     ],
 )
