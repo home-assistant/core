@@ -400,11 +400,10 @@ async def test_blindtilt_idle_advertisement(
 
     entry = mock_entry_factory(sensor_type="blind_tilt")
     entry.add_to_hass(hass)
-    # Idle advertisement: no motionDirection key
-    info_idle: dict = {}
+
     with patch(
         "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.get_basic_info",
-        new=AsyncMock(return_value=info_idle),
+        new=AsyncMock(return_value={}),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -414,14 +413,10 @@ async def test_blindtilt_idle_advertisement(
         service_data = b"x\x00*"
         manufacturer_data = b"\xfbgA`\x98\xe8\x1d%F\x12\x85"
 
-        with patch(
-            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.get_basic_info",
-            return_value=info_idle,
-        ):
-            inject_bluetooth_service_info(
-                hass, make_advertisement(address, manufacturer_data, service_data)
-            )
-            await hass.async_block_till_done()
+        inject_bluetooth_service_info(
+            hass, make_advertisement(address, manufacturer_data, service_data)
+        )
+        await hass.async_block_till_done()
 
         # Should not crash; entity should still exist
         state = hass.states.get(entity_id)
