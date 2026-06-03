@@ -773,7 +773,11 @@ class SpeechManager:
 
     @callback
     def async_get_cache_file_path(self, cache_key: str) -> Path | None:
-        """Return the path to a cached TTS file on disk, if it exists."""
+        """Return the path to a cached TTS file, if it is in the file cache.
+
+        The file cache is the authoritative in-memory index of files on disk;
+        the path is not stat'd here to avoid blocking I/O in the event loop.
+        """
         if not (filename := self.file_cache.get(cache_key)):
             return None
         return Path(self.cache_dir) / filename
