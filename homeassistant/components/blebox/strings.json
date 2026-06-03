@@ -27,6 +27,9 @@
     "bad_value": {
       "message": "Turning on the light failed: invalid color value."
     },
+    "data_update_failed": {
+      "message": "An error occurred while communicating with the BleBox device: {error}"
+    },
     "effect_not_found": {
       "message": "The specified light effect is not available on this device."
     },
