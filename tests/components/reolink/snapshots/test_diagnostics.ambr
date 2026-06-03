@@ -10,8 +10,13 @@
         'pushAlarm': 7,
       }),
     }),
+    'Baichuan connection': 'tcp',
+    'Baichuan fallbacks': list([
+    ]),
     'Baichuan only': False,
     'Baichuan port': 5678,
+    'Broken cmds': list([
+    ]),
     'Chimes': dict({
       '12345678': dict({
         'channel': 0,
@@ -215,6 +220,9 @@
     ]),
     'firmware version': 'v1.0.0.0.0.0000',
     'hardware version': 'IPC_00000',
+    'is Battery': False,
+    'is Hub': False,
+    'is NVR': True,
     'model': 'RLN8-410',
     'stream channels': list([
       0,
