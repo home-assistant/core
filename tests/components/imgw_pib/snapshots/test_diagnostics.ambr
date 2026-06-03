@@ -22,6 +22,16 @@
       'version': 1,
     }),
     'hydrological_data': dict({
+      'emergent_vegetation_cover': dict({
+        'name': 'Emergent Vegetation Cover',
+        'unit': None,
+        'value': 100.0,
+      }),
+      'floating_vegetation_cover': dict({
+        'name': 'Floating Vegetation Cover',
+        'unit': None,
+        'value': 67.0,
+      }),
       'flood_alarm': None,
       'flood_alarm_level': dict({
         'name': 'Flood Alarm Level',
@@ -41,11 +51,23 @@
         'valid_to': '2024-04-28T11:00:00+00:00',
         'value': 'rapid_water_level_rise',
       }),
+      'ice_phenomena': dict({
+        'name': 'Ice Phenomena',
+        'unit': None,
+        'value': 20,
+      }),
+      'ice_phenomena_measurement_date': '2024-04-27T10:00:00+00:00',
       'latitude': None,
       'longitude': None,
       'river': 'River Name',
       'station': 'Station Name',
       'station_id': '123',
+      'submerged_vegetation_cover': dict({
+        'name': 'Submerged Vegetation Cover',
+        'unit': None,
+        'value': 33.0,
+      }),
+      'vegetation_phenomena_measurement_date': '2024-04-27T10:00:00+00:00',
       'water_flow': dict({
         'name': 'Water Flow',
         'unit': None,

@@ -1,7 +1,5 @@
 """Support for fetching WiFi associations through SNMP."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.device_tracker import (

@@ -1,4 +1,4 @@
-"""The snmp component."""
+"""The SNMP integration."""
 
 import logging
 

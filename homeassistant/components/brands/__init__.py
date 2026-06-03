@@ -1,7 +1,5 @@
 """The Brands integration."""
 
-from __future__ import annotations
-
 from collections import deque
 from http import HTTPStatus
 import logging
@@ -43,7 +41,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Brands integration."""
-    access_tokens: deque[str] = deque([], 2)
+    access_tokens: deque[str] = deque(maxlen=2)
     access_tokens.append(hex(_RND.getrandbits(256))[2:])
     hass.data[DOMAIN] = access_tokens
 
@@ -52,7 +50,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Rotate the access token."""
         access_tokens.append(hex(_RND.getrandbits(256))[2:])
 
-    async_track_time_interval(hass, _rotate_token, TOKEN_CHANGE_INTERVAL)
+    async_track_time_interval(
+        hass, _rotate_token, TOKEN_CHANGE_INTERVAL, cancel_on_shutdown=True
+    )
 
     hass.http.register_view(BrandsIntegrationView(hass))
     hass.http.register_view(BrandsHardwareView(hass))

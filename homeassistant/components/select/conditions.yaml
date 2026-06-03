@@ -8,18 +8,19 @@ is_option_selected:
       required: true
       default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
+        automation_behavior:
+          mode: condition
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
     option:
       context:
         filter_target: target
       required: true
       selector:
         state:
-          attribute: options
           hide_states:
             - unavailable
             - unknown

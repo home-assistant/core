@@ -1,7 +1,5 @@
 """Config flow for the Home Assistant SkyConnect integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -19,10 +17,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
-from homeassistant.components.usb import (
-    usb_service_info_from_device,
-    usb_unique_id_from_service_info,
-)
+from homeassistant.components.usb import usb_service_info_from_device
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryBaseFlow,
@@ -130,7 +125,7 @@ class HomeAssistantSkyConnectConfigFlow(
     """Handle a config flow for Home Assistant SkyConnect."""
 
     VERSION = 1
-    MINOR_VERSION = 4
+    MINOR_VERSION = 5
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""
@@ -154,9 +149,7 @@ class HomeAssistantSkyConnectConfigFlow(
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        unique_id = usb_unique_id_from_service_info(discovery_info)
-
-        if await self.async_set_unique_id(unique_id):
+        if await self.async_set_unique_id(discovery_info.serial_number):
             self._abort_if_unique_id_configured(updates={DEVICE: discovery_info.device})
 
         discovery_info.device = await self.hass.async_add_executor_job(
@@ -182,9 +175,10 @@ class HomeAssistantSkyConnectConfigFlow(
         """Handle import from ZHA/OTBR firmware notification."""
         assert fw_discovery_info["usb_device"] is not None
         usb_info = usb_service_info_from_device(fw_discovery_info["usb_device"])
-        unique_id = usb_unique_id_from_service_info(usb_info)
 
-        if await self.async_set_unique_id(unique_id, raise_on_progress=False):
+        if await self.async_set_unique_id(
+            usb_info.serial_number, raise_on_progress=False
+        ):
             self._abort_if_unique_id_configured(updates={DEVICE: usb_info.device})
 
         self._usb_info = usb_info
@@ -253,6 +247,19 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
         return self._hw_variant.full_name
+
+    def _firmware_update_url(self) -> str:
+        """Return the firmware update manifest URL."""
+        return NABU_CASA_FIRMWARE_RELEASES_URL
+
+    def _zigbee_firmware_type(self) -> str:
+        """Return the zigbee firmware type identifier."""
+        return "skyconnect_zigbee_ncp"
+
+    @property
+    def _flasher_cls(self) -> type:
+        """Return the hardware-specific flasher class."""
+        return Zbt1Flasher  # type: ignore[no-any-return]
 
     async def async_step_flashing_complete(
         self, user_input: dict[str, Any] | None = None

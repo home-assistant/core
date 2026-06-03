@@ -1,7 +1,5 @@
 """Config flow for OpenSky integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohttp import BasicAuth
@@ -9,12 +7,7 @@ from python_opensky import OpenSky
 from python_opensky.exceptions import OpenSkyUnauthenticatedError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -33,6 +26,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from .coordinator import OpenSkyConfigEntry
 
 
 class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -41,7 +35,7 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: OpenSkyConfigEntry,
     ) -> OpenSkyOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OpenSkyOptionsFlowHandler()

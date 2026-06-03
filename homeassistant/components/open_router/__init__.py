@@ -1,7 +1,5 @@
 """The OpenRouter integration."""
 
-from __future__ import annotations
-
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import LOGGER
+from .const import CONF_WEB_SEARCH, LOGGER
 
 PLATFORMS = [Platform.AI_TASK, Platform.CONVERSATION]
 
@@ -25,7 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -
         http_client=get_async_client(hass),
     )
 
-    # Cache current platform data which gets added to each request (caching done by library)
+    # Cache current platform data which gets added to each request
+    # (caching done by library)
     _ = await hass.async_add_executor_job(client.platform_headers)
 
     try:
@@ -56,3 +55,32 @@ async def _async_update_listener(
 async def async_unload_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -> bool:
     """Unload OpenRouter."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: OpenRouterConfigEntry
+) -> bool:
+    """Migrate config entry."""
+    LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
+
+    if entry.version > 1 or (entry.version == 1 and entry.minor_version > 2):
+        return False
+
+    if entry.version == 1 and entry.minor_version < 2:
+        for subentry in entry.subentries.values():
+            if CONF_WEB_SEARCH in subentry.data:
+                continue
+
+            updated_data = {**subentry.data, CONF_WEB_SEARCH: False}
+
+            hass.config_entries.async_update_subentry(
+                entry, subentry, data=updated_data
+            )
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    LOGGER.info(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
+
+    return True

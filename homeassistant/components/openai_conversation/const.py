@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.helpers import llm
 
 DOMAIN = "openai_conversation"
@@ -20,10 +20,10 @@ CONF_IMAGE_MODEL = "image_model"
 CONF_CODE_INTERPRETER = "code_interpreter"
 CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"
-CONF_PROMPT = "prompt"
 CONF_REASONING_EFFORT = "reasoning_effort"
 CONF_REASONING_SUMMARY = "reasoning_summary"
 CONF_RECOMMENDED = "recommended"
+CONF_STORE_RESPONSES = "store_responses"
 CONF_SERVICE_TIER = "service_tier"
 CONF_TEMPERATURE = "temperature"
 CONF_TOP_P = "top_p"
@@ -39,9 +39,10 @@ CONF_WEB_SEARCH_TIMEZONE = "timezone"
 CONF_WEB_SEARCH_INLINE_CITATIONS = "inline_citations"
 RECOMMENDED_CODE_INTERPRETER = False
 RECOMMENDED_CHAT_MODEL = "gpt-4o-mini"
-RECOMMENDED_IMAGE_MODEL = "gpt-image-1.5"
+RECOMMENDED_IMAGE_MODEL = "gpt-image-2"
 RECOMMENDED_MAX_TOKENS = 3000
 RECOMMENDED_REASONING_EFFORT = "low"
+RECOMMENDED_STORE_RESPONSES = False
 RECOMMENDED_REASONING_SUMMARY = "auto"
 RECOMMENDED_SERVICE_TIER = "auto"
 RECOMMENDED_STT_MODEL = "gpt-4o-mini-transcribe"
@@ -70,7 +71,6 @@ UNSUPPORTED_MODELS: list[str] = [
 ]
 
 UNSUPPORTED_WEB_SEARCH_MODELS: list[str] = [
-    "gpt-5-nano",
     "gpt-3.5",
     "gpt-4-turbo",
     "gpt-4.1-nano",

@@ -1,7 +1,5 @@
 """Support for LIFX."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
@@ -224,7 +222,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool
         # wait for the next discovery to find the device at its new address
         # and update the config entry so we do not mix up devices.
         raise ConfigEntryNotReady(
-            f"Unexpected device found at {host}; expected {entry.unique_id}, found {serial}"
+            f"Unexpected device found at {host};"
+            f" expected {entry.unique_id}, found {serial}"
         )
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

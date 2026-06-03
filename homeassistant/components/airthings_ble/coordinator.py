@@ -1,7 +1,5 @@
 """The Airthings BLE integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -10,6 +8,7 @@ from bleak.backends.device import BLEDevice
 from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -65,7 +64,16 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
 
         if not ble_device:
             raise ConfigEntryNotReady(
-                f"Could not find Airthings device with address {address}"
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={
+                    "address": address,
+                    "reason": bluetooth.async_address_reachability_diagnostics(
+                        self.hass,
+                        address.upper(),
+                        BluetoothReachabilityIntent.CONNECTION,
+                    ),
+                },
             )
         self.ble_device = ble_device
 

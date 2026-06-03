@@ -13,6 +13,7 @@ from switchbot_api import (
     SwitchBotAPI,
     SwitchBotAuthenticationError,
     SwitchBotConnectionError,
+    SwitchBotDeviceOfflineError,
 )
 
 from homeassistant.components import webhook
@@ -22,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, ENTRY_TITLE
+from .const import DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
@@ -74,9 +75,12 @@ class SwitchbotCloudData:
     devices: SwitchbotDevices
 
 
+type SwitchbotCloudConfigEntry = ConfigEntry[SwitchbotCloudData]
+
+
 async def coordinator_for_device(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchbotCloudConfigEntry,
     api: SwitchBotAPI,
     device: Device | Remote,
     coordinators_by_id: dict[str, SwitchBotCoordinator],
@@ -96,7 +100,7 @@ async def coordinator_for_device(
 
 async def make_switchbot_devices(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchbotCloudConfigEntry,
     api: SwitchBotAPI,
     devices: list[Device | Remote],
     coordinators_by_id: dict[str, SwitchBotCoordinator],
@@ -114,7 +118,7 @@ async def make_switchbot_devices(
 
 async def make_device_data(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchbotCloudConfigEntry,
     api: SwitchBotAPI,
     device: Device | Remote,
     devices_data: SwitchbotDevices,
@@ -150,12 +154,6 @@ async def make_device_data(
         devices_data.switches.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in [
-        "Meter",
-        "MeterPlus",
-        "WoIOSensor",
-        "Hub 2",
-        "MeterPro",
-        "MeterPro(CO2)",
         "Relay Switch 1PM",
         "Plug Mini (US)",
         "Plug Mini (JP)",
@@ -202,7 +200,7 @@ async def make_device_data(
 
     if isinstance(device, Device) and device.device_type == "Bot":
         coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
+            hass, entry, api, device, coordinators_by_id, True
         )
         devices_data.sensors.append((device, coordinator))
         if coordinator.data is not None:
@@ -222,22 +220,6 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.fans.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type in [
-        "Motion Sensor",
-        "Contact Sensor",
-        "Presence Sensor",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id, True
-        )
-        devices_data.sensors.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Hub 3":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id, True
-        )
-        devices_data.sensors.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
     if isinstance(device, Device) and device.device_type == "Water Detector":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
@@ -309,12 +291,6 @@ async def make_device_data(
         )
         devices_data.humidifiers.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Climate Panel":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.binary_sensors.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
     if isinstance(device, Device) and device.device_type == "AI Art Frame":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -322,14 +298,61 @@ async def make_device_data(
         devices_data.buttons.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
         devices_data.images.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "WeatherStation":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.sensors.append((device, coordinator))
+
+    await make_new_device_data(
+        hass, entry, api, device, devices_data, coordinators_by_id
+    )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def make_new_device_data(
+    hass: HomeAssistant,
+    entry: SwitchbotCloudConfigEntry,
+    api: SwitchBotAPI,
+    device: Device | Remote,
+    devices_data: SwitchbotDevices,
+    coordinators_by_id: dict[str, SwitchBotCoordinator],
+) -> None:
+    """Make device data."""
+    if device.device_type not in DEVICE_SUPPORT_MAP:
+        return
+
+    default_config = DEVICE_SUPPORT_MAP[device.device_type]
+    coordinator = await coordinator_for_device(
+        hass,
+        entry,
+        api,
+        device,
+        coordinators_by_id,
+        manageable_by_webhook=default_config.webhook,
+    )
+
+    _platform_list_map: dict[Platform, list] = {
+        Platform.BINARY_SENSOR: devices_data.binary_sensors,
+        Platform.BUTTON: devices_data.buttons,
+        Platform.CLIMATE: devices_data.climates,
+        Platform.COVER: devices_data.covers,
+        Platform.FAN: devices_data.fans,
+        Platform.HUMIDIFIER: devices_data.humidifiers,
+        Platform.IMAGE: devices_data.images,
+        Platform.LIGHT: devices_data.lights,
+        Platform.LOCK: devices_data.locks,
+        Platform.SENSOR: devices_data.sensors,
+        Platform.SWITCH: devices_data.switches,
+        Platform.VACUUM: devices_data.vacuums,
+    }
+
+    for platform in default_config.entity_config:
+        target_list = _platform_list_map.get(platform)
+        if target_list is None:
+            continue
+        existing_ids = {item[0].device_id for item in target_list}
+        if device.device_id not in existing_ids:
+            target_list.append((device, coordinator))
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
+) -> bool:
     """Set up SwitchBot via API from a config entry."""
     token = entry.data[CONF_API_TOKEN]
     secret = entry.data[CONF_API_KEY]
@@ -352,10 +375,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     switchbot_devices = await make_switchbot_devices(
         hass, entry, api, devices, coordinators_by_id
     )
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = SwitchbotCloudData(
-        api=api, devices=switchbot_devices
-    )
+    entry.runtime_data = SwitchbotCloudData(api=api, devices=switchbot_devices)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -364,17 +384,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _initialize_webhook(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchbotCloudConfigEntry,
     api: SwitchBotAPI,
     coordinators_by_id: dict[str, SwitchBotCoordinator],
 ) -> None:
@@ -409,42 +428,49 @@ async def _initialize_webhook(
             hass,
             entry.data[CONF_WEBHOOK_ID],
         )
-
         # check if webhook is configured in switchbot cloud
-        check_webhook_result = None
-        with contextlib.suppress(Exception):
-            check_webhook_result = await api.get_webook_configuration()
 
-        actual_webhook_urls = (
-            check_webhook_result["urls"]
-            if check_webhook_result and "urls" in check_webhook_result
-            else []
-        )
-        need_add_webhook = (
-            len(actual_webhook_urls) == 0 or webhook_url not in actual_webhook_urls
-        )
-        need_clean_previous_webhook = (
-            len(actual_webhook_urls) > 0 and webhook_url not in actual_webhook_urls
-        )
+        try:
+            check_webhook_result = None
+            with contextlib.suppress(Exception):
+                check_webhook_result = await api.get_webook_configuration()
 
-        if need_clean_previous_webhook:
-            # it seems is impossible to register multiple webhook.
-            # So, if webhook already exists, we delete it
-            await api.delete_webhook(actual_webhook_urls[0])
-            _LOGGER.debug(
-                "Deleted previous Switchbot cloud webhook url: %s",
-                actual_webhook_urls[0],
+            actual_webhook_urls = (
+                check_webhook_result["urls"]
+                if check_webhook_result and "urls" in check_webhook_result
+                else []
+            )
+            need_add_webhook = (
+                len(actual_webhook_urls) == 0 or webhook_url not in actual_webhook_urls
+            )
+            need_clean_previous_webhook = (
+                len(actual_webhook_urls) > 0 and webhook_url not in actual_webhook_urls
             )
 
-        if need_add_webhook:
-            # call api for register webhookurl
-            await api.setup_webhook(webhook_url)
-            _LOGGER.debug("Registered Switchbot cloud webhook at hass: %s", webhook_url)
+            if need_clean_previous_webhook:
+                # it seems is impossible to register multiple webhook.
+                # So, if webhook already exists, we delete it
+                await api.delete_webhook(actual_webhook_urls[0])
+                _LOGGER.debug(
+                    "Deleted previous Switchbot cloud webhook url: %s",
+                    actual_webhook_urls[0],
+                )
 
-        for coordinator in coordinators_by_id.values():
-            coordinator.webhook_subscription_listener(True)
+            if need_add_webhook:
+                # call api for register webhookurl
+                await api.setup_webhook(webhook_url)
+                _LOGGER.debug(
+                    "Registered Switchbot cloud webhook at hass: %s", webhook_url
+                )
 
-        _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
+            for coordinator in coordinators_by_id.values():
+                coordinator.webhook_subscription_listener(True)
+
+            _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
+        except SwitchBotDeviceOfflineError as e:
+            _LOGGER.error("Failed to connect Switchbot cloud device: %s", e)
+        except SwitchBotConnectionError as e:
+            _LOGGER.error("Failed to connect Switchbot cloud device: %s", e)
 
 
 def _create_handle_webhook(
@@ -476,14 +502,14 @@ def _create_handle_webhook(
             _LOGGER.debug("Received invalid data from switchbot webhook %s", repr(data))
             return
         _LOGGER.debug("Received data from switchbot webhook: %s", repr(data))
-        deviceMac = data["context"]["deviceMac"]
+        device_mac = data["context"]["deviceMac"]
 
-        if deviceMac not in coordinators_by_id:
+        if device_mac not in coordinators_by_id:
             _LOGGER.error(
                 "Received data for unknown entity from switchbot webhook: %s", data
             )
             return
 
-        coordinators_by_id[deviceMac].async_set_updated_data(data["context"])
+        coordinators_by_id[device_mac].async_set_updated_data(data["context"])
 
     return _internal_handle_webhook

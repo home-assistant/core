@@ -1,6 +1,7 @@
 """Test cases for the Shelly component."""
 
 from ipaddress import IPv4Address
+from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.block_device import COAP
@@ -608,7 +609,7 @@ async def test_ble_scanner_unsupported_firmware_fixed(
     """Test device init with unsupported firmware."""
     issue_id = BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
     entry = await init_integration(
-        hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.AUTO}
     )
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
@@ -621,6 +622,80 @@ async def test_ble_scanner_unsupported_firmware_fixed(
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize(
+    ("starting_options", "expected_mode"),
+    [
+        ({CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}, BLEScannerMode.AUTO),
+        ({CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE}, BLEScannerMode.PASSIVE),
+        ({CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED}, BLEScannerMode.DISABLED),
+        ({}, None),
+    ],
+    ids=["active_to_auto", "passive_kept", "disabled_kept", "no_option"],
+)
+async def test_migrate_ble_scanner_mode(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    starting_options: dict[str, Any],
+    expected_mode: BLEScannerMode | None,
+) -> None:
+    """Active migrates to Auto once; other modes stay put."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.37",
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+            "gen": 2,
+        },
+        unique_id=MOCK_MAC,
+        options=starting_options,
+        title="Test name",
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.minor_version == 3
+    assert entry.options.get(CONF_BLE_SCANNER_MODE) == expected_mode
+
+
+@pytest.mark.parametrize(
+    ("entry_version", "entry_minor_version"),
+    [(2, 1), (1, 4)],
+    ids=["future_major", "future_minor"],
+)
+async def test_migrate_ble_scanner_mode_future_version(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entry_version: int,
+    entry_minor_version: int,
+) -> None:
+    """Future versions are not downgraded."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.37",
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+            "gen": 2,
+        },
+        unique_id=MOCK_MAC,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
+        title="Test name",
+        version=entry_version,
+        minor_version=entry_minor_version,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.version == entry_version
+    assert entry.minor_version == entry_minor_version
+    assert entry.options[CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
 
 
 async def test_blu_trv_stale_device_removal(

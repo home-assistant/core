@@ -1,15 +1,22 @@
 """Test report state."""
 
 import json
+import logging
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import core
 from homeassistant.components.alexa import errors, state_report
 from homeassistant.components.alexa.resources import AlexaGlobalCatalog
-from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    UnitOfLength,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 
 from .test_common import TEST_URL, get_default_config
@@ -522,10 +529,10 @@ async def test_send_delete_message(
     )
 
 
-async def test_doorbell_event(
+async def test_doorbell_event_binary_sensor(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test doorbell press reports."""
+    """Test doorbell press via binary sensor reports."""
     aioclient_mock.post(TEST_URL, text="", status=202)
 
     hass.states.async_set(
@@ -547,6 +554,16 @@ async def test_doorbell_event(
             "friendly_name": "Test Doorbell Sensor",
             "device_class": "occupancy",
             "linkquality": 42,
+        },
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        STATE_UNAVAILABLE,
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "occupancy",
+            "linkquality": 99,
         },
     )
 
@@ -582,6 +599,113 @@ async def test_doorbell_event(
         "binary_sensor.test_doorbell",
         "on",
         {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 2
+
+
+async def test_doorbell_event_for_event_entity(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test doorbell event reports."""
+    freezer.move_to("2026-05-11T19:50:47.647427+0000")
+    aioclient_mock.post(TEST_URL, text="", status=202)
+
+    hass.states.async_set(
+        "event.test_doorbell",
+        "unknown",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config(hass))
+
+    # Stale event (does not trigger)
+    hass.states.async_set(
+        "event.test_doorbell",
+        "2026-05-11T19:40:48.1265799+00:00",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+    # Event within 30 sec
+    hass.states.async_set(
+        "event.test_doorbell",
+        "2026-05-11T19:50:30.647427+00:00",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+    hass.states.async_set(
+        "event.test_doorbell",
+        STATE_UNAVAILABLE,
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+    # Same event after being unavailable
+    hass.states.async_set(
+        "event.test_doorbell",
+        "2026-05-11T19:50:30.647427+00:00",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+    assert call_json["event"]["header"]["namespace"] == "Alexa.DoorbellEventSource"
+    assert call_json["event"]["header"]["name"] == "DoorbellPress"
+    assert call_json["event"]["payload"]["cause"]["type"] == "PHYSICAL_INTERACTION"
+    assert call_json["event"]["endpoint"]["endpointId"] == "event#test_doorbell"
+
+    # Same event after being unavailable
+    with caplog.at_level(logging.DEBUG):
+        hass.states.async_set(
+            "event.test_doorbell",
+            "11 may 2026 19:50:30",
+            {
+                "friendly_name": "Test Doorbell Sensor",
+                "device_class": "doorbell",
+                "event_types": ["ring"],
+            },
+        )
+        await hass.async_block_till_done()
+        assert (
+            "Unable to parse ISO timestamp from state for "
+            "event.test_doorbell. Got 11 may 2026 19:50:30" in caplog.text
+        )
+
+    # Later event
+    freezer.tick(35000)
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "event.test_doorbell",
+        f"{freezer.time_to_freeze.isoformat()}+00:00",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
     )
 
     await hass.async_block_till_done()

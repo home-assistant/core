@@ -1,7 +1,5 @@
 """Config Flow to configure UniFi Protect Integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from pathlib import Path
@@ -36,8 +34,6 @@ from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
 )
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
@@ -56,7 +52,6 @@ from .const import (
     OUTDATED_LOG_MESSAGE,
 )
 from .data import UFPConfigEntry, async_last_update_was_successful
-from .discovery import async_start_discovery
 from .utils import (
     _async_resolve,
     _async_short_mac,
@@ -92,7 +87,7 @@ async def _async_clear_session_if_credentials_changed(
     entry: UFPConfigEntry,
     new_data: Mapping[str, Any],
 ) -> None:
-    """Clear stored session if credentials have changed to force fresh authentication."""
+    """Clear stored session if credentials changed."""
     existing_data = entry.data
     if existing_data.get(CONF_USERNAME) != new_data.get(
         CONF_USERNAME
@@ -205,28 +200,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         super().__init__()
         self._discovered_device: dict[str, str] = {}
 
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle discovery via dhcp."""
-        _LOGGER.debug("Starting discovery via: %s", discovery_info)
-        return await self._async_discovery_handoff()
-
-    async def async_step_ssdp(
-        self, discovery_info: SsdpServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle a discovered UniFi device."""
-        _LOGGER.debug("Starting discovery via: %s", discovery_info)
-        return await self._async_discovery_handoff()
-
-    async def _async_discovery_handoff(self) -> ConfigFlowResult:
-        """Ensure discovery is active."""
-        # Discovery requires an additional check so we use
-        # SSDP and DHCP to tell us to start it so it only
-        # runs on networks where unifi devices are present.
-        async_start_discovery(self.hass)
-        return self.async_abort(reason="discovery_started")
-
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -323,8 +296,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             description_placeholders={
                 **placeholders,
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 ),
             },
             data_schema=self.add_suggested_values_to_schema(
@@ -458,8 +431,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 ),
             },
             data_schema=self.add_suggested_values_to_schema(REAUTH_SCHEMA, form_data),
@@ -508,8 +481,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             description_placeholders={
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 ),
             },
             data_schema=self.add_suggested_values_to_schema(
@@ -536,8 +509,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             description_placeholders={
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 )
             },
             data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),

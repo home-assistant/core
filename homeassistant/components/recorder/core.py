@@ -1,7 +1,5 @@
 """Support for recording details."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from concurrent.futures import CancelledError
@@ -378,7 +376,7 @@ class Recorder(threading.Thread):
         return cast(int, self._psutil.psutil.virtual_memory().available)
 
     def _reached_max_backlog(self) -> bool:
-        """Check if the system has reached the max queue backlog and return True if it has."""
+        """Check if the system has reached the max queue backlog."""
         # First check the minimum value since its cheap
         if self.backlog < MAX_QUEUE_BACKLOG_MIN_VALUE:
             return False
@@ -805,7 +803,7 @@ class Recorder(threading.Thread):
     def _activate_and_set_db_ready(
         self, schema_status: migration.SchemaValidationStatus
     ) -> None:
-        """Activate the table managers or schedule migrations and mark the db as ready."""
+        """Activate table managers or schedule migrations and mark db as ready."""
         with session_scope(session=self.get_session()) as session:
             # Prime the statistics meta manager as soon as possible
             # since we want the frontend queries to avoid a thundering
@@ -870,7 +868,10 @@ class Recorder(threading.Thread):
     def _guarded_process_one_task_or_event_or_recover(
         self, task: RecorderTask | Event
     ) -> None:
-        """Process a task, guarding against exceptions to ensure the loop does not collapse."""
+        """Process a task, guarding against exceptions.
+
+        This ensures the loop does not collapse.
+        """
         _LOGGER.debug("Processing task: %s", task)
         try:
             self._process_one_task_or_event_or_recover(task)
@@ -1222,7 +1223,9 @@ class Recorder(threading.Thread):
                             "state_id": state_id,
                             "last_reported_ts": last_reported_timestamp,
                         }
-                        for state_id, last_reported_timestamp in pending_last_reported.items()
+                        for state_id, last_reported_timestamp in (
+                            pending_last_reported.items()
+                        )
                     ],
                 )
         session.commit()
@@ -1298,7 +1301,10 @@ class Recorder(threading.Thread):
 
     @callback
     def async_get_commit_future(self) -> asyncio.Future[None] | None:
-        """Return a future that will wait for the next commit or None if nothing pending."""
+        """Return a future that will wait for the next commit.
+
+        Returns None if nothing is pending.
+        """
         if self._queue.empty() and not self._event_session_has_pending_writes:
             return None
         future: asyncio.Future[None] = self.hass.loop.create_future()

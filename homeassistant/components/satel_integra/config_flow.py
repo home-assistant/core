@@ -1,16 +1,21 @@
 """Config flow for Satel Integra."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 import logging
 from typing import Any
 
 from satel_integra import AsyncSatel
+from satel_integra.exceptions import (
+    SatelConnectFailedError,
+    SatelConnectionInitializationError,
+    SatelPanelBusyError,
+)
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -23,6 +28,8 @@ from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENABLE_TEMPERATURE_SENSOR,
+    CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
@@ -44,6 +51,9 @@ CONNECTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_ENCRYPTION_KEY): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
     }
 )
 
@@ -78,7 +88,40 @@ ZONE_AND_OUTPUT_SCHEMA = vol.Schema(
     }
 )
 
+ZONE_SCHEMA = ZONE_AND_OUTPUT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ENABLE_TEMPERATURE_SENSOR, default=False): (
+            selector.BooleanSelector()
+        ),
+    }
+)
+
+
 SWITCHABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+
+
+async def _async_validate_zone_temperature_sensor(
+    entry: SatelConfigEntry, zone_number: int
+) -> dict[str, str]:
+    """Validate that temperature reading can be fetched for the zone."""
+    errors: dict[str, str] = {}
+
+    try:
+        temperature = await entry.runtime_data.client.controller.read_temperature(
+            zone_number
+        )
+
+        if temperature is None:
+            errors[CONF_ENABLE_TEMPERATURE_SENSOR] = "zone_does_not_report_temperature"
+
+    except Exception:
+        _LOGGER.exception(
+            "Unexpected error while validating temperature sensor support for zone %s",
+            zone_number,
+        )
+        errors["base"] = "unknown"
+
+    return errors
 
 
 class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -90,7 +133,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         self.connection_data: dict[str, Any] = {}
 
     VERSION = 2
-    MINOR_VERSION = 1
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
@@ -122,14 +165,19 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
-            if await self.test_connection(user_input[CONF_HOST], user_input[CONF_PORT]):
+            errors = await self.test_connection(
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                user_input.get(CONF_ENCRYPTION_KEY),
+            )
+
+            if not errors:
                 self.connection_data = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
+                    CONF_ENCRYPTION_KEY: user_input.get(CONF_ENCRYPTION_KEY),
                 }
                 return await self.async_step_code()
-
-            errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -163,18 +211,29 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
-            if await self.test_connection(user_input[CONF_HOST], user_input[CONF_PORT]):
+            # Normalize user_input to include None for missing optional encryption key
+            normalized_input = {CONF_ENCRYPTION_KEY: None, **user_input}
+
+            if (
+                reconfigure_entry.state is not ConfigEntryState.LOADED
+                or reconfigure_entry.data != normalized_input
+            ):
+                errors = await self.test_connection(
+                    normalized_input[CONF_HOST],
+                    normalized_input[CONF_PORT],
+                    normalized_input.get(CONF_ENCRYPTION_KEY),
+                )
+
+            if not errors:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_HOST: normalized_input[CONF_HOST],
+                        CONF_PORT: normalized_input[CONF_PORT],
+                        CONF_ENCRYPTION_KEY: normalized_input.get(CONF_ENCRYPTION_KEY),
                     },
-                    title=user_input[CONF_HOST],
-                    reload_even_if_entry_is_unchanged=False,
+                    title=normalized_input[CONF_HOST],
                 )
-
-            errors["base"] = "cannot_connect"
 
         suggested_values: dict[str, Any] = {
             **reconfigure_entry.data,
@@ -189,21 +248,32 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def test_connection(self, host: str, port: int) -> bool:
+    async def test_connection(
+        self, host: str, port: int, integration_key: str | None = None
+    ) -> dict[str, str]:
         """Test a connection to the Satel alarm."""
-        controller = AsyncSatel(host, port)
+        errors: dict[str, str] = {}
+        controller = AsyncSatel(host, port, integration_key=integration_key)
 
         try:
-            return await controller.connect(check_busy=False)
+            await controller.connect(raise_exceptions=True)
+        except SatelPanelBusyError:
+            errors["base"] = "panel_busy"
+        except SatelConnectionInitializationError:
+            errors["base"] = "connection_initialization_failed"
+        except SatelConnectFailedError:
+            errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception(
                 "Unexpected error during connection test to %s:%s",
                 host,
                 port,
             )
-            return False
+            errors["base"] = "unknown"
         finally:
             await controller.close()
+
+        return errors
 
 
 class SatelOptionsFlow(OptionsFlow):
@@ -242,7 +312,9 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_PARTITION_NUMBER]})",
+                    title=(
+                        f"{user_input[CONF_NAME]} ({user_input[CONF_PARTITION_NUMBER]})"
+                    ),
                     data=user_input,
                     unique_id=unique_id,
                 )
@@ -269,7 +341,10 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_PARTITION_NUMBER]})",
+                title=(
+                    f"{user_input[CONF_NAME]}"
+                    f" ({subconfig_entry.data[CONF_PARTITION_NUMBER]})"
+                ),
                 data_updates=user_input,
             )
 
@@ -301,6 +376,15 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
                 if existing_subentry.unique_id == unique_id:
                     errors[CONF_ZONE_NUMBER] = "already_configured"
 
+            if not errors and user_input.get(CONF_ENABLE_TEMPERATURE_SENSOR, False):
+                if self._get_entry().state is not ConfigEntryState.LOADED:
+                    return self.async_abort(reason="entry_not_loaded")
+
+                errors = await _async_validate_zone_temperature_sensor(
+                    self._get_entry(),
+                    user_input[CONF_ZONE_NUMBER],
+                )
+
             if not errors:
                 return self.async_create_entry(
                     title=f"{user_input[CONF_NAME]} ({user_input[CONF_ZONE_NUMBER]})",
@@ -311,13 +395,16 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ZONE_NUMBER): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
-                    ),
-                }
-            ).extend(ZONE_AND_OUTPUT_SCHEMA.schema),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_ZONE_NUMBER): vol.All(
+                            vol.Coerce(int), vol.Range(min=1)
+                        ),
+                    }
+                ).extend(ZONE_SCHEMA.schema),
+                user_input or {},
+            ),
         )
 
     async def async_step_reconfigure(
@@ -325,19 +412,41 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Reconfigure existing zone."""
         subconfig_entry = self._get_reconfigure_subentry()
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            return self.async_update_and_abort(
-                self._get_entry(),
-                subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_ZONE_NUMBER]})",
-                data_updates=user_input,
-            )
+            if user_input.get(
+                CONF_ENABLE_TEMPERATURE_SENSOR, False
+            ) and not subconfig_entry.data.get(CONF_ENABLE_TEMPERATURE_SENSOR, False):
+                if self._get_entry().state is not ConfigEntryState.LOADED:
+                    return self.async_abort(reason="entry_not_loaded")
+
+                errors = await _async_validate_zone_temperature_sensor(
+                    self._get_entry(),
+                    subconfig_entry.data[CONF_ZONE_NUMBER],
+                )
+
+            if not errors:
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    subconfig_entry,
+                    title=(
+                        f"{user_input[CONF_NAME]}"
+                        f" ({subconfig_entry.data[CONF_ZONE_NUMBER]})"
+                    ),
+                    data_updates=user_input,
+                )
+
+        suggested_values: dict[str, Any] = {
+            **subconfig_entry.data,
+            **(user_input or {}),
+        }
 
         return self.async_show_form(
             step_id="reconfigure",
+            errors=errors,
             data_schema=self.add_suggested_values_to_schema(
-                ZONE_AND_OUTPUT_SCHEMA, subconfig_entry.data
+                ZONE_SCHEMA, suggested_values
             ),
             description_placeholders={
                 CONF_ZONE_NUMBER: subconfig_entry.data[CONF_ZONE_NUMBER]
@@ -390,7 +499,10 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_OUTPUT_NUMBER]})",
+                title=(
+                    f"{user_input[CONF_NAME]}"
+                    f" ({subconfig_entry.data[CONF_OUTPUT_NUMBER]})"
+                ),
                 data_updates=user_input,
             )
 
@@ -415,7 +527,10 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            unique_id = f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]}"
+            unique_id = (
+                f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}"
+                f"_{user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]}"
+            )
 
             for existing_subentry in self._get_entry().subentries.values():
                 if existing_subentry.unique_id == unique_id:
@@ -423,7 +538,10 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]})",
+                    title=(
+                        f"{user_input[CONF_NAME]}"
+                        f" ({user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]})"
+                    ),
                     data=user_input,
                     unique_id=unique_id,
                 )
@@ -450,7 +568,10 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]})",
+                title=(
+                    f"{user_input[CONF_NAME]}"
+                    f" ({subconfig_entry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]})"
+                ),
                 data_updates=user_input,
             )
 

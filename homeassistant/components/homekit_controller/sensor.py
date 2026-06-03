@@ -1,7 +1,5 @@
 """Support for Homekit sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
@@ -146,33 +144,41 @@ def thread_status_to_str(char: Characteristic) -> str:
 
 
 SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
-    CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_WATT: HomeKitSensorEntityDescription(
-        key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_WATT,
-        name="Power",
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
+    CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_WATT: (
+        HomeKitSensorEntityDescription(
+            key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_WATT,
+            name="Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.WATT,
+        )
     ),
-    CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS: HomeKitSensorEntityDescription(
-        key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS,
-        name="Current",
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS: (
+        HomeKitSensorEntityDescription(
+            key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS,
+            name="Current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        )
     ),
-    CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS_20: HomeKitSensorEntityDescription(
-        key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS_20,
-        name="Current",
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS_20: (
+        HomeKitSensorEntityDescription(
+            key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS_20,
+            name="Current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        )
     ),
-    CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_KW_HOUR: HomeKitSensorEntityDescription(
-        key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_KW_HOUR,
-        name="Energy kWh",
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_KW_HOUR: (
+        HomeKitSensorEntityDescription(
+            key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_KW_HOUR,
+            name="Energy kWh",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        )
     ),
     CharacteristicsTypes.VENDOR_EVE_ENERGY_WATT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_ENERGY_WATT,
@@ -209,12 +215,14 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
-    CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY_2: HomeKitSensorEntityDescription(
-        key=CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY_2,
-        name="Power",
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
+    CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY_2: (
+        HomeKitSensorEntityDescription(
+            key=CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY_2,
+            name="Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.WATT,
+        )
     ),
     CharacteristicsTypes.VENDOR_EVE_DEGREE_AIR_PRESSURE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_DEGREE_AIR_PRESSURE,
@@ -363,13 +371,15 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: HomeKitSensorEntityDescription(
-        key=CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION,
-        name="Valve position",
-        translation_key="valve_position",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+    CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: (
+        HomeKitSensorEntityDescription(
+            key=CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION,
+            name="Valve position",
+            translation_key="valve_position",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        )
     ),
 }
 
@@ -509,14 +519,14 @@ class HomeKitBatterySensor(HomeKitSensor):
         icon = "mdi:battery"
         is_charging = self.is_charging
         if is_charging and native_value > 10:
-            percentage = int(round(native_value / 20 - 0.01)) * 20
+            percentage = round(native_value / 20 - 0.01) * 20
             icon += f"-charging-{percentage}"
         elif is_charging:
             icon += "-outline"
         elif self.is_low_battery:
             icon += "-alert"
         elif native_value < 95:
-            percentage = max(int(round(native_value / 10 - 0.01)) * 10, 10)
+            percentage = max(round(native_value / 10 - 0.01) * 10, 10)
             icon += f"-{percentage}"
 
         return icon
@@ -690,7 +700,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_accessory(accessory: Accessory) -> bool:
-        if conn.pairing.transport != Transport.BLE:
+        if conn.pairing.transport is not Transport.BLE:
             return False
 
         accessory_info = accessory.services.first(

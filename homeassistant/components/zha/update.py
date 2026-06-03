@@ -1,7 +1,5 @@
 """Representation of ZHA updates."""
 
-from __future__ import annotations
-
 import functools
 import logging
 from typing import Any
@@ -75,7 +73,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-class-module
+class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=home-assistant-enforce-class-module
     """Firmware update coordinator that broadcasts updates network-wide."""
 
     def __init__(
@@ -183,7 +181,7 @@ class ZHAFirmwareUpdateEntity(
         return self.entity_data.entity.release_url
 
     # We explicitly convert ZHA exceptions to HA exceptions here so there is no need to
-    # use the `@convert_zha_error_to_ha_error` decorator.
+    # use the `@convert_zha_error_to_ha_error()` decorator.
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

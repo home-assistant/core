@@ -1,161 +1,139 @@
 """Configuration for pylint tests."""
 
-from importlib.util import module_from_spec, spec_from_file_location
-from pathlib import Path
-import sys
-from types import ModuleType
-
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
+from pylint_home_assistant.checkers.class_module import HassEnforceClassModule
+from pylint_home_assistant.checkers.config_flow.no_name import (
+    HassEnforceConfigFlowNoNameChecker,
+)
+from pylint_home_assistant.checkers.config_flow.no_polling import (
+    HassEnforceConfigFlowNoPollingChecker,
+)
+from pylint_home_assistant.checkers.config_flow.unique_id_no_ip import (
+    HassEnforceConfigEntryUniqueIdNoIpChecker,
+)
+from pylint_home_assistant.checkers.decorator import HassDecoratorChecker
+from pylint_home_assistant.checkers.greek_micro_char import (
+    HassEnforceGreekMicroCharChecker,
+)
+from pylint_home_assistant.checkers.imports import HassImportsFormatChecker
+from pylint_home_assistant.checkers.runtime_data import HassEnforceRuntimeDataChecker
+from pylint_home_assistant.checkers.sorted_platforms import (
+    HassEnforceSortedPlatformsChecker,
+)
+from pylint_home_assistant.checkers.super_call import HassEnforceSuperCallChecker
+from pylint_home_assistant.checkers.type_hints import HassTypeHintChecker
+from pylint_home_assistant.checkers.utcnow import HassEnforceUtcnowChecker
+from pylint_home_assistant.helpers.integration import clear_caches
 import pytest
-
-BASE_PATH = Path(__file__).parents[2]
-
-
-def _load_plugin_from_file(module_name: str, file: str) -> ModuleType:
-    """Load plugin from file path."""
-    spec = spec_from_file_location(
-        module_name,
-        str(BASE_PATH.joinpath(file)),
-    )
-    assert spec and spec.loader
-
-    module = module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-@pytest.fixture(name="hass_enforce_type_hints", scope="package")
-def hass_enforce_type_hints_fixture() -> ModuleType:
-    """Fixture to provide a requests mocker."""
-    return _load_plugin_from_file(
-        "hass_enforce_type_hints",
-        "pylint/plugins/hass_enforce_type_hints.py",
-    )
 
 
 @pytest.fixture(name="linter")
 def linter_fixture() -> UnittestLinter:
-    """Fixture to provide a requests mocker."""
+    """Fixture to provide a UnittestLinter."""
     return UnittestLinter()
 
 
 @pytest.fixture(name="type_hint_checker")
-def type_hint_checker_fixture(hass_enforce_type_hints, linter) -> BaseChecker:
-    """Fixture to provide a requests mocker."""
-    type_hint_checker = hass_enforce_type_hints.HassTypeHintChecker(linter)
+def type_hint_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a type hint checker."""
+    type_hint_checker = HassTypeHintChecker(linter)
     type_hint_checker.module = "homeassistant.components.pylint_test"
     return type_hint_checker
-
-
-@pytest.fixture(name="hass_imports", scope="package")
-def hass_imports_fixture() -> ModuleType:
-    """Fixture to provide a requests mocker."""
-    return _load_plugin_from_file(
-        "hass_imports",
-        "pylint/plugins/hass_imports.py",
-    )
 
 
 @pytest.fixture(name="imports_checker")
-def imports_checker_fixture(hass_imports, linter) -> BaseChecker:
-    """Fixture to provide a requests mocker."""
-    type_hint_checker = hass_imports.HassImportsFormatChecker(linter)
+def imports_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide an imports checker."""
+    type_hint_checker = HassImportsFormatChecker(linter)
     type_hint_checker.module = "homeassistant.components.pylint_test"
     return type_hint_checker
 
 
-@pytest.fixture(name="hass_enforce_super_call", scope="package")
-def hass_enforce_super_call_fixture() -> ModuleType:
-    """Fixture to provide a requests mocker."""
-    return _load_plugin_from_file(
-        "hass_enforce_super_call",
-        "pylint/plugins/hass_enforce_super_call.py",
-    )
-
-
 @pytest.fixture(name="super_call_checker")
-def super_call_checker_fixture(hass_enforce_super_call, linter) -> BaseChecker:
-    """Fixture to provide a requests mocker."""
-    super_call_checker = hass_enforce_super_call.HassEnforceSuperCallChecker(linter)
+def super_call_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a super call checker."""
+    super_call_checker = HassEnforceSuperCallChecker(linter)
     super_call_checker.module = "homeassistant.components.pylint_test"
     return super_call_checker
 
 
-@pytest.fixture(name="hass_enforce_sorted_platforms", scope="package")
-def hass_enforce_sorted_platforms_fixture() -> ModuleType:
-    """Fixture to the content for the hass_enforce_sorted_platforms check."""
-    return _load_plugin_from_file(
-        "hass_enforce_sorted_platforms",
-        "pylint/plugins/hass_enforce_sorted_platforms.py",
-    )
-
-
 @pytest.fixture(name="enforce_sorted_platforms_checker")
-def enforce_sorted_platforms_checker_fixture(
-    hass_enforce_sorted_platforms, linter
-) -> BaseChecker:
-    """Fixture to provide a hass_enforce_sorted_platforms checker."""
-    enforce_sorted_platforms_checker = (
-        hass_enforce_sorted_platforms.HassEnforceSortedPlatformsChecker(linter)
-    )
+def enforce_sorted_platforms_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a sorted platforms checker."""
+    enforce_sorted_platforms_checker = HassEnforceSortedPlatformsChecker(linter)
     enforce_sorted_platforms_checker.module = "homeassistant.components.pylint_test"
     return enforce_sorted_platforms_checker
 
 
-@pytest.fixture(name="hass_enforce_class_module", scope="package")
-def hass_enforce_class_module_fixture() -> ModuleType:
-    """Fixture to the content for the hass_enforce_class_module check."""
-    return _load_plugin_from_file(
-        "hass_enforce_class_module",
-        "pylint/plugins/hass_enforce_class_module.py",
-    )
-
-
 @pytest.fixture(name="enforce_class_module_checker")
-def enforce_class_module_fixture(hass_enforce_class_module, linter) -> BaseChecker:
-    """Fixture to provide a hass_enforce_class_module checker."""
-    enforce_class_module_checker = hass_enforce_class_module.HassEnforceClassModule(
-        linter
-    )
+def enforce_class_module_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a class module checker."""
+    enforce_class_module_checker = HassEnforceClassModule(linter)
     enforce_class_module_checker.module = "homeassistant.components.pylint_test"
     return enforce_class_module_checker
 
 
-@pytest.fixture(name="hass_decorator", scope="package")
-def hass_decorator_fixture() -> ModuleType:
-    """Fixture to provide a pylint plugin."""
-    return _load_plugin_from_file(
-        "hass_imports",
-        "pylint/plugins/hass_decorator.py",
-    )
-
-
 @pytest.fixture(name="decorator_checker")
-def decorator_checker_fixture(hass_decorator, linter) -> BaseChecker:
-    """Fixture to provide a pylint checker."""
-    type_hint_checker = hass_decorator.HassDecoratorChecker(linter)
+def decorator_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a decorator checker."""
+    type_hint_checker = HassDecoratorChecker(linter)
     type_hint_checker.module = "homeassistant.components.pylint_test"
     return type_hint_checker
 
 
-@pytest.fixture(name="hass_enforce_greek_micro_char", scope="package")
-def hass_enforce_greek_micro_checker_fixture() -> ModuleType:
-    """Fixture to the content for the hass_enforce_greek_micro_char check."""
-    return _load_plugin_from_file(
-        "hass_enforce_greek_micro_char",
-        "pylint/plugins/hass_enforce_greek_micro_char.py",
-    )
+@pytest.fixture(name="enforce_config_entry_unique_id_no_ip_checker")
+def enforce_config_entry_unique_id_no_ip_checker_fixture(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a unique_id_no_ip checker."""
+    clear_caches()
+    checker = HassEnforceConfigEntryUniqueIdNoIpChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
+@pytest.fixture(name="enforce_config_flow_no_name_checker")
+def enforce_config_flow_no_name_checker_fixture(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a config_flow_no_name checker."""
+    clear_caches()
+    checker = HassEnforceConfigFlowNoNameChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
+@pytest.fixture(name="enforce_config_flow_no_polling_checker")
+def enforce_config_flow_no_polling_checker_fixture(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a config_flow_no_polling checker."""
+    checker = HassEnforceConfigFlowNoPollingChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
+@pytest.fixture(name="enforce_runtime_data_checker")
+def enforce_runtime_data_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a runtime_data checker."""
+    clear_caches()
+    enforce_runtime_data_checker = HassEnforceRuntimeDataChecker(linter)
+    enforce_runtime_data_checker.module = "homeassistant.components.pylint_test"
+    return enforce_runtime_data_checker
 
 
 @pytest.fixture(name="enforce_greek_micro_char_checker")
-def enforce_greek_micro_char_checker_fixture(
-    hass_enforce_greek_micro_char, linter
-) -> BaseChecker:
-    """Fixture to provide a hass_enforce_greek_micro_char checker."""
-    enforce_greek_micro_char_checker = (
-        hass_enforce_greek_micro_char.HassEnforceGreekMicroCharChecker(linter)
-    )
+def enforce_greek_micro_char_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a greek micro char checker."""
+    enforce_greek_micro_char_checker = HassEnforceGreekMicroCharChecker(linter)
     enforce_greek_micro_char_checker.module = "homeassistant.components.pylint_test"
     return enforce_greek_micro_char_checker
+
+
+@pytest.fixture(name="enforce_utcnow_checker")
+def enforce_utcnow_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a utcnow checker."""
+    enforce_utcnow_checker = HassEnforceUtcnowChecker(linter)
+    enforce_utcnow_checker.module = "homeassistant.components.pylint_test"
+    return enforce_utcnow_checker

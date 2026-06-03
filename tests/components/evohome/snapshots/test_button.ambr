@@ -1,0 +1,482 @@
+# serializer version: 1
+# name: test_setup_platform[botched][button.reset_bathroom_dn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Bathroom Dn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_bathroom_dn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_dead_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Dead Zone',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_dead_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_domestic_hot_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Domestic Hot Water',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_domestic_hot_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_front_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Front Room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_front_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_kids_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Kids Room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_kids_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Kitchen',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_kitchen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_main_bedroom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Main Bedroom',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_bedroom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Main Room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_bathroom_dn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Bathroom Dn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_bathroom_dn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_dead_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Dead Zone',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_dead_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_domestic_hot_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Domestic Hot Water',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_domestic_hot_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_front_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Front Room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_front_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_kids_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Kids Room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_kids_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Kitchen',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_kitchen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_main_bedroom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Main Bedroom',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_bedroom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Main Room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_spare_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Spare Room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_spare_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h032585][button.reset_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h032585][button.reset_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset THERMOSTAT',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h099625][button.reset_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h099625][button.reset_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset THERMOSTAT',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h099625][button.reset_thermostat_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset THERMOSTAT',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h139906][button.reset_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Thermostat',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h139906][button.reset_thermostat_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Thermostat 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h139906][button.reset_vr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Vr**********',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_vr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_ba-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Ba******',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_ba',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_ka-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Ka*********',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_ka',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_ka_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Ka*****',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_ka_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_kl-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Kl********',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_kl',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_sl-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Sl********',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_sl',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_wo-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Wo*******',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_wo',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[minimal][button.reset_main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Main Room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[minimal][button.reset_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[sys_004][button.reset_living_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Living room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_living_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[sys_004][button.reset_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Thermostat',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
