@@ -57,10 +57,12 @@ from .const import (
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
+    DATA_STORE,
     DOMAIN,
     SIGNAL_RECORD_NOTIFICATION,
+    STORAGE_SAVE_DELAY_SECONDS,
 )
-from .helpers import device_info
+from .helpers import device_info, savable_state
 from .push_notification import PushChannel
 from .util import supports_push
 
@@ -292,9 +294,18 @@ class MobileAppNotificationService(BaseNotificationService):
     ) -> None:
         """Send a message to a target."""
         live_activity_token: str | None = None
+        live_activity_event: LiveActivityEvent | None = None
+        live_activity_tag: str | None = None
         if resolved := self._resolve_live_activity_push(entry, data):
-            live_activity_token, event = resolved
-            data = _translate_live_activity_payload(data, event)
+            live_activity_token, live_activity_event = resolved
+            live_activity_tag = (data.get(ATTR_DATA) or {}).get(ATTR_TAG)
+            data = {
+                **data,
+                ATTR_DATA: {
+                    **(data.get(ATTR_DATA) or {}),
+                    "event": live_activity_event,
+                },
+            }
 
         try:
             await _send_message(
@@ -308,57 +319,40 @@ class MobileAppNotificationService(BaseNotificationService):
                 _LOGGER.warning(str(e))
             else:
                 _LOGGER.error(str(e))
-
-
-# Documented flat fields that get lifted into content_state under the same
-# key name. The wire keys match the iOS HALiveActivityAttributes.ContentState
-# struct.
-_LIVE_ACTIVITY_PASS_THROUGH_FIELDS = frozenset(
-    {"critical_text", "progress", "progress_max", "chronometer"}
-)
-
-# Documented flat fields that get renamed when lifted into content_state.
-_LIVE_ACTIVITY_RENAMED_FIELDS = {
-    "notification_icon": "icon",
-    "notification_icon_color": "color",
-}
-
-
-def _translate_live_activity_payload(
-    data: dict[str, Any], event: LiveActivityEvent
-) -> dict[str, Any]:
-    """Lift the documented flat Live Activity fields into content_state."""
-    notification_data = {**(data.get(ATTR_DATA) or {}), "event": event}
-    new_data = {**data, ATTR_DATA: notification_data}
-
-    if event == LiveActivityEvent.END:
-        # clear_notification is a command string, not body text the user wants
-        # to see briefly before dismissal — strip it so the relay doesn't copy
-        # it into content_state.message.
-        new_data.pop(ATTR_MESSAGE, None)
-        return new_data
-
-    content_state: dict[str, Any] = dict(notification_data.get("content_state", {}))
-
-    for key in _LIVE_ACTIVITY_PASS_THROUGH_FIELDS:
-        if (value := notification_data.get(key)) is not None:
-            content_state.setdefault(key, value)
-
-    for flat_key, wire_key in _LIVE_ACTIVITY_RENAMED_FIELDS.items():
-        if (value := notification_data.get(flat_key)) is not None:
-            content_state.setdefault(wire_key, value)
-
-    if (when := notification_data.get("when")) is not None:
-        if notification_data.get("when_relative"):
-            countdown_end = dt_util.utcnow().timestamp() + when
         else:
-            countdown_end = when
-        content_state.setdefault("countdown_end", countdown_end)
+            if (
+                live_activity_event == LiveActivityEvent.END
+                and live_activity_tag is not None
+            ):
+                _remove_live_activity_token(self.hass, entry, live_activity_tag)
 
-    if content_state:
-        notification_data["content_state"] = content_state
 
-    return new_data
+@callback
+def _remove_live_activity_token(
+    hass: HomeAssistant, entry: ConfigEntry, activity_tag: str
+) -> None:
+    """Remove a stored Live Activity token after Core sends an end event.
+
+    Once the activity is ended, the per-activity token can no longer be used.
+    Clearing it lets recurring automations reuse the same tag and start a new
+    Live Activity with the device's push-to-start token.
+    """
+    webhook_id = entry.data[ATTR_WEBHOOK_ID]
+    live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+
+    if webhook_id not in live_activity_tokens:
+        return
+
+    device_tokens = live_activity_tokens[webhook_id]
+    if device_tokens.pop(activity_tag, None) is None:
+        return
+
+    if not device_tokens:
+        del live_activity_tokens[webhook_id]
+
+    hass.data[DOMAIN][DATA_STORE].async_delay_save(
+        partial(savable_state, hass), STORAGE_SAVE_DELAY_SECONDS
+    )
 
 
 async def _send_message(

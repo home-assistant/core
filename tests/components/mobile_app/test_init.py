@@ -17,7 +17,6 @@ from homeassistant.components.mobile_app.const import (
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_STORE,
     DOMAIN,
-    LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     STORAGE_KEY,
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
@@ -717,7 +716,7 @@ async def test_live_activity_expired_tokens_cleaned_at_startup(
     """Test that expired tokens are dropped at startup and the store is saved."""
     now = dt_util.utcnow().timestamp()
     expired_ts = now - 1
-    valid_ts = now + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+    valid_ts = now + 3600
 
     hass_storage[STORAGE_KEY] = {
         "key": STORAGE_KEY,

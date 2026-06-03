@@ -20,7 +20,6 @@ from homeassistant.components.mobile_app.const import (
     DATA_DEVICES,
     DATA_LIVE_ACTIVITY_TOKENS,
     DOMAIN,
-    LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
 )
 from homeassistant.components.tag import EVENT_TAG_SCANNED
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
@@ -1424,6 +1423,7 @@ async def test_webhook_update_live_activity_token(
     """Test that we can store a Live Activity push token."""
     freezer.move_to("2026-01-01 00:00:00+00:00")
     webhook_id = create_registrations[1]["webhook_id"]
+    expires_at = dt_util.utcnow().timestamp() + 3600
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
         json={
@@ -1431,6 +1431,7 @@ async def test_webhook_update_live_activity_token(
             "data": {
                 "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "expires_at": expires_at,
             },
         },
     )
@@ -1446,9 +1447,7 @@ async def test_webhook_update_live_activity_token(
                 "token": (
                     "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
                 ),
-                "expires_at": (
-                    dt_util.utcnow().timestamp() + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
-                ),
+                "expires_at": expires_at,
             },
         },
     }
@@ -1464,6 +1463,7 @@ async def test_webhook_live_activity_token_schedules_cleanup(
     freezer.move_to("2026-01-01 00:00:00+00:00")
     webhook_id = create_registrations[1]["webhook_id"]
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    expires_at = dt_util.utcnow().timestamp() + 60
     # No tokens yet, and no cleanup scheduled
     assert tokens == {}
 
@@ -1474,6 +1474,7 @@ async def test_webhook_live_activity_token_schedules_cleanup(
             "data": {
                 "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "expires_at": expires_at,
             },
         },
     )
@@ -1486,14 +1487,12 @@ async def test_webhook_live_activity_token_schedules_cleanup(
                 "token": (
                     "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
                 ),
-                "expires_at": (
-                    dt_util.utcnow().timestamp() + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
-                ),
+                "expires_at": expires_at,
             },
         },
     }
 
-    freezer.tick(timedelta(seconds=LIVE_ACTIVITY_TOKEN_TTL_SECONDS + 1))
+    freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1509,25 +1508,35 @@ async def test_webhook_live_activity_token_cleanup_reschedules_for_remaining(
     """Test cleanup reschedules itself when some tokens remain after a sweep."""
     freezer.move_to("2026-01-01 00:00:00+00:00")
     webhook_id = create_registrations[1]["webhook_id"]
+    first_expires_at = dt_util.utcnow().timestamp() + 60
 
-    # First token at t=0, expires at t=TTL.
+    # First token at t=0, expires in 60 seconds.
     await webhook_client.post(
         f"/api/webhook/{webhook_id}",
         json={
             "type": "live_activity_token",
-            "data": {"tag": "first", "push_token": "a" * 64},
+            "data": {
+                "tag": "first",
+                "push_token": "a" * 64,
+                "expires_at": first_expires_at,
+            },
         },
     )
 
-    # Advance halfway through TTL, then store a second token. Its expiry is
-    # TTL/2 later than the first's, so the initial cleanup sweep should remove
-    # only the first and reschedule itself for the second's expiry.
-    freezer.tick(timedelta(seconds=LIVE_ACTIVITY_TOKEN_TTL_SECONDS // 2))
+    # Advance halfway to the first expiry, then store a second token. Its expiry
+    # is later than the first's, so the initial cleanup sweep should remove only
+    # the first and reschedule itself for the second's expiry.
+    freezer.tick(timedelta(seconds=30))
+    second_expires_at = dt_util.utcnow().timestamp() + 60
     await webhook_client.post(
         f"/api/webhook/{webhook_id}",
         json={
             "type": "live_activity_token",
-            "data": {"tag": "second", "push_token": "b" * 64},
+            "data": {
+                "tag": "second",
+                "push_token": "b" * 64,
+                "expires_at": second_expires_at,
+            },
         },
     )
 
@@ -1536,7 +1545,7 @@ async def test_webhook_live_activity_token_cleanup_reschedules_for_remaining(
 
     # Fire just past the first token's expiry. The originally scheduled sweep
     # runs, removes the first token, and reschedules itself for the second.
-    freezer.tick(timedelta(seconds=LIVE_ACTIVITY_TOKEN_TTL_SECONDS // 2 + 1))
+    freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1544,7 +1553,7 @@ async def test_webhook_live_activity_token_cleanup_reschedules_for_remaining(
 
     # Fire past the second token's expiry. The rescheduled sweep should run
     # and remove the second token, draining the store.
-    freezer.tick(timedelta(seconds=LIVE_ACTIVITY_TOKEN_TTL_SECONDS))
+    freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1560,6 +1569,7 @@ async def test_webhook_live_activity_dismissed(
     """Test that we can dismiss a Live Activity and clean up its token."""
     freezer.move_to("2026-01-01 00:00:00+00:00")
     webhook_id = create_registrations[1]["webhook_id"]
+    expires_at = dt_util.utcnow().timestamp() + 3600
 
     # First register a token
     await webhook_client.post(
@@ -1569,6 +1579,7 @@ async def test_webhook_live_activity_dismissed(
             "data": {
                 "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "expires_at": expires_at,
             },
         },
     )
@@ -1580,9 +1591,7 @@ async def test_webhook_live_activity_dismissed(
                 "token": (
                     "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
                 ),
-                "expires_at": (
-                    dt_util.utcnow().timestamp() + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
-                ),
+                "expires_at": expires_at,
             },
         },
     }

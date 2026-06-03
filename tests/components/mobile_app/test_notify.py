@@ -889,8 +889,8 @@ async def test_notify_live_activity_uses_stored_token(
     call_json = aioclient_mock.mock_calls[0][2]
     # FCM token stays as push_token; live activity APNs token is a separate
     # field. A stored per-tag token means the activity is already running, so
-    # the outbound payload carries event=update and flat fields are lifted
-    # into content_state for the iOS ActivityKit decoder.
+    # the outbound payload carries event=update and leaves flat fields for
+    # the relay or local app to translate.
     assert call_json == {
         "push_token": "PUSH_TOKEN",
         "live_activity_token": "LIVE_ACTIVITY_TOKEN_HEX",
@@ -900,7 +900,6 @@ async def test_notify_live_activity_uses_stored_token(
             "tag": "washer_cycle",
             "progress": 2700,
             "event": "update",
-            "content_state": {"progress": 2700},
         },
         "registration_info": {
             "app_id": "io.homeassistant.mobile_app",
@@ -1061,10 +1060,10 @@ async def test_notify_normal_notification_ignores_live_activity_tokens(
     }
 
 
-async def test_notify_live_activity_translates_documented_flat_fields(
+async def test_notify_live_activity_preserves_documented_flat_fields(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
-    """Test the docs' flat fields lift into content_state under the wire names."""
+    """Test the docs' flat fields pass through unchanged for relay translation."""
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
         "washer_cycle": {
             "token": "TOKEN",
@@ -1095,21 +1094,24 @@ async def test_notify_live_activity_translates_documented_flat_fields(
 
     call_json = aioclient_mock.mock_calls[0][2]
     assert call_json["data"]["event"] == "update"
-    assert call_json["data"]["content_state"] == {
+    assert call_json["data"] == {
+        "live_update": True,
+        "tag": "washer_cycle",
         "progress": 900,
         "progress_max": 3600,
         "chronometer": True,
         "critical_text": "Rinse",
-        "icon": "mdi:washing-machine",
-        "color": "#2196F3",
+        "notification_icon": "mdi:washing-machine",
+        "notification_icon_color": "#2196F3",
+        "event": "update",
     }
 
 
 @pytest.mark.freeze_time("2026-01-01T00:00:00Z")
-async def test_notify_live_activity_when_relative_computes_countdown_end(
+async def test_notify_live_activity_when_relative_passes_through(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
-    """Test when + when_relative becomes an absolute countdown_end unix timestamp."""
+    """Test when + when_relative remain flat for relay translation."""
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
         "timer": {
             "token": "TOKEN",
@@ -1133,16 +1135,20 @@ async def test_notify_live_activity_when_relative_computes_countdown_end(
         blocking=True,
     )
 
-    countdown_end = aioclient_mock.mock_calls[0][2]["data"]["content_state"][
-        "countdown_end"
-    ]
-    assert countdown_end == dt_util.utcnow().timestamp() + 300
+    call_data = aioclient_mock.mock_calls[0][2]["data"]
+    assert call_data == {
+        "live_update": True,
+        "tag": "timer",
+        "when": 300,
+        "when_relative": True,
+        "event": "update",
+    }
 
 
-async def test_notify_live_activity_explicit_content_state_wins_over_flat(
+async def test_notify_live_activity_explicit_content_state_passes_through(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
-    """Test that an explicit content_state value is not overwritten by the flat shorthand."""
+    """Test that explicit content_state passes through without Core translation."""
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
         "washer_cycle": {
             "token": "TOKEN",
@@ -1166,7 +1172,13 @@ async def test_notify_live_activity_explicit_content_state_wins_over_flat(
         blocking=True,
     )
 
-    assert aioclient_mock.mock_calls[0][2]["data"]["content_state"]["progress"] == 999
+    assert aioclient_mock.mock_calls[0][2]["data"] == {
+        "live_update": True,
+        "tag": "washer_cycle",
+        "progress": 100,
+        "content_state": {"progress": 999},
+        "event": "update",
+    }
 
 
 async def test_notify_clear_notification_ends_known_live_activity(
@@ -1194,8 +1206,95 @@ async def test_notify_clear_notification_ends_known_live_activity(
     call_json = aioclient_mock.mock_calls[0][2]
     assert call_json["live_activity_token"] == "TOKEN_TO_END"
     assert call_json["data"]["event"] == "end"
-    # The command string should not leak through to the activity's final render.
-    assert "message" not in call_json
+    assert call_json["message"] == "clear_notification"
+    assert "mock-webhook_id" not in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+
+
+async def test_notify_clear_notification_allows_same_tag_to_start_again(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test clear_notification removes the tag token so recurring automations restart."""
+    push_url = "https://mobile-push.home-assistant.dev/push"
+    now = datetime.now() + timedelta(hours=24)
+    iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    aioclient_mock.post(
+        push_url,
+        json={
+            "rateLimits": {
+                "successful": 1,
+                "errors": 0,
+                "maximum": 150,
+                "resetsAt": iso_time,
+            }
+        },
+    )
+
+    entry = MockConfigEntry(
+        data={
+            "app_data": {
+                "push_token": "FCM_TOKEN",
+                "push_url": push_url,
+                "live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+            },
+            "app_id": "io.robbie.HomeAssistant",
+            "app_name": "Home Assistant",
+            "app_version": "2024.1",
+            "device_id": "ios-device-1",
+            "device_name": "iPhone",
+            "manufacturer": "Apple",
+            "model": "iPhone 15",
+            "os_name": "iOS",
+            "os_version": "17.2",
+            "supports_encryption": False,
+            "user_id": hass_admin_user.id,
+            "webhook_id": "ios-webhook-1",
+        },
+        domain=DOMAIN,
+        source="registration",
+        title="iPhone entry",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["ios-webhook-1"] = {
+        "laundry": {
+            "token": "TOKEN_TO_END",
+            "expires_at": dt_util.utcnow().timestamp() + 3600,
+        }
+    }
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_iphone",
+        {
+            "message": "clear_notification",
+            "target": ["ios-webhook-1"],
+            "data": {"tag": "laundry"},
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_iphone",
+        {
+            "message": "Laundry started",
+            "target": ["ios-webhook-1"],
+            "data": {"live_update": True, "tag": "laundry"},
+        },
+        blocking=True,
+    )
+
+    assert aioclient_mock.mock_calls[0][2]["live_activity_token"] == "TOKEN_TO_END"
+    assert aioclient_mock.mock_calls[0][2]["data"]["event"] == "end"
+    assert aioclient_mock.mock_calls[1][2]["live_activity_token"] == (
+        "PUSH_TO_START_HEX_TOKEN"
+    )
+    assert aioclient_mock.mock_calls[1][2]["data"]["event"] == "start"
 
 
 async def test_notify_clear_notification_without_stored_token_passes_through(

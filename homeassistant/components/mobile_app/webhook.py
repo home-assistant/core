@@ -50,7 +50,6 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -100,7 +99,6 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
-    LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     SCHEMA_APP_DATA,
     SENSOR_TYPES,
     SIGNAL_LOCATION_UPDATE,
@@ -790,6 +788,7 @@ async def webhook_scan_tag(
     {
         vol.Required(ATTR_TAG): cv.string,
         vol.Required(ATTR_PUSH_TOKEN): cv.string,
+        vol.Required(ATTR_EXPIRES_AT): cv.positive_float,
     }
 )
 async def webhook_update_live_activity_token(
@@ -804,7 +803,7 @@ async def webhook_update_live_activity_token(
     was_empty = not live_activity_tokens
     live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
         ATTR_TOKEN: data[ATTR_PUSH_TOKEN],
-        ATTR_EXPIRES_AT: dt_util.utcnow().timestamp() + LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
+        ATTR_EXPIRES_AT: data[ATTR_EXPIRES_AT],
     }
     # Debounce disk writes: ActivityKit can hand a fresh per-tag token to the
     # iOS app multiple times in quick succession (e.g. when several activities

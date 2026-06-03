@@ -11,9 +11,6 @@ STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 2
 STORAGE_SAVE_DELAY_SECONDS = 10
 
-# A Live Activity can be active for up to eight hours unless its app or a person ends it before this limit. https://developer.apple.com/documentation/activitykit/displaying-live-data-with-live-activities#Understand-constraints
-LIVE_ACTIVITY_TOKEN_TTL_SECONDS = 8 * 3600
-
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_REMOTE_UI_URL = "remote_ui_url"
 CONF_SECRET = "secret"
