@@ -130,7 +130,15 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         link_keys_json = link_keys.to_json()
-        panel_unique_id = _panel_unique_id(panel_info)
+        try:
+            panel_unique_id = _panel_unique_id(panel_info)
+        except ValueError:
+            errors["base"] = "unknown"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors=errors,
+            )
         data: dict[str, Any] = {
             CONF_HOST: host,
             CONF_PORT: port,
@@ -179,8 +187,11 @@ def _panel_unique_id(panel_info: dict[str, Any]) -> str:
         panel_info.get("serial")
         or panel_info.get("panel_serial")
         or panel_info.get("mac")
-        or panel_info["panel_mac"]
+        or panel_info.get("panel_mac")
     )
+    if not unique_id:
+        msg = "Panel info did not include a stable identifier"
+        raise ValueError(msg)
     return normalize_identifier(str(unique_id))
 
 

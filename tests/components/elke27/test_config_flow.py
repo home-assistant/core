@@ -84,6 +84,8 @@ def test_panel_helpers() -> None:
     assert config_flow._panel_unique_id({"mac": "AA:BB:CC:DD:EE:FF"}) == (
         "aabbccddeeff"
     )
+    with pytest.raises(ValueError, match="stable identifier"):
+        config_flow._panel_unique_id({})
 
 
 def test_create_client() -> None:
@@ -436,6 +438,39 @@ async def test_unknown_error_maps_to_unknown(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "unknown"
         client.async_disconnect.assert_awaited_once()
+
+
+async def test_missing_panel_identifier_maps_to_unknown(hass: HomeAssistant) -> None:
+    """Test missing panel identifiers map to a form error."""
+    client = AsyncMock()
+    client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
+    client.async_connect = AsyncMock(return_value=None)
+    client.wait_ready = AsyncMock(return_value=True)
+    client.async_disconnect = AsyncMock(return_value=None)
+    client.snapshot = FakeSnapshot(
+        panel=FakePanelInfo(panel_name="Test Panel", mac="", panel_serial=""),
+        table_info=FakeTableInfo(areas=8, zones=16),
+    )
+
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.35",
+                "access_code": "1234",
+                "passphrase": "test-pass",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]["base"] == "unknown"
+    client.async_disconnect.assert_awaited_once()
 
 
 async def test_auth_error_maps_to_cannot_connect(hass: HomeAssistant) -> None:
