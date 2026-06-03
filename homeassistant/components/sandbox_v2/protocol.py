@@ -1,10 +1,20 @@
-"""Phase 5 wire-protocol constants and payload helpers.
+"""Wire-protocol message-type constants.
 
-The integration and the sandbox runtime exchange JSON-line messages over
-the :class:`Channel` set up in Phase 4. Each message type is namespaced
-``sandbox_v2/…``. Both sides share the same names — kept here on the HA
-side and mirrored verbatim in :mod:`hass_client.protocol` so neither has
-to import the other.
+The integration and the sandbox runtime exchange typed protobuf messages
+over the :class:`Channel`. Each message type is namespaced ``sandbox_v2/…``;
+this module holds the type-string constants. Both sides share the same
+names — kept here on the HA side and mirrored verbatim in
+:mod:`hass_client.protocol` so neither has to import the other.
+
+The wire is protobuf (default codec :class:`~.codec_protobuf.ProtobufCodec`):
+each ``type`` maps to a request/result proto message pair in
+:mod:`.messages` (the `REGISTRY`), generated from
+``sandbox_v2/proto/sandbox_v2.proto``. The payload shapes described below
+are the *logical* contract for each call — they are carried as those typed
+proto messages, not free-form dicts (only genuinely dynamic fields, e.g.
+``service_data`` / state attributes / serialized voluptuous schemas, cross
+as ``Struct`` / ``ListValue``). The line-oriented :class:`~.channel.JsonCodec`
+is retained only as the channel-core test/debug wire.
 
 Main → Sandbox calls:
 

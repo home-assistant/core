@@ -41,7 +41,7 @@ inside the sandbox.
 | | v1 (`sandbox/`) | v2 (`sandbox_v2/`) |
 |---|---|---|
 | Routing | `entry.options["sandbox"]` set by hand | Computed at runtime from manifest + platform inspection ([`classifier.py`](../homeassistant/components/sandbox_v2/classifier.py)) |
-| Transport | Live websocket connection back to main | JSON-line `Channel` over the subprocess's stdin/stdout |
+| Transport | Live websocket connection back to main | Protobuf `Channel` over a pluggable transport (stdio by default, unix socket opt-in; websocket later) |
 | Entity bridge | Bespoke `sandbox/update_state` + `sandbox/entity_command_result` (Option A) | Shared `sandbox_v2/call_service` (Option B) — see [`docs/entity-bridge-decision.md`](docs/entity-bridge-decision.md) |
 | Config flow | Forwarded through host integration | Runs inside the sandbox; main owns the canonical `ConfigEntry` store |
 | Auth | System-user token, full HA scope | System-user token (scope enforcement deferred until the sandbox→main connection lands) |
@@ -76,8 +76,8 @@ The design choices and the failure modes of v1 they fix are recorded in
 └─────────────────────────┬─────────────────────────────────────────┼───────────────────┘
                           │                                         │
                           │  subprocess.Popen                       │  Channel
-                          │  python -m hass_client.sandbox_v2       │  (JSON lines over
-                          │  --name … --url … --token …             │   stdin/stdout)
+                          │  python -m hass_client.sandbox_v2       │  (protobuf frames over
+                          │  --name … --url … --token …             │   stdio / unix socket)
                           ▼                                         │
 ┌──────────────────────────── Sandbox subprocess ──────────────────────────────────────┐
 │  sandbox_v2/hass_client/hass_client/sandbox.py                                       │
@@ -147,15 +147,23 @@ is:
 ```
 python -m hass_client.sandbox_v2 \
     --name <name> \
-    --url ws://localhost:8123/api/websocket \
+    --url stdio:// \
     --token <sandbox access token>
 ```
 
-The runtime prints `sandbox_v2:ready` on stdout once its
-`HomeAssistant` instance is up; the manager parses that marker, then
-opens a `Channel` over the subprocess's remaining stdin/stdout traffic.
-Everything after the marker is JSON-line framed (one message per line,
-length-delimited at the newline).
+`--url` selects the control-channel transport: `stdio://` (the default —
+frames ride the subprocess's stdin/stdout) or `unix://<path>` (the
+manager opens a unix socket and the runtime dials back). `ws://` / `wss://`
+are reserved for the deferred websocket transport and rejected for now.
+The runtime opens the channel and sends a `Ready` frame
+(`sandbox_v2/ready`) as its first message; the manager treats its arrival
+as "running" (there is no stdout text marker — stdout carries nothing but
+channel frames). Frames are protobuf (a `Frame` envelope carrying one
+typed message per `type`; `JsonCodec` is kept only for channel-core tests)
+and length-prefixed (4-byte big-endian length + body) on the stream
+transports. The three-layer split is `Channel` (dispatch core) → `Codec`
+(`Frame` ↔ bytes; `ProtobufCodec` in production) → `Transport`
+(`StreamTransport` length-prefixing over stdio / unix).
 
 ### Health & crash recovery
 
@@ -452,7 +460,7 @@ only thing that differs is how the channel pair is materialised.
 | Plugin | Wire | When to use |
 |---|---|---|
 | `hass_client.testing.pytest_plugin` | in-memory channel pair, `SandboxRuntime` as an asyncio task | fast feedback, freezer-safe |
-| `hass_client.testing.conftest_sandbox` | real stdio JSON-line (`python -m hass_client.sandbox_v2`) | pins the subprocess boundary, freezer tests auto-skip |
+| `hass_client.testing.conftest_sandbox` | real stdio protobuf channel (`python -m hass_client.sandbox_v2`) | pins the subprocess boundary, freezer tests auto-skip |
 
 The compat lane runner
 [`run_compat.py`](run_compat.py) drives either plugin against a list of

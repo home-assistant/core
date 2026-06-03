@@ -366,7 +366,9 @@
             >
           </li>
           <li>
-            <a href="#channel">The channel &mdash; wire protocol over stdio</a>
+            <a href="#channel"
+              >The channel &mdash; protobuf wire over pluggable transports</a
+            >
           </li>
           <li><a href="#flow">Config-flow forwarding</a></li>
           <li>
@@ -438,8 +440,8 @@
       <p>
         Main holds the canonical view of the world. Each sandbox group is a
         separate Python process spawned lazily on first need. The two sides
-        communicate over a JSON-line channel pinned to the subprocess's
-        stdin/stdout. Inside the sandbox, a private
+        communicate over a protobuf channel that rides a pluggable transport
+        (stdio by default, unix socket opt-in). Inside the sandbox, a private
         <code>HomeAssistant</code> instance hosts the integration's real
         <code>async_setup_entry</code>, <code>ConfigFlow</code>, entities,
         services, and events.
@@ -882,7 +884,7 @@
             font-size="10"
             font-style="italic"
           >
-            stdio JSON
+            stdio protobuf
           </text>
           <text
             x="500"
@@ -1279,7 +1281,7 @@
             fill="#a5f3fc"
             font-size="9.5"
           >
-            JSON-line framing, request/response,
+            protobuf framing, request/response,
           </text>
           <text
             x="755"
@@ -1383,7 +1385,7 @@
             >Any platform in <code>SANDBOX_INCOMPATIBLE_PLATFORMS</code> &rarr;
             main.</strong
           >
-          Audio / byte-stream platforms the JSON channel can't ferry:
+          Audio / byte-stream platforms the control channel can't ferry:
           <code>stt</code>, <code>tts</code>, <code>conversation</code>,
           <code>assist_satellite</code>, <code>wake_word</code>,
           <code>camera</code>.
@@ -1463,16 +1465,21 @@
 
       <pre><code>python -m hass_client.sandbox_v2 \
     --name &lt;name&gt; \
-    --url ws://localhost:8123/api/websocket \
-    --token &lt;sandbox access token&gt; \
-    [--share-states] [--share-entity-registry] [--share-areas]</code></pre>
+    --url stdio:// \
+    --token &lt;sandbox access token&gt;</code></pre>
 
       <p>
-        The runtime prints <code>sandbox_v2:ready</code> on stdout once its
-        <code>HomeAssistant</code> instance is up. The manager parses that
-        marker, then opens a JSON-line <code>Channel</code> over the remaining
-        stdin/stdout traffic. Everything after the marker is length-delimited at
-        the newline &mdash; one message per line.
+        <code>--url</code> selects the control-channel transport:
+        <code>stdio://</code> (the default &mdash; frames over the subprocess's
+        stdin/stdout) or <code>unix://&lt;path&gt;</code> (the manager opens a
+        unix socket and the runtime dials back). <code>ws://</code> /
+        <code>wss://</code> are reserved for the deferred websocket transport
+        and rejected for now. The runtime opens the channel and sends a
+        <code>Ready</code> frame (<code>sandbox_v2/ready</code>) as its first
+        message; the manager treats its arrival as &ldquo;running&rdquo; &mdash;
+        there is no stdout text marker, so stdout carries nothing but channel
+        frames. Frames are protobuf and length-prefixed (4-byte big-endian
+        length + body) on the stream transports.
       </p>
 
       <h3>Health and crash recovery</h3>
@@ -1553,18 +1560,51 @@
       </div>
 
       <!-- ======================================================== -->
-      <h2 id="channel">5. The channel &mdash; wire protocol over stdio</h2>
+      <h2 id="channel">
+        5. The channel &mdash; protobuf wire over pluggable transports
+      </h2>
+
+      <p>
+        The channel is split into three layers so the wire format and the byte
+        transport can each change without touching the concurrency-critical
+        dispatch core:
+      </p>
+
+      <ul>
+        <li>
+          <strong><code>Channel</code></strong> &mdash; the dispatch core
+          (pending-id map, inflight semaphore, register / call / push / close).
+          It speaks <code>Frame</code> objects and never touches raw bytes.
+        </li>
+        <li>
+          <strong><code>Codec</code></strong> &mdash; <code>Frame</code> &harr;
+          bytes. <code>ProtobufCodec</code> is the production wire (a typed
+          protobuf <code>Frame</code> envelope; the codec owns the
+          <code>type&nbsp;&rarr;&nbsp;message</code> registry). The
+          line-oriented <code>JsonCodec</code> is kept only as the channel-core
+          test/debug wire.
+        </li>
+        <li>
+          <strong><code>Transport</code></strong> &mdash; moves whole frame
+          blobs. <code>StreamTransport</code> length-prefixes each frame (4-byte
+          big-endian length + body) over a reader/writer pair (stdio, unix
+          socket); a future <code>WebSocketTransport</code> drops in via
+          <code>Channel.from_transport</code>.
+        </li>
+      </ul>
 
       <p>
         Both sides of the bridge share an identical
-        <code>protocol.py</code> &mdash; the constants are mirrored verbatim in
+        <code>protocol.py</code> (type-string constants, mirrored verbatim in
         <code>homeassistant/components/sandbox_v2/protocol.py</code> and
-        <code>sandbox_v2/hass_client/hass_client/protocol.py</code>. Each
-        message is a single JSON object on its own line over the subprocess's
-        stdio:
+        <code>sandbox_v2/hass_client/hass_client/protocol.py</code>) and an
+        identical <code>messages.py</code> / generated <code>_pb2</code> pair. A
+        <code>call_service</code> request, for example, is a
+        <code>CallService</code> message (<code>domain</code>,
+        <code>service</code>, plus <code>Struct</code> <code>target</code> /
+        <code>service_data</code> for the dynamic fields) wrapped in the
+        <code>Frame</code> envelope.
       </p>
-
-      <pre><code>{"id": 17, "type": "sandbox_v2/call_service", "domain": "light", "service": "turn_on", "target": {"entity_id": ["light.kitchen"]}, "service_data": {}}</code></pre>
 
       <p>Three message shapes ride the channel:</p>
 
@@ -1583,7 +1623,7 @@
         </li>
         <li>
           <strong>Graceful close.</strong> Either end can flush a final reply
-          and then close stdin/stdout cleanly.
+          and then close the channel cleanly.
         </li>
       </ul>
 
@@ -2182,7 +2222,8 @@
           <tr>
             <td><code>hass_client.testing.conftest_sandbox</code></td>
             <td>
-              Real stdio JSON-line (<code>python -m hass_client.sandbox_v2</code
+              Real stdio protobuf channel (<code
+                >python -m hass_client.sandbox_v2</code
               >)
             </td>
             <td>Pins the subprocess boundary; freezer tests auto-skip</td>
@@ -2292,8 +2333,8 @@
           <h4>Sandbox lifecycle</h4>
           <p>
             <code>SandboxManager</code> spawns one subprocess per group lazily;
-            restart-on-crash with a 3/60&nbsp;s budget;
-            <code>sandbox_v2:ready</code> handshake.
+            restart-on-crash with a 3/60&nbsp;s budget; <code>Ready</code>-frame
+            handshake.
           </p>
         </div>
 

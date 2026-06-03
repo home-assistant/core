@@ -8,9 +8,10 @@ dispatch core:
   semaphore, ``register`` / ``call`` / ``push`` / ``close``. It speaks in
   :class:`Frame` objects and never touches raw bytes.
 * :class:`Codec` — turns a :class:`Frame` into bytes and back.
-  :class:`JsonCodec` is the line-compatible default (one JSON object per
-  frame); :mod:`.codec_protobuf` adds the protobuf wire on top of the same
-  seam.
+  :class:`~.codec_protobuf.ProtobufCodec` is the production wire (a typed
+  protobuf ``Frame`` envelope; the codec owns the ``type → message`` registry
+  so this dispatch core stays codec-agnostic). :class:`JsonCodec` (one JSON
+  object per frame) is retained only as the channel-core test/debug wire.
 * :class:`Transport` — moves whole frame blobs over some byte channel.
   :class:`StreamTransport` length-prefixes each frame (4-byte big-endian
   length + body) over an :class:`asyncio.StreamReader` /
@@ -172,9 +173,11 @@ class Codec(Protocol):
 class JsonCodec:
     """One-JSON-object-per-frame codec.
 
-    Line-compatible with the original wire shape (sans the trailing
-    newline, which the length prefix replaces). Kept as the default for
-    tests and debugging; production rides :class:`ProtobufCodec`.
+    The registry-free test/debug wire: it passes frame payloads through as
+    plain JSON (no ``type``-to-proto lookup), so the concurrency-critical
+    channel core can be exercised with synthetic message types and arbitrary
+    dict/int payloads. Production rides :class:`ProtobufCodec`; this stays
+    for the channel-core tests only.
     """
 
     def encode(self, frame: Frame) -> bytes:

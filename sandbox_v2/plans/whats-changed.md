@@ -70,14 +70,15 @@
   opt-in is future work (`docs/design-share-states.md`).
 
 ## For sandbox / core contributors
-- [ ] **Protobuf wire format.** Messages are protobuf (`Frame` envelope + typed
+- [x] **Protobuf wire format.** Messages are protobuf (`Frame` envelope + typed
   per-message bodies; `Struct`/`ListValue` only for voluptuous schemas and
   `service_data`). `.proto` source + generated `_pb2` checked in; regen script
-  provided. (`plan-transport.md`)
-- [ ] **Pluggable transports.** stdio + unix socket now; the `Transport` seam
-  accepts the deferred websocket drop-in (lands with share-states).
-  (`plan-transport.md`)
-- [ ] **Handlers consume typed protobuf messages** (no dict adapters).
+  provided. (`plan-transport.md` T2 `360e4543300`)
+- [x] **Pluggable transports.** stdio (default) + unix socket now; the
+  `Transport` seam accepts the deferred websocket drop-in (lands with
+  share-states). (`plan-transport.md` T3 `1eaa79d261e`)
+- [x] **Handlers consume typed protobuf messages** (no dict adapters).
+  (`plan-transport.md` T2 `360e4543300`)
 - [ ] **Test Dockerfile** for running the client runtime against main.
   (`plan-docker.md`)
 - [ ] v1 reference code lives only in git history now.

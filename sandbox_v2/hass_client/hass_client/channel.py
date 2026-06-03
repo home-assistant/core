@@ -147,9 +147,11 @@ class Codec(Protocol):
 class JsonCodec:
     """One-JSON-object-per-frame codec.
 
-    Line-compatible with the original wire shape (sans the trailing
-    newline, which the length prefix replaces). Kept as the default for
-    tests and debugging; production rides :class:`ProtobufCodec`.
+    The registry-free test/debug wire: it passes frame payloads through as
+    plain JSON (no ``type``-to-proto lookup), so the concurrency-critical
+    channel core can be exercised with synthetic message types and arbitrary
+    dict/int payloads. Production rides :class:`ProtobufCodec`; this stays
+    for the channel-core tests only.
     """
 
     def encode(self, frame: Frame) -> bytes:

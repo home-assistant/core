@@ -12,10 +12,12 @@ Composes the sandbox's per-process services:
   registrations and ``<owned_domain>_*`` events up to main, gated by
   :class:`ApprovedDomains` (Phase 6).
 
-The handshake: open the stdio channel, send a :data:`MSG_READY` frame
-as the first message, warm-load restore state, register handlers, then
-idle until SIGTERM (or until main asks for a graceful shutdown over the
-channel — see Phase 9's :meth:`SandboxRuntime._handle_shutdown`).
+The handshake: open the control channel (transport selected by the
+``--url`` scheme — ``stdio://`` by default, ``unix://<path>`` to dial back
+to the manager's unix socket), send a :data:`MSG_READY` frame as the first
+message, warm-load restore state, register handlers, then idle until
+SIGTERM (or until main asks for a graceful shutdown over the channel — see
+Phase 9's :meth:`SandboxRuntime._handle_shutdown`).
 """
 
 import asyncio
@@ -54,12 +56,13 @@ ChannelFactory = Callable[[], Awaitable[Channel | None]]
 class SandboxRuntime:
     """Runtime: Ready-frame handshake + length-prefixed control channel.
 
-    The websocket URL/token still come in on the CLI for forward-compat
-    with the deferred WS transport (the scoped sandbox token will travel
-    that path), but today the runtime only uses the stdin/stdout control
-    channel that the manager opens. The handshake is a :data:`MSG_READY`
-    frame sent as the channel's first message — there is no stdout text
-    marker.
+    The control-channel transport is chosen from the ``--url`` scheme:
+    ``stdio://`` (default — frames over the process's stdin/stdout) or
+    ``unix://<path>`` (dial back to the manager's unix socket). ``ws://`` /
+    ``wss://`` are reserved for the deferred websocket transport and
+    rejected for now; the token still travels the CLI for forward-compat
+    with it. The handshake is a :data:`MSG_READY` frame sent as the
+    channel's first message — there is no stdout text marker.
     """
 
     def __init__(
