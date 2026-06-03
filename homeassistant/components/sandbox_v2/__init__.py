@@ -63,8 +63,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Persist the sandbox's restore-state snapshot (Phase 9).
 
         The runtime ships its ``RestoreEntity`` state in the shutdown
-        reply rather than via ``RemoteStore`` (the reader task is busy
-        dispatching the shutdown handler — a re-entrant store_save
+        reply rather than via the sandbox store bridge (the reader task
+        is busy dispatching the shutdown handler — a re-entrant store_save
         would deadlock). We route the payload through the bridge's
         store server so it lands at the same path the next run's
         warm-load reads from.
@@ -106,8 +106,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Stop every sandbox process on HA shutdown.
 
         Phase 9: ask each sandbox to unload its entries and flush
-        ``RestoreEntity`` state through the Phase 8 ``RemoteStore``
-        before pulling the plug. ``async_stop_all`` then handles SIGTERM
+        ``RestoreEntity`` state through the ``current_sandbox`` store
+        bridge before pulling the plug. ``async_stop_all`` then handles SIGTERM
         / SIGKILL for any sandbox that didn't ack the graceful request
         within the grace.
         """

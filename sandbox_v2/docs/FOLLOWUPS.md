@@ -35,7 +35,7 @@ dispatched task, so the reader keeps draining the wire even when the
 cap is hit. `SandboxRuntime._run_graceful_shutdown` now fires
 `EVENT_HOMEASSISTANT_FINAL_WRITE` (after setting `CoreState.final_write`
 and `await hass.async_block_till_done()`) so `delay_save` Stores flush
-through `RemoteStore` before the reply goes out.
+their pending writes to main before the reply goes out.
 
 **Outcome.** 93 HA-core sandbox_v2 tests + 45 hass_client tests green
 (2 new channel tests covering reentrancy + the concurrency cap; 2 new
@@ -250,6 +250,37 @@ plumbing). V2: `router.py` + `proxy_flow.py` + `_autotag.py` +
 gets `sandbox=` kwarg) + 6 new `tests/test_config_entries.py` cases +
 v2 test updates. Reports: `COMPAT.md` + `COMPAT_FULL.md` + `BACKLOG.md`
 + `BACKLOG_FAILURES.json` + companion `.csv` files all regenerated.
+
+---
+
+## plan-sandbox-context — `current_sandbox` contextvar replaces the store rebinding
+
+**Why.** Phase 8 routed sandbox `Store` IO to main by rebinding
+`homeassistant.helpers.storage.Store` at module scope — the `remote_store`
+installer swapped in a `Store` subclass for the lifetime of the process. That
+is the exact "do not monkey-patch private internals" smell the project's Iron
+Law calls out — the same shape v1 was the cautionary tale for. It also had a
+footgun: helpers that did `from .storage import Store` at import time
+(`restore_state`, the registries) captured the *original* class, so the
+rebinding couldn't reach them — `restore_state` needed an explicit per-instance
+`Store` swap as a workaround.
+
+**What landed.** A declared core HA hook: `current_sandbox`, a module-level
+`ContextVar[SandboxBridge | None]` in
+`homeassistant/helpers/sandbox_context.py`, read by `Store._async_load_data`,
+`Store._async_write_data`, and `Store.async_remove` at IO time. A contextvar
+read inside the instance methods is a single source of truth no matter how
+`Store` was imported, so the `restore_state` workaround is gone. The sandbox
+runtime sets the contextvar to a `ChannelSandboxBridge` before the warm-load;
+asyncio's context copy on `create_task` propagates it to every handler. Shipped
+as **A1** (additive — contextvar branch alongside the rebinding) then **A2**
+(deleted `remote_store.py`, the installer, and the `restore_state` swap). A2's
+load-bearing detail: the save branch lives at `_async_write_data`, not
+`async_save`, so `async_delay_save` and the FINAL_WRITE flush — which bypass
+`async_save` — route to main too.
+
+**Outcome.** Zero patched globals in the sandbox; `Store` routing is a declared
+hook. The "monkey-patch the storage module" tension is closed.
 
 ---
 

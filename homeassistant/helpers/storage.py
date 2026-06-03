@@ -479,16 +479,6 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             "data": data,
         }
 
-        if sandbox := current_sandbox.get():
-            # A sandbox runtime routes the wrapped envelope to main; the
-            # bridge owns the serialise + transport. Bypass the local-disk
-            # write machinery (write lock, manager cache, final-write
-            # listener) entirely.
-            wrapped = self._data
-            self._data = None
-            await sandbox.async_store_save(self.key, wrapped)
-            return
-
         if self.hass.state is CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
@@ -608,6 +598,17 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
     async def _async_write_data(self, data: dict) -> None:
+        if sandbox := current_sandbox.get():
+            # A sandbox runtime routes the wrapped envelope to main instead
+            # of writing to local disk. Branching here (rather than in
+            # async_save) is load-bearing: async_save, async_delay_save, and
+            # the EVENT_HOMEASSISTANT_FINAL_WRITE flush all funnel their
+            # writes through _async_handle_write_data -> _async_write_data,
+            # so a single branch here covers every write path uniformly. The
+            # bridge owns the envelope normalisation (resolving any pending
+            # data_func), orjson preserialise, and transport.
+            await sandbox.async_store_save(self.key, data)
+            return
         if self._serialize_in_event_loop:
             if "data_func" in data:
                 data["data"] = data.pop("data_func")()

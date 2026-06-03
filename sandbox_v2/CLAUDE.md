@@ -47,8 +47,8 @@ second condition), as a deliberate call relying on git history for rollback.
 
 - `hass_client/` — Python client library (its own `uv` env). Hosts
   `SandboxRuntime`, `FlowRunner`, `EntryRunner`, `EntityBridge`,
-  `ServiceMirror`, `EventMirror`, `RemoteStore`, and the two pytest
-  plugins under `hass_client/testing/`.
+  `ServiceMirror`, `EventMirror`, `ChannelSandboxBridge`, and the two
+  pytest plugins under `hass_client/testing/`.
 - `docs/` — per-phase decision write-ups.
 - `run_compat.py` + `COMPAT.md` + `COMPAT.csv` — compat-lane runner
   and report (Phase 10).
@@ -58,7 +58,7 @@ The HA Core side of the integration lives at
 
 ## Core HA files modified (high-review surface)
 
-v2 touches three core HA files. Each is intentional, small, and was
+v2 touches four core HA files. Each is intentional, small, and was
 introduced by a specific phase — see the matching STATUS file for
 the rationale.
 
@@ -80,10 +80,19 @@ the rationale.
 - `homeassistant/auth/models.py` + `auth/__init__.py` +
   `auth/auth_store.py` + `components/websocket_api/connection.py` —
   optional `RefreshToken.scopes` + dispatcher enforcement. **Phase 7.**
+- `homeassistant/helpers/sandbox_context.py` (NEW) +
+  `homeassistant/helpers/storage.py` — the `current_sandbox`
+  `ContextVar` + `SandboxBridge` `Protocol`, read by `Store`'s IO
+  methods (`_async_load_data`, `_async_write_data`, `async_remove`) so
+  sandbox `Store` IO routes to main at call time. This **replaced** the
+  Phase 8 module-level `Store` rebinding — no more monkey-patch.
+  **plan-sandbox-context (Phase A1 + A2).**
 
 Iron Law: do **not** monkey-patch private internals. v1's direct
 write to `EntityComponent._platforms` is the cautionary tale —
-v2 took the slightly bigger PR to add the public hook instead.
+v2 took the slightly bigger PR to add the public hook instead. The
+Phase 8 `Store` rebinding was the same smell; plan-sandbox-context
+replaced it with the declared `current_sandbox` core HA hook.
 
 ## Open follow-ups (not yet shipped)
 

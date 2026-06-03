@@ -32,7 +32,6 @@ from typing import Any
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CoreState
 from homeassistant.helpers import json as json_helper, restore_state
-from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.sandbox_context import current_sandbox
 
 from .approved_domains import ApprovedDomains
@@ -42,7 +41,6 @@ from .entry_runner import EntryRunner
 from .event_mirror import EventMirror
 from .flow_runner import FlowRunner
 from .protocol import MSG_SHUTDOWN
-from .remote_store import RemoteStore, install_remote_store
 from .sandbox_bridge import ChannelSandboxBridge
 from .service_mirror import ServiceMirror
 
@@ -160,7 +158,6 @@ class SandboxRuntime:
         sys.stdout.flush()
 
         self._channel = await self._channel_factory()
-        uninstall_remote_store: Callable[[], None] | None = None
         sandbox_token: Any = None
         if self._channel is not None:
             # Route every `Store` IO to main via `current_sandbox`. The
@@ -185,21 +182,10 @@ class SandboxRuntime:
                 "one event loop? (see plan Risk #3)"
             )
             sandbox_token = current_sandbox.set(ChannelSandboxBridge(self._channel))
-            # Phase A1 keeps `install_remote_store` alongside the contextvar
-            # (both paths active). The contextvar branch is the first line of
-            # each `Store` IO method, so it serves the IO; the rebinding is
-            # the legacy path A2 deletes once A1 bakes on dev.
-            #
-            # Patch `homeassistant.helpers.storage.Store` BEFORE any
-            # integration imports it: every entry_setup that arrives
-            # below will instantiate Stores that route to main. Registries
-            # already created against the sandbox tempdir keep their
-            # local backing — only post-install instantiations are routed.
-            uninstall_remote_store = install_remote_store(self._channel)
             # Phase 9: start the channel reader first so the warm-load
             # round-trip can resolve, then pre-load this sandbox group's
-            # restore-state cache via the freshly-installed RemoteStore.
-            # The data lives on main under
+            # restore-state cache. The contextvar (set above) routes the
+            # load to main. The data lives on main under
             # ``.storage/sandbox_v2/<group>/core.restore_state`` and was
             # written by the previous run's shutdown handler. Bare HA —
             # no bootstrap — so we call it ourselves; any RestoreEntity
@@ -229,8 +215,6 @@ class SandboxRuntime:
                 await self._entity_bridge.async_stop()
             if self._channel is not None:
                 await self._channel.close()
-            if uninstall_remote_store is not None:
-                uninstall_remote_store()
             if sandbox_token is not None:
                 # Tidy test isolation; in prod the process exits anyway.
                 current_sandbox.reset(sandbox_token)
@@ -262,12 +246,13 @@ class SandboxRuntime:
 
         Phase 12 fires ``EVENT_HOMEASSISTANT_FINAL_WRITE`` and waits for
         the bus to drain so ``Store``s with pending ``async_delay_save``
-        writes flush to main via ``RemoteStore`` — the now-concurrent
-        channel dispatcher means the re-entrant ``MSG_STORE_SAVE`` call
-        each flush issues no longer deadlocks against this handler.
+        writes flush to main via the ``current_sandbox`` bridge — the
+        now-concurrent channel dispatcher means the re-entrant
+        ``MSG_STORE_SAVE`` call each flush issues no longer deadlocks
+        against this handler.
 
-        Restore state is still **collected** (not flushed via
-        ``RemoteStore``) and returned in this reply: ``core.restore_state``
+        Restore state is still **collected** (not flushed via the
+        bridge) and returned in this reply: ``core.restore_state``
         is owned by the runtime's explicit warm-load / shutdown-dump path,
         not by an integration's ``Store``, so it doesn't ride the
         FINAL_WRITE flush. Shipping it back in the reply keeps the data
@@ -299,8 +284,8 @@ class SandboxRuntime:
 
         # Phase 12: fire FINAL_WRITE so ``async_delay_save``-using
         # ``Store``s flush their pending data. Concurrent channel
-        # dispatcher means each ``RemoteStore`` write can re-enter the
-        # channel without deadlocking against this handler.
+        # dispatcher means each bridge write can re-enter the channel
+        # without deadlocking against this handler.
         try:
             hass.set_state(CoreState.final_write)
             hass.bus.async_fire_internal(EVENT_HOMEASSISTANT_FINAL_WRITE)
@@ -351,20 +336,14 @@ async def _load_restore_state(hass: Any) -> None:
     through ``async_start``, so we skip that listener and rely on
     Phase 9's shutdown handler to force the final dump.
 
-    ``RestoreStateData`` imports ``Store`` via ``from .storage import
-    Store`` at module-load time, so Phase 8's
-    :func:`install_remote_store` (which rebinds
-    ``helpers.storage.Store``) cannot reach it. We swap the singleton's
-    ``store`` attribute with a :class:`RemoteStore` explicitly so the
-    load — and the later shutdown dump — round-trip through main.
+    No store swap is needed: ``RestoreStateData`` builds a vanilla
+    ``Store``, and ``Store.async_load`` reads ``current_sandbox`` at call
+    time. Because the runtime set the contextvar before calling us, the
+    load — and the later shutdown dump — round-trip through main no matter
+    that ``restore_state.py`` captured the original ``Store`` reference at
+    import time.
     """
     data = restore_state.async_get(hass)
-    data.store = RemoteStore(
-        hass,
-        restore_state.STORAGE_VERSION,
-        restore_state.STORAGE_KEY,
-        encoder=JSONEncoder,
-    )
     try:
         await data.async_load()
     except Exception:

@@ -46,7 +46,7 @@ inside the sandbox.
 | Config flow | Forwarded through host integration | Runs inside the sandbox; main owns the canonical `ConfigEntry` store |
 | Auth | System-user token, full HA scope | Scoped `RefreshToken` (`{"sandbox_v2/", "auth/current_user"}`); dispatcher rejects out-of-scope calls |
 | Data sharing | Sandbox sees all of main's state | Default locked-down; opt-in state/registry/area sharing per group is a future feature ([`docs/design-share-states.md`](docs/design-share-states.md)) |
-| Store routing | None — sandbox writes to its own tempdir | `RemoteStore` proxies every `Store(...)` to main; main writes to `<config>/.storage/sandbox_v2/<group>/<key>` |
+| Store routing | None — sandbox writes to its own tempdir | The `current_sandbox` contextvar makes `Store` IO proxy to main; main writes to `<config>/.storage/sandbox_v2/<group>/<key>` |
 | Shutdown | Best-effort | Graceful `sandbox_v2/shutdown` round-trip; sandbox unloads entries + dumps `RestoreEntity` state; main persists it for next boot |
 | Custom integrations | Out of scope | First-class — they route to the `custom` group |
 
@@ -84,7 +84,7 @@ The design choices and the failure modes of v1 they fix are recorded in
 │                                                                                       │
 │  SandboxRuntime                                                                       │
 │  • private HomeAssistant instance                                                     │
-│  • install_remote_store(channel) — rebinds storage.Store to RemoteStore               │
+│  • current_sandbox.set(bridge) — routes Store IO to main via contextvar               │
 │  • FlowRunner       — drives integration ConfigFlow on entry_init / step / abort     │
 │  • EntryRunner      — runs async_setup_entry against the sandbox's hass              │
 │  • EntityBridge     — pushes register_entity + state_changed to main                 │
@@ -190,12 +190,15 @@ On `EVENT_HOMEASSISTANT_STOP` the integration runs:
 4. `manager.async_stop_all()` falls through to SIGTERM, then SIGKILL,
    for any sandbox that didn't ack the graceful round-trip.
 
-On the next boot the runtime warm-loads `core.restore_state` via an
-explicit `RemoteStore(hass, …, encoder=JSONEncoder)` before any handler
-registers, so the first `RestoreEntity.async_get_last_state()` sees the
-previous run's state. The warm-load can't go through the storage-module
-rebinding because `restore_state.py` captures `Store` at import time —
-the explicit `RemoteStore` instance is the workaround.
+On the next boot the runtime warm-loads `core.restore_state` before any
+handler registers, so the first `RestoreEntity.async_get_last_state()`
+sees the previous run's state. It works against a vanilla `Store`: the
+runtime sets `current_sandbox` before the warm-load, and `Store`'s IO
+methods read the contextvar at call time, so the load routes to main even
+though `restore_state.py` captured the original `Store` reference at
+import. (Phase 8 needed an explicit sandbox-backed `Store` instance here
+because its module-level rebinding couldn't reach that captured
+reference; the contextvar made that workaround unnecessary.)
 
 ## Config-flow forwarding
 
@@ -384,20 +387,32 @@ The full decision rationale for the auth side lives in
 
 ## Store routing
 
-`RemoteStore` ([`hass_client/remote_store.py`](hass_client/hass_client/remote_store.py))
-subclasses `homeassistant.helpers.storage.Store` and overrides the
-three IO primitives — `_async_load_data`, `_async_write_data`,
-`async_remove` — to talk to main via `sandbox_v2/store_load`,
-`sandbox_v2/store_save`, `sandbox_v2/store_remove`. `delay_save`, the
-`EVENT_HOMEASSISTANT_FINAL_WRITE` hook, and the migration loop run
-unchanged from the base class.
+`homeassistant.helpers.storage.Store` reads a `current_sandbox`
+`ContextVar` (declared in
+[`homeassistant/helpers/sandbox_context.py`](../homeassistant/helpers/sandbox_context.py))
+at IO time. When it is set, `Store._async_load_data`,
+`Store._async_write_data`, and `Store.async_remove` delegate to the
+contextvar's `SandboxBridge` instead of touching local disk. Branching at
+`_async_write_data` (not `async_save`) is deliberate: `async_save`,
+`async_delay_save`, and the `EVENT_HOMEASSISTANT_FINAL_WRITE` flush all
+funnel through `_async_handle_write_data` → `_async_write_data`, so one
+branch there covers every write path. The migration loop in
+`_async_load_data` runs unchanged regardless of whether the wrapped
+envelope came from disk or the bridge.
 
-`install_remote_store(channel)` runs right after the sandbox channel
-opens and before any per-runner handler registers. It rebinds
-`homeassistant.helpers.storage.Store` to `RemoteStore` for the lifetime
-of the sandbox process, so every `Store(...)` instantiated during
-`async_setup_entry` is a `RemoteStore`. The patch is process-wide
-because one sandbox process hosts one sandbox group.
+The sandbox runtime supplies the bridge:
+`ChannelSandboxBridge` ([`hass_client/sandbox_bridge.py`](hass_client/hass_client/sandbox_bridge.py))
+implements the three `SandboxBridge` store methods over
+`sandbox_v2/store_load`, `sandbox_v2/store_save`,
+`sandbox_v2/store_remove`. `SandboxRuntime.run` does
+`current_sandbox.set(ChannelSandboxBridge(channel))` right after the
+channel opens and **before** the warm-load and any per-runner handler
+registers, so every coroutine the runtime spawns inherits it (asyncio
+copies the context at `create_task` time). One sandbox process hosts one
+sandbox group, so a single bridge per runtime is correct. This replaced
+the Phase 8 module-level `Store` rebinding — no monkey-patch, and it
+reaches helpers like `restore_state` that captured the original `Store`
+reference at import.
 
 On main, each `SandboxBridge` owns a `_SandboxStoreServer` pinned to
 `<config>/.storage/sandbox_v2/<group>/`. Writes use
@@ -522,7 +537,7 @@ deferred, and what it flagged for the next phase. For a quick map:
 | Entity bridge | [`bridge.py`](../homeassistant/components/sandbox_v2/bridge.py), [`entity/`](../homeassistant/components/sandbox_v2/entity/) | [`entry_runner.py`](hass_client/hass_client/entry_runner.py), [`entity_bridge.py`](hass_client/hass_client/entity_bridge.py) |
 | Service/event mirror | [`bridge.py`](../homeassistant/components/sandbox_v2/bridge.py) | [`service_mirror.py`](hass_client/hass_client/service_mirror.py), [`event_mirror.py`](hass_client/hass_client/event_mirror.py), [`approved_domains.py`](hass_client/hass_client/approved_domains.py) |
 | Auth scopes | [`auth.py`](../homeassistant/components/sandbox_v2/auth.py), `homeassistant/auth/models.py`, `homeassistant/components/websocket_api/connection.py` | — |
-| Store routing | [`bridge.py`](../homeassistant/components/sandbox_v2/bridge.py) (`_SandboxStoreServer`) | [`remote_store.py`](hass_client/hass_client/remote_store.py) |
+| Store routing | [`bridge.py`](../homeassistant/components/sandbox_v2/bridge.py) (`_SandboxStoreServer`), `homeassistant/helpers/sandbox_context.py`, `homeassistant/helpers/storage.py` | [`sandbox_bridge.py`](hass_client/hass_client/sandbox_bridge.py) |
 | Shutdown | [`__init__.py`](../homeassistant/components/sandbox_v2/__init__.py) (`_on_stop`), `manager.py` | [`sandbox.py`](hass_client/hass_client/sandbox.py) (`_run_graceful_shutdown`) |
 | Test infra | — | [`testing/`](hass_client/hass_client/testing/), [`run_compat.py`](run_compat.py) |
 

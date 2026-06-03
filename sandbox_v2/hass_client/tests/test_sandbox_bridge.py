@@ -1,17 +1,18 @@
-"""Phase A1 tests for the ``current_sandbox`` contextvar store routing.
+"""Tests for the ``current_sandbox`` contextvar store routing.
 
-These exercise the new routing primitive that replaces the module-level
-``Store`` rebinding (``install_remote_store`` / :class:`RemoteStore`):
+These exercise the routing primitive that replaced the former
+module-level ``Store`` rebinding (the deleted ``remote_store`` module):
 
-* The first five tests drive ``Store``'s public API through the contextvar
-  branch using an in-memory ``_FakeBridge`` set on ``current_sandbox``
-  directly — no channel. They map 1:1 to the plan's "Phase A1 — Tests
-  added" list.
+* Most tests drive ``Store``'s public API through the contextvar branch
+  using an in-memory ``_FakeBridge`` set on ``current_sandbox`` directly —
+  no channel. They cover load/unwrap, missing keys, migration, the
+  no-sandbox disk path, the ``restore_state`` warm-load, contextvar task
+  inheritance, and (the A2 guard) the ``async_delay_save`` / FINAL_WRITE
+  flush.
 * The final test exercises the concrete :class:`ChannelSandboxBridge` over
-  an in-memory channel pair, covering the wire mapping of the new
-  ``sandbox_bridge.py`` file directly (in A1 the same mapping is still
-  covered transitively by ``test_remote_store.py``; A2 keeps this one when
-  it deletes that file).
+  an in-memory channel pair, covering the wire mapping of
+  ``sandbox_bridge.py`` directly — the coverage ``test_remote_store.py``
+  used to provide transitively before A2 deleted it.
 """
 
 import asyncio
@@ -24,6 +25,7 @@ from hass_client.flow_runner import FlowRunner
 from hass_client.sandbox_bridge import ChannelSandboxBridge
 import pytest
 
+from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import restore_state, storage as _storage
 from homeassistant.helpers.sandbox_context import current_sandbox
@@ -48,6 +50,11 @@ class _FakeBridge:
         return self.loaded.get(key)
 
     async def async_store_save(self, key: str, data: Any) -> None:
+        # Mirror ``ChannelSandboxBridge``: resolve a deferred ``data_func``
+        # (handed down by ``async_delay_save``) into a concrete ``data`` key
+        # before recording the envelope.
+        if "data_func" in data:
+            data["data"] = data.pop("data_func")()
         self.saved[key] = data
 
     async def async_store_remove(self, key: str) -> None:
@@ -183,8 +190,8 @@ async def test_restore_state_warm_load_without_workaround(
 ) -> None:
     """``RestoreStateData`` warm-load reaches the bridge with no store swap.
 
-    The smoking gun that the contextvar fix subsumes the
-    ``data.store = RemoteStore(...)`` workaround in ``sandbox.py``: a vanilla
+    The smoking gun that the contextvar fix subsumes the explicit
+    ``data.store`` swap A2 deleted from ``sandbox.py``: a vanilla
     ``RestoreStateData`` (which captured the original ``Store`` at module
     import) routes its ``async_load`` to the bridge purely because the
     contextvar is set — no explicit store replacement.
@@ -220,6 +227,35 @@ async def test_contextvar_inherits_across_create_task(
 
     assert bridge.load_keys == ["in_task"]
     assert result == {"from": "task"}
+
+
+async def test_delayed_save_flushes_through_bridge(
+    hass_runtime: HomeAssistant,
+    bridge: _FakeBridge,
+) -> None:
+    """``async_delay_save`` + the FINAL_WRITE flush route through the bridge.
+
+    The A2 regression guard. ``async_delay_save`` and the
+    EVENT_HOMEASSISTANT_FINAL_WRITE flush bypass ``async_save`` entirely —
+    they funnel through ``_async_handle_write_data`` -> ``_async_write_data``.
+    The contextvar branch must live at ``_async_write_data`` (not only
+    ``async_save``) or these writes would silently land on the sandbox's
+    local disk instead of reaching main. The Phase 8 store subclass
+    overrode ``_async_write_data`` and masked this; deleting it surfaced the
+    gap.
+    """
+    store = _storage.Store(hass_runtime, 1, "delayed")
+    store.async_delay_save(lambda: {"foo": "bar"}, delay=0)
+
+    # The FINAL_WRITE listener (armed by async_delay_save) flushes the
+    # pending envelope; whichever of it / the delay timer fires first wins
+    # the write lock, the other is a no-op. Either path is _async_write_data.
+    hass_runtime.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass_runtime.async_block_till_done()
+
+    assert "delayed" in bridge.saved
+    assert bridge.saved["delayed"]["key"] == "delayed"
+    assert bridge.saved["delayed"]["data"] == {"foo": "bar"}
 
 
 # --- ChannelSandboxBridge wire mapping (the new sandbox_bridge.py file) ---

@@ -127,7 +127,7 @@ async def test_shutdown_returns_restore_state_payload(
 ) -> None:
     """The shutdown handler returns a JSON-safe restore-state snapshot.
 
-    Restore state ships back in the reply (not via ``RemoteStore``)
+    Restore state ships back in the reply (not via the store bridge)
     because the channel reader task is busy dispatching the shutdown
     handler — a re-entrant ``store_save`` call would deadlock. Main is
     responsible for persisting the payload before SIGTERM.
@@ -165,7 +165,7 @@ async def test_shutdown_fires_final_write_event(
 
     Concurrent channel dispatcher means the FINAL_WRITE fire-and-drain
     inside the shutdown handler no longer deadlocks against re-entrant
-    ``RemoteStore`` writes triggered by listeners on the event.
+    bridge writes triggered by listeners on the event.
     """
     runtime, main_channel, _task = runtime_pair
     hass = runtime._flow_runner.hass  # noqa: SLF001
@@ -189,7 +189,7 @@ async def test_shutdown_flushes_pending_delay_save(
     runtime_pair: tuple[SandboxRuntime, Channel, asyncio.Task[int]],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Phase 12: ``async_delay_save`` writes flush through ``RemoteStore``.
+    """Phase 12: ``async_delay_save`` writes flush through the store bridge.
 
     Without the concurrent channel dispatcher this would deadlock: the
     Store's FINAL_WRITE listener would re-enter the same channel reader
@@ -207,9 +207,10 @@ async def test_shutdown_flushes_pending_delay_save(
 
     main_channel.register(MSG_STORE_SAVE, _on_store_save)
 
-    # ``install_remote_store`` already patched ``Store`` during ``run()``,
-    # so resolving ``Store`` via the module attribute returns the
-    # ``RemoteStore`` subclass that routes writes at our main channel.
+    # ``run()`` already set ``current_sandbox`` to the channel bridge, so a
+    # vanilla ``Store`` routes its writes to our main channel at IO time —
+    # the FINAL_WRITE flush below funnels through ``_async_write_data``,
+    # which reads the contextvar inside the shutdown handler's task context.
     store = _storage.Store(hass, 1, "phase12_test")
     store.async_delay_save(lambda: {"pending": True}, 3600)
 

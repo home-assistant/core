@@ -56,9 +56,9 @@ Sandbox → Main calls:
 Main → Sandbox shutdown (Phase 9):
 
 * ``sandbox_v2/shutdown`` — ask the runtime to unload its entries, dump
-  ``RestoreEntity`` state through the Phase 8 :class:`RemoteStore`, fire
-  ``EVENT_HOMEASSISTANT_FINAL_WRITE`` so any pending Stores flush, and
-  exit cleanly. Response ``{"ok": True, "unloaded": int, "restored":
+  ``RestoreEntity`` state, fire ``EVENT_HOMEASSISTANT_FINAL_WRITE`` so any
+  pending Stores flush to main via the ``current_sandbox`` store bridge,
+  and exit cleanly. Response ``{"ok": True, "unloaded": int, "restored":
   int}``. The runtime sets its shutdown event right after writing the
   reply, so the subprocess exits 0 on its own — main only needs SIGTERM
   if the round-trip times out.
