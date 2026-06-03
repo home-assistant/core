@@ -27,17 +27,11 @@ from .const import CONF_GIID, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
 type VerisureConfigEntry = ConfigEntry[VerisureDataUpdateCoordinator]
 
-
-def _is_transient_verisure_error(exc: VerisureError) -> bool:
-    """Return True for network, server, or rate-limit failures (not bad credentials)."""
-    return isinstance(
-        exc,
-        (
-            VerisureRequestError,
-            VerisureResponseError,
-            VerisureRateLimitError,
-        ),
-    )
+_TRANSIENT_VERISURE_ERRORS = (
+    VerisureRequestError,
+    VerisureResponseError,
+    VerisureRateLimitError,
+)
 
 
 class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
@@ -66,14 +60,6 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
-    async def _async_password_login(self) -> None:
-        """Re-authenticate with username/password when cookies cannot be used."""
-        await self.hass.async_add_executor_job(self.verisure.login)
-
-    async def _async_login_cookie(self) -> None:
-        """Restore session from persisted cookies."""
-        await self.hass.async_add_executor_job(self.verisure.login_cookie)
-
     async def _async_password_login_after_cookie_read(
         self,
         *,
@@ -81,22 +67,26 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> bool:
         """Re-authenticate with password when the cookie file cannot be used."""
         try:
-            await self._async_password_login()
+            await self.hass.async_add_executor_job(self.verisure.login)
         except VerisureAuthenticationError as login_ex:
             raise ConfigEntryAuthFailed(
                 "Verisure re-authentication failed after cookie could not be read"
             ) from login_ex
+        except _TRANSIENT_VERISURE_ERRORS as login_ex:
+            if on_transient == "return_false":
+                LOGGER.warning(
+                    "Verisure login unavailable (likely transient), %s",
+                    login_ex,
+                )
+                return False
+            raise UpdateFailed(
+                "Could not refresh Verisure session (transient)"
+            ) from login_ex
+        except VerisureLoginError as login_ex:
+            raise ConfigEntryAuthFailed(
+                "Verisure re-authentication failed after cookie could not be read"
+            ) from login_ex
         except VerisureError as login_ex:
-            if _is_transient_verisure_error(login_ex):
-                if on_transient == "return_false":
-                    LOGGER.warning(
-                        "Verisure login unavailable (likely transient), %s",
-                        login_ex,
-                    )
-                    return False
-                raise UpdateFailed(
-                    "Could not refresh Verisure session (transient)"
-                ) from login_ex
             raise ConfigEntryAuthFailed(
                 "Verisure re-authentication failed after cookie could not be read"
             ) from login_ex
@@ -105,7 +95,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_refresh_session_after_auth_failure(self) -> None:
         """Recover session when cookie refresh indicates expired authentication."""
         try:
-            await self._async_login_cookie()
+            await self.hass.async_add_executor_job(self.verisure.login_cookie)
         except VerisureAuthenticationError as ex:
             raise ConfigEntryAuthFailed(
                 "Verisure authentication rejected (invalid or expired session)"
@@ -116,17 +106,17 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             )
         except VerisureLoginError as ex:
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
+        except _TRANSIENT_VERISURE_ERRORS as ex:
+            raise UpdateFailed(
+                "Could not refresh Verisure session (transient)"
+            ) from ex
         except VerisureError as ex:
-            if _is_transient_verisure_error(ex):
-                raise UpdateFailed(
-                    "Could not refresh Verisure session (transient)"
-                ) from ex
             raise UpdateFailed("Could not log in to Verisure") from ex
 
     async def async_login(self) -> bool:
         """Login to Verisure."""
         try:
-            await self._async_login_cookie()
+            await self.hass.async_add_executor_job(self.verisure.login_cookie)
         except VerisureAuthenticationError as ex:
             raise ConfigEntryAuthFailed(
                 "Verisure authentication rejected (invalid or expired session)"
@@ -139,13 +129,13 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         except VerisureLoginError as ex:
             LOGGER.error("Credentials expired for Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
+        except _TRANSIENT_VERISURE_ERRORS as ex:
+            LOGGER.warning(
+                "Verisure login unavailable (likely transient), %s",
+                ex,
+            )
+            return False
         except VerisureError as ex:
-            if _is_transient_verisure_error(ex):
-                LOGGER.warning(
-                    "Verisure login unavailable (likely transient), %s",
-                    ex,
-                )
-                return False
             LOGGER.error("Could not log in to Verisure, %s", ex)
             return False
 
