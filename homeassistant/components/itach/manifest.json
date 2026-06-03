@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/itach",
   "iot_class": "assumed_state",
   "quality_scale": "legacy",
-  "requirements": ["pyitachip2ir==0.0.7"]
+  "requirements": ["pyitachip2ir2==0.0.8"]
 }

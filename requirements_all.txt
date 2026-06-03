@@ -2262,7 +2262,7 @@ pyiss==1.0.1
 pyisy==3.6.1
 
 # homeassistant.components.itach
-pyitachip2ir==0.0.7
+pyitachip2ir2==0.0.8
 
 # homeassistant.components.ituran
 pyituran==0.1.5
