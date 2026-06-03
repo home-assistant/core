@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.gree.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.data_entry_flow import FlowResultType
 
 from .common import FakeDiscovery, build_device_mock
 
@@ -45,9 +45,6 @@ async def test_scan_finds_devices(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": "scan"}
         )
-        assert result["type"] is FlowResultType.FORM
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {}
 
@@ -74,9 +71,6 @@ async def test_scan_no_devices(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": "scan"}
         )
-        assert result["type"] is FlowResultType.FORM
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_devices_found"
 
@@ -182,12 +176,42 @@ async def test_manual_step_already_configured(
         assert result["reason"] == "already_configured"
 
 
+async def test_manual_step_no_mac_uses_ip_as_unique_id(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test manual step uses IP as unique ID when MAC is unavailable."""
+    mock_device = build_device_mock(
+        name="test-device", ipAddress="192.168.1.100", mac=None
+    )
+
+    with patch(
+        "homeassistant.components.gree.config_flow.Device",
+        return_value=mock_device,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "manual"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_IP_ADDRESS: "192.168.1.100"}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"] == {CONF_IP_ADDRESS: "192.168.1.100"}
+
+        await hass.async_block_till_done()
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
 @patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
 async def test_scan_single_instance_allowed(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test scan step aborts when a discovery entry already exists."""
-    existing_entry = MockConfigEntry(domain=DOMAIN, data={})
+    existing_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data={})
     existing_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -197,29 +221,41 @@ async def test_scan_single_instance_allowed(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "scan"}
     )
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
-async def test_manual_step_single_instance_allowed(
+async def test_manual_step_allowed_alongside_discovery_entry(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test manual step aborts when a discovery entry already exists."""
-    existing_entry = MockConfigEntry(domain=DOMAIN, data={})
+    """Test manual step is allowed even when a discovery entry exists."""
+    existing_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data={})
     existing_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    mock_device = build_device_mock(
+        name="test-device", ipAddress="192.168.1.100", mac="aabbcc112233"
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "manual"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    with patch(
+        "homeassistant.components.gree.config_flow.Device",
+        return_value=mock_device,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "manual"}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_IP_ADDRESS: "192.168.1.100"}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+        await hass.async_block_till_done()
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_manual_step_unexpected_error(
@@ -255,7 +291,7 @@ async def test_manual_step_unexpected_error(
 async def test_manual_step_invalid_ip(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test manual step rejects invalid IP address via schema validation."""
+    """Test manual step shows error for invalid IP address."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -265,7 +301,8 @@ async def test_manual_step_invalid_ip(
     )
     assert result["type"] is FlowResultType.FORM
 
-    with pytest.raises(InvalidData):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: "not-an-ip"}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_IP_ADDRESS: "not-an-ip"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"ip_address": "invalid_host"}

@@ -6,16 +6,14 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
     },
     "step": {
       "manual": {
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]"
         }
-      },
-      "scan": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "user": {
         "menu_options": {

@@ -20,16 +20,9 @@ from .const import DEFAULT_PORT, DISCOVERY_TIMEOUT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _validate_ip_address(value: str) -> str:
-    """Validate that value is a valid IPv4 address."""
-    if not is_ipv4_address(value):
-        raise vol.Invalid(f"Invalid IPv4 address: {value}")
-    return value
-
-
 MANUAL_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): vol.All(str, _validate_ip_address),
+        vol.Required(CONF_IP_ADDRESS): str,
     }
 )
 
@@ -52,12 +45,8 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle network scan step."""
-        if user_input is None:
-            return self.async_show_form(step_id="scan")
-
-        # Abort if any config entry already exists (manual or discovery)
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
 
         gree_discovery = Discovery(DISCOVERY_TIMEOUT)
         bcast_addr = list(await async_get_ipv4_broadcast_addresses(self.hass))
@@ -73,42 +62,40 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle manual IP entry step."""
-        # Abort if a discovery-mode entry exists; manual entries would create
-        # duplicate entities for devices already managed by discovery.
-        for entry in self._async_current_entries():
-            if CONF_IP_ADDRESS not in entry.data:
-                return self.async_abort(reason="single_instance_allowed")
-
         errors: dict[str, str] = {}
 
         if user_input is not None:
             ip_address = user_input[CONF_IP_ADDRESS]
-            device_info = DeviceInfo(ip_address, DEFAULT_PORT, "", "")
-            device = Device(device_info)
 
-            try:
-                await device.bind()
-            except (DeviceNotBoundError, DeviceTimeoutError) as err:
-                _LOGGER.debug(
-                    "Failed to connect to Gree device at %s: %s", ip_address, err
-                )
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception(
-                    "Unexpected error connecting to Gree device at %s", ip_address
-                )
-                errors["base"] = "cannot_connect"
+            if not is_ipv4_address(ip_address):
+                errors["ip_address"] = "invalid_host"
             else:
-                mac = device.device_info.mac
-                if mac:
-                    await self.async_set_unique_id(mac)
+                device_info = DeviceInfo(ip_address, DEFAULT_PORT, "", "")
+                device = Device(device_info)
+
+                try:
+                    await device.bind()
+                except (DeviceNotBoundError, DeviceTimeoutError) as err:
+                    _LOGGER.debug(
+                        "Failed to connect to Gree device at %s: %s", ip_address, err
+                    )
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception(
+                        "Unexpected error connecting to Gree device at %s", ip_address
+                    )
+                    errors["base"] = "cannot_connect"
+                else:
+                    mac = device.device_info.mac
+                    unique_id = mac or ip_address
+                    await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
 
-                title = device.device_info.name or ip_address
-                return self.async_create_entry(
-                    title=title,
-                    data={CONF_IP_ADDRESS: ip_address},
-                )
+                    title = device.device_info.name or ip_address
+                    return self.async_create_entry(
+                        title=title,
+                        data={CONF_IP_ADDRESS: ip_address},
+                    )
 
         return self.async_show_form(
             step_id="manual",
