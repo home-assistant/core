@@ -1,9 +1,47 @@
 {
   "common": {
+    "condition_behavior_name": "Check when",
+    "condition_for_name": "For at least",
+    "condition_zone_description": "The zone to test against.",
+    "condition_zone_name": "Zone",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least",
     "trigger_zone_description": "The zone to trigger on.",
     "trigger_zone_name": "Zone"
+  },
+  "conditions": {
+    "in_zone": {
+      "description": "Tests if one or more persons or device trackers are in a zone.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::zone::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::zone::common::condition_for_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::zone::common::condition_zone_description%]",
+          "name": "[%key:component::zone::common::condition_zone_name%]"
+        }
+      },
+      "name": "Is in zone"
+    },
+    "not_in_zone": {
+      "description": "Tests if one or more persons or device trackers are not in a zone.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::zone::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::zone::common::condition_for_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::zone::common::condition_zone_description%]",
+          "name": "[%key:component::zone::common::condition_zone_name%]"
+        }
+      },
+      "name": "Is not in zone"
+    }
   },
   "services": {
     "reload": {

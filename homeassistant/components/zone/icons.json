@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "in_zone": {
+      "condition": "mdi:map-marker-check"
+    },
+    "not_in_zone": {
+      "condition": "mdi:map-marker-remove"
+    }
+  },
   "services": {
     "reload": {
       "service": "mdi:reload"

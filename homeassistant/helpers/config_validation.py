@@ -1953,6 +1953,7 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             [
                 {
                     vol.Optional(CONF_ALIAS): string,
+                    vol.Remove(CONF_NOTE): str,  # Is only used in frontend
                     vol.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
                     vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }
