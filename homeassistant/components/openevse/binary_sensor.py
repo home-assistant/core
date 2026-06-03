@@ -1,4 +1,4 @@
-"""Support for monitoring an OpenEVSE Charger binary sensors."""
+"""Support for monitoring OpenEVSE Charger binary sensors."""
 
 from collections.abc import Callable
 from dataclasses import dataclass

@@ -38,7 +38,6 @@ def mock_charger() -> Generator[MagicMock]:
         charger.callback = None
         # Status sensors
         charger.status = "Charging"
-        charger.vehicle = True
         charger.mode = "STA"
         charger.charge_mode = "fast"
         charger.divertmode = "normal"
@@ -91,6 +90,7 @@ def mock_charger() -> Generator[MagicMock]:
         charger.uptime = 86400  # 1 day in seconds
         charger.freeram = 50000
         # Binary sensors
+        charger.vehicle = True
         charger.divert_active = False
         charger.using_ethernet = False
         charger.shaper_active = False
