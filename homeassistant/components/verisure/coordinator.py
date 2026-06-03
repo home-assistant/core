@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from time import sleep
+from typing import Literal
 
 from verisure import (
     AuthenticationError as VerisureAuthenticationError,
@@ -73,6 +74,34 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         """Restore session from persisted cookies."""
         await self.hass.async_add_executor_job(self.verisure.login_cookie)
 
+    async def _async_password_login_after_cookie_read(
+        self,
+        *,
+        on_transient: Literal["return_false", "raise_update_failed"],
+    ) -> bool:
+        """Re-authenticate with password when the cookie file cannot be used."""
+        try:
+            await self._async_password_login()
+        except VerisureAuthenticationError as login_ex:
+            raise ConfigEntryAuthFailed(
+                "Verisure re-authentication failed after cookie could not be read"
+            ) from login_ex
+        except VerisureError as login_ex:
+            if _is_transient_verisure_error(login_ex):
+                if on_transient == "return_false":
+                    LOGGER.warning(
+                        "Verisure login unavailable (likely transient), %s",
+                        login_ex,
+                    )
+                    return False
+                raise UpdateFailed(
+                    "Could not refresh Verisure session (transient)"
+                ) from login_ex
+            raise ConfigEntryAuthFailed(
+                "Verisure re-authentication failed after cookie could not be read"
+            ) from login_ex
+        return True
+
     async def _async_refresh_session_after_auth_failure(self) -> None:
         """Recover session when cookie refresh indicates expired authentication."""
         try:
@@ -82,20 +111,9 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 "Verisure authentication rejected (invalid or expired session)"
             ) from ex
         except VerisureCookieReadError:
-            try:
-                await self._async_password_login()
-            except VerisureAuthenticationError as login_ex:
-                raise ConfigEntryAuthFailed(
-                    "Verisure re-authentication failed after cookie could not be read"
-                ) from login_ex
-            except VerisureError as login_ex:
-                if _is_transient_verisure_error(login_ex):
-                    raise UpdateFailed(
-                        "Could not refresh Verisure session (transient)"
-                    ) from login_ex
-                raise ConfigEntryAuthFailed(
-                    "Verisure re-authentication failed after cookie could not be read"
-                ) from login_ex
+            await self._async_password_login_after_cookie_read(
+                on_transient="raise_update_failed"
+            )
         except VerisureLoginError as ex:
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         except VerisureError as ex:
@@ -114,22 +132,10 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 "Verisure authentication rejected (invalid or expired session)"
             ) from ex
         except VerisureCookieReadError:
-            try:
-                await self._async_password_login()
-            except VerisureAuthenticationError as login_ex:
-                raise ConfigEntryAuthFailed(
-                    "Verisure re-authentication failed after cookie could not be read"
-                ) from login_ex
-            except VerisureError as login_ex:
-                if _is_transient_verisure_error(login_ex):
-                    LOGGER.warning(
-                        "Verisure login unavailable (likely transient), %s",
-                        login_ex,
-                    )
-                    return False
-                raise ConfigEntryAuthFailed(
-                    "Verisure re-authentication failed after cookie could not be read"
-                ) from login_ex
+            if not await self._async_password_login_after_cookie_read(
+                on_transient="return_false"
+            ):
+                return False
         except VerisureLoginError as ex:
             LOGGER.error("Credentials expired for Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
@@ -158,20 +164,9 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             await self._async_refresh_session_after_auth_failure()
         except VerisureCookieReadError:
             LOGGER.debug("Cookie unreadable, re-authenticating with password")
-            try:
-                await self._async_password_login()
-            except VerisureAuthenticationError as ex:
-                raise ConfigEntryAuthFailed(
-                    "Verisure re-authentication failed after cookie could not be read"
-                ) from ex
-            except VerisureError as ex:
-                if _is_transient_verisure_error(ex):
-                    raise UpdateFailed(
-                        "Could not refresh Verisure session (transient)"
-                    ) from ex
-                raise ConfigEntryAuthFailed(
-                    "Verisure re-authentication failed after cookie could not be read"
-                ) from ex
+            await self._async_password_login_after_cookie_read(
+                on_transient="raise_update_failed"
+            )
         except VerisureLoginError:
             LOGGER.debug("Cookie expired, acquiring new cookies")
             await self._async_refresh_session_after_auth_failure()
@@ -183,7 +178,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         except VerisureRateLimitError as ex:
             LOGGER.warning("Verisure rate limited during cookie refresh, %s", ex)
             raise UpdateFailed(
-                "Unable to update cookie — Verisure rate limited"
+                "Unable to update cookie - Verisure rate limited"
             ) from ex
         except VerisureError as ex:
             raise UpdateFailed("Unable to update cookie") from ex
