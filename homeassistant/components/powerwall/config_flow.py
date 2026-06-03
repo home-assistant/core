@@ -1,8 +1,5 @@
 """Config flow for Tesla Powerwall integration."""
 
-from __future__ import annotations
-
-import asyncio
 from collections.abc import Mapping
 import hashlib
 import logging
@@ -49,9 +46,9 @@ async def _login_and_fetch_site_info(
 ) -> tuple[str | None, str | None]:
     """Login to the powerwall and return (title, gateway_din).
 
-    On the restricted PW3-style surface, ``/api/powerwalls`` and
-    ``/api/site_info`` return 404. Both ``None`` results signal that the caller
-    should synthesize a title and unique id from the host.
+    On the restricted PW3-style surface, ``/api/powerwalls`` returns 404. Both
+    ``None`` results signal that the caller should synthesize a title and unique
+    id from the host.
     """
     if password is not None:
         await power_wall.login(password)
@@ -62,12 +59,7 @@ async def _login_and_fetch_site_info(
         if not is_api_404(err):
             raise
         return None, None
-    try:
-        site_info = await power_wall.get_site_info()
-    except ApiError as err:
-        if not is_api_404(err):
-            raise
-        return f"Powerwall {gateway_din[-5:]}", gateway_din
+    site_info = await power_wall.get_site_info()
     return site_info.site_name, gateway_din
 
 
