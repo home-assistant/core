@@ -31,11 +31,11 @@
 ## ⚠️ Breaking changes
 - [x] **v1 removed** — `homeassistant/components/sandbox/` + the v1 client are
   gone. Use v2. (`plan-v1-removal.md`, done 2026-05-28)
-- [ ] **`RefreshToken.scopes` field + dispatcher enforcement removed from core
+- [x] **`RefreshToken.scopes` field + dispatcher enforcement removed from core
   HA.** Phase 7's scope mechanism was reverted; no consumer shipped while it
   was in tree. Existing auth stores with `scopes` keys on refresh tokens load
   silently (the field is dropped on read). Re-introduces when the sandbox→main
-  WS transport lands and needs scoping. (`plan-strip-auth-scopes.md`)
+  WS transport lands and needs scoping. (`plan-strip-auth-scopes.md` `5141f96ebe1`)
 - [x] **`install_remote_store` monkey-patch removed.** Sandbox Store IO now
   routes via a `current_sandbox` ContextVar in `homeassistant/helpers/`. No
   user-visible API change; internal-only. (`plan-sandbox-context.md`, A1
