@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 from httpx import Response
+from noonlight_dispatch import NoonlightError
 import respx
 
 from homeassistant import config_entries, data_entry_flow
@@ -153,6 +156,23 @@ async def test_server_error_surfaces_cannot_connect(hass: HomeAssistant) -> None
     )
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
+
+
+async def test_unexpected_library_error_is_reachable(hass: HomeAssistant) -> None:
+    """A bare NoonlightError during validation is treated as reachable."""
+    with patch(
+        "homeassistant.components.noonlight.config_flow.NoonlightClient."
+        "get_alarm_status",
+        side_effect=NoonlightError("unexpected"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "tok", CONF_ENVIRONMENT: ENV_SANDBOX},
+        )
+    assert result["step_id"] == "caller"
 
 
 async def test_custom_requires_base_url(hass: HomeAssistant) -> None:

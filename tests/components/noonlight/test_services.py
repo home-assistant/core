@@ -344,3 +344,43 @@ async def test_account_selected_by_title(hass: HomeAssistant, setup_entry) -> No
     assert _coordinator(hass, second).data["state"] == STATE_DISPATCHED
     # The first account stayed idle.
     assert _coordinator(hass, setup_entry).data["state"] == "idle"
+
+
+@respx.mock
+async def test_ambiguous_account_title_raises(hass: HomeAssistant, setup_entry) -> None:
+    """A title shared by more than one entry is refused (use the entry id)."""
+    twin = MockConfigEntry(
+        domain=DOMAIN,
+        title="Main",  # same title as the setup_entry fixture
+        entry_id="noonlight3",
+        unique_id="sandbox_9_twin_st_90009",
+        data={
+            CONF_API_TOKEN: "tok3",
+            CONF_ENVIRONMENT: ENV_SANDBOX,
+            "name": "Main",
+            "phone": "+15555550133",
+            "address": "9 Twin St",
+            "city": "Testville",
+            "state": "CA",
+            "zip": "90009",
+        },
+        options={
+            CONF_DEFAULT_ENTRY_DELAY: 30,
+            CONF_DEDUPE_SECONDS: 300,
+            CONF_SERVICES_GRANTED: ALL_NOONLIGHT_SERVICES,
+        },
+    )
+    twin.add_to_hass(hass)
+    respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+        return_value=Response(404)
+    )
+    assert await hass.config_entries.async_setup(twin.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError, match="titled 'Main'"):
+        await hass.services.async_call(
+            DOMAIN,
+            SVC_DISPATCH_POLICE,
+            {"entry_delay_seconds": 0, "account": "Main"},
+            blocking=True,
+        )
