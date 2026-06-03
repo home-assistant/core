@@ -1,7 +1,7 @@
 """Test the Ubiquiti airOS config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from airos.exceptions import (
     AirOSConnectionAuthenticationError,
@@ -10,12 +10,14 @@ from airos.exceptions import (
     AirOSEndpointError,
     AirOSKeyDataMissingError,
     AirOSListenerError,
+    AirOSTLSCompatibilityError,
 )
 from airos.helpers import DetectDeviceData
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.airos.const import (
+    CONF_LEGACY_SSL,
     DEFAULT_USERNAME,
     DOMAIN,
     HOSTNAME,
@@ -876,3 +878,92 @@ async def test_dhcp_ip_unchanged(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_manual_flow_retries_with_legacy_tls(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_async_get_firmware_data: AsyncMock,
+    ap_status_fixture: dict[str, Any],
+) -> None:
+    """Test manual flow retries with legacy TLS and creates an entry."""
+    legacy_session = MagicMock()
+    legacy_session.close = AsyncMock()
+
+    mock_async_get_firmware_data.side_effect = [
+        AirOSTLSCompatibilityError(),
+        {
+            "mac": ap_status_fixture.derived.mac,
+            "hostname": ap_status_fixture.host.hostname,
+        },
+    ]
+
+    with (
+        patch(
+            "homeassistant.components.airos.config_flow.TCPConnector",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.airos.config_flow.ClientSession",
+            return_value=legacy_session,
+        ) as mock_client_session,
+        patch(
+            "homeassistant.components.airos.config_flow.build_legacy_context",
+            return_value=MagicMock(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "manual"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_LEGACY_SSL] is True
+    assert mock_async_get_firmware_data.await_count == 2
+    mock_client_session.assert_called_once()
+    legacy_session.close.assert_awaited_once()
+
+
+async def test_validate_raise_on_attempted_legacy(
+    hass: HomeAssistant,
+) -> None:
+    """Test legacy mode re-raises TLS compatibility errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+
+    legacy_session = MagicMock()
+    legacy_session.close = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.airos.config_flow.async_get_firmware_data",
+            side_effect=AirOSTLSCompatibilityError(),
+        ),
+        patch(
+            "homeassistant.components.airos.config_flow.TCPConnector",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.airos.config_flow.ClientSession",
+            return_value=legacy_session,
+        ) as mock_client_session,
+        patch(
+            "homeassistant.components.airos.config_flow.build_legacy_context",
+            return_value=MagicMock(),
+        ),
+        pytest.raises(AirOSTLSCompatibilityError),
+    ):
+        await flow._validate_and_get_device_info(MOCK_CONFIG, legacy=True)
+
+    mock_client_session.assert_called_once()
+    legacy_session.close.assert_awaited_once()

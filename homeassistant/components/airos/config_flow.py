@@ -5,6 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from aiohttp import ClientSession, TCPConnector
 from airos.airos6 import AirOS6
 from airos.airos8 import AirOS8
 from airos.discovery import airos_discover_devices
@@ -16,6 +17,7 @@ from airos.exceptions import (
     AirOSEndpointError,
     AirOSKeyDataMissingError,
     AirOSListenerError,
+    AirOSTLSCompatibilityError,
 )
 from airos.helpers import DetectDeviceData, async_get_firmware_data
 import voluptuous as vol
@@ -44,6 +46,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
+    CONF_LEGACY_SSL,
     DEFAULT_SSL,
     DEFAULT_USERNAME,
     DEFAULT_VERIFY_SSL,
@@ -54,6 +57,7 @@ from .const import (
     MAC_ADDRESS,
     SECTION_ADDITIONAL_SETTINGS,
 )
+from .helpers import build_legacy_context
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,15 +131,24 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _validate_and_get_device_info(
-        self, config_data: dict[str, Any]
+        self,
+        config_data: dict[str, Any],
+        legacy: bool = False,
     ) -> dict[str, Any] | None:
         """Validate user input with the device API."""
         # By default airOS 8 comes with self-signed SSL certificates,
         # with no option in the web UI to change or upload a custom certificate.
-        session = async_get_clientsession(
-            self.hass,
-            verify_ssl=config_data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL],
-        )
+        # Older airOS 6 devices may still lack proper levels
+
+        close_session = False
+        verify_ssl = config_data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL]
+
+        session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
+        if legacy:
+            session = ClientSession(
+                connector=TCPConnector(ssl=build_legacy_context(verify_ssl=verify_ssl))
+            )
+            close_session = True
 
         try:
             device_data: DetectDeviceData = await async_get_firmware_data(
@@ -144,6 +157,15 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 password=config_data[CONF_PASSWORD],
                 session=session,
                 use_ssl=config_data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL],
+            )
+
+        except AirOSTLSCompatibilityError:
+            if legacy:
+                raise
+            retry_config = dict(config_data)
+            retry_config[CONF_LEGACY_SSL] = True
+            return await self._validate_and_get_device_info(
+                config_data=retry_config, legacy=True
             )
 
         except (
@@ -167,6 +189,10 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
             return {"title": device_data["hostname"], "data": config_data}
+
+        finally:
+            if close_session:
+                await session.close()
 
         return None
 
