@@ -39,10 +39,10 @@
 # name: test_cameras[camera.front_door_camera-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': <ANY>,
-      'entity_picture': <ANY>,
+      'access_token': 'd0fa38e3d9dcd41cb6c72b1349ec40e1f1c397ca95916c50c6b22c3479c9de50',
+      'entity_picture': '/api/camera_proxy/camera.front_door_camera?token=d0fa38e3d9dcd41cb6c72b1349ec40e1f1c397ca95916c50c6b22c3479c9de50',
       'friendly_name': 'Front Door Camera',
-      'supported_features': <CameraEntityFeature.STREAM: 2>,
+      'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.front_door_camera',

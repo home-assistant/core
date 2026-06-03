@@ -146,6 +146,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         """Handle WebRTC offer via KVS signaling."""
         if session_id in self._kvs_sessions:
             self.close_webrtc_session(session_id)
+        self._closed_sessions.discard(session_id)
 
         try:
             kvs_data = await self.coordinator.client.async_get_camera_webrtc(

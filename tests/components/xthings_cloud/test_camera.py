@@ -255,6 +255,19 @@ async def test_webrtc_session_cleanup(
         await camera_entity.async_on_webrtc_candidate(session_id, candidate)
         mock_kvs_client.async_send_ice_candidate.assert_not_called()
 
+        # Verify a new offer with the same session id accepts candidates again
+        await camera_entity.async_handle_async_webrtc_offer(
+            offer_sdp="mock_offer_sdp",
+            session_id=session_id,
+            send_message=MagicMock(),
+        )
+        await camera_entity.async_on_webrtc_candidate(session_id, candidate)
+        mock_kvs_client.async_send_ice_candidate.assert_called_once_with(
+            candidate="mock_candidate_string",
+            sdp_mid="mock_sdp_mid",
+            sdp_m_line_index=0,
+        )
+
 
 async def test_webrtc_offer_kvs_error(
     hass: HomeAssistant,
