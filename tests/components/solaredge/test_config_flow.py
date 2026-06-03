@@ -10,11 +10,10 @@ from homeassistant.components.solaredge.const import (
     CONF_SECTION_API_AUTH,
     CONF_SECTION_WEB_AUTH,
     CONF_SITE_ID,
-    DEFAULT_NAME,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -51,7 +50,6 @@ async def test_user_api_key(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: NAME,
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
             CONF_SECTION_WEB_AUTH: {
@@ -61,7 +59,7 @@ async def test_user_api_key(
         },
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "solaredge_site_1_2_3"
+    assert result.get("title") == SITE_ID
 
     data = result.get("data")
     assert data
@@ -87,7 +85,6 @@ async def test_user_web_login(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: NAME,
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: ""},
             CONF_SECTION_WEB_AUTH: {
@@ -98,7 +95,7 @@ async def test_user_web_login(
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "solaredge_site_1_2_3"
+    assert result.get("title") == SITE_ID
 
     data = result.get("data")
     assert data
@@ -126,7 +123,6 @@ async def test_user_both_auth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: NAME,
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
             CONF_SECTION_WEB_AUTH: {
@@ -153,7 +149,7 @@ async def test_abort_if_already_setup(
     """Test we abort if the site_id is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
     ).add_to_hass(hass)
 
     # Should fail, same SITE_ID
@@ -161,7 +157,6 @@ async def test_abort_if_already_setup(
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
-            CONF_NAME: "test",
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
         },
@@ -176,7 +171,7 @@ async def test_ignored_entry_does_not_cause_error(
     """Test an ignored entry does not cause an error on new entry."""
     MockConfigEntry(
         domain="solaredge",
-        data={CONF_NAME: DEFAULT_NAME, CONF_API_KEY: API_KEY},
+        data={CONF_API_KEY: API_KEY},
         source=SOURCE_IGNORE,
     ).add_to_hass(hass)
 
@@ -185,13 +180,12 @@ async def test_ignored_entry_does_not_cause_error(
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
-            CONF_NAME: "test",
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
+    assert result["title"] == SITE_ID
 
     data = result["data"]
     assert data
@@ -206,7 +200,7 @@ async def test_no_auth_provided(recorder_mock: Recorder, hass: HomeAssistant) ->
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_NAME: NAME, CONF_SITE_ID: SITE_ID},
+        {CONF_SITE_ID: SITE_ID},
     )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "auth_missing"}
@@ -233,7 +227,6 @@ async def test_api_key_errors(
     solaredge_api.get_details = get_details_setup
 
     user_input = {
-        CONF_NAME: NAME,
         CONF_SITE_ID: SITE_ID,
         CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
     }
@@ -285,7 +278,6 @@ async def test_web_login_errors(
 
     solaredge_web_api.async_get_equipment.side_effect = api_exception
     user_input = {
-        CONF_NAME: NAME,
         CONF_SITE_ID: SITE_ID,
         CONF_SECTION_WEB_AUTH: {
             CONF_USERNAME: USERNAME,

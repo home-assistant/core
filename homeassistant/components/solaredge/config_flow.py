@@ -13,19 +13,12 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import slugify
 
-from .const import (
-    CONF_SECTION_API_AUTH,
-    CONF_SECTION_WEB_AUTH,
-    CONF_SITE_ID,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from .const import CONF_SECTION_API_AUTH, CONF_SECTION_WEB_AUTH, CONF_SITE_ID, DOMAIN
 
 
 class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -100,7 +93,6 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
             if self.source == SOURCE_RECONFIGURE:
                 if TYPE_CHECKING:
                     assert entry
@@ -142,7 +134,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                             assert entry
                         return self.async_update_reload_and_abort(entry, data=data)
 
-                    return self.async_create_entry(title=name, data=data)
+                    return self.async_create_entry(title=site_id, data=data)
         elif self.source == SOURCE_RECONFIGURE:
             if TYPE_CHECKING:
                 assert entry
@@ -158,11 +150,6 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema_dict: dict[vol.Marker, Any] = {}
         if self.source != SOURCE_RECONFIGURE:
-            data_schema_dict[
-                # Name field is no longer allowed in config flow schemas
-                # pylint: disable-next=home-assistant-config-flow-name-field
-                vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME))
-            ] = str
             data_schema_dict[
                 vol.Required(CONF_SITE_ID, default=user_input.get(CONF_SITE_ID, ""))
             ] = str
