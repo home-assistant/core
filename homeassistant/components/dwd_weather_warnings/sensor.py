@@ -100,7 +100,7 @@ class DwdWeatherWarningsSensor(
         if warnings is None:
             return []
 
-        now = datetime.now(UTC)
+        now = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
         return [warning for warning in warnings if warning[API_ATTR_WARNING_END] > now]
 
     @property

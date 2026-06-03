@@ -103,6 +103,7 @@ Every check has a code following the
 | `W7420` | [`home-assistant-tests-direct-platform-async-setup-entry`](#w7420-home-assistant-tests-direct-platform-async-setup-entry) | Tests should not call a platform's `async_setup_entry` directly |
 | `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
 | `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
+| `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
 | `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
 | `W7424` | [`home-assistant-entity-unique-id-static`](#w7424-home-assistant-entity-unique-id-static) | Entity class sets `_attr_unique_id` to a static string at class level |
 
@@ -401,6 +402,19 @@ the setup through the normal pipeline:
   `homeassistant.setup`.
 
 See [epic #79](https://github.com/home-assistant/epics/issues/79).
+
+
+## `home_assistant_enforce_utcnow` checker
+
+Ensures the Home Assistant helper is used to get the current UTC time.
+
+### `C7414`: `home-assistant-enforce-utcnow`
+
+Use `homeassistant.util.dt.utcnow()` instead of `datetime.datetime.now(UTC)`.
+The helper is implemented as
+`functools.partial(datetime.datetime.now, UTC)` and avoids the global
+lookup of `UTC` on every call, while keeping the codebase consistent in
+how the current UTC time is obtained.
 
 
 ## `home_assistant_entity_unique_id` checker
