@@ -1,8 +1,7 @@
 """Tests for the arwn config flow."""
 
-from homeassistant import config_entries
 from homeassistant.components.arwn.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_MQTT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
@@ -45,7 +44,7 @@ async def test_mqtt_step(
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_MQTT},
+        context={"source": SOURCE_MQTT},
         data=discovery_info,
     )
     assert result["type"] is FlowResultType.FORM
@@ -66,7 +65,10 @@ async def test_single_instance_allowed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    await hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
+    first_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert first_result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
     duplicate = await hass.config_entries.flow.async_init(
