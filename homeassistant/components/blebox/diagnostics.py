@@ -15,7 +15,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: BleBoxConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    product = entry.runtime_data
+    product = entry.runtime_data.box
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
