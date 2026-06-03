@@ -507,5 +507,6 @@ def _normalize_arm_mode(mode: Any) -> ArmMode:
 
 
 def _connection_state(event: Any) -> bool | None:
+    """Return the connection state from a client connection event."""
     connected = getattr(event, "connected", None)
     return connected if isinstance(connected, bool) else None
