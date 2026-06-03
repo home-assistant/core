@@ -306,3 +306,5 @@ class IpBanManager:
         async with self.ip_bans_lock:
             if self.ip_bans_lookup.pop(remote_addr, None):
                 await self.hass.async_add_executor_job(self._save_all_bans)
+            else:
+                raise ServiceValidationError(f"{remote_addr} not banned")

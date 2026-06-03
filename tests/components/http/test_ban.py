@@ -21,7 +21,7 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.view import request_handler_factory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.setup import async_setup_component
 
@@ -109,6 +109,14 @@ async def test_unban(
                 {"ip_address": remote_address},
                 blocking=True,
             )
+        for remote_address in BANNED_IPS:
+            with pytest.raises(ServiceValidationError):
+                await hass.services.async_call(
+                    "http",
+                    "unban",
+                    {"ip_address": remote_address},
+                    blocking=True,
+                )
 
     assert len(app[KEY_BAN_MANAGER].ip_bans_lookup) == 0
 
