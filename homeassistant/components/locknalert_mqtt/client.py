@@ -55,7 +55,7 @@ def publish(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to an MQTT topic."""
-    hass.create_task(async_publish(hass, topic, payload, qos, retain, encoding))
+    hass.async_create_task(async_publish(hass, topic, payload, qos, retain, encoding))
 
 
 async def async_publish(
@@ -91,7 +91,7 @@ async def async_publish(
         if encoding != DEFAULT_ENCODING:
             try:
                 outgoing_payload = outgoing_payload.encode(encoding)
-            except AttributeError, LookupError, UnicodeEncodeError:
+            except (AttributeError, LookupError, UnicodeEncodeError):
                 _LOGGER.error(
                     "Can't encode payload for publishing %s on %s with encoding %s",
                     payload,

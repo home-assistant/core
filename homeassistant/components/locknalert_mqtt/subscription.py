@@ -123,7 +123,8 @@ def async_prepare_subscribe_topics(
     return sub_state
 
 
-async def async_subscribe_topics(
+@callback
+def async_subscribe_topics(
     hass: HomeAssistant,
     sub_state: dict[str, EntitySubscription],
 ) -> None:

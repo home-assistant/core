@@ -820,7 +820,8 @@ def extract_serial_from_discovery(discovery_info: ZeroconfServiceInfo) -> str | 
             return parts[0]  # Return serial/hostname part
 
     # Fallback to TXT property
-    return discovery_info.properties.get(DISCOVERY_ATTR_SERIAL)
+    raw = discovery_info.properties.get(DISCOVERY_ATTR_SERIAL)
+    return str(raw) if raw is not None else None
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):

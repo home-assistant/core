@@ -269,7 +269,7 @@ async def async_check_config_schema(
 ) -> None:
     """Validate manually configured MQTT items."""
     mqtt_data = hass.data[DATA_MQTT]
-    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
+    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, [])
     for mqtt_config_item in mqtt_config:
         for domain, config_items in mqtt_config_item.items():
             schema = mqtt_data.reload_schema[domain]
@@ -559,7 +559,7 @@ async def websocket_subscribe(
             payload = cast(bytes, mqttmsg.payload).decode(
                 DEFAULT_ENCODING
             )  # not str because encoding is set to None
-        except AttributeError, UnicodeDecodeError:
+        except (AttributeError, UnicodeDecodeError):
             # Convert non UTF-8 payload to a string presentation
             payload = str(mqttmsg.payload)
 

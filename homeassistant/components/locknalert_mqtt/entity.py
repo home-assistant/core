@@ -949,7 +949,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
     ) -> None:
         """Handle the manual removal of a device."""
         if self._skip_device_removal or not async_removed_from_device(
-            self.hass, event, cast(str, self._device_id), self._config_entry_id
+            self.hass, event, self._device_id, self._config_entry_id
         ):
             return
         # Prevent a second cleanup round after the device is removed
