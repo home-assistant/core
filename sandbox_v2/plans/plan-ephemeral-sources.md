@@ -48,22 +48,16 @@ Extend `_entry_setup_payload` with a `source` block:
 Main decides built-in vs git from `Integration.is_built_in` (already used by the
 classifier).
 
-### 2. **Open fork — how does core learn the git URL + version?**
-Core must not depend on HACS. Options:
-- **(a) HACS-provided index.** HACS already tracks installed repos + versions in
-  its own storage. Define a small read contract (a known `.storage` key or a
-  `hass.data` registry HACS populates) that the sandbox resolver reads. Couples
-  to a HACS data shape — needs a tiny HACS-side cooperation PR.
-- **(b) Manifest convention.** A custom integration's `manifest.json` carries
-  the source (HACS could stamp `"sandbox_source": {url, ...}` on install, or we
-  reuse existing fields + `version`). Core reads the on-disk manifest. Cleanest
-  decoupling; needs HACS to write the field.
-- **(c) Generic resolver hook.** Core exposes
-  `async_register_sandbox_source_resolver(callable)`; HACS registers a resolver
-  domain→source. Core ships a no-op default (built-in only). Most decoupled;
-  HACS owns the mapping.
-**Lean (c)** — a registered resolver keeps core HACS-agnostic and lets any
-distribution mechanism (not just HACS) supply sources. Confirm before building.
+### 2. **Decision (2026-06-03): generic resolver hook (option c)**
+Core exposes
+`async_register_sandbox_source_resolver(callable)`; HACS (or any other
+distribution mechanism) registers a resolver domain→source. Core ships a
+no-op default (built-in only). Keeps core HACS-agnostic.
+
+Options considered and rejected:
+- (a) HACS-provided index — couples core to a HACS data shape.
+- (b) Manifest convention — clean decoupling but requires HACS to write the
+  manifest field; less flexible than (c).
 
 ### 3. Sandbox fetches before setup
 In `entry_runner._handle_entry_setup`, before `async_setup`:
@@ -115,8 +109,8 @@ sandbox_v2/hass_client/hass_client/sources.py     (new — git/tarball fetch + c
   `plan-docker.md` (the ephemeral container).
 
 ## Open decisions
-- Source-resolution mechanism: (a) HACS index / (b) manifest convention /
-  (c) registered resolver hook — **lean (c)**.
+- ~~Source-resolution mechanism: (a) HACS index / (b) manifest convention /
+  (c) registered resolver hook~~ — **DECIDED 2026-06-03: (c) registered resolver hook.**
 - Fetch mechanism: `git` shallow clone vs GitHub tarball download — **lean
   tarball** (no `git` binary dep; matches HACS).
 - Cache scope: process-lifetime only (pure ephemeral) vs a bounded on-disk

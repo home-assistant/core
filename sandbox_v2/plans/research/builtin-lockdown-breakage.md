@@ -71,23 +71,18 @@ Strong **ALWAYS_MAIN** candidates.
 | `prometheus` | hub, no config_flow | exports metrics for every entity, labels by area; YAML-only → probably stays on main |
 | `alert` | hub, no config_flow | fires on a watched foreign entity; YAML-only → probably stays on main |
 
-## Open decision (the point-1 sub-fork)
+## Decision (2026-06-03): (a) blanket `ALWAYS_MAIN`
 
-The ~15 Category-A helpers are the crux. Two dispositions:
+All Category A + B helpers move to `ALWAYS_MAIN`. Ships now; the
+narrow-opt-in design (option b) is deferred to the eventual share-states
+consumer (`docs/design-share-states.md`) where a scoped declared-allow-list
+is the natural shape.
 
-- **(a) All Category A + B → `ALWAYS_MAIN`.** Simple, ships now. Cost: moves
-  ~17 of the most popular built-in helpers out of the sandbox, eroding the
-  sandbox's value for exactly the integrations users add most.
-- **(b) Narrow opt-in for Category A; `ALWAYS_MAIN` only for B (+ history_stats).**
-  A helper declares its source entity_ids; the sandbox proxies just those
-  states (+ registry rows). Preserves sandboxing for the helper cluster but is
-  more work and overlaps the deferred `design-share-states.md` consumer (a
-  *scoped, declared-allow-list* subscription rather than a group-wide share).
+Cost accepted: ~17 of the most popular built-in helpers run on main, not
+sandboxed. Mitigation: the share-states consumer can later peel Category A
+back into sandboxes once the declared-source-entity_ids allow-list lands.
 
-Recommendation to discuss: **B**, because (a) guts the helper experience and
-(b)'s "declared source entity_ids" allow-list is strictly narrower (and safer)
-than the group-wide share the old design proposed — it may be the right v1 of
-the share consumer.
+Implementation in `plan-fidelity-batch.md` appendix.
 
 ## Suggested next confirmations (cheap)
 - Confirm router.py only sandboxes config-**entry** integrations (spares

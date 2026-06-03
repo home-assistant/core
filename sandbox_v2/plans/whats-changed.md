@@ -9,6 +9,14 @@
 > broadcast from). Keep it short — link to OVERVIEW.md for depth.
 
 ## TL;DR
+- Store IO is now routed via a `current_sandbox` **ContextVar** in core HA,
+  replacing the module-level monkey-patch of
+  `homeassistant.helpers.storage.Store`. Same primitive will later carry
+  cross-sandbox IR/RF/BLE calls.
+- Phase 7's `RefreshToken.scopes` mechanism was **reverted from core HA** —
+  no consumer shipped, so it was dead weight. The sandbox token is now a
+  plain system-user token. Re-introduce when the sandbox→main websocket
+  actually lands.
 - The `built-in` sandbox group is now locked down like `custom` (HACS) — no
   access to other integrations' states/registry/areas. ~18 helper/aggregator
   integrations consequently run on **main**.
@@ -23,6 +31,14 @@
 ## ⚠️ Breaking changes
 - [x] **v1 removed** — `homeassistant/components/sandbox/` + the v1 client are
   gone. Use v2. (`plan-v1-removal.md`, done 2026-05-28)
+- [ ] **`RefreshToken.scopes` field + dispatcher enforcement removed from core
+  HA.** Phase 7's scope mechanism was reverted; no consumer shipped while it
+  was in tree. Existing auth stores with `scopes` keys on refresh tokens load
+  silently (the field is dropped on read). Re-introduces when the sandbox→main
+  WS transport lands and needs scoping. (`plan-strip-auth-scopes.md`)
+- [ ] **`install_remote_store` monkey-patch removed.** Sandbox Store IO now
+  routes via a `current_sandbox` ContextVar in `homeassistant/helpers/`. No
+  user-visible API change; internal-only. (`plan-sandbox-context.md`)
 - [ ] **Runtime CLI flag `--group` → `--name`** on
   `python -m hass_client.sandbox_v2`. (`plan-fidelity-batch.md` #2)
 - [ ] **`built-in` group locked down** — these integrations now run on **main**,
