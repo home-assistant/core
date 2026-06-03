@@ -27,6 +27,7 @@ from homeassistant.components.noonlight.const import (
     SVC_TEST_DISPATCH,
 )
 from homeassistant.components.noonlight.coordinator import NoonlightCoordinator
+from homeassistant.components.noonlight.services import async_setup_services
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -52,6 +53,12 @@ async def test_services_registered(hass: HomeAssistant, setup_entry) -> None:
         SVC_TEST_DISPATCH,
     ):
         assert hass.services.has_service(DOMAIN, service)
+
+
+async def test_setup_services_is_idempotent(hass: HomeAssistant, setup_entry) -> None:
+    """A second registration call is a no-op (services already registered)."""
+    async_setup_services(hass)
+    assert hass.services.has_service(DOMAIN, SVC_CANCEL)
 
 
 async def test_services_persist_after_unload(hass: HomeAssistant, setup_entry) -> None:

@@ -3,6 +3,8 @@
 (ConfigEntryNotReady / ConfigEntryAuthFailed)
 """
 
+from unittest.mock import patch
+
 import httpx
 from httpx import Response
 import respx
@@ -69,3 +71,13 @@ async def test_setup_succeeds_on_404_probe(hass: HomeAssistant, config_entry) ->
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_unload_reports_failure_when_platform_unload_fails(
+    hass: HomeAssistant, setup_entry
+) -> None:
+    """If a platform fails to unload, the entry unload reports failure."""
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert not await hass.config_entries.async_unload(setup_entry.entry_id)
