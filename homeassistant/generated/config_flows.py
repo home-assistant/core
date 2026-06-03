@@ -186,6 +186,7 @@ FLOWS = {
         "econet",
         "ecovacs",
         "ecowitt",
+        "edifier_infrared",
         "edl21",
         "efergy",
         "egauge",
