@@ -31,6 +31,7 @@ APPLIANCE_FIXTURES = [
     "700series_vacuum",
     "gordias_vacuum",
     "cybele_vacuum",
+    "fridge_with_filters",
 ]
 
 
