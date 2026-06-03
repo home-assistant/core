@@ -110,7 +110,7 @@ async def test_unban(
                 blocking=True,
             )
 
-    assert len(app[KEY_BAN_MANAGER]) == 0
+    assert len(app[KEY_BAN_MANAGER].ip_bans_lookup) == 0
 
     for remote_addr in BANNED_IPS:
         set_real_ip(remote_addr)
