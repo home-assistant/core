@@ -91,6 +91,21 @@ message DeviceInfo {
 
 // --- entry_setup / entry_unload (main -> sandbox) -------------------------
 
+// Where the sandbox should source the integration's code from. Makes the
+// sandbox stateless: built-ins ride the bundled `homeassistant` package
+// (no-op), custom (HACS) integrations carry a git source the sandbox fetches
+// at startup. Main pins the source to an exact commit `ref` (sha) before it
+// crosses the wire — never a moving tag — see `sources.py`.
+message IntegrationSource {
+  string kind = 1;    // "builtin" | "git"
+  // git-only fields (unset for builtin):
+  string url = 2;     // repository url, e.g. https://github.com/owner/repo
+  string ref = 3;     // exact commit sha (main pins tag -> sha)
+  string tag = 4;     // human-readable version, for logs only
+  string domain = 5;  // the custom integration's domain
+  string subdir = 6;  // path within the repo, e.g. custom_components/<domain>
+}
+
 message EntrySetup {
   string entry_id = 1;
   string domain = 2;
@@ -101,6 +116,7 @@ message EntrySetup {
   optional string unique_id = 7;
   int32 version = 8;
   int32 minor_version = 9;
+  IntegrationSource integration_source = 10;
 }
 
 message EntrySetupResult {

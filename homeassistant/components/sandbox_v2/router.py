@@ -35,6 +35,7 @@ from .manager import SandboxManager
 from .messages import dict_to_struct
 from .protocol import MSG_ENTRY_SETUP, MSG_ENTRY_UNLOAD
 from .proxy_flow import SandboxFlowProxy
+from .sources import SandboxSourceError, async_resolve_integration_source
 
 if TYPE_CHECKING:
     from . import SandboxV2Data
@@ -113,7 +114,19 @@ class SandboxFlowRouter:
             )
             return False
 
-        payload = _entry_setup_payload(entry)
+        try:
+            payload = await _entry_setup_payload(self._hass, entry)
+        except SandboxSourceError as err:
+            _LOGGER.error(
+                "Cannot resolve integration source for entry %s (%s): %s",
+                entry.title,
+                entry.domain,
+                err,
+            )
+            entry._async_set_state(  # noqa: SLF001
+                self._hass, ConfigEntryState.SETUP_ERROR, str(err)
+            )
+            return False
         try:
             result = await channel.call(MSG_ENTRY_SETUP, payload)
         except ChannelClosedError:
@@ -187,11 +200,16 @@ class SandboxFlowRouter:
         return classify(integration)
 
 
-def _entry_setup_payload(entry: ConfigEntry) -> pb.EntrySetup:
+async def _entry_setup_payload(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> pb.EntrySetup:
     """Build the typed ``EntrySetup`` message for ``sandbox_v2/entry_setup``.
 
     Surfaces the small subset of entry fields the integration's
-    ``async_setup_entry`` reads.
+    ``async_setup_entry`` reads, plus the ``integration_source`` descriptor
+    telling a stateless sandbox where to fetch the code (built-in → no-op;
+    custom → a git source pinned to an exact sha). May raise
+    :class:`SandboxSourceError` if a custom integration has no source resolver.
     """
     msg = pb.EntrySetup(
         entry_id=entry.entry_id,
@@ -205,6 +223,9 @@ def _entry_setup_payload(entry: ConfigEntry) -> pb.EntrySetup:
     )
     if entry.unique_id is not None:
         msg.unique_id = entry.unique_id
+    msg.integration_source.CopyFrom(
+        await async_resolve_integration_source(hass, entry.domain)
+    )
     return msg
 
 

@@ -8,7 +8,13 @@ from homeassistant.components.sandbox_v2._proto import sandbox_v2_pb2 as pb
 from homeassistant.components.sandbox_v2.manager import SandboxManager
 from homeassistant.components.sandbox_v2.messages import struct_to_dict
 from homeassistant.components.sandbox_v2.proxy_flow import SandboxFlowProxy
-from homeassistant.components.sandbox_v2.router import SandboxFlowRouter
+from homeassistant.components.sandbox_v2.router import (
+    SandboxFlowRouter,
+    _entry_setup_payload,
+)
+from homeassistant.components.sandbox_v2.sources import (
+    async_register_sandbox_source_resolver,
+)
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigFlowContext
 from homeassistant.core import HomeAssistant
 
@@ -118,6 +124,7 @@ async def test_async_setup_entry_routes_to_sandbox(
     channel_b.start()
     manager.install("built-in", channel_a)
 
+    mock_integration(hass, MockModule("test_entry"))
     entry = MockConfigEntry(
         domain="test_entry",
         title="Test",
@@ -155,6 +162,7 @@ async def test_async_setup_entry_marks_setup_error_on_failure(
     channel_b.start()
     manager.install("built-in", channel_a)
 
+    mock_integration(hass, MockModule("test_fail"))
     entry = MockConfigEntry(
         domain="test_fail",
         title="Test",
@@ -171,6 +179,37 @@ async def test_async_setup_entry_marks_setup_error_on_failure(
 
     assert result is False
     assert entry.reason == "boom"
+
+
+async def test_entry_setup_payload_sets_builtin_source(hass: HomeAssistant) -> None:
+    """A built-in entry's payload carries a ``{kind: builtin}`` source."""
+    mock_integration(hass, MockModule("payload_builtin"))
+    entry = MockConfigEntry(domain="payload_builtin", title="Payload")
+
+    payload = await _entry_setup_payload(hass, cast(ConfigEntry, entry))
+
+    assert payload.integration_source.kind == "builtin"
+
+
+async def test_entry_setup_payload_sets_git_source(hass: HomeAssistant) -> None:
+    """A custom entry's payload carries the resolver's pinned git source."""
+    mock_integration(hass, MockModule("payload_custom"), built_in=False)
+    async_register_sandbox_source_resolver(
+        hass,
+        lambda domain: {
+            "kind": "git",
+            "url": "https://github.com/owner/payload_custom",
+            "ref": "d" * 40,
+            "tag": "v2.0.0",
+        },
+    )
+    entry = MockConfigEntry(domain="payload_custom", title="Payload")
+
+    payload = await _entry_setup_payload(hass, cast(ConfigEntry, entry))
+
+    assert payload.integration_source.kind == "git"
+    assert payload.integration_source.ref == "d" * 40
+    assert payload.integration_source.subdir == "custom_components/payload_custom"
 
 
 async def test_async_setup_entry_returns_none_when_not_sandboxed(

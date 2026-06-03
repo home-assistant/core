@@ -19,6 +19,7 @@ from .approved_domains import ApprovedDomains
 from .channel import Channel
 from .messages import dict_to_struct, struct_to_dict
 from .protocol import MSG_CALL_SERVICE, MSG_ENTRY_SETUP, MSG_ENTRY_UNLOAD
+from .sources import FetchPrimitive, SandboxSourceError, async_ensure_integration_source
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,15 +28,22 @@ class EntryRunner:
     """Load integrations on demand and run config entries inside the sandbox."""
 
     def __init__(
-        self, hass: HomeAssistant, approved: ApprovedDomains | None = None
+        self,
+        hass: HomeAssistant,
+        approved: ApprovedDomains | None = None,
+        *,
+        fetch: FetchPrimitive | None = None,
     ) -> None:
         """Initialise with the sandbox-private HA instance.
 
         ``approved`` is shared with the service + event mirrors so an
         entry's domain becomes approved as soon as setup completes.
+        ``fetch`` overrides the integration-source download primitive (tests
+        inject a local stub); ``None`` uses the real codeload tarball fetch.
         """
         self.hass = hass
         self.approved = approved if approved is not None else ApprovedDomains()
+        self._fetch = fetch
 
     def register(self, channel: Channel) -> None:
         """Wire the ``sandbox_v2/entry_*`` + ``call_service`` handlers."""
@@ -49,6 +57,24 @@ class EntryRunner:
             entry = _entry_from_proto(msg)
         except (KeyError, TypeError) as err:
             return pb.EntrySetupResult(ok=False, reason=f"bad payload: {err}")
+
+        # Fetch the integration code before setup so a stateless sandbox can
+        # load custom (HACS) integrations whose code isn't bundled. Built-in
+        # sources are a no-op.
+        try:
+            await async_ensure_integration_source(
+                self.hass.config.config_dir,
+                msg.integration_source,
+                fetch=self._fetch,
+            )
+        except SandboxSourceError as err:
+            _LOGGER.error(
+                "sandbox entry_setup: source fetch failed for %s (%s): %s",
+                entry.title,
+                entry.domain,
+                err,
+            )
+            return pb.EntrySetupResult(ok=False, reason=f"source fetch failed: {err}")
 
         config_entries = self.hass.config_entries
         if config_entries.async_get_entry(entry.entry_id) is not None:

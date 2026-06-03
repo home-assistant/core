@@ -95,8 +95,24 @@ class DeviceInfo(_message.Message):
     translation_key: str
     def __init__(self, identifiers: _Optional[_Iterable[_Union[DevicePair, _Mapping]]] = ..., connections: _Optional[_Iterable[_Union[DevicePair, _Mapping]]] = ..., via_device: _Optional[_Union[DevicePair, _Mapping]] = ..., entry_type: _Optional[str] = ..., name: _Optional[str] = ..., manufacturer: _Optional[str] = ..., model: _Optional[str] = ..., model_id: _Optional[str] = ..., sw_version: _Optional[str] = ..., hw_version: _Optional[str] = ..., serial_number: _Optional[str] = ..., suggested_area: _Optional[str] = ..., configuration_url: _Optional[str] = ..., default_name: _Optional[str] = ..., default_manufacturer: _Optional[str] = ..., default_model: _Optional[str] = ..., translation_key: _Optional[str] = ...) -> None: ...
 
+class IntegrationSource(_message.Message):
+    __slots__ = ("kind", "url", "ref", "tag", "domain", "subdir")
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    URL_FIELD_NUMBER: _ClassVar[int]
+    REF_FIELD_NUMBER: _ClassVar[int]
+    TAG_FIELD_NUMBER: _ClassVar[int]
+    DOMAIN_FIELD_NUMBER: _ClassVar[int]
+    SUBDIR_FIELD_NUMBER: _ClassVar[int]
+    kind: str
+    url: str
+    ref: str
+    tag: str
+    domain: str
+    subdir: str
+    def __init__(self, kind: _Optional[str] = ..., url: _Optional[str] = ..., ref: _Optional[str] = ..., tag: _Optional[str] = ..., domain: _Optional[str] = ..., subdir: _Optional[str] = ...) -> None: ...
+
 class EntrySetup(_message.Message):
-    __slots__ = ("entry_id", "domain", "title", "data", "options", "source", "unique_id", "version", "minor_version")
+    __slots__ = ("entry_id", "domain", "title", "data", "options", "source", "unique_id", "version", "minor_version", "integration_source")
     ENTRY_ID_FIELD_NUMBER: _ClassVar[int]
     DOMAIN_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
@@ -106,6 +122,7 @@ class EntrySetup(_message.Message):
     UNIQUE_ID_FIELD_NUMBER: _ClassVar[int]
     VERSION_FIELD_NUMBER: _ClassVar[int]
     MINOR_VERSION_FIELD_NUMBER: _ClassVar[int]
+    INTEGRATION_SOURCE_FIELD_NUMBER: _ClassVar[int]
     entry_id: str
     domain: str
     title: str
@@ -115,7 +132,8 @@ class EntrySetup(_message.Message):
     unique_id: str
     version: int
     minor_version: int
-    def __init__(self, entry_id: _Optional[str] = ..., domain: _Optional[str] = ..., title: _Optional[str] = ..., data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., options: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., source: _Optional[str] = ..., unique_id: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ...) -> None: ...
+    integration_source: IntegrationSource
+    def __init__(self, entry_id: _Optional[str] = ..., domain: _Optional[str] = ..., title: _Optional[str] = ..., data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., options: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., source: _Optional[str] = ..., unique_id: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., integration_source: _Optional[_Union[IntegrationSource, _Mapping]] = ...) -> None: ...
 
 class EntrySetupResult(_message.Message):
     __slots__ = ("ok", "reason")
