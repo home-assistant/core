@@ -76,6 +76,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -143,7 +144,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the universal media players."""
-    await async_setup_reload_service(hass, "universal", ["media_player"])
+    await async_setup_reload_service(hass, "universal", [Platform.MEDIA_PLAYER])
 
     player = UniversalMediaPlayer(hass, config)
     async_add_entities([player])
