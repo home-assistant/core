@@ -24,11 +24,11 @@ class AqvifyBaseEntity(CoordinatorEntity[AqvifyCoordinator]):
 
         self.device_key = device_key
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(coordinator.config_entry.unique_id))},
+            identifiers={(DOMAIN, device_key)},
             name=coordinator.data.devices.devices[device_key].name,
             manufacturer="Aqvify",
             configuration_url="https://app.aqvify.com",
             serial_number=device_key,
         )
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{device_key}_{description.key}"
         self.entity_description = description

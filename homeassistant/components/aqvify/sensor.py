@@ -26,7 +26,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class AqvifySensorEntityDescription(SensorEntityDescription):
-    """Description of a Aqvify sensor entity."""
+    """Description of an Aqvify sensor entity."""
 
     value_fn: Callable[[AqvifyDeviceData], StateType | datetime | None]
 
@@ -67,7 +67,7 @@ async def async_setup_entry(
 
 
 class AqvifySensor(AqvifyBaseEntity, SensorEntity):
-    """Representation of a Aqvify sensor entity."""
+    """Representation of an Aqvify sensor entity."""
 
     entity_description: AqvifySensorEntityDescription
 

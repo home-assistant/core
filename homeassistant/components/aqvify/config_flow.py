@@ -38,9 +38,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth from err
     except ClientResponseError as err:
         raise CannotConnect from err
-    except Exception:
-        raise
-
     account_id = AqvifyAccount(data).account_id
     return {"title": "Aqvify", "account_id": account_id}
 

@@ -70,15 +70,18 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
             raise UpdateFailed(f"Unexpected response: {err}") from err
 
         device_data = {}
-        try:
-            device_key = "AQ20282"
-            _data = await self.api_client.async_get_device_latest_data(device_key)
-            device_data[device_key] = AqvifyDeviceData(_data)
-        except ClientResponseError as err:
-            raise UpdateFailed(f"Error communicating with device: {err}") from err
-        except TimeoutError as err:
-            raise UpdateFailed(f"Unexpected response: {err}") from err
+        for device in devices.devices.values():
+            try:
+                device_key = str(device.device_key)
+                _data = await self.api_client.async_get_device_latest_data(device_key)
+                device_data[device_key] = AqvifyDeviceData(_data)
+            except ClientResponseError as err:
+                raise UpdateFailed(f"Error communicating with device: {err}") from err
+            except TimeoutError as err:
+                raise UpdateFailed(f"Unexpected response: {err}") from err
 
         return AqvifyCoordinatorData(
-            account_id="example_account_id", devices=devices, device_data=device_data
+            account_id=str(self.config_entry.unique_id),
+            devices=devices,
+            device_data=device_data,
         )
