@@ -134,6 +134,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             self.async_write_ha_state()
 
     async def _async_fetch_image(self, url: str) -> bytes | None:
+        """Fetch a snapshot image from the given URL, returning None on failure."""
         try:
             return await self.coordinator.client.async_get_snapshot(url)
         except XthingsCloudApiError as err:
@@ -273,10 +274,9 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         else:
             if session_id in self._pending_candidates:
                 candidates = self._pending_candidates[session_id]
-            elif len(self._pending_candidates) >= MAX_PENDING_WEBRTC_SESSIONS:
-                self._pending_candidates.popitem(last=False)
-                candidates = self._pending_candidates[session_id] = []
             else:
+                if len(self._pending_candidates) >= MAX_PENDING_WEBRTC_SESSIONS:
+                    self._pending_candidates.popitem(last=False)
                 candidates = self._pending_candidates[session_id] = []
             if len(candidates) < MAX_PENDING_ICE_CANDIDATES:
                 candidates.append(candidate)
