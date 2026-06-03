@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any
+from typing import Any, Literal, overload
 
 from homeassistant.core import ServiceResponse
 from homeassistant.util import dt as dt_util
@@ -230,8 +230,23 @@ def trace_append_element(
     trace[path].append(trace_element)
 
 
+@overload
+def trace_get(clear: Literal[True] = True) -> dict[str, deque[TraceElement]]: ...
+
+
+@overload
+def trace_get(clear: Literal[False]) -> dict[str, deque[TraceElement]] | None: ...
+
+
 def trace_get(clear: bool = True) -> dict[str, deque[TraceElement]] | None:
-    """Return the current trace."""
+    """Return the current trace.
+
+    When clear is True the trace is reset and a fresh (empty) trace is
+    unconditionally returned.
+
+    When clear is False, the current trace is returned without modification
+    if it exists, otherwise None is returned.
+    """
     if clear:
         trace_clear()
     return trace_cv.get()

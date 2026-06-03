@@ -2877,21 +2877,21 @@ async def test_subscribe_condition(
             "{{ trigger.to_state.attributes.event_type == 'double_press' }}",
             {
                 "error": "In 'template' condition: UndefinedError: 'trigger' is undefined",
-                "errors": ["'trigger' is undefined"],
+                "template_errors": ["'trigger' is undefined"],
             },
         ),
         # Undefined variable used in a way that only warns: the condition still
         # evaluates to a result, but the template error is forwarded alongside it.
         (
             "{{ no_such_variable }}",
-            {"result": False, "errors": ["'no_such_variable' is undefined"]},
+            {"result": False, "template_errors": ["'no_such_variable' is undefined"]},
         ),
         # A single render emitting multiple errors forwards all of them.
         (
             "{{ foo }}{{ bar }}",
             {
                 "result": False,
-                "errors": ["'foo' is undefined", "'bar' is undefined"],
+                "template_errors": ["'foo' is undefined", "'bar' is undefined"],
             },
         ),
     ],
