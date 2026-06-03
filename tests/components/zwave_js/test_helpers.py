@@ -13,7 +13,10 @@ from homeassistant.components.zwave_js.helpers import (
     async_get_nodes_from_area_id,
     async_get_provisioning_entry_from_device_id,
     format_home_id_for_display,
+    get_device_id,
+    get_node_id_and_endpoint_from_device_entry,
     get_value_state_schema,
+    value_requires_endpoint_device,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -142,6 +145,68 @@ async def test_async_get_provisioning_entry_from_device_id(
     ):
         result = await async_get_provisioning_entry_from_device_id(hass, device.id)
         assert result == provisioning_entry
+
+
+async def test_get_device_id_with_endpoint(client, vision_security_zl7432) -> None:
+    """Test get_device_id with an endpoint argument."""
+    driver = client.driver
+    node = vision_security_zl7432
+    home_id = driver.controller.home_id
+
+    node_device_id = get_device_id(driver, node)
+    assert node_device_id == (DOMAIN, f"{home_id}-{node.node_id}")
+
+    # Endpoint 0 and None map to the node device.
+    assert get_device_id(driver, node, 0) == node_device_id
+    assert get_device_id(driver, node, None) == node_device_id
+
+    # A non-root endpoint maps to a sub-device identifier.
+    assert get_device_id(driver, node, 2) == (
+        DOMAIN,
+        f"{home_id}-{node.node_id}-2",
+    )
+
+
+async def test_value_requires_endpoint_device(client, vision_security_zl7432) -> None:
+    """Test value_requires_endpoint_device collision detection."""
+    node = vision_security_zl7432
+
+    # The root endpoint value always stays on the node device.
+    root_value = node.values[f"{node.node_id}-114-0-manufacturerId"]
+    assert not value_requires_endpoint_device(node, root_value)
+
+    # Both non-root endpoints collide with each other and get their own device.
+    endpoint_1_value = node.values[f"{node.node_id}-37-1-currentValue"]
+    assert value_requires_endpoint_device(node, endpoint_1_value)
+    endpoint_2_value = node.values[f"{node.node_id}-37-2-currentValue"]
+    assert value_requires_endpoint_device(node, endpoint_2_value)
+
+
+async def test_get_node_id_and_endpoint_from_device_entry(
+    hass: HomeAssistant, client, device_registry: dr.DeviceRegistry, integration
+) -> None:
+    """Test get_node_id_and_endpoint_from_device_entry."""
+    driver = client.driver
+    home_id = driver.controller.home_id
+
+    node_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"{home_id}-7")},
+    )
+    assert get_node_id_and_endpoint_from_device_entry(node_device) is None
+
+    # The hardware signature identifier is not an endpoint sub-device.
+    ext_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"{home_id}-7-265:8215:5911")},
+    )
+    assert get_node_id_and_endpoint_from_device_entry(ext_device) is None
+
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"{home_id}-7-2")},
+    )
+    assert get_node_id_and_endpoint_from_device_entry(endpoint_device) == (7, 2)
 
 
 def test_format_home_id_for_display() -> None:

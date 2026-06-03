@@ -285,7 +285,7 @@ async def test_value_updated(
     assert len(events) == 1
     assert events[0].data["home_id"] == client.driver.controller.home_id
     assert events[0].data["node_id"] == 7
-    assert events[0].data["entity_id"] == "switch.in_wall_dual_relay_switch"
+    assert events[0].data["entity_id"] == "switch.binary_power_switch_1"
     assert events[0].data["command_class"] == CommandClass.SWITCH_BINARY
     assert events[0].data["command_class_name"] == "Switch Binary"
     assert events[0].data["endpoint"] == 1

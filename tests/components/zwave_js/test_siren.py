@@ -11,7 +11,7 @@ from homeassistant.components.siren import (
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
-SIREN_ENTITY = "siren.indoor_siren_6_play_tone_2"
+SIREN_ENTITY = "siren.sound_switch_2_play_tone"
 
 TONE_ID_VALUE_ID = {
     "endpoint": 2,

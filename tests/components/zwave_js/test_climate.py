@@ -975,7 +975,7 @@ async def test_temp_unit_fix(
     integration,
 ) -> None:
     """Test temperaturee unit fix."""
-    state = hass.states.get("climate.thermostat")
+    state = hass.states.get("climate.endpoint_1")
     assert state
     assert state.attributes["current_temperature"] == 18.3
 

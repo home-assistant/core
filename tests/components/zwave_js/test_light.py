@@ -40,7 +40,7 @@ from .common import (
     ZEN_31_ENTITY,
 )
 
-ZDB5100_ENTITY = "light.matrix_office"
+ZDB5100_ENTITY = "light.basic_wall_controller_1"
 HSM200_V1_ENTITY = "light.basement_hsm200"
 
 

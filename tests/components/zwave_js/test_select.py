@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import replace_value_of_zwave_value
 
-DEFAULT_TONE_SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
+DEFAULT_TONE_SELECT_ENTITY = "select.sound_switch_2_default_tone"
 PROTECTION_SELECT_ENTITY = "select.family_room_combo_local_protection_state"
 MULTILEVEL_SWITCH_SELECT_ENTITY = "select.outside_front_door_siren"
 

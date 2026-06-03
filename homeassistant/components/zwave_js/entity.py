@@ -34,6 +34,7 @@ from .helpers import (
     get_device_info,
     get_unique_id,
     get_valueless_base_unique_id,
+    value_requires_endpoint_device,
 )
 from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
@@ -91,10 +92,20 @@ class ZWaveBaseEntity(Entity):
         self._attr_name = self.generate_name()
         self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
         self._attr_assumed_state = self.info.assumed_state
-        # device is precreated in main handler
-        self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(driver, self.info.node)},
-        )
+        # The node device is precreated in the main handler. Endpoint sub-devices
+        # are created on demand here for values that would otherwise produce
+        # ambiguous duplicate entities across endpoints.
+        primary_value = self.info.primary_value
+        endpoint_idx = primary_value.endpoint
+        if endpoint_idx is not None and value_requires_endpoint_device(
+            self.info.node, primary_value
+        ):
+            endpoint = self.info.node.endpoints.get(endpoint_idx)
+            self._attr_device_info = get_device_info(driver, self.info.node, endpoint)
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers={get_device_id(driver, self.info.node)},
+            )
 
     @callback
     def on_value_update(self) -> None:
@@ -219,21 +230,6 @@ class ZWaveBaseEntity(Entity):
         # Only include non empty additional info
         if additional_info := [item for item in (additional_info or []) if item]:
             name = f"{name} {' '.join(additional_info)}"
-
-        # Only append endpoint to name if there are equivalent values on a lower
-        # endpoint
-        if primary_value.endpoint is not None and any(
-            get_value_id_str(
-                self.info.node,
-                primary_value.command_class,
-                primary_value.property_,
-                endpoint=endpoint_idx,
-                property_key=primary_value.property_key,
-            )
-            in self.info.node.values
-            for endpoint_idx in range(primary_value.endpoint)
-        ):
-            name += f" ({primary_value.endpoint})"
 
         return name.strip()
 

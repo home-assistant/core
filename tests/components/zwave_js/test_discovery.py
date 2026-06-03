@@ -83,7 +83,7 @@ async def test_touchwand_glass9(
 
     assert not hass.states.async_entity_ids_count("light")
     assert hass.states.async_entity_ids_count("cover") == 3
-    state = hass.states.get("cover.gp9")
+    state = hass.states.get("cover.motor_control_class_c_8")
     assert state
 
 
@@ -132,10 +132,10 @@ async def test_inovelli_lzw36(
     node = inovelli_lzw36
     assert node.device_class.specific.label == "Unused"
 
-    state = hass.states.get("light.family_room_combo")
+    state = hass.states.get("light.endpoint_1")
     assert state.state == "off"
 
-    state = hass.states.get("fan.family_room_combo_2")
+    state = hass.states.get("fan.endpoint_2")
     assert state
 
 
@@ -144,8 +144,8 @@ async def test_vision_security_zl7432(
 ) -> None:
     """Test Vision Security ZL7432 is caught by the device specific discovery."""
     for entity_id in (
-        "switch.in_wall_dual_relay_switch",
-        "switch.in_wall_dual_relay_switch_2",
+        "switch.binary_power_switch_1",
+        "switch.binary_power_switch_2",
     ):
         state = hass.states.get(entity_id)
         assert state
@@ -212,7 +212,7 @@ async def test_merten_507801(
     state = hass.states.get("light.connect_roller_shutter")
     assert not state
 
-    state = hass.states.get("cover.connect_roller_shutter")
+    state = hass.states.get("cover.unused_1")
     assert state
 
 
@@ -225,7 +225,7 @@ async def test_shelly_001p10_disabled_entities(
 ) -> None:
     """Test that Shelly 001P10 entity created by endpoint 2 is disabled."""
     entity_ids = [
-        "cover.wave_shutter_2",
+        "cover.motor_control_class_b_2",
     ]
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
@@ -243,7 +243,7 @@ async def test_shelly_001p10_disabled_entities(
         assert updated_entry.disabled is False
 
     # Test if the main entity from endpoint 1 was created.
-    state = hass.states.get("cover.wave_shutter")
+    state = hass.states.get("cover.motor_control_class_b_1")
     assert state
 
 
@@ -256,9 +256,9 @@ async def test_merten_507801_disabled_enitites(
 ) -> None:
     """Test that Merten 507801 entities created by endpoint 2 are disabled."""
     entity_ids = [
-        "cover.connect_roller_shutter_2",
-        "select.connect_roller_shutter_local_protection_state_2",
-        "select.connect_roller_shutter_rf_protection_state_2",
+        "cover.unused_2",
+        "select.unused_2_local_protection_state",
+        "select.unused_2_rf_protection_state",
     ]
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
