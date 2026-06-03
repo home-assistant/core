@@ -32,6 +32,7 @@ from homeassistant.helpers.condition import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import in_zone
+from .const import DOMAIN
 
 _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
@@ -163,7 +164,7 @@ _DOMAIN_SPECS: dict[str, DomainSpec] = {
 _ZONE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
         vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_ZONE): cv.entity_domain("zone"),
+            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
         },
     }
 )
