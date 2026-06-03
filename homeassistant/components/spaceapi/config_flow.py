@@ -8,6 +8,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryData,
     ConfigSubentryFlow,
     OptionsFlow,
     SubentryFlowResult,
@@ -58,12 +59,23 @@ from .const import (
     CONF_FEED_FLICKR,
     CONF_FEED_WIKI,
     CONF_FEEDS,
+    CONF_FOURSQUARE,
     CONF_GOPHER,
     CONF_HINT,
     CONF_HUMIDITY,
     CONF_ICON_CLOSED,
     CONF_ICON_OPEN,
+    CONF_IDENTICA,
     CONF_IRC,
+    CONF_ISSUE_MAIL,
+    CONF_KEYMASTER_EMAIL,
+    CONF_KEYMASTER_IRC_NICK,
+    CONF_KEYMASTER_MASTODON,
+    CONF_KEYMASTER_MATRIX,
+    CONF_KEYMASTER_NAME,
+    CONF_KEYMASTER_PHONE,
+    CONF_KEYMASTER_TWITTER,
+    CONF_KEYMASTER_XMPP,
     CONF_LINK_DESCRIPTION,
     CONF_LINK_NAME,
     CONF_LINK_URL,
@@ -105,6 +117,7 @@ from .const import (
     CONF_WIND_SPEED,
     CONF_XMPP,
     DOMAIN,
+    SUBENTRY_KEYMASTER,
     SUBENTRY_LINK,
     SUBENTRY_LINKED_SPACE,
     SUBENTRY_LOCATION_AREA,
@@ -161,6 +174,7 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_LINKED_SPACE: LinkedSpaceSubentryFlowHandler,
             SUBENTRY_LOCATION_AREA: LocationAreaSubentryFlowHandler,
             SUBENTRY_WIND_SENSOR: WindSensorSubentryFlowHandler,
+            SUBENTRY_KEYMASTER: KeymasterSubentryFlowHandler,
         }
 
     async def async_step_user(
@@ -204,8 +218,10 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
         # Optional fields -> entry.options
         options: dict[str, Any] = {}
 
-        # Contact: email + extras all go to options; drop removed v13 fields
-        dropped_contact_fields = {"identica", "foursquare", "issue_mail", "keymasters"}
+        # Contact: keep all fields still valid in v15. "google" was removed in
+        # v15, and "keymasters" is migrated to subentries (see below), so both
+        # are dropped here. "jabber" is renamed to "xmpp".
+        dropped_contact_fields = {"google", "keymasters"}
         contact: dict[str, Any] = {}
         for k, v in import_data.get(CONF_CONTACT, {}).items():
             if not v or k in dropped_contact_fields:
@@ -253,10 +269,40 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: import_data[CONF_LOCATION][CONF_ADDRESS]
             }
 
+        # Keymasters (v13 contact.keymasters) -> keymaster subentries. Skip any
+        # without a contact method, since the v15 spec requires at least one.
+        keymaster_one_of = (
+            CONF_KEYMASTER_IRC_NICK,
+            CONF_KEYMASTER_PHONE,
+            CONF_KEYMASTER_EMAIL,
+            CONF_KEYMASTER_TWITTER,
+        )
+        subentries: list[ConfigSubentryData] = []
+        for keymaster in import_data.get(CONF_CONTACT, {}).get("keymasters", []):
+            keymaster_data = {k: v for k, v in keymaster.items() if v}
+            if not any(keymaster_data.get(field) for field in keymaster_one_of):
+                continue
+            title = (
+                keymaster_data.get(CONF_KEYMASTER_NAME)
+                or keymaster_data.get(CONF_KEYMASTER_EMAIL)
+                or keymaster_data.get(CONF_KEYMASTER_IRC_NICK)
+                or keymaster_data.get(CONF_KEYMASTER_PHONE)
+                or keymaster_data[CONF_KEYMASTER_TWITTER]
+            )
+            subentries.append(
+                ConfigSubentryData(
+                    data=keymaster_data,
+                    subentry_type=SUBENTRY_KEYMASTER,
+                    title=title,
+                    unique_id=None,
+                )
+            )
+
         return self.async_create_entry(
             title=data[CONF_SPACE],
             data=data,
             options=options,
+            subentries=subentries,
         )
 
     async def async_step_reconfigure(
@@ -340,6 +386,9 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                 vol.Optional(CONF_EMAIL, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.EMAIL)
                 ),
+                vol.Optional(CONF_ISSUE_MAIL, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.EMAIL)
+                ),
                 vol.Optional(CONF_IRC, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
@@ -372,6 +421,12 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                 ),
                 vol.Optional(CONF_GOPHER, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional(CONF_IDENTICA, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_FOURSQUARE, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
             }
         )
@@ -1031,4 +1086,100 @@ class WindSensorSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=self.add_suggested_values_to_schema(
                 self._SCHEMA, dict(subentry.data)
             ),
+        )
+
+
+class KeymasterSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing keymasters."""
+
+    _SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_KEYMASTER_NAME, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_KEYMASTER_EMAIL, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.EMAIL)
+            ),
+            vol.Optional(CONF_KEYMASTER_PHONE, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEL)
+            ),
+            vol.Optional(CONF_KEYMASTER_IRC_NICK, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_KEYMASTER_TWITTER, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_KEYMASTER_XMPP, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_KEYMASTER_MASTODON, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_KEYMASTER_MATRIX, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+        }
+    )
+
+    # Per the v15 spec at least one of these must be provided.
+    _REQUIRED_ONE_OF = (
+        CONF_KEYMASTER_IRC_NICK,
+        CONF_KEYMASTER_PHONE,
+        CONF_KEYMASTER_EMAIL,
+        CONF_KEYMASTER_TWITTER,
+    )
+
+    @staticmethod
+    def _clean(user_input: dict[str, Any]) -> dict[str, Any]:
+        """Drop empty fields so the output never contains blank values."""
+        return {k: v for k, v in user_input.items() if v}
+
+    @staticmethod
+    def _title(data: dict[str, Any]) -> str:
+        """Derive a title from the name or the first available contact field."""
+        return (
+            data.get(CONF_KEYMASTER_NAME)
+            or data.get(CONF_KEYMASTER_EMAIL)
+            or data.get(CONF_KEYMASTER_IRC_NICK)
+            or data.get(CONF_KEYMASTER_PHONE)
+            or data.get(CONF_KEYMASTER_TWITTER)
+            or "Keymaster"
+        )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new keymaster subentry."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if any(user_input.get(field) for field in self._REQUIRED_ONE_OF):
+                data = self._clean(user_input)
+                return self.async_create_entry(title=self._title(data), data=data)
+            errors["base"] = "no_contact_method"
+        return self.async_show_form(
+            step_id="user", data_schema=self._SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing keymaster subentry."""
+        subentry = self._get_reconfigure_subentry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if any(user_input.get(field) for field in self._REQUIRED_ONE_OF):
+                data = self._clean(user_input)
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    subentry,
+                    title=self._title(data),
+                    data=data,
+                )
+            errors["base"] = "no_contact_method"
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._SCHEMA, dict(subentry.data)
+            ),
+            errors=errors,
         )

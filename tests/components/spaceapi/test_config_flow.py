@@ -29,6 +29,8 @@ YAML_CONFIG = {
         "jabber": "space@conference.jabber.org",
         "identica": "space_identica",
         "foursquare": "space_foursquare",
+        "issue_mail": "issues@home-assistant.io",
+        "google": "should-be-dropped",
     },
     "issue_report_channels": ["email"],
     "state": {
@@ -119,9 +121,11 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     assert "jabber" not in result["options"].get("contact", {})
     assert result["options"]["contact"]["email"] == "hello@home-assistant.io"
     assert result["options"]["contact"]["xmpp"] == "space@conference.jabber.org"
-    # Verify dropped fields are not present
-    assert "identica" not in result["options"].get("contact", {})
-    assert "foursquare" not in result["options"].get("contact", {})
+    # Fields still valid in v15 are kept; "google" (removed in v15) is dropped
+    assert result["options"]["contact"]["identica"] == "space_identica"
+    assert result["options"]["contact"]["foursquare"] == "space_foursquare"
+    assert result["options"]["contact"]["issue_mail"] == "issues@home-assistant.io"
+    assert "google" not in result["options"].get("contact", {})
     assert "spacephone" not in result["options"].get("spacefed", {})
     assert "stream" not in result["options"]
     assert "cache" not in result["options"]
@@ -130,6 +134,9 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         "contact": {
             "email": "hello@home-assistant.io",
             "xmpp": "space@conference.jabber.org",
+            "identica": "space_identica",
+            "foursquare": "space_foursquare",
+            "issue_mail": "issues@home-assistant.io",
         },
         "state": {
             "icon_open": "https://home-assistant.io/open.png",
@@ -143,6 +150,42 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         "location": {"address": "In your Home"},
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_flow_keymasters(  # remove with YAML import (2026.12)
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test v13 contact.keymasters are migrated to keymaster subentries."""
+    config = {
+        "space": "Home",
+        "logo": "https://home-assistant.io/logo.png",
+        "url": "https://home-assistant.io",
+        "state": {"entity_id": "test.test_door"},
+        "contact": {
+            "email": "hello@home-assistant.io",
+            "keymasters": [
+                {"name": "Alice", "email": "alice@home-assistant.io"},
+                {"name": "Bob", "irc_nick": "bob"},
+                {"name": "NoContact"},
+            ],
+        },
+        "issue_report_channels": ["email"],
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # keymasters are not kept in contact options
+    assert "keymasters" not in result["options"]["contact"]
+    # Only keymasters with a contact method become subentries ("NoContact" dropped)
+    subentries = result["subentries"]
+    assert len(subentries) == 2
+    assert all(s["subentry_type"] == "keymaster" for s in subentries)
+    assert {s["title"] for s in subentries} == {"Alice", "Bob"}
+    alice = next(s for s in subentries if s["title"] == "Alice")
+    assert alice["data"] == {"name": "Alice", "email": "alice@home-assistant.io"}
 
 
 async def test_import_flow_already_configured(  # remove with YAML import (2026.12)
@@ -356,6 +399,7 @@ async def test_options_flow_contact(hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             "email": "",
+            "issue_mail": "issues@hackerspace.org",
             "irc": "#hackerspace",
             "ml": "list@hackerspace.org",
             "phone": "",
@@ -367,10 +411,13 @@ async def test_options_flow_contact(hass: HomeAssistant) -> None:
             "xmpp": "",
             "mumble": "",
             "gopher": "",
+            "identica": "",
+            "foursquare": "",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["contact"] == {
+        "issue_mail": "issues@hackerspace.org",
         "irc": "#hackerspace",
         "ml": "list@hackerspace.org",
         "twitter": "@hackerspace",
@@ -400,6 +447,7 @@ async def test_options_flow_contact_empty_clears(hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             "email": "",
+            "issue_mail": "",
             "irc": "",
             "ml": "",
             "phone": "",
@@ -411,6 +459,8 @@ async def test_options_flow_contact_empty_clears(hass: HomeAssistant) -> None:
             "xmpp": "",
             "mumble": "",
             "gopher": "",
+            "identica": "",
+            "foursquare": "",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -1297,6 +1347,109 @@ async def test_subentry_wind_sensor_reconfigure(hass: HomeAssistant) -> None:
     updated = next(iter(entry.subentries.values()))
     assert updated.data["speed"] == "sensor.new_speed"
     assert updated.data["name"] == "Roof"
+
+
+async def test_subentry_keymaster_add(hass: HomeAssistant) -> None:
+    """Test adding a keymaster subentry; empty fields are dropped."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "keymaster"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Alice",
+            "email": "alice@hackerspace.org",
+            "phone": "",
+            "irc_nick": "",
+            "twitter": "",
+            "xmpp": "",
+            "mastodon": "",
+            "matrix": "",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Alice"
+
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data == {"name": "Alice", "email": "alice@hackerspace.org"}
+
+
+async def test_subentry_keymaster_requires_contact_method(hass: HomeAssistant) -> None:
+    """Test a keymaster without any contact method is rejected."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "keymaster"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Bob",
+            "email": "",
+            "phone": "",
+            "irc_nick": "",
+            "twitter": "",
+            "xmpp": "",
+            "mastodon": "",
+            "matrix": "",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_contact_method"}
+
+
+async def test_subentry_keymaster_reconfigure(hass: HomeAssistant) -> None:
+    """Test editing a keymaster subentry; cleared fields are removed."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            subentry_type="keymaster",
+            data=MappingProxyType({"name": "Alice", "email": "alice@hackerspace.org"}),
+            title="Alice",
+            unique_id=None,
+        ),
+    )
+    subentry = next(iter(entry.subentries.values()))
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "keymaster"),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry.subentry_id,
+        },
+    )
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Alice",
+            "email": "",
+            "phone": "",
+            "irc_nick": "alice_irc",
+            "twitter": "",
+            "xmpp": "",
+            "mastodon": "",
+            "matrix": "",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated = next(iter(entry.subentries.values()))
+    # email cleared -> removed; irc_nick added
+    assert updated.data == {"name": "Alice", "irc_nick": "alice_irc"}
 
 
 async def test_options_flow_events_saves(hass: HomeAssistant) -> None:
