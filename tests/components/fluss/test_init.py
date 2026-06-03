@@ -86,13 +86,13 @@ async def test_offline_device_stays_unavailable(
         FlussApiClientAuthenticationError("permission revoked"),
     ],
 )
-async def test_failed_status_skips_device(
+async def test_failed_status_fails_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
     exception: Exception,
 ) -> None:
-    """A non-offline status error drops that device but still loads the rest."""
+    """A non-offline status error fails the whole refresh."""
 
     async def _status(device_id: str) -> dict[str, Any]:
         if device_id == "2a303030sdj1":
@@ -102,6 +102,4 @@ async def test_failed_status_skips_device(
     mock_api_client.async_get_device_status.side_effect = _status
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("button.device_1") is None
-    assert hass.states.get("button.device_2").state == STATE_UNKNOWN
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
