@@ -33,6 +33,7 @@ def device_info_for_entry(
         if formatted_mac
         else set(),
         identifiers=identifiers,
+        manufacturer="Elk Products",
         name=panel_name,
         model=panel_info.model,
         sw_version=panel_info.firmware,
