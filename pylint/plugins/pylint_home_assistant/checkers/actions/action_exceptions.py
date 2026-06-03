@@ -26,6 +26,10 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from pylint_home_assistant.helpers.quality_scale import (
+    quality_scale_rule_is_done_or_exempt,
+)
+
 from .helpers import ActionHandlers, collect_action_handlers
 from .swallowed_exceptions import _is_action_handler
 
@@ -103,13 +107,19 @@ class ActionExceptionsChecker(BaseChecker):
     options = ()
 
     _action_handlers: ActionHandlers
+    _rule_active: bool
 
     def visit_module(self, node: nodes.Module) -> None:
         """Determine which action handlers to check for this module."""
         self._action_handlers = collect_action_handlers(node)
+        self._rule_active = quality_scale_rule_is_done_or_exempt(
+            node, "action-exceptions"
+        )
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Check action handlers raise HomeAssistantError or are decorated."""
+        if not self._rule_active:
+            return
         if not self._action_handlers.all_names:
             return
         if not _is_action_handler(node, self._action_handlers):
