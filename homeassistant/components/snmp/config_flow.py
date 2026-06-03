@@ -1,7 +1,5 @@
 """Config flow for SNMP."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -246,7 +244,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         unique_id = f"{user_input[CONF_HOST]}_{port}_{user_input[CONF_BASEOID]}"
         if context_name:
             unique_id = f"{unique_id}_{context_name}"
-        await self.async_set_unique_id(unique_id)
+        await self.async_set_unique_id(unique_id)  # pylint: disable=home-assistant-unique-id-ip-based
         self._abort_if_unique_id_configured()
 
     async def _async_validate_and_create_entry(

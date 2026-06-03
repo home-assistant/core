@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the SNMP integration."""
 
-from __future__ import annotations
-
 import binascii
 import logging
 
