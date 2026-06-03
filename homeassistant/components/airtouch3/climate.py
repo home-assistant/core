@@ -58,6 +58,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirTouch 3 climate entities."""
     coordinator = config_entry.runtime_data
+    entities = _create_climate_entities(coordinator)
+
+    _LOGGER.debug("Adding entities %s", entities)
+    async_add_entities(entities)
+
+
+def _create_climate_entities(
+    coordinator: Airtouch3DataUpdateCoordinator,
+) -> list[ClimateEntity]:
+    """Create AirTouch 3 climate entities from coordinator data."""
     aircon = coordinator.data.aircon
 
     entities: list[ClimateEntity] = [AirtouchAC(coordinator, aircon.ac_id)]
@@ -66,9 +76,7 @@ async def async_setup_entry(
         AirtouchGroup(coordinator, zone.id, aircon.ac_id, zone.name)
         for zone in coordinator.data.zones.values()
     )
-
-    _LOGGER.debug("Adding entities %s", entities)
-    async_add_entities(entities)
+    return entities
 
 
 class AirtouchClimateEntity(
