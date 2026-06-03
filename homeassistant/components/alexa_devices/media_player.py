@@ -1,8 +1,7 @@
 """Media player platform for Alexa Devices."""
 
-from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Final
+from typing import Any
 
 from aioamazondevices.structures import (
     AmazonMediaControls,
@@ -38,18 +37,6 @@ STANDARD_SUPPORTED_FEATURES = (
 )
 
 
-@dataclass(frozen=True, kw_only=True)
-class AmazonDevicesMediaPlayerEntityDescription(MediaPlayerEntityDescription):
-    """Describes an Alexa Devices media player entity."""
-
-
-MEDIA_PLAYERS: Final = (
-    AmazonDevicesMediaPlayerEntityDescription(
-        key="media",
-    ),
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AmazonConfigEntry,
@@ -69,9 +56,10 @@ async def async_setup_entry(
                 continue
 
             known_devices.add(serial_num)
-            new_entities.extend(
-                AlexaDevicesMediaPlayer(coordinator, serial_num, description)
-                for description in MEDIA_PLAYERS
+            new_entities.append(
+                AlexaDevicesMediaPlayer(
+                    coordinator, serial_num, MediaPlayerEntityDescription(key="media")
+                )
             )
 
         if new_entities:
@@ -85,8 +73,6 @@ async def async_setup_entry(
 class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     """Representation of an Alexa device media player."""
 
-    entity_description: AmazonDevicesMediaPlayerEntityDescription
-
     _attr_name = None  # Uses the device name
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = 0.05
@@ -95,7 +81,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         self,
         coordinator: AmazonDevicesCoordinator,
         serial_num: str,
-        description: AmazonDevicesMediaPlayerEntityDescription,
+        description: MediaPlayerEntityDescription,
     ) -> None:
         """Initialize."""
         self._prev_volume: int | None = None
@@ -214,7 +200,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def media_content_type(self) -> MediaType | None:
         """Content type — tells HA what kind of media is playing."""
-        if self.state in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
+        if self.state in (MediaPlayerState.PLAYING, MediaPlayerState.PAUSED):
             return MediaType.MUSIC
         return None
 
@@ -227,7 +213,8 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         **kwargs: Any,
     ) -> None:
         """Play a piece of media."""
-        await self.async_call_alexa_music(media_id, media_type)
+        provider = media_type.value if isinstance(media_type, MediaType) else media_type
+        await self.async_call_alexa_music(media_id, provider)
 
     @alexa_api_call
     async def async_call_alexa_music(
