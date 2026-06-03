@@ -120,8 +120,8 @@ def _convert_item(item: TodoItem) -> Todo:
     return todo
 
 
-def _prepare_edit(info: dict[str, Any], /) -> dict[str, Any]:
-    """Convert a HomeAssistant TodoItem patch to an ical Todo edit.
+def _prepare_update(info: dict[str, Any], /) -> dict[str, Any]:
+    """Convert a HomeAssistant TodoItem update to an ical Todo update.
 
     For use with todo.update_list action.
 
@@ -129,18 +129,18 @@ def _prepare_edit(info: dict[str, Any], /) -> dict[str, Any]:
     fields only. Only propagates fields present in `info`. Unmatched fields
     are ignored.
     """
-    item = {}
+    data = {}
     if "status" in info:
-        item["status"] = _convert_status(info["status"])
-    return item
+        data["status"] = _convert_status(info["status"])
+    return data
 
 
-def _is_edit(todo: Todo, item: dict[str, Any], /) -> bool:
-    """Whether patch changes ical Todo.
+def _is_edit(todo: Todo, data: dict[str, Any], /) -> bool:
+    """Whether update changes ical Todo.
 
-    `item` comes from _prepare_edit, so is guaranteed to have the right fields.
+    `data` comes from _prepare_update, so is guaranteed to have the right fields.
     """
-    return any(getattr(todo, field) != value for field, value in item.items())
+    return any(getattr(todo, field) != value for field, value in data.items())
 
 
 class LocalTodoListEntity(TodoListEntity):
@@ -217,7 +217,7 @@ class LocalTodoListEntity(TodoListEntity):
 
     async def async_update_todo_list(self, info: dict[str, Any]) -> None:
         """Update all items in the To-do list."""
-        item = _prepare_edit(info)
+        item = _prepare_update(info)
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
             # Only edit items for which something changes

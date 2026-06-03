@@ -502,15 +502,15 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
 
     _validate_supported_features(entity.supported_features, call.data)
 
-    # Prepare patch for todo item based on the fields present in the
-    # update. This allows explicitly clearing any of the extended fields
-    # present and set to None.
-    info = {}
+    # Prepare an update based on the fields present in the service call.
+    # This allows explicitly clearing any of the extended fields present
+    # and set to None.
+    data = {}
     if summary := call.data.get(ATTR_RENAME):
-        info["summary"] = summary
+        data["summary"] = summary
     if status := call.data.get(ATTR_STATUS):
-        info["status"] = TodoItemStatus(status)
-    info.update(
+        data["status"] = TodoItemStatus(status)
+    data.update(
         {
             desc.todo_item_field: call.data[desc.service_field]
             for desc in TODO_ITEM_FIELDS
@@ -518,8 +518,8 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
         }
     )
 
-    # Perform a partial update on the existing entity.
-    updated_item = dataclasses.replace(found, **info)
+    # Perform a partial update on the existing entity and pass to integration.
+    updated_item = dataclasses.replace(found, **data)
     await entity.async_update_todo_item(item=updated_item)
 
 
@@ -564,12 +564,12 @@ async def _async_remove_completed_items(entity: TodoListEntity, _: ServiceCall) 
 
 async def _async_update_todo_list(entity: TodoListEntity, call: ServiceCall) -> None:
     """Update all items in the To-do list."""
-    # Prepare patch for todo item(s) based on the fields present in the
-    # update. This allows explicitly clearing any of the extended fields
-    # present and set to None.
-    info = {}
+    # Prepare an update based on the fields present in the service call.
+    # This allows explicitly clearing any of the extended fields present
+    # and set to None.
+    data = {}
     if status := call.data.get(ATTR_STATUS):
-        info["status"] = TodoItemStatus(status)
+        data["status"] = TodoItemStatus(status)
 
-    # Pass patch to integration
-    await entity.async_update_todo_list(info=info)
+    # Pass update to integration
+    await entity.async_update_todo_list(info=data)
