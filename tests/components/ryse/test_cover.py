@@ -3,12 +3,14 @@
 import logging
 from unittest.mock import AsyncMock, MagicMock
 
+from bleak import BleakError
 import pytest
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntityFeature
 from homeassistant.components.ryse.const import DOMAIN
 from homeassistant.components.ryse.cover import RyseCoverEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -273,3 +275,80 @@ async def test_async_update_pairing_failure_no_log_debug(
     await entity.async_update()
     assert entity.available is False
     assert "Failed to pair with device, skipping update" not in caplog.text
+
+
+# ---------------------------------------------------------------------------
+# Exception-handling tests for BLE command methods
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [TimeoutError("t/o"), OSError("io err"), BleakError("ble err")],
+    ids=["timeout", "oserror", "bleak"],
+)
+async def test_async_open_cover_ble_error_raises_ha_error(
+    exc: Exception,
+    mock_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """BLE errors during send_open are re-raised as HomeAssistantError."""
+    mock_device.send_open = AsyncMock(side_effect=exc)
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
+    entity.async_write_ha_state = MagicMock()
+    original_position = entity._current_position
+
+    with pytest.raises(HomeAssistantError, match="Failed to open cover"):
+        await entity.async_open_cover()
+
+    # State must NOT be updated on failure
+    assert entity._current_position == original_position
+    entity.async_write_ha_state.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [TimeoutError("t/o"), OSError("io err"), BleakError("ble err")],
+    ids=["timeout", "oserror", "bleak"],
+)
+async def test_async_close_cover_ble_error_raises_ha_error(
+    exc: Exception,
+    mock_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """BLE errors during send_close are re-raised as HomeAssistantError."""
+    mock_device.send_close = AsyncMock(side_effect=exc)
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
+    entity.async_write_ha_state = MagicMock()
+    original_position = entity._current_position
+
+    with pytest.raises(HomeAssistantError, match="Failed to close cover"):
+        await entity.async_close_cover()
+
+    # State must NOT be updated on failure
+    assert entity._current_position == original_position
+    entity.async_write_ha_state.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [TimeoutError("t/o"), OSError("io err"), BleakError("ble err")],
+    ids=["timeout", "oserror", "bleak"],
+)
+async def test_async_set_cover_position_ble_error_raises_ha_error(
+    exc: Exception,
+    mock_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """BLE errors during send_set_position are re-raised as HomeAssistantError."""
+    mock_device.send_set_position = AsyncMock(side_effect=exc)
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
+    entity.async_write_ha_state = MagicMock()
+    original_position = entity._current_position
+
+    with pytest.raises(HomeAssistantError, match="Failed to set cover position"):
+        await entity.async_set_cover_position(**{ATTR_POSITION: 50})
+
+    # State must NOT be updated on failure
+    assert entity._current_position == original_position
+    entity.async_write_ha_state.assert_not_called()

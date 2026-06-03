@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from bleak import BleakError
 from ryseble.device import RyseBLEDevice
 
 from homeassistant.components.cover import (
@@ -12,6 +13,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -102,15 +104,23 @@ class RyseCoverEntity(CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the shade."""
-        await self._device.send_open()
+        try:
+            await self._device.send_open()
+        except (TimeoutError, OSError, BleakError) as err:
+            raise HomeAssistantError(f"Failed to open cover: {err}") from err
         _LOGGER.debug("Change position to open")
+        self._current_position = 100
         self._attr_is_closed = False
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the shade."""
-        await self._device.send_close()
+        try:
+            await self._device.send_close()
+        except (TimeoutError, OSError, BleakError) as err:
+            raise HomeAssistantError(f"Failed to close cover: {err}") from err
         _LOGGER.debug("Change position to close")
+        self._current_position = 0
         self._attr_is_closed = True
         self.async_write_ha_state()
 
@@ -118,7 +128,10 @@ class RyseCoverEntity(CoverEntity):
         """Set the shade to a specific position."""
         ha_position = kwargs[ATTR_POSITION]
         device_position = self._device.get_real_position(ha_position)
-        await self._device.send_set_position(device_position)
+        try:
+            await self._device.send_set_position(device_position)
+        except (TimeoutError, OSError, BleakError) as err:
+            raise HomeAssistantError(f"Failed to set cover position: {err}") from err
         _LOGGER.debug("Change position to a specific position")
         self._attr_is_closed = self._device.is_closed(device_position)
         self._current_position = ha_position
