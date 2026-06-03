@@ -75,9 +75,9 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self._cached_snapshot_url: str | None = None
         self._snapshot_task: asyncio.Task[None] | None = None
         self._kvs_sessions: dict[str, KvsSignalingClient] = {}
-        self._pending_candidates: OrderedDict[
-            str, list[RTCIceCandidateInit]
-        ] = OrderedDict()
+        self._pending_candidates: OrderedDict[str, list[RTCIceCandidateInit]] = (
+            OrderedDict()
+        )
         self._closed_sessions: OrderedDict[str, None] = OrderedDict()
 
     @property
