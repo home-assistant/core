@@ -312,5 +312,5 @@ class IpBanManager:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="unban_not_banned_ip_address",
-                    translation_placeholders={"ip_address": remote_addr},
+                    translation_placeholders={"ip_address": str(remote_addr)},
                 )
