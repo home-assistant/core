@@ -1,17 +1,26 @@
 """Tests for Kii Audio media player entities."""
 
 from copy import deepcopy
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.kii_audio.const import MAX_VOLUME, MIN_VOLUME, VOLUME_STEP
-from homeassistant.components.kii_audio.media_player import (
-    KiiAudioZoneMediaPlayer,
-    async_setup_entry,
+from homeassistant.components.kii_audio.const import (
+    CONF_SYSTEM_ID,
+    DOMAIN,
+    MAX_VOLUME,
+    MIN_VOLUME,
+    VOLUME_STEP,
 )
+from homeassistant.components.kii_audio.coordinator import KiiAudioCoordinator
+from homeassistant.components.kii_audio.media_player import KiiAudioZoneMediaPlayer
 from homeassistant.components.media_player import MediaPlayerDeviceClass
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
-from .conftest import ZONE_ID, FakeCoordinator, make_zone
+from .conftest import SYSTEM_ID, ZONE_ID, FakeCoordinator, make_zone
+
+from tests.common import MockConfigEntry
 
 
 def test_media_player_reports_zone_state(coordinator: FakeCoordinator) -> None:
@@ -171,21 +180,38 @@ def test_zone_device_info_reports_mixed_models() -> None:
 
 
 async def test_media_player_setup_entry_adds_zone_entities(
-    coordinator: FakeCoordinator,
+    hass: HomeAssistant,
 ) -> None:
     """Test media player setup adds one entity for valid zone data."""
-    added_entities: list[KiiAudioZoneMediaPlayer] = []
-    config_entry = type("ConfigEntry", (), {"runtime_data": coordinator})()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Kii Audio",
+        data={CONF_HOST: "192.0.2.1", CONF_SYSTEM_ID: SYSTEM_ID},
+        unique_id=SYSTEM_ID,
+    )
+    entry.add_to_hass(hass)
 
-    def add_entities(entities) -> None:
-        added_entities.extend(entities)
+    async def async_wait_ready(coordinator: KiiAudioCoordinator) -> None:
+        coordinator.async_set_updated_data(
+            {"systemName": "Kii System", "zones": [make_zone(), {"zoneId": 1}]}
+        )
 
-    coordinator.data["zones"].append({"zoneId": 1})
+    with (
+        patch(
+            "homeassistant.components.kii_audio.coordinator.KiiAudioClient.start",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_wait_ready",
+            new=async_wait_ready,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    await async_setup_entry(None, config_entry, add_entities)  # type: ignore[arg-type]
-
-    assert len(added_entities) == 1
-    assert added_entities[0].unique_id == "system-id_zone-id"
+    state = hass.states.get("media_player.office")
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Office"
 
 
 def test_media_player_reports_off_state() -> None:
