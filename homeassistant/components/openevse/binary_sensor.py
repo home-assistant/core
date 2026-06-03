@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from openevsehttp.__main__ import OpenEVSE
 
@@ -19,8 +18,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
