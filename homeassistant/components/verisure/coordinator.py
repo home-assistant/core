@@ -97,10 +97,6 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                     "Verisure re-authentication failed after cookie could not be read"
                 ) from login_ex
         except VerisureLoginError as ex:
-            if _is_transient_verisure_error(ex):
-                raise UpdateFailed(
-                    "Could not refresh Verisure session (transient)"
-                ) from ex
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         except VerisureError as ex:
             if _is_transient_verisure_error(ex):
@@ -135,12 +131,6 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                     "Verisure re-authentication failed after cookie could not be read"
                 ) from login_ex
         except VerisureLoginError as ex:
-            if _is_transient_verisure_error(ex):
-                LOGGER.warning(
-                    "Verisure login unavailable (likely transient), %s",
-                    ex,
-                )
-                return False
             LOGGER.error("Credentials expired for Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         except VerisureError as ex:
@@ -189,7 +179,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER.warning(
                 "Verisure unreachable or server error during cookie refresh, %s", ex
             )
-            raise UpdateFailed("Unable to update cookie — Verisure unreachable") from ex
+            raise UpdateFailed("Unable to update cookie - Verisure unreachable") from ex
         except VerisureRateLimitError as ex:
             LOGGER.warning("Verisure rate limited during cookie refresh, %s", ex)
             raise UpdateFailed(

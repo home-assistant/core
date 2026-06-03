@@ -157,3 +157,66 @@ async def test_async_update_data_login_error_refreshes_session(
 
     assert data["alarm"] == {"status": "DISARMED"}
     mock_verisure_session.login_cookie.assert_called_once()
+
+
+async def test_async_login_login_error_raises_auth_failed(
+    coordinator: VerisureDataUpdateCoordinator,
+    mock_verisure_session: MagicMock,
+) -> None:
+    """Generic login errors raise ConfigEntryAuthFailed."""
+    mock_verisure_session.login_cookie.side_effect = LoginError("login failed")
+
+    with pytest.raises(ConfigEntryAuthFailed, match="Credentials expired"):
+        await coordinator.async_login()
+
+
+async def test_refresh_session_login_cookie_authentication_error(
+    coordinator: VerisureDataUpdateCoordinator,
+    mock_verisure_session: MagicMock,
+) -> None:
+    """Authentication failure during session refresh raises ConfigEntryAuthFailed."""
+    mock_verisure_session.update_cookie.side_effect = AuthenticationError(
+        "session expired", status_code=401
+    )
+    mock_verisure_session.login_cookie.side_effect = AuthenticationError(
+        "invalid session", status_code=403
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed, match="authentication rejected"):
+        await coordinator._async_update_data()
+
+
+async def test_refresh_session_cookie_read_password_login_auth_error(
+    coordinator: VerisureDataUpdateCoordinator,
+    mock_verisure_session: MagicMock,
+) -> None:
+    """Authentication failure after cookie-read password login raises ConfigEntryAuthFailed."""
+    mock_verisure_session.update_cookie.side_effect = AuthenticationError(
+        "session expired", status_code=401
+    )
+    mock_verisure_session.login_cookie.side_effect = CookieReadError(
+        "Failed to read cookie"
+    )
+    mock_verisure_session.login.side_effect = AuthenticationError(
+        "bad credentials", status_code=401
+    )
+
+    with pytest.raises(
+        ConfigEntryAuthFailed,
+        match="re-authentication failed after cookie could not be read",
+    ):
+        await coordinator._async_update_data()
+
+
+async def test_update_data_cookie_read_password_login_transient(
+    coordinator: VerisureDataUpdateCoordinator,
+    mock_verisure_session: MagicMock,
+) -> None:
+    """Transient failure during cookie-read password login raises UpdateFailed."""
+    mock_verisure_session.update_cookie.side_effect = CookieReadError(
+        "Failed to read cookie"
+    )
+    mock_verisure_session.login.side_effect = RequestError("offline")
+
+    with pytest.raises(UpdateFailed, match="transient"):
+        await coordinator._async_update_data()
