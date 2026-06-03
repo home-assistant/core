@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED
@@ -37,6 +37,7 @@ SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
         key="interface",
         name="Interface",
         data_key="intf_description",
+        icon="mdi:lan",
     ),
 )
 
@@ -49,6 +50,7 @@ async def async_setup_entry(
     """Set up sensor entities for OPNsense."""
     coordinator = entry.runtime_data.coordinator
 
+    @callback
     def _async_add_new_entities() -> None:
         """Add entities for newly discovered devices."""
         if not coordinator.data:
@@ -83,6 +85,7 @@ class OPNsenseSensorEntity(
     """Representation of an OPNsense sensor for one tracked device."""
 
     _attr_has_entity_name = True
+    entity_description: OPNsenseSensorDescription
 
     def __init__(
         self,
@@ -93,11 +96,9 @@ class OPNsenseSensorEntity(
         """Initialize the sensor entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._description = description
         self._attr_name = None if description.name is UNDEFINED else description.name
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address
-        self._attr_device_class = description.device_class
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -110,7 +111,7 @@ class OPNsenseSensorEntity(
         if device_data:
             if hostname := device_data.get("hostname"):
                 device_info["default_name"] = str(hostname)
-            if manufacturer := device_data["manufacturer"]:
+            if manufacturer := device_data.get("manufacturer"):
                 device_info["default_manufacturer"] = str(manufacturer)
 
         return device_info
@@ -129,7 +130,7 @@ class OPNsenseSensorEntity(
         if not device_data:
             return None
 
-        value = device_data.get(self._description.data_key)
+        value = device_data.get(self.entity_description.data_key)
         if value in (None, ""):
             return None
 
