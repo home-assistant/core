@@ -37,7 +37,7 @@ PARALLEL_UPDATES = 0
 
 
 def is_light_node(node: HomeeNode) -> bool:
-    """Determine if a node is controllable as a homee light based on its profile and attributes."""
+    """Determine if a node is controllable as a homee light."""
     assert node.attribute_map is not None
     return node.profile in LIGHT_PROFILES and AttributeType.ON_OFF in node.attribute_map
 

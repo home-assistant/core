@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohomeconnect.model import (
     ArrayOfEvents,
     ArrayOfHomeAppliances,
+    ArrayOfPrograms,
     ArrayOfSettings,
     ArrayOfStatus,
     Event,
@@ -26,6 +27,15 @@ from aiohomeconnect.model.error import (
     HomeConnectRequestError,
     TooManyRequestsError,
     UnauthorizedError,
+)
+from aiohomeconnect.model.program import (
+    Option,
+    OptionKey,
+    Program,
+    ProgramDefinition,
+    ProgramDefinitionConstraints,
+    ProgramDefinitionOption,
+    ProgramKey,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -197,11 +207,7 @@ async def test_coordinator_failure_refresh_and_stream(
     assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize(
-    "appliance",
-    ["Dishwasher"],
-    indirect=True,
-)
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 async def test_coordinator_not_fetching_on_disconnected_appliance(
     client: MagicMock,
     config_entry: MockConfigEntry,
@@ -228,9 +234,10 @@ async def test_coordinator_update_failing(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     mock_method: str,
 ) -> None:
-    """Test that although is not possible to get settings and status, the config entry is loaded.
+    """Test config entry loads even when settings/status fetch fails.
 
-    This is for cases where some appliances are reachable and some are not in the same configuration entry.
+    This is for cases where some appliances are reachable and some are not in the same
+    configuration entry.
     """
     setattr(client, mock_method, AsyncMock(side_effect=HomeConnectError()))
 
@@ -339,7 +346,7 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that the event listener is capable of receiving settings and status for the first time."""
+    """Test event listener receives settings and status initially."""
     client.get_setting = AsyncMock(return_value=ArrayOfSettings([]))
     client.get_status = AsyncMock(return_value=ArrayOfStatus([]))
 
@@ -393,7 +400,7 @@ async def test_event_listener_error(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test that the configuration entry is reloaded when the event stream raises an API error."""
+    """Test config entry reloads on event stream API error."""
     client_with_exception.stream_all_events = MagicMock(
         side_effect=HomeConnectApiError("error.key", "error description")
     )
@@ -810,7 +817,7 @@ async def test_auth_error_while_updating_appliance(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test that the configuration entry is set to require reauth when an auth error happens."""
+    """Test config entry requires reauth on auth error."""
     entity_id = "switch.dishwasher_power"
 
     assert await integration_setup(client)
@@ -888,3 +895,199 @@ async def test_other_errors_while_updating_appliance(
         record.levelname == log_level and re.search(string_in_log, record.message)
         for record in caplog.records
     )
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("array_of_programs_param", ["active", "selected"])
+async def test_fetch_base_program_options_when_active_favorite_program(
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    array_of_programs_param: str,
+) -> None:
+    """Test usage of base program option.
+
+    Test that when the favorite program is active or selected,
+    the options are fetched from the base program.
+    """
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            programs=[],
+            **{
+                array_of_programs_param: Program(
+                    key=ProgramKey.BSH_COMMON_FAVORITE_001,
+                    options=[
+                        Option(
+                            OptionKey.BSH_COMMON_BASE_PROGRAM,
+                            ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                        )
+                    ],
+                ),
+            },
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client.get_available_program.assert_awaited_once_with(
+        appliance.ha_id, program_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50
+    )
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    "event_key",
+    [
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+    ],
+)
+async def test_fetch_base_program_options_when_favorite_program_event(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    event_key: EventKey,
+) -> None:
+    """Test usage of base program option on event.
+
+    Test that when a program event does report favorite program,
+    the options are fetched from the base program.
+    """
+    appliance_ha_id = appliance.ha_id
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client.get_available_program.reset_mock()
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.BSH_COMMON_FAVORITE_001.value,
+                        ),
+                        Event(
+                            key=EventKey.BSH_COMMON_OPTION_BASE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_OPTION_BASE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    client.get_available_program.assert_awaited_once_with(
+        appliance.ha_id, program_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50
+    )
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    "event_key",
+    [
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+    ],
+)
+async def test_option_values_kept_after_changing_program(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    event_key: EventKey,
+) -> None:
+    """Test program change keeps options instead of using defaults."""
+    appliance_ha_id = appliance.ha_id
+    entity_id = "switch.dishwasher_half_load"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                    "Boolean",
+                    constraints=ProgramDefinitionConstraints(default=False),
+                )
+            ],
+        )
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert not hass.states.is_state(entity_id, "on")
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.DISHCARE_DISHWASHER_OPTION_HALF_LOAD,
+                            raw_key=EventKey.DISHCARE_DISHWASHER_OPTION_HALF_LOAD.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=True,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, "on")
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                    "Boolean",
+                    constraints=ProgramDefinitionConstraints(default=False),
+                )
+            ],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, "on")

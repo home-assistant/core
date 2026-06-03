@@ -1,0 +1,104 @@
+{
+  "items": [
+    {
+      "deviceId": "4496dbbd-db7b-4b72-89a8-208ed9482832",
+      "name": "leak-battery",
+      "label": "Waschkeller Feuchtigkeitssensor",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "759cccc4-5559-3718-9387-e73fa9f28bc0",
+      "deviceManufacturerCode": "IKEA of Sweden",
+      "locationId": "a123d440-3337-4e3b-8af2-51427b68052f",
+      "ownerId": "a6f94f18-42d6-28c6-57c8-6c77aaf87439",
+      "roomId": "5dc4bad8-175a-4510-96a9-4b8871581be1",
+      "productId": "4396a64a-d55f-4c14-8c57-c630a1b24455",
+      "brandId": "964722e3-7d62-3e0b-a84b-31a134874f20",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "waterSensor",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "LeakSensor",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2026-03-02T14:59:51.087Z",
+      "parentDeviceId": "8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb",
+      "profile": {
+        "id": "eeceec3b-97cf-38ba-9484-f66ed545c5c3"
+      },
+      "matter": {
+        "driverId": "fba178cd-203e-4b7c-bfa0-d4f07197b527",
+        "hubId": "8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb",
+        "provisioningState": "PROVISIONED",
+        "networkId": "F050C5A30C6BE3F6-7D3EB8FD67F6C13E",
+        "executingLocally": true,
+        "uniqueId": "38bac94196d198e0085823ef7fd2bf38",
+        "vendorId": 4476,
+        "productId": 32774,
+        "listeningType": "SLEEPY",
+        "supportedNetworkInterfaces": ["THREAD"],
+        "version": {
+          "hardware": 512,
+          "hardwareLabel": "P2.0",
+          "software": 16777227,
+          "softwareLabel": "1.0.11"
+        },
+        "endpoints": [
+          {
+            "endpointId": 0,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 18
+              },
+              {
+                "deviceTypeId": 17
+              },
+              {
+                "deviceTypeId": 22
+              }
+            ]
+          },
+          {
+            "endpointId": 1,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 67
+              }
+            ]
+          }
+        ],
+        "syncDrivers": true,
+        "fingerprintType": "MATTER_MANUFACTURER",
+        "fingerprintId": "4476/32774"
+      },
+      "type": "MATTER",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

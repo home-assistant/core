@@ -15,8 +15,9 @@
 # ---
 # name: test_number_entities[binary_sensor.door_1_operational_problem].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -96,8 +97,9 @@
 # ---
 # name: test_number_entities[binary_sensor.door_2_operational_problem].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

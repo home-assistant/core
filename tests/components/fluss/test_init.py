@@ -54,3 +54,17 @@ async def test_async_setup_entry_authentication_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is state
+
+
+async def test_status_error_during_setup_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test auth error from per-device status marks device offline."""
+    mock_api_client.async_get_device_status.side_effect = (
+        FlussApiClientAuthenticationError("permission revoked")
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

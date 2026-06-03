@@ -1,7 +1,5 @@
 """Support for the Daikin HVAC."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 import logging
 from typing import Any
@@ -112,11 +110,12 @@ def _zone_is_configured(zone: DaikinZone) -> bool:
 
 def _zone_temperature_lists(device: Appliance) -> tuple[list[str], list[str]]:
     """Return the decoded zone temperature lists."""
-    try:
-        heating = device.represent(DAIKIN_ZONE_TEMP_HEAT)[1]
-        cooling = device.represent(DAIKIN_ZONE_TEMP_COOL)[1]
-    except AttributeError, KeyError:
+    values = device.values
+    if DAIKIN_ZONE_TEMP_HEAT not in values or DAIKIN_ZONE_TEMP_COOL not in values:
         return ([], [])
+
+    heating = device.represent(DAIKIN_ZONE_TEMP_HEAT)[1]
+    cooling = device.represent(DAIKIN_ZONE_TEMP_COOL)[1]
     return (list(heating or []), list(cooling or []))
 
 
@@ -174,7 +173,10 @@ async def async_setup_entry(
 
 
 def format_target_temperature(target_temperature: float) -> str:
-    """Format target temperature to be sent to the Daikin unit, rounding to nearest half degree."""
+    """Format target temperature to be sent to the Daikin unit.
+
+    Rounds to nearest half degree.
+    """
     return str(round(float(target_temperature) * 2, 0) / 2).rstrip("0").rstrip(".")
 
 

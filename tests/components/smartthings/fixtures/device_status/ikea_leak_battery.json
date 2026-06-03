@@ -1,0 +1,67 @@
+{
+  "components": {
+    "main": {
+      "waterSensor": {
+        "water": {
+          "value": "dry",
+          "timestamp": "2026-03-12T17:12:40.554Z"
+        }
+      },
+      "refresh": {},
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2026-03-07T14:37:09.813Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "imageTransferProgress": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "1.0.11 (16777227)",
+          "timestamp": "2026-03-02T14:59:51.992Z"
+        },
+        "lastUpdateStatus": {
+          "value": "updateSucceeded",
+          "timestamp": "2026-03-02T15:06:29.116Z"
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2026-03-02T15:06:29.154Z"
+        },
+        "estimatedTimeRemaining": {
+          "value": null
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2026-03-02T15:06:35.716Z"
+        },
+        "currentVersion": {
+          "value": "1.0.11 (16777227)",
+          "timestamp": "2026-03-02T15:06:35.745Z"
+        },
+        "lastUpdateTime": {
+          "value": "2026-03-02T15:06:28Z",
+          "timestamp": "2026-03-02T15:06:29.153Z"
+        },
+        "supportsProgressReports": {
+          "value": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "garage_door",
+  "name": "Garage door",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/garage_door",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

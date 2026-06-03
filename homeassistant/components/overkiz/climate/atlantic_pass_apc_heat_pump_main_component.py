@@ -1,7 +1,5 @@
 """Support for Atlantic Pass APC Heat Pump Main Component."""
 
-from __future__ import annotations
-
 from asyncio import sleep
 from typing import cast
 
@@ -29,10 +27,13 @@ HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
 class AtlanticPassAPCHeatPumpMainComponent(OverkizEntity, ClimateEntity):
     """Representation of Atlantic Pass APC Heat Pump Main Component.
 
-    This component can only turn off the heating pump and select the working mode: heating or cooling.
-    To set new temperatures, they must be selected individually per Zones (ie: AtlanticPassAPCHeatingAndCoolingZone).
-    Once the Device is switched on into heating or cooling mode, the Heat Pump will be activated and will use
-    the default temperature configuration for each available zone.
+    This component can only turn off the heating pump and select
+    the working mode: heating or cooling. To set new
+    temperatures, they must be selected individually per Zones
+    (ie: AtlanticPassAPCHeatingAndCoolingZone). Once the Device
+    is switched on into heating or cooling mode, the Heat Pump
+    will be activated and will use the default temperature
+    configuration for each available zone.
     """
 
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
@@ -60,5 +61,6 @@ class AtlanticPassAPCHeatPumpMainComponent(OverkizEntity, ClimateEntity):
             HVAC_MODES_TO_OVERKIZ[hvac_mode],
         )
 
-        # Wait for 2 seconds to ensure the HVAC mode change is properly applied and system stabilizes.
+        # Wait for 2 seconds to ensure the HVAC mode change is
+        # properly applied and system stabilizes.
         await sleep(2)

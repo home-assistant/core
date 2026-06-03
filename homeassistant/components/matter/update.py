@@ -1,7 +1,5 @@
 """Matter update."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
@@ -17,7 +15,6 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -26,7 +23,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 SCAN_INTERVAL = timedelta(hours=12)
@@ -59,11 +56,11 @@ class MatterUpdateExtraStoredData(ExtraStoredData):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.UPDATE, async_add_entities)
 
 
@@ -80,6 +77,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
     # Matter server.
     _attr_should_poll = True
     _software_update: MatterSoftwareVersion | None = None
+    _installed_software_version: int | None = None
     _cancel_update: CALLBACK_TYPE | None = None
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL
@@ -92,6 +90,9 @@ class MatterUpdate(MatterEntity, UpdateEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
 
+        self._installed_software_version = self.get_matter_attribute_value(
+            clusters.BasicInformation.Attributes.SoftwareVersion
+        )
         self._attr_installed_version = self.get_matter_attribute_value(
             clusters.BasicInformation.Attributes.SoftwareVersionString
         )
@@ -123,6 +124,22 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         else:
             self._attr_update_percentage = None
 
+    def _format_latest_version(
+        self, update_information: MatterSoftwareVersion
+    ) -> str | None:
+        """Return the version string to expose in Home Assistant."""
+        latest_version = update_information.software_version_string
+        if self._installed_software_version is None:
+            return latest_version
+
+        if update_information.software_version == self._installed_software_version:
+            return self._attr_installed_version or latest_version
+
+        if latest_version == self._attr_installed_version:
+            return f"{latest_version} ({update_information.software_version})"
+
+        return latest_version
+
     async def async_update(self) -> None:
         """Call when the entity needs to be updated."""
         try:
@@ -130,11 +147,13 @@ class MatterUpdate(MatterEntity, UpdateEntity):
                 node_id=self._endpoint.node.node_id
             )
             if not update_information:
+                self._software_update = None
                 self._attr_latest_version = self._attr_installed_version
+                self._attr_release_url = None
                 return
 
             self._software_update = update_information
-            self._attr_latest_version = update_information.software_version_string
+            self._attr_latest_version = self._format_latest_version(update_information)
             self._attr_release_url = update_information.release_notes_url
 
         except UpdateCheckError as err:
@@ -154,18 +173,25 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         release_notes = ""
 
         # insert extra heavy warning case the update is not from the main net
-        if self._software_update.update_source != UpdateSource.MAIN_NET_DCL:
+        if self._software_update.update_source is not UpdateSource.MAIN_NET_DCL:
             release_notes += (
                 "\n\n<ha-alert alert-type='warning'>"
-                f"Update provided by {self._software_update.update_source.value}. "
-                "Installing this update is at your own risk and you may run into unexpected "
-                "problems such as the need to re-add and factory reset your device.</ha-alert>\n\n"
+                "Update provided by "
+                f"{self._software_update.update_source.value}. "
+                "Installing this update is at your own risk "
+                "and you may run into unexpected "
+                "problems such as the need to re-add and "
+                "factory reset your device.</ha-alert>\n\n"
             )
         return release_notes + (
-            "\n\n<ha-alert alert-type='info'>The update process can take a while, "
-            "especially for battery powered devices. Please be patient and wait until the update "
-            "process is fully completed. Do not remove power from the device while it's updating. "
-            "The device may restart during the update process and be unavailable for several minutes."
+            "\n\n<ha-alert alert-type='info'>"
+            "The update process can take a while, "
+            "especially for battery powered devices. "
+            "Please be patient and wait until the update "
+            "process is fully completed. Do not remove power "
+            "from the device while it's updating. "
+            "The device may restart during the update process "
+            "and be unavailable for several minutes."
             "</ha-alert>\n\n"
         )
 
@@ -212,7 +238,12 @@ class MatterUpdate(MatterEntity, UpdateEntity):
 
         software_version: str | int | None = version
         if self._software_update is not None and (
-            version is None or version == self._software_update.software_version_string
+            version is None
+            or version
+            in {
+                self._software_update.software_version_string,
+                self._attr_latest_version,
+            }
         ):
             # Update to the version previously fetched and shown.
             # We can pass the integer version directly to speedup download.

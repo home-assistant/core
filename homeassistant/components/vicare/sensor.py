@@ -1,7 +1,5 @@
 """Viessmann ViCare sensor device."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
@@ -722,6 +720,26 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
+        key="energy_consumption_heating_this_year",
+        translation_key="energy_consumption_heating_this_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerConsumptionHeatingThisYear(),
+        unit_getter=lambda api: api.getPowerConsumptionHeatingUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="energy_consumption_dhw_this_year",
+        translation_key="energy_consumption_dhw_this_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerConsumptionDomesticHotWaterThisYear(),
+        unit_getter=lambda api: api.getPowerConsumptionDomesticHotWaterUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
         key="buffer top temperature",
         translation_key="buffer_top_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -965,6 +983,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getTemperature(),
+    ),
+    ViCareSensorEntityDescription(
+        key="target_temperature",
+        translation_key="target_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getTargetTemperature(),
     ),
     ViCareSensorEntityDescription(
         key="room_humidity",

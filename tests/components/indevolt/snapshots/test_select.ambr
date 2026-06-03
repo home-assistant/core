@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_select[1][select.bk1600_energy_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -61,8 +62,9 @@
 # ---
 # name: test_select[2][select.cms_sf2000_energy_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

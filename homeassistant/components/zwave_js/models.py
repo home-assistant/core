@@ -1,7 +1,5 @@
 """Provide models for the Z-Wave integration."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
@@ -149,6 +147,8 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     any_available_states: set[tuple[int, str]] | None = None
     # [optional] the value's states map must include ANY of these keys
     any_available_states_keys: set[int] | None = None
+    # [optional] the value's cc specific map must include ALL of these key/value pairs
+    all_available_cc_specific: set[tuple[Any, Any]] | None = None
     # [optional] the value's cc specific map must include ANY of these key/value pairs
     any_available_cc_specific: set[tuple[Any, Any]] | None = None
     # [optional] the value's value must match this value

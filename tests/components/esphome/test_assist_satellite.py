@@ -29,7 +29,7 @@ from homeassistant.components import (
     tts,
 )
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     KEY_ASSIST_PIPELINE,
 )
 from homeassistant.components.assist_satellite import (
@@ -38,7 +38,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteWakeWord,
 )
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
 from homeassistant.components.esphome.const import NO_WAKE_WORD
@@ -77,7 +77,7 @@ async def test_no_satellite_without_voice_assistant(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that an assist satellite entity is not created if a voice assistant is not present."""
+    """Test satellite entity is not created without a voice assistant."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={},
@@ -574,6 +574,7 @@ async def test_pipeline_udp_audio(
             await pipeline_finished.wait()
 
             await tts_finished.wait()
+            transport.close()
 
     # Verify TTS audio (from UDP)
     assert protocol.data_received == [b"test-wav"]
@@ -616,7 +617,7 @@ async def test_pipeline_media_player(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_wav: bytes,
 ) -> None:
-    """Test a complete pipeline run with the TTS response sent to a media player instead of a speaker.
+    """Test pipeline run with TTS response sent to a media player.
 
     This test is not as comprehensive as test_pipeline_api_audio since we're
     mainly focused on tts_response_finished getting automatically called.
@@ -1784,7 +1785,7 @@ async def test_intent_progress_optimization(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that intent progress events are only sent when early TTS streaming is available."""
+    """Test intent progress events only sent with early TTS streaming."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -1980,7 +1981,7 @@ async def test_secondary_pipeline(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that the secondary pipeline is used when the secondary wake word is given."""
+    """Test secondary pipeline is used with secondary wake word."""
     assert await async_setup_component(hass, "assist_pipeline", {})
     pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     pipeline_id_to_name: dict[str, str] = {}
@@ -2091,6 +2092,129 @@ async def test_secondary_pipeline(
     assert (await get_pipeline(None)) == "Primary Pipeline"
 
 
+@pytest.mark.timeout(5)
+async def test_pipeline_start_missing_wake_word_entity_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test pipeline selection when a wake word entity has no state.
+
+    Regression test for an infinite loop that occurred when a wake word entity
+    existed in the entity registry but had no state in the state machine.
+    """
+    assert await async_setup_component(hass, "assist_pipeline", {})
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
+    pipeline_id_to_name: dict[str, str] = {}
+    for pipeline_name in ("Primary Pipeline", "Secondary Pipeline"):
+        pipeline = await pipeline_data.pipeline_store.async_create_item(
+            {
+                "name": pipeline_name,
+                "language": "en-US",
+                "conversation_engine": None,
+                "conversation_language": "en-US",
+                "tts_engine": None,
+                "tts_language": None,
+                "tts_voice": None,
+                "stt_engine": None,
+                "stt_language": None,
+                "wake_word_entity": None,
+                "wake_word_id": None,
+            }
+        )
+        pipeline_id_to_name[pipeline.id] = pipeline_name
+
+    device_config = AssistSatelliteConfiguration(
+        available_wake_words=[
+            AssistSatelliteWakeWord("okay_nabu", "Okay Nabu", ["en"]),
+            AssistSatelliteWakeWord("hey_jarvis", "Hey Jarvis", ["en"]),
+        ],
+        active_wake_words=["hey_jarvis"],
+        max_active_wake_words=2,
+    )
+    mock_client.get_voice_assistant_configuration.return_value = device_config
+
+    configuration_set = asyncio.Event()
+
+    async def wrapper(*args, **kwargs):
+        device_config.active_wake_words = kwargs["active_wake_words"]
+        configuration_set.set()
+
+    mock_client.set_voice_assistant_configuration = AsyncMock(side_effect=wrapper)
+
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.ANNOUNCE
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    # Set primary/secondary wake words and assistants
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.test_wake_word", "option": "Okay Nabu"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.test_assistant", "option": "Primary Pipeline"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.test_wake_word_2", "option": "Hey Jarvis"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.test_assistant_2",
+            "option": "Secondary Pipeline",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Remove state for primary wake word entity to simulate the bug scenario:
+    # entity exists in the registry but has no state in the state machine.
+    hass.states.async_remove("select.test_wake_word")
+
+    async def get_pipeline(wake_word_phrase):
+        with patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        ) as mock_pipeline_from_audio_stream:
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=0,
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase=wake_word_phrase,
+            )
+
+            mock_pipeline_from_audio_stream.assert_called_once()
+            kwargs = mock_pipeline_from_audio_stream.call_args_list[0].kwargs
+            return pipeline_id_to_name[kwargs["pipeline_id"]]
+
+    # The primary wake word entity has no state, so the loop must skip it.
+    # The secondary wake word entity still has state, so "Hey Jarvis" matches.
+    assert (await get_pipeline("Hey Jarvis")) == "Secondary Pipeline"
+
+    # "Okay Nabu" can't match because its entity has no state — falls back to
+    # default pipeline (index 0).
+    assert (await get_pipeline("Okay Nabu")) == "Primary Pipeline"
+
+    # No wake word phrase also falls back to default.
+    assert (await get_pipeline(None)) == "Primary Pipeline"
+
+
 async def test_custom_wake_words(
     hass: HomeAssistant,
     mock_client: APIClient,
@@ -2166,3 +2290,138 @@ async def test_custom_wake_words(
     # Check non-existent wake word
     req = await http_client.get("/api/esphome/wake_words/wrong_wake_word.json")
     assert req.status == HTTPStatus.NOT_FOUND
+
+
+async def test_multichannel_audio(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that stt-start event can switch audio channels."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.MULTI_CHANNEL_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    pipeline_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        event_callback = kwargs["event_callback"]
+
+        # STT
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.STT_START,
+                data={
+                    "engine": "test-stt-engine",
+                    "metadata": {},
+                    "audio_processing": {
+                        # Request non-enhanced audio (channel 1)
+                        "prefers_auto_gain_enabled": False,
+                        "prefers_noise_reduction_enabled": False,
+                    },
+                },
+            )
+        )
+
+        stt_stream = kwargs["stt_stream"]
+
+        chunks = [chunk async for chunk in stt_stream]
+
+        # Verify correct channel
+        assert chunks == [b"channel 1"]
+
+        pipeline_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase=None,
+            )
+            await satellite.handle_audio(b"channel 0", b"channel 1")
+            await satellite.handle_pipeline_stop(abort=False)
+            await pipeline_finished.wait()
+
+
+async def test_multichannel_audio_fallback_channel_0(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that channel 0 is used if multi-channel audio isn't supported."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    pipeline_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        event_callback = kwargs["event_callback"]
+
+        # STT
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.STT_START,
+                data={
+                    "engine": "test-stt-engine",
+                    "metadata": {},
+                    "audio_processing": {
+                        # Request non-enhanced audio (channel 1)
+                        "prefers_auto_gain_enabled": False,
+                        "prefers_noise_reduction_enabled": False,
+                    },
+                },
+            )
+        )
+
+        stt_stream = kwargs["stt_stream"]
+
+        chunks = [chunk async for chunk in stt_stream]
+
+        # Non-enhanced audio (channel 1) was requested, but it isn't supported.
+        assert chunks == [b"channel 0"]
+
+        pipeline_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase=None,
+            )
+            await satellite.handle_audio(b"channel 0", b"channel 1")
+            await satellite.handle_pipeline_stop(abort=False)
+            await pipeline_finished.wait()

@@ -179,14 +179,16 @@ async def test_vacuum_updates(
     assert state
     assert state.state == "returning"
 
-    # confirm state is 'idle' by setting the operational state to 0x01 (running) but mode is idle
+    # confirm state is 'idle' by setting the operational state to
+    # 0x01 (running) but mode is idle
     set_node_attribute(matter_node, 1, 97, 4, 0x01)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "idle"
 
-    # confirm state is 'idle' by setting the operational state to 0x01 (running) but mode is cleaning
+    # confirm state is 'idle' by setting the operational state to
+    # 0x01 (running) but mode is cleaning
     set_node_attribute(matter_node, 1, 97, 4, 0x01)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
@@ -472,6 +474,43 @@ async def test_vacuum_clean_area_select_areas_failure(
         endpoint_id=1,
         command=clusters.ServiceArea.Commands.SelectAreas(newAreas=[7, 1234567]),
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
+async def test_vacuum_no_issue_on_transient_empty_segments(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that no issue is raised when device transiently reports empty segments."""
+    entity_id = "vacuum.mock_vacuum"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {
+            "last_seen_segments": [
+                {
+                    "id": "7",
+                    "name": "My Location A",
+                    "group": None,
+                }
+            ]
+        },
+    )
+
+    # Simulate transient empty SupportedAreas (cluster 336, attribute 0)
+    set_node_attribute(matter_node, 1, 336, 0, [])
+    await trigger_subscription_callback(hass, matter_client)
+
+    issue_reg = ir.async_get(hass)
+    issue = issue_reg.async_get_issue(
+        VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
+    )
+    assert issue is None
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])

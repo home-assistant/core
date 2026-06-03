@@ -1,7 +1,5 @@
 """Support for select entities through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import cast
 
@@ -26,10 +24,23 @@ LAMP_TO_HA = {
     "off": "off",
 }
 
+SOUND_MODE_TO_HA = {
+    "voice": "voice",
+    "beep": "tone",
+    "mute": "mute",
+}
+
 DRIVING_MODE_TO_HA = {
     "areaThenWalls": "area_then_walls",
     "wallFirst": "walls_first",
     "quickCleaningZigzagPattern": "quick_clean_zigzag_pattern",
+}
+
+CLEANING_TYPE_TO_HA = {
+    "vacuum": "vacuum",
+    "mop": "mop",
+    "vacuumAndMopTogether": "vacuum_and_mop_together",
+    "mopAfterVacuum": "mop_after_vacuum",
 }
 
 WASHER_SOIL_LEVEL_TO_HA = {
@@ -154,13 +165,15 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         command=Command.SET_AMOUNT,
         entity_category=EntityCategory.CONFIG,
     ),
-    Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
-        key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
-        translation_key="flexible_detergent_amount",
-        options_attribute=Attribute.SUPPORTED_AMOUNT,
-        status_attribute=Attribute.AMOUNT,
-        command=Command.SET_AMOUNT,
-        entity_category=EntityCategory.CONFIG,
+    Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: (
+        SmartThingsSelectDescription(
+            key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
+            translation_key="flexible_detergent_amount",
+            options_attribute=Attribute.SUPPORTED_AMOUNT,
+            status_attribute=Attribute.AMOUNT,
+            command=Command.SET_AMOUNT,
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     Capability.SAMSUNG_CE_LAMP: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_LAMP,
@@ -236,6 +249,25 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         command=Command.SET_ALARM_THRESHOLD,
         entity_category=EntityCategory.CONFIG,
         value_is_integer=True,
+    ),
+    Capability.SAMSUNG_CE_ROBOT_CLEANER_SYSTEM_SOUND_MODE: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_ROBOT_CLEANER_SYSTEM_SOUND_MODE,
+        translation_key="robot_cleaner_sound_mode",
+        options_attribute=Attribute.SUPPORTED_SOUND_MODES,
+        status_attribute=Attribute.SOUND_MODE,
+        command=Command.SET_SOUND_MODE,
+        options_map=SOUND_MODE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+    Capability.SAMSUNG_CE_ROBOT_CLEANER_CLEANING_TYPE: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_ROBOT_CLEANER_CLEANING_TYPE,
+        translation_key="robot_cleaner_cleaning_type",
+        options_attribute=Attribute.SUPPORTED_CLEANING_TYPES,
+        status_attribute=Attribute.CLEANING_TYPE,
+        command=Command.SET_CLEANING_TYPE,
+        options_map=CLEANING_TYPE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 DISHWASHER_WASHING_OPTIONS_TO_SELECT: dict[
@@ -331,7 +363,12 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             capabilities.update(extra_capabilities)
         super().__init__(client, device, capabilities, component=component)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{entity_description.key}_{entity_description.status_attribute}_{entity_description.status_attribute}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}"
+            f"_{entity_description.key}"
+            f"_{entity_description.status_attribute}"
+            f"_{entity_description.status_attribute}"
+        )
 
     @property
     def options(self) -> list[str]:

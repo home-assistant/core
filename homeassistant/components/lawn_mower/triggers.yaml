@@ -5,16 +5,18 @@
   fields:
     behavior:
       required: true
-      default: any
+      default: each
       selector:
-        select:
-          options:
-            - first
-            - last
-            - any
-          translation_key: trigger_behavior
+        automation_behavior:
+          mode: trigger
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 docked: *trigger_common
 errored: *trigger_common
 paused_mowing: *trigger_common
 started_mowing: *trigger_common
+started_returning: *trigger_common

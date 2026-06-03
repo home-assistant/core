@@ -2,5 +2,59 @@
   "tilt_eq": {
     "enabled": true,
     "intensity": 0
+  },
+  "user_eq": {
+    "enabled": true,
+    "bands": [
+      {
+        "index": 0,
+        "filter": "LOWSHELF",
+        "freq": 80,
+        "gain": 0.0,
+        "q": 0.8
+      },
+      {
+        "index": 1,
+        "filter": "PEAKING",
+        "freq": 120,
+        "gain": 0.0,
+        "q": 1.24
+      },
+      {
+        "index": 2,
+        "filter": "PEAKING",
+        "freq": 315,
+        "gain": 0.0,
+        "q": 1.24
+      },
+      {
+        "index": 3,
+        "filter": "PEAKING",
+        "freq": 800,
+        "gain": 0.0,
+        "q": 1.24
+      },
+      {
+        "index": 4,
+        "filter": "PEAKING",
+        "freq": 2000,
+        "gain": 0.0,
+        "q": 1.24
+      },
+      {
+        "index": 5,
+        "filter": "PEAKING",
+        "freq": 5000,
+        "gain": 0.0,
+        "q": 1.24
+      },
+      {
+        "index": 6,
+        "filter": "HIGHSHELF",
+        "freq": 8000,
+        "gain": 0.0,
+        "q": 0.8
+      }
+    ]
   }
 }

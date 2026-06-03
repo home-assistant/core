@@ -196,7 +196,8 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
                     _LOGGER.debug(
                         "Empty camera image returned for %s", self._device.host
                     )
-                    # image could be empty if a stream is running so check for explicit auth error
+                    # image could be empty if a stream is
+                    # running so check for explicit auth error
                     await self._async_check_stream_auth(video_url)
                 else:
                     _LOGGER.debug(

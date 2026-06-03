@@ -1,7 +1,5 @@
 """Contains time pickers exposed by the Starlink integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, time, tzinfo
@@ -65,6 +63,7 @@ def _utc_minutes_to_time(utc_minutes: int, timezone: tzinfo) -> time:
         hour -= 24
     minute = utc_minutes % 60
     try:
+        # pylint: disable-next=home-assistant-enforce-utcnow
         utc = datetime.now(UTC).replace(
             hour=hour, minute=minute, second=0, microsecond=0
         )

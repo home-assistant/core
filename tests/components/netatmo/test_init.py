@@ -15,6 +15,7 @@ from homeassistant.components.netatmo import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -157,7 +158,7 @@ async def test_setup_component_with_webhook(
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
 
     # Assert webhook is established successfully
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK)
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -446,7 +447,7 @@ async def test_setup_component_invalid_token(
     """Test handling of invalid token."""
 
     async def fake_ensure_valid_token(*args, **kwargs):
-        raise aiohttp.ClientResponseError(
+        raise OAuth2TokenRequestReauthError(
             request_info=aiohttp.client.RequestInfo(
                 url="http://example.com",
                 method="GET",
@@ -455,6 +456,7 @@ async def test_setup_component_invalid_token(
             ),
             status=400,
             history=(),
+            domain="netatmo",
         )
 
     with (
@@ -544,7 +546,7 @@ async def test_device_remove_devices(
 
         await hass.async_block_till_done()
 
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
     entity = entity_registry.async_get(climate_entity_livingroom)
 
     device_entry = device_registry.async_get(entity.device_id)

@@ -1,7 +1,5 @@
 """Support for bthome event entities."""
 
-from __future__ import annotations
-
 from dataclasses import replace
 
 from homeassistant.components.event import (
@@ -18,6 +16,7 @@ from . import format_discovered_event_class, format_event_dispatcher_name
 from .const import (
     DOMAIN,
     EVENT_CLASS_BUTTON,
+    EVENT_CLASS_COMMAND,
     EVENT_CLASS_DIMMER,
     EVENT_PROPERTIES,
     EVENT_TYPE,
@@ -44,6 +43,11 @@ DESCRIPTIONS_BY_EVENT_CLASS = {
         key=EVENT_CLASS_DIMMER,
         translation_key="dimmer",
         event_types=["rotate_left", "rotate_right"],
+    ),
+    EVENT_CLASS_COMMAND: EventEntityDescription(
+        key=EVENT_CLASS_COMMAND,
+        translation_key="command",
+        event_types=["off", "on", "toggle", "step_up", "step_down"],
     ),
 }
 

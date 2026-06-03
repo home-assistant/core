@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for WeatherKit integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from apple_weatherkit import DataSetType
@@ -11,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 
@@ -22,18 +21,22 @@ REQUESTED_DATA_SETS = [
 
 STALE_DATA_THRESHOLD = timedelta(hours=1)
 
+HOURLY_FORECAST_DURATION = timedelta(days=7)
+
+type WeatherKitConfigEntry = ConfigEntry[WeatherKitDataUpdateCoordinator]
+
 
 class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
-    config_entry: ConfigEntry
+    config_entry: WeatherKitConfigEntry
     supported_data_sets: list[DataSetType] | None = None
     last_updated_at: datetime | None = None
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WeatherKitConfigEntry,
         client: WeatherKitApiClient,
     ) -> None:
         """Initialize."""
@@ -67,10 +70,13 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             if not self.supported_data_sets:
                 await self.update_supported_data_sets()
 
+            dt_now = dt_util.utcnow()
             updated_data = await self.client.get_weather_data(
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
+                hourly_start=dt_now,
+                hourly_end=dt_now + HOURLY_FORECAST_DURATION,
             )
         except WeatherKitApiClientError as exception:
             if self.data is None or (

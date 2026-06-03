@@ -1,7 +1,5 @@
 """Component for interfacing RFK101 proximity card readers."""
 
-from __future__ import annotations
-
 import logging
 
 from rfk101py.rfk101py import rfk101py

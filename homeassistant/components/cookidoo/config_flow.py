@@ -1,7 +1,5 @@
 """Config flow for Cookidoo integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -56,7 +54,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cookidoo."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     COUNTRY_DATA_SCHEMA: dict
     LANGUAGE_DATA_SCHEMA: dict
@@ -225,8 +223,9 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
         cookidoo = await cookidoo_from_config_data(self.hass, data_input)
         try:
-            auth_data = await cookidoo.login()
-            self.user_uuid = auth_data.sub
+            await cookidoo.login()
+            user_info = await cookidoo.get_user_info()
+            self.user_uuid = user_info.id
             if language_input:
                 await cookidoo.get_additional_items()
         except CookidooRequestException:

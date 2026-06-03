@@ -409,7 +409,7 @@ async def test_async_listen_cloudhook_change_cloud_setup_later(
     cloud: MagicMock,
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
-    """Test async_listen_cloudhook_change works when cloud is set up after listener registration."""
+    """Test cloudhook change listener with late cloud setup."""
     webhook_id = "mock-webhook-id"
     cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
 

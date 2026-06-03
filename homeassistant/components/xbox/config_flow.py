@@ -74,7 +74,7 @@ class OAuth2FlowHandler(
 
         client = XboxLiveClient(auth)
 
-        me = await client.people.get_friends_by_xuid(client.xuid)
+        me = await client.people.get_friend_by_xuid(client.xuid)
 
         await self.async_set_unique_id(client.xuid)
 
@@ -83,9 +83,7 @@ class OAuth2FlowHandler(
                 description_placeholders={"gamertag": me.people[0].gamertag}
             )
 
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
-            )
+            return self.async_update_and_abort(self._get_reauth_entry(), data=data)
 
         self._abort_if_unique_id_configured()
 

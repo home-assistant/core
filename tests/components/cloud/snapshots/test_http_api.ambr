@@ -61,6 +61,19 @@
   
   </details>
   
+  ## Custom Themes
+  
+  Custom themes: 2
+  
+  <details><summary>Custom themes</summary>
+  
+  Name
+  ---
+  midnight
+  solarized-dark
+  
+  </details>
+  
   <details><summary>mock_no_info_integration</summary>
   
   No information available
@@ -86,6 +99,13 @@
   can_reach_cloud | ok
   
   </details>
+  
+  ## Latency by location
+  
+  Location | Latency (ms)
+  --- | ---
+  Earth | 13.37
+  Moon | N/A
   
   ## Installed packages
   
@@ -166,6 +186,10 @@
   
   </details>
   
+  ## Custom Themes
+  
+  Custom themes: 0
+  
   <details><summary>mock_no_info_integration</summary>
   
   No information available
@@ -241,6 +265,10 @@
   ## Active integrations
   
   Unable to collect integration information
+  
+  ## Custom Themes
+  
+  Custom themes: 0
   
   <details><summary>mock_no_info_integration</summary>
   
