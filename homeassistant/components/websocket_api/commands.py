@@ -39,6 +39,7 @@ from homeassistant.helpers import (
     entity,
     target as target_helpers,
     template,
+    trace,
 )
 from homeassistant.helpers.condition import (
     async_from_config as async_condition_from_config,
@@ -1050,9 +1051,23 @@ async def handle_subscribe_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe condition command."""
-    condition_config = await async_validate_condition_config(hass, msg["condition"])
+    try:
+        condition_config = await async_validate_condition_config(hass, msg["condition"])
+        condition = await async_condition_from_config(hass, condition_config)
+    except vol.Invalid as err:
+        connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        return
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
 
-    condition = await async_condition_from_config(hass, condition_config)
     event_data: dict[str, Any] = {}
 
     @callback
@@ -1061,10 +1076,24 @@ async def handle_subscribe_condition(
         nonlocal event_data
         new_event_data: dict[str, Any]
 
+        condition_trace = trace.trace_get()
         try:
-            new_event_data = {"result": condition.async_check()}
+            with trace.record_template_errors():
+                new_event_data = {"result": condition.async_check()}
         except HomeAssistantError as err:
             new_event_data = {"error": str(err)}
+
+        # Template errors (e.g. undefined variables) are recorded in the trace
+        # instead of being logged. Forward them to the client so they are not
+        # lost, even when the condition still evaluated to a result.
+        if template_errors := [
+            template_error
+            for elements in condition_trace.values()
+            for element in elements
+            for template_error in element.template_errors
+        ]:
+            new_event_data["template_errors"] = template_errors
+
         if new_event_data == event_data:
             return
         event_data = new_event_data
