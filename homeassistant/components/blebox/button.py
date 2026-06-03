@@ -7,7 +7,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
+from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
+from .util import blebox_command
+
+PARALLEL_UPDATES = 1
 
 BUTTON_TYPES: dict[str, ButtonEntityDescription] = {
     "up": ButtonEntityDescription(key="up", translation_key="up"),
@@ -26,19 +30,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox button entry."""
+    coordinator = config_entry.runtime_data
     entities = [
-        BleBoxButtonEntity(feature)
-        for feature in config_entry.runtime_data.features.get("buttons", [])
+        BleBoxButtonEntity(coordinator, feature)
+        for feature in coordinator.box.features.get("buttons", [])
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class BleBoxButtonEntity(BleBoxEntity[blebox_uniapi.button.Button], ButtonEntity):
     """Representation of BleBox buttons."""
 
-    def __init__(self, feature: blebox_uniapi.button.Button) -> None:
+    def __init__(
+        self, coordinator: BleBoxCoordinator, feature: blebox_uniapi.button.Button
+    ) -> None:
         """Initialize a BleBox button feature."""
-        super().__init__(feature)
+
+        super().__init__(coordinator, feature)
         self.entity_description = self._get_description()
 
     def _get_description(self) -> ButtonEntityDescription:
@@ -48,6 +56,7 @@ class BleBoxButtonEntity(BleBoxEntity[blebox_uniapi.button.Button], ButtonEntity
                 return description
         return _DEFAULT_BUTTON
 
+    @blebox_command
     async def async_press(self) -> None:
         """Handle the button press."""
         await self._feature.set()
