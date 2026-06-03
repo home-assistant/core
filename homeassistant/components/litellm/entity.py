@@ -190,3 +190,8 @@ class LiteLLMEntity(Entity):
             )
             if not chat_log.unresponded_tool_results:
                 break
+        else:
+            LOGGER.warning(
+                "Stopped after %s tool iterations with unresolved tool calls",
+                MAX_TOOL_ITERATIONS,
+            )

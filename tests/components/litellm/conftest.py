@@ -36,7 +36,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def enable_assist() -> bool:
-    """Mock conversation subentry data."""
+    """Return whether the Assist LLM API is enabled for the conversation agent."""
     return False
 
 
