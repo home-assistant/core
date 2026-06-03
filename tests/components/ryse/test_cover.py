@@ -352,3 +352,15 @@ async def test_async_set_cover_position_ble_error_raises_ha_error(
     # State must NOT be updated on failure
     assert entity._current_position == original_position
     entity.async_write_ha_state.assert_not_called()
+
+
+async def test_current_cover_position_is_none(
+    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Covers: `if self._current_position is None: return None`."""
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
+
+    # Ensure it is explicitly None (it is by default in __init__)
+    entity._current_position = None
+
+    assert entity.current_cover_position is None
