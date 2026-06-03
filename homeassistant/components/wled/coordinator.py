@@ -39,6 +39,9 @@ def normalize_repo(repo: str | None) -> str:
         return DEFAULT_REPO
 
     normalized_repo = repo.strip().lower()
+    if normalized_repo == DEFAULT_REPO.lower():
+        return DEFAULT_REPO
+
     return normalized_repo or DEFAULT_REPO
 
 
@@ -193,30 +196,73 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         return device
 
 
-class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
+class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Releases]]):
     """Class to manage fetching WLED releases."""
 
-    repo: str
-
-    def __init__(self, hass: HomeAssistant, *, repo: str | None = None) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize global WLED releases updater."""
-        self.repo = normalize_repo(repo)
-        self.wled = WLEDReleases(repo=self.repo, session=async_get_clientsession(hass))
         super().__init__(
             hass,
             LOGGER,
             config_entry=None,
-            name=f"{DOMAIN}:{self.repo}",
+            name=DOMAIN,
             update_interval=RELEASES_SCAN_INTERVAL,
         )
+        self._repos_by_entry_id: dict[str, str] = {}
 
-    async def _async_update_data(self) -> Releases:
+    async def async_set_repo(self, entry_id: str, repo: str | None) -> None:
+        """Set the repository currently used by a WLED config entry."""
+        normalized_repo = normalize_repo(repo)
+        if self._repos_by_entry_id.get(entry_id) == normalized_repo:
+            return
+
+        self._repos_by_entry_id[entry_id] = normalized_repo
+        await self.async_request_refresh()
+
+    @callback
+    def async_unset_repo(self, entry_id: str) -> None:
+        """Stop tracking the repository used by a WLED config entry."""
+        repo = self._repos_by_entry_id.pop(entry_id, None)
+        if repo is None or repo in self._repos_by_entry_id.values():
+            return
+
+        if self.data is not None and repo in self.data:
+            self.data = {key: value for key, value in self.data.items() if key != repo}
+            self.async_update_listeners()
+
+    async def _async_update_data(self) -> dict[str, Releases]:
         """Fetch release data from WLED."""
-        try:
-            return await self.wled.releases()
-        except WLEDError as error:
+        active_repos = set(self._repos_by_entry_id.values())
+        releases_by_repo = {
+            repo: releases
+            for repo, releases in (self.data or {}).items()
+            if repo in active_repos
+        }
+
+        # Preserve existing release data for repos with transient fetch failures,
+        # while dropping repos that are no longer used by any WLED entry.
+        first_error: WLEDError | None = None
+        success_count = 0
+        for repo in active_repos:
+            try:
+                releases_by_repo[repo] = await WLEDReleases(
+                    repo=repo,
+                    session=async_get_clientsession(self.hass),
+                ).releases()
+            except WLEDError as error:
+                first_error = first_error or error
+                self.logger.warning(
+                    "Error fetching WLED releases for repo %s: %s", repo, error
+                )
+            else:
+                success_count += 1
+
+        if active_repos and not success_count:
+            assert first_error is not None
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_response_github_error",
-                translation_placeholders={"error": str(error)},
-            ) from error
+                translation_placeholders={"error": str(first_error)},
+            ) from first_error
+
+        return releases_by_repo

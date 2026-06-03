@@ -2,19 +2,22 @@
 
 from typing import Any, cast
 
+from wled import Releases
+
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import async_get_releases_coordinator
+from . import WLED_KEY
 from .coordinator import (
     WLEDConfigEntry,
     WLEDDataUpdateCoordinator,
     WLEDReleasesDataUpdateCoordinator,
+    normalize_repo,
 )
 from .entity import WLEDEntity
 from .helpers import wled_exception_handler
@@ -28,10 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED update based on a config entry."""
-    releases_coordinator = await async_get_releases_coordinator(
-        hass, entry.runtime_data.data.info.repo
-    )
-    async_add_entities([WLEDUpdateEntity(entry.runtime_data, releases_coordinator)])
+    async_add_entities([WLEDUpdateEntity(entry.runtime_data, hass.data[WLED_KEY])])
 
 
 class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
@@ -62,14 +62,51 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         await super().async_added_to_hass()
         self.async_on_remove(
             self.releases_coordinator.async_add_listener(
-                self._handle_coordinator_update
+                self._handle_releases_coordinator_update
             )
         )
+        await self.releases_coordinator.async_set_repo(
+            self.coordinator.config_entry.entry_id, self._repo
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the device coordinator."""
+        self.hass.async_create_task(
+            self.releases_coordinator.async_set_repo(
+                self.coordinator.config_entry.entry_id, self._repo
+            )
+        )
+        super()._handle_coordinator_update()
+
+    @callback
+    def _handle_releases_coordinator_update(self) -> None:
+        """Handle updated data from the releases coordinator."""
+        self.async_write_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When removed from hass."""
+        self.releases_coordinator.async_unset_repo(
+            self.coordinator.config_entry.entry_id
+        )
+        await super().async_will_remove_from_hass()
+
+    @property
+    def _repo(self) -> str:
+        """Return the repo to fetch releases for."""
+        return normalize_repo(getattr(self.coordinator.data.info, "repo", None))
+
+    @property
+    def _release_info(self) -> Releases | None:
+        """Return the release info for the current repo."""
+        if (releases_by_repo := self.releases_coordinator.data) is None:
+            return None
+        return releases_by_repo.get(self._repo)
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.releases_coordinator.last_update_success
+        return super().available and self._release_info is not None
 
     @property
     def installed_version(self) -> str | None:
@@ -81,8 +118,7 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        releases = self.releases_coordinator.data
-        if releases is None:
+        if (releases := self._release_info) is None:
             return None
 
         # If we already run a pre-release, we consider being on the beta channel.
@@ -108,9 +144,7 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         """URL to the full release notes of the latest version available."""
         if (version := self.latest_version) is None:
             return None
-        if (releases := self.releases_coordinator.data) is None:
-            return None
-        return f"https://github.com/{releases.repo}/releases/tag/v{version}"
+        return f"https://github.com/{self._repo}/releases/tag/v{version}"
 
     @wled_exception_handler
     async def async_install(
@@ -120,7 +154,7 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         if version is None:
             # We cast here, as we know that the latest_version is a string.
             version = cast(str, self.latest_version)
-        await self.coordinator.wled.upgrade(version=version)
+        await self.coordinator.wled.upgrade(version=version, repo=self._repo)
         await self.coordinator.async_refresh()
 
     async def async_update(self) -> None:

@@ -143,7 +143,7 @@ async def test_update_stay_stable(
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
-    mock_wled.upgrade.assert_called_with(version="0.99.0")
+    mock_wled.upgrade.assert_called_with(version="0.99.0", repo="wled/WLED")
 
 
 @pytest.mark.parametrize("device_fixture", ["rgbw"])
@@ -169,7 +169,7 @@ async def test_update_beta_to_stable(
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
-    mock_wled.upgrade.assert_called_with(version="0.99.0")
+    mock_wled.upgrade.assert_called_with(version="0.99.0", repo="wled/WLED")
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
@@ -194,7 +194,7 @@ async def test_update_stay_beta(
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
-    mock_wled.upgrade.assert_called_with(version="1.0.0b5")
+    mock_wled.upgrade.assert_called_with(version="1.0.0b5", repo="wled/WLED")
 
 
 async def test_update_entities(
