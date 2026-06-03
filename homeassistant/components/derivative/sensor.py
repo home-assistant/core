@@ -178,7 +178,7 @@ async def async_setup_platform(
         unit_time=config[CONF_UNIT_TIME],
         unique_id=config.get(CONF_UNIQUE_ID),
         max_sub_interval=config.get(CONF_MAX_SUB_INTERVAL),
-        replace_unavailable=config[CONF_REPLACE_UNAVAILABLE],
+        replace_unavailable=config.get(CONF_REPLACE_UNAVAILABLE, False),
     )
 
     async_add_entities([derivative])
@@ -336,7 +336,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
     def _handle_invalid_source_state(self, state: State | None) -> bool:
         # Handle source states that cannot be used directly for derivative
         # calculation.
-        # - Missing/unknown source state: mark this entity unavailable and write
+        # - Missing source state: mark this entity unavailable and write
         #   that availability change.
         # - Unknown source state: keep this entity available and write an unknown
         #   native value.
