@@ -384,10 +384,11 @@ async def test_ambiguous_account_title_raises(hass: HomeAssistant, setup_entry) 
     assert await hass.config_entries.async_setup(twin.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(ServiceValidationError, match="titled 'Main'"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SVC_DISPATCH_POLICE,
             {"entry_delay_seconds": 0, "account": "Main"},
             blocking=True,
         )
+    assert err.value.translation_key == "ambiguous_account_title"

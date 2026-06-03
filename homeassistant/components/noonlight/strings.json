@@ -32,7 +32,7 @@
           "location_id": "Label for this property if you run multiple, e.g. 'Site A' or 'Lake House'. Sent to Noonlight with every alarm so you can tell which site raised it. Leave blank if you only have one.",
           "name": "Name responders should ask for, e.g. Jane Doe.",
           "phone": "Callback number. Any common US format works — (202) 555-0142, 202-555-0142, or +12025550142 — and is stored as +12025550142.",
-          "state": "Two-letter US state/territory code, e.g. VA (not 'Virginia' or 'va').",
+          "state": "Two-letter US state/territory code, e.g. VA. Lowercase such as 'va' is accepted and uppercased automatically; full names such as 'Virginia' are not accepted.",
           "zip": "5-digit US ZIP, e.g. 62704 (ZIP+4 like 62704-1234 also accepted)."
         },
         "description": "Sent to Noonlight with every dispatch so responders know who and where. Phone, state, and ZIP are validated now to avoid a confusing failure later, at dispatch time.",
@@ -139,6 +139,26 @@
       "last_health_check": {
         "name": "Last health check"
       }
+    }
+  },
+  "exceptions": {
+    "account_not_found": {
+      "message": "No Noonlight account matches \"{account}\"."
+    },
+    "account_required": {
+      "message": "More than one Noonlight account is configured. Set the \"account\" field to choose one."
+    },
+    "ambiguous_account_title": {
+      "message": "More than one Noonlight account is titled \"{account}\". Use the entry ID instead to choose one."
+    },
+    "no_accounts_loaded": {
+      "message": "No Noonlight accounts are loaded."
+    },
+    "no_granted_services": {
+      "message": "None of the requested Noonlight services are granted for account \"{account}\"."
+    },
+    "test_dispatch_failed": {
+      "message": "Noonlight test dispatch failed: {error}"
     }
   },
   "issues": {

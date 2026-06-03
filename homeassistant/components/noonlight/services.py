@@ -67,7 +67,9 @@ def _resolve_coordinator(
         if entry.state is ConfigEntryState.LOADED
     ]
     if not entries:
-        raise ServiceValidationError("No Noonlight accounts are loaded")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="no_accounts_loaded"
+        )
 
     account = call.data.get(ATTR_ACCOUNT)
     if account is not None:
@@ -81,17 +83,22 @@ def _resolve_coordinator(
             matches = [e for e in entries if e.title == account]
             if len(matches) > 1:
                 raise ServiceValidationError(
-                    f"Multiple Noonlight accounts are titled '{account}'; "
-                    "specify the entry id instead"
+                    translation_domain=DOMAIN,
+                    translation_key="ambiguous_account_title",
+                    translation_placeholders={"account": account},
                 )
             entry = matches[0] if matches else None
         if entry is None:
-            raise ServiceValidationError(f"No Noonlight account matches '{account}'")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="account_not_found",
+                translation_placeholders={"account": account},
+            )
         return entry.runtime_data
 
     if len(entries) > 1:
         raise ServiceValidationError(
-            "Multiple Noonlight accounts configured; specify 'account'"
+            translation_domain=DOMAIN, translation_key="account_required"
         )
     return entries[0].runtime_data
 
@@ -129,8 +136,9 @@ def _make_dispatch_handler(hass: HomeAssistant, requested: list[str]):
         services = [svc for svc in requested if svc in granted]
         if not services:
             raise ServiceValidationError(
-                "None of the requested Noonlight services are granted for "
-                f"account '{coordinator.entry.title}'"
+                translation_domain=DOMAIN,
+                translation_key="no_granted_services",
+                translation_placeholders={"account": coordinator.entry.title},
             )
         if len(services) < len(requested):
             _LOGGER.warning(
@@ -160,6 +168,10 @@ def _make_test_handler(hass: HomeAssistant):
         try:
             await coordinator.async_test_dispatch()
         except NoonlightError as err:
-            raise HomeAssistantError(f"Noonlight test dispatch failed: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="test_dispatch_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     return _handle

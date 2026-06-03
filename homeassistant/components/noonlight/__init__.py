@@ -5,6 +5,7 @@ import logging
 from noonlight_dispatch import (
     NoonlightAuthError,
     NoonlightConnectionError,
+    NoonlightError,
     NoonlightResponseError,
 )
 
@@ -54,6 +55,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoonlightConfigEntry) ->
             raise ConfigEntryNotReady(
                 f"Noonlight returned an unexpected response (HTTP {err.status_code})"
             ) from err
+    except NoonlightError as err:
+        # Any other Noonlight error during the probe: treat as not-ready and
+        # retry rather than letting it crash setup.
+        raise ConfigEntryNotReady("Could not reach Noonlight") from err
 
     entry.runtime_data = coordinator
 
