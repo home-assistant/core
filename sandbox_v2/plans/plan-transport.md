@@ -57,6 +57,26 @@ Transport (read_frame()->bytes|None, write_frame(bytes), close())
 Single source of truth; **generated `_pb2.py` + `_pb2.pyi` checked into the
 repo** (core has no build-time protoc — see Codegen below).
 
+**T2 refinements (locked 2026-06-03 — direct user direction):**
+- **Group fields the way HA organizes them.** `EntityDescription` (wire) gets
+  an `EntityInfo` sub-message (identity: HA's `EntityDescription` dataclass
+  fields + `DeviceInfo`) and an `InitialState` sub-message (runtime: initial
+  `state` + `capabilities` + initial `attributes`). Mirrors the HA mental
+  model, not the wire's historical flat shape.
+- **`ServiceResponse` is a typed message** (was `Struct` in the draft) so
+  every call-service response goes through the same typed envelope; the
+  dynamic payload sits inside it.
+- **`StateChanged` carries `Context`.** Was missing.
+- **Context handling — security model:** the wire only ever carries
+  `context_id` (a string). `parent_id` and `user_id` are NEVER on the wire
+  from sandbox → main. Main owns the authoritative `Context` objects; the
+  sandbox holds a local cache of `context_id → Context` populated by main
+  (e.g. when main pushes a state-changed / fire_event from a context the
+  sandbox needs to know about, or when a `call_service` originates on
+  sandbox and main mints + returns the resolved `context_id`). Sandbox
+  cannot fabricate `parent_id` / `user_id`; main resolves the context_id
+  to its own authoritative `Context` at dispatch time.
+
 ```proto
 syntax = "proto3";
 import "google/protobuf/struct.proto";
@@ -66,7 +86,7 @@ import "google/protobuf/struct.proto";
 // distinct without sentinel fields.
 message Frame {
   uint32 id = 1;            // 0 = push (no reply)
-  string type = 2;          // e.g. "sandbox_v2/register_entity"
+  string type = 2;          // e.g. "sandbox_v2/register_entity"; set on responses too
   oneof body {
     bytes request = 3;      // serialized request message (call or push)
     Response response = 4;
@@ -86,37 +106,80 @@ message Error {
 message InvalidError { string message = 1; repeated string path = 2; }
 
 // --- Typed payloads (known fields) ---
+
+// Outer wire message for register_entity. Sub-messages group by HA's own
+// organization: EntityInfo = identity; InitialState = runtime starting state.
 message EntityDescription {
-  string entry_id = 1; string domain = 2; string sandbox_entity_id = 3;
-  optional string unique_id = 4; optional string name = 5; optional string icon = 6;
-  bool has_entity_name = 7; optional string entity_category = 8;
-  optional string device_class = 9; int32 supported_features = 10;
-  google.protobuf.Struct capabilities = 11;          // dynamic → Struct
-  optional string initial_state = 12;
-  google.protobuf.Struct initial_attributes = 13;    // dynamic → Struct
-  optional DeviceInfo device_info = 14;
+  string entry_id = 1;
+  string domain = 2;
+  string sandbox_entity_id = 3;
+  optional string unique_id = 4;
+  bool has_entity_name = 5;
+  EntityInfo info = 6;
+  InitialState initial = 7;
 }
+
+// Identity: mirrors HA's homeassistant.helpers.entity.EntityDescription
+// dataclass + the entity's DeviceInfo. Nested `Description` keeps the
+// inner type unambiguous next to the outer `EntityDescription` wire type.
+message EntityInfo {
+  message Description {
+    optional string name = 1;
+    optional string icon = 2;
+    optional string entity_category = 3;
+    optional string device_class = 4;
+    int32 supported_features = 5;
+    optional string translation_key = 6;
+  }
+  optional Description description = 1;
+  optional DeviceInfo device_info = 2;
+}
+
+// Runtime starting state — everything HA needs to surface the entity for
+// the first time.
+message InitialState {
+  optional string state = 1;
+  google.protobuf.Struct capabilities = 2;   // dynamic → Struct
+  google.protobuf.Struct attributes = 3;     // dynamic → Struct
+}
+
 message DeviceInfo { /* identifiers, connections, name, manufacturer, model,
   sw_version, hw_version, via_device, entry_type, configuration_url, ... — all
   known DeviceInfo TypedDict keys as explicit fields */ }
+
 message CallService {
   string domain = 1; string service = 2;
   google.protobuf.Struct target = 3;        // dynamic → Struct
   google.protobuf.Struct service_data = 4;  // dynamic → Struct
-  optional string context_id = 5; bool return_response = 6;
+  optional string context_id = 5;           // wire-safe: only the id
+  bool return_response = 6;
 }
+message ServiceResponse {
+  google.protobuf.Struct data = 1;          // dynamic → Struct
+}
+message CallServiceResult {
+  optional ServiceResponse response = 1;    // unset when return_response was false
+}
+
+// Context never crosses with parent_id / user_id from sandbox. Wire-safe
+// is the id only; main resolves to its authoritative Context.
 message StateChanged {
   string sandbox_entity_id = 1; string state = 2;
   google.protobuf.Struct attributes = 3;    // dynamic → Struct
+  optional string context_id = 4;
 }
+
 message FlowResult {
   string type = 1; optional string flow_id = 2; optional string step_id = 3;
   google.protobuf.ListValue data_schema = 4;   // serialized voluptuous → ListValue
   bool has_data_schema = 5; google.protobuf.Struct errors = 6;
   google.protobuf.Struct context = 7; /* ...title/data/reason/placeholders... */
 }
-// + EntrySetup, RegisterService, FireEvent, StoreLoad/Save/Remove, Shutdown,
-//   RegisterEntityResult{entity_id}, Ready{} ...
+
+// FireEvent also carries only context_id, never the full Context.
+// + EntrySetup, RegisterService, FireEvent (with optional context_id),
+//   StoreLoad/Save/Remove, Shutdown, RegisterEntityResult{entity_id},
+//   Ready{} ...
 ```
 
 - **Dynamic-field rule:** `service_data`, `target`, state `attributes`,
@@ -125,6 +188,15 @@ message FlowResult {
   Everything else is an explicit field.
 - **Dispatch stays string-keyed** (`type`), so adding a message = add a proto
   message + register a handler; no change to the dispatch core.
+- **Context discipline (security):** `parent_id` and `user_id` are NEVER
+  serialized on any outbound message from sandbox. Wire types that today
+  carry `Context` carry `context_id` only. Sandbox-side caching is
+  out-of-band — a small in-runtime `context_id → Context` dict main
+  populates when relevant (e.g. when pushing a state-changed for an entity
+  whose context originated on main). Main resolves `context_id` to its own
+  Context at the dispatch site; if no such Context exists in main's
+  registry, main mints one attributed to the sandbox's system user (no
+  parent_id) and registers it.
 
 ## Codec & handler boundary  — DECIDED: typed handlers
 
@@ -219,7 +291,11 @@ Implications:
 - **T3 — Unix socket transport.** `UnixSocketTransport` (reuses
   `StreamTransport` framing), manager-side socket creation + subprocess wiring,
   url-scheme selection, tests.
-- **T4 — WebSocket transport. DEFERRED** to the share-states connection work
+- **T4 — WebSocket transport. COMPLETELY OUT OF SCOPE** for this effort
+  (re-confirmed 2026-06-03). Focus is stdio + unix socket only. The
+  `Transport` Protocol that T1 already shipped is shape-compatible with a
+  future `WebSocketTransport`, but no WS code, no WS deps, no WS auth
+  surface lands in this batch. Lifts to the share-states work.
   (builds + security-reviews the main-side WS auth endpoint once, alongside the
   subscription protocol it's for). The `Transport` seam from T1 accepts a
   `WebSocketTransport` drop-in when that lands.
