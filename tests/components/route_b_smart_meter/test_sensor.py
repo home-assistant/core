@@ -3,7 +3,7 @@
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
-from momonga import MomongaError
+from momonga import MomongaError, MomongaNeedToReopen
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.route_b_smart_meter.const import DEFAULT_SCAN_INTERVAL
@@ -79,8 +79,9 @@ async def test_recovery_reopen_session(
 
     # Simulate session closed error on next update
     client = mock_momonga.return_value
+    initial_open_count = client.open.call_count
     client.get_instantaneous_current.side_effect = [
-        RuntimeError("session not open"),
+        MomongaNeedToReopen("session not open"),
         {"r phase current": 10, "t phase current": 20},
     ]
 
@@ -89,7 +90,7 @@ async def test_recovery_reopen_session(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify api.open() was called and data was updated
-    assert client.open.call_count == 2  # Once in setup, once in recovery
+    assert client.open.call_count == initial_open_count + 1
     assert hass.states.get(entity_id).state == "10"
 
 
@@ -126,7 +127,7 @@ async def test_recovery_unhandled_runtime_error(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that a generic RuntimeError is not swallowed."""
+    """Test that a generic RuntimeError is wrapped in UpdateFailed and sets state to unavailable."""
     entity_id = (
         "sensor.route_b_smart_meter_"
         "01234567890123456789012345f789_"

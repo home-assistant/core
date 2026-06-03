@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 import time
 
-from momonga import Momonga, MomongaError
+from momonga import Momonga, MomongaError, MomongaNeedToReopen
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
@@ -109,15 +109,13 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
         def fetch_with_reopen() -> BRouteData:
             try:
                 return self._get_data()
-            except RuntimeError as err:
-                if "not open" in str(err):
-                    _LOGGER.info(
-                        "Route-B API is closed (likely from a previous recovery). "
-                        "Reopening session"
-                    )
-                    self.api.open()
-                    return self._get_data()
-                raise
+            except MomongaNeedToReopen:
+                _LOGGER.info(
+                    "Route-B API is closed (likely from a previous recovery). "
+                    "Reopening session"
+                )
+                self.api.open()
+                return self._get_data()
 
         try:
             return await self.hass.async_add_executor_job(fetch_with_reopen)
@@ -128,7 +126,7 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
             )
             try:
                 await self.hass.async_add_executor_job(self.api.close)
-                _LOGGER.warning(
+                _LOGGER.info(
                     "Serial port closed cleanly; ready for the next polling cycle"
                 )
             except Exception:
