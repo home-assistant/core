@@ -98,7 +98,6 @@ def _entity_keys(hass: HomeAssistant, entry: MockConfigEntry) -> set[str]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 async def test_setup_entry(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, config_entry
 ) -> None:
@@ -137,7 +136,6 @@ async def test_setup_entry(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 async def test_discovered_sensor(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, config_entry
 ) -> None:
@@ -163,7 +161,6 @@ async def test_discovered_sensor(
     assert len(entries_after_second) == 10
 
 
-@pytest.mark.asyncio
 async def test_discovered_sensor_with_no_role_creates_only_universal_entities(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, config_entry
 ) -> None:
@@ -184,7 +181,6 @@ async def test_discovered_sensor_with_no_role_creates_only_universal_entities(
     assert len(registered) == universal_count
 
 
-@pytest.mark.asyncio
 async def test_role_update_for_unknown_mac_persists_role(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, config_entry
 ) -> None:
@@ -209,7 +205,6 @@ async def test_role_update_for_unknown_mac_persists_role(
     assert updated_data.get(CFG_ROLES, {}).get(MAC) == "house-net"
 
 
-@pytest.mark.asyncio
 async def test_role_change_adds_role_specific_entities(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, config_entry
 ) -> None:
@@ -272,7 +267,6 @@ async def test_role_change_adds_role_specific_entities(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 async def test_vhh_mains_entities_created_when_housenet_sensor_present(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -310,7 +304,6 @@ async def test_vhh_mains_entities_created_when_housenet_sensor_present(
     )
 
 
-@pytest.mark.asyncio
 async def test_vhh_mains_entities_not_duplicated_on_second_update_vhh_signal(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -348,7 +341,6 @@ async def test_vhh_mains_entities_not_duplicated_on_second_update_vhh_signal(
     )
 
 
-@pytest.mark.asyncio
 async def test_vhh_solar_entities_created_when_solar_sensor_discovered(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -402,7 +394,6 @@ async def test_vhh_solar_entities_created_when_solar_sensor_discovered(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 async def test_handle_discovered_plug_creates_entities(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, config_entry
 ) -> None:
@@ -422,7 +413,6 @@ async def test_handle_discovered_plug_creates_entities(
     assert len(registered) == len(PLUG_DESCRIPTIONS)
 
 
-@pytest.mark.asyncio
 async def test_handle_discovered_plug_creates_entities_once_on_duplicate_signal(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, config_entry
 ) -> None:
@@ -449,7 +439,6 @@ async def test_handle_discovered_plug_creates_entities_once_on_duplicate_signal(
     assert second_count == first_count
 
 
-@pytest.mark.asyncio
 async def test_role_update_for_plug_mac_persists_role_but_creates_no_entities(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, config_entry
 ) -> None:
@@ -480,7 +469,6 @@ async def test_role_update_for_plug_mac_persists_role_but_creates_no_entities(
     assert updated_data.get(CFG_ROLES, {}).get(MAC) == "house-net"
 
 
-@pytest.mark.asyncio
 async def test_role_update_for_plug_persists_appliance_role(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, config_entry
 ) -> None:
@@ -527,7 +515,6 @@ async def test_role_update_for_plug_persists_appliance_role(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 async def test_role_change_to_appliance_persists_role(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, config_entry
 ) -> None:
@@ -565,7 +552,6 @@ async def test_role_change_to_appliance_persists_role(
     )
 
 
-@pytest.mark.asyncio
 async def test_solar_reload_scheduled_when_vhh_has_no_solar(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:

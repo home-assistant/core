@@ -15,11 +15,6 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
-    """Placeholder fixture that is a no-op for enabling custom integrations."""
-
-
-@pytest.fixture(autouse=True)
 def no_zeroconf() -> Generator[None]:
     """Prevent the zeroconf component from setting up (it opens real sockets).
 

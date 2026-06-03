@@ -46,7 +46,6 @@ def mock_config():
 ### Tests ################################################
 
 
-@pytest.mark.asyncio
 async def test_generic_powersensor_entity(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, mock_config
 ) -> None:
@@ -94,7 +93,6 @@ async def test_generic_powersensor_entity(
     # covered by test_powersensor_sensor_handle_role_update.
 
 
-@pytest.mark.asyncio
 async def test_powersensor_sensor_default_name(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -147,7 +145,6 @@ async def test_powersensor_sensor_default_name(
     )
 
 
-@pytest.mark.asyncio
 async def test_powersensor_base_entity_async_added_to_hass_connects_data_signal_only(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, mock_config
 ) -> None:
@@ -185,7 +182,6 @@ async def test_powersensor_base_entity_async_added_to_hass_connects_data_signal_
     )
 
 
-@pytest.mark.asyncio
 async def test_powersensor_sensor_entity_device_info(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -203,7 +199,6 @@ async def test_powersensor_sensor_entity_device_info(
     assert info["translation_placeholders"] is not None
 
 
-@pytest.mark.asyncio
 async def test_powersensor_plug_entity_device_info(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -221,7 +216,6 @@ async def test_powersensor_plug_entity_device_info(
     assert info["translation_placeholders"] is not None
 
 
-@pytest.mark.asyncio
 async def test_powersensor_household_entity_device_info(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -240,7 +234,6 @@ async def test_powersensor_household_entity_device_info(
     assert (DOMAIN, "vhh") in info["identifiers"]
 
 
-@pytest.mark.asyncio
 async def test_powersensor_virtual_household(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -307,7 +300,6 @@ async def test_powersensor_virtual_household(
     assert energy_from_grid.entity_description.event in unsubscribed_events
 
 
-@pytest.mark.asyncio
 async def test_powersensor_household_entity_formatter_is_applied(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -333,7 +325,6 @@ async def test_powersensor_household_entity_formatter_is_applied(
     )
 
 
-@pytest.mark.asyncio
 async def test_powersensor_household_entity_missing_message_key_is_ignored(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -356,7 +347,6 @@ async def test_powersensor_household_entity_missing_message_key_is_ignored(
     write_state.assert_not_called()
 
 
-@pytest.mark.asyncio
 async def test_powersensor_household_entity_unique_id_uses_event(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -376,7 +366,6 @@ async def test_powersensor_household_entity_unique_id_uses_event(
         seen_ids.add(uid)
 
 
-@pytest.mark.asyncio
 async def test_entity_removal(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -407,7 +396,6 @@ async def test_entity_removal(
     mock_cancel.assert_called_once_with()  # still exactly one call
 
 
-@pytest.mark.asyncio
 async def test_powersensor_sensor_handle_role_update(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -453,7 +441,6 @@ async def test_powersensor_sensor_handle_role_update(
     write_state.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_powersensor_entity_handle_update(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, mock_config
 ) -> None:
@@ -491,7 +478,6 @@ async def test_powersensor_entity_handle_update(
     assert entity2.native_value == 123_456_789
 
 
-@pytest.mark.asyncio
 async def test_schedule_unavailable_cancels_existing_timer(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, mock_config
 ) -> None:
@@ -530,7 +516,6 @@ async def test_schedule_unavailable_cancels_existing_timer(
     assert entity._remove_unavailability_tracker is not None
 
 
-@pytest.mark.asyncio
 async def test_schedule_unavailable_before_hass_is_set_does_not_raise(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, mock_config
 ) -> None:
@@ -552,7 +537,6 @@ async def test_schedule_unavailable_before_hass_is_set_does_not_raise(
         )
 
 
-@pytest.mark.asyncio
 async def test_volts_to_battery_pct(hass: HomeAssistant) -> None:
     """Test _volts_to_battery_pct boundary and midpoint values."""
 
@@ -570,7 +554,6 @@ async def test_volts_to_battery_pct(hass: HomeAssistant) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 async def test_handle_role_update_no_rename_skips_device_registry(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -599,7 +582,6 @@ async def test_handle_role_update_no_rename_skips_device_registry(
     write_state.assert_not_called()
 
 
-@pytest.mark.asyncio
 async def test_handle_update_normalises_role_hyphen(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -619,7 +601,6 @@ async def test_handle_update_normalises_role_hyphen(
     assert entity.native_value == "house_net"
 
 
-@pytest.mark.asyncio
 async def test_plug_entity_rename_based_on_role_returns_false(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -148,7 +148,7 @@ async def test_zeroconf_two_plugs(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     validate_config_data(result["data"])
 
-    # # we expect the second plug config flow to get canceled if the integration has already been configured
+    # we expect the second plug config flow to get canceled if the integration has already been configured
     assert second_result["type"] == FlowResultType.ABORT
 
 

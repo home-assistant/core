@@ -204,29 +204,37 @@ class PowersensorMessageDispatcher:
 
         persisted_role = _filter_unknown(self._entry.data.get(CFG_ROLES, {}).get(mac))
 
-        message["role"] = persisted_role if role is None else role
+        # Compute the effective role without mutating the library's dict.
+        # When the device reports no role (or ROLE_UNKNOWN), fall back to the
+        # persisted role so downstream entities see a stable value.
+        effective_role = persisted_role if role is None else role
 
         if role is not None and role != persisted_role:
             self.sensors[mac] = role
             async_dispatcher_send(self._hass, ROLE_UPDATE_SIGNAL, mac, role)
 
+        # Build the outbound message with the effective role injected.
+        # We construct a new dict rather than mutating the library's original
+        # so that the library can safely reuse or log the original payload.
+        outbound = {**message, "role": effective_role}
+
         if event_type == "average_power":
-            await self._vhh.process_average_power_event(message)
+            await self._vhh.process_average_power_event(outbound)
         elif event_type == "summation_energy":
-            await self._vhh.process_summation_event(message)
+            await self._vhh.process_summation_event(outbound)
 
         async_dispatcher_send(
             self._hass,
             f"{DATA_UPDATE_SIGNAL_PREFIX}{mac}_{event_type}",
             event_type,
-            message,
+            outbound,
         )
 
         async_dispatcher_send(
             self._hass,
             f"{DATA_UPDATE_SIGNAL_PREFIX}{mac}_role",
             "role",
-            {"role": message["role"]},
+            {"role": effective_role},
         )
 
     # ------------------------------------------------------------------

@@ -1,7 +1,7 @@
 """Tests for initial setup, migration, and teardown of the Powersensor component."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -301,18 +301,34 @@ async def test_rescan_fires_devices_rescan(
         await hass.async_block_till_done()
 
     assert captured_rescan_cb, "async_track_time_interval was never called"
+
+    # Reset the mock before invoking the captured callback: setup already called
+    # rescan() directly via the is_running branch, so the count is non-zero here.
+    mock_devices.rescan.reset_mock()
     await captured_rescan_cb[0](None)
 
     mock_devices.rescan.assert_awaited_once()
 
 
-async def test_hass_started_event_triggers_rescan(
+async def test_hass_already_running_triggers_rescan_directly(
     hass: HomeAssistant,
     def_config_entry,
 ) -> None:
-    """Test that EVENT_HOMEASSISTANT_STARTED triggers a rescan."""
+    """Test that setup calls rescan directly when HA is already running.
+
+    When the integration is added or re-added after HA has fully started
+    (hass.is_running is True), EVENT_HOMEASSISTANT_STARTED will never fire
+    again.  The fix bypasses the listener and calls devices.rescan() directly
+    during setup, so the startup rescan still happens without registering a
+    one-shot listener whose unsubscribe token would error on unload.
+
+    The HA test harness runs hass in CoreState.running, so this test exercises
+    the is_running=True branch without any extra patching.
+    """
     def_config_entry.add_to_hass(hass)
     mock_devices = def_config_entry.runtime_data.devices
+
+    assert hass.is_running, "hass fixture must be in running state for this test"
 
     with patch(
         "homeassistant.components.powersensor_au.PowersensorDevices",
@@ -321,9 +337,86 @@ async def test_hass_started_event_triggers_rescan(
         assert await hass.config_entries.async_setup(def_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    mock_devices.rescan.reset_mock()
+    # rescan() is called directly during setup (not via event listener).
+    mock_devices.rescan.assert_awaited()
 
+    # Confirm no listener was registered: firing the event now must NOT
+    # trigger another rescan call.
+    call_count_after_setup = mock_devices.rescan.await_count
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
+    assert mock_devices.rescan.await_count == call_count_after_setup, (
+        "Firing EVENT_HOMEASSISTANT_STARTED must not trigger an extra rescan "
+        "when hass.is_running was True at setup time"
+    )
+
+
+async def test_hass_not_yet_running_registers_listener_for_rescan(
+    hass: HomeAssistant,
+    def_config_entry,
+) -> None:
+    """Test that setup registers an event listener when HA is still starting.
+
+    When the integration loads during HA startup (hass.is_running is False),
+    it must register a one-shot EVENT_HOMEASSISTANT_STARTED listener so the
+    startup rescan fires once HA is fully up.  The listener must then be
+    cleaned up via entry.async_on_unload so that unloading doesn't error.
+    """
+    def_config_entry.add_to_hass(hass)
+    mock_devices = def_config_entry.runtime_data.devices
+
+    with (
+        patch(
+            "homeassistant.components.powersensor_au.PowersensorDevices",
+            return_value=mock_devices,
+        ),
+        patch.object(
+            type(hass), "is_running", new_callable=PropertyMock, return_value=False
+        ),
+    ):
+        assert await hass.config_entries.async_setup(def_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # rescan() must NOT have been called directly during setup.
+        mock_devices.rescan.assert_not_awaited()
+
+        # Firing the event should now trigger rescan via the registered listener.
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     mock_devices.rescan.assert_awaited_once()
+
+
+async def test_rescan_does_not_fire_when_unloaded(
+    hass: HomeAssistant,
+    def_config_entry,
+) -> None:
+    """_rescan is a no-op after the entry has been unloaded."""
+    def_config_entry.add_to_hass(hass)
+    mock_devices = def_config_entry.runtime_data.devices
+
+    captured_rescan_cb = []
+
+    def capture_interval(hass_arg, cb, interval):
+        captured_rescan_cb.append(cb)
+        return lambda: None
+
+    with (
+        patch(
+            "homeassistant.components.powersensor_au.PowersensorDevices",
+            return_value=mock_devices,
+        ),
+        patch(
+            "homeassistant.components.powersensor_au.async_track_time_interval",
+            side_effect=capture_interval,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(def_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(def_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_devices.rescan.reset_mock()
+    await captured_rescan_cb[0](None)
+
+    mock_devices.rescan.assert_not_awaited()

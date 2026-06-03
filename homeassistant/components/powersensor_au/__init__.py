@@ -1,7 +1,9 @@
 """The Powersensor integration."""
 
+from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
+from types import SimpleNamespace
 
 from powersensor_local import VirtualHousehold
 from powersensor_local.devices import PowersensorDevices
@@ -59,8 +61,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowersensorConfigEntry) 
         await devices.stop()
         raise ConfigEntryNotReady(f"Failed to start device discovery: {err}") from err
 
+    # early teardown of the integration can sometimes lead to stranded async calls
+    # this guards against firing tasks after the tear down has already begun
+    _unloaded_status = SimpleNamespace(already_unloaded=False)
+
     async def _rescan(_now: datetime) -> None:
-        await devices.rescan()
+        if _unloaded_status.already_unloaded:
+            return
+        with suppress(TypeError):
+            await devices.rescan()
+
+    def _mark_unloaded() -> None:
+        _unloaded_status.already_unloaded = True
 
     # Short-interval one-shot rescans catch plugs that missed the initial
     # 2-second UDP window (e.g. still booting when HA started).
@@ -84,13 +96,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowersensorConfigEntry) 
     # duplicate connection is harmless — events simply arrive twice with the same
     # value.  The full recovery path is therefore fully guarded in this component.
     async def _on_hass_started(_event: Event) -> None:
-        _LOGGER.debug("HA started event — triggering Powersensor rescan")
-        await devices.rescan()
+        with suppress(TypeError):
+            await devices.rescan()
 
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_hass_started)
-    )
+    if hass.is_running:
+        # HA is already up (e.g. integration removed and re-added at runtime).
+        # EVENT_HOMEASSISTANT_STARTED will never fire again, so trigger the
+        # rescan directly.
+        _LOGGER.debug("HA already running — triggering Powersensor rescan immediately")
+        with suppress(TypeError):
+            await devices.rescan()
+    else:
+        # Use async_listen (not async_listen_once) so the 'unsubscribe' callable
+        # is always safe to call — async_listen_once self-removes when the event
+        # fires, leaving the token invalid and causing a ValueError on unload if
+        # the entry is torn down during the boot cycle before async_on_unload
+        # callbacks run.
+        entry.async_on_unload(
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, _on_hass_started)
+        )
 
+    entry.async_on_unload(_mark_unloaded)
     return True
 
 
@@ -111,9 +137,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.version > PowersensorConfigFlow.VERSION:
         return False
 
-    # update version unconditionally, given that all versions less than the current require this
-    # update and the only way to reach this code is by giving a config entry with version less than
-    # the current version.
+    # The custom-component predecessor stored device data under a different schema
+    # (CFG_DEVICES) with no CFG_ROLES key.  All pre-2.2 entries are reset to the
+    # current minimal schema; no role data is lost because none existed before 2.2.
     hass.config_entries.async_update_entry(
         entry,
         data={CFG_ROLES: {}},
