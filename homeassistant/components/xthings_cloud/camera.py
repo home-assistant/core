@@ -63,7 +63,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             model=device_data.get("model", "Unknown"),
             sw_version=device_data.get("version"),
         )
-        self._attr_supported_features = CameraEntityFeature.WEBRTC
+        self._attr_supported_features = CameraEntityFeature.STREAM
         self._cached_image: bytes | None = None
         self._cached_snapshot_url: str | None = None
         self._snapshot_task: Any | None = None
