@@ -559,8 +559,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.DRY)
         if (vendor_id, product_id) in SUPPORT_FAN_MODE_DEVICES:
             self._attr_hvac_modes.append(HVACMode.FAN_ONLY)
-        if (vendor_id, product_id) in SUPPORT_HEAT_COOL_MODE_DEVICES:
-            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
         if feature_map & ThermostatFeature.kAutoMode:
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
             # only enable temperature_range feature if the device actually supports that
@@ -569,6 +567,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 self._attr_supported_features |= (
                     ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
                 )
+        elif (vendor_id, product_id) in SUPPORT_HEAT_COOL_MODE_DEVICES:
+            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
         if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 

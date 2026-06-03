@@ -859,3 +859,11 @@ async def test_smart_tcl_portable_ac(
         value=2200,
     )
     matter_client.write_attribute.reset_mock()
+
+    # regression guard: if kAutoMode is set on this device (allowlist entry), the elif
+    # in _calculate_features must prevent HEAT_COOL from being appended twice
+    set_node_attribute(matter_node, 1, 513, 65532, 34)  # kCooling (2) | kAutoMode (32)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.smart_tcl_portable_ac")
+    assert state
+    assert state.attributes["hvac_modes"].count(HVACMode.HEAT_COOL) == 1
