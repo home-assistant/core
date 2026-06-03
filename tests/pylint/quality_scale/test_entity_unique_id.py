@@ -252,88 +252,42 @@ def test_handled(
         walker.walk(root_node)
 
 
-def test_ancestor_class_level(
-    linter: UnittestLinter,
-    entity_unique_id_checker: EntityUniqueIdChecker,
-    tmp_path: Path,
-) -> None:
-    """Subclass passes when an ancestor sets _attr_unique_id at class level."""
-    integration_dir = _make_integration(tmp_path)
-    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
-
-    astroid.parse(
-        """
+@pytest.mark.parametrize(
+    ("ancestor_code", "sensor_code"),
+    [
+        pytest.param(
+            """
 from homeassistant.helpers.entity import Entity
 
 class TestIntegrationBaseEntity(Entity):
     _attr_unique_id = "fixed_id"
 """,
-        "homeassistant.components.test_integration.eui_entity",
-    )
-
-    root_node = _parse(
-        """
+            """
 from homeassistant.components.test_integration.eui_entity import TestIntegrationBaseEntity
 
 class MySensor(TestIntegrationBaseEntity):
     pass
 """,
-        integration_dir,
-    )
-
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
-    with assert_no_messages(linter):
-        walker.walk(root_node)
-
-
-def test_ancestor_self_assign(
-    linter: UnittestLinter,
-    entity_unique_id_checker: EntityUniqueIdChecker,
-    tmp_path: Path,
-) -> None:
-    """Subclass passes when an ancestor sets _attr_unique_id via self in __init__."""
-    integration_dir = _make_integration(tmp_path)
-    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
-
-    astroid.parse(
-        """
+            id="ancestor_class_level",
+        ),
+        pytest.param(
+            """
 from homeassistant.helpers.entity import Entity
 
 class TestIntegrationBaseEntity(Entity):
     def __init__(self, key):
         self._attr_unique_id = key
 """,
-        "homeassistant.components.test_integration.eui_entity",
-    )
-
-    root_node = _parse(
-        """
+            """
 from homeassistant.components.test_integration.eui_entity import TestIntegrationBaseEntity
 
 class MySensor(TestIntegrationBaseEntity):
     pass
 """,
-        integration_dir,
-    )
-
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
-    with assert_no_messages(linter):
-        walker.walk(root_node)
-
-
-def test_ancestor_property(
-    linter: UnittestLinter,
-    entity_unique_id_checker: EntityUniqueIdChecker,
-    tmp_path: Path,
-) -> None:
-    """Subclass passes when an ancestor defines a unique_id property override."""
-    integration_dir = _make_integration(tmp_path)
-    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
-
-    astroid.parse(
-        """
+            id="ancestor_self_assign",
+        ),
+        pytest.param(
+            """
 from homeassistant.helpers.entity import Entity
 
 class TestIntegrationBaseEntity(Entity):
@@ -341,18 +295,49 @@ class TestIntegrationBaseEntity(Entity):
     def unique_id(self) -> str:
         return self._device.id
 """,
-        "homeassistant.components.test_integration.eui_entity",
-    )
-
-    root_node = _parse(
-        """
+            """
 from homeassistant.components.test_integration.eui_entity import TestIntegrationBaseEntity
 
 class MySensor(TestIntegrationBaseEntity):
     pass
 """,
-        integration_dir,
-    )
+            id="ancestor_property",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class TestIntegrationGenericBase[T](Entity):
+    _attr_unique_id = "x"
+""",
+            """
+from homeassistant.components.test_integration.eui_entity import TestIntegrationGenericBase
+
+class MySensor(TestIntegrationGenericBase[int]):
+    pass
+""",
+            id="generic_subscript_base",
+        ),
+    ],
+)
+def test_ancestor_satisfies_rule(
+    linter: UnittestLinter,
+    entity_unique_id_checker: EntityUniqueIdChecker,
+    tmp_path: Path,
+    ancestor_code: str,
+    sensor_code: str,
+) -> None:
+    """No warning when an ancestor module's class satisfies the rule.
+
+    The bare ``class MySensor(Base): pass`` subclass inherits whatever
+    the ancestor provides (class-level attribute, self-assigning
+    ``__init__``, ``unique_id`` property, or a generic-subscript base).
+    """
+    integration_dir = _make_integration(tmp_path)
+    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
+
+    astroid.parse(ancestor_code, "homeassistant.components.test_integration.eui_entity")
+    root_node = _parse(sensor_code, integration_dir)
 
     walker = ASTWalker(linter)
     walker.add_checker(entity_unique_id_checker)
@@ -578,52 +563,11 @@ class MySensor(Entity):
         walker.walk(root_node)
 
 
-def test_generic_subscript_base_sets_attr(
-    linter: UnittestLinter,
-    entity_unique_id_checker: EntityUniqueIdChecker,
-    tmp_path: Path,
-) -> None:
-    """PEP-695-style generic base ``Base[T]`` is recognised as an ancestor."""
-    integration_dir = _make_integration(tmp_path)
-    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
-
-    astroid.parse(
-        """
-from homeassistant.helpers.entity import Entity
-
-class TestIntegrationGenericBase[T](Entity):
-    _attr_unique_id = "x"
-""",
-        "homeassistant.components.test_integration.eui_entity",
-    )
-
-    root_node = _parse(
-        """
-from homeassistant.components.test_integration.eui_entity import TestIntegrationGenericBase
-
-class MySensor(TestIntegrationGenericBase[int]):
-    pass
-""",
-        integration_dir,
-    )
-
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
-    with assert_no_messages(linter):
-        walker.walk(root_node)
-
-
-def test_mixin_subclassed_in_same_module_ignored(
-    linter: UnittestLinter,
-    entity_unique_id_checker: EntityUniqueIdChecker,
-    tmp_path: Path,
-) -> None:
-    """Mixin base class is skipped if another class in the same module extends it."""
-    integration_dir = _make_integration(tmp_path)
-    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
-
-    root_node = _parse(
-        """
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
 from homeassistant.helpers.entity import Entity
 
 class MyClimateMixin(Entity):
@@ -632,8 +576,28 @@ class MyClimateMixin(Entity):
 class ActualEntity(MyClimateMixin):
     _attr_unique_id = "x"
 """,
-        integration_dir,
-    )
+            id="mixin_subclassed_in_same_module",
+        ),
+        pytest.param(
+            """
+class NotAnEntity:
+    pass
+""",
+            id="non_entity_class",
+        ),
+    ],
+)
+def test_class_not_subject_to_rule(
+    linter: UnittestLinter,
+    entity_unique_id_checker: EntityUniqueIdChecker,
+    tmp_path: Path,
+    code: str,
+) -> None:
+    """No warning for classes that aren't runtime entities subject to the rule."""
+    integration_dir = _make_integration(tmp_path)
+    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
+
+    root_node = _parse(code, integration_dir)
 
     walker = ASTWalker(linter)
     walker.add_checker(entity_unique_id_checker)
@@ -671,29 +635,6 @@ class SomethingUnrelated:
     walker = ASTWalker(linter)
     walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
-
-
-def test_non_entity_class_ignored(
-    linter: UnittestLinter,
-    entity_unique_id_checker: EntityUniqueIdChecker,
-    tmp_path: Path,
-) -> None:
-    """Class that does not inherit from Entity is ignored."""
-    integration_dir = _make_integration(tmp_path)
-    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
-
-    root_node = _parse(
-        """
-class NotAnEntity:
-    pass
-""",
-        integration_dir,
-    )
-
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
-    with assert_no_messages(linter):
         walker.walk(root_node)
 
 
@@ -874,31 +815,6 @@ def test_static_class_body_string_in_multi_entry_fires(
         walker.walk(root_node)
 
 
-def test_static_class_body_string_in_single_entry_passes(
-    linter: UnittestLinter,
-    entity_unique_id_checker: EntityUniqueIdChecker,
-    tmp_path: Path,
-) -> None:
-    """Single-config-entry integration: class-body string literal is fine."""
-    integration_dir = _make_integration(tmp_path, single_config_entry=True)
-    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
-
-    root_node = _parse(
-        """
-from homeassistant.helpers.entity import Entity
-
-class MySensor(Entity):
-    _attr_unique_id = "fixed_id"
-""",
-        integration_dir,
-    )
-
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
-    with assert_no_messages(linter):
-        walker.walk(root_node)
-
-
 def test_static_class_body_string_no_manifest_fires(
     linter: UnittestLinter,
     entity_unique_id_checker: EntityUniqueIdChecker,
@@ -926,10 +842,26 @@ class MySensor(Entity):
         walker.walk(root_node)
 
 
+_STATIC_CLASS_BODY_STRING = """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    _attr_unique_id = "fixed_id"
+"""
+
+
 @pytest.mark.parametrize(
-    "code",
+    ("single_config_entry", "rule_status", "code"),
     [
         pytest.param(
+            True,
+            "done",
+            _STATIC_CLASS_BODY_STRING,
+            id="single_entry_with_static_string",
+        ),
+        pytest.param(
+            False,
+            "done",
             """
 from homeassistant.helpers.entity import Entity
 
@@ -938,9 +870,11 @@ MY_CONST = "fixed"
 class MySensor(Entity):
     _attr_unique_id = MY_CONST
 """,
-            id="name_reference_not_flagged",
+            id="multi_entry_with_name_reference",
         ),
         pytest.param(
+            False,
+            "done",
             """
 from homeassistant.helpers.entity import Entity
 
@@ -948,46 +882,31 @@ class MySensor(Entity):
     def __init__(self, key):
         self._attr_unique_id = key
 """,
-            id="self_assign_string_not_flagged",
+            id="multi_entry_with_self_assign",
+        ),
+        pytest.param(
+            False,
+            "todo",
+            _STATIC_CLASS_BODY_STRING,
+            id="rule_status_todo",
         ),
     ],
 )
-def test_static_rule_only_targets_class_body_string_literals(
+def test_static_rule_does_not_warn(
     linter: UnittestLinter,
     entity_unique_id_checker: EntityUniqueIdChecker,
     tmp_path: Path,
+    single_config_entry: bool,
+    rule_status: str,
     code: str,
 ) -> None:
-    """W7424 only fires for literal strings at class body; references / self-assigns pass."""
-    integration_dir = _make_integration(tmp_path, single_config_entry=False)
-    _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
+    """W7424 stays silent for singleton integrations, non-literals, and gated-off cases."""
+    integration_dir = _make_integration(
+        tmp_path, single_config_entry=single_config_entry
+    )
+    _create_quality_scale(integration_dir, {"entity-unique-id": rule_status})
 
     root_node = _parse(code, integration_dir)
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
-    with assert_no_messages(linter):
-        walker.walk(root_node)
-
-
-def test_static_rule_gated_off_when_rule_not_done(
-    linter: UnittestLinter,
-    entity_unique_id_checker: EntityUniqueIdChecker,
-    tmp_path: Path,
-) -> None:
-    """When entity-unique-id is not 'done', W7424 doesn't fire either."""
-    integration_dir = _make_integration(tmp_path, single_config_entry=False)
-    _create_quality_scale(integration_dir, {"entity-unique-id": "todo"})
-
-    root_node = _parse(
-        """
-from homeassistant.helpers.entity import Entity
-
-class MySensor(Entity):
-    _attr_unique_id = "fixed_id"
-""",
-        integration_dir,
-    )
-
     walker = ASTWalker(linter)
     walker.add_checker(entity_unique_id_checker)
     with assert_no_messages(linter):
