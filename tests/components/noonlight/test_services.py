@@ -174,22 +174,31 @@ async def test_dispatch_passes_instructions_to_noonlight(
     assert payload["instructions"] == {"entry": "Front Door motion"}
 
 
+@respx.mock
 async def test_dispatch_ungranted_service_raises(
     hass: HomeAssistant, setup_entry
 ) -> None:
     """Calling a dispatch service that isn't granted is rejected."""
+    # Updating options reloads the entry, which re-runs the setup probe; mock
+    # it so the entry stays loaded and we exercise the granted-services check
+    # (not the no-entries path).
+    respx.get(url__regex=r".*/dispatch/v1/alarms/.*/status").mock(
+        return_value=Response(404)
+    )
     hass.config_entries.async_update_entry(
-        setup_entry, options={CONF_SERVICES_GRANTED: ["fire"]}
+        setup_entry,
+        options={**setup_entry.options, CONF_SERVICES_GRANTED: ["fire"]},
     )
     await hass.async_block_till_done()
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SVC_DISPATCH_POLICE,
             {"entry_delay_seconds": 0},
             blocking=True,
         )
+    assert err.value.translation_key == "no_granted_services"
 
 
 @respx.mock
