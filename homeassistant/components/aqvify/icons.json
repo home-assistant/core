@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "meter_value": {
+        "default": "mdi:water-well"
+      },
+      "water_level": {
+        "default": "mdi:water-well"
+      }
+    }
+  }
+}
