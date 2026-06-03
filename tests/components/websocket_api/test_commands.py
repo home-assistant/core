@@ -2869,6 +2869,83 @@ async def test_subscribe_condition(
 
 
 @pytest.mark.parametrize(
+    ("value_template", "expected_event"),
+    [
+        # Undefined variable used in a way that raises: forwarded as an error,
+        # with the underlying template error included.
+        (
+            "{{ trigger.to_state.attributes.event_type == 'double_press' }}",
+            {
+                "error": "In 'template' condition: UndefinedError: 'trigger' is undefined",
+                "template_errors": ["'trigger' is undefined"],
+            },
+        ),
+        # Undefined variable used in a way that only warns: the condition still
+        # evaluates to a result, but the template error is forwarded alongside it.
+        (
+            "{{ no_such_variable }}",
+            {"result": False, "template_errors": ["'no_such_variable' is undefined"]},
+        ),
+        # A single render emitting multiple errors forwards all of them.
+        (
+            "{{ foo }}{{ bar }}",
+            {
+                "result": False,
+                "template_errors": ["'foo' is undefined", "'bar' is undefined"],
+            },
+        ),
+    ],
+)
+async def test_subscribe_condition_template_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    value_template: str,
+    expected_event: dict[str, Any],
+) -> None:
+    """Test template errors are forwarded as events and don't spam the log."""
+    caplog.set_level(logging.WARNING)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "template",
+                "value_template": value_template,
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "id": subscription_id,
+        "type": "event",
+        "event": expected_event,
+    }
+
+    # Let the condition be evaluated a few more times
+    for _ in range(5):
+        freezer.tick(1.1)
+        await hass.async_block_till_done()
+
+    # The unchanged result/error is not re-sent; a ping is the next message
+    await websocket_client.send_json_auto_id({"type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "pong"
+
+    # The template error is forwarded, not logged
+    assert "Template variable warning" not in caplog.text
+    assert "Template variable error" not in caplog.text
+
+
+@pytest.mark.parametrize(
     ("condition", "expected_error"),
     [
         # Validated by the websocket command's schema
