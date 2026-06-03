@@ -232,6 +232,26 @@ async def test_unknown_account_raises(hass: HomeAssistant, setup_entry) -> None:
 
 
 @respx.mock
+async def test_blank_account_resolves_single_site(
+    hass: HomeAssistant, setup_entry
+) -> None:
+    """A blank/whitespace account is treated as 'single site', not an error."""
+    create = respx.post(_ALARMS).mock(
+        return_value=Response(201, json={"id": "abc123", "status": "ACTIVE"})
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SVC_DISPATCH_POLICE,
+        {"entry_delay_seconds": 0, "account": "   "},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert create.called
+    assert _coordinator(hass, setup_entry).data["state"] == "dispatched"
+
+
+@respx.mock
 async def test_test_dispatch_hits_sandbox(hass: HomeAssistant, setup_entry) -> None:
     """test_dispatch creates and immediately cancels a sandbox alarm."""
     create = respx.post(_ALARMS).mock(

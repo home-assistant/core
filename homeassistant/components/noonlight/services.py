@@ -71,7 +71,9 @@ def _resolve_coordinator(
             translation_domain=DOMAIN, translation_key="no_accounts_loaded"
         )
 
-    account = call.data.get(ATTR_ACCOUNT)
+    # Treat a blank/whitespace account as "not specified" so callers (e.g.
+    # blueprints) can always pass the field and leave it empty for a single site.
+    account = (call.data.get(ATTR_ACCOUNT) or "").strip() or None
     if account is not None:
         entry = next(
             (e for e in entries if e.entry_id == account),
