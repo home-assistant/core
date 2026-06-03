@@ -107,9 +107,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         except VerisureLoginError as ex:
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         except _TRANSIENT_VERISURE_ERRORS as ex:
-            raise UpdateFailed(
-                "Could not refresh Verisure session (transient)"
-            ) from ex
+            raise UpdateFailed("Could not refresh Verisure session (transient)") from ex
         except VerisureError as ex:
             raise UpdateFailed("Could not log in to Verisure") from ex
 
