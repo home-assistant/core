@@ -275,7 +275,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_SET_PRESET_MODE_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_SET_SWING_MODE_ACTION): selector.ActionSelector(),
             vol.Optional(
-                CONF_HVAC_MODE_LIST, default=[HVACMode.OFF, HVACMode.HEAT]
+                CONF_HVAC_MODE_LIST, default=[HVACMode.OFF.value, HVACMode.HEAT.value]
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[mode.value for mode in HVACMode],
@@ -332,7 +332,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             ),
             vol.Optional(CONF_PRESETS_FEATURES): selector.NumberSelector(
                 selector.NumberSelectorConfig(
-                    min=0, max=255,step=1, mode=selector.NumberSelectorMode.BOX
+                    min=0, max=255, step=1, mode=selector.NumberSelectorMode.BOX
                 )
             ),
             vol.Optional(CONF_MAX_ACTION): selector.NumberSelector(
