@@ -1,6 +1,5 @@
 """BleBox light entities implementation."""
 
-from datetime import timedelta
 import logging
 import math
 from typing import Any
@@ -24,11 +23,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
 from .const import LIGHT_MAX_KELVINS, LIGHT_MIN_KELVINS
+from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
+from .util import blebox_command
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -37,11 +38,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
+    coordinator = config_entry.runtime_data
     entities = [
-        BleBoxLightEntity(feature)
-        for feature in config_entry.runtime_data.features.get("lights", [])
+        BleBoxLightEntity(coordinator, feature)
+        for feature in coordinator.box.features.get("lights", [])
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 COLOR_MODE_MAP = {
@@ -61,9 +63,11 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     _attr_min_color_temp_kelvin = LIGHT_MIN_KELVINS
     _attr_max_color_temp_kelvin = LIGHT_MAX_KELVINS
 
-    def __init__(self, feature: blebox_uniapi.light.Light) -> None:
+    def __init__(
+        self, coordinator: BleBoxCoordinator, feature: blebox_uniapi.light.Light
+    ) -> None:
         """Initialize a BleBox light."""
-        super().__init__(feature)
+        super().__init__(coordinator, feature)
         if feature.effect_list:
             self._attr_supported_features = LightEntityFeature.EFFECT
 
@@ -165,6 +169,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
             return None
         return tuple(blebox_uniapi.light.Light.rgb_hex_to_rgb_list(rgbww_hex))
 
+    @blebox_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
 
@@ -224,6 +229,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
                     " effect list."
                 ) from exc
 
+    @blebox_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._feature.async_off()
