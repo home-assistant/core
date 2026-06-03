@@ -526,6 +526,10 @@ async def test_validate_input_unexpected_error(hass: HomeAssistant) -> None:
             "homeassistant.components.snmp.util.UdpTransportTarget.create",
             side_effect=PySnmpError,
         ),
+        patch(
+            "homeassistant.components.snmp.util.Udp6TransportTarget.create",
+            side_effect=PySnmpError,
+        ),
         pytest.raises(CannotConnect),
     ):
         await validate_input(
