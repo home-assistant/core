@@ -47,7 +47,7 @@ async def test_reconfigure_updates_caller_and_site(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "name": "Brent",
+            "name": "Jane Doe",
             # Loose input is normalized on the way in.
             CONF_PHONE: "(202) 555-0142",
             # Address + ZIP are unchanged so the address-based unique id still
@@ -76,7 +76,7 @@ async def test_reconfigure_rejects_bad_input(hass: HomeAssistant, setup_entry) -
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "name": "Brent",
+            "name": "Jane Doe",
             CONF_PHONE: "123",
             "address": "123 Main St",
             "city": "Springfield",
