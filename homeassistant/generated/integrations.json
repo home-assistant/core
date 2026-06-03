@@ -576,7 +576,7 @@
       "name": "Ambient Radio Weather Network",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "aseko_pool_live": {
       "name": "Aseko Pool Live",
@@ -1866,6 +1866,12 @@
       "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "envertech_evt800": {
+      "name": "ENVERTECH EVT800",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "environment_canada": {
       "name": "Environment Canada",
@@ -3228,6 +3234,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "imou": {
+      "name": "Imou",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "improv_ble": {
       "name": "Improv via BLE",
