@@ -219,6 +219,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="bad_value",
+                translation_placeholders={"error": str(exc)},
             ) from exc
 
         if effect is not None:
@@ -229,6 +230,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="effect_not_found",
+                    translation_placeholders={"error": str(exc)},
                 ) from exc
 
     @blebox_command
