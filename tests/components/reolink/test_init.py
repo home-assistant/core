@@ -1154,7 +1154,7 @@ async def test_firmware_update_delay(
     call_count: int,
 ) -> None:
     """Test delay of firmware update check."""
-    now = datetime.now(UTC)
+    now = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     check_delay = (
         now
         + timedelta(seconds=seconds)
