@@ -3,14 +3,10 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
-
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import WebRTCAnswer, WebRTCError, async_get_image
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 

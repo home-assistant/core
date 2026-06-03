@@ -4,6 +4,7 @@ import asyncio
 from typing import Any
 
 from ha_xthings_cloud import KvsSignalingClient
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     Camera,
@@ -19,7 +20,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from webrtc_models import RTCIceCandidateInit
 
 from .const import DOMAIN, LOGGER
 from .coordinator import XthingsCloudCoordinator
