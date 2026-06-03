@@ -81,3 +81,7 @@ async def test_unload_reports_failure_when_platform_unload_fails(
         hass.config_entries, "async_unload_platforms", return_value=False
     ):
         assert not await hass.config_entries.async_unload(setup_entry.entry_id)
+    # The failed unload skipped coordinator shutdown, leaving its refresh timer
+    # running; stop it so the test tears down cleanly.
+    await setup_entry.runtime_data.async_shutdown()
+    await hass.async_block_till_done()
