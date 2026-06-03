@@ -70,7 +70,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class LiveActivityEvent(StrEnum):
-    """ActivityKit lifecycle action the relay should apply to a Live Activity push."""
+    """Apple ActivityKit lifecycle action the relay should apply to a Live Activity push."""
 
     START = "start"
     UPDATE = "update"
@@ -257,7 +257,7 @@ class MobileAppNotificationService(BaseNotificationService):
     ) -> tuple[str, LiveActivityEvent] | None:
         """Return ``(token, event)`` for a Live Activity push, or ``None``.
 
-        Core needs to choose the ActivityKit route before calling the relay:
+        Core needs to choose the Apple ActivityKit route before calling the relay:
         updates and ends must use the stored per-activity token for the tag,
         while a new or expired tag must use the device's push-to-start token.
         """
