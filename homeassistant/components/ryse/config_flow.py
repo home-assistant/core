@@ -63,7 +63,7 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
             except Exception:
                 _LOGGER.exception("Unexpected error during bluetooth confirm")
-                errors["base"] = "unknown"
+                errors["base"] = "unexpected_error"
 
         self._set_confirm_only()
         self.context["title_placeholders"] = {"name": name}
@@ -101,7 +101,7 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 except Exception:
                     _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
+                    errors["base"] = "unexpected_error"
 
         current_ids = self._async_current_ids(include_ignore=False)
 
@@ -131,9 +131,17 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 async with asyncio.timeout(5.0):
                     if await is_pairing_ryse_device(device_info.address):
                         return device_info
-            except Exception as ex:  # noqa: BLE001
+            except TimeoutError as ex:
                 _LOGGER.debug(
-                    "Failed to check pairing status for %s: %s", device_info.address, ex
+                    "Timeout checking pairing status for %s: %s",
+                    device_info.address,
+                    ex,
+                )
+                return None
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error checking pairing status for %s",
+                    device_info.address,
                 )
                 return None
             return None

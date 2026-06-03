@@ -57,13 +57,15 @@ async def test_update_position_valid(
 
 
 async def test_async_open_close_and_set_cover(
-    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_device: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test open, close and set cover methods."""
     mock_device.send_open = AsyncMock()
     mock_device.send_close = AsyncMock()
     mock_device.send_set_position = AsyncMock()
     entity = RyseCoverEntity(mock_device, mock_config_entry)
+    entity.hass = hass
+    entity.async_write_ha_state = MagicMock()
 
     await entity.async_open_cover()
     await entity.async_close_cover()
@@ -188,8 +190,9 @@ async def test_entity_lifecycle(
     # Attach hass so base-class async_added_to_hass() can run without errors
     entity.hass = hass
 
-    # Mock async_on_remove to check registration
-    entity.async_on_remove = MagicMock()
+    # Spy on async_on_remove to check registration while preserving base behavior
+    original_on_remove = entity.async_on_remove
+    entity.async_on_remove = MagicMock(side_effect=original_on_remove)
 
     # Call added_to_hass
     await entity.async_added_to_hass()

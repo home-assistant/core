@@ -119,7 +119,7 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("raise_error", "expected_error"),
     [
-        (Exception("boom"), "unknown"),
+        (Exception("boom"), "unexpected_error"),
         (None, "cannot_connect"),
     ],
 )
@@ -226,7 +226,7 @@ async def test_async_step_bluetooth(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("raise_error", "error_text"),
     [
-        (Exception("boom"), "unknown"),
+        (Exception("boom"), "unexpected_error"),
         (None, "cannot_connect"),
     ],
 )
