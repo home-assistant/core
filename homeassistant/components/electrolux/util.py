@@ -1,5 +1,7 @@
 """Utility functions used by the Electrolux integration."""
 
+from homeassistant.helpers.entity import EntityDescription
+
 
 def round_to_multiple_of_step(value: float, step: float) -> float:
     """Utility function for rounding a value to the closest multiple of a step."""
@@ -21,3 +23,15 @@ def _convert_char_to_snake_case(char: str) -> str:
     if char.isspace():
         return "_"
     return char
+
+
+def get_submodule_entity_key(submodule: str, description: EntityDescription) -> str:
+    """Get the entity key for a submodule."""
+    return f"{convert_to_snake_case(submodule)}_{description.key}"
+
+
+def get_submodule_translation_key(
+    submodule: str, description: EntityDescription
+) -> str:
+    """Get the translation key for a submodule."""
+    return f"{convert_to_snake_case(submodule)}_{description.translation_key}"
