@@ -352,7 +352,7 @@ async def test_area_temperature_sensor(
     area_registry.async_update(area.id, temperature_entity_id=entity_entry.entity_id)
 
     # Test with temperature sensor set
-    # Test with invalid area, area name and area id
+    # Test with invalid area, valid area name and valid area id
     for test in [
         ("", None),
         (area.name, entity_entry.entity_id),
