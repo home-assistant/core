@@ -16,8 +16,8 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import Elke27DataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import Elke27DataUpdateCoordinator
 from .helpers import build_unique_id, unique_base
 from .hub import Elke27Hub
 from .models import Elke27ConfigEntry
