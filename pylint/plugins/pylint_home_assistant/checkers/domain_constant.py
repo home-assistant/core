@@ -27,7 +27,7 @@ _METHOD_CHECKS: list[tuple[str, str, ArgumentCheckInfo]] = [
     ("hass.config_entries.flow", "async_init", ArgumentCheckInfo(0, "handler")),
     ("hass.services", "async_call", ArgumentCheckInfo(0, "domain")),
     ("hass.services", "call", ArgumentCheckInfo(0, "domain")),
-    ("hass.states", "async_entity_ids", ArgumentCheckInfo(0, "domain", True)),
+    ("hass.states", "async_entity_ids", ArgumentCheckInfo(0, "domain_filter", True)),
 ]
 
 _DOMAIN_CONSTANTS: set[str] = {"DOMAIN", "domain"}
