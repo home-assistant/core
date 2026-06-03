@@ -131,6 +131,71 @@ async def test_setup_entry(
     mock_handler.assert_called_once_with()  # still exactly one call
 
 
+async def test_role_update_syncs_dispatcher_sensors_and_creates_vhh_entities(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """ROLE_UPDATE_SIGNAL from reconfigure must sync dispatcher.sensors and create VHH entities.
+
+    Scenario: a sensor is discovered with role=None (the normal case — the
+    library omits role from device_found).  The user opens the reconfigure
+    form and assigns house-net.  The signal arrives in sensor.py's
+    handle_role_update BEFORE any measurement event updates the dispatcher's
+    cache, so handle_role_update must update dispatcher.sensors itself.
+    Without that update, update_virtual_household_entities() sees None in
+    dispatcher.sensors.values() and skips creating VHH entities.
+    """
+    mock_devices = _make_mock_devices()
+    # Sensor discovered with no role yet.
+    mock_dispatcher = _make_mock_dispatcher(sensors={MAC: None})
+    entry = MockConfigEntry(domain=DOMAIN, version=2, minor_version=2)
+    entry.runtime_data = PowersensorRuntimeData(
+        vhh=VirtualHousehold(False),
+        dispatcher=mock_dispatcher,
+        devices=mock_devices,
+    )
+    entry.add_to_hass(hass)
+
+    def real_update_entry(ent, *, data, **kwargs):
+        object.__setattr__(ent, "data", data)
+
+    monkeypatch.setattr(hass.config_entries, "async_update_entry", real_update_entry)
+
+    with (
+        patch(
+            "homeassistant.components.powersensor_au.PowersensorDevices",
+            return_value=mock_devices,
+        ),
+        patch(
+            "homeassistant.components.powersensor_au.PowersensorMessageDispatcher",
+            return_value=mock_dispatcher,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Simulate reconfigure flow assigning house-net to the sensor.
+    async_dispatcher_send(hass, ROLE_UPDATE_SIGNAL, MAC, ROLE_HOUSENET)
+    for _ in range(5):
+        await hass.async_block_till_done()
+
+    # The dispatcher's in-memory cache must be updated immediately.
+    assert mock_dispatcher.sensors[MAC] == ROLE_HOUSENET, (
+        "handle_role_update must update dispatcher.sensors so that "
+        "update_virtual_household_entities() sees the new role"
+    )
+
+    # VHH mains entities must have been created without waiting for a measurement.
+    ent_reg = er.async_get(hass)
+    registered_unique_ids = {
+        e.unique_id for e in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+    }
+    expected_mains_keys = {f"{DOMAIN}_vhh_{d.event}" for d in CONSUMPTION_DESCRIPTIONS}
+    assert expected_mains_keys.issubset(registered_unique_ids), (
+        f"VHH mains entities not created after reconfigure role assignment: "
+        f"{expected_mains_keys - registered_unique_ids}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Sensor discovery
 # ---------------------------------------------------------------------------

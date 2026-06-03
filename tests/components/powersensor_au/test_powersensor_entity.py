@@ -601,6 +601,34 @@ async def test_handle_update_normalises_role_hyphen(
     assert entity.native_value == "house_net"
 
 
+async def test_handle_update_device_role_none_maps_to_unknown(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """device_role entity must show 'unknown' when the dispatcher sends role=None.
+
+    When a sensor has never been assigned a role, effective_role in the
+    dispatcher is None and the _role signal payload is {'role': None}.
+    The entity must store the string 'unknown' so that it always has a
+    valid state translation key in strings.json rather than a None state.
+    """
+    monkeypatch.setattr(PowersensorEntity, "async_write_ha_state", lambda self: None)
+    monkeypatch.setattr(PowersensorEntity, "_schedule_unavailable", lambda self: None)
+
+    entity = PowersensorSensorEntity(
+        "",
+        MAC,
+        None,
+        next(d for d in SENSOR_DESCRIPTIONS if d.key == "device_role"),
+    )
+
+    entity._handle_update("role", {"role": None})
+
+    assert entity.native_value == "unknown", (
+        "device_role entity must map None to 'unknown' so the state translation "
+        "key always resolves; got None instead"
+    )
+
+
 async def test_plug_entity_rename_based_on_role_returns_false(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:

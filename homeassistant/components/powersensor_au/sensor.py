@@ -510,11 +510,16 @@ class PowersensorEntity(SensorEntity):
             raw = message[desc.message_key]
             if desc.conversion_function:
                 self._attr_native_value = desc.conversion_function(raw)
-            elif desc.key == "device_role" and isinstance(raw, str):
+            elif desc.key == "device_role":
                 # State translation keys must be snake_case.  The wire value
                 # "house-net" is normalised to "house_net" so it matches the
                 # key in strings.json.  All other role strings are already valid.
-                self._attr_native_value = raw.replace("-", "_")
+                # None means the sensor has no role yet; map to "unknown" so the
+                # entity always has a valid translation key rather than a None state.
+                if raw is None:
+                    self._attr_native_value = "unknown"
+                else:
+                    self._attr_native_value = raw.replace("-", "_")
             else:
                 self._attr_native_value = raw
 
@@ -708,6 +713,16 @@ async def async_setup_entry(
             # Plugs always have ROLE_APPLIANCE — no entity creation needed here.
             return
 
+        # Keep the dispatcher's in-memory role cache in sync.  When a role
+        # arrives via the reconfigure flow the dispatcher itself never sees a
+        # measurement event for it, so its sensors dict still holds the old
+        # (possibly None) value.  update_virtual_household_entities reads
+        # dispatcher.sensors.values() to decide whether to create VHH entities,
+        # so if this isn't updated now those entities won't be created until the
+        # next measurement arrives.
+        if mac_address in dispatcher.sensors:
+            dispatcher.sensors[mac_address] = new_role
+
         if new_role in (ROLE_SOLAR, ROLE_HOUSENET):
             async_dispatcher_send(hass, UPDATE_VHH_SIGNAL)
 
@@ -812,7 +827,8 @@ async def async_setup_entry(
                 [
                     PowersensorHouseholdEntity(vhh, desc)
                     for desc in CONSUMPTION_DESCRIPTIONS
-                ]
+                ],
+                False,
             )
             vhh_state.mains_added = True
 
@@ -822,7 +838,8 @@ async def async_setup_entry(
                 [
                     PowersensorHouseholdEntity(vhh, desc)
                     for desc in PRODUCTION_DESCRIPTIONS
-                ]
+                ],
+                False,
             )
             vhh_state.solar_added = True
 

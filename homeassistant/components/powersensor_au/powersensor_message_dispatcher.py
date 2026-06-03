@@ -120,13 +120,15 @@ class PowersensorMessageDispatcher:
         scan) and sensors (found when a plug relays a now_relaying_for message,
         which the library converts to a device_found internally).
 
-        Note: the library drops the role when converting now_relaying_for →
-        device_found (_add_device only receives the type string), so
-        event.get("role") is always None for sensors.  We fall back to the
-        role persisted in entry.data from the previous session so that
-        role-gated entities (power, energy, water flow, etc.) are created
-        immediately on reload rather than waiting for the first measurement
-        to trigger ROLE_UPDATE_SIGNAL.
+        Note: current library versions drop the role when converting
+        now_relaying_for → device_found (_add_device only receives the type
+        string), so event.get("role") is typically None for sensors — but
+        this may change in future API versions and the code handles both
+        cases.  When role is absent we fall back to the role persisted in
+        entry.data from the previous session so that role-gated entities
+        (power, energy, water flow, etc.) are created immediately on reload
+        rather than waiting for the first measurement to trigger
+        ROLE_UPDATE_SIGNAL.
 
         Re-subscribe after expiry: if the MAC is already known (i.e. we have
         entities for it) but the library re-fired device_found because its

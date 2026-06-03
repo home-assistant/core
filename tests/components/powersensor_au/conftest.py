@@ -44,7 +44,7 @@ def no_zeroconf() -> Generator[None]:
 def no_powersensor_local(monkeypatch: pytest.MonkeyPatch) -> None:
     """Monkeypatch for UDP listener making 'connect' a no-op safe for testing."""
 
-    def no_connect(self):
+    def no_connect(self) -> None:
         pass
 
     monkeypatch.setattr(PlugListenerUdp, "connect", no_connect)

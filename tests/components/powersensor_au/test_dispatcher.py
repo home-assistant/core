@@ -471,7 +471,7 @@ async def test_measurement_other_event_type_does_not_feed_vhh(
     d = dispatcher_module.PowersensorMessageDispatcher(hass, entry, vhh)
     d.sensors[MAC] = "house-net"
 
-    message = {"mac": MAC, "role": "house-net", "battery_volts": 3.8}
+    message = {"mac": MAC, "role": "house-net", "volts": 3.8}
     await d.on_device_event({**message, "event": "battery_level"})
 
     vhh.process_average_power_event.assert_not_called()
