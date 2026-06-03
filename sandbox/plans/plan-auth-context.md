@@ -52,22 +52,41 @@ issued / observed for a sandbox (per group, or one shared map). On any inbound
 sandbox message carrying a `context_id` (`state_changed`, `fire_event`, and the
 result of a sandbox-originated `call_service`):
 
-1. **Known id** → resolve to the cached `Context` and reuse it verbatim, so
-   the original `parent_id` / `user_id` (e.g. the user who pressed the button
-   that triggered the sandboxed automation) survive the round-trip.
-2. **Unknown id** → mint a fresh main-owned `Context` with **no fabricated
-   parentage** (`parent_id=None`; `user_id` per Part C) and register it in the
-   cache, so any follow-on events that chain off it resolve in step 1.
+1. **Known id** (in the cache, not expired) → return the cached main-owned
+   `Context` verbatim, so the original `parent_id` / `user_id` (e.g. the user
+   who pressed the button that triggered the sandboxed automation) survive the
+   round-trip.
+2. **Unknown / expired id** → mint a **brand-new** main-owned `Context` —
+   `Context(user_id=None)`, which generates its **own** fresh id on main — and
+   cache it under the sandbox-supplied id so repeated echoes within the same
+   operation map to one stable context. **Do NOT adopt the sandbox's id**
+   (`Context(id=sandbox_context_id)` is wrong here): context ids are **ULIDs
+   with an embedded millisecond timestamp, and main cannot trust the sandbox's
+   clock.** A sandbox could craft a ULID to back- or forward-date an event, and
+   downstream consumers (recorder/logbook ordering, etc.) read time out of the
+   id — so for any id main didn't itself issue, main generates its own ULID with
+   its own trusted clock. The sandbox-supplied string is used only as a **cache
+   key**, never as the resulting `Context`'s identity.
 
-The cache is populated where main *hands a context down to the sandbox* — e.g.
-when main forwards a service call or event into the sandbox, the `Context` it
-used is recorded under its id, so the sandbox echoing that id back resolves to
-the real thing. Bound the cache (LRU / TTL) so it can't grow without limit; a
-cache miss is safe (falls to step 2), so eviction only loses parentage, never
-correctness.
+The cache is **seeded where main hands a context down to the sandbox** — when
+main forwards a service call into the sandbox, the real `Context` (its own,
+main-issued, trusted-timestamp id) is recorded under its id, so the sandbox
+echoing that id back in a derived event/state resolves to the real thing.
+
+**Bounding — TTL, not size.** Use a **15-minute TTL** (entries expire 15 min
+after insertion). Volume is naturally tiny: only contexts from main→sandbox
+**service calls** are cached, and the sandbox echoes them back within the same
+operation (seconds), so 15 min is generous headroom. A miss is always safe — it
+falls to step 2 (a fresh main context), so expiry only loses parentage on
+pathologically delayed echoes, never correctness. Lazy pruning on each resolve
+(plus a periodic sweep if convenient) is enough; no count cap needed given the
+TTL + low volume, though a sanity max is fine as a backstop.
 
 This **replaces** `EventMirror`'s current "fresh `Context` on every re-fire"
-and folds the T2 `_resolve_context` helper into the seen-id lookup.
+and folds the T2 `_resolve_context` helper into the seen-id lookup — but note
+T2's current code **adopts the sandbox id** for unknown ids (`Context(id=context_id,
+…)`); Part B must change that to a fresh main-generated id per the ULID-trust
+reasoning above.
 
 ### Part C — DECIDED (2026-06-03): drop the per-group system user
 
