@@ -70,6 +70,18 @@ async_setup_component(hass, "sensor", {})
         ),
         pytest.param(
             """
+async_setup_component(hass, config["domain"], {})
+""",
+            id="subscript_positional",
+        ),
+        pytest.param(
+            """
+MockConfigEntry(domain=entries["domain"])
+""",
+            id="subscript_kwarg",
+        ),
+        pytest.param(
+            """
 async_mock_service(hass, DOMAIN, "service")
 """,
             id="async_mock_service",
