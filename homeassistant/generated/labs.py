@@ -6,9 +6,9 @@ To update, run python3 -m script.hassfest
 LABS_PREVIEW_FEATURES = {
     "alexa_devices": {
         "alexa_media": {
-            "feedback_url": "https://discord.gg/9P75ptv8WT",
-            "learn_more_url": "https://github.com/chemelli74/aioamazondevices/wiki/Media-Player-Testing",
-            "report_issue_url": "https://github.com/chemelli74/aioamazondevices/issues/new",
+            "feedback_url": "https://community.home-assistant.io/t/alexa-devices-media-player-feedback",
+            "learn_more_url": "https://www.home-assistant.io/integrations/alexa_devices",
+            "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_name=Alexa+Devices&integration_link=https%3A%2F%2Fwww.home-assistant.io%2Fintegrations%2Falexa_devices",
         },
     },
     "analytics": {
