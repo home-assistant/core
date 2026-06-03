@@ -330,10 +330,12 @@ async def test_area_temperature_sensor(
         # Test function
         info = render_to_info(hass, f'{{{{ area_temperature_sensor("{test[0]}") }}}}')
         assert_result_info(info, test[1])
+        assert info.rate_limit is None
 
         # Test filter
         info = render_to_info(hass, f'{{{{ "{test[0]}" | area_temperature_sensor }}}}')
         assert_result_info(info, test[1])
+        assert info.rate_limit is None
 
     # Add a temperature sensor
     entity_entry = entity_registry.async_get_or_create(
@@ -361,10 +363,12 @@ async def test_area_temperature_sensor(
         # Test function
         info = render_to_info(hass, f'{{{{ area_temperature_sensor("{test[0]}") }}}}')
         assert_result_info(info, test[1])
+        assert info.rate_limit is None
 
         # Test filter
         info = render_to_info(hass, f'{{{{ "{test[0]}" | area_temperature_sensor }}}}')
         assert_result_info(info, test[1])
+        assert info.rate_limit is None
 
 
 async def test_area_humidity_sensor(
@@ -385,10 +389,12 @@ async def test_area_humidity_sensor(
         # Test function
         info = render_to_info(hass, f'{{{{ area_humidity_sensor("{test[0]}") }}}}')
         assert_result_info(info, test[1])
+        assert info.rate_limit is None
 
         # Test filter
         info = render_to_info(hass, f'{{{{ "{test[0]}" | area_humidity_sensor }}}}')
         assert_result_info(info, test[1])
+        assert info.rate_limit is None
 
     # Add a humidity sensor
     entity_entry = entity_registry.async_get_or_create(
@@ -417,7 +423,9 @@ async def test_area_humidity_sensor(
         # Test function
         info = render_to_info(hass, f'{{{{ area_humidity_sensor("{test[0]}") }}}}')
         assert_result_info(info, test[1])
+        assert info.rate_limit is None
 
         # Test filter
         info = render_to_info(hass, f'{{{{ "{test[0]}" | area_humidity_sensor }}}}')
         assert_result_info(info, test[1])
+        assert info.rate_limit is None
