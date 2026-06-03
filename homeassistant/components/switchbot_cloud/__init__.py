@@ -23,8 +23,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
+from .const import (
+    AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
+    DEVICE_SUPPORT_MAP,
+    DOMAIN,
+    ENTRY_TITLE,
+)
 from .coordinator import SwitchBotCoordinator
+from .service import async_register_services
 
 _LOGGER = getLogger(__name__)
 PLATFORMS: list[Platform] = [
@@ -349,7 +355,6 @@ async def async_setup_entry(
     """Set up SwitchBot via API from a config entry."""
     token = entry.data[CONF_API_TOKEN]
     secret = entry.data[CONF_API_KEY]
-
     api = SwitchBotAPI(
         token=token, secret=secret, session=async_get_clientsession(hass)
     )
@@ -373,6 +378,9 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await _initialize_webhook(hass, entry, api, coordinators_by_id)
+
+    if not hass.services.has_service(DOMAIN, AI_ART_FRAME_UPLOAD_IMAGE_SERVICE):
+        async_register_services(hass)
 
     return True
 

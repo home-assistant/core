@@ -101,5 +101,21 @@
     "device_offline": {
       "message": "SwitchBot Cloud device is offline."
     }
+  },
+  "services": {
+    "ai_art_frame_upload_image": {
+      "description": "Upload third-party web images to the device.",
+      "fields": {
+        "device_id": {
+          "description": "The target AI Art Frame device.",
+          "name": "Device"
+        },
+        "image_url": {
+          "description": "The URL of the image to upload.",
+          "name": "Image URL"
+        }
+      },
+      "name": "AI Art Frame Upload Image"
+    }
   }
 }
