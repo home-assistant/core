@@ -120,6 +120,8 @@ class DomainConstantChecker(BaseChecker):
         ),
     }
 
+    options = ()
+
     _in_test_module: bool
 
     def visit_module(self, node: nodes.Module) -> None:
