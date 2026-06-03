@@ -154,6 +154,21 @@ class TemplateClimateEntityPresetFeature(IntFlag):
     TARGET_HUMIDITY = 128
 
 
+class TemplateClimateEntityPresetFeatureOptions:
+    """Mapping of preset feature options for template climates."""
+
+    CLIMATE_PRESET_FEATURE_OPTIONS: dict[str, TemplateClimateEntityPresetFeature] = {
+        "editable": TemplateClimateEntityPresetFeature.EDITABLE,
+        "preserved": TemplateClimateEntityPresetFeature.PRESERVED,
+        "hvac_mode": TemplateClimateEntityPresetFeature.HVAC_MODE,
+        "fan_mode": TemplateClimateEntityPresetFeature.FAN_MODE,
+        "swing_mode": TemplateClimateEntityPresetFeature.SWING_MODE,
+        "target_temperature": TemplateClimateEntityPresetFeature.TARGET_TEMPERATURE,
+        "target_temperature_range": TemplateClimateEntityPresetFeature.TARGET_TEMPERATURE_RANGE,
+        "target_humidity": TemplateClimateEntityPresetFeature.TARGET_HUMIDITY,
+    }
+
+
 def _hvac_mode_list(value: Any) -> list[HVACMode]:
     """Validate and coerce a configured HVAC mode list."""
     return [HVACMode(item) for item in cv.ensure_list(value)]
@@ -953,10 +968,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 )
                 self._presets[self._attr_preset_mode]["hvac_mode"] = hvac_mode
 
-        if (
-            (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is not None
-            and self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
-        ):
+        if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            if (
+                not self._attr_supported_features
+                & ClimateEntityFeature.TARGET_TEMPERATURE
+            ):
+                raise ValueError("Unsupported target temperature")
+
             validated = self._validate_target_temperature(target_temperature)
             if validated is None:
                 raise ValueError(f"Invalid target temperature: {target_temperature}")
@@ -973,11 +991,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 ] = validated
                 self._presets[self._attr_preset_mode]["target_temperature"] = validated
 
-        if (
-            (target_temperature_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None
-            and self._attr_supported_features
-            & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        ):
+        if (target_temperature_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
+            if (
+                not self._attr_supported_features
+                & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            ):
+                raise ValueError("Unsupported target temperature range")
+
             validated = self._validate_target_temperature_low(target_temperature_low)
             if validated is None:
                 raise ValueError(
@@ -998,11 +1018,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                     validated
                 )
 
-        if (
-            (target_temperature_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None
-            and self._attr_supported_features
-            & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        ):
+        if (target_temperature_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
+            if (
+                not self._attr_supported_features
+                & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            ):
+                raise ValueError("Unsupported target temperature range")
+
             validated = self._validate_target_temperature_high(target_temperature_high)
             if validated is None:
                 raise ValueError(

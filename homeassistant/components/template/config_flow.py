@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.number import NumberDeviceClass
@@ -80,6 +80,7 @@ from .climate import (
     CONF_SET_HUMIDITY_ACTION,
     CONF_SET_HVAC_MODE_ACTION,
     CONF_SET_PRESET_MODE_ACTION,
+    CONF_SET_PRESETS_ACTION,
     CONF_SET_SWING_MODE_ACTION,
     CONF_SET_TEMPERATURE_ACTION,
     CONF_SWING_MODE_LIST,
@@ -91,6 +92,7 @@ from .climate import (
     CONF_TEMP_STEP,
     CONF_TEMPERATURE_MAX,
     CONF_TEMPERATURE_MIN,
+    TemplateClimateEntityPresetFeatureOptions,
     async_create_preview_climate,
 )
 from .const import (
@@ -273,6 +275,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_SET_HUMIDITY_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_SET_FAN_MODE_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_SET_PRESET_MODE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SET_PRESETS_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_SET_SWING_MODE_ACTION): selector.ActionSelector(),
             vol.Optional(
                 CONF_HVAC_MODE_LIST, default=[HVACMode.OFF.value, HVACMode.HEAT.value]
@@ -330,9 +333,30 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     min=0.1, mode=selector.NumberSelectorMode.BOX
                 )
             ),
-            vol.Optional(CONF_PRESETS_FEATURES): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0, max=255, step=1, mode=selector.NumberSelectorMode.BOX
+            vol.Optional(CONF_PRESETS_FEATURES): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        selector.SelectOptionDict(value="editable", label="Editable"),
+                        selector.SelectOptionDict(value="preserved", label="Preserved"),
+                        selector.SelectOptionDict(value="hvac_mode", label="HVAC mode"),
+                        selector.SelectOptionDict(value="fan_mode", label="Fan mode"),
+                        selector.SelectOptionDict(
+                            value="swing_mode", label="Swing mode"
+                        ),
+                        selector.SelectOptionDict(
+                            value="target_temperature",
+                            label="Target temperature",
+                        ),
+                        selector.SelectOptionDict(
+                            value="target_temperature_range",
+                            label="Target temperature range",
+                        ),
+                        selector.SelectOptionDict(
+                            value="target_humidity", label="Target humidity"
+                        ),
+                    ],
+                    multiple=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
                 )
             ),
             vol.Optional(CONF_MAX_ACTION): selector.NumberSelector(
@@ -612,6 +636,37 @@ async def choose_options_step(options: dict[str, Any]) -> str:
     return cast(str, options["template_type"])
 
 
+def _normalize_climate_preset_features(user_input: dict[str, Any]) -> None:
+    """Normalize climate preset features from multi-select values to bitmask."""
+    if not isinstance(advanced_options := user_input.get(CONF_ADVANCED_OPTIONS), dict):
+        return
+
+    if (selected := advanced_options.get(CONF_PRESETS_FEATURES)) is None:
+        return
+
+    if isinstance(selected, int):
+        return
+
+    if not isinstance(selected, list):
+        raise vol.Invalid("Invalid presets features")
+
+    bitmask = 0
+    for item in selected:
+        if (
+            not isinstance(item, str)
+            or item
+            not in TemplateClimateEntityPresetFeatureOptions.CLIMATE_PRESET_FEATURE_OPTIONS
+        ):
+            raise vol.Invalid("Invalid presets features")
+        bitmask |= int(
+            TemplateClimateEntityPresetFeatureOptions.CLIMATE_PRESET_FEATURE_OPTIONS[
+                item
+            ]
+        )
+
+    advanced_options[CONF_PRESETS_FEATURES] = bitmask
+
+
 def _validate_unit(options: dict[str, Any]) -> None:
     """Validate unit of measurement."""
     if (
@@ -683,6 +738,8 @@ def validate_user_input(
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
+        if template_type == Platform.CLIMATE:
+            _normalize_climate_preset_features(user_input)
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
