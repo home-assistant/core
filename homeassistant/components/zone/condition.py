@@ -211,7 +211,7 @@ class NotInZoneCondition(_ZoneTargetConditionBase):
 _OCCUPANCY_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_ZONE): cv.entity_domain("zone"),
+            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
             vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
@@ -221,7 +221,7 @@ _OCCUPANCY_CONDITION_SCHEMA = vol.Schema(
 class _ZoneOccupancyConditionBase(EntityConditionBase):
     """Base for zone occupancy conditions (single zone, no behavior)."""
 
-    _domain_specs = {"zone": DomainSpec()}
+    _domain_specs = {DOMAIN: DomainSpec()}
     _schema = _OCCUPANCY_CONDITION_SCHEMA
 
     @classmethod
