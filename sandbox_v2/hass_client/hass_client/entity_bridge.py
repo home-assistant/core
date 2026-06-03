@@ -14,13 +14,17 @@ integration creates outside its own entry) are skipped with a debug log.
 
 import asyncio
 from collections.abc import Iterable
+import json
 import logging
 from typing import Any
 
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import DATA_INSTANCES
+from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 
 from .approved_domains import ApprovedDomains
 from .channel import Channel
@@ -54,20 +58,41 @@ class EntityBridge:
         self._channel: Channel | None = None
         self._registered: set[str] = set()
         self._pending: set[str] = set()
+        # Hash of the last description (registry-shaped fields only, no
+        # state) sent per entity, so a registry-update resend that mirrors
+        # nothing we actually carry is a no-op instead of an event storm.
+        self._last_hash: dict[str, str] = {}
         self._unsub_state: Any = None
+        self._unsub_entity_registry: Any = None
+        self._unsub_device_registry: Any = None
 
     def register(self, channel: Channel) -> None:
-        """Subscribe to state-change events and capture the channel."""
+        """Subscribe to state + registry events and capture the channel."""
         self._channel = channel
         self._unsub_state = self.hass.bus.async_listen(
             EVENT_STATE_CHANGED, self._on_state_changed
         )
+        # Post-registration changes to name / icon / category / device link
+        # arrive as registry-updated events; re-send the registration as an
+        # upsert so main's proxy keeps current.
+        self._unsub_entity_registry = self.hass.bus.async_listen(
+            EVENT_ENTITY_REGISTRY_UPDATED, self._on_entity_registry_updated
+        )
+        self._unsub_device_registry = self.hass.bus.async_listen(
+            EVENT_DEVICE_REGISTRY_UPDATED, self._on_device_registry_updated
+        )
 
     async def async_stop(self) -> None:
-        """Detach the state listener."""
-        if self._unsub_state is not None:
-            self._unsub_state()
-            self._unsub_state = None
+        """Detach the state + registry listeners."""
+        for attr in (
+            "_unsub_state",
+            "_unsub_entity_registry",
+            "_unsub_device_registry",
+        ):
+            unsub = getattr(self, attr)
+            if unsub is not None:
+                unsub()
+                setattr(self, attr, None)
 
     @callback
     def _on_state_changed(self, event: Event[EventStateChangedData]) -> None:
@@ -105,15 +130,47 @@ class EntityBridge:
             name=f"sandbox_v2:register:{entity_id}",
         )
 
+    @callback
+    def _on_entity_registry_updated(self, event: Event[Any]) -> None:
+        if self._channel is None or self._channel.closed:
+            return
+        if event.data.get("action") != "update":
+            return
+        entity_id: str = event.data["entity_id"]
+        if entity_id not in self._registered:
+            return
+        asyncio.create_task(  # noqa: RUF006
+            self._resend(entity_id),
+            name=f"sandbox_v2:resend:{entity_id}",
+        )
+
+    @callback
+    def _on_device_registry_updated(self, event: Event[Any]) -> None:
+        if self._channel is None or self._channel.closed:
+            return
+        if event.data.get("action") != "update":
+            return
+        device_id: str = event.data["device_id"]
+        ent_reg = er.async_get(self.hass)
+        # Re-send every tracked entity linked to the changed device so the
+        # refreshed device_info reaches main.
+        for entity_id in list(self._registered):
+            registry_entry = ent_reg.async_get(entity_id)
+            if registry_entry is None or registry_entry.device_id != device_id:
+                continue
+            asyncio.create_task(  # noqa: RUF006
+                self._resend(entity_id),
+                name=f"sandbox_v2:resend:{entity_id}",
+            )
+
     async def _register_and_push(self, entity_id: str, new_state: Any) -> None:
         try:
             await self._register(entity_id, new_state)
         finally:
             self._pending.discard(entity_id)
 
-    async def _register(self, entity_id: str, new_state: Any) -> None:
-        if self._channel is None:
-            return
+    def _describe(self, entity_id: str) -> dict[str, Any] | None:
+        """Build the registry-shaped description for a live entity, or None."""
         domain = entity_id.split(".", 1)[0]
         components = self.hass.data.get(DATA_INSTANCES, {})
         component = components.get(domain)
@@ -124,15 +181,23 @@ class EntityBridge:
                 " entity object; skipping",
                 entity_id,
             )
-            return
+            return None
         entry_id = _entry_id_for(entity)
         if entry_id is None:
             _LOGGER.debug(
                 "EntityBridge: %s has no owning config entry; not bridging",
                 entity_id,
             )
+            return None
+        return _describe_entity(entity, entry_id)
+
+    async def _register(self, entity_id: str, new_state: Any) -> None:
+        if self._channel is None:
             return
-        payload = _describe_entity(entity, entry_id)
+        payload = self._describe(entity_id)
+        if payload is None:
+            return
+        new_hash = _payload_hash(payload)
         if hasattr(new_state, "state"):
             payload["initial_state"] = new_state.state
             payload["initial_attributes"] = dict(new_state.attributes)
@@ -142,9 +207,37 @@ class EntityBridge:
             _LOGGER.exception("EntityBridge: register failed for %s", entity_id)
             return
         self._registered.add(entity_id)
+        self._last_hash[entity_id] = new_hash
         # Approve the entity's domain so the service + event mirrors
         # let through registrations / events that originate from it.
         self.approved.add(payload["domain"])
+
+    async def _resend(self, entity_id: str) -> None:
+        """Re-send a registration as an upsert after a registry change.
+
+        Skips when the entity isn't tracked yet (the initial register will
+        carry current values) or when nothing we mirror actually changed.
+        """
+        if self._channel is None or self._channel.closed:
+            return
+        if entity_id not in self._registered:
+            return
+        payload = self._describe(entity_id)
+        if payload is None:
+            return
+        new_hash = _payload_hash(payload)
+        if self._last_hash.get(entity_id) == new_hash:
+            return
+        state = self.hass.states.get(entity_id)
+        if state is not None:
+            payload["initial_state"] = state.state
+            payload["initial_attributes"] = dict(state.attributes)
+        try:
+            await self._channel.call(MSG_REGISTER_ENTITY, payload)
+        except Exception:
+            _LOGGER.exception("EntityBridge: resend failed for %s", entity_id)
+            return
+        self._last_hash[entity_id] = new_hash
 
     async def _push_state(self, entity_id: str, new_state: Any) -> None:
         if self._channel is None:
@@ -172,6 +265,21 @@ class EntityBridge:
             _LOGGER.exception(
                 "EntityBridge: unregister failed for %s", entity_id
             )
+
+
+def _payload_hash(payload: dict[str, Any]) -> str:
+    """Stable hash of a description payload's mirrored fields.
+
+    State-shaped keys (``initial_state`` / ``initial_attributes``) flow via
+    the ``state_changed`` push path and are excluded so the resend guard
+    only fires on changes to fields a registration actually carries.
+    """
+    mirrored = {
+        key: value
+        for key, value in payload.items()
+        if key not in ("initial_state", "initial_attributes")
+    }
+    return json.dumps(mirrored, sort_keys=True, default=str)
 
 
 def _entry_id_for(entity: Entity) -> str | None:

@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from ._helpers import make_channel_pair
 
@@ -132,6 +132,89 @@ async def test_register_entity_prefixes_unique_id_with_source_domain(
     # Registry rows carry the domain-prefixed unique_ids, not a bare "1".
     assert entity_registry.async_get(result_a["entity_id"]).unique_id == "demo_a:1"
     assert entity_registry.async_get(result_b["entity_id"]).unique_id == "demo_b:1"
+
+
+async def test_register_entity_upsert_updates_name_in_place(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """A re-sent registration updates the proxy without adding a duplicate."""
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    def _payload(name: str) -> dict[str, Any]:
+        return {
+            "entry_id": entry.entry_id,
+            "domain": "light",
+            "sandbox_entity_id": "light.lamp",
+            "unique_id": "lamp",
+            "name": name,
+            "supported_features": 0,
+            "capabilities": {"supported_color_modes": ["onoff"]},
+            "initial_state": STATE_ON,
+            "initial_attributes": {"color_mode": "onoff"},
+        }
+
+    try:
+        first = await sandbox_channel.call(
+            "sandbox_v2/register_entity", _payload("Old Name")
+        )
+        second = await sandbox_channel.call(
+            "sandbox_v2/register_entity", _payload("New Name")
+        )
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    # Same entity_id back, single tracked proxy — no duplicate created.
+    assert first["entity_id"] == second["entity_id"]
+    assert len(bridge._entities) == 1
+    proxy = bridge._entities["light.lamp"]
+    assert proxy._attr_name == "New Name"
+    state = hass.states.get(second["entity_id"])
+    assert state is not None
+    assert state.attributes["friendly_name"] == "New Name"
+
+
+async def test_register_entity_upsert_refreshes_device(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A re-sent registration with new device_info updates the device entry."""
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    def _payload(sw_version: str) -> dict[str, Any]:
+        return {
+            "entry_id": entry.entry_id,
+            "domain": "light",
+            "sandbox_entity_id": "light.lamp",
+            "unique_id": "lamp",
+            "supported_features": 0,
+            "capabilities": {"supported_color_modes": ["onoff"]},
+            "initial_state": STATE_ON,
+            "initial_attributes": {"color_mode": "onoff"},
+            "device_info": {
+                "identifiers": [["demo", "dev-1"]],
+                "name": "Lamp Device",
+                "sw_version": sw_version,
+            },
+        }
+
+    try:
+        await sandbox_channel.call("sandbox_v2/register_entity", _payload("1.0"))
+        device = device_registry.async_get_device(identifiers={("demo", "dev-1")})
+        assert device is not None
+        assert device.sw_version == "1.0"
+
+        await sandbox_channel.call("sandbox_v2/register_entity", _payload("2.0"))
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    # Same device entry, firmware refreshed, single proxy — no duplicate.
+    device = device_registry.async_get_device(identifiers={("demo", "dev-1")})
+    assert device is not None
+    assert device.sw_version == "2.0"
+    assert len(bridge._entities) == 1
 
 
 async def test_state_changed_push_updates_proxy(

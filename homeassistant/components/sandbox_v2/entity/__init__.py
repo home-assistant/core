@@ -13,6 +13,7 @@ pattern — see ``plan.md`` Phase 5's deferral note.
 """
 
 import contextlib
+from enum import IntFlag
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.const import EntityCategory
@@ -80,6 +81,40 @@ class SandboxProxyEntity(Entity):
         duplicate those values in the state-machine attributes dict.
         """
         return None
+
+    def sandbox_update_description(self, description: SandboxEntityDescription) -> None:
+        """Refresh mirrored attributes from a re-sent registration (upsert).
+
+        The unique_id is deliberately left untouched — changing it would
+        orphan the entity-registry row. State flows via the separate
+        ``state_changed`` push path, so only the registration-carried
+        fields (name / icon / category / device_class / features /
+        device_info) are refreshed here.
+        """
+        self.description = description
+        self._attr_has_entity_name = description.has_entity_name
+        self._attr_name = description.name or None
+        self._attr_icon = description.icon or None
+        if description.entity_category:
+            with contextlib.suppress(ValueError):
+                self._attr_entity_category = EntityCategory(description.entity_category)
+        else:
+            self._attr_entity_category = None
+        if description.device_class:
+            self._attr_device_class = description.device_class
+        # Domain subclasses store supported_features as their own IntFlag
+        # (light's capability_attributes does ``X in supported_features``,
+        # which only works on the flag). Preserve that type when refreshing.
+        features = int(description.supported_features or 0)
+        current = self._attr_supported_features
+        if isinstance(current, IntFlag):
+            self._attr_supported_features = type(current)(features)
+        else:
+            self._attr_supported_features = features
+        if description.device_info is not None:
+            self._attr_device_info = cast(DeviceInfo, description.device_info)
+        if self.hass is not None:
+            self.async_write_ha_state()
 
     def sandbox_apply_state(
         self, state: str | None, attributes: dict[str, Any]

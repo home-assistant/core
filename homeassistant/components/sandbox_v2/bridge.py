@@ -345,6 +345,15 @@ class SandboxBridge:
                     f"{description.sandbox_entity_id!r}: {err}"
                 ) from err
             description.device_id = device.id
+        # MSG_REGISTER_ENTITY is an upsert: a re-send for an already-tracked
+        # entity (the client re-describes on registry/device updates) refreshes
+        # the existing proxy in place rather than adding a duplicate. The
+        # device pre-creation above already refreshed the DeviceEntry via the
+        # idempotent async_get_or_create.
+        existing = self._entities.get(description.sandbox_entity_id)
+        if existing is not None:
+            existing.sandbox_update_description(description)
+            return {"entity_id": existing.entity_id or ""}
         proxy = self._build_proxy(description)
         platform = self._ensure_platform(entry, description.domain)
         await platform.async_add_entities([proxy])

@@ -22,8 +22,10 @@ from hass_client.entity_bridge import EntityBridge
 from hass_client.flow_runner import FlowRunner
 import pytest
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -282,5 +284,173 @@ async def test_bridge_emits_register_and_state_pushes(
     assert state_calls[0]["sandbox_entity_id"] == "demo.lamp"
     assert state_calls[0]["new_state"]["state"] == "on"
     assert state_calls[0]["new_state"]["attributes"]["brightness"] == 200
+
+    await bridge.async_stop()
+
+
+async def _register_initial(
+    bridge: EntityBridge, hass: Any, entity: Entity
+) -> None:
+    """Drive the first state-change so ``entity`` is tracked + registered."""
+    now = datetime.now(tz=datetime.now().astimezone().tzinfo)
+    hass.bus.async_fire(
+        EVENT_STATE_CHANGED,
+        {
+            "entity_id": entity.entity_id,
+            "old_state": None,
+            "new_state": State(
+                entity.entity_id, "off", {}, last_changed=now, last_updated=now
+            ),
+        },
+    )
+    for _ in range(50):
+        if entity.entity_id in bridge._registered:  # noqa: SLF001
+            break
+        await asyncio.sleep(0)
+
+
+async def test_entity_registry_update_resends_registration(
+    channels: tuple[Channel, Channel], hass_with_demo_component
+) -> None:
+    """A post-setup name change re-sends register_entity (upsert) once.
+
+    A second identical update is a no-op thanks to the description hash
+    guard, so a registry-update storm doesn't flood the channel.
+    """
+    main, sandbox = channels
+    hass, component = hass_with_demo_component
+
+    register_calls: list[dict[str, Any]] = []
+
+    async def _on_register(payload: dict[str, Any]) -> dict[str, str]:
+        register_calls.append(payload)
+        return {"entity_id": "demo.lamp_main"}
+
+    main.register("sandbox_v2/register_entity", _on_register)
+    main.start()
+    sandbox.start()
+
+    entity = _FakeEntity()
+    component._entities[entity.entity_id] = entity  # noqa: SLF001
+
+    bridge = EntityBridge(hass)
+    bridge.register(sandbox)
+    await _register_initial(bridge, hass, entity)
+    assert len(register_calls) == 1
+
+    # Integration renames the entity post-setup.
+    entity._attr_name = "Renamed Lamp"  # noqa: SLF001
+    hass.bus.async_fire(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        {"action": "update", "entity_id": entity.entity_id, "changes": {}},
+    )
+    for _ in range(50):
+        if len(register_calls) == 2:
+            break
+        await asyncio.sleep(0)
+
+    assert len(register_calls) == 2
+    assert register_calls[1]["name"] == "Renamed Lamp"
+    assert register_calls[1]["sandbox_entity_id"] == "demo.lamp"
+
+    # Let the resend coroutine settle past its await so the description
+    # hash is recorded before the next event fires.
+    for _ in range(10):
+        await asyncio.sleep(0)
+
+    # A second update with nothing changed is suppressed by the hash guard.
+    hass.bus.async_fire(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        {"action": "update", "entity_id": entity.entity_id, "changes": {}},
+    )
+    for _ in range(20):
+        await asyncio.sleep(0)
+    assert len(register_calls) == 2
+
+    await bridge.async_stop()
+
+
+async def test_device_registry_update_resends_linked_entities(
+    channels: tuple[Channel, Channel], hass_with_demo_component
+) -> None:
+    """A device update re-sends register_entity for its tracked entities."""
+    main, sandbox = channels
+    hass, component = hass_with_demo_component
+
+    register_calls: list[dict[str, Any]] = []
+
+    async def _on_register(payload: dict[str, Any]) -> dict[str, str]:
+        register_calls.append(payload)
+        return {"entity_id": "demo.lamp_main"}
+
+    main.register("sandbox_v2/register_entity", _on_register)
+    main.start()
+    sandbox.start()
+
+    # Link the entity to a device in the registry so the device-update
+    # handler can find it via its device_id. The sandbox-private hass does
+    # not bootstrap the registries, so set them up explicitly and register a
+    # config entry the device can hang off.
+    dr.async_setup(hass)
+    await dr.async_load(hass, load_empty=True)
+    await er.async_load(hass, load_empty=True)
+    config_entry = ConfigEntry(
+        version=1,
+        minor_version=1,
+        domain="demo",
+        title="Demo",
+        data={},
+        options={},
+        source="user",
+        unique_id=None,
+        discovery_keys={},
+        subentries_data=(),
+    )
+    hass.config_entries._entries[config_entry.entry_id] = config_entry  # noqa: SLF001
+    device_reg = dr.async_get(hass)
+    device = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("demo", "dev-1")},
+        name="Demo Device",
+        sw_version="1.0",
+    )
+    ent_reg = er.async_get(hass)
+    registry_entry = ent_reg.async_get_or_create(
+        "demo", "demo", "demo-lamp", suggested_object_id="lamp", device_id=device.id
+    )
+
+    class _DeviceEntity(_FakeEntity):
+        def __init__(self) -> None:
+            super().__init__()
+            self.entity_id = registry_entry.entity_id
+            self._attr_device_info = {
+                "identifiers": {("demo", "dev-1")},
+                "name": "Demo Device",
+                "sw_version": "1.0",
+            }
+
+    entity = _DeviceEntity()
+    component._entities[entity.entity_id] = entity  # noqa: SLF001
+
+    bridge = EntityBridge(hass)
+    bridge.register(sandbox)
+    await _register_initial(bridge, hass, entity)
+    assert len(register_calls) == 1
+    assert register_calls[0]["device_info"]["sw_version"] == "1.0"
+
+    # Firmware bump: the entity now reports a new sw_version and the device
+    # registry fires its updated event.
+    entity._attr_device_info["sw_version"] = "2.0"  # noqa: SLF001
+    hass.bus.async_fire(
+        dr.EVENT_DEVICE_REGISTRY_UPDATED,
+        {"action": "update", "device_id": device.id, "changes": {}},
+    )
+    for _ in range(50):
+        if len(register_calls) == 2:
+            break
+        await asyncio.sleep(0)
+
+    assert len(register_calls) == 2
+    assert register_calls[1]["device_info"]["sw_version"] == "2.0"
 
     await bridge.async_stop()
