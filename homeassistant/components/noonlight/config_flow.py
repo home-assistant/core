@@ -10,6 +10,7 @@ from noonlight_dispatch import (
     NoonlightClient,
     NoonlightConnectionError,
     NoonlightError,
+    NoonlightResponseError,
 )
 import voluptuous as vol
 
@@ -26,7 +27,6 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -75,7 +75,7 @@ _LOGGER = logging.getLogger(__name__)
 def _environment_selector() -> SelectSelector:
     return SelectSelector(
         SelectSelectorConfig(
-            options=[SelectOptionDict(value=env, label=env) for env in ENVIRONMENTS],
+            options=list(ENVIRONMENTS),
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="environment",
         )
@@ -85,9 +85,7 @@ def _environment_selector() -> SelectSelector:
 def _services_selector() -> SelectSelector:
     return SelectSelector(
         SelectSelectorConfig(
-            options=[
-                SelectOptionDict(value=svc, label=svc) for svc in ALL_NOONLIGHT_SERVICES
-            ],
+            options=list(ALL_NOONLIGHT_SERVICES),
             mode=SelectSelectorMode.LIST,
             multiple=True,
             translation_key="services_granted",
@@ -241,7 +239,9 @@ async def _validate_credentials(
     """Probe Noonlight to confirm token + reachability without dispatching.
 
     A GET against a bogus alarm id has no side effects: a 401 means the token
-    is bad, anything else (typically 404) means we are reachable and authorised.
+    is bad, a 404 means we are reachable and authorised, and a 5xx outage or
+    429 rate-limit means Noonlight is not answering normally (treated as a
+    connection problem so we do not create an entry against a broken backend).
     """
     api = NoonlightClient(
         get_async_client(hass),
@@ -254,9 +254,14 @@ async def _validate_credentials(
         raise _InvalidAuth from err
     except NoonlightConnectionError as err:
         raise _CannotConnect from err
-    except NoonlightError:
-        # Reachable + authorised (e.g. 404 for the bogus id) — good enough.
-        return
+    except NoonlightResponseError as err:
+        # Only a 404 on the bogus id proves reachable + authorised; any other
+        # status (5xx outage, 429 rate-limit) must not be accepted as valid.
+        if err.status_code != 404:
+            raise _CannotConnect from err
+    except NoonlightError as err:
+        # Other reachable-but-unusual response — reachable + authorised.
+        _LOGGER.debug("Noonlight validation probe returned: %s", err)
 
 
 class _CannotConnect(Exception):

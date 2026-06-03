@@ -7,6 +7,7 @@ when only one entry is configured it can be omitted.
 
 import logging
 
+from noonlight_dispatch import NoonlightError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -66,7 +67,7 @@ def _resolve_coordinator(
         if entry.state is ConfigEntryState.LOADED
     ]
     if not entries:
-        raise ServiceValidationError("No Noonlight accounts are configured")
+        raise ServiceValidationError("No Noonlight accounts are loaded")
 
     account = call.data.get(ATTR_ACCOUNT)
     if account is not None:
@@ -75,11 +76,15 @@ def _resolve_coordinator(
             None,
         )
         if entry is None:
-            # Allow matching by human title as a convenience.
-            entry = next(
-                (e for e in entries if e.title == account),
-                None,
-            )
+            # Allow matching by human title as a convenience, but a title is
+            # not guaranteed unique — refuse rather than silently pick one.
+            matches = [e for e in entries if e.title == account]
+            if len(matches) > 1:
+                raise ServiceValidationError(
+                    f"Multiple Noonlight accounts are titled '{account}'; "
+                    "specify the entry id instead"
+                )
+            entry = matches[0] if matches else None
         if entry is None:
             raise ServiceValidationError(f"No Noonlight account matches '{account}'")
         return entry.runtime_data
@@ -154,7 +159,7 @@ def _make_test_handler(hass: HomeAssistant):
         coordinator = _resolve_coordinator(hass, call)
         try:
             await coordinator.async_test_dispatch()
-        except Exception as err:
+        except NoonlightError as err:
             raise HomeAssistantError(f"Noonlight test dispatch failed: {err}") from err
 
     return _handle

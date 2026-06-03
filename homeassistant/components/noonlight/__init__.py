@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoonlightConfigEntry) ->
     except NoonlightResponseError as err:
         if err.status_code != 404:
             raise ConfigEntryNotReady(
-                "Noonlight returned an unexpected response"
+                f"Noonlight returned an unexpected response (HTTP {err.status_code})"
             ) from err
 
     entry.runtime_data = coordinator

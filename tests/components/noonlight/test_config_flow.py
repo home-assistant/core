@@ -140,6 +140,21 @@ async def test_cannot_connect_surfaced(hass: HomeAssistant) -> None:
     assert result["errors"]["base"] == "cannot_connect"
 
 
+@respx.mock
+async def test_server_error_surfaces_cannot_connect(hass: HomeAssistant) -> None:
+    """A 5xx during validation must not be accepted as a valid token."""
+    respx.route(method="GET", url__regex=r".*/status").mock(return_value=Response(503))
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "tok", CONF_ENVIRONMENT: ENV_SANDBOX},
+    )
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "cannot_connect"
+
+
 async def test_custom_requires_base_url(hass: HomeAssistant) -> None:
     """Selecting the custom environment without a URL is rejected."""
     result = await hass.config_entries.flow.async_init(

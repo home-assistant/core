@@ -297,8 +297,9 @@ class NoonlightCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Probe Noonlight (side-effect-free) and update health state.
 
         A GET on a bogus alarm id has no side effects: 401/403 means the token
-        is bad, a connection error means unreachable, and anything else (e.g.
-        404) means we are reachable + authorized.
+        is bad, a connection error means unreachable, a 404 means we are
+        reachable + authorized, and any other response (5xx outage, 429
+        rate-limit) is treated as unhealthy.
         """
         self._last_heartbeat = dt_util.utcnow().timestamp()
         self._probed_once = True
