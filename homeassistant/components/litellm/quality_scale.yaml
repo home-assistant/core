@@ -5,7 +5,9 @@ rules:
     comment: No actions are implemented
   appropriate-polling:
     status: exempt
-    comment: the integration does not poll
+    comment: >-
+      the integration queries the proxy on demand (during conversation) and
+      does not poll on a fixed interval
   brands: done
   common-modules:
     status: exempt
