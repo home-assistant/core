@@ -23,14 +23,6 @@ type AqvifyConfigEntry = ConfigEntry[AqvifyCoordinator]
 
 
 @dataclass
-class AqvifyDeviceInfo:
-    """Data about the Aqvify device."""
-
-    device_key: str
-    device_name: str
-
-
-@dataclass
 class AqvifyCoordinatorData:
     """Data class for storing coordinator data."""
 
@@ -43,7 +35,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
     """Data update coordinator for Aqvify devices."""
 
     config_entry: AqvifyConfigEntry
-    device_info: AqvifyDeviceInfo
 
     def __init__(self, hass: HomeAssistant, entry: AqvifyConfigEntry) -> None:
         """Initialize the Aqvify data update coordinator."""

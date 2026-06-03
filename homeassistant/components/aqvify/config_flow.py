@@ -33,12 +33,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     hub = AqvifyAPI(data[CONF_API_KEY], websession=async_get_clientsession(hass))
 
     try:
-        data = await hub.async_get_account_id()
+        data_json = await hub.async_get_account_id()
     except AqvifyAuthException as err:
         raise InvalidAuth from err
     except ClientResponseError as err:
         raise CannotConnect from err
-    account_id = AqvifyAccount(data).account_id
+    account_id = AqvifyAccount(data_json).account_id
     return {"title": "Aqvify", "account_id": account_id}
 
 

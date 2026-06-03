@@ -58,7 +58,7 @@ async def test_form_invalid(
     side_effect: Exception,
     error_base: str,
 ) -> None:
-    """Test we handle invalid auth."""
+    """Test we handle errors during form submission."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
