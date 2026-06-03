@@ -117,6 +117,13 @@ async def test_unban(
                     {"ip_address": remote_address},
                     blocking=True,
                 )
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                "http",
+                "unban",
+                {"ip_address": "xyzzy"},
+                blocking=True,
+            )
 
     assert len(app[KEY_BAN_MANAGER].ip_bans_lookup) == 0
 
