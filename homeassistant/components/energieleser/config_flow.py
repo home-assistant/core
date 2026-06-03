@@ -74,6 +74,11 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
             host=host, session=async_get_clientsession(self.hass)
         )
 
+        device_id = discovery_info.name.split(".")[0].replace("-", "_").upper()
+
+        await self.async_set_unique_id(device_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
         try:
             device = await client.get_device()
         except EnergieleserConnectionError:
