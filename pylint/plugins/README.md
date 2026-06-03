@@ -463,8 +463,10 @@ set to their default value.
 
 ### `C7412`: `home-assistant-entity-description-redundant-default`
 
-An EntityDescription field is set equal to the default declared in the
-parent class; the assignment can be removed.
+An EntityDescription field is set equal to a default already declared
+anywhere in the class hierarchy; the assignment can be removed. Only the
+literal defaults `None`, `True`, and `False` are checked; other default
+values are not flagged.
 
 
 ## `home_assistant_duplicate_const` checker
@@ -484,8 +486,11 @@ exceptions are not surfaced to the user.
 
 ### `E7405`: `home-assistant-action-swallowed-exception`
 
-Action handlers must re-raise (or raise `HomeAssistantError` / a subclass)
-so the user is notified of the failure.
+Action handlers must re-raise so the user is notified of the failure.
+The checker detects empty `except` blocks, blocks that only log,
+`contextlib.suppress(...)`, and equivalent patterns on decorators. It does
+not validate the *type* of exception being raised; a separate rule covers
+that.
 
 
 ## `home_assistant_actions_service_registration` checker
@@ -495,8 +500,10 @@ Detects services registered inside `async_setup_entry` rather than
 
 ### `W7414`: `home-assistant-service-registered-in-setup-entry`
 
-Services should be registered in `async_setup` so they exist independently
-of which config entries are loaded.
+Services should be registered in `async_setup` so they are available for
+automation validation even when no config entry is loaded. Registrations
+inside helper functions that are called from `async_setup_entry` are
+caught too.
 
 See the [action-setup quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup).
 
@@ -553,12 +560,13 @@ Icons set.
 ## `home_assistant_tests_redundant_usefixtures` checker
 
 Detects `@pytest.mark.usefixtures(...)` decorators that duplicate a fixture
-already applied by a module-level `pytestmark`.
+already applied module-wide, either through a module-level `pytestmark`
+or via `autouse=True` on a fixture defined in a parent `conftest.py`.
 
 ### `R7403`: `home-assistant-tests-redundant-usefixtures`
 
-Drop the redundant `@pytest.mark.usefixtures` decorator; `pytestmark` at the
-module level already applies it to every test.
+Drop the redundant `@pytest.mark.usefixtures` decorator; the fixture is
+already applied to every test in the module.
 
 
 ## `home_assistant_test_determinism` checker
@@ -568,10 +576,12 @@ execution paths: some branches may never run, silently hiding failures.
 
 ### `W7409`: `home-assistant-test-non-deterministic`
 
-Test function contains an `if`/`match` statement. Use
+Test function contains an `if` or `match` statement. Use
 `@pytest.mark.parametrize` to cover cases explicitly, or split into separate
-test functions. Guard clauses (`return`/`raise`/`pytest.skip`) and
-parameter-dependent conditions in already-parametrized tests are exempt.
+test functions. `if` statements have several exemptions: guard clauses
+(`return`/`raise`/`pytest.skip`/`pytest.xfail`/`pytest.fail`),
+conditions that reference a function parameter, and branches that contain
+no `assert`. `match` statements have no exemptions.
 
 
 ## `home_assistant_reauthentication_flow` checker
@@ -621,13 +631,16 @@ Integration's `__init__.py` should implement `async_unload_entry`.
 
 ## `home_assistant_sequential_executor_jobs` checker
 
-Detects multiple `async_add_executor_job` calls that could be grouped into
-a single executor job.
+Detects consecutive `async_add_executor_job` calls in integration modules
+that could be grouped into a single executor job.
 
 ### `W7415`: `home-assistant-sequential-executor-jobs`
 
-Sequential `async_add_executor_job` calls should be combined into a single
-executor job that performs all the work, to reduce thread-pool overhead.
+Two or more `async_add_executor_job` calls appearing as consecutive
+statements (uninterrupted by control flow such as `if`/`try`/`with`/`for`)
+should be combined into a single executor job that performs all the work,
+avoiding unnecessary context switches back to the event loop between
+blocking calls. The rule applies to integration modules only.
 
 
 ## `home_assistant_has_entity_name` checker
