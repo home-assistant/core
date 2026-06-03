@@ -1269,7 +1269,7 @@ hole==0.9.0
 holidays==0.97
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260527.2
+home-assistant-frontend==20260527.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.6.1
@@ -2228,6 +2228,9 @@ pyialarm==2.2.0
 # homeassistant.components.icloud
 pyicloud==2.4.1
 
+# homeassistant.components.imou
+pyimouapi==1.2.7
+
 # homeassistant.components.insteon
 pyinsteon==1.6.4
 
@@ -2259,7 +2262,7 @@ pyiss==1.0.1
 pyisy==3.6.1
 
 # homeassistant.components.itach
-pyitachip2ir==0.0.7
+pyitachip2ir2==0.0.8
 
 # homeassistant.components.ituran
 pyituran==0.1.5
@@ -2887,7 +2890,7 @@ renault-api==0.5.11
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.20.0
+reolink-aio==0.20.1
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.0.1
@@ -3320,7 +3323,7 @@ volkszaehler==0.4.0
 volvocarsapi==0.4.3
 
 # homeassistant.components.verisure
-vsure==2.6.7
+vsure==2.7.0
 
 # homeassistant.components.vasttrafik
 vtjp==0.2.1
