@@ -117,7 +117,11 @@ class Elke27AreaAlarmControlPanel(
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Arm the area with a custom bypass."""
         code = _normalize_code(code)
-        faulted_zones = list(self.coordinator.data.faulted_zones)
+        faulted_zones = [
+            zone
+            for zone in self.coordinator.data.faulted_zones
+            if zone.area_id == self._area_id
+        ]
         results = await asyncio.gather(
             *(
                 self._hub.async_set_zone_bypass(zone.zone_id, bypassed=True, pin=code)

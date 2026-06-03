@@ -131,14 +131,14 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         link_keys_json = link_keys.to_json()
         panel_unique_id = _panel_unique_id(panel_info)
-        await self.async_set_unique_id(panel_unique_id)
-        self._abort_if_unique_id_configured()
         data: dict[str, Any] = {
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_LINK_KEYS_JSON: link_keys_json,
             CONF_CLIENT_ID: client_id,
         }
+        await self.async_set_unique_id(panel_unique_id)
+        self._abort_if_unique_id_configured(updates=data)
 
         options: dict[str, Any] = {
             CONF_PANEL_INFO: panel_info,

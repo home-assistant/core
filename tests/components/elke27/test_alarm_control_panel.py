@@ -124,7 +124,13 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
         _snapshot(
             areas={1: AreaState(area_id=1, name="Area 1")},
             zones={
-                1: ZoneState(zone_id=1, name="Front Door", open=True, bypassed=False),
+                1: ZoneState(
+                    zone_id=1,
+                    name="Front Door",
+                    area_id=1,
+                    open=True,
+                    bypassed=False,
+                ),
                 2: ZoneState(zone_id=2, name="Window", open=False, bypassed=False),
                 3: ZoneState(zone_id=3, name="Garage", open=True, bypassed=True),
             },
@@ -214,8 +220,20 @@ async def test_custom_bypass_handles_multiple_faulted_zones(
         _snapshot(
             areas={1: AreaState(area_id=1, name="Area 1")},
             zones={
-                1: ZoneState(zone_id=1, name="Front Door", open=True, bypassed=False),
-                2: ZoneState(zone_id=2, name="Window", open=True, bypassed=False),
+                1: ZoneState(
+                    zone_id=1,
+                    name="Front Door",
+                    area_id=1,
+                    open=True,
+                    bypassed=False,
+                ),
+                2: ZoneState(
+                    zone_id=2,
+                    name="Window",
+                    area_id=1,
+                    open=True,
+                    bypassed=False,
+                ),
             },
         ),
     )
@@ -227,6 +245,39 @@ async def test_custom_bypass_handles_multiple_faulted_zones(
 
     assert hub.async_set_zone_bypass.await_count == 2
     hub.async_arm_area.assert_not_awaited()
+
+
+async def test_custom_bypass_skips_other_area_faulted_zones(
+    hass: HomeAssistant,
+) -> None:
+    """Test custom bypass only bypasses faulted zones assigned to the area."""
+    hub, entities = _setup_area_entities(
+        hass,
+        _snapshot(
+            areas={1: AreaState(area_id=1, name="Area 1")},
+            zones={
+                1: ZoneState(
+                    zone_id=1,
+                    name="Front Door",
+                    area_id=1,
+                    open=True,
+                    bypassed=False,
+                ),
+                2: ZoneState(
+                    zone_id=2,
+                    name="Window",
+                    area_id=2,
+                    open=True,
+                    bypassed=False,
+                ),
+            },
+        ),
+    )
+
+    await entities[0].async_alarm_arm_custom_bypass(code="1234")
+
+    hub.async_set_zone_bypass.assert_awaited_once_with(1, bypassed=True, pin="1234")
+    hub.async_arm_area.assert_awaited_once()
 
 
 def test_area_state_helpers() -> None:

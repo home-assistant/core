@@ -4,7 +4,7 @@ import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-from elke27_lib import LinkKeys
+from elke27_lib import LinkKeys, PanelInfo, PanelSnapshot, TableInfo
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
 import pytest
 
@@ -22,8 +22,29 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
+
+
+def _snapshot() -> PanelSnapshot:
+    """Return a minimal panel snapshot."""
+    return PanelSnapshot(
+        panel=PanelInfo(serial="1234", model="E27", firmware="1.0"),
+        table_info=TableInfo(),
+        areas={},
+        zones={},
+        zone_definitions={},
+        outputs={},
+        output_definitions={},
+        lights={},
+        barriers={},
+        locks={},
+        thermostats={},
+        version=1,
+        updated_at=dt_util.utcnow(),
+    )
 
 
 async def test_setup_unload_calls_connect_disconnect_and_subscribe(
@@ -40,7 +61,7 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
         async_start=AsyncMock(return_value=None),
         async_config_entry_first_refresh=AsyncMock(return_value=None),
         async_stop=AsyncMock(return_value=None),
-        data=None,
+        data=_snapshot(),
     )
 
     entry = MockConfigEntry(
@@ -84,10 +105,59 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
         coordinator.async_start.assert_awaited_once()
         coordinator.async_config_entry_first_refresh.assert_awaited_once()
         assert isinstance(entry.runtime_data, Elke27RuntimeData)
+        assert (
+            dr.async_get(hass).async_get_device({(DOMAIN, "112233445566")}) is not None
+        )
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
+    coordinator.async_stop.assert_awaited_once()
+    hub.async_disconnect.assert_awaited_once()
+
+
+async def test_setup_forward_entry_setups_error_cleans_up(
+    hass: HomeAssistant,
+) -> None:
+    """Test platform forwarding errors clean up setup resources."""
+    hub = SimpleNamespace(
+        panel_name=None,
+        async_connect=AsyncMock(return_value=None),
+        async_disconnect=AsyncMock(return_value=None),
+    )
+    coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
+        async_config_entry_first_refresh=AsyncMock(return_value=None),
+        async_stop=AsyncMock(return_value=None),
+        data=_snapshot(),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.18",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
+            CONF_CLIENT_ID: "112233445566",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch(
+            "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            AsyncMock(side_effect=ConfigEntryError),
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     coordinator.async_stop.assert_awaited_once()
     hub.async_disconnect.assert_awaited_once()
 
@@ -413,7 +483,7 @@ async def test_setup_uses_client_id(hass: HomeAssistant) -> None:
         async_start=AsyncMock(return_value=None),
         async_config_entry_first_refresh=AsyncMock(return_value=None),
         async_stop=AsyncMock(return_value=None),
-        data=None,
+        data=_snapshot(),
     )
     entry = MockConfigEntry(
         domain=DOMAIN,

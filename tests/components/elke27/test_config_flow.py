@@ -358,6 +358,58 @@ async def test_manual_flow_aborts_on_duplicate(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
+async def test_manual_flow_updates_duplicate_panel_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test duplicate panel unique IDs keep the fresh link data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234",
+        data={
+            CONF_HOST: "192.168.1.70",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS_JSON: LinkKeys("old", "old", "old").to_json(),
+            CONF_CLIENT_ID: "oldclientid",
+        },
+    )
+    entry.add_to_hass(hass)
+    client = AsyncMock()
+    client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
+    client.async_connect = AsyncMock(return_value=None)
+    client.wait_ready = AsyncMock(return_value=True)
+    client.async_disconnect = AsyncMock(return_value=None)
+    client.snapshot = FakeSnapshot(
+        panel=FakePanelInfo(
+            panel_name="Test Panel",
+            mac="aa:bb:cc:dd:ee:ff",
+            panel_serial="1234",
+        ),
+        table_info=FakeTableInfo(areas=8, zones=16),
+    )
+
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.71",
+                "access_code": "1234",
+                "passphrase": "test-pass",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "192.168.1.71"
+    assert entry.data[CONF_LINK_KEYS_JSON] == LinkKeys("tk", "lk", "lh").to_json()
+    assert entry.data[CONF_CLIENT_ID] == config_flow.derive_client_id(result["flow_id"])
+
+
 async def test_unknown_error_maps_to_unknown(hass: HomeAssistant) -> None:
     """Test unknown client errors map to the unknown config flow error."""
     client = AsyncMock()
