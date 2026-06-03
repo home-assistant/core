@@ -38,9 +38,7 @@ OVERVIEW = [
                 "smartLocks": [
                     {"device": {"deviceLabel": "lock-1"}, "status": "LOCKED"}
                 ],
-                "smartplugs": [
-                    {"device": {"deviceLabel": "plug-1"}, "status": "on"}
-                ],
+                "smartplugs": [{"device": {"deviceLabel": "plug-1"}, "status": "on"}],
             }
         }
     }
@@ -432,11 +430,7 @@ def test_smartcam_capture(
 ) -> None:
     """Smartcam capture polls until the image is available."""
     mock_verisure_session.request.side_effect = [
-        {
-            "data": {
-                "ContentProviderCaptureImageRequest": {"requestId": "req-1"}
-            }
-        },
+        {"data": {"ContentProviderCaptureImageRequest": {"requestId": "req-1"}}},
         {
             "data": {
                 "installation": {
