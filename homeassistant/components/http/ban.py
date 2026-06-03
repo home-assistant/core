@@ -268,10 +268,6 @@ class IpBanManager:
 
         self.ip_bans_lookup = ip_bans_lookup
 
-    def __len__(self) -> int:
-        """Return number of banned IP addresses."""
-        return len(self.ip_bans_lookup)
-
     def _add_ban(self, ip_ban: IpBan) -> None:
         """Update config file with new banned IP address."""
         with open(self.path, "a", encoding="utf8") as out:
