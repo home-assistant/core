@@ -84,7 +84,7 @@ def _check_domain_argument(arg_node: nodes.NodeNG) -> bool:
     We allow:
         - x.DOMAIN/x.domain attribute (including *_DOMAIN/*_domain)
         - DOMAIN/domain name (including *_DOMAIN/*_domain)
-        - string literals (for cases where the constant is not imported)
+    Return True if the argument is valid, False otherwise.
         - subscript expressions (e.g. data["key"])
 
     Return True if the argument is valid, False if a message was added.
