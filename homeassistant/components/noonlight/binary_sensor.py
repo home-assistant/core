@@ -1,4 +1,4 @@
-"""Binary sensors derived from the Noonlight dispatch state."""
+"""Binary sensor for Noonlight API reachability."""
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -8,7 +8,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import STATE_DISPATCHED, STATE_PENDING
 from .coordinator import NoonlightConfigEntry, NoonlightCoordinator
 from .entity import NoonlightEntity
 
@@ -18,51 +17,15 @@ async def async_setup_entry(
     entry: NoonlightConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Noonlight binary sensors."""
-    coordinator = entry.runtime_data
-    async_add_entities(
-        [
-            NoonlightDispatchPending(coordinator),
-            NoonlightDispatchActive(coordinator),
-            NoonlightApiReachable(coordinator),
-        ]
-    )
-
-
-class NoonlightDispatchPending(NoonlightEntity, BinarySensorEntity):
-    """``on`` during the cancelable entry-delay grace window."""
-
-    def __init__(self, coordinator: NoonlightCoordinator) -> None:
-        """Initialize the dispatch pending binary sensor."""
-        super().__init__(coordinator, "dispatch_pending")
-
-    @property
-    def is_on(self) -> bool:
-        """Return True while the dispatch is in the pending grace window."""
-        return self.coordinator.data["state"] == STATE_PENDING
-
-
-class NoonlightDispatchActive(NoonlightEntity, BinarySensorEntity):
-    """``on`` while a dispatch is live with Noonlight."""
-
-    _attr_device_class = BinarySensorDeviceClass.SAFETY
-
-    def __init__(self, coordinator: NoonlightCoordinator) -> None:
-        """Initialize the dispatch active binary sensor."""
-        super().__init__(coordinator, "dispatch_active")
-
-    @property
-    def is_on(self) -> bool:
-        """Return True while a dispatch is live with Noonlight."""
-        # SAFETY device class: ``on`` == unsafe == help is actively dispatched.
-        return self.coordinator.data["state"] == STATE_DISPATCHED
+    """Set up the Noonlight binary sensor."""
+    async_add_entities([NoonlightApiReachable(entry.runtime_data)])
 
 
 class NoonlightApiReachable(NoonlightEntity, BinarySensorEntity):
-    """``on`` while the idle heartbeat confirms Noonlight is reachable + authed.
+    """``on`` while the Noonlight API is reachable and the token is valid.
 
     CONNECTIVITY device class: ``on`` == connected. Build automations on this
-    to be warned of a broken token/network before you need to dispatch.
+    to be warned of a broken token or network problem ahead of time.
     """
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
@@ -75,5 +38,4 @@ class NoonlightApiReachable(NoonlightEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True while the Noonlight API is reachable and authenticated."""
-        # api_healthy is always present (set by _initial_state).
-        return bool(self.coordinator.data["api_healthy"])
+        return self.coordinator.data

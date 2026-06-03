@@ -18,15 +18,14 @@ class NoonlightEntity(CoordinatorEntity[NoonlightCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: NoonlightCoordinator, key: str) -> None:
-        """Initialise with a stable per-entry ``key`` (e.g. ``dispatch_state``)."""
+        """Initialise with a stable per-entry ``key`` (e.g. ``api_reachable``)."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.entry.entry_id}_{key}"
+        entry = coordinator.config_entry
+        self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._attr_translation_key = key
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.entry.entry_id)},
-            # Naming the device "Noonlight <account>" yields entity ids like
-            # ``binary_sensor.noonlight_<account>_dispatch_pending``.
-            name=f"Noonlight {coordinator.entry.title}",
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.title,
             manufacturer="Noonlight",
             model="Dispatch",
         )

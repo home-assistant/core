@@ -1,99 +1,14 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This property (environment, address, and ZIP) is already configured.",
-      "reauth_successful": "Re-authentication was successful.",
-      "reconfigure_successful": "Caller and location details updated.",
-      "unique_id_mismatch": "The address and ZIP identify a different property. Add a new entry instead of changing this one's location."
+      "already_configured": "[%key:common::config_flow::abort::already_configured%]"
     },
     "error": {
       "base_url_required": "A custom base URL is required for the 'custom' environment.",
-      "cannot_connect": "Could not reach Noonlight. Check your network and base URL.",
-      "invalid_auth": "Noonlight rejected that token.",
-      "invalid_phone": "Enter a valid phone number, e.g. +12025550142 or (202) 555-0142.",
-      "invalid_state": "Enter a valid 2-letter US state code, e.g. VA.",
-      "invalid_zip": "Enter a valid 5-digit US ZIP code, e.g. 62704.",
-      "safety_ack_required": "You must acknowledge the safety disclosure to use the production environment."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
-      "caller": {
-        "data": {
-          "address": "Street address",
-          "city": "City",
-          "location_id": "Site / location name (optional)",
-          "name": "Full name",
-          "phone": "Phone number",
-          "state": "State (2-letter code)",
-          "zip": "ZIP code"
-        },
-        "data_description": {
-          "address": "Street address only, e.g. 123 Main St.",
-          "city": "City name, e.g. Springfield.",
-          "location_id": "Label for this property if you run multiple, e.g. 'Site A' or 'Lake House'. Sent to Noonlight with every alarm so you can tell which site raised it. Leave blank if you only have one.",
-          "name": "Name responders should ask for, e.g. Jane Doe.",
-          "phone": "Callback number. Any common US format works — (202) 555-0142, 202-555-0142, or +12025550142 — and is stored as +12025550142.",
-          "state": "Two-letter US state/territory code, e.g. VA. Lowercase such as 'va' is accepted and uppercased automatically; full names such as 'Virginia' are not accepted.",
-          "zip": "5-digit US ZIP, e.g. 62704 (ZIP+4 like 62704-1234 also accepted)."
-        },
-        "description": "Sent to Noonlight with every dispatch so responders know who and where. Phone, state, and ZIP are validated now to avoid a confusing failure later, at dispatch time.",
-        "title": "Caller and location"
-      },
-      "defaults": {
-        "data": {
-          "dedupe_seconds": "De-dup window (seconds)",
-          "default_entry_delay_seconds": "Default entry delay (seconds)",
-          "services_granted": "Granted services"
-        },
-        "data_description": {
-          "dedupe_seconds": "After a dispatch fires, repeat dispatches within this window are ignored.",
-          "default_entry_delay_seconds": "Grace window before a dispatch fires. Cancelable during this time.",
-          "services_granted": "Only the selected dispatch services will be available."
-        },
-        "description": "Tune the grace window, de-dup window, and which dispatch services to enable.",
-        "title": "Defaults"
-      },
-      "reauth_confirm": {
-        "data": {
-          "api_token": "API token"
-        },
-        "data_description": {
-          "api_token": "Long-lived token from your Noonlight account portal."
-        },
-        "description": "Your Noonlight token was rejected. Paste a new token to restore service.",
-        "title": "Re-authenticate Noonlight"
-      },
-      "reconfigure": {
-        "data": {
-          "address": "Street address",
-          "city": "City",
-          "location_id": "Site / location name (optional)",
-          "name": "Full name",
-          "phone": "Phone number",
-          "state": "State (2-letter code)",
-          "zip": "ZIP code"
-        },
-        "data_description": {
-          "address": "Street address only, e.g. 123 Main St.",
-          "city": "City name, e.g. Springfield.",
-          "location_id": "Label for this property if you run multiple, e.g. 'Site A'. Sent to Noonlight with every alarm.",
-          "name": "Name responders should ask for, e.g. Jane Doe.",
-          "phone": "Callback number. Any common US format works — (202) 555-0142 or +12025550142.",
-          "state": "Two-letter US state/territory code, e.g. VA.",
-          "zip": "5-digit US ZIP, e.g. 62704."
-        },
-        "description": "Update the caller details, address, or site label sent to Noonlight. Phone, state, and ZIP are re-validated.",
-        "title": "Edit caller and location"
-      },
-      "safety": {
-        "data": {
-          "safety_ack": "I understand this integration can summon real police, fire, and medical responders, and that false dispatches may incur fines from local authorities."
-        },
-        "data_description": {
-          "safety_ack": "You must acknowledge this to use the production environment."
-        },
-        "description": "You selected the production environment.",
-        "title": "Safety acknowledgment"
-      },
       "user": {
         "data": {
           "api_token": "API token",
@@ -102,8 +17,8 @@
         },
         "data_description": {
           "api_token": "Long-lived token from your Noonlight account portal.",
-          "base_url": "Only used when environment is 'custom'; paste the full base URL for your endpoint.",
-          "environment": "production reaches real responders. sandbox is safe for testing. Choose custom to point at your own endpoint."
+          "base_url": "Only used when the environment is 'custom'; the full base URL of your Noonlight endpoint.",
+          "environment": "Production reaches real responders. Sandbox is safe for testing. Choose custom to point at your own endpoint."
         },
         "description": "Enter your Noonlight API token and choose which environment to target. Use sandbox for testing — it never alerts real responders.",
         "title": "Noonlight credentials"
@@ -114,84 +29,6 @@
     "binary_sensor": {
       "api_reachable": {
         "name": "API reachable"
-      },
-      "dispatch_active": {
-        "name": "Dispatch active"
-      },
-      "dispatch_pending": {
-        "name": "Dispatch pending"
-      }
-    },
-    "sensor": {
-      "dispatch_state": {
-        "name": "Dispatch state",
-        "state": {
-          "canceled": "Canceled",
-          "dispatched": "Dispatched",
-          "error": "Error",
-          "idle": "Idle",
-          "pending": "Pending"
-        }
-      },
-      "last_event": {
-        "name": "Last event"
-      },
-      "last_health_check": {
-        "name": "Last health check"
-      }
-    }
-  },
-  "exceptions": {
-    "account_not_found": {
-      "message": "No Noonlight account matches \"{account}\"."
-    },
-    "account_required": {
-      "message": "More than one Noonlight account is configured. Set the \"account\" field to choose one."
-    },
-    "ambiguous_account_title": {
-      "message": "More than one Noonlight account is titled \"{account}\". Use the entry ID instead to choose one."
-    },
-    "no_accounts_loaded": {
-      "message": "No Noonlight accounts are loaded."
-    },
-    "no_granted_services": {
-      "message": "None of the requested Noonlight services are granted for account \"{account}\"."
-    },
-    "test_dispatch_failed": {
-      "message": "Noonlight test dispatch failed: {error}"
-    }
-  },
-  "issues": {
-    "auth_failed": {
-      "description": "Noonlight rejected the API token. Re-authenticate to restore dispatch capability.",
-      "title": "Noonlight authentication failed"
-    },
-    "network_failed": {
-      "description": "Home Assistant could not reach the Noonlight API. Dispatches and status updates may be delayed.",
-      "title": "Cannot reach Noonlight"
-    },
-    "unexpected_response": {
-      "description": "Noonlight returned a response Home Assistant did not understand. Check the logs and the Noonlight status page.",
-      "title": "Unexpected Noonlight response"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "dedupe_seconds": "De-dup window (seconds)",
-          "default_entry_delay_seconds": "Default entry delay (seconds)",
-          "heartbeat_minutes": "Heartbeat interval (minutes)",
-          "services_granted": "Granted services"
-        },
-        "data_description": {
-          "dedupe_seconds": "After a dispatch fires, repeat dispatches for the same service within this window are ignored.",
-          "default_entry_delay_seconds": "Grace window before a dispatch fires; cancelable during this time.",
-          "heartbeat_minutes": "How often (minutes) to silently verify Noonlight is reachable and your token is valid, so a problem surfaces before an emergency rather than during one. Set to 0 to disable.",
-          "services_granted": "Only the selected dispatch services will be available."
-        },
-        "description": "Caller, address, and site changes are made with the Reconfigure action.",
-        "title": "Noonlight options"
       }
     }
   },
@@ -202,111 +39,6 @@
         "production": "Production (real responders)",
         "sandbox": "Sandbox (testing)"
       }
-    },
-    "services_granted": {
-      "options": {
-        "fire": "Fire",
-        "medical": "Medical",
-        "police": "Police"
-      }
-    }
-  },
-  "services": {
-    "cancel": {
-      "description": "Abort a pending dispatch, or signal Noonlight that an active dispatch is a false alarm.",
-      "fields": {
-        "account": {
-          "description": "Config entry id or title. Optional when only one account is configured.",
-          "name": "Account"
-        },
-        "reason": {
-          "description": "Free-text reason recorded in the audit log.",
-          "name": "Reason"
-        }
-      },
-      "name": "Cancel"
-    },
-    "dispatch_all": {
-      "description": "Request police, fire, and medical in a single alarm.",
-      "fields": {
-        "account": {
-          "description": "Config entry id or title. Optional when only one account is configured.",
-          "name": "Account"
-        },
-        "entry_delay_seconds": {
-          "description": "Grace window before the dispatch actually fires. Set 0 to skip.",
-          "name": "Entry delay (seconds)"
-        },
-        "instructions": {
-          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. You can use a template to include the triggering entity name.",
-          "name": "Instructions"
-        }
-      },
-      "name": "Dispatch all"
-    },
-    "dispatch_fire": {
-      "description": "Request fire dispatch through Noonlight.",
-      "fields": {
-        "account": {
-          "description": "Config entry id or title. Optional when only one account is configured.",
-          "name": "Account"
-        },
-        "entry_delay_seconds": {
-          "description": "Grace window before the dispatch actually fires. Set 0 to skip.",
-          "name": "Entry delay (seconds)"
-        },
-        "instructions": {
-          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. You can use a template to include the triggering entity name.",
-          "name": "Instructions"
-        }
-      },
-      "name": "Dispatch fire"
-    },
-    "dispatch_medical": {
-      "description": "Request medical dispatch through Noonlight.",
-      "fields": {
-        "account": {
-          "description": "Config entry id or title. Optional when only one account is configured.",
-          "name": "Account"
-        },
-        "entry_delay_seconds": {
-          "description": "Grace window before the dispatch actually fires. Set 0 to skip.",
-          "name": "Entry delay (seconds)"
-        },
-        "instructions": {
-          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. You can use a template to include the triggering entity name.",
-          "name": "Instructions"
-        }
-      },
-      "name": "Dispatch medical"
-    },
-    "dispatch_police": {
-      "description": "Request police dispatch through Noonlight.",
-      "fields": {
-        "account": {
-          "description": "Config entry id or title. Optional when only one account is configured.",
-          "name": "Account"
-        },
-        "entry_delay_seconds": {
-          "description": "Grace window before the dispatch actually fires. Set 0 to skip.",
-          "name": "Entry delay (seconds)"
-        },
-        "instructions": {
-          "description": "Optional context sent to Noonlight responders, e.g. which sensor triggered the alarm. You can use a template to include the triggering entity name.",
-          "name": "Instructions"
-        }
-      },
-      "name": "Dispatch police"
-    },
-    "test_dispatch": {
-      "description": "Fire a no-op round-trip against Noonlight's sandbox. Confirms credentials and connectivity without alerting real responders.",
-      "fields": {
-        "account": {
-          "description": "Config entry id or title. Optional when only one account is configured.",
-          "name": "Account"
-        }
-      },
-      "name": "Test dispatch"
     }
   }
 }
