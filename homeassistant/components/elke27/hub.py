@@ -33,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _ARM_MODE_BY_NAME = {
     "ARMED_AWAY": ArmMode.ARMED_AWAY,
+    # E27 has no native custom-bypass arm mode; HA bypasses zones first, then arms away.
     "ARMED_CUSTOM_BYPASS": ArmMode.ARMED_AWAY,
     "ARMED_NIGHT": ArmMode.ARMED_NIGHT,
     "ARMED_STAY": ArmMode.ARMED_STAY,
