@@ -1051,9 +1051,23 @@ async def handle_subscribe_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe condition command."""
-    condition_config = await async_validate_condition_config(hass, msg["condition"])
+    try:
+        condition_config = await async_validate_condition_config(hass, msg["condition"])
+        condition = await async_condition_from_config(hass, condition_config)
+    except vol.Invalid as err:
+        connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        return
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
 
-    condition = await async_condition_from_config(hass, condition_config)
     event_data: dict[str, Any] = {}
 
     @callback
