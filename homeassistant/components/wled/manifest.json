@@ -7,6 +7,8 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "platinum",
-  "requirements": ["wled==0.23.0"],
+  "requirements": [
+    "wled @ git+https://github.com/LordMike/python-wled@codex/use-device-repo-upgrade"
+  ],
   "zeroconf": ["_wled._tcp.local."]
 }

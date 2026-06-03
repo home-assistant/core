@@ -183,12 +183,11 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         return device
 
 
-class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
+class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Releases]]):
     """Class to manage fetching WLED releases."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize global WLED releases updater."""
-        self.wled = WLEDReleases(session=async_get_clientsession(hass))
         super().__init__(
             hass,
             LOGGER,
@@ -196,14 +195,32 @@ class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
             name=DOMAIN,
             update_interval=RELEASES_SCAN_INTERVAL,
         )
+        self.repos: dict[str, str] = {}
 
-    async def _async_update_data(self) -> Releases:
+    async def register_repo(self, entry_id: str, repo: str) -> None:
+        """Register a repo to fetch releases for."""
+        if self.repos.get(entry_id) != repo:
+            self.repos[entry_id] = repo.lower()
+            await self.async_request_refresh()
+
+    def unregister_repo(self, entry_id: str) -> None:
+        """Unregister a repo."""
+        del self.repos[entry_id]
+
+    async def _async_update_data(self) -> dict[str, Releases]:
         """Fetch release data from WLED."""
-        try:
-            return await self.wled.releases()
-        except WLEDError as error:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_response_github_error",
-                translation_placeholders={"error": str(error)},
-            ) from error
+        result = {}
+        repos = set(self.repos.values())
+        for repo in repos:
+            try:
+                update = await WLEDReleases(
+                    repo=repo,
+                    session=async_get_clientsession(self.hass),
+                ).releases()
+            except WLEDError as error:
+                self.logger.warning(
+                    "Error fetching releases for repo %s: %s", repo, error
+                )
+            else:
+                result[repo] = update
+        return result
