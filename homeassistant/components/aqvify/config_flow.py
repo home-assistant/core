@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from aiohttp import ClientResponseError
 from pyaqvify import AqvifyAccount, AqvifyAPI, AqvifyAuthException
 import voluptuous as vol
 
@@ -35,8 +36,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         data = await hub.async_get_account_id()
     except AqvifyAuthException as err:
         raise InvalidAuth from err
-    except Exception as err:
+    except ClientResponseError as err:
         raise CannotConnect from err
+    except Exception:
+        raise
 
     account_id = AqvifyAccount(data).account_id
     return {"title": "Aqvify", "account_id": account_id}
