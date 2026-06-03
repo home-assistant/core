@@ -28,7 +28,10 @@ async def test_cameras(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test camera entities are created correctly."""
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
+    with (
+        patch("homeassistant.components.camera._RND.getrandbits", return_value=1),
+        patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]),
+    ):
         await setup_integration(hass, mock_config_entry)
 
         await snapshot_platform(
