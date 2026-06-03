@@ -105,13 +105,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
         await close_session()
         raise ConfigEntryAuthFailed from err
     except AirOSKeyDataMissingError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
         await close_session()
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="key_data_missing"
         ) from err
     except Exception as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
         await close_session()
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="unknown"
@@ -126,12 +124,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
     data_coordinator = AirOSDataUpdateCoordinator(
         hass, entry, device_data, airos_device
     )
-    await data_coordinator.async_config_entry_first_refresh()
 
-    firmware_coordinator: AirOSFirmwareUpdateCoordinator | None = None
-    if device_data["fw_major"] >= 8:
-        firmware_coordinator = AirOSFirmwareUpdateCoordinator(hass, entry, airos_device)
-        await firmware_coordinator.async_config_entry_first_refresh()
+    try:
+        await data_coordinator.async_config_entry_first_refresh()
+
+        firmware_coordinator: AirOSFirmwareUpdateCoordinator | None = None
+        if device_data["fw_major"] >= 8:
+            firmware_coordinator = AirOSFirmwareUpdateCoordinator(
+                hass, entry, airos_device
+            )
+            await firmware_coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady, ConfigEntryAuthFailed:
+        await close_session()
+        raise
+    except Exception as err:
+        await close_session()
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="unknown"
+        ) from err
 
     entry.runtime_data = AirOSRuntimeData(
         status=data_coordinator,

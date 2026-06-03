@@ -160,13 +160,15 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         except AirOSTLSCompatibilityError:
+            # If already in legacy, stop iteration
             if legacy:
-                raise
-            retry_config = dict(config_data)
-            retry_config[CONF_LEGACY_SSL] = True
-            return await self._validate_and_get_device_info(
-                config_data=retry_config, legacy=True
-            )
+                self.errors["base"] = "cannot_connect"
+            else:
+                retry_config = dict(config_data)
+                retry_config[CONF_LEGACY_SSL] = True
+                return await self._validate_and_get_device_info(
+                    config_data=retry_config, legacy=True
+                )
 
         except (
             AirOSConnectionSetupError,

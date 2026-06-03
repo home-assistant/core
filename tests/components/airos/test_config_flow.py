@@ -86,7 +86,7 @@ MOCK_DISC_EXISTS = {
 
 async def test_manual_flow_creates_entry(
     hass: HomeAssistant,
-    ap_status_fixture: dict[str, Any],
+    ap_status_fixture: AirOSData,
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
     mock_setup_entry: AsyncMock,
@@ -161,7 +161,7 @@ async def test_form_duplicate_entry(
 async def test_form_exception_handling(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    ap_status_fixture: dict[str, Any],
+    ap_status_fixture: AirOSData,
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
     exception: Exception,
@@ -961,9 +961,11 @@ async def test_validate_raise_on_attempted_legacy(
             "homeassistant.components.airos.config_flow.build_legacy_context",
             return_value=MagicMock(),
         ),
-        pytest.raises(AirOSTLSCompatibilityError),
     ):
-        await flow._validate_and_get_device_info(MOCK_CONFIG, legacy=True)
+        result = await flow._validate_and_get_device_info(MOCK_CONFIG, legacy=True)
+
+    assert result is None
+    assert flow.errors == {"base": "cannot_connect"}
 
     mock_client_session.assert_called_once()
     legacy_session.close.assert_awaited_once()
