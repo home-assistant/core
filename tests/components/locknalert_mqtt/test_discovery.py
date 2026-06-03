@@ -22,7 +22,7 @@ from homeassistant.components.locknalert_mqtt.discovery import (
     MQTTDiscoveryPayload,
     async_start,
 )
-from homeassistant.components.locknalert_mqtt.models import ReceiveMessage
+from homeassistant.components.locknalert_mqtt.models import DATA_MQTT, ReceiveMessage
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_STATE_CHANGED,
@@ -382,7 +382,7 @@ async def test_correct_config_discovery_component(
 
     assert state is not None
     assert state.name == "test_device1 Beer"
-    assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
+    assert discovery_hash in hass.data[DATA_MQTT].discovery_already_discovered
 
     device_entry = device_registry.async_get_device(
         identifiers={(mqtt.DOMAIN, "0AFFD2")}
@@ -410,7 +410,7 @@ async def test_correct_config_discovery_component(
 
     assert state is not None
     assert state.name == "test_device2 Milk"
-    assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
+    assert discovery_hash in hass.data[DATA_MQTT].discovery_already_discovered
 
     device_entry = device_registry.async_get_device(
         identifiers={(mqtt.DOMAIN, "0AFFD2")}
@@ -480,7 +480,7 @@ async def test_correct_config_discovery_device(
 
     assert state is not None
     assert state.name == "test_device1 Beer"
-    assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
+    assert discovery_hash in hass.data[DATA_MQTT].discovery_already_discovered
 
     device_entry = device_registry.async_get_device(
         identifiers={(mqtt.DOMAIN, "0AFFD2")}
@@ -513,7 +513,7 @@ async def test_correct_config_discovery_device(
 
     assert state is not None
     assert state.name == "test_device2 Milk"
-    assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
+    assert discovery_hash in hass.data[DATA_MQTT].discovery_already_discovered
 
     device_entry = device_registry.async_get_device(
         identifiers={(mqtt.DOMAIN, "0AFFD2")}
@@ -1254,12 +1254,12 @@ async def test_discovery_with_default_entity_id_for_previous_deleted_entity(
 
     assert state is not None
     assert state.name == name
-    assert (domain, "object bla") in hass.data["mqtt"].discovery_already_discovered
+    assert (domain, "object bla") in hass.data[DATA_MQTT].discovery_already_discovered
 
     # Delete the entity
     async_fire_mqtt_message(hass, topic, "")
     await hass.async_block_till_done()
-    assert (domain, "object bla") not in hass.data["mqtt"].discovery_already_discovered
+    assert (domain, "object bla") not in hass.data[DATA_MQTT].discovery_already_discovered
 
     # Rediscover with new default_entity_id
     async_fire_mqtt_message(hass, topic, new_config)
@@ -1269,7 +1269,7 @@ async def test_discovery_with_default_entity_id_for_previous_deleted_entity(
 
     assert state is not None
     assert state.name == name
-    assert (domain, "object bla") in hass.data["mqtt"].discovery_already_discovered
+    assert (domain, "object bla") in hass.data[DATA_MQTT].discovery_already_discovered
 
     # Assert the entity ID can be changed later
     entity_registry.async_update_entity(new_entity_id, new_entity_id=later_entity_id)
@@ -2736,7 +2736,7 @@ async def test_clean_up_registry_monitoring(
 ) -> None:
     """Test registry monitoring hook is removed after a reload."""
     await mqtt_mock_entry()
-    hooks: dict = hass.data["mqtt"].discovery_registry_hooks
+    hooks: dict = hass.data[DATA_MQTT].discovery_registry_hooks
     # discover an entity that is not enabled by default
     config1 = {
         "name": "sbfspot_12345",
