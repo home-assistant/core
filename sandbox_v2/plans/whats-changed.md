@@ -53,9 +53,10 @@
   group. Pre-release → no migration. (`plan-fidelity-batch.md` #5 `3833290b165`)
 
 ## For integration authors
-- [ ] **Custom (HACS) integrations are fetched at startup.** Main pushes the git
+- [x] **Custom (HACS) integrations are fetched at startup.** Main pushes the git
   URL + pinned commit sha; the sandbox clones it before setup. No persistent
-  code on disk → sandboxes are wipe-and-restart safe. (`plan-ephemeral-sources.md`)
+  code on disk → sandboxes are wipe-and-restart safe. (`plan-ephemeral-sources.md`
+  `d4b7aef732f`)
 - [x] **Config-flow forms render faithfully.** Selectors and sections now
   survive the sandbox round-trip (previously some collapsed to plain inputs).
   (`plan-fidelity-batch.md` #4 `94804369825`)

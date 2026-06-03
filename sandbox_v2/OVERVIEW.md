@@ -255,6 +255,43 @@ rides in every marshalled `FlowResult` and the proxy applies it via
 `async_set_unique_id`, so main's duplicate-detection guard fires for
 collisions (Phase 14).
 
+## Integration source — fetch before setup (stateless)
+
+A sandbox holds no persistent state. Config is pushed on `entry_setup`,
+storage/restore-state routes to main via the `current_sandbox` store
+bridge — the last stateful bit was the **integration code itself**. Built-in
+integrations ride the bundled `homeassistant` package, but custom (HACS)
+integrations live under `<config>/custom_components` on the main install and
+are absent from a fresh sandbox.
+
+`entry_setup` therefore carries a typed `IntegrationSource` sub-message
+(`EntrySetup.integration_source`):
+
+- `{kind: "builtin"}` — the bundled package provides it; the sandbox does
+  nothing.
+- `{kind: "git", url, ref, tag, domain, subdir}` — main pushes where to fetch
+  the code. `ref` is an **exact commit sha** (never a moving tag), so what the
+  sandbox fetches can't be re-pointed between resolution and fetch.
+
+**Main side** (`sources.py`): core stays HACS-agnostic via a registered
+resolver hook. `async_register_sandbox_source_resolver(hass, resolver)` lets
+HACS (or anything) map a custom domain → git source;
+`async_resolve_integration_source` short-circuits built-ins to
+`{kind: builtin}` (via `Integration.is_built_in`) and otherwise consults the
+resolvers in order. With no resolver, a custom integration **raises** rather
+than silently failing. The resolver is responsible for pinning the installed
+version to a sha (core performs no network I/O); `tag` is logs-only.
+
+**Sandbox side** (`hass_client/sources.py`):
+`async_ensure_integration_source` runs **before** `async_setup`. A git source
+downloads GitHub's codeload tarball for the exact sha (no `git` binary
+dependency, matching HACS) and extracts the repo's `subdir` into
+`<config>/custom_components/<domain>`, verifying the tree has a
+`manifest.json`. A **process-lifetime cache** keyed by `(url, ref)` means
+multiple entries from one repo download once; nothing survives a process
+restart, so the sandbox stays wipe-and-restart safe. The download primitive is
+injected so tests substitute a local fixture — no fetch ever hits the network.
+
 ## Entity bridge (Option B — action-call forwarding)
 
 The Phase 1 spike compared two designs head-to-head and recorded
@@ -267,8 +304,9 @@ target={"entity_id": [...]})` round-trip over the shared
 ### Sandbox side
 
 `EntryRunner` rebuilds a `ConfigEntry` from the `sandbox_v2/entry_setup`
-payload, drops it into the sandbox's `ConfigEntries`, and runs the
-integration's `async_setup_entry`. The integration adds entities the
+payload, **fetches the integration's code** if needed (see below), drops the
+entry into the sandbox's `ConfigEntries`, and runs the integration's
+`async_setup_entry`. The integration adds entities the
 normal way — `EntityBridge` listens for `EVENT_STATE_CHANGED` on the
 sandbox's bus and, on each entity's first appearance, pushes
 `sandbox_v2/register_entity` to main with:

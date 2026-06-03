@@ -57,6 +57,36 @@ second condition), as a deliberate call relying on git history for rollback.
 The HA Core side of the integration lives at
 `../homeassistant/components/sandbox_v2/`.
 
+## Stateless sandboxes — integration source
+
+Sandboxes hold no persistent state: config is pushed on `entry_setup`,
+storage/restore-state routes to main via the `current_sandbox` store bridge,
+and the **last stateful bit — the integration code — is now fetched at
+startup**. `EntrySetup.integration_source` (a typed proto sub-message) tells
+the sandbox where to get the code:
+
+- Built-in → `{kind: "builtin"}`, a no-op (the bundled `homeassistant`
+  package provides it).
+- Custom (HACS) → `{kind: "git", url, ref, tag, domain, subdir}`; the sandbox
+  downloads the codeload tarball for the exact `ref` (commit sha) into
+  `<config>/custom_components/<domain>` before `async_setup`.
+
+**Resolver-hook contract.** Core stays HACS-agnostic. `sources.py` (HA side)
+exposes `async_register_sandbox_source_resolver(hass, resolver)`; a resolver
+maps a custom `domain → IntegrationSource-dict | None`. Built-ins
+short-circuit (`Integration.is_built_in`) without consulting a resolver; a
+custom domain with no resolver **raises** rather than silently falling back.
+The resolver MUST pin `ref` to an exact commit sha — core performs **no
+network I/O**, so it trusts the resolver's pin (`tag` is logs-only). The fetch
++ process-lifetime `(url, ref)` cache live in `hass_client/sources.py`; the
+download primitive is injectable so tests never hit the network. See
+OVERVIEW.md "Integration source — fetch before setup (stateless)".
+
+Runtime gap (follow-up, pairs with `plan-docker.md`): the bare-HA sandbox must
+run `async_process_requirements` (pip) for custom integrations that ship
+Python deps, and needs network egress (GitHub + PyPI). The wire + fetch are
+shipped + tested; the pip/egress runtime is not validated here.
+
 ## Core HA files modified (high-review surface)
 
 v2 touches three core HA surfaces. Each is intentional, small, and was

@@ -1865,7 +1865,8 @@
 
       <p>
         <code>EntryRunner</code> rebuilds a <code>ConfigEntry</code> from the
-        <code>sandbox_v2/entry_setup</code> payload, drops it into the sandbox's
+        <code>sandbox_v2/entry_setup</code> payload, fetches the integration's
+        code if needed (see below), drops the entry into the sandbox's
         <code>ConfigEntries</code>, and runs the integration's
         <code>async_setup_entry</code>. The integration adds entities the normal
         way &mdash; <code>EntityBridge</code> listens for
@@ -1897,6 +1898,26 @@
       <p>
         Subsequent updates push <code>sandbox_v2/state_changed</code> &mdash;
         state + attributes only, no re-registration.
+      </p>
+
+      <h3>Integration source &mdash; fetch before setup (stateless)</h3>
+
+      <p>
+        Sandboxes hold no persistent state: config arrives on
+        <code>entry_setup</code>, storage routes to main, and the last stateful
+        bit &mdash; the integration code &mdash; is fetched at startup.
+        <code>EntrySetup.integration_source</code> carries
+        <code>{kind: "builtin"}</code> (a no-op; the bundled
+        <code>homeassistant</code> package provides it) or
+        <code>{kind: "git", url, ref, &hellip;}</code> for custom (HACS)
+        integrations. Main pins <code>ref</code> to an exact commit sha; the
+        sandbox downloads the codeload tarball before <code>async_setup</code>
+        and extracts it into
+        <code>&lt;config&gt;/custom_components/&lt;domain&gt;</code>, cached for
+        the process lifetime by <code>(url, ref)</code>. Core stays
+        HACS-agnostic via a registered resolver hook
+        (<code>async_register_sandbox_source_resolver</code>); a custom domain
+        with no resolver fails loudly.
       </p>
 
       <h3>Main side</h3>

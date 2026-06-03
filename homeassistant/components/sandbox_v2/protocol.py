@@ -21,6 +21,12 @@ Main → Sandbox calls:
 * ``sandbox_v2/entry_setup``  — push a serialised :class:`ConfigEntry` into
   the sandbox, asking it to load the owning integration and run
   ``async_setup_entry``. Returns ``{"ok": bool, "reason": str | None}``.
+  Carries an ``integration_source`` sub-message telling a stateless sandbox
+  where to fetch the integration code: ``{kind: "builtin"}`` (the bundled
+  ``homeassistant`` package provides it — a no-op) or ``{kind: "git", url,
+  ref, tag, domain, subdir}`` for custom (HACS) integrations. ``ref`` is an
+  exact commit sha (main pins tag→sha; see ``sources.py``); the sandbox
+  fetches the code before setup (see ``hass_client.sources``).
 * ``sandbox_v2/entry_unload`` — ask the sandbox to unload an entry by id.
 * ``sandbox_v2/call_service``  — generic service dispatch (shared with
   Phase 6's main→sandbox service mirroring path). Payload mirrors a
