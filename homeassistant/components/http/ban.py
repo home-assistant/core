@@ -268,20 +268,23 @@ class IpBanManager:
 
         self.ip_bans_lookup = ip_bans_lookup
 
+    @staticmethod
+    def _get_ban_entry(ip_ban: IpBan) -> dict[str, str]:
+        """Get the ban entry for a given IP ban."""
+        return {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
+
     def _add_ban(self, ip_ban: IpBan) -> None:
         """Update config file with new banned IP address."""
         with open(self.path, "a", encoding="utf8") as out:
-            ip_ = {
-                str(ip_ban.ip_address): {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
-            }
+            ban_entry = {str(ip_ban.ip_address): self._get_ban_entry(ip_ban)}
             # Write in a single write call to avoid interleaved writes
-            out.write("\n" + yaml_util.dump(ip_))
+            out.write("\n" + yaml_util.dump(ban_entry))
 
     def _save_all_bans(self) -> None:
         """Save all banned IP addresses to the config file."""
         ip_bans = {
-            str(ban.ip_address): {ATTR_BANNED_AT: ban.banned_at.isoformat()}
-            for ban in self.ip_bans_lookup.values()
+            str(ip_ban.ip_address): self._get_ban_entry(ip_ban)
+            for ip_ban in self.ip_bans_lookup.values()
         }
         try:
             yaml_util.save_yaml(self.path, ip_bans)
