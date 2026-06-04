@@ -3,7 +3,7 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import YardianUpdateCoordinator
 
 
@@ -30,6 +30,6 @@ class YardianZoneEntity(CoordinatorEntity[YardianUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.yid}_{zone_id}")},
             name=coordinator.data.zones[zone_id].name,
-            manufacturer="Aeon Matrix",
+            manufacturer=MANUFACTURER,
             via_device=(DOMAIN, coordinator.yid),
         )
