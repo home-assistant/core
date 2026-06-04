@@ -22,7 +22,7 @@ from homeassistant.components.matter.ble_proxy import (
 from homeassistant.core import HomeAssistant
 
 
-def _make_service_info() -> BluetoothServiceInfoBleak:
+def _make_service_info(time: float | None = None) -> BluetoothServiceInfoBleak:
     """Return a real BluetoothServiceInfoBleak with realistic field values."""
     address = "AA:BB:CC:DD:EE:FF"
     name = "TestDevice"
@@ -37,7 +37,7 @@ def _make_service_info() -> BluetoothServiceInfoBleak:
         device=BLEDevice(name=name, address=address, details={}),
         advertisement=None,
         connectable=True,
-        time=monotonic_time_coarse(),
+        time=monotonic_time_coarse() if time is None else time,
         tx_power=0,
         raw=None,
     )
@@ -69,8 +69,14 @@ def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) -> None:
     assert kwargs["ws_url"] == "ws://localhost:5580/ble"
     assert isinstance(kwargs["scan_source"], HaBluetoothScanSource)
     assert isinstance(kwargs["device_resolver"], HaBluetoothDeviceResolver)
-    assert kwargs["task_factory"] == hass.async_create_task
     assert result is proxy_cls.return_value
+
+    coro = MagicMock()
+    with patch.object(hass, "async_create_background_task") as bg_task:
+        task = kwargs["task_factory"](coro)
+
+    bg_task.assert_called_once_with(coro, name="matter_ble_proxy")
+    assert task is bg_task.return_value
 
 
 async def test_scan_source_start_registers_passive_callback(
@@ -144,6 +150,43 @@ async def test_scan_source_callback_forwards_advertisement(
 
     assert len(forwarded) == 1
     assert forwarded[0].address == "AA:BB:CC:DD:EE:FF"
+
+
+@pytest.mark.parametrize(
+    ("advert_time", "expected_count"),
+    [
+        pytest.param(999.0, 0, id="stale-before-scan-start-dropped"),
+        pytest.param(1000.0, 1, id="equal-scan-start-forwarded"),
+        pytest.param(1001.0, 1, id="fresh-after-scan-start-forwarded"),
+    ],
+)
+async def test_scan_source_drops_replayed_history(
+    hass: HomeAssistant, advert_time: float, expected_count: int
+) -> None:
+    """Adverts older than the registration instant (HA history replay) are dropped."""
+    forwarded: list[AdvertisementData] = []
+    captured: dict[str, object] = {}
+
+    def fake_register(hass_, cb, _matcher, _mode):
+        captured["cb"] = cb
+        return MagicMock()
+
+    source = HaBluetoothScanSource(hass)
+    with (
+        patch(
+            "homeassistant.components.matter.ble_proxy.async_register_callback",
+            side_effect=fake_register,
+        ),
+        patch(
+            "homeassistant.components.matter.ble_proxy.MONOTONIC_TIME",
+            return_value=1000.0,
+        ),
+    ):
+        await source.start(forwarded.append)
+
+    captured["cb"](_make_service_info(time=advert_time), object())
+
+    assert len(forwarded) == expected_count
 
 
 async def test_scan_source_callback_swallows_exceptions(

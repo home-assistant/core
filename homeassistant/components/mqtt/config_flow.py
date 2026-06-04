@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from enum import IntEnum
 import json
 import logging
-import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
@@ -22,7 +21,6 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
 )
 from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
-import paho.mqtt.client as mqtt
 import voluptuous as vol
 import yaml
 
@@ -143,7 +141,7 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .addon import get_addon_manager
-from .client import MqttClientSetup
+from .client import try_connection
 from .const import (
     ALARM_CONTROL_PANEL_SUPPORTED_FEATURES,
     ATTR_PAYLOAD,
@@ -443,8 +441,6 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 5
 
 CONF_CLIENT_KEY_PASSWORD = "client_key_password"
-
-MQTT_TIMEOUT = 5
 
 ADVANCED_OPTIONS = "advanced_options"
 SET_CA_CERT = "set_ca_cert"
@@ -2455,7 +2451,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=valid_subscribe_topic,
             error="invalid_subscribe_topic",
         ),
-        CONF_VALUE_TEMPLATE: PlatformField(
+        CONF_STATE_VALUE_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
             validator=validate(cv.template),
@@ -3399,7 +3395,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=valid_subscribe_topic,
             error="invalid_subscribe_topic",
         ),
-        CONF_VALUE_TEMPLATE: PlatformField(
+        CONF_STATE_VALUE_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
             validator=validate(cv.template),
@@ -5457,7 +5453,6 @@ async def async_get_broker_settings(
         or current_client_certificate
         or current_client_key
         or current_tls_insecure
-        or current_protocol != DEFAULT_PROTOCOL
         or current_config.get(SET_CA_CERT, "off") != "off"
         or current_config.get(SET_CLIENT_CERT)
         or current_transport == TRANSPORT_WEBSOCKETS
@@ -5466,6 +5461,12 @@ async def async_get_broker_settings(
     # Build form
     fields[vol.Required(CONF_BROKER, default=current_broker)] = TEXT_SELECTOR
     fields[vol.Required(CONF_PORT, default=current_port)] = PORT_SELECTOR
+    fields[
+        vol.Optional(
+            CONF_PROTOCOL,
+            description={"suggested_value": current_protocol},
+        )
+    ] = PROTOCOL_SELECTOR
     fields[
         vol.Optional(
             CONF_USERNAME,
@@ -5558,12 +5559,6 @@ async def async_get_broker_settings(
     ] = BOOLEAN_SELECTOR
     fields[
         vol.Optional(
-            CONF_PROTOCOL,
-            description={"suggested_value": current_protocol},
-        )
-    ] = PROTOCOL_SELECTOR
-    fields[
-        vol.Optional(
             CONF_TRANSPORT,
             description={"suggested_value": current_transport},
         )
@@ -5580,40 +5575,6 @@ async def async_get_broker_settings(
 
     # Show form
     return False
-
-
-def try_connection(
-    user_input: dict[str, Any],
-) -> bool:
-    """Test if we can connect to an MQTT broker."""
-    mqtt_client_setup = MqttClientSetup(user_input)
-    mqtt_client_setup.setup()
-    client = mqtt_client_setup.client
-
-    result: queue.Queue[bool] = queue.Queue(maxsize=1)
-
-    def on_connect(
-        _mqttc: mqtt.Client,
-        _userdata: None,
-        _connect_flags: mqtt.ConnectFlags,
-        reason_code: mqtt.ReasonCode,
-        _properties: mqtt.Properties | None = None,
-    ) -> None:
-        """Handle connection result."""
-        result.put(not reason_code.is_failure)
-
-    client.on_connect = on_connect
-
-    client.connect_async(user_input[CONF_BROKER], user_input[CONF_PORT])
-    client.loop_start()
-
-    try:
-        return result.get(timeout=MQTT_TIMEOUT)
-    except queue.Empty:
-        return False
-    finally:
-        client.disconnect()
-        client.loop_stop()
 
 
 def check_certicate_chain() -> str | None:
