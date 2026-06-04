@@ -145,6 +145,9 @@
     "setup_general_error": {
       "message": "An unknown error occurred while retrieving static device data"
     },
+    "setup_outdated_firmware": {
+      "message": "Your BSB-LAN device is running firmware {firmware_version}, which is no longer supported. Please update your BSB-LAN board firmware to a newer version to keep using this integration."
+    },
     "sync_time_failed": {
       "message": "Failed to sync time for {device_name}: {error}"
     }

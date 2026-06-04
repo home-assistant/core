@@ -1,6 +1,5 @@
 """The BSB-LAN integration."""
 
-import asyncio
 import dataclasses
 
 from bsblan import (
@@ -117,6 +116,26 @@ def _issue_id_for_entry(entry_id: str) -> str:
     return f"{ISSUE_OUTDATED_FIRMWARE}_{entry_id}"
 
 
+def _async_manage_outdated_firmware_issue(
+    hass: HomeAssistant, entry: BSBLanConfigEntry, version: str
+) -> None:
+    """Create or remove the outdated firmware repair issue for an entry."""
+    issue_id = _issue_id_for_entry(entry.entry_id)
+    if _is_outdated_firmware_version(version):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_OUTDATED_FIRMWARE,
+            translation_placeholders={"firmware_version": version},
+            learn_more_url="https://github.com/fredlcore/BSB-LAN/releases",
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
     """Set up BSB-LAN from a config entry."""
 
@@ -134,7 +153,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
     bsblan = BSBLAN(config=config, session=session)
 
     try:
-        # Initialize the client first - this sets up internal caches and validates
+        # Fetch device info first. The /JI request works regardless of firmware
+        # version, allowing us to detect the unsupported v1 firmware series
+        # before initialize(), which would reject it with a generic version
+        # error and prevent us from raising a clear, actionable message.
+        device = await bsblan.device()
+
+        _async_manage_outdated_firmware_issue(hass, entry, device.version)
+        if _is_outdated_firmware_version(device.version):
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="setup_outdated_firmware",
+                translation_placeholders={"firmware_version": device.version},
+            )
+
+        # Initialize the client - this sets up internal caches and validates
         # the connection by fetching firmware version
         await bsblan.initialize()
 
@@ -144,11 +177,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
             DEFAULT_HEATING_CIRCUITS
         )
 
-        # Fetch required device metadata in parallel for faster startup
-        device, info = await asyncio.gather(
-            bsblan.device(),
-            bsblan.info(),
-        )
+        # Fetch remaining device metadata
+        info = await bsblan.info()
     except BSBLANConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -226,21 +256,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         sw_version=main_device_info.get("sw_version"),
         configuration_url=main_device_info.get("configuration_url"),
     )
-
-    issue_id = _issue_id_for_entry(entry.entry_id)
-    if _is_outdated_firmware_version(device.version):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=ISSUE_OUTDATED_FIRMWARE,
-            translation_placeholders={"firmware_version": device.version},
-            learn_more_url="https://github.com/fredlcore/BSB-LAN/releases",
-        )
-    else:
-        ir.async_delete_issue(hass, DOMAIN, issue_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

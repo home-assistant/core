@@ -49,12 +49,16 @@ async def test_setup_creates_outdated_firmware_issue(
     mock_bsblan: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test setup creates a repair issue for unsupported firmware v1."""
+    """Test setup creates a repair issue and fails for unsupported firmware v1."""
     mock_bsblan.device.return_value.version = "1.0.38-20200730234859"
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    # The library cannot operate with v1 firmware, so setup fails, but the
+    # repair issue must be surfaced instead of a generic error.
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
     issue = issue_registry.async_get_issue(
         DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"

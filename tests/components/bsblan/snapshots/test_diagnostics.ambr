@@ -13,7 +13,7 @@
       'buswritable': 1,
       'name': 'BSB-LAN',
       'uptime': 969402857,
-      'version': '1.0.38-20200730234859',
+      'version': '3.3.2-20250101120000',
     }),
     'fast_coordinator_data': dict({
       'dhw': dict({
