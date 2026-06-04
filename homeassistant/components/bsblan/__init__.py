@@ -237,6 +237,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
             severity=ir.IssueSeverity.WARNING,
             translation_key=ISSUE_OUTDATED_FIRMWARE,
             translation_placeholders={"firmware_version": device.version},
+            learn_more_url="https://github.com/fredlcore/BSB-LAN/releases",
         )
     else:
         ir.async_delete_issue(hass, DOMAIN, issue_id)
