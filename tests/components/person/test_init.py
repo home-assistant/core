@@ -11,7 +11,9 @@ from homeassistant.components import person
 from homeassistant.components.device_tracker import (
     ATTR_IN_ZONES,
     ATTR_SOURCE_TYPE,
+    ATTR_TRACKING_TYPE,
     SourceType,
+    TrackingType,
 )
 from homeassistant.components.person import (
     ATTR_DEVICE_TRACKERS,
@@ -373,31 +375,45 @@ async def test_setup_router_ble_trackers(
     }
 
 
-# Representative device tracker states for the three priority buckets used by
+# Representative device tracker states for the priority buckets used by
 # `Person._update_state`, in priority order:
-#   1. a non-GPS tracker reporting "home"            (highest priority)
-#   2. any GPS tracker, regardless of its state      (middle priority)
-#   3. everything else, e.g. a non-GPS scanner associated with a non-home zone
-#      or a non-GPS tracker reporting "not_home"      (lowest priority)
+#   1. a scanner reporting a non-empty in_zones, i.e. connected in a known
+#      zone                                           (highest priority)
+#   2. a tracker reporting "home"
+#   3. any GPS tracker, regardless of its state
+#   4. everything else, e.g. a tracker reporting "not_home"   (lowest priority)
 # Each value is a (state, attributes) tuple passed to `hass.states.async_set`.
 _ROUTER_HOME: tuple[str, dict[str, Any]] = (
     "home",
-    {ATTR_SOURCE_TYPE: SourceType.ROUTER, ATTR_IN_ZONES: ["zone.home"]},
+    {
+        ATTR_SOURCE_TYPE: SourceType.ROUTER,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
+        ATTR_IN_ZONES: ["zone.home"],
+    },
 )
 _ROUTER_NOT_HOME: tuple[str, dict[str, Any]] = (
     "not_home",
-    {ATTR_SOURCE_TYPE: SourceType.ROUTER, ATTR_IN_ZONES: []},
+    {
+        ATTR_SOURCE_TYPE: SourceType.ROUTER,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
+        ATTR_IN_ZONES: [],
+    },
 )
 # A scanner tracker associated with a non-home zone reports the zone's name as
 # its state and lists the zone in `in_zones` (see device_tracker PR #172157).
 _SCANNER_OFFICE: tuple[str, dict[str, Any]] = (
     "office",
-    {ATTR_SOURCE_TYPE: SourceType.ROUTER, ATTR_IN_ZONES: ["zone.office"]},
+    {
+        ATTR_SOURCE_TYPE: SourceType.ROUTER,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
+        ATTR_IN_ZONES: ["zone.office"],
+    },
 )
 _GPS_NOT_HOME: tuple[str, dict[str, Any]] = (
     "not_home",
     {
         ATTR_SOURCE_TYPE: SourceType.GPS,
+        ATTR_TRACKING_TYPE: TrackingType.POSITION,
         ATTR_LATITUDE: 1.0,
         ATTR_LONGITUDE: 2.0,
         ATTR_GPS_ACCURACY: 5,
@@ -408,6 +424,7 @@ _GPS_WORK: tuple[str, dict[str, Any]] = (
     "work",
     {
         ATTR_SOURCE_TYPE: SourceType.GPS,
+        ATTR_TRACKING_TYPE: TrackingType.POSITION,
         ATTR_LATITUDE: 3.0,
         ATTR_LONGITUDE: 4.0,
         ATTR_GPS_ACCURACY: 7,
@@ -469,7 +486,8 @@ async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) ->
 @pytest.mark.parametrize(
     ("high_priority", "low_priority", "expected_state", "expected_extra"),
     [
-        # A non-GPS "home" tracker outranks a GPS tracker reporting coordinates.
+        # A scanner reporting a zone outranks a GPS tracker. It has no
+        # coordinates.
         pytest.param(
             _ROUTER_HOME,
             _GPS_NOT_HOME,
@@ -478,7 +496,7 @@ async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) ->
                 ATTR_IN_ZONES: ["zone.home"],
                 ATTR_SOURCE: DEVICE_TRACKER,
             },
-            id="home_beats_gps",
+            id="scanner_beats_gps",
         ),
         # A legacy "home" tracker (no in_zones) likewise outranks GPS; it is
         # placed at the home zone.
@@ -493,21 +511,10 @@ async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) ->
             },
             id="legacy_home_beats_gps",
         ),
-        # A non-GPS "home" tracker outranks a scanner in another zone.
-        pytest.param(
-            _ROUTER_HOME,
-            _SCANNER_OFFICE,
-            "home",
-            {
-                ATTR_IN_ZONES: ["zone.home"],
-                ATTR_SOURCE: DEVICE_TRACKER,
-            },
-            id="home_beats_other_zone",
-        ),
-        # A GPS tracker outranks a scanner associated with another zone.
+        # A GPS tracker outranks a "not_home" tracker.
         pytest.param(
             _GPS_WORK,
-            _SCANNER_OFFICE,
+            _ROUTER_NOT_HOME,
             "work",
             {
                 ATTR_GPS_ACCURACY: 7,
@@ -516,7 +523,7 @@ async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) ->
                 ATTR_IN_ZONES: ["zone.work"],
                 ATTR_SOURCE: DEVICE_TRACKER,
             },
-            id="gps_beats_other_zone",
+            id="gps_beats_not_home",
         ),
     ],
 )
@@ -589,32 +596,22 @@ async def test_state_priority_overrides_recency(
             },
             id="gps_newer_work",
         ),
-        # Lowest-priority bucket: a fresh scanner in another zone wins over a
-        # stale "not_home", and vice versa.
+        # Highest-priority bucket: the most recent scanner in a zone wins
+        # (here a fresh "office" scanner over a stale "home" one).
         pytest.param(
-            _ROUTER_NOT_HOME,
+            _ROUTER_HOME,
             _SCANNER_OFFICE,
             "office",
             {ATTR_IN_ZONES: ["zone.office"], ATTR_SOURCE: DEVICE_TRACKER_2},
-            id="other_newer_office",
+            id="scanner_newer_office",
         ),
+        # Lowest-priority bucket: the most recent "not_home" tracker wins.
         pytest.param(
-            _SCANNER_OFFICE,
             _ROUTER_NOT_HOME,
+            _LEGACY_NOT_HOME,
             "not_home",
             {ATTR_SOURCE: DEVICE_TRACKER_2},
-            id="other_newer_not_home",
-        ),
-        # "home" bucket: the most recent "home" tracker becomes the source.
-        pytest.param(
-            _ROUTER_HOME,
-            _ROUTER_HOME,
-            "home",
-            {
-                ATTR_IN_ZONES: ["zone.home"],
-                ATTR_SOURCE: DEVICE_TRACKER_2,
-            },
-            id="home_newer",
+            id="not_home_newer",
         ),
         # A pair of legacy "home" trackers (no in_zones) likewise picks the
         # most recent; it is placed at the home zone.
@@ -799,6 +796,95 @@ async def test_legacy_device_tracker(
         }
         | expected_extra
     )
+
+
+@pytest.mark.parametrize(
+    ("competitor"),
+    [
+        # A fresh GPS tracker reporting coordinates...
+        pytest.param(_GPS_WORK, id="vs_gps"),
+        # ...and a fresh legacy "home" tracker both lose to the scanner that
+        # reports being in a zone.
+        pytest.param(_LEGACY_HOME, id="vs_legacy_home"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("scanner", "expected_state", "expected_in_zones"),
+    [
+        pytest.param(_ROUTER_HOME, "home", ["zone.home"], id="home"),
+        pytest.param(_SCANNER_OFFICE, "office", ["zone.office"], id="office"),
+    ],
+)
+async def test_scanner_in_zone_has_highest_priority(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    freezer: FrozenDateTimeFactory,
+    scanner: tuple[str, dict[str, Any]],
+    expected_state: str,
+    expected_in_zones: list[str],
+    competitor: tuple[str, dict[str, Any]],
+) -> None:
+    """Test a scanner in a zone wins, even when stale.
+
+    A scanner reporting a non-empty `in_zones` is the most reliable presence
+    signal and takes precedence over a fresher GPS or legacy "home" tracker. It
+    contributes no coordinates of its own.
+    """
+    await _async_setup_person_two_trackers(hass, hass_admin_user.id)
+
+    # The scanner reports first and then goes stale.
+    hass.states.async_set(DEVICE_TRACKER, scanner[0], scanner[1])
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(hours=2))
+    # A competing tracker reports a much more recent update.
+    hass.states.async_set(DEVICE_TRACKER_2, competitor[0], competitor[1])
+    await hass.async_block_till_done()
+
+    state = hass.states.get("person.tracked_person")
+    assert state.state == expected_state
+    assert state.attributes == {
+        ATTR_DEVICE_TRACKERS: [DEVICE_TRACKER, DEVICE_TRACKER_2],
+        ATTR_EDITABLE: False,
+        ATTR_FRIENDLY_NAME: "tracked person",
+        ATTR_ID: "1234",
+        ATTR_IN_ZONES: expected_in_zones,
+        ATTR_SOURCE: DEVICE_TRACKER,
+        ATTR_USER_ID: hass_admin_user.id,
+    }
+
+
+async def test_scanner_without_in_zones_not_prioritized(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a disconnected scanner does not get highest priority.
+
+    With an empty `in_zones` it falls into the lowest-priority bucket, so a
+    GPS tracker wins.
+    """
+    await _async_setup_person_two_trackers(hass, hass_admin_user.id)
+
+    hass.states.async_set(DEVICE_TRACKER, _ROUTER_NOT_HOME[0], _ROUTER_NOT_HOME[1])
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=5))
+    hass.states.async_set(DEVICE_TRACKER_2, _GPS_WORK[0], _GPS_WORK[1])
+    await hass.async_block_till_done()
+
+    state = hass.states.get("person.tracked_person")
+    assert state.state == "work"
+    assert state.attributes == {
+        ATTR_DEVICE_TRACKERS: [DEVICE_TRACKER, DEVICE_TRACKER_2],
+        ATTR_EDITABLE: False,
+        ATTR_FRIENDLY_NAME: "tracked person",
+        ATTR_GPS_ACCURACY: 7,
+        ATTR_ID: "1234",
+        ATTR_IN_ZONES: ["zone.work"],
+        ATTR_LATITUDE: 3.0,
+        ATTR_LONGITUDE: 4.0,
+        ATTR_SOURCE: DEVICE_TRACKER_2,
+        ATTR_USER_ID: hass_admin_user.id,
+    }
 
 
 async def test_ignore_unavailable_states(
