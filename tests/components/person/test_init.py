@@ -769,7 +769,7 @@ async def test_duplicate_ids(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    assert len(hass.states.async_entity_ids("person")) == 1
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 1
     assert hass.states.get("person.test_user_1") is not None
     assert hass.states.get("person.test_user_2") is None
 
@@ -847,7 +847,7 @@ async def test_load_person_storage_two_nonlinked(
     }
     await async_setup_component(hass, DOMAIN, {})
 
-    assert len(hass.states.async_entity_ids("person")) == 2
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 2
     assert hass.states.get("person.tracked_person_1") is not None
     assert hass.states.get("person.tracked_person_2") is not None
 
@@ -1028,7 +1028,7 @@ async def test_ws_delete(
     assert len(persons) == 0
 
     assert resp["success"]
-    assert len(hass.states.async_entity_ids("person")) == 0
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 0
     assert not entity_registry.async_is_registered("person.tracked_person")
 
 
