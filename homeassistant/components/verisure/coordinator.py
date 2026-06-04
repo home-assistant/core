@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 from time import sleep
-from typing import Literal
 
 from verisure import (
     AuthenticationError as VerisureAuthenticationError,
@@ -63,7 +62,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_password_login_after_cookie_read(
         self,
         *,
-        on_transient: Literal["return_false", "raise_update_failed"],
+        raise_on_transient: bool,
     ) -> bool:
         """Re-authenticate with password when the cookie file cannot be used."""
         try:
@@ -73,7 +72,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 "Verisure re-authentication failed after cookie could not be read"
             ) from login_ex
         except _TRANSIENT_VERISURE_ERRORS as login_ex:
-            if on_transient == "return_false":
+            if not raise_on_transient:
                 LOGGER.warning(
                     "Verisure login unavailable (likely transient), %s",
                     login_ex,
@@ -101,9 +100,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 "Verisure authentication rejected (invalid or expired session)"
             ) from ex
         except VerisureCookieReadError:
-            await self._async_password_login_after_cookie_read(
-                on_transient="raise_update_failed"
-            )
+            await self._async_password_login_after_cookie_read(raise_on_transient=True)
         except VerisureLoginError as ex:
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         except _TRANSIENT_VERISURE_ERRORS as ex:
@@ -121,7 +118,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             ) from ex
         except VerisureCookieReadError:
             if not await self._async_password_login_after_cookie_read(
-                on_transient="return_false"
+                raise_on_transient=False
             ):
                 return False
         except VerisureLoginError as ex:
@@ -152,9 +149,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             await self._async_refresh_session_after_auth_failure()
         except VerisureCookieReadError:
             LOGGER.debug("Cookie unreadable, re-authenticating with password")
-            await self._async_password_login_after_cookie_read(
-                on_transient="raise_update_failed"
-            )
+            await self._async_password_login_after_cookie_read(raise_on_transient=True)
         except VerisureLoginError:
             LOGGER.debug("Login token expired, refreshing session")
             await self._async_refresh_session_after_auth_failure()
