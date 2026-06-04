@@ -137,7 +137,7 @@ async def test_number_state_update(
         mock_client,
         [
             build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+                EventName.DEVICE_STATE_CHANGED,
                 device_url=EXPECTED_NUMBER_OF_SHOWER.device_url,
                 device_states=[
                     {
@@ -173,7 +173,7 @@ async def test_number_unavailability(
         mock_client,
         [
             build_event(
-                EventName.DEVICE_UNAVAILABLE.value,
+                EventName.DEVICE_UNAVAILABLE,
                 device_url=EXPECTED_NUMBER_OF_SHOWER.device_url,
             )
         ],

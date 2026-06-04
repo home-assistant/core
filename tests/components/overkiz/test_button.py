@@ -137,7 +137,7 @@ async def test_button_unavailability(
         mock_client,
         [
             build_event(
-                EventName.DEVICE_UNAVAILABLE.value,
+                EventName.DEVICE_UNAVAILABLE,
                 device_url=MY_POSITION.device_url,
             )
         ],

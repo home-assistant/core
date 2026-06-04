@@ -98,7 +98,7 @@ async def test_sensor_temperature_state_update(
         mock_client,
         [
             build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+                EventName.DEVICE_STATE_CHANGED,
                 device_url=TEMPERATURE_SENSOR.device_url,
                 device_states=[
                     {
@@ -134,7 +134,7 @@ async def test_sensor_battery_level_state_update(
         mock_client,
         [
             build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+                EventName.DEVICE_STATE_CHANGED,
                 device_url=HEATING_BATTERY.device_url,
                 device_states=[
                     {
@@ -170,7 +170,7 @@ async def test_sensor_unavailability(
         mock_client,
         [
             build_event(
-                EventName.DEVICE_UNAVAILABLE.value,
+                EventName.DEVICE_UNAVAILABLE,
                 device_url=TEMPERATURE_SENSOR.device_url,
             )
         ],

@@ -151,7 +151,7 @@ async def test_light_state_update(
         mock_client,
         [
             build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+                EventName.DEVICE_STATE_CHANGED,
                 device_url=DIMMABLE_LIGHT.device_url,
                 device_states=[
                     {
@@ -187,7 +187,7 @@ async def test_light_rgb_state_update(
         mock_client,
         [
             build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+                EventName.DEVICE_STATE_CHANGED,
                 device_url=RGB_LIGHT.device_url,
                 device_states=[
                     {
@@ -231,7 +231,7 @@ async def test_light_unavailability(
         mock_client,
         [
             build_event(
-                EventName.DEVICE_UNAVAILABLE.value,
+                EventName.DEVICE_UNAVAILABLE,
                 device_url=DIMMABLE_LIGHT.device_url,
             )
         ],
