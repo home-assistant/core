@@ -98,22 +98,20 @@ class OPNsenseSensorEntity(
         self.entity_description = description
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address
+        self._device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, mac_address)}
+        )
+        device_data = self.device_data
+        if device_data:
+            if hostname := device_data.get("hostname"):
+                self._device_info["default_name"] = str(hostname)
+            if manufacturer := device_data.get("manufacturer"):
+                self._device_info["default_manufacturer"] = str(manufacturer)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return information used to associate entities with a device."""
-        device_data = self.device_data
-        device_info: DeviceInfo = {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac_address)}
-        }
-
-        if device_data:
-            if hostname := device_data.get("hostname"):
-                device_info["default_name"] = str(hostname)
-            if manufacturer := device_data.get("manufacturer"):
-                device_info["default_manufacturer"] = str(manufacturer)
-
-        return device_info
+        return self._device_info
 
     @property
     def device_data(self) -> DeviceDetails | None:
