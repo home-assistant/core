@@ -36,12 +36,11 @@ second condition), as a deliberate call relying on git history for rollback.
   forwarding via the shared `sandbox/call_service` channel) is
   the protocol every entity proxy uses.
 - [`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md) —
-  **SUPERSEDED.** The Phase-7 `RefreshToken.scopes` mechanism it
-  describes was reverted from core HA (`plans/plan-strip-auth-scopes.md`),
-  and `plans/plan-auth-context.md` then dropped the sandbox token + the
-  per-group system user entirely — the sandbox now holds **no** credential.
-  Kept as the design record for whenever the sandbox→main websocket
-  actually lands (the credential is redesigned fresh then).
+  the auth design: the sandbox holds **no** credential (it is not an
+  authenticated principal in main) and cannot fabricate a `Context`; main
+  restores attribution from a TTL cache of contexts it issued, falling back
+  to `user_id=None`. An appendix preserves the earlier scoped-token design
+  (reverted, never shipped) for whenever the sandbox→main websocket lands.
 - [`docs/design-share-states.md`](docs/design-share-states.md) —
   design for the post-launch state-sharing consumer that replaces the
   Phase 7 `share_*` flags Phase 20 deleted. Covers entity_id
