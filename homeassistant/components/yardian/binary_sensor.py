@@ -89,7 +89,7 @@ async def async_setup_entry(
     for zone_id in range(len(coordinator.data.zones)):
         description = YardianBinarySensorEntityDescription(
             key=f"zone_enabled_{zone_id}",
-            translation_key="zone_enabled",
+            translation_key="enabled",
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             value_fn=_zone_value_factory(zone_id),
