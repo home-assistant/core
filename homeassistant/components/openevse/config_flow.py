@@ -45,7 +45,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Check if we can connect to the OpenEVSE charger."""
 
         charger = OpenEVSE(
-            host, user, password, session=async_get_clientsession(self.hass)
+            host, user or "", password or "", session=async_get_clientsession(self.hass)
         )
         try:
             result = await charger.test_and_get()
