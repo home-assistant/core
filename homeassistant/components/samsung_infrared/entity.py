@@ -12,7 +12,12 @@ class SamsungIrEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, entry: ConfigEntry, unique_id_suffix: str, device_name: str = "Samsung Device") -> None:
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        unique_id_suffix: str,
+        device_name: str = "Samsung Device",
+    ) -> None:
         """Initialize Samsung IR entity."""
         self._attr_unique_id = f"{entry.entry_id}_{unique_id_suffix}"
         self._attr_device_info = DeviceInfo(

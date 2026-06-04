@@ -167,7 +167,9 @@ class SamsungIrButton(SamsungIrEntity, InfraredEmitterConsumerEntity, ButtonEnti
         description: SamsungIrButtonEntityDescription,
     ) -> None:
         """Initialize Samsung IR button."""
-        super().__init__(entry, unique_id_suffix=description.key, device_name="Samsung TV")
+        super().__init__(
+            entry, unique_id_suffix=description.key, device_name="Samsung TV"
+        )
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
         self.entity_description = description
 

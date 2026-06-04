@@ -22,6 +22,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_EMITTER_ENTITY_ID, SamsungDeviceType
 from .entity import SamsungIrEntity
 
+PARALLEL_UPDATES = 0
+
 # Map Home Assistant HVAC modes to library string representations
 HA_TO_LIB_HVAC = {
     HVACMode.OFF: "off",
