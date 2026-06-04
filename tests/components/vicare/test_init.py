@@ -1,5 +1,6 @@
 """Test ViCare initialization and migration."""
 
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
@@ -346,7 +347,7 @@ async def test_setup_entry_empty_account(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup completes when the account has no devices, then reloads later."""
+    """Test setup completes for an empty account and schedules a 6h reload."""
     mock_config_entry.add_to_hass(hass)
 
     client = Mock()
@@ -360,11 +361,16 @@ async def test_setup_entry_empty_account(
             f"{MODULE}._setup_vicare_api",
             return_value=ViCareData(client=client, devices=[]),
         ),
+        patch(
+            f"{MODULE}.async_track_time_interval"
+        ) as mock_track_time_interval,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_track_time_interval.assert_called_once()
+    assert mock_track_time_interval.call_args.args[2] == timedelta(hours=6)
 
 
 async def test_setup_entry_invalid_configuration(
