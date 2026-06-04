@@ -52,7 +52,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
 
         remote_latency_avg_by_location: dict[str, float | None] = {}
         for location, result in cloud.remote.latency_by_location.items():
-            remote_latency_avg_by_location[location] = result["avg"]
+            remote_latency_avg_by_location[location] = result.get("avg")
 
         if remote_latency_avg_by_location:
             data["remote_latency_avg_by_location"] = remote_latency_avg_by_location
