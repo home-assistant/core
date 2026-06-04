@@ -1,7 +1,6 @@
 """Jewish Calendar constants."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Self
 
 DOMAIN = "jewish_calendar"
 
@@ -24,65 +23,25 @@ DEFAULT_LANGUAGE = "en"
 
 
 class DailyCalendarEventType(StrEnum):
-    """Daily Calendar event types with metadata."""
+    """Daily Calendar event types.
+
+    The summary and description for each event are translated at runtime using
+    the ``common`` strings of the integration (see ``calendar.py``).
+    """
 
     DATE = "date"
-    ALOT_HASHACHAR = (
-        "alot_hashachar",
-        "Alot Hashachar",  # codespell:ignore alot
-        "Halachic dawn",
-    )
-    NETZ_HACHAMA = ("netz_hachama", "Netz Hachama", "Halachic sunrise")
-    SOF_ZMAN_SHEMA_GRA = (
-        "sof_zman_shema_gra",
-        'Sof Zman Shema (Gr"A)',  # codespell:ignore shema
-        "Latest time for Shema",  # codespell:ignore shema
-    )
-    SOF_ZMAN_SHEMA_MGA = (
-        "sof_zman_shema_mga",
-        'Sof Zman Shema (Mg"A)',  # codespell:ignore shema
-        "Latest time for Shema",  # codespell:ignore shema
-    )
-    SOF_ZMAN_TFILLA_GRA = (
-        "sof_zman_tfilla_gra",
-        'Sof Zman Tefilla (Gr"A)',
-        "Latest time for Tefilla",
-    )
-    SOF_ZMAN_TFILLA_MGA = (
-        "sof_zman_tfilla_mga",
-        'Sof Zman Tefilla (Mg"A)',
-        "Latest time for Tefilla",
-    )
-    CHATZOT_HAYOM = ("chatzot_hayom", "Chatzot Hayom", "Halachic midday")
-    MINCHA_GEDOLA = ("mincha_gedola", "Mincha Gedola", "Earliest time for Mincha")
-    MINCHA_KETANA = ("mincha_ketana", "Mincha Ketana", "Preferable time for Mincha")
-    PLAG_HAMINCHA = ("plag_hamincha", "Plag Hamincha", "Plag Hamincha")
-    SHKIA = ("shkia", "Shkia", "Sunset")
-    TSET_HAKOHAVIM = ("tset_hakohavim_tsom", "T'set Hakochavim", "Nightfall")
-
-    if TYPE_CHECKING:
-        _summary: str
-        _description_prefix: str
-
-    def __new__(
-        cls, value: str, summary: str = "", description_prefix: str = ""
-    ) -> Self:
-        """Create new enum member with additional attributes."""
-        obj = str.__new__(cls, value)
-        obj._value_ = value
-        obj._summary = summary  # noqa: SLF001
-        obj._description_prefix = description_prefix  # noqa: SLF001
-        return obj
-
-    @property
-    def summary(self) -> str:
-        """Return the summary for the event."""
-        return self._summary
-
-    @property
-    def description_prefix(self) -> str:
-        """Return the description prefix for the event."""
-        return self._description_prefix
+    ALOT_HASHACHAR = "alot_hashachar"  # codespell:ignore alot
+    NETZ_HACHAMA = "netz_hachama"
+    SOF_ZMAN_SHEMA_GRA = "sof_zman_shema_gra"  # codespell:ignore shema
+    SOF_ZMAN_SHEMA_MGA = "sof_zman_shema_mga"  # codespell:ignore shema
+    SOF_ZMAN_TFILLA_GRA = "sof_zman_tfilla_gra"
+    SOF_ZMAN_TFILLA_MGA = "sof_zman_tfilla_mga"
+    CHATZOT_HAYOM = "chatzot_hayom"
+    MINCHA_GEDOLA = "mincha_gedola"
+    MINCHA_KETANA = "mincha_ketana"
+    PLAG_HAMINCHA = "plag_hamincha"
+    SHKIA = "shkia"
+    TSET_HAKOHAVIM = "tset_hakohavim_tsom"
 
 
 class YearlyCalendarEventType(StrEnum):

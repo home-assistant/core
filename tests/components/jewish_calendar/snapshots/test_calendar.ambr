@@ -12,10 +12,10 @@
 # name: test_daily_events[Jerusalem]
   list([
     dict({
-      'description': 'Hebrew date: ה\' שבט ה\' תשפ"ד',
+      'description': "Hebrew date: 5 Sh'vat 5784",
       'end': '2024-01-16',
       'start': '2024-01-15',
-      'summary': 'ה\' שבט ה\' תשפ"ד',
+      'summary': "5 Sh'vat 5784",
     }),
     dict({
       'description': 'Halachic sunrise: 06:40',
@@ -40,10 +40,10 @@
 # name: test_daily_events[New York]
   list([
     dict({
-      'description': 'Hebrew date: ה\' שבט ה\' תשפ"ד',
+      'description': "Hebrew date: 5 Sh'vat 5784",
       'end': '2024-01-16',
       'start': '2024-01-15',
-      'summary': 'ה\' שבט ה\' תשפ"ד',
+      'summary': "5 Sh'vat 5784",
     }),
     dict({
       'description': 'Halachic sunrise: 07:18',
@@ -415,42 +415,42 @@
   list([
     dict({
       'description': '''
-        Jewish Holiday: שושן פורים
-        Holiday Type: HolidayTypes.MELACHA_PERMITTED_HOLIDAY
+        Jewish Holiday: Shushan Purim
+        Holiday type: HolidayTypes.MELACHA_PERMITTED_HOLIDAY
       ''',
       'end': '2024-03-26',
       'start': '2024-03-25',
-      'summary': 'שושן פורים',
+      'summary': 'Shushan Purim',
     }),
   ])
 # ---
 # name: test_learning_schedule_events[Jerusalem]
   list([
     dict({
-      'description': 'Daf Yomi: בבא בתרא כ',
+      'description': 'Daf Yomi: Bava Basra 20',
       'end': '2024-07-16',
       'start': '2024-07-15',
-      'summary': 'בבא בתרא כ',
+      'summary': 'Bava Basra 20',
     }),
   ])
 # ---
 # name: test_omer_count[calendar_events0-New York]
   list([
     dict({
-      'description': 'Sefirat HaOmer: היום יום אחד לעומר',
+      'description': 'Sefirat HaOmer: Today is the first day of the Omer',
       'end': '2024-04-25',
       'start': '2024-04-24',
-      'summary': "א' לעומר",
+      'summary': '1 of the Omer',
     }),
   ])
 # ---
 # name: test_weekly_portion_on_shabbat[Jerusalem]
   list([
     dict({
-      'description': 'Parshat Hashavua: וארא',
+      'description': 'Parshat Hashavua: Vaera',
       'end': '2024-01-14',
       'start': '2024-01-13',
-      'summary': 'וארא',
+      'summary': 'Vaera',
     }),
     dict({
       'description': 'Havdalah time: 17:35',
@@ -463,10 +463,10 @@
 # name: test_weekly_portion_on_shabbat[New York]
   list([
     dict({
-      'description': 'Parshat Hashavua: וארא',
+      'description': 'Parshat Hashavua: Vaera',
       'end': '2024-01-14',
       'start': '2024-01-13',
-      'summary': 'וארא',
+      'summary': 'Vaera',
     }),
     dict({
       'description': 'Havdalah time: 17:35',
@@ -480,18 +480,18 @@
   list([
     dict({
       'description': '''
-        Jewish Holiday: שמחת תורה
-        Holiday Type: HolidayTypes.YOM_TOV
+        Jewish Holiday: Simchat Torah
+        Holiday type: HolidayTypes.YOM_TOV
       ''',
       'end': '2024-10-26',
       'start': '2024-10-25',
-      'summary': 'שמחת תורה',
+      'summary': 'Simchat Torah',
     }),
     dict({
-      'description': 'Parshat Hashavua: וזאת הברכה',
+      'description': 'Parshat Hashavua: Vezot Habracha',
       'end': '2024-10-26',
       'start': '2024-10-25',
-      'summary': 'וזאת הברכה',
+      'summary': 'Vezot Habracha',
     }),
     dict({
       'description': 'Candle lighting time: 17:42',
@@ -505,27 +505,27 @@
   list([
     dict({
       'description': '''
-        Jewish Holiday: שמיני עצרת
-        Holiday Type: HolidayTypes.YOM_TOV
+        Jewish Holiday: Shmini Atzeret
+        Holiday type: HolidayTypes.YOM_TOV
       ''',
       'end': '2024-10-25',
       'start': '2024-10-24',
-      'summary': 'שמיני עצרת',
+      'summary': 'Shmini Atzeret',
     }),
     dict({
       'description': '''
-        Jewish Holiday: שמחת תורה
-        Holiday Type: HolidayTypes.YOM_TOV
+        Jewish Holiday: Simchat Torah
+        Holiday type: HolidayTypes.YOM_TOV
       ''',
       'end': '2024-10-25',
       'start': '2024-10-24',
-      'summary': 'שמחת תורה',
+      'summary': 'Simchat Torah',
     }),
     dict({
-      'description': 'Parshat Hashavua: וזאת הברכה',
+      'description': 'Parshat Hashavua: Vezot Habracha',
       'end': '2024-10-25',
       'start': '2024-10-24',
-      'summary': 'וזאת הברכה',
+      'summary': 'Vezot Habracha',
     }),
     dict({
       'description': 'Havdalah time: 18:34',

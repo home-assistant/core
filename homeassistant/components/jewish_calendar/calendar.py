@@ -7,6 +7,7 @@ import logging
 
 from hdate import HDateInfo, Zmanim
 from hdate.parasha import Parasha
+from hdate.translator import set_language
 
 from homeassistant.components.calendar import (
     CalendarEntity,
@@ -15,6 +16,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -22,6 +24,7 @@ from .const import (
     CONF_LEARNING_SCHEDULE,
     CONF_YEARLY_EVENTS,
     DEFAULT_CALENDAR_EVENTS,
+    DOMAIN,
     DailyCalendarEventType,
     LearningScheduleEventType,
     YearlyCalendarEventType,
@@ -45,7 +48,7 @@ class JewishCalendarCalendarEntityDescription(CalendarEntityDescription):
     """Jewish Calendar calendar entity description."""
 
     value_fn: Callable[
-        [JewishCalendarEventType, date, HDateInfo, Zmanim],
+        [JewishCalendarEventType, date, HDateInfo, Zmanim, dict[str, str]],
         list[CalendarEvent] | CalendarEvent | None,
     ]
 
@@ -55,6 +58,7 @@ def _create_daily_event(
     target_date: date,
     info: HDateInfo,
     zmanim: Zmanim,
+    translations: dict[str, str],
 ) -> CalendarEvent | None:
     """Create a daily calendar event."""
     # Hebrew date
@@ -63,10 +67,10 @@ def _create_daily_event(
             start=target_date,
             end=target_date,
             summary=str(info.hdate),
-            description=f"Hebrew date: {info.hdate}",
+            description=translations["date_description"].format(date=info.hdate),
         )
 
-    # Time-based daily events using enum properties
+    # Time-based daily events, translated by their event value
     daily_event = DailyCalendarEventType(event_type)
     time_value = zmanim.zmanim.get(daily_event.value)
 
@@ -74,8 +78,10 @@ def _create_daily_event(
         return CalendarEvent(
             start=time_value.utc,
             end=time_value.utc,
-            summary=daily_event.summary,
-            description=f"{daily_event.description_prefix}: {time_value.local.strftime('%H:%M')}",
+            summary=translations[daily_event.value],
+            description=translations[f"{daily_event.value}_description"].format(
+                time=time_value.local.strftime("%H:%M")
+            ),
         )
 
     return None  # Should never happen
@@ -86,6 +92,7 @@ def _create_yearly_event(
     target_date: date,
     info: HDateInfo,
     zmanim: Zmanim,
+    translations: dict[str, str],
 ) -> list[CalendarEvent] | CalendarEvent | None:
     """Create a yearly calendar event."""
     if event_type == YearlyCalendarEventType.HOLIDAY and info.holidays:
@@ -94,8 +101,8 @@ def _create_yearly_event(
                 start=target_date,
                 end=target_date,
                 summary=str(holiday),
-                description=(
-                    f"Jewish Holiday: {holiday}\nHoliday Type: {holiday.type}"
+                description=translations["holiday_description"].format(
+                    holiday=holiday, type=holiday.type
                 ),
             )
             for holiday in info.holidays
@@ -111,7 +118,9 @@ def _create_yearly_event(
                 start=target_date,
                 end=target_date,
                 summary=str(info.parasha),
-                description=f"Parshat Hashavua: {info.parasha}",
+                description=translations["weekly_portion_description"].format(
+                    parasha=info.parasha
+                ),
             )
         return None
 
@@ -120,23 +129,29 @@ def _create_yearly_event(
             start=target_date,
             end=target_date,
             summary=str(info.omer),
-            description=f"Sefirat HaOmer: {info.omer.count_str()}",
+            description=translations["omer_count_description"].format(
+                count=info.omer.count_str()
+            ),
         )
 
     if event_type == YearlyCalendarEventType.CANDLE_LIGHTING and zmanim.candle_lighting:
         return CalendarEvent(
             start=zmanim.candle_lighting.astimezone(UTC),
             end=zmanim.candle_lighting.astimezone(UTC),
-            summary="Candle Lighting",
-            description=f"Candle lighting time: {zmanim.candle_lighting.strftime('%H:%M')}",
+            summary=translations["candle_lighting"],
+            description=translations["candle_lighting_description"].format(
+                time=zmanim.candle_lighting.strftime("%H:%M")
+            ),
         )
 
     if event_type == YearlyCalendarEventType.HAVDALAH and zmanim.havdalah:
         return CalendarEvent(
             start=zmanim.havdalah.astimezone(UTC),
             end=zmanim.havdalah.astimezone(UTC),
-            summary="Havdalah",
-            description=f"Havdalah time: {zmanim.havdalah.strftime('%H:%M')}",
+            summary=translations["havdalah"],
+            description=translations["havdalah_description"].format(
+                time=zmanim.havdalah.strftime("%H:%M")
+            ),
         )
 
     return None
@@ -147,6 +162,7 @@ def _create_learning_event(
     target_date: date,
     info: HDateInfo,
     zmanim: Zmanim,
+    translations: dict[str, str],
 ) -> CalendarEvent | None:
     """Create a learning schedule event."""
     if event_type == LearningScheduleEventType.DAF_YOMI and info.daf_yomi:
@@ -154,7 +170,7 @@ def _create_learning_event(
             start=target_date,
             end=target_date,
             summary=str(info.daf_yomi),
-            description=f"Daf Yomi: {info.daf_yomi}",
+            description=translations["daf_yomi_description"].format(daf=info.daf_yomi),
         )
 
     return None
@@ -206,6 +222,23 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         self._events_config = config_entry.options.get(
             description.key, DEFAULT_CALENDAR_EVENTS[description.key]
         )
+        self._translations: dict[str, str] = {}
+
+    async def async_added_to_hass(self) -> None:
+        """Load the translations used to render the calendar events."""
+        # Load translations before registering with the coordinator (in
+        # super()), otherwise a coordinator update could trigger a state write
+        # that renders events while self._translations is still empty.
+        prefix = f"component.{DOMAIN}.common."
+        self._translations = {
+            key.removeprefix(prefix): value
+            for key, value in (
+                await async_get_translations(
+                    self.hass, self.coordinator.data.language, "common", {DOMAIN}
+                )
+            ).items()
+        }
+        await super().async_added_to_hass()
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -276,12 +309,17 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         """Get all configured events for a specific date."""
         events = []
 
+        # The hdate language is stored in a context variable that does not
+        # propagate from the coordinator to the task serving calendar requests,
+        # so it has to be set again here before any hdate object is rendered.
+        set_language(self.coordinator.data.language)
+
         info = HDateInfo(target_date, self.coordinator.data.diaspora)
         zmanim = self.coordinator.make_zmanim(target_date)
 
         for event_type in self._events_config:
             if _events := self.entity_description.value_fn(
-                event_type, target_date, info, zmanim
+                event_type, target_date, info, zmanim, self._translations
             ):
                 events.extend(_events if isinstance(_events, list) else [_events])
 

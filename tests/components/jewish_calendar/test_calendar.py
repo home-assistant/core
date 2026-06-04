@@ -29,6 +29,7 @@ from homeassistant.components.jewish_calendar.const import (
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -131,6 +132,53 @@ async def test_daily_events(
     # Default config: 1 all-day date + 3 time-based events (by default)
     assert len(events) == 4
     assert events == snapshot
+
+
+@pytest.mark.freeze_time("2024-01-15 12:00:00")
+@pytest.mark.parametrize("location_data", ["Jerusalem"], indirect=True)
+@pytest.mark.parametrize(
+    ("language", "expected_summary"),
+    [("en", "5 Sh'vat 5784"), ("he", "ה' שבט ה' תשפ\"ד")],
+)
+@pytest.mark.usefixtures("setup")
+async def test_daily_events_localized(
+    hass: HomeAssistant,
+    get_calendar_events,
+    expected_summary: str,
+) -> None:
+    """Test the Hebrew date is rendered in the configured language.
+
+    The hdate language is held in a context variable that defaults to Hebrew
+    and does not propagate from the coordinator to the task serving calendar
+    requests, so this guards against the calendar ignoring the configured
+    language (in particular an ``en`` config falling back to Hebrew).
+    """
+    events = await get_calendar_events(hass, DAILY_EVENTS, dt.datetime(2024, 1, 15))
+    date_event = next(e for e in events if e["description"].startswith("Hebrew date"))
+    assert date_event["summary"] == expected_summary
+
+
+@pytest.mark.parametrize("location_data", ["New York"], indirect=True)
+@pytest.mark.parametrize("language", ["he"])
+async def test_event_strings_use_configured_language(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test event strings are translated in the configured, not the system, language."""
+    # Pick a system language that differs from the configured one, so a call
+    # using the system language instead would be caught.
+    hass.config.language = "en"
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.jewish_calendar.calendar.async_get_translations",
+        wraps=async_get_translations,
+    ) as mock_get_translations:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_get_translations.call_args_list
+    assert all(call.args[1] == "he" for call in mock_get_translations.call_args_list)
 
 
 # ─── Yearly Events: Weekly Torah Portion ──────────────────────────────
