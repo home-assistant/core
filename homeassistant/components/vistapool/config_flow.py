@@ -7,7 +7,7 @@ from typing import Any
 from aioaquarite import AquariteAuth, AquariteClient, AquariteError, AuthenticationError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -23,7 +23,7 @@ AUTH_SCHEMA = vol.Schema(
     }
 )
 
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): cv.string})
+PASSWORD_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): cv.string})
 
 
 class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -88,8 +88,26 @@ class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask the user for a new password and validate against the same account."""
+        return await self._async_update_password(
+            self._get_reauth_entry(), "reauth_confirm", user_input
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user proactively update the stored Vistapool password."""
+        return await self._async_update_password(
+            self._get_reconfigure_entry(), "reconfigure", user_input
+        )
+
+    async def _async_update_password(
+        self,
+        entry: ConfigEntry,
+        step_id: str,
+        user_input: dict[str, Any] | None,
+    ) -> ConfigFlowResult:
+        """Shared password-update handler for reauth and reconfigure."""
         errors: dict[str, str] = {}
-        entry = self._get_reauth_entry()
         username = entry.data[CONF_USERNAME]
 
         if user_input is not None:
@@ -103,7 +121,7 @@ class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
             except AquariteError:
                 errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("Unexpected error during reauthentication")
+                _LOGGER.exception("Unexpected error during credential update")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(auth.user_id)
@@ -113,8 +131,8 @@ class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=REAUTH_SCHEMA,
+            step_id=step_id,
+            data_schema=PASSWORD_SCHEMA,
             description_placeholders={"username": username},
             errors=errors,
         )

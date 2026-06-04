@@ -115,7 +115,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
-                        f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
+                        translation_placeholders={"error": err.error_msg or str(err)},
                     ) from err
                 _LOGGER.debug("Failed to fetch V1 device list during scan: %s", err)
                 self.device_list = None
@@ -157,9 +159,14 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 msg = login_response.get("msg", "Unknown error")
                 if msg == LOGIN_INVALID_AUTH_CODE:
                     raise ConfigEntryAuthFailed(
-                        "Username, password, or URL may be incorrect"
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_credentials",
                     )
-                raise UpdateFailed(f"Growatt login failed: {msg}")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="login_failed",
+                    translation_placeholders={"message": msg},
+                )
 
         if self.device_type == "total":
             if self.api_version == "v1":
@@ -181,11 +188,16 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 except growattServer.GrowattV1ApiError as err:
                     if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                         raise ConfigEntryAuthFailed(
-                            "Authentication failed for Growatt API:"
-                            f" {err.error_msg or str(err)}"
+                            translation_domain=DOMAIN,
+                            translation_key="auth_failed",
+                            translation_placeholders={
+                                "error": err.error_msg or str(err)
+                            },
                         ) from err
                     raise UpdateFailed(
-                        f"Error fetching plant energy overview: {err}"
+                        translation_domain=DOMAIN,
+                        translation_key="fetch_data_failed",
+                        translation_placeholders={"error": str(err)},
                     ) from err
                 total_info["todayEnergy"] = total_info["today_energy"]
                 total_info["totalEnergy"] = total_info["total_energy"]
@@ -214,10 +226,15 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
-                        "Authentication failed for Growatt API:"
-                        f" {err.error_msg or str(err)}"
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
+                        translation_placeholders={"error": err.error_msg or str(err)},
                     ) from err
-                raise UpdateFailed(f"Error fetching min device data: {err}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="fetch_data_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
             min_info = {**min_details, **min_settings, **min_energy}
             self.data = min_info
@@ -242,10 +259,15 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
-                        "Authentication failed for Growatt API:"
-                        f" {err.error_msg or str(err)}"
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
+                        translation_placeholders={"error": err.error_msg or str(err)},
                     ) from err
-                raise UpdateFailed(f"Error fetching SPH device data: {err}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="fetch_data_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
             combined = {**sph_detail, **sph_energy}
 
@@ -313,7 +335,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.hass.async_add_executor_job(self._sync_update_data)
         except json.decoder.JSONDecodeError as err:
-            raise UpdateFailed(f"Error fetching data: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="fetch_data_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     def request_device_list_scan(self) -> None:
         """Request that the next _sync_update_data also fetches the device list.
