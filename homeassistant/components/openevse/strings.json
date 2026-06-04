@@ -42,6 +42,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "divert_active": {
+        "name": "Divert active"
+      },
+      "has_limit": {
+        "name": "Limit active"
+      },
+      "mqtt_connected": {
+        "name": "MQTT connected"
+      },
+      "shaper_active": {
+        "name": "Shaper active"
+      },
+      "using_ethernet": {
+        "name": "Ethernet connected"
+      },
+      "vehicle": {
+        "name": "Vehicle connected"
+      }
+    },
     "number": {
       "charge_rate": {
         "name": "Charge rate"
