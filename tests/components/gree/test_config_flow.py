@@ -281,7 +281,7 @@ async def test_manual_step_unexpected_error(
             result["flow_id"], {CONF_IP_ADDRESS: "192.168.1.100"}
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {"base": "unknown"}
         mock_device.bind.assert_awaited_once()
 
         await hass.async_block_till_done()

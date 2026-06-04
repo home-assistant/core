@@ -84,7 +84,7 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception(
                         "Unexpected error connecting to Gree device at %s", ip_address
                     )
-                    errors["base"] = "cannot_connect"
+                    errors["base"] = "unknown"
                 else:
                     mac = device.device_info.mac
                     unique_id = mac or ip_address
