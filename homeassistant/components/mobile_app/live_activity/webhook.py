@@ -14,11 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.decorator import Registry
 
-from ..const import (
-    ATTR_LIVE_ACTIVITY_EXPIRES_AT,
-    ATTR_LIVE_ACTIVITY_TAG,
-    ATTR_PUSH_TOKEN,
-)
+from ..const import ATTR_LIVE_ACTIVITY_EXPIRES_AT, ATTR_PUSH_TOKEN, ATTR_TAG
 from ..helpers import empty_okay_response
 from . import remove_live_activity_token, store_live_activity_token
 
@@ -39,7 +35,7 @@ def register_live_activity_webhook_commands(
     @webhook_commands.register("live_activity_token")
     @validate_schema(
         {
-            vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
+            vol.Required(ATTR_TAG): cv.string,
             vol.Required(ATTR_PUSH_TOKEN): cv.string,
             vol.Required(ATTR_LIVE_ACTIVITY_EXPIRES_AT): cv.positive_float,
         }
@@ -52,7 +48,7 @@ def register_live_activity_webhook_commands(
         store_live_activity_token(
             hass,
             webhook_id,
-            data[ATTR_LIVE_ACTIVITY_TAG],
+            data[ATTR_TAG],
             data[ATTR_PUSH_TOKEN],
             data[ATTR_LIVE_ACTIVITY_EXPIRES_AT],
         )
@@ -62,7 +58,7 @@ def register_live_activity_webhook_commands(
     @webhook_commands.register("live_activity_dismissed")
     @validate_schema(
         {
-            vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
+            vol.Required(ATTR_TAG): cv.string,
         }
     )
     async def webhook_live_activity_dismissed(
@@ -70,7 +66,7 @@ def register_live_activity_webhook_commands(
     ) -> Response:
         """Remove a stored Live Activity token when the activity ends on device."""
         webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-        activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
+        activity_tag = data[ATTR_TAG]
 
         if not remove_live_activity_token(hass, webhook_id, activity_tag):
             # Typically means the token already expired via the cleanup loop or

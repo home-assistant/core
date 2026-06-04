@@ -1,7 +1,7 @@
 """Live Activity push token lifecycle: expiry-driven cleanup loop."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -16,9 +16,9 @@ from homeassistant.util import dt as dt_util
 from ..const import (
     ATTR_APP_DATA,
     ATTR_LIVE_ACTIVITY_EXPIRES_AT,
-    ATTR_LIVE_ACTIVITY_TAG,
     ATTR_LIVE_UPDATE,
     ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN,
+    ATTR_TAG,
     ATTR_TOKEN,
     ATTR_WEBHOOK_ID,
     CLEAR_NOTIFICATION,
@@ -55,6 +55,11 @@ class LiveActivityRemotePush:
     target_push_token: str | None = None
     success_callback: Callable[[], None] | None = None
 
+    def async_handle_success(self) -> None:
+        """Invoke the success callback if one was registered."""
+        if self.success_callback is not None:
+            self.success_callback()
+
 
 def prepare_live_activity_remote_push(
     hass: HomeAssistant, registration: Mapping[str, Any], data: dict[str, Any]
@@ -72,10 +77,6 @@ def prepare_live_activity_remote_push(
             },
         },
         target_push_token=resolved.token,
-        _hass=hass,
-        _webhook_id=registration[ATTR_WEBHOOK_ID],
-        _activity_tag=resolved.tag,
-        _event=resolved.event,
     )
 
 
@@ -89,7 +90,7 @@ def resolve_live_activity_push(
     new or expired tag must use the device's push-to-start token.
     """
     notification_data = data.get(ATTR_DATA) or {}
-    tag = notification_data.get(ATTR_LIVE_ACTIVITY_TAG)
+    tag = notification_data.get(ATTR_TAG)
     if not tag:
         return None
 
