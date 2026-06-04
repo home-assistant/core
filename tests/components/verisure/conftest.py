@@ -14,7 +14,7 @@ OVERVIEW = [
     {
         "data": {
             "installation": {
-                "armState": {"status": "DISARMED"},
+                "armState": {"status": "DISARMED", "statusType": "DISARMED"},
                 "broadband": [{"status": "ONLINE"}],
                 "cameras": [
                     {"device": {"deviceLabel": "cam-1"}, "status": "AVAILABLE"}
