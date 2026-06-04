@@ -436,6 +436,12 @@
       }
     },
     "sensor": {
+      "alarm_hub_battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "alarm_hub_last_event": {
+        "name": "Last event"
+      },
       "alarm_sound_detected": {
         "name": "Alarm sound detected"
       },

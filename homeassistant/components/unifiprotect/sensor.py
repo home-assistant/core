@@ -11,6 +11,7 @@ from uiprotect.data import (
     NVR,
     Camera,
     Light,
+    LinkStation,
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
@@ -36,9 +37,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
+    BaseAlarmHubEntity,
     BaseProtectEntity,
     EventEntityMixin,
     PermRequired,
@@ -569,6 +572,71 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 }
 
 
+@dataclass(frozen=True, kw_only=True)
+class ProtectAlarmHubSensorEntityDescription(SensorEntityDescription):
+    """Describes a UniFi Protect alarm hub (public API) sensor."""
+
+    value_fn: Callable[[LinkStation], datetime | float | str | None]
+
+
+def _alarm_hub_battery_voltage(hub: LinkStation) -> float | None:
+    """Return the backup-battery voltage, if reported."""
+    if (battery := hub.alarm_hub_battery) is None:
+        return None
+    return battery.voltage
+
+
+def _alarm_hub_last_event(hub: LinkStation) -> datetime | None:
+    """Return the last-event timestamp, if reported."""
+    if hub.last_event is None:
+        return None
+    return dt_util.utc_from_timestamp(hub.last_event / 1000)
+
+
+ALARM_HUB_SENSORS: tuple[ProtectAlarmHubSensorEntityDescription, ...] = (
+    ProtectAlarmHubSensorEntityDescription(
+        key="battery_voltage",
+        translation_key="alarm_hub_battery_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_alarm_hub_battery_voltage,
+    ),
+    ProtectAlarmHubSensorEntityDescription(
+        key="last_event",
+        translation_key="alarm_hub_last_event",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_alarm_hub_last_event,
+    ),
+)
+
+
+class ProtectAlarmHubSensor(BaseAlarmHubEntity, SensorEntity):
+    """A sensor entity for a UniFi Protect alarm hub."""
+
+    entity_description: ProtectAlarmHubSensorEntityDescription
+
+    @callback
+    def _async_update_attrs(self, hub: LinkStation) -> None:
+        super()._async_update_attrs(hub)
+        self._attr_native_value = self.entity_description.value_fn(hub)
+
+
+@callback
+def _async_alarm_hub_entities(data: ProtectData) -> list[ProtectAlarmHubSensor]:
+    """Build alarm hub sensor entities from the public bootstrap."""
+    api = data.api
+    if not api.has_public_bootstrap:
+        return []
+    return [
+        ProtectAlarmHubSensor(data, hub, description)
+        for hub in api.public_bootstrap.alarm_hubs.values()
+        for description in ALARM_HUB_SENSORS
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -604,6 +672,7 @@ async def async_setup_entry(
     )
     entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
+    entities += _async_alarm_hub_entities(data)
 
     async_add_entities(entities)
 
