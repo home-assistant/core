@@ -27,6 +27,12 @@ class OPNsenseSensorDescription(SensorEntityDescription):
 
 SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
     OPNsenseSensorDescription(
+        key="expired",
+        translation_key="expired",
+        data_key="expired",
+        entity_registry_enabled_default=False,
+    ),
+    OPNsenseSensorDescription(
         key="expires",
         translation_key="expires",
         data_key="expires",
@@ -136,11 +142,8 @@ class OPNsenseSensorEntity(
             return None
 
         if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
-            if isinstance(value, datetime):
-                return value
-            if isinstance(value, str):
-                return dt_util.parse_datetime(value)
-            if isinstance(value, (int, float)):
+            # Should be the number of seconds until the device expires, so convert to a timestamp
+            if isinstance(value, int):
                 return dt_util.utcnow() + timedelta(seconds=value)
             return None
 

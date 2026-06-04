@@ -45,6 +45,9 @@
   },
   "entity": {
     "sensor": {
+      "expired": {
+        "name": "Expired"
+      },
       "expires": {
         "name": "Expires"
       },

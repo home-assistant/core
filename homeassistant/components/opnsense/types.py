@@ -1,7 +1,7 @@
 """Types for OPNsense routers."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from aiopnsense import OPNsenseClient
 
@@ -20,6 +20,6 @@ class OPNsenseRuntimeData:
     coordinator: OPNsenseDeviceTrackerCoordinator
 
 
-type DeviceDetails = dict[str, Any]
+type DeviceDetails = dict[str, str | int | bool]
 type DeviceDetailsByMAC = dict[str, DeviceDetails]
 type OPNsenseConfigEntry = ConfigEntry[OPNsenseRuntimeData]
