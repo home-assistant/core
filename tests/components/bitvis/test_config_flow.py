@@ -74,8 +74,11 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
     }
 
 
-async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test that a port binding failure surfaces a cannot_connect error."""
+@pytest.mark.parametrize("recover", [False, True])
+async def test_user_form_cannot_connect(
+    hass: HomeAssistant, recover: bool
+) -> None:
+    """Test user form error on port bind failure, optionally with recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -95,52 +98,31 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    if recover:
+        with (
+            patch(
+                "homeassistant.components.bitvis.config_flow._async_test_port",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "homeassistant.components.bitvis.async_setup_entry",
+                return_value=True,
+            ),
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HOST: "192.168.1.100",
+                    CONF_PORT: 5000,
+                },
+            )
 
-async def test_user_form_cannot_connect_recovery(hass: HomeAssistant) -> None:
-    """Test recovery from connection failure by successfully creating entry after error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.bitvis.config_flow._async_test_port",
-        side_effect=OSError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 5000,
-            },
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    with (
-        patch(
-            "homeassistant.components.bitvis.config_flow._async_test_port",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.bitvis.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 5000,
-            },
-        )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == MODEL_NAME
-    assert result["data"] == {
-        CONF_HOST: "192.168.1.100",
-        CONF_PORT: 5000,
-    }
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == MODEL_NAME
+        assert result["data"] == {
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 5000,
+        }
 
 
 async def test_user_form_duplicate(hass: HomeAssistant) -> None:
@@ -175,27 +157,16 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_shows_confirm_form(hass: HomeAssistant) -> None:
-    """Test that zeroconf discovery shows the confirmation form."""
+async def test_zeroconf_confirm_creates_entry(hass: HomeAssistant) -> None:
+    """Test that zeroconf discovery shows confirmation form and creates entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=ZEROCONF_DISCOVERY,
     )
-
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
-
-async def test_zeroconf_confirm_creates_entry(hass: HomeAssistant) -> None:
-    """Test that confirming a zeroconf discovery creates a config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
-    assert result["step_id"] == "zeroconf_confirm"
-
     with (
         patch(
             "homeassistant.components.bitvis.config_flow._async_test_port",
@@ -217,8 +188,11 @@ async def test_zeroconf_confirm_creates_entry(hass: HomeAssistant) -> None:
     }
 
 
-async def test_zeroconf_confirm_cannot_connect(hass: HomeAssistant) -> None:
-    """Test that a port bind failure during zeroconf confirm aborts the flow."""
+@pytest.mark.parametrize("recover", [False, True])
+async def test_zeroconf_confirm_cannot_connect(
+    hass: HomeAssistant, recover: bool
+) -> None:
+    """Test zeroconf confirm abort on port bind failure, optionally with recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -236,51 +210,32 @@ async def test_zeroconf_confirm_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-
-async def test_zeroconf_confirm_cannot_connect_recovery(hass: HomeAssistant) -> None:
-    """Test recovery from zeroconf connection failure by successfully creating entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
-
-    with patch(
-        "homeassistant.components.bitvis.config_flow._async_test_port",
-        side_effect=OSError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+    if recover:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
         )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+        with (
+            patch(
+                "homeassistant.components.bitvis.config_flow._async_test_port",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "homeassistant.components.bitvis.async_setup_entry",
+                return_value=True,
+            ),
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={}
+            )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
-
-    with (
-        patch(
-            "homeassistant.components.bitvis.config_flow._async_test_port",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.bitvis.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_HOST: "192.168.1.200",
-        CONF_PORT: DEFAULT_PORT,
-    }
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["data"] == {
+            CONF_HOST: "192.168.1.200",
+            CONF_PORT: DEFAULT_PORT,
+        }
 
 
 async def test_zeroconf_duplicate(hass: HomeAssistant) -> None:

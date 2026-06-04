@@ -101,7 +101,6 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=None,
             config_entry=config_entry,
         )
         self.host = host
@@ -178,8 +177,7 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
             self._unavailable_logged = False
         self.data.sample = payload
         self.data.last_sample_timestamp = dt_util.utcnow()
-        self.last_update_success = True
-        self.async_update_listeners()
+        self.async_set_updated_data(self.data)
 
     @callback
     def _handle_diagnostic(self, payload: PayloadDiagnostic) -> None:
@@ -197,7 +195,7 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
             self.data.sw_version = None
         self.data.boot_time = self._stable_boot_time(diagnostic.uptime_s)
 
-        self.async_update_listeners()
+        self.async_set_updated_data(self.data)
 
     async def _async_watchdog(self) -> None:
         """Monitor for stale data and mark unavailable."""
@@ -219,8 +217,9 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
                 self._unavailable_logged = True
 
             self.data = BitvisData()
-            self.last_update_success = False
-            self.async_update_listeners()
+            self.async_set_update_error(
+                UpdateFailed("No data received within watchdog interval")
+            )
 
     async def _async_update_data(self) -> BitvisData:
         """Return current data (updates are push-based via UDP datagrams)."""
