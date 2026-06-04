@@ -40,6 +40,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
             raise ConfigEntryNotReady(
                 f"Unable to connect to Gree device at {ip_address}"
             ) from err
+        except Exception as err:
+            raise ConfigEntryNotReady(
+                f"Unexpected error connecting to Gree device at {ip_address}"
+            ) from err
         coordinator = DeviceDataUpdateCoordinator(hass, entry, device)
         await coordinator.async_config_entry_first_refresh()
         entry.runtime_data = GreeRuntimeData(

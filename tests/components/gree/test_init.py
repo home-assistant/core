@@ -109,3 +109,25 @@ async def test_setup_static_ip_bind_failure(hass: HomeAssistant) -> None:
 
         assert entry.state is ConfigEntryState.SETUP_RETRY
         mock_device.bind.assert_awaited_once()
+
+
+async def test_setup_static_ip_unexpected_bind_error(hass: HomeAssistant) -> None:
+    """Test static IP entry retries on unexpected bind errors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_device = build_device_mock(ipAddress="192.168.1.100")
+    mock_device.bind = AsyncMock(side_effect=OSError("Network unreachable"))
+
+    with patch(
+        "homeassistant.components.gree.Device",
+        return_value=mock_device,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+        mock_device.bind.assert_awaited_once()
