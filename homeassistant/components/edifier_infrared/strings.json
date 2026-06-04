@@ -1,0 +1,22 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Edifier device has already been configured with this transmitter.",
+      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "infrared_entity_id": "IR transmitter",
+          "model": "Speaker model"
+        },
+        "data_description": {
+          "infrared_entity_id": "Select the infrared transmitter entity to use.",
+          "model": "Choose your Edifier speaker model from the list."
+        },
+        "description": "Configure your Edifier speaker for IR control.",
+        "title": "Set up Edifier IR speaker"
+      }
+    }
+  }
+}

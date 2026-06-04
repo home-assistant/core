@@ -303,3 +303,80 @@ async def test_dhcp_discovery_aborts_when_in_progress(
 
     assert second["type"] is FlowResultType.ABORT
     assert second["reason"] == "already_in_progress"
+
+
+_NEW_PASSWORD = "new-password"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the reconfigure flow updates the stored password and reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == _NEW_PASSWORD
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_reconfigure_invalid_auth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_vistapool_client: AsyncMock,
+    mock_vistapool_auth: MagicMock,
+) -> None:
+    """Test the reconfigure flow surfaces invalid_auth and recovers on retry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_vistapool_auth.authenticate.side_effect = AuthenticationError
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_vistapool_auth.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == _NEW_PASSWORD
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_reconfigure_account_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_vistapool_client: AsyncMock,
+    mock_vistapool_auth: MagicMock,
+) -> None:
+    """Test the reconfigure flow aborts when credentials belong to a different account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_vistapool_auth.user_id = "a-different-firebase-uid"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "account_mismatch"
+    assert mock_setup_entry.call_count == 0

@@ -24,7 +24,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteAnswer,
     SatelliteBusyError,
 )
-from homeassistant.components.assist_satellite.const import PREANNOUNCE_URL
+from homeassistant.components.assist_satellite.const import DOMAIN, PREANNOUNCE_URL
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
@@ -362,7 +362,7 @@ async def test_announce(
         patch.object(entity, "async_announce", new=async_announce),
     ):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "announce",
             service_data,
             target={"entity_id": "assist_satellite.test_entity"},
@@ -457,7 +457,7 @@ async def test_announce_default_preannounce(
 
     with patch.object(entity, "async_announce", new=async_announce):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "announce",
             {"media_id": "test-media-id"},
             target={"entity_id": "assist_satellite.test_entity"},
@@ -777,7 +777,7 @@ async def test_start_conversation(
         patch.object(entity, "async_start_conversation", new=async_start_conversation),
     ):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "start_conversation",
             service_data,
             target={"entity_id": "assist_satellite.test_entity"},
@@ -796,7 +796,7 @@ async def test_start_conversation_reject_builtin_agent(
     """Test starting a conversation on a device."""
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "start_conversation",
             {"start_message": "Hey!"},
             target={"entity_id": "assist_satellite.test_entity"},
@@ -822,7 +822,7 @@ async def test_start_conversation_default_preannounce(
         patch.object(entity, "async_start_conversation", new=async_start_conversation),
     ):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "start_conversation",
             {"start_media_id": "test-media-id"},
             target={"entity_id": "assist_satellite.test_entity"},
@@ -958,7 +958,7 @@ async def test_ask_question(
         patch.object(entity, "async_start_conversation", new=async_start_conversation),
     ):
         response = await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "ask_question",
             {"entity_id": entity_id, "question": question_text, **service_data},
             blocking=True,
@@ -977,7 +977,7 @@ async def test_ask_question_requires_entity_permission(
     """Test ask_question is denied for users without POLICY_CONTROL on the entity."""
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "ask_question",
             {"entity_id": "assist_satellite.test_entity", "question": "Anything?"},
             blocking=True,

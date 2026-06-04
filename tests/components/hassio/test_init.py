@@ -541,19 +541,19 @@ async def test_service_calls(
     supervisor_client.reset_mock()
 
     await hass.services.async_call(
-        "hassio", f"{app_or_addon}_start", {app_or_addon: "test"}
+        DOMAIN, f"{app_or_addon}_start", {app_or_addon: "test"}
     )
     await hass.services.async_call(
-        "hassio", f"{app_or_addon}_stop", {app_or_addon: "test"}
+        DOMAIN, f"{app_or_addon}_stop", {app_or_addon: "test"}
     )
     await hass.services.async_call(
-        "hassio", f"{app_or_addon}_restart", {app_or_addon: "test"}
+        DOMAIN, f"{app_or_addon}_restart", {app_or_addon: "test"}
     )
     await hass.services.async_call(
-        "hassio", f"{app_or_addon}_stdin", {app_or_addon: "test", "input": "test"}
+        DOMAIN, f"{app_or_addon}_stdin", {app_or_addon: "test", "input": "test"}
     )
     await hass.services.async_call(
-        "hassio",
+        DOMAIN,
         f"{app_or_addon}_stdin",
         {app_or_addon: "test", "input": {"hello": "world"}},
     )
@@ -570,8 +570,8 @@ async def test_service_calls(
         in supervisor_client.addons.write_addon_stdin.mock_calls
     )
 
-    await hass.services.async_call("hassio", "host_shutdown", {})
-    await hass.services.async_call("hassio", "host_reboot", {})
+    await hass.services.async_call(DOMAIN, "host_shutdown", {})
+    await hass.services.async_call(DOMAIN, "host_reboot", {})
     await hass.async_block_till_done()
 
     supervisor_client.host.shutdown.assert_called_once_with()
@@ -585,7 +585,7 @@ async def test_service_calls(
     )
 
     full_backup = await hass.services.async_call(
-        "hassio", "backup_full", {}, blocking=True, return_response=True
+        DOMAIN, "backup_full", {}, blocking=True, return_response=True
     )
     supervisor_client.backups.full_backup.assert_called_once_with(
         FullBackupOptions(name="2021-11-13 03:48:00")
@@ -593,7 +593,7 @@ async def test_service_calls(
     assert full_backup == {"backup": "full"}
 
     partial_backup = await hass.services.async_call(
-        "hassio",
+        DOMAIN,
         "backup_partial",
         {
             "homeassistant": True,
@@ -615,9 +615,9 @@ async def test_service_calls(
     )
     assert partial_backup == {"backup": "partial"}
 
-    await hass.services.async_call("hassio", "restore_full", {"slug": "test"})
+    await hass.services.async_call(DOMAIN, "restore_full", {"slug": "test"})
     await hass.services.async_call(
-        "hassio",
+        DOMAIN,
         "restore_partial",
         {
             "slug": "test",
@@ -641,7 +641,7 @@ async def test_service_calls(
     )
 
     await hass.services.async_call(
-        "hassio",
+        DOMAIN,
         "backup_full",
         {
             "name": "backup_name",
@@ -659,7 +659,7 @@ async def test_service_calls(
     )
 
     await hass.services.async_call(
-        "hassio",
+        DOMAIN,
         "backup_full",
         {
             "location": "/backup",
@@ -675,7 +675,7 @@ async def test_service_calls(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "hassio",
+        DOMAIN,
         "backup_full",
         {
             "location": "/backup",
@@ -699,11 +699,11 @@ async def test_invalid_service_calls(hass: HomeAssistant, app_or_addon: str) -> 
 
     with pytest.raises(Invalid):
         await hass.services.async_call(
-            "hassio", f"{app_or_addon}_start", {app_or_addon: "inv@lid"}
+            DOMAIN, f"{app_or_addon}_start", {app_or_addon: "inv@lid"}
         )
     with pytest.raises(Invalid):
         await hass.services.async_call(
-            "hassio",
+            DOMAIN,
             f"{app_or_addon}_stdin",
             {app_or_addon: "inv@lid", "input": "test"},
         )
@@ -738,7 +738,7 @@ async def test_service_calls_apps_addons_exclusive(
     with pytest.raises(
         Invalid, match="two or more values in the same group of exclusion"
     ):
-        await hass.services.async_call("hassio", service, service_data)
+        await hass.services.async_call(DOMAIN, service, service_data)
 
 
 @pytest.mark.parametrize(
@@ -779,7 +779,7 @@ async def test_addon_service_call_with_complex_slug(
         await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "hassio", f"{app_or_addon}_start", {app_or_addon: "test.a_1-2"}
+        DOMAIN, f"{app_or_addon}_start", {app_or_addon: "test.a_1-2"}
     )
 
 
@@ -823,12 +823,12 @@ async def test_invalid_service_calls_app_duplicates(
 
     with pytest.raises(Invalid, match="contains duplicate items"):
         await hass.services.async_call(
-            "hassio", "backup_partial", {app_or_addon: ["test", "test"]}
+            DOMAIN, "backup_partial", {app_or_addon: ["test", "test"]}
         )
 
     with pytest.raises(Invalid, match="contains duplicate items"):
         await hass.services.async_call(
-            "hassio", "restore_partial", {app_or_addon: ["test", "test"]}
+            DOMAIN, "restore_partial", {app_or_addon: ["test", "test"]}
         )
 
 
@@ -839,12 +839,12 @@ async def test_invalid_service_calls_folder_duplicates(hass: HomeAssistant) -> N
 
     with pytest.raises(Invalid, match="contains duplicate items"):
         await hass.services.async_call(
-            "hassio", "backup_partial", {"folders": ["ssl", "ssl"]}
+            DOMAIN, "backup_partial", {"folders": ["ssl", "ssl"]}
         )
 
     with pytest.raises(Invalid, match="contains duplicate items"):
         await hass.services.async_call(
-            "hassio", "restore_partial", {"folders": ["ssl", "ssl"]}
+            DOMAIN, "restore_partial", {"folders": ["ssl", "ssl"]}
         )
 
 
@@ -859,7 +859,7 @@ async def test_partial_backup_legacy_homeassistant_folder(
     )
 
     await hass.services.async_call(
-        "hassio",
+        DOMAIN,
         "backup_partial",
         {"folders": ["homeassistant", "ssl"], "name": "test"},
         blocking=True,
@@ -886,7 +886,7 @@ async def test_partial_restore_legacy_homeassistant_folder(
     assert await async_setup_component(hass, "hassio", {})
 
     await hass.services.async_call(
-        "hassio",
+        DOMAIN,
         "restore_partial",
         {"slug": "test", "folders": ["homeassistant", "ssl"]},
         blocking=True,
@@ -906,9 +906,7 @@ async def test_partial_backup_invalid_folder(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "hassio", {})
 
     with pytest.raises(Invalid, match="not a valid value"):
-        await hass.services.async_call(
-            "hassio", "backup_partial", {"folders": ["bogus"]}
-        )
+        await hass.services.async_call(DOMAIN, "backup_partial", {"folders": ["bogus"]})
 
 
 @pytest.mark.usefixtures("hassio_env", "supervisor_client")
@@ -920,7 +918,7 @@ async def test_partial_backup_legacy_homeassistant_folder_conflict(
 
     with pytest.raises(ServiceValidationError, match="conflicts"):
         await hass.services.async_call(
-            "hassio",
+            DOMAIN,
             "backup_partial",
             {"homeassistant": False, "folders": ["homeassistant"]},
             blocking=True,
@@ -1569,7 +1567,7 @@ async def test_mount_reload_action(
     """Test reload_mount service call."""
     device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
     await hass.services.async_call(
-        "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        DOMAIN, "mount_reload", {"device_id": device.id}, blocking=True
     )
     supervisor_client.mounts.reload_mount.assert_awaited_once_with("NAS")
 
@@ -1586,7 +1584,7 @@ async def test_mount_reload_action_failure(
     )
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
-            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+            DOMAIN, "mount_reload", {"device_id": device.id}, blocking=True
         )
     assert str(exc.value) == "Failed to reload mount NAS: test failure"
 
@@ -1600,7 +1598,7 @@ async def test_mount_reload_unknown_device_id(
     await mount_reload_test_setup(hass, device_registry, supervisor_client)
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
-            "hassio", "mount_reload", {"device_id": "1234"}, blocking=True
+            DOMAIN, "mount_reload", {"device_id": "1234"}, blocking=True
         )
     assert str(exc.value) == "Device ID not found"
 
@@ -1615,7 +1613,7 @@ async def test_mount_reload_no_name(
     device_registry.async_update_device(device.id, name=None)
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
-            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+            DOMAIN, "mount_reload", {"device_id": device.id}, blocking=True
         )
     assert str(exc.value) == "Device is not a supervisor mount point"
 
@@ -1630,7 +1628,7 @@ async def test_mount_reload_invalid_model(
     device_registry.async_update_device(device.id, model=None)
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
-            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+            DOMAIN, "mount_reload", {"device_id": device.id}, blocking=True
         )
     assert str(exc.value) == "Device is not a supervisor mount point"
 
@@ -1652,7 +1650,7 @@ async def test_mount_reload_not_supervisor_device(
     )
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
-            "hassio", "mount_reload", {"device_id": device2.id}, blocking=True
+            DOMAIN, "mount_reload", {"device_id": device2.id}, blocking=True
         )
     assert str(exc.value) == "Device is not a supervisor mount point"
 
