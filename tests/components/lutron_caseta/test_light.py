@@ -121,3 +121,47 @@ async def test_previous_brightness_physical_switch(
     assert state is not None
     # to_hass_level(72) == (72 * 255) // 100 == 183
     assert state.attributes.get(ATTR_BRIGHTNESS) == 183
+
+
+async def test_previous_brightness_zero_not_remembered(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a zero brightness is not remembered as the restore level."""
+    await async_setup_integration(hass, MockBridge)
+
+    caseta_entity_id = "light.kitchen_other_lights"
+
+    # 1. Establish a non-zero previous brightness of 25
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_BRIGHTNESS: 25},
+        target={ATTR_ENTITY_ID: caseta_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # 2. Turn on with an explicit brightness of 0 (effectively off)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_BRIGHTNESS: 0},
+        target={ATTR_ENTITY_ID: caseta_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # 3. Turn on without brightness → the 0 is ignored and 25 is restored
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {},
+        target={ATTR_ENTITY_ID: caseta_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(caseta_entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 25

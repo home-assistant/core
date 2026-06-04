@@ -187,16 +187,20 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         """Turn the light on."""
         # first check for "white mode" (WarmDim)
         if (white_color := kwargs.get(ATTR_WHITE)) is not None:
-            self._prev_brightness = white_color
+            # Only remember non-zero levels (see brightness handling below)
+            if white_color:
+                self._prev_brightness = white_color
             await self._async_set_warm_dim(white_color)
             return
 
         brightness: int | None
 
         if ATTR_BRIGHTNESS in kwargs:
-            # Explicit brightness: remember it
             brightness = kwargs.pop(ATTR_BRIGHTNESS)
-            self._prev_brightness = brightness
+            # Only remember non-zero levels, so a later turn-on without an
+            # explicit brightness never restores the light to "off"
+            if brightness:
+                self._prev_brightness = brightness
         # No explicit brightness: use last known non-zero brightness
         elif self._prev_brightness is None:
             # No history at all: default to full brightness
