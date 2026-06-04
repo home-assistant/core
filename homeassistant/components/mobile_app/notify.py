@@ -53,7 +53,6 @@ from .const import (
     ATTR_WEBHOOK_ID,
     CLEAR_NOTIFICATION,
     DATA_CONFIG_ENTRIES,
-    # Apple ActivityKit per-activity push tokens, stored by webhook_id and tag
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
