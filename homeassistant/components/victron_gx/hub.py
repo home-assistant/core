@@ -16,11 +16,7 @@ from victron_mqtt import (
     VictronEnum,
 )
 
-from homeassistant.config_entries import (
-    CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
-    DEFAULT_STATE_WRITE_DEBOUNCE_INTERVAL,
-    ConfigEntry,
-)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -69,12 +65,6 @@ class Hub:
         config = {**entry.data, **entry.options}
         self.hass = hass
         self.host = config[CONF_HOST]
-        self.state_write_debounce_interval = float(
-            config.get(
-                CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
-                DEFAULT_STATE_WRITE_DEBOUNCE_INTERVAL,
-            )
-        )
 
         self._hub = VictronVenusHub(
             host=self.host,

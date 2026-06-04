@@ -71,7 +71,6 @@ async def async_setup_entry(
                     metric,
                     device_info,
                     installation_id,
-                    hub.state_write_debounce_interval,
                 )
             ]
         )
@@ -88,11 +87,9 @@ class VictronSensor(DebouncedWriteEntity, VictronBaseEntity, SensorEntity):
         metric: VictronVenusMetric,
         device_info: DeviceInfo,
         installation_id: str,
-        state_write_debounce_interval: float,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, metric, device_info, installation_id)
-        self.state_write_debounce_interval = state_write_debounce_interval
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
         # Enum sensors must not have a state class
         if self._attr_device_class == SensorDeviceClass.ENUM:

@@ -43,6 +43,7 @@
       'port': 1883,
       'serial': '**REDACTED**',
       'ssl': False,
+      'state_write_debounce_interval': 0,
       'username': '**REDACTED**',
     }),
   })

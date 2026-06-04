@@ -637,6 +637,20 @@ class ConfigEntry[_DataT = Any]:
         return self._state_write_debounce_system_option_default
 
     @property
+    def state_write_debounce_interval(self) -> int | None:
+        """Return the effective state write debounce interval.
+
+        Returns None if the integration does not support the system option.
+        """
+        default = self.state_write_debounce_system_option_default
+        if default is None:
+            return None
+        value = self.options.get(CONF_STATE_WRITE_DEBOUNCE_INTERVAL, default)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return default
+        return int(value)
+
+    @property
     def supported_subentry_types(self) -> dict[str, dict[str, bool]]:
         """Return supported subentry types."""
         if self._supported_subentry_types is None and (
@@ -698,12 +712,7 @@ class ConfigEntry[_DataT = Any]:
             ),
             "num_subentries": len(self.subentries),
         }
-        if (default := self.state_write_debounce_system_option_default) is not None:
-            value = self.options.get(CONF_STATE_WRITE_DEBOUNCE_INTERVAL, default)
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                value = default
-            elif not isinstance(value, int):
-                value = int(value)
+        if (value := self.state_write_debounce_interval) is not None:
             json_repr["supports_state_write_debounce_system_option"] = True
             json_repr[CONF_STATE_WRITE_DEBOUNCE_INTERVAL] = value
         return json_fragment(json_bytes(json_repr))

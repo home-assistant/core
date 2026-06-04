@@ -1716,18 +1716,60 @@ class Entity(
 
 
 class DebouncedWriteEntity(Entity):
-    """An entity mixin that debounces state writes."""
+    """An entity mixin that debounces state writes.
+
+    Integrations opt in to debouncing by inheriting from this class.
+    The debounce interval is resolved automatically from the config entry's
+    system option when the entity is added to a platform, so integrations
+    only need to declare ``state_write_debounce_system_option_default`` on
+    their ``ConfigFlow`` subclass.  An integration may still override the
+    interval by setting ``state_write_debounce_interval`` directly on the
+    entity instance (e.g. in ``__init__``).
+    """
 
     state_write_debounce_interval: float = 0.0
     __last_state_write: float | None = None
 
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: asyncio.Semaphore | None,
+    ) -> None:
+        """Start adding an entity to a platform.
+
+        Auto-wires ``state_write_debounce_interval`` from the config entry's
+        system option when the integration has not set it explicitly.
+        """
+        super().add_to_platform_start(hass, platform, parallel_updates)
+        # Only auto-wire if the integration hasn't set the interval explicitly.
+        if (
+            "state_write_debounce_interval" not in self.__dict__
+            and platform.config_entry is not None
+            and (interval := platform.config_entry.state_write_debounce_interval)
+            is not None
+        ):
+            self.state_write_debounce_interval = float(interval)
+
     def _should_debounce_state_write(self) -> bool:
         """Return if state writes should be debounced."""
-        return True
+        # bool is a subclass of int, but we only want real numeric sensor values.
+        return isinstance(self._attr_native_value, (int, float)) and not isinstance(
+            self._attr_native_value, bool
+        )
 
     @callback
     def _async_should_write_ha_state(self) -> bool:
         """Return if a state write should proceed."""
+        # Don't debounce writes before the entity is fully added to the
+        # platform.  Writes during the ADDING phase are rejected by the
+        # base Entity anyway, so letting them through avoids recording a
+        # debounce timestamp for a write that never reaches the state
+        # machine.
+        if self._platform_state is not EntityPlatformState.ADDED:
+            return True
+
         if not self._should_debounce_state_write():
             return True
 

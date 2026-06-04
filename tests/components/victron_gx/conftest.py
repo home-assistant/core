@@ -12,6 +12,7 @@ from homeassistant.components.victron_gx.const import (
     CONF_SERIAL,
     DOMAIN,
 )
+from homeassistant.config_entries import CONF_STATE_WRITE_DEBOUNCE_INTERVAL
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -52,6 +53,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_MODEL: MOCK_MODEL,
             CONF_SERIAL: MOCK_SERIAL,
         },
+        options={CONF_STATE_WRITE_DEBOUNCE_INTERVAL: 0},
         title=f"Victron OS {MOCK_INSTALLATION_ID} ({MOCK_HOST}:1883)",
     )
 
