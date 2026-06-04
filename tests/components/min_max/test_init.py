@@ -189,7 +189,7 @@ async def test_migrate_helper_broken_config(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test migrating to group sensors with manually removed helper."""
+    """Test migrating to group sensors with broken config."""
     assert await async_setup_component(hass, "repairs", {})
     hass.states.async_set("sensor.input_one", "10")
     hass.states.async_set("switch.input_two", "20")
@@ -260,12 +260,7 @@ async def test_migrate_helper_broken_config(
 
 async def test_issue_is_deleted_on_removal(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    freezer: FrozenDateTimeFactory,
-    snapshot: SnapshotAssertion,
-    hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test issue is removed on config entry removal."""
     assert await async_setup_component(hass, "repairs", {})
