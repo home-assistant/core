@@ -325,11 +325,8 @@ def _create_mocked_hole(
 
 
 @contextmanager
-def _patch_hole(mocked_hole: MagicMock, patch_target: str) -> Generator[MagicMock]:
-    """Patch the Hole class and API version detection."""
-
-    def side_effect(*args, **kwargs):
-        return mocked_hole(**kwargs)
+def _patch_api_version_detection(mocked_hole: MagicMock) -> Generator[None]:
+    """Patch API version detection."""
 
     async def is_v6_api_side_effect(*_args, **_kwargs) -> bool:
         if mocked_hole.wrong_host:
@@ -344,7 +341,6 @@ def _patch_hole(mocked_hole: MagicMock, patch_target: str) -> Generator[MagicMoc
         return mocked_hole.v6_authentication_required
 
     with ExitStack() as stack:
-        patched_hole = stack.enter_context(patch(patch_target, side_effect=side_effect))
         stack.enter_context(
             patch(
                 "homeassistant.components.pi_hole._async_is_v6_api",
@@ -363,13 +359,31 @@ def _patch_hole(mocked_hole: MagicMock, patch_target: str) -> Generator[MagicMoc
                 side_effect=v6_api_authentication_required_side_effect,
             )
         )
+        yield
+
+
+@contextmanager
+def _patch_hole(mocked_hole: MagicMock, patch_target: str) -> Generator[MagicMock]:
+    """Patch the Hole class."""
+
+    def side_effect(*args, **kwargs):
+        return mocked_hole(**kwargs)
+
+    with patch(patch_target, side_effect=side_effect) as patched_hole:
         yield patched_hole
 
 
+@contextmanager
 def _patch_init_hole(mocked_hole):
     """Patch the Hole class in the main integration."""
 
-    return _patch_hole(mocked_hole, "homeassistant.components.pi_hole.Hole")
+    with (
+        _patch_hole(
+            mocked_hole, "homeassistant.components.pi_hole.Hole"
+        ) as patched_hole,
+        _patch_api_version_detection(mocked_hole),
+    ):
+        yield patched_hole
 
 
 def _patch_config_flow_hole(mocked_hole):

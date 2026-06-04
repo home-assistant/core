@@ -32,6 +32,7 @@ from .coordinator import PiHoleConfigEntry, PiHoleData, PiHoleUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 DATA_V6_CLIENTSESSIONS = f"{DOMAIN}_v6_clientsessions"
+V6_API_RESPONSE_EXCEPTIONS = (aiohttp.ContentTypeError, ValueError)
 
 
 PLATFORMS = [
@@ -166,7 +167,10 @@ def _async_get_v6_session(
 
         @callback
         def _close(_event: Event) -> None:
-            session.detach()
+            if sessions.get(verify_ssl) is not session:
+                return
+            if not session.closed:
+                session.detach()
             sessions.pop(verify_ssl, None)
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _close)
@@ -185,7 +189,7 @@ async def _async_v6_api_authentication_required(
         async with session.get(url) as response:
             try:
                 data: Any = await response.json()
-            except aiohttp.ContentTypeError, ValueError:
+            except V6_API_RESPONSE_EXCEPTIONS:
                 return None
 
             if not isinstance(data, dict):

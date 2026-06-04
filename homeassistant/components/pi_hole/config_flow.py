@@ -35,6 +35,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+V6_API_CONNECTION_EXCEPTIONS = (TimeoutError, aiohttp.ClientError)
+
 
 class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Pi-hole config flow."""
@@ -164,7 +166,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 authentication_required = await _async_v6_api_authentication_required(
                     self.hass, self._config
                 )
-            except TimeoutError, aiohttp.ClientError:
+            except V6_API_CONNECTION_EXCEPTIONS:
                 return {"base": "cannot_connect"}
 
             if authentication_required is False:
