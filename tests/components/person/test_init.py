@@ -1238,7 +1238,7 @@ async def test_persons_with_entity(hass: HomeAssistant) -> None:
     """Test finding persons with an entity."""
     assert await async_setup_component(
         hass,
-        "person",
+        DOMAIN,
         {
             "person": [
                 {
@@ -1269,7 +1269,7 @@ async def test_entities_in_person(hass: HomeAssistant) -> None:
     """Test finding entities tracked by person."""
     assert await async_setup_component(
         hass,
-        "person",
+        DOMAIN,
         {
             "person": [
                 {
