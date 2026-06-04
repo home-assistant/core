@@ -54,11 +54,7 @@ from .const import (
     SIGNAL_RECORD_NOTIFICATION,
 )
 from .helpers import device_info
-from .live_activity import (
-    LiveActivityEvent,
-    remove_live_activity_token,
-    resolve_live_activity_push,
-)
+from .live_activity import prepare_live_activity_remote_push
 from .push_notification import PushChannel
 from .util import supports_push
 
@@ -244,27 +240,15 @@ class MobileAppNotificationService(BaseNotificationService):
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
-        live_activity_token: str | None = None
-        live_activity_event: LiveActivityEvent | None = None
-        live_activity_tag: str | None = None
-        if resolved := resolve_live_activity_push(self.hass, entry.data, data):
-            live_activity_token = resolved.token
-            live_activity_event = resolved.event
-            live_activity_tag = resolved.tag
-            data = {
-                **data,
-                ATTR_DATA: {
-                    **(data.get(ATTR_DATA) or {}),
-                    "event": live_activity_event,
-                },
-            }
-
+        # Applies Apple ActivityKit Live Activity routing when the payload asks
+        # for it; otherwise it returns the original generic mobile push data.
+        remote_push = prepare_live_activity_remote_push(self.hass, entry.data, data)
         try:
             await _send_message(
                 async_get_clientsession(self.hass),
                 entry,
-                data,
-                live_activity_token=live_activity_token,
+                remote_push.data,
+                target_push_token=remote_push.target_push_token,
             )
         except HomeAssistantError as e:
             if e.translation_key == "rate_limit_exceeded_sending_notification":
@@ -272,13 +256,7 @@ class MobileAppNotificationService(BaseNotificationService):
             else:
                 _LOGGER.error(str(e))
         else:
-            if (
-                live_activity_event == LiveActivityEvent.END
-                and live_activity_tag is not None
-            ):
-                remove_live_activity_token(
-                    self.hass, entry.data[ATTR_WEBHOOK_ID], live_activity_tag
-                )
+            remote_push.async_handle_success()
 
 
 async def _send_message(
@@ -286,7 +264,7 @@ async def _send_message(
     entry: ConfigEntry,
     data: dict[str, Any],
     *,
-    live_activity_token: str | None = None,
+    target_push_token: str | None = None,
 ) -> None:
     """Shared internal helper to send messages via cloud push notification services."""
     reg_info = {
@@ -302,8 +280,8 @@ async def _send_message(
         ATTR_PUSH_TOKEN: entry.data[ATTR_APP_DATA][ATTR_PUSH_TOKEN],
         "registration_info": reg_info,
     }
-    if live_activity_token:
-        payload[ATTR_LIVE_ACTIVITY_TOKEN] = live_activity_token
+    if target_push_token:
+        payload[ATTR_LIVE_ACTIVITY_TOKEN] = target_push_token
 
     try:
         async with asyncio.timeout(10):

@@ -47,6 +47,54 @@ class LiveActivityPush:
     tag: str
 
 
+@dataclass(slots=True)
+class LiveActivityRemotePush:
+    """Apple ActivityKit-specific adjustments for a remote notification send."""
+
+    data: dict[str, Any]
+    target_push_token: str | None = None
+    _hass: HomeAssistant | None = None
+    _webhook_id: str | None = None
+    _activity_tag: str | None = None
+    _event: LiveActivityEvent | None = None
+
+    @callback
+    def async_handle_success(self) -> None:
+        """Clean up ActivityKit state after a successful remote send."""
+        if (
+            self._event != LiveActivityEvent.END
+            or self._hass is None
+            or self._webhook_id is None
+            or self._activity_tag is None
+        ):
+            return
+
+        remove_live_activity_token(self._hass, self._webhook_id, self._activity_tag)
+
+
+def prepare_live_activity_remote_push(
+    hass: HomeAssistant, registration: Mapping[str, Any], data: dict[str, Any]
+) -> LiveActivityRemotePush:
+    """Return remote notification data with any ActivityKit routing applied."""
+    if not (resolved := resolve_live_activity_push(hass, registration, data)):
+        return LiveActivityRemotePush(data=data)
+
+    return LiveActivityRemotePush(
+        data={
+            **data,
+            ATTR_DATA: {
+                **(data.get(ATTR_DATA) or {}),
+                "event": resolved.event,
+            },
+        },
+        target_push_token=resolved.token,
+        _hass=hass,
+        _webhook_id=registration[ATTR_WEBHOOK_ID],
+        _activity_tag=resolved.tag,
+        _event=resolved.event,
+    )
+
+
 def resolve_live_activity_push(
     hass: HomeAssistant, registration: Mapping[str, Any], data: dict[str, Any]
 ) -> LiveActivityPush | None:
