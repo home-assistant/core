@@ -58,6 +58,8 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_URL] = user_input[CONF_URL].rstrip("/")
+
             if self.client_device_id is None:
                 self.client_device_id = _generate_client_device_id()
 

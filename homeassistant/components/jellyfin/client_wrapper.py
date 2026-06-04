@@ -21,7 +21,10 @@ async def validate_input(
     hass: HomeAssistant, user_input: dict[str, Any], client: JellyfinClient
 ) -> tuple[str, dict[str, Any]]:
     """Validate that the provided url and credentials can be used to connect."""
-    url = user_input[CONF_URL]
+    # Strip any trailing slash; the client joins paths without normalizing, so a
+    # trailing slash produces a double-slashed request path (e.g. //system/info/public)
+    # that some Jellyfin versions reject with a 404.
+    url = user_input[CONF_URL].rstrip("/")
     username = user_input[CONF_USERNAME]
     password = user_input[CONF_PASSWORD]
 
