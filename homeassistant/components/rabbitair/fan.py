@@ -46,6 +46,7 @@ async def async_setup_entry(
 class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     """Fan control functions of the Rabbit Air air purifier."""
 
+    _attr_name = None
     _attr_translation_key = "rabbitair"
     _attr_supported_features = (
         FanEntityFeature.PRESET_MODE
@@ -61,7 +62,6 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, entry)
-        self._attr_name = entry.title
 
         if self._is_model(Model.MinusA2):
             self._attr_preset_modes = list(PRESET_MODES)

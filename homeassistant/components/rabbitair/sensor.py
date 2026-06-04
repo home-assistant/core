@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -44,7 +44,6 @@ class RabbitAirAirQualitySensor(RabbitAirBaseEntity, SensorEntity):
     """Rabbit Air air quality sensor."""
 
     entity_description = AIR_QUALITY_DESCRIPTION
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -54,10 +53,8 @@ class RabbitAirAirQualitySensor(RabbitAirBaseEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.unique_id}_{self.entity_description.key}"
-        self._attr_native_value = _quality_value(coordinator.data.quality)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = _quality_value(self.coordinator.data.quality)
-        super()._handle_coordinator_update()
+    @property
+    def native_value(self) -> StateType:
+        """Return the air quality state."""
+        return _quality_value(self.coordinator.data.quality)

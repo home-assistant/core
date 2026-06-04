@@ -21,12 +21,12 @@ from .test_config_flow import (
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("mock_async_zeroconf")
 
-@pytest.mark.usefixtures("mock_async_zeroconf")
-async def test_air_quality_sensor(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test the air quality sensor."""
+
+@pytest.fixture
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a mock config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -38,12 +38,20 @@ async def test_air_quality_sensor(
         unique_id=TEST_UNIQUE_ID,
     )
     entry.add_to_hass(hass)
+    return entry
 
+
+async def test_air_quality_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the air quality sensor."""
     with patch(
-        "rabbitair.UdpClient.get_state",
+        "homeassistant.components.rabbitair.coordinator.Client.get_state",
         return_value=get_mock_state(quality=Quality.High),
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.rabbit_air_air_quality")
@@ -55,26 +63,15 @@ async def test_air_quality_sensor(
     assert registry_entry.unique_id == f"{TEST_UNIQUE_ID}_air_quality"
 
 
-@pytest.mark.usefixtures("mock_async_zeroconf")
-async def test_no_air_quality_sensor_when_quality_is_none(hass: HomeAssistant) -> None:
+async def test_no_air_quality_sensor_when_quality_is_none(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test the air quality sensor is not created when quality is unavailable."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_ACCESS_TOKEN: TEST_TOKEN,
-            CONF_MAC: TEST_MAC,
-        },
-        title=TEST_TITLE,
-        unique_id=TEST_UNIQUE_ID,
-    )
-    entry.add_to_hass(hass)
-
     with patch(
-        "rabbitair.UdpClient.get_state",
+        "homeassistant.components.rabbitair.coordinator.Client.get_state",
         return_value=get_mock_state(quality=None),
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.rabbit_air_air_quality") is None

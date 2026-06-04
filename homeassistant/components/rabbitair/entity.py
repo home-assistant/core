@@ -25,6 +25,8 @@ MODELS = {
 class RabbitAirBaseEntity(CoordinatorEntity[RabbitAirDataUpdateCoordinator]):
     """Base class for Rabbit Air entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: RabbitAirDataUpdateCoordinator,
