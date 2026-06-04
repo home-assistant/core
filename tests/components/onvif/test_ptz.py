@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.components.onvif.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -34,7 +35,7 @@ def _setup_ptz_camera_mocks(mock_onvif_camera_cls: MagicMock) -> MagicMock:
 def _make_entry() -> MockConfigEntry:
     """Build a config entry suitable for the PTZ tests."""
     return MockConfigEntry(
-        domain="onvif",
+        domain=DOMAIN,
         title=NAME,
         unique_id=MAC,
         data={
