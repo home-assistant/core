@@ -1,11 +1,7 @@
 """Base entity for the Duco integration."""
 
 from duco_connectivity.models import Node, NodeType
-from yarl import URL
 
-from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -22,10 +18,9 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._node_id = node.node_id
-        assert coordinator.config_entry.unique_id is not None
-        mac = coordinator.config_entry.unique_id
+        if (mac := coordinator.config_entry.unique_id) is None:
+            raise ValueError("Duco config entry unique ID is missing")
 
-        self._mac = mac
         self._is_box = node.general.node_type == NodeType.BOX
         device_name: str
         if self._is_box:
@@ -34,7 +29,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             device_name = node.general.name or f"Node {node.node_id}"
 
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_identifier(mac, node.node_id))},
+            identifiers={(DOMAIN, coordinator.device_identifier(node.node_id))},
             manufacturer="Duco",
             model=(
                 coordinator.board_info.box_name
@@ -42,7 +37,9 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
                 else node.general.node_type
             ),
             name=device_name,
-            configuration_url=self._configuration_url(),
+            configuration_url=coordinator.configuration_url(
+                node.node_id, is_box=self._is_box
+            ),
         )
         if self._is_box:
             device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
@@ -51,70 +48,9 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             if model_id := coordinator.board_info.box_sub_type_name:
                 device_info["model_id"] = model_id
         else:
-            device_info["via_device"] = (DOMAIN, self._device_identifier(mac, 1))
+            device_info["via_device"] = (DOMAIN, coordinator.device_identifier(1))
 
         self._attr_device_info = device_info
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks when the entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-
-        if not self._is_box:
-            self.async_on_remove(
-                self.coordinator.async_add_zone_mapping_listener(
-                    self._update_device_registry_configuration_url
-                )
-            )
-
-    @staticmethod
-    def _device_identifier(mac: str, node_id: int) -> str:
-        """Return the stable device identifier used in the registry."""
-        return f"{mac}_{node_id}"
-
-    def _configuration_url(self) -> str | None:
-        """Return the device configuration URL when it is unambiguous."""
-        host = self.coordinator.config_entry.data[CONF_HOST]
-
-        try:
-            base_url = URL.build(scheme="http", host=host)
-        except ValueError:
-            base_url = URL(f"http://{host}")
-
-        if self._is_box:
-            return str(base_url)
-
-        if (
-            zone_group := self.coordinator.data.node_zone_groups.get(self._node_id)
-        ) is None:
-            return None
-
-        zone_id, group_id = zone_group
-        return str(
-            base_url.with_path("/nodeconfig.html").update_query(
-                node=str(self._node_id),
-                zone=str(zone_id),
-                group=str(group_id),
-            )
-        )
-
-    @callback
-    def _update_device_registry_configuration_url(self) -> None:
-        """Update the device visit link when coordinator data changes."""
-        device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, self._device_identifier(self._mac, self._node_id))}
-        )
-        if device is None:
-            return
-
-        configuration_url = self._configuration_url()
-        if device.configuration_url == configuration_url:
-            return
-
-        device_registry.async_update_device(
-            device_id=device.id,
-            configuration_url=configuration_url,
-        )
 
     @property
     def available(self) -> bool:

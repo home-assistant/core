@@ -1,6 +1,5 @@
 """Data update coordinator for the Duco integration."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
@@ -11,10 +10,13 @@ from duco_connectivity.exceptions import (
     DucoResponseError,
 )
 from duco_connectivity.models import BoardInfo, InfoZonesOverview, Node
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
@@ -45,6 +47,14 @@ def _build_node_zone_groups(zones_info: InfoZonesOverview) -> dict[int, NodeZone
         for node_id, memberships in node_memberships.items()
         if len(memberships) == 1
     }
+
+
+def _base_url(host: str) -> URL:
+    """Return the base configuration URL for the configured Duco host."""
+    try:
+        return URL.build(scheme="http", host=host)
+    except ValueError:
+        return URL(f"http://{host}")
 
 
 @dataclass
@@ -78,22 +88,53 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self._zone_mapping_changed = False
-        self._zone_mapping_listeners: list[CALLBACK_TYPE] = []
+
+    def device_identifier(self, node_id: int) -> str:
+        """Return the stable device identifier used in the registry."""
+        return f"{self.config_entry.unique_id}_{node_id}"
+
+    def configuration_url(self, node_id: int, *, is_box: bool) -> str | None:
+        """Return the device configuration URL when it is unambiguous."""
+        base_url = _base_url(self.config_entry.data[CONF_HOST])
+
+        if is_box:
+            return str(base_url)
+
+        if (zone_group := self.data.node_zone_groups.get(node_id)) is None:
+            return None
+
+        zone_id, group_id = zone_group
+        return str(
+            base_url.with_path("/nodeconfig.html").update_query(
+                node=str(node_id),
+                zone=str(zone_id),
+                group=str(group_id),
+            )
+        )
 
     @callback
-    def async_add_zone_mapping_listener(
-        self, update_callback: CALLBACK_TYPE
-    ) -> Callable[[], None]:
-        """Listen for zone mapping changes."""
-        self._zone_mapping_listeners.append(update_callback)
+    def _update_known_device_configuration_urls(self) -> None:
+        """Update device visit links after the zone mapping changes."""
+        device_registry = dr.async_get(self.hass)
 
-        @callback
-        def unsubscribe() -> None:
-            """Remove the zone mapping listener."""
-            if update_callback in self._zone_mapping_listeners:
-                self._zone_mapping_listeners.remove(update_callback)
+        for node in self.data.nodes.values():
+            if node.node_id == 1:
+                continue
 
-        return unsubscribe
+            device = device_registry.async_get_device(
+                identifiers={(DOMAIN, self.device_identifier(node.node_id))}
+            )
+            if device is None:
+                continue
+
+            configuration_url = self.configuration_url(node.node_id, is_box=False)
+            if device.configuration_url == configuration_url:
+                continue
+
+            device_registry.async_update_device(
+                device_id=device.id,
+                configuration_url=configuration_url,
+            )
 
     async def _async_setup(self) -> None:
         """Fetch board info once during initial setup."""
@@ -182,5 +223,4 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         if not self.last_update_success or not self._zone_mapping_changed:
             return
 
-        for update_callback in list(self._zone_mapping_listeners):
-            update_callback()
+        self._update_known_device_configuration_urls()
