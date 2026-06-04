@@ -6,7 +6,7 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from pylint_home_assistant.helpers.module_info import is_test_module
+from pylint_home_assistant.helpers.module_info import is_test_module, parse_module
 
 
 @dataclass
@@ -34,7 +34,9 @@ _DOMAIN_CONSTANTS: set[str] = {"DOMAIN", "domain"}
 _DOMAIN_SUFFIXES: tuple[str, ...] = ("_DOMAIN", "_domain")
 
 
-def _check_call_node_domain_arguments(node: nodes.Call) -> nodes.NodeNG | None:
+def _check_call_node_domain_arguments(
+    node: nodes.Call, component_domain: str | None
+) -> nodes.NodeNG | None:
     """Ensure the call node arguments are valid domain constant or variable.
 
     Return None if the argument node is valid, or the argument node if it is invalid.
@@ -46,16 +48,20 @@ def _check_call_node_domain_arguments(node: nodes.Call) -> nodes.NodeNG | None:
                     node.func.attrname == method_name
                     and node.func.expr.as_string() == method_source
                 ):
-                    return _check_call_node_domain_argument(node, arg_info)
+                    return _check_call_node_domain_argument(
+                        node, component_domain, arg_info
+                    )
         case nodes.Name():
             for func_name, arg_info in _FUNCTION_CHECKS:
                 if node.func.name == func_name:
-                    return _check_call_node_domain_argument(node, arg_info)
+                    return _check_call_node_domain_argument(
+                        node, component_domain, arg_info
+                    )
     return None
 
 
 def _check_call_node_domain_argument(
-    call_node: nodes.Call, arg_info: ArgumentCheckInfo
+    call_node: nodes.Call, component_domain: str | None, arg_info: ArgumentCheckInfo
 ) -> nodes.NodeNG | None:
     """Ensure the argument node is a domain constant or variable.
 
@@ -74,14 +80,16 @@ def _check_call_node_domain_argument(
         )
 
     if argument_node and not _check_domain_argument(
-        argument_node, arg_info.allow_iterable
+        argument_node, component_domain, arg_info.allow_iterable
     ):
         return argument_node
 
     return None
 
 
-def _check_domain_argument(arg_node: nodes.NodeNG, allow_iterable: bool) -> bool:
+def _check_domain_argument(
+    arg_node: nodes.NodeNG, component_domain: str | None, allow_iterable: bool
+) -> bool:
     """Ensure the argument node is a domain constant or variable.
 
     We allow:
@@ -99,7 +107,7 @@ def _check_domain_argument(arg_node: nodes.NodeNG, allow_iterable: bool) -> bool
             ) in _DOMAIN_CONSTANTS or attrname.endswith(_DOMAIN_SUFFIXES):
                 return True
         case nodes.Const():
-            if isinstance(arg_node.value, str):
+            if isinstance(arg_node.value, str) and arg_node.value != component_domain:
                 return True
         case nodes.Name():
             if (node_name := arg_node.name) in _DOMAIN_CONSTANTS or node_name.endswith(
@@ -112,7 +120,9 @@ def _check_domain_argument(arg_node: nodes.NodeNG, allow_iterable: bool) -> bool
         case nodes.Tuple():
             if allow_iterable:
                 return all(
-                    _check_domain_argument(element, allow_iterable=False)
+                    _check_domain_argument(
+                        element, component_domain, allow_iterable=False
+                    )
                     for element in arg_node.elts
                 )
 
@@ -135,9 +145,13 @@ class DomainConstantChecker(BaseChecker):
     options = ()
 
     _in_test_module: bool
+    _component_domain: str | None
 
     def visit_module(self, node: nodes.Module) -> None:
         """Visit Module node."""
+        self._component_domain = None
+        if parsed := parse_module(node.name, include_test=True):
+            self._component_domain = parsed.domain
         self._in_test_module = is_test_module(node.name)
 
     def visit_call(self, node: nodes.Call) -> None:
@@ -145,7 +159,9 @@ class DomainConstantChecker(BaseChecker):
         if not self._in_test_module:
             return
 
-        if invalid_arg_node := _check_call_node_domain_arguments(node):
+        if invalid_arg_node := _check_call_node_domain_arguments(
+            node, self._component_domain
+        ):
             self.add_message(
                 "home-assistant-domain-argument",
                 node=invalid_arg_node,

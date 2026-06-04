@@ -14,6 +14,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.universal import media_player as universal
+from homeassistant.components.universal.const import DOMAIN
 from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_OFF,
@@ -1394,7 +1395,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     yaml_path = get_fixture_path("configuration.yaml", "universal")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "universal",
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
