@@ -86,9 +86,8 @@ Phases 0–17 landed:
 - **Phase 4** — config-flow forwarding. New flows run inside the
   sandbox; main owns the canonical `ConfigEntry` store.
 - **Phase 5** — entity bridge end-to-end. Four initial proxies
-  (`light`, `switch`, `sensor`, `binary_sensor`); per-loop-tick
-  fan-out batching; exception translation. The remaining 28
-  domain proxies landed in **Phase 13**.
+  (`light`, `switch`, `sensor`, `binary_sensor`); exception
+  translation. The remaining 28 domain proxies landed in **Phase 13**.
 - **Phase 6** — service & event mirroring. Sandbox-side
   `ServiceMirror` + `EventMirror` push registrations and events to
   main, gated by a refcounted `ApprovedDomains` set.
@@ -113,8 +112,7 @@ Phases 0–17 landed:
 - **Phase 13** — remaining 28 domain proxies; all 32 supported HA
   entity domains now have a typed proxy.
 - **Phase 14** — `data_schema` + service-schema marshalling,
-  `unique_id` propagation, `async_unload_entry` core hook,
-  200-light area-call perf benchmark.
+  `unique_id` propagation, `async_unload_entry` core hook.
 - **Phase 15** — v1-baseline compat sweep against the 37-integration
   list (99.19 % at the time; lifted to 99.97 % by Phase 17).
 - **Phase 16** — cross-integration sweep across 807 integrations

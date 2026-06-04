@@ -16,10 +16,9 @@ Responsibilities:
     state of the matching proxy entity.
 
 * Expose :meth:`SandboxBridge.async_call_service` for proxy entities to
-  forward action calls back to the sandbox. The forwarder coalesces calls
-  made within the same event-loop tick using
-  :class:`_CallServiceBatcher` so a 200-entity area call pays one RPC
-  instead of 200.
+  forward action calls back to the sandbox — one RPC per call. (Coalescing
+  same-tick calls for the same service into a single multi-entity RPC is a
+  possible future optimisation; the first iteration keeps it simple.)
 * Translate sandbox-side exceptions back into the exception types proxy
   callers would have raised locally (``vol.Invalid`` → ``TypeError``,
   unknown service / entity → ``HomeAssistantError``).
@@ -32,7 +31,6 @@ Scope isolation is by construction — each bridge owns one channel for
 one group, so a sandbox can't reach another sandbox's files.
 """
 
-import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -161,113 +159,6 @@ class SandboxEntityDescription:
         )
 
 
-class _CallServiceBatcher:
-    """Per-loop-tick coalescer keyed by (domain, service, frozen kwargs).
-
-    Proxy entities call :meth:`enqueue` for every method invocation. The
-    batcher gathers everything that arrived this tick, fires one
-    ``sandbox/call_service`` per (domain, service, kwargs-shape) bucket with a
-    multi-entity ``target.entity_id`` list, and resolves every waiting future
-    when that RPC completes — so each caller still learns when its call
-    finished and sees any error. A service call is never fire-and-forget;
-    batching only coalesces the *wire* call, not the await. What can't be
-    coalesced is a response *value* (every caller in a bucket would have to
-    share one), so a call needing a response bypasses the batcher and there is
-    no per-entity response to demultiplex here.
-
-    Kwargs are not hashable (they include nested dicts/lists), so the key
-    is the JSON-canonical form of the kwargs dict. Only entities that
-    happen to use *identical* kwargs collapse into one RPC, which matches
-    how an area call resolves: HA applies the same kwargs to every
-    targeted entity.
-    """
-
-    def __init__(self, bridge: SandboxBridge) -> None:
-        """Initialise the batcher with its owning bridge."""
-        self._bridge = bridge
-        self._buckets: dict[tuple[str, str, bytes], _BatchBucket] = {}
-        self._flush_handle: asyncio.Handle | None = None
-
-    async def enqueue(
-        self,
-        *,
-        domain: str,
-        service: str,
-        sandbox_entity_id: str,
-        service_data: dict[str, Any],
-        context_id: str | None = None,
-    ) -> Any:
-        """Queue one entity into the next batched ``call_service`` RPC.
-
-        The returned awaitable resolves when the batched RPC completes (with
-        its result, or the raised error), so the caller always learns the call
-        finished. Only a response *value* can't be coalesced, so a call needing
-        a response bypasses the batcher (see
-        :meth:`SandboxBridge.async_call_service`).
-        """
-        # Sorted canonical form keys the bucket; bytes are hashable.
-        kwargs_key = json_helper.json_bytes_sorted(service_data)
-        bucket_key = (domain, service, kwargs_key)
-        bucket = self._buckets.get(bucket_key)
-        if bucket is None:
-            future: asyncio.Future[Any] = asyncio.get_running_loop().create_future()
-            bucket = _BatchBucket(
-                domain=domain,
-                service=service,
-                service_data=service_data,
-                context_id=context_id,
-                future=future,
-            )
-            self._buckets[bucket_key] = bucket
-        bucket.sandbox_entity_ids.append(sandbox_entity_id)
-        self._schedule_flush()
-        return await bucket.future
-
-    def _schedule_flush(self) -> None:
-        if self._flush_handle is not None:
-            return
-        loop = asyncio.get_running_loop()
-        self._flush_handle = loop.call_soon(self._flush)
-
-    def _flush(self) -> None:
-        self._flush_handle = None
-        buckets = self._buckets
-        self._buckets = {}
-        for bucket in buckets.values():
-            asyncio.create_task(  # noqa: RUF006 — detached task; callers await bucket.future, the join point
-                self._dispatch(bucket), name="sandbox:call_service:flush"
-            )
-
-    async def _dispatch(self, bucket: _BatchBucket) -> None:
-        try:
-            result = await self._bridge._raw_call_service(  # noqa: SLF001
-                domain=bucket.domain,
-                service=bucket.service,
-                target={"entity_id": bucket.sandbox_entity_ids},
-                service_data=bucket.service_data,
-                context_id=bucket.context_id,
-                return_response=False,
-            )
-        except BaseException as err:  # noqa: BLE001
-            if not bucket.future.done():
-                bucket.future.set_exception(err)
-            return
-        if not bucket.future.done():
-            bucket.future.set_result(result)
-
-
-@dataclass
-class _BatchBucket:
-    """One coalesced ``sandbox/call_service`` invocation in flight."""
-
-    domain: str
-    service: str
-    service_data: dict[str, Any]
-    context_id: str | None
-    future: asyncio.Future[Any]
-    sandbox_entity_ids: list[str] = field(default_factory=list)
-
-
 class SandboxBridge:
     """Per-sandbox-group bridge owning entities + outbound RPC dispatch."""
 
@@ -292,7 +183,6 @@ class SandboxBridge:
         # (domain, service) pairs this bridge has mirrored onto main.
         # Used to clean up on shutdown / unregister.
         self._mirrored_services: set[tuple[str, str]] = set()
-        self._batcher = _CallServiceBatcher(self)
 
         self._store_server = _SandboxStoreServer(hass, group)
 
@@ -330,39 +220,27 @@ class SandboxBridge:
         context: Context | None = None,
         return_response: bool = False,
     ) -> Any:
-        """Forward one entity service call to the sandbox.
-
-        Calls made in the same tick with matching ``(domain, service,
-        service_data)`` coalesce into a single RPC with a multi-entity target.
-        Each caller still awaits that RPC's completion (and receives any
-        error), so the call is never fire-and-forget — only the *wire* call is
-        shared. A call that needs a response (``return_response=True``) cannot
-        share a coalesced bucket's single response, so it skips the batcher and
-        goes out as its own single-entity RPC instead.
+        """Forward one entity service call to the sandbox as a single RPC.
 
         ``context`` is the main-side Context driving the entity call. It is
         remembered here (before the id is reduced to a bare wire value) so that
         when the sandbox echoes the same id back on a resulting state change
         or event, :meth:`_resolve_context` restores the original
         ``parent_id`` / ``user_id`` instead of minting a fresh attribution.
+
+        One RPC per call keeps the first iteration simple. Coalescing same-tick
+        calls for one service into a single multi-entity RPC (so a 200-entity
+        area call pays one round-trip instead of 200) is a possible future
+        optimisation — see ``docs/FOLLOWUPS.md``.
         """
         self._remember_context(context)
-        context_id = context.id if context is not None else None
-        if return_response:
-            return await self._raw_call_service(
-                domain=domain,
-                service=service,
-                target={"entity_id": [sandbox_entity_id]},
-                service_data=service_data,
-                context_id=context_id,
-                return_response=True,
-            )
-        return await self._batcher.enqueue(
+        return await self._raw_call_service(
             domain=domain,
             service=service,
-            sandbox_entity_id=sandbox_entity_id,
+            target={"entity_id": [sandbox_entity_id]},
             service_data=service_data,
-            context_id=context_id,
+            context_id=context.id if context is not None else None,
+            return_response=return_response,
         )
 
     async def _raw_call_service(
