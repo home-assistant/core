@@ -71,7 +71,8 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
             attrs[ATTR_LATITUDE] = station.lat
             attrs[ATTR_LONGITUDE] = station.lng
 
-        self._attr_extra_state_attributes = attrs
+        if attrs:
+            self._attr_extra_state_attributes = attrs
 
     @property
     def is_on(self) -> bool | None:
