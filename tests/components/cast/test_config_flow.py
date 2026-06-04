@@ -66,7 +66,7 @@ async def test_single_instance(hass: HomeAssistant, source) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
-        "cast", context={"source": source}
+        DOMAIN, context={"source": source}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
@@ -75,7 +75,7 @@ async def test_single_instance(hass: HomeAssistant, source) -> None:
 async def test_user_setup(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
-        "cast", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -95,7 +95,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
 async def test_user_setup_options(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
-        "cast", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -117,7 +117,7 @@ async def test_user_setup_options(hass: HomeAssistant) -> None:
 async def test_zeroconf_setup(hass: HomeAssistant) -> None:
     """Test we can finish a config flow through zeroconf."""
     result = await hass.config_entries.flow.async_init(
-        "cast", context={"source": config_entries.SOURCE_ZEROCONF}
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -140,7 +140,7 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ):
         result = await hass.config_entries.flow.async_init(
-            "cast", context={"source": config_entries.SOURCE_ZEROCONF}
+            DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
         )
 
     users = await hass.auth.async_get_users()
@@ -271,7 +271,7 @@ async def test_option_flow(
 async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
     """Test known hosts is passed to pychromecast."""
     result = await hass.config_entries.flow.async_init(
-        "cast", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"known_hosts": ["192.168.0.1", "192.168.0.2"]}
