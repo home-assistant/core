@@ -1,4 +1,4 @@
-"""Shared helpers for Phase 4 sandbox tests.
+"""Shared helpers for sandbox tests.
 
 Provides:
 

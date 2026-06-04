@@ -1,6 +1,6 @@
-"""Phase 14 perf benchmark — 200-light area call through the bridge batcher.
+"""Perf benchmark — 200-light area call through the bridge batcher.
 
-Validates the Phase 5 :class:`_CallServiceBatcher` coalesces a 200-entity
+Validates the :class:`_CallServiceBatcher` coalesces a 200-entity
 area-targeted ``light.turn_on`` into a single
 ``sandbox/call_service`` round-trip with sub-100 ms latency.
 
@@ -42,8 +42,8 @@ from tests.common import MockConfigEntry
 # Total number of sandbox-resident lights pushed into the bridge.
 _LIGHT_COUNT = 200
 
-# Wall-clock bar for the area call. The Phase 1 spike measured Option B
-# at ~64 ms / 100 entities in-process; the batcher should compress the
+# Wall-clock bar for the area call. The entity-bridge spike measured
+# Option B at ~64 ms / 100 entities in-process; the batcher should compress the
 # 200-entity area call into one RPC, so we budget 500 ms on the
 # generous end to absorb slow CI shared runners. If we ever exceed this
 # bar, either the batcher regressed or the channel grew per-call

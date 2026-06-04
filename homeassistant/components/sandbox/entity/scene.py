@@ -1,8 +1,8 @@
 """Sandbox proxy for ``scene`` entities.
 
 ``scene`` is in ``ALWAYS_MAIN`` so the classifier never routes it to a
-sandbox in practice. The proxy ships anyway for symmetry — Phase 13
-covers the full set so a future classifier change doesn't surprise us.
+sandbox in practice. The proxy ships anyway for symmetry — the full
+set is covered so a future classifier change doesn't surprise us.
 """
 
 from typing import Any

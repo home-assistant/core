@@ -1,4 +1,4 @@
-"""Phase 4 tests for :class:`hass_client.flow_runner.FlowRunner`.
+"""Tests for :class:`hass_client.flow_runner.FlowRunner`.
 
 Exercises the sandbox-side flow loop against a mock integration whose
 ``async_setup_entry`` is intercepted before the FlowRunner is asked to
@@ -131,7 +131,7 @@ async def test_flow_init_returns_form(
 
     assert result.type == "form"
     assert result.step_id == "user"
-    # Phase 14: data_schema rides as the same list-of-fields shape
+    # data_schema rides as the same list-of-fields shape
     # voluptuous_serialize.convert produces, so the proxy on main can
     # rebuild a usable vol.Schema (or hand the list straight to the
     # frontend).
@@ -185,7 +185,7 @@ async def test_flow_step_validation_error_returns_form(
 async def test_flow_init_marshals_unique_id(
     channels: tuple[Channel, Channel], runner: FlowRunner
 ) -> None:
-    """flow_init pulls ``unique_id`` out of the live flow's context (Phase 14)."""
+    """flow_init pulls ``unique_id`` out of the live flow's context."""
     main, sandbox = channels
     runner.register(sandbox)
     main.start()

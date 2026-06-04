@@ -1,4 +1,4 @@
-"""Phase 10 tests: the ``hass_client.testing`` pytest plugins.
+"""Tests for the ``hass_client.testing`` pytest plugins.
 
 Two plugins are exercised here:
 
@@ -11,7 +11,7 @@ Two plugins are exercised here:
   with the real-subprocess sandbox.
 
 The real-subprocess fixture itself is covered by
-:mod:`test_phase4_subprocess` which already drives ``SandboxManager``
+:mod:`test_subprocess` which already drives ``SandboxManager``
 through a real subprocess; the tests here unit-check the hook shape
 without spawning a nested pytest run.
 """
@@ -159,7 +159,7 @@ def test_autotag_sets_mock_config_entry_sandbox() -> None:
         assert entry.sandbox is None
         entry.add_to_hass(fake_hass)
         assert entry.sandbox == "built-in"
-        # entry.data is untouched — this is the whole point of Phase 17.
+        # entry.data is untouched — the tag rides on entry.sandbox instead.
         assert dict(entry.data) == {"foo": "bar"}
         assert fake_hass.config_entries._entries == {entry.entry_id: entry}
 

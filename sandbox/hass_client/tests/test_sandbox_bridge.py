@@ -244,7 +244,7 @@ async def test_delayed_save_flushes_through_bridge(
     they funnel through ``_async_handle_write_data`` -> ``_async_write_data``.
     The contextvar branch must live at ``_async_write_data`` (not only
     ``async_save``) or these writes would silently land on the sandbox's
-    local disk instead of reaching main. The Phase 8 store subclass
+    local disk instead of reaching main. The earlier store subclass
     overrode ``_async_write_data`` and masked this; deleting it surfaced the
     gap.
     """

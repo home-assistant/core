@@ -6,7 +6,7 @@ control channel: the three ``Store`` IO methods delegate to main via the
 namespaces every key as ``<config>/.storage/sandbox/<group>/<key>`` so
 two sandbox processes — or main itself — can't read each other's data.
 
-The bodies are lifted from the pre-contextvar Phase 8 store subclass that
+The bodies are lifted from the pre-contextvar store subclass that
 this primitive replaced: same load semantics, same orjson preserialise on
 save, same channel error handling. The difference is *how* it's wired —
 ``Store`` reads ``current_sandbox`` at call time instead of being rebound

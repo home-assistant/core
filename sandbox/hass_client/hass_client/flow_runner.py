@@ -12,9 +12,8 @@ manager-side proxy :class:`ConfigFlow` calls these handlers across the
 Flow results cross the wire as plain dicts. ``data_schema`` and the
 ``progress_task`` field are intentionally stripped — the schema lives on
 the sandbox where validation happens, and the task is a runtime object
-that can't be serialised. Phase 5 lifts the bridge to a richer
-representation; the docstring in ``_marshal_result`` is the load-bearing
-note for that follow-up.
+that can't be serialised. The docstring in ``_marshal_result`` is the
+load-bearing note for how the schema is later marshalled.
 """
 
 from collections.abc import Mapping
@@ -69,7 +68,7 @@ class _SandboxFlowManager(ConfigEntriesFlowManager):
     Main owns the canonical entry store; the sandbox just runs the flow
     and returns the result. The default ``async_finish_flow`` would
     create an entry inside the sandbox-private store and try to set the
-    integration up locally — that's Phase 5 / 6 work, not Phase 4's.
+    integration up locally — that's later work, not this layer's.
     """
 
     async def async_finish_flow(
@@ -149,7 +148,7 @@ def _marshal_result(
 ) -> pb.FlowResult:
     """Marshal a FlowResult into the typed ``FlowResult`` message.
 
-    ``data_schema`` is rendered via :func:`serialize_schema` (Phase 14) —
+    ``data_schema`` is rendered via :func:`serialize_schema` —
     the wire payload carries the same list-of-fields shape
     :func:`voluptuous_serialize.convert` produces, so the proxy on main
     can rebuild a usable :class:`vol.Schema`. ``flow.context`` (which

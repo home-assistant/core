@@ -39,7 +39,7 @@ CORE_ROOT = _HERE.parent
 CORE_TESTS_DIR = CORE_ROOT / "tests" / "components"
 HASS_CLIENT_DIR = _HERE / "hass_client"
 DEFAULT_RESULTS_CSV = _HERE / "COMPAT.csv"
-# COMPAT.md is the curated Phase 15 baseline report and is NOT overwritten
+# COMPAT.md is the curated baseline report and is NOT overwritten
 # on every run. Auto-generated runs land in COMPAT_LATEST.md so reviewers
 # can diff against the curated baseline.
 DEFAULT_REPORT_MD = _HERE / "COMPAT_LATEST.md"

@@ -1,4 +1,4 @@
-"""Sandbox-side event mirror (Phase 6).
+"""Sandbox-side event mirror.
 
 Forwards every event whose ``event_type`` matches ``<approved_domain>_*``
 up to main via ``sandbox/fire_event``. Canonical examples: ``zha_event``,

@@ -1,4 +1,4 @@
-"""Sandbox-side approved-domains gate (Phase 6).
+"""Sandbox-side approved-domains gate.
 
 A single shared :class:`ApprovedDomains` instance tracks which domains
 the sandbox is allowed to own. It is the firewall the user asked for:

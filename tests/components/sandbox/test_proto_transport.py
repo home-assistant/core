@@ -1,6 +1,6 @@
-"""T2 transport tests: ProtobufCodec round-trips + the Context security model.
+"""Transport tests: ProtobufCodec round-trips + the Context security model.
 
-Covers the guarantees the protobuf wire adds on top of T1:
+Covers the guarantees the protobuf wire adds:
 
 * a frame survives an encode → decode → re-encode cycle byte-identically (no
   field drops), including fidelity #7's structured voluptuous error data;

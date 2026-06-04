@@ -9,7 +9,7 @@ signature matchers, and writes:
   (``{bucket → {integration → [test_node, …]}}``) for downstream tooling.
 - A short stdout summary suitable for `tee`-ing onto an issue.
 
-The bucket list mirrors the Phase 16 spec in ``plan.md``. Categories are
+Categories are
 ordered most-specific → most-generic; the first match wins, so unknown
 genuinely means "no rule fired". A "≥95% of failures buckets out of
 ``unknown``" smoke gate lives at the bottom of the run; if that fails,
@@ -65,7 +65,7 @@ def _compile(pattern: str) -> re.Pattern[str]:
 
 RULES: tuple[Rule, ...] = (
     # ---- test-only -------------------------------------------------------
-    # Phase 15's autotag patch mutates entry.data; tests that assert
+    # The autotag patch mutates entry.data; tests that assert
     # ``entry.data == <anything>`` or snapshot it see the new
     # ``__sandbox_group`` key. Same root cause whether it surfaces in an
     # `assert`, a `mappingproxy(...)` repr (pytest truncates the diff into
@@ -88,7 +88,7 @@ RULES: tuple[Rule, ...] = (
         "test-only",
         _compile(r"assert\s+mappingproxy\(.+?\)\s*==\s*[\{\[]"),
     ),
-    # Post-Phase-17: diagnostic snapshots that include the entry's
+    # Diagnostic snapshots that include the entry's
     # full ``as_dict()`` now see a top-level ``+ 'sandbox': '<group>'``
     # line in the diff. Same root cause as ``__sandbox_group`` — the
     # autotag synthesises the field for compat coverage, the snapshot
@@ -130,7 +130,7 @@ RULES: tuple[Rule, ...] = (
     ),
 
     # ---- protocol gaps ---------------------------------------------------
-    # data_schema serialisation drift. Phase 14 added voluptuous-serialize
+    # data_schema serialisation drift. The bridge does voluptuous-serialize
     # round-tripping; a regression would surface as None / wrong type.
     Rule(
         "data-schema-stripped",
@@ -310,7 +310,7 @@ def render_summary(
         for node_list in integrations.values()
     )
     lines = [
-        "Phase 16 failure categorisation",
+        "Failure categorisation",
         "-" * 32,
         f"Total failures bucketed: {total_failures}",
         "",

@@ -2,8 +2,8 @@
 
 `classify(integration)` is a pure function from a loaded `Integration`
 (manifest + on-disk shape) to a `SandboxAssignment`. It is called by the
-config-flow router (Phase 4) and by config-entry setup interception
-(Phase 4) — every decision about "main vs sandbox" funnels through here.
+config-flow router and by config-entry setup interception — every
+decision about "main vs sandbox" funnels through here.
 
 Rule order (first match wins):
 
