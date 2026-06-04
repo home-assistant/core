@@ -81,6 +81,16 @@
         "name": "Shut down"
       }
     },
+    "select": {
+      "fan_speed_mode": {
+        "name": "Fan speed mode",
+        "state": {
+          "coolfan": "Cool mode",
+          "fullfan": "Full-speed mode",
+          "quietfan": "Quiet mode"
+        }
+      }
+    },
     "sensor": {
       "cpu_15min_load": {
         "name": "CPU load average (15 min)"
