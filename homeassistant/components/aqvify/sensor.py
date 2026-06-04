@@ -17,7 +17,7 @@ from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AqvifyConfigEntry, AqvifyCoordinator
+from .coordinator import AqvifyConfigEntry
 from .entity import AqvifyBaseEntity
 
 # Coordinator is used to centralize the data updates.
@@ -70,15 +70,6 @@ class AqvifySensor(AqvifyBaseEntity, SensorEntity):
     """Representation of an Aqvify sensor entity."""
 
     entity_description: AqvifySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: AqvifyCoordinator,
-        description: AqvifySensorEntityDescription,
-        device_key: str,
-    ) -> None:
-        """Initialize the Aqvify sensor."""
-        super().__init__(coordinator, description, device_key)
 
     @property
     def native_value(self) -> StateType | datetime | None:

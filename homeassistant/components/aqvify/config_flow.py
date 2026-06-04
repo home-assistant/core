@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -24,24 +23,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    hub = AqvifyAPI(data[CONF_API_KEY], websession=async_get_clientsession(hass))
-
-    try:
-        data_json = await hub.async_get_account_id()
-    except AqvifyAuthException as err:
-        raise InvalidAuth from err
-    except ClientResponseError as err:
-        raise CannotConnect from err
-    account_id = AqvifyAccount(data_json).account_id
-    return {"title": "Aqvify", "account_id": account_id}
-
-
 class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aqvify."""
 
@@ -53,23 +34,23 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            hub = AqvifyAPI(
+                user_input[CONF_API_KEY],
+                websession=async_get_clientsession(self.hass),
+            )
             try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                data_json = await hub.async_get_account_id()
+            except AqvifyAuthException:
                 errors["base"] = "invalid_auth"
+            except ClientResponseError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    unique_id=info["account_id"], raise_on_progress=True
-                )
-                self._abort_if_unique_id_configured(
-                    updates=user_input, reload_on_update=True
-                )
-                return self.async_create_entry(title=info["title"], data=user_input)
+                await self.async_set_unique_id(AqvifyAccount(data_json).account_id)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title="Aqvify", data=user_input)
 
         return self.async_show_form(
             step_id="user",

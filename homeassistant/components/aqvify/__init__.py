@@ -22,11 +22,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqvifyConfigEntry) -> bo
     try:
         await _api.async_get_account_id()
     except AqvifyAuthException as err:
-        _LOGGER.error("Invalid API key for Aqvify API: %s", err)
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(f"Invalid Aqvify API key: {err}") from err
     except Exception as err:
-        _LOGGER.error("Failed to connect to Aqvify API: %s", err)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Failed to connect to Aqvify API: {err}") from err
 
     coordinator = AqvifyCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()

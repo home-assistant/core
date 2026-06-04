@@ -26,7 +26,6 @@ type AqvifyConfigEntry = ConfigEntry[AqvifyCoordinator]
 class AqvifyCoordinatorData:
     """Data class for storing coordinator data."""
 
-    account_id: str
     devices: AqvifyDevices
     device_data: dict[str, AqvifyDeviceData]
 
@@ -76,7 +75,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 ) from err
 
         return AqvifyCoordinatorData(
-            account_id=str(self.config_entry.unique_id),
             devices=devices,
             device_data=device_data,
         )

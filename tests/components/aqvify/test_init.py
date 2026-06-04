@@ -50,7 +50,7 @@ async def test_setup_entry_with_error(
     expected_state: ConfigEntryState,
 ) -> None:
     """Test setup entry with error."""
-    mock_aqvify_client.async_get_account_id.side_effect = error or None
+    mock_aqvify_client.async_get_account_id.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
 
