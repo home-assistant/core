@@ -29,6 +29,7 @@ async def async_get_config_entry_diagnostics(
             "ram": dsm_info.ram,
             "uptime": dsm_info.uptime,
             "temperature": dsm_info.temperature,
+            "fan_speed_mode": syno_api.dsm.hardware.fan_speed.value,
         },
         "external_usb": {"devices": {}, "partitions": {}},
         "network": {"interfaces": {}},
