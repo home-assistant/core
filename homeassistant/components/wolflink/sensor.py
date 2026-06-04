@@ -44,8 +44,9 @@ from .const import DOMAIN, MANUFACTURER, STATES
 from .coordinator import WolflinkConfigEntry, WolfLinkCoordinator
 
 
-def get_listitem_resolve_state(wolf_object, state):
+def get_listitem_resolve_state(wolf_object: Parameter, state: str) -> str:
     """Resolve list item state."""
+    assert isinstance(wolf_object, ListItemParameter)
     resolved_state = [item for item in wolf_object.items if item.value == int(state)]
     if resolved_state:
         resolved_name = resolved_state[0].name
@@ -136,13 +137,10 @@ async def async_setup_entry(
     """Set up all entries for Wolf Platform."""
     for coordinator in config_entry.runtime_data.values():
         async_add_entities(
-            (
-                WolfLinkSensor(coordinator, parameter, description)
-                for parameter in coordinator.parameters
-                for description in SENSOR_DESCRIPTIONS
-                if description.supported_fn(parameter)
-            ),
-            config_subentry_id=coordinator.subentry.subentry_id,
+            WolfLinkSensor(coordinator, parameter, description)
+            for parameter in coordinator.parameters
+            for description in SENSOR_DESCRIPTIONS
+            if description.supported_fn(parameter)
         )
 
 
@@ -168,7 +166,7 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
             identifiers={(DOMAIN, str(coordinator.device_id))},
             configuration_url="https://www.wolf-smartset.com/",
             manufacturer=MANUFACTURER,
-            name=coordinator.subentry.title,
+            name=coordinator.device_name,
         )
 
     @property

@@ -2,10 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_devices": "No devices were found on this account.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "no_devices": "No devices were found on this account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -19,28 +16,6 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "title": "WOLF SmartSet connection"
-      }
-    }
-  },
-  "config_subentries": {
-    "device": {
-      "abort": {
-        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-        "no_devices_to_add": "All devices on this account are already configured.",
-        "unknown": "[%key:common::config_flow::error::unknown%]"
-      },
-      "entry_type": "device",
-      "initiate_flow": {
-        "user": "Add device"
-      },
-      "step": {
-        "device": {
-          "data": {
-            "device_id": "Device"
-          },
-          "title": "Select WOLF device"
-        }
       }
     }
   },

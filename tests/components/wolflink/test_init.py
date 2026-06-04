@@ -5,12 +5,7 @@ from unittest.mock import MagicMock, patch
 from httpx import RequestError
 import pytest
 
-from homeassistant.components.wolflink.const import (
-    DEVICE_ID,
-    DOMAIN,
-    MANUFACTURER,
-    SUBENTRY_TYPE_DEVICE,
-)
+from homeassistant.components.wolflink.const import DEVICE_ID, DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -35,14 +30,14 @@ def _assert_v2_2_hub(entry: MockConfigEntry) -> None:
     assert entry.data == {
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
+        DEVICE_ID: [1234],
     }
-    assert DEVICE_ID not in entry.data
 
 
 async def test_migration_v1_1_to_v2_2(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test migration from v1.1 (int unique_id, device-oriented) to v2.2 hub-with-subentries."""
+    """Test migration from v1.1 (int unique_id, device-oriented) to v2.2 hub."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, unique_id=1234, data=LEGACY_CONFIG, version=1, minor_version=1
     )
@@ -66,22 +61,12 @@ async def test_migration_v1_1_to_v2_2(
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     _assert_v2_2_hub(config_entry)
-    subentries = list(config_entry.subentries.values())
-    assert len(subentries) == 1
-    subentry = subentries[0]
-    assert subentry.subentry_type == SUBENTRY_TYPE_DEVICE
-    assert subentry.unique_id == "1234"
-    assert subentry.title == "test-device"
-    assert subentry.data == {DEVICE_ID: 1234}
 
-    # The device-registry identifier was rewritten to a string and the device
-    # is now attached to the new subentry.
+    # The device-registry identifier was rewritten to a string.
     device = device_registry.async_get(device_id)
     assert device is not None
     assert device.identifiers == {(DOMAIN, "1234")}
-    assert device.config_entries_subentries == {
-        config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entries == {config_entry.entry_id}
 
 
 async def test_migration_v1_2_to_v2_2(
@@ -115,9 +100,6 @@ async def test_migration_v1_2_to_v2_2(
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     _assert_v2_2_hub(config_entry)
-    subentries = list(config_entry.subentries.values())
-    assert len(subentries) == 1
-    assert subentries[0].unique_id == "1234"
 
 
 async def test_migration_v1_reattaches_entities(
@@ -125,7 +107,7 @@ async def test_migration_v1_reattaches_entities(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test v1 migration moves existing entities onto the new device subentry."""
+    """Test v1 migration moves existing entities onto the hub entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="1234",
@@ -158,11 +140,58 @@ async def test_migration_v1_reattaches_entities(
         )
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    subentry_id = next(iter(config_entry.subentries))
     updated = entity_registry.async_get(entity.entity_id)
     assert updated is not None
     assert updated.config_entry_id == config_entry.entry_id
-    assert updated.config_subentry_id == subentry_id
+    assert updated.config_subentry_id is None
+
+
+async def test_migration_skips_entity_from_other_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration ignores entities on the device that belong to another entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234",
+        data=LEGACY_CONFIG,
+        version=1,
+        minor_version=2,
+    )
+    other_entry = MockConfigEntry(domain="other", unique_id="other")
+    config_entry.add_to_hass(hass)
+    other_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1234")},
+        manufacturer=MANUFACTURER,
+        name="test-device",
+    )
+    # This entity belongs to a different integration sharing the same device.
+    other_entity = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="other",
+        unique_id="other:sensor",
+        config_entry=other_entry,
+        device_id=device.id,
+    )
+
+    with patch(
+        "homeassistant.components.wolflink.WolfClient",
+        autospec=True,
+    ) as wolf_mock:
+        wolf_mock.return_value.fetch_system_list.side_effect = RequestError(
+            "Unable to connect"
+        )
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # The other entry's entity must be untouched.
+    assert (
+        entity_registry.async_get(other_entity.entity_id).config_entry_id
+        == other_entry.entry_id
+    )
 
 
 async def test_migration_v1_disabled_by_fixup(
@@ -219,7 +248,7 @@ async def test_migration_v1_disabled_by_fixup(
 async def test_migration_merges_duplicate_v1_entries(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test two v1 entries for the same account merge into one v2.2 entry with subentries."""
+    """Test two v1 entries for the same account merge into one v2.2 hub entry."""
     first_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="1234",
@@ -238,8 +267,8 @@ async def test_migration_merges_duplicate_v1_entries(
     second_entry.add_to_hass(hass)
 
     # Pre-register the second entry's device so the sibling-merge path also
-    # exercises the device-reattachment branch (remove_config_entry_id=other).
-    device_registry.async_get_or_create(
+    # exercises the device-reattachment branch.
+    device_5678 = device_registry.async_get_or_create(
         config_entry_id=second_entry.entry_id,
         identifiers={(DOMAIN, "5678")},
         manufacturer=MANUFACTURER,
@@ -261,18 +290,19 @@ async def test_migration_merges_duplicate_v1_entries(
     assert len(entries) == 1
     surviving = entries[0]
     assert surviving.entry_id == first_entry.entry_id
-    _assert_v2_2_hub(surviving)
-    subentries = {s.unique_id: s for s in surviving.subentries.values()}
-    assert set(subentries) == {"1234", "5678"}
+    assert surviving.version == 2
+    assert surviving.minor_version == 2
+    assert surviving.unique_id == "test-username"
+    assert sorted(surviving.data[DEVICE_ID]) == [1234, 5678]
 
-    # The pre-existing device-registry row for 5678 was reattached to the
-    # surviving entry and its merged subentry.
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "5678")})
+    # The absorbed entry must have DEVICE_ID cleared so that if async_setup_entry
+    # fires before async_remove runs, it sets up no devices (no duplicate coordinators).
+    assert DEVICE_ID not in second_entry.data
+
+    # The pre-existing device for 5678 was reattached to the surviving entry.
+    device = device_registry.async_get(device_5678.id)
     assert device is not None
     assert device.config_entries == {surviving.entry_id}
-    assert device.config_entries_subentries == {
-        surviving.entry_id: {subentries["5678"].subentry_id}
-    }
 
 
 @pytest.mark.parametrize(
@@ -304,46 +334,26 @@ async def test_migration_v1_with_list_device_id(
         )
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    _assert_v2_2_hub(config_entry)
-    assert sorted(s.unique_id for s in config_entry.subentries.values()) == [
-        "1234",
-        "5678",
-    ]
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 2
+    assert config_entry.unique_id == "test-username"
+    assert sorted(config_entry.data[DEVICE_ID]) == [1234, 5678]
 
 
-async def test_migration_v2_1_to_v2_2(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test v2.1 (DEVICE_ID list in entry data) migrates to v2.2 subentries."""
+async def test_migration_v2_1_to_v2_2(hass: HomeAssistant) -> None:
+    """Test v2.1 entry is bumped to v2.2 and DEVICE_ID is normalised to list[int]."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-username",
         data={
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
-            DEVICE_ID: [1234, 5678],
+            DEVICE_ID: ["1234", "5678"],
         },
         version=2,
         minor_version=1,
     )
     config_entry.add_to_hass(hass)
-
-    for device_id, name in ((1234, "first"), (5678, "second")):
-        device = device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, str(device_id))},
-            manufacturer=MANUFACTURER,
-            name=name,
-        )
-        entity_registry.async_get_or_create(
-            domain="sensor",
-            platform=DOMAIN,
-            unique_id=f"{device_id}:6005200000",
-            config_entry=config_entry,
-            device_id=device.id,
-        )
 
     with patch(
         "homeassistant.components.wolflink.WolfClient",
@@ -354,26 +364,15 @@ async def test_migration_v2_1_to_v2_2(
         )
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    _assert_v2_2_hub(config_entry)
-    subentries_by_uid = {s.unique_id: s for s in config_entry.subentries.values()}
-    assert set(subentries_by_uid) == {"1234", "5678"}
-    assert subentries_by_uid["1234"].title == "first"
-    assert subentries_by_uid["5678"].title == "second"
-
-    for device_id, expected_uid in ((1234, "1234"), (5678, "5678")):
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, str(device_id))}
-        )
-        assert device is not None
-        assert device.config_entries_subentries == {
-            config_entry.entry_id: {subentries_by_uid[expected_uid].subentry_id}
-        }
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 2
+    assert config_entry.data[DEVICE_ID] == [1234, 5678]
 
 
 async def test_setup_no_devices_on_account(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup raises ConfigEntryNotReady if the account has no devices."""
+    """Test setup loads cleanly even if no configured device is on the account."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -384,7 +383,6 @@ async def test_setup_no_devices_on_account(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # No subentries set up, but the entry itself loads cleanly.
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data == {}
 
@@ -397,6 +395,7 @@ async def test_migrate_future_version_aborts(hass: HomeAssistant) -> None:
         data={
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
+            DEVICE_ID: [1234],
         },
         version=3,
         minor_version=1,
@@ -417,6 +416,7 @@ async def test_migrate_future_minor_version_aborts(hass: HomeAssistant) -> None:
         data={
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
+            DEVICE_ID: [1234],
         },
         version=2,
         minor_version=3,
@@ -434,7 +434,7 @@ async def test_setup_fetch_parameters_fails(
     mock_config_entry: MockConfigEntry,
     mock_wolflink: MagicMock,
 ) -> None:
-    """Test a subentry whose parameter fetch fails is skipped, not the whole entry."""
+    """Test a device whose parameter fetch fails is skipped, not the whole entry."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -448,27 +448,20 @@ async def test_setup_fetch_parameters_fails(
     assert mock_config_entry.runtime_data == {}
 
 
-async def test_setup_skips_subentries_with_missing_device(
+async def test_setup_skips_device_not_on_account(
     hass: HomeAssistant, mock_wolflink: MagicMock
 ) -> None:
-    """Test subentries whose device is gone from the account are skipped."""
+    """Test devices whose ID is no longer on the account are skipped."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-username",
         data={
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
+            DEVICE_ID: [9999],
         },
         version=2,
         minor_version=2,
-        subentries_data=[
-            {
-                "data": {DEVICE_ID: 9999},
-                "subentry_type": SUBENTRY_TYPE_DEVICE,
-                "title": "vanished",
-                "unique_id": "9999",
-            }
-        ],
     )
     config_entry.add_to_hass(hass)
 

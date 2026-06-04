@@ -4,13 +4,12 @@ from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, patch, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_device_entry(
@@ -39,7 +38,6 @@ async def test_sensors(
 ) -> None:
     """Test wolflink sensors."""
 
-    with patch("homeassistant.components.wolflink.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

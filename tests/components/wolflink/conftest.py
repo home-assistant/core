@@ -21,11 +21,7 @@ from wolf_comm import (
 )
 from wolf_comm.models import Device
 
-from homeassistant.components.wolflink.const import (
-    DEVICE_ID,
-    DOMAIN,
-    SUBENTRY_TYPE_DEVICE,
-)
+from homeassistant.components.wolflink.const import DEVICE_ID, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -43,18 +39,11 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
+            DEVICE_ID: [1234],
         },
         unique_id="test-username",
         version=2,
         minor_version=2,
-        subentries_data=[
-            {
-                "data": {DEVICE_ID: 1234},
-                "subentry_type": SUBENTRY_TYPE_DEVICE,
-                "title": "test-device",
-                "unique_id": "1234",
-            }
-        ],
     )
 
 

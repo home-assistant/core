@@ -8,15 +8,15 @@ from wolf_comm.models import Parameter
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICE_ID, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type WolflinkConfigEntry = ConfigEntry[dict[str, WolfLinkCoordinator]]
+type WolflinkConfigEntry = ConfigEntry[dict[int, "WolfLinkCoordinator"]]
 
 
 class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
@@ -28,24 +28,25 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
         self,
         hass: HomeAssistant,
         entry: WolflinkConfigEntry,
-        subentry: ConfigSubentry,
         wolf_client: WolfClient,
         parameters: list[Parameter],
         gateway_id: int,
+        device_id: int,
+        device_name: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
-            name=f"{DOMAIN} {subentry.title}",
+            name=f"{DOMAIN} {device_name}",
             update_interval=timedelta(seconds=60),
         )
-        self.subentry = subentry
         self._wolf_client = wolf_client
         self.parameters = parameters
         self._gateway_id = gateway_id
-        self.device_id: int = subentry.data[DEVICE_ID]
+        self.device_id = device_id
+        self.device_name = device_name
         self._refetch_parameters = False
 
     async def _async_update_data(self) -> dict[int, tuple[int, str]]:
