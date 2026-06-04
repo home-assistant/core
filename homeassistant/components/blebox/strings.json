@@ -36,8 +36,23 @@
     }
   },
   "exceptions": {
-    "update_failed": {
+    "bad_value": {
+      "message": "Turning on the light failed: {error}"
+    },
+    "command_failed": {
+      "message": "Failed to execute command on the BleBox device: {error}"
+    },
+    "data_update_failed": {
       "message": "An error occurred while communicating with the BleBox device: {error}"
+    },
+    "effect_not_found": {
+      "message": "The specified light effect is not available on this device: {error}"
+    },
+    "install_failed": {
+      "message": "Failed to install firmware update on the BleBox device: {error}"
+    },
+    "update_failed": {
+      "message": "Failed to fetch firmware update information from the BleBox device: {error}"
     }
   }
 }

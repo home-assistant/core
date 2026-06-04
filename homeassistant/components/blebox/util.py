@@ -7,6 +7,7 @@ from blebox_uniapi.error import Error
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
 from .entity import BleBoxEntity
 
 
@@ -22,7 +23,11 @@ def blebox_command[_BleBoxEntityT: BleBoxEntity, **_P, _R](
         try:
             return await func(self, *args, **kwargs)
         except Error as err:
-            raise HomeAssistantError(str(err)) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         finally:
             await self.coordinator.async_refresh()
 
