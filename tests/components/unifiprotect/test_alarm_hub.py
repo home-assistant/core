@@ -189,7 +189,9 @@ async def test_alarm_hub_in_diagnostics(
     """Alarm hubs are included (anonymized) in config entry diagnostics."""
     await init_entry(hass, ufp_with_alarm_hub, [])
 
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, ufp_with_alarm_hub.entry)
+    diag = await get_diagnostics_for_config_entry(
+        hass, hass_client, ufp_with_alarm_hub.entry
+    )
 
     assert "alarm_hubs" in diag
     assert len(diag["alarm_hubs"]) == 1
