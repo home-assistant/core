@@ -37,33 +37,28 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
-    ATTR_LIVE_ACTIVITY_EXPIRES_AT,
-    ATTR_LIVE_ACTIVITY_TAG,
     ATTR_LIVE_ACTIVITY_TOKEN,
-    ATTR_LIVE_UPDATE,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
     ATTR_PUSH_RATE_LIMITS_MAXIMUM,
     ATTR_PUSH_RATE_LIMITS_RESETS_AT,
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
-    ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
-    ATTR_TOKEN,
     ATTR_WEBHOOK_ID,
-    CLEAR_NOTIFICATION,
     DATA_CONFIG_ENTRIES,
-    DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
-    DATA_STORE,
     DOMAIN,
     SIGNAL_RECORD_NOTIFICATION,
-    STORAGE_SAVE_DELAY_SECONDS,
 )
-from .helpers import device_info, savable_state
-from .live_activity import LiveActivityEvent
+from .helpers import device_info
+from .live_activity import (
+    LiveActivityEvent,
+    remove_live_activity_token,
+    resolve_live_activity_push,
+)
 from .push_notification import PushChannel
 from .util import supports_push
 
@@ -245,50 +240,6 @@ class MobileAppNotificationService(BaseNotificationService):
                 " not connected to local push notifications"
             )
 
-    def _resolve_live_activity_push(
-        self, entry: ConfigEntry, data: dict[str, Any]
-    ) -> tuple[str, LiveActivityEvent] | None:
-        """Return ``(token, event)`` for a Live Activity push, or ``None``.
-
-        Core needs to choose the Apple ActivityKit route before calling the relay:
-        updates and ends must use the stored per-activity token for the tag,
-        while a new or expired tag must use the device's push-to-start token.
-        """
-        notification_data = data.get(ATTR_DATA) or {}
-        tag = notification_data.get(ATTR_LIVE_ACTIVITY_TAG)
-        if not tag:
-            return None
-
-        webhook_id = entry.data[ATTR_WEBHOOK_ID]
-        device_tokens = self.hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].get(
-            webhook_id, {}
-        )
-        stored = device_tokens.get(tag)
-        stored_token_valid = (
-            stored is not None
-            and stored[ATTR_LIVE_ACTIVITY_EXPIRES_AT] > dt_util.utcnow().timestamp()
-        )
-
-        # clear_notification ends a known activity; if no token is stored for
-        # the tag, fall through to the normal clear_notification path.
-        if data.get(ATTR_MESSAGE) == CLEAR_NOTIFICATION:
-            if stored_token_valid:
-                return stored[ATTR_TOKEN], LiveActivityEvent.END
-            return None
-
-        if not notification_data.get(ATTR_LIVE_UPDATE):
-            return None
-
-        if stored_token_valid:
-            return stored[ATTR_TOKEN], LiveActivityEvent.UPDATE
-
-        if push_to_start := entry.data[ATTR_APP_DATA].get(
-            ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN
-        ):
-            return push_to_start, LiveActivityEvent.START
-
-        return None
-
     async def _async_send_remote_message_target(
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
@@ -296,9 +247,10 @@ class MobileAppNotificationService(BaseNotificationService):
         live_activity_token: str | None = None
         live_activity_event: LiveActivityEvent | None = None
         live_activity_tag: str | None = None
-        if resolved := self._resolve_live_activity_push(entry, data):
-            live_activity_token, live_activity_event = resolved
-            live_activity_tag = (data.get(ATTR_DATA) or {}).get(ATTR_LIVE_ACTIVITY_TAG)
+        if resolved := resolve_live_activity_push(self.hass, entry.data, data):
+            live_activity_token = resolved.token
+            live_activity_event = resolved.event
+            live_activity_tag = resolved.tag
             data = {
                 **data,
                 ATTR_DATA: {
@@ -324,35 +276,9 @@ class MobileAppNotificationService(BaseNotificationService):
                 live_activity_event == LiveActivityEvent.END
                 and live_activity_tag is not None
             ):
-                _remove_live_activity_token(self.hass, entry, live_activity_tag)
-
-
-@callback
-def _remove_live_activity_token(
-    hass: HomeAssistant, entry: ConfigEntry, activity_tag: str
-) -> None:
-    """Remove a stored Live Activity token after Core sends an end event.
-
-    Once the activity is ended, the per-activity token can no longer be used.
-    Clearing it lets recurring automations reuse the same tag and start a new
-    Live Activity with the device's push-to-start token.
-    """
-    webhook_id = entry.data[ATTR_WEBHOOK_ID]
-    live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-
-    if webhook_id not in live_activity_tokens:
-        return
-
-    device_tokens = live_activity_tokens[webhook_id]
-    if device_tokens.pop(activity_tag, None) is None:
-        return
-
-    if not device_tokens:
-        del live_activity_tokens[webhook_id]
-
-    hass.data[DOMAIN][DATA_STORE].async_delay_save(
-        partial(savable_state, hass), STORAGE_SAVE_DELAY_SECONDS
-    )
+                remove_live_activity_token(
+                    self.hass, entry.data[ATTR_WEBHOOK_ID], live_activity_tag
+                )
 
 
 async def _send_message(

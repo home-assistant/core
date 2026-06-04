@@ -4,7 +4,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from functools import lru_cache, partial, wraps
+from functools import lru_cache, wraps
 from http import HTTPStatus
 import logging
 import secrets
@@ -79,7 +79,6 @@ from .const import (
     ATTR_SUPPORTS_ENCRYPTION,
     ATTR_TEMPLATE,
     ATTR_TEMPLATE_VARIABLES,
-    ATTR_TOKEN,
     ATTR_WEBHOOK_DATA,
     ATTR_WEBHOOK_ENCRYPTED,
     ATTR_WEBHOOK_ENCRYPTED_DATA,
@@ -91,9 +90,7 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
-    DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
-    DATA_STORE,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_REQUIRED,
@@ -103,7 +100,6 @@ from .const import (
     SENSOR_TYPES,
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
-    STORAGE_SAVE_DELAY_SECONDS,
 )
 from .device_tracker import LOCATION_UPDATE_SCHEMA
 from .helpers import (
@@ -114,10 +110,9 @@ from .helpers import (
     error_response,
     registration_context,
     safe_registration,
-    savable_state,
     webhook_response,
 )
-from .live_activity import async_schedule_next_cleanup
+from .live_activity import remove_live_activity_token, store_live_activity_token
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -796,23 +791,13 @@ async def webhook_update_live_activity_token(
 ) -> Response:
     """Store a Live Activity APNs token sent by the iOS app."""
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
-
-    live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    # Empty-before-add means no cleanup loop is running; start one.
-    was_empty = not live_activity_tokens
-    live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
-        ATTR_TOKEN: data[ATTR_PUSH_TOKEN],
-        ATTR_LIVE_ACTIVITY_EXPIRES_AT: data[ATTR_LIVE_ACTIVITY_EXPIRES_AT],
-    }
-    # Debounce disk writes: ActivityKit can hand a fresh per-tag token to the
-    # iOS app multiple times in quick succession (e.g. when several activities
-    # start back-to-back), and we don't need to fsync after each one.
-    hass.data[DOMAIN][DATA_STORE].async_delay_save(
-        partial(savable_state, hass), STORAGE_SAVE_DELAY_SECONDS
+    store_live_activity_token(
+        hass,
+        webhook_id,
+        data[ATTR_LIVE_ACTIVITY_TAG],
+        data[ATTR_PUSH_TOKEN],
+        data[ATTR_LIVE_ACTIVITY_EXPIRES_AT],
     )
-    if was_empty:
-        async_schedule_next_cleanup(hass)
 
     return empty_okay_response()
 
@@ -830,18 +815,7 @@ async def webhook_live_activity_dismissed(
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
 
-    live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    if webhook_id in live_activity_tokens:
-        live_activity_tokens[webhook_id].pop(activity_tag, None)
-        # Clean up the device key if no activities remain.
-        if not live_activity_tokens[webhook_id]:
-            del live_activity_tokens[webhook_id]
-        # Debounce disk writes: bulk dismissals (e.g. user clears all
-        # activities) hit this handler in quick succession.
-        hass.data[DOMAIN][DATA_STORE].async_delay_save(
-            partial(savable_state, hass), STORAGE_SAVE_DELAY_SECONDS
-        )
-    else:
+    if not remove_live_activity_token(hass, webhook_id, activity_tag):
         # Typically means the token already expired via the cleanup loop or
         # the activity predates this code shipping — both expected, not a bug.
         _LOGGER.debug(
