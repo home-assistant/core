@@ -17,6 +17,7 @@ from pylint_home_assistant.checkers.greek_micro_char import (
     HassEnforceGreekMicroCharChecker,
 )
 from pylint_home_assistant.checkers.imports import HassImportsFormatChecker
+from pylint_home_assistant.checkers.now import HassEnforceNowChecker
 from pylint_home_assistant.checkers.runtime_data import HassEnforceRuntimeDataChecker
 from pylint_home_assistant.checkers.sorted_platforms import (
     HassEnforceSortedPlatformsChecker,
@@ -129,6 +130,14 @@ def enforce_greek_micro_char_checker_fixture(linter: UnittestLinter) -> BaseChec
     enforce_greek_micro_char_checker = HassEnforceGreekMicroCharChecker(linter)
     enforce_greek_micro_char_checker.module = "homeassistant.components.pylint_test"
     return enforce_greek_micro_char_checker
+
+
+@pytest.fixture(name="enforce_now_checker")
+def enforce_now_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a now checker."""
+    enforce_now_checker = HassEnforceNowChecker(linter)
+    enforce_now_checker.module = "homeassistant.components.pylint_test"
+    return enforce_now_checker
 
 
 @pytest.fixture(name="enforce_utcnow_checker")
