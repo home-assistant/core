@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from reolink_aio.api import (
-    DUAL_LENS_DUAL_MOTION_MODELS,
     FACE_DETECTION_TYPE,
     PACKAGE_DETECTION_TYPE,
     PERSON_DETECTION_TYPE,
@@ -344,6 +343,7 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
     """Base binary-sensor class for Reolink IP camera."""
 
     entity_description: ReolinkBinarySensorEntityDescription
+    _lens_entity = True
 
     def __init__(
         self,
@@ -354,13 +354,6 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
         """Initialize Reolink binary sensor."""
         self.entity_description = entity_description
         super().__init__(reolink_data, channel)
-
-        if self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
-            if entity_description.translation_key is not None:
-                key = entity_description.translation_key
-            else:
-                key = entity_description.key
-            self._attr_translation_key = f"{key}_lens_{self._channel}"
 
     @property
     def is_on(self) -> bool:

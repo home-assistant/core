@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from reolink_aio.api import DUAL_LENS_MODELS, Chime, Host
+from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, DUAL_LENS_MODELS, Chime, Host
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -161,6 +161,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     """Parent class for Reolink camera entities connected to a NVR channel."""
 
+    # Whether the entity belongs to a single lens of a dual lens camera
+    _lens_entity = False
+
     def __init__(
         self,
         reolink_data: ReolinkData,
@@ -215,6 +218,20 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 sw_version=self._host.api.camera_sw_version(dev_ch),
                 serial_number=self._host.api.camera_uid(dev_ch),
                 configuration_url=conf_url,
+            )
+
+        if self._lens_entity and self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
+            # Dual lens cameras with separate sensors per lens
+            # use a sub-device per lens
+            parent_dev_id = self._dev_id
+            self._dev_id = f"{self._host.unique_id}_lens{channel}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._dev_id)},
+                via_device=(DOMAIN, parent_dev_id),
+                name=f"{self._host.api.camera_name(channel)} lens {channel}",
+                model=self._host.api.camera_model(channel),
+                manufacturer=self._host.api.manufacturer,
+                configuration_url=self._conf_url,
             )
 
     @property
