@@ -215,9 +215,9 @@ so two integrations in one group can't collide.
 
 On main, `SandboxBridge` instantiates a domain-typed proxy (all **32** domains
 have one under `entity/`) and attaches it via the
-`EntityComponent.async_register_remote_platform` core hook. Outbound proxy
-calls coalesce through a per-loop-tick batcher: a 200-light area call pays one
-RPC, not 200. Exception translation rebuilds sandbox-side `vol.Invalid` /
+`EntityComponent.async_register_remote_platform` core hook. Each outbound proxy
+call sends one RPC; coalescing same-tick calls into a single multi-entity RPC
+is a noted future optimisation. Exception translation rebuilds sandbox-side `vol.Invalid` /
 `vol.MultipleInvalid` (with their `.path`) from a structured `error_data` frame
 field, so callers on main see the local-entity error shape.
 
