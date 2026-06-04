@@ -52,8 +52,7 @@ class KlikAanKlikUitSwitch(SwitchEntity, RestoreEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="KlikAanKlikUit",
-            model="KlikAanKlikUit switch",
-            name=entry.title,
+            model="KlikAanKlikUit RC device",
             sw_version=format_device_summary(
                 self._device_id, self._channel, self._group
             ),

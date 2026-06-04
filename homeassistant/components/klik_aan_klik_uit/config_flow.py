@@ -147,46 +147,41 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
-        device_id_key = (
-            vol.Required(CONF_DEVICE_ID, default=user_input[CONF_DEVICE_ID])
-            if CONF_DEVICE_ID in user_input
-            else vol.Required(CONF_DEVICE_ID)
-        )
+        suggested_values: dict[str, Any] = {
+            CONF_TRANSMITTER: transmitters[0],
+            CONF_CHANNEL: 1,
+            CONF_GROUP: False,
+        }
+        suggested_values.update(user_input)
 
-        return vol.Schema(
-            {
-                vol.Required(
-                    CONF_TRANSMITTER,
-                    default=user_input.get(CONF_TRANSMITTER, transmitters[0]),
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(include_entities=transmitters),
-                ),
-                device_id_key: vol.All(
-                    selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0,
-                            max=0x3FFFFFF,
-                            mode=selector.NumberSelectorMode.BOX,
-                        )
+        return self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(CONF_TRANSMITTER): selector.EntitySelector(
+                        selector.EntitySelectorConfig(include_entities=transmitters),
                     ),
-                    vol.Coerce(int),
-                ),
-                vol.Required(
-                    CONF_CHANNEL,
-                    default=user_input.get(CONF_CHANNEL, 1),
-                ): vol.All(
-                    selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=1,
-                            max=16,
-                            mode=selector.NumberSelectorMode.BOX,
-                        )
+                    vol.Required(CONF_DEVICE_ID): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=0,
+                                max=0x3FFFFFF,
+                                mode=selector.NumberSelectorMode.BOX,
+                            )
+                        ),
+                        vol.Coerce(int),
                     ),
-                    vol.Coerce(int),
-                ),
-                vol.Required(
-                    CONF_GROUP,
-                    default=user_input.get(CONF_GROUP, False),
-                ): selector.BooleanSelector(),
-            }
+                    vol.Required(CONF_CHANNEL): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=1,
+                                max=16,
+                                mode=selector.NumberSelectorMode.BOX,
+                            )
+                        ),
+                        vol.Coerce(int),
+                    ),
+                    vol.Required(CONF_GROUP): selector.BooleanSelector(),
+                }
+            ),
+            suggested_values,
         )
