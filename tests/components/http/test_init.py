@@ -1078,3 +1078,38 @@ async def test_ssl_reload_schedule_coalescing() -> None:
     http_server._schedule_reload()
     assert http_server._ssl_reload_pending is True
     assert http_server._ssl_reload_task is not None  # Unchanged
+
+
+async def test_ssl_watcher_started_and_stopped(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test that the watcher is started and can be cleanly stopped."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    context = server_context_modern()
+    await hass.async_add_executor_job(_create_self_signed_cert, cert_path, key_path)
+
+    with patch(
+        "homeassistant.util.ssl.server_context_modern",
+        return_value=context,
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # The watcher should have been started (ssl_auto_reload defaults to True)
+    assert hass.http._ssl_watcher is not None
+
+    # _stop_ssl_watcher should cancel debounce and set stopping flag
+    hass.http._stop_ssl_watcher()
+    assert hass.http._ssl_watcher_stopping is True
+    assert hass.http._ssl_reload_debounce_handle is None
