@@ -7,6 +7,7 @@ from pylutron_caseta.color_value import WarmCoolColorValue
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -14,6 +15,7 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
 from . import MockBridge, async_setup_integration
 
@@ -192,6 +194,22 @@ class MockBridgeWithColorLight(MockBridge):
             "white_tuning_range": {"Min": 2700, "Max": 6500},
             "color": WarmCoolColorValue(3000),
         }
+        devices["904"] = {
+            "device_id": "904",
+            "current_state": 50,
+            "fan_speed": None,
+            "zone": "904",
+            "name": "Kitchen_Spectrum Light",
+            "button_groups": None,
+            "type": "SpectrumTune",
+            "model": None,
+            "serial": 5442324,
+            "tilt": None,
+            "area": "1025",
+            "white_tuning_range": {"Min": 2700, "Max": 6500},
+            "warm_dim": True,
+            "color": WarmCoolColorValue(3000),
+        }
         return devices
 
 
@@ -217,3 +235,61 @@ async def test_color_only_turn_on_preserves_brightness(
     # A color-only change must leave brightness untouched, i.e. value=None
     assert mock_set_value.call_args is not None
     assert mock_set_value.call_args.kwargs["value"] is None
+
+
+async def test_white_mode_turn_on_remembers_brightness(
+    hass: HomeAssistant,
+) -> None:
+    """Test turning on in white (warm dim) mode tracks the brightness."""
+    await async_setup_integration(hass, MockBridgeWithColorLight)
+
+    entity_id = "light.kitchen_kitchen_spectrum_light"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_WHITE: 100},
+        target={ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+async def test_async_update_syncs_previous_brightness(
+    hass: HomeAssistant,
+) -> None:
+    """Test forcing an update keeps the previous brightness in sync."""
+    mock_entry = await async_setup_integration(hass, MockBridge)
+
+    entity_id = "light.kitchen_kitchen_other_lights"
+    bridge = mock_entry.runtime_data.bridge
+
+    # Change the level on the device and force an entity refresh.
+    bridge.devices["902"]["current_state"] = 60
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+
+    # Turn off, then on without brightness → the synced level is restored.
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        target={ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {},
+        target={ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # to_hass_level(60) == (60 * 255) // 100 == 153
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 153
