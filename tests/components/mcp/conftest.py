@@ -104,6 +104,7 @@ async def mock_credential(hass: HomeAssistant) -> None:
 @pytest.fixture(name="config_entry_token_expiration")
 def mock_config_entry_token_expiration() -> datetime.datetime:
     """Fixture to mock the token expiration."""
+    # pylint: disable-next=home-assistant-enforce-utcnow
     return datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
 
 

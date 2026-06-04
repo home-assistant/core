@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from homeassistant.components.hue import DOMAIN
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -125,7 +126,7 @@ async def test_scene_advanced_turn_on_service(
 
     # call the hue.activate_scene service
     await hass.services.async_call(
-        "hue",
+        DOMAIN,
         "activate_scene",
         {"entity_id": test_entity_id},
         blocking=True,
@@ -138,7 +139,7 @@ async def test_scene_advanced_turn_on_service(
 
     # test again with sending speed and dynamic
     await hass.services.async_call(
-        "hue",
+        DOMAIN,
         "activate_scene",
         {"entity_id": test_entity_id, "speed": 80, "dynamic": True},
         blocking=True,
