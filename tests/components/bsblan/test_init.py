@@ -15,7 +15,11 @@ from homeassistant.components.bsblan.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -37,6 +41,46 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_creates_outdated_firmware_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test setup creates a repair issue for unsupported firmware v1."""
+    mock_bsblan.device.return_value.version = "1.0.38-20200730234859"
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_key == "outdated_firmware"
+
+
+async def test_setup_no_outdated_firmware_issue_for_supported_firmware(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test setup does not create a repair issue for supported firmware."""
+    mock_bsblan.device.return_value.version = "2.1.0"
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"
+    )
+    assert issue is None
 
 
 async def test_config_entry_not_ready(

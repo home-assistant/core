@@ -29,7 +29,11 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.typing import ConfigType
@@ -46,6 +50,7 @@ from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
 from .services import async_setup_services
 
 PLATFORMS = [Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
+ISSUE_OUTDATED_FIRMWARE = "outdated_firmware"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -96,6 +101,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the BSB-LAN integration."""
     async_setup_services(hass)
     return True
+
+
+def _is_outdated_firmware_version(version: str | None) -> bool:
+    """Return if the firmware version is the no longer supported major v1 series."""
+    if not version:
+        return False
+
+    normalized = version.strip().lstrip("vV")
+    return normalized == "1" or normalized.startswith("1.")
+
+
+def _issue_id_for_entry(entry_id: str) -> str:
+    """Build issue id for a config entry."""
+    return f"{ISSUE_OUTDATED_FIRMWARE}_{entry_id}"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
@@ -208,6 +227,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         configuration_url=main_device_info.get("configuration_url"),
     )
 
+    issue_id = _issue_id_for_entry(entry.entry_id)
+    if _is_outdated_firmware_version(device.version):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_OUTDATED_FIRMWARE,
+            translation_placeholders={"firmware_version": device.version},
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -215,6 +248,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
     """Unload BSBLAN config entry."""
+    ir.async_delete_issue(hass, DOMAIN, _issue_id_for_entry(entry.entry_id))
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

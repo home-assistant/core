@@ -149,6 +149,12 @@
       "message": "Failed to sync time for {device_name}: {error}"
     }
   },
+  "issues": {
+    "outdated_firmware": {
+      "description": "Your BSB-LAN device is running firmware {firmware_version}, which is no longer supported. Please update your BSB-LAN board firmware to a newer version to keep using this integration.",
+      "title": "Update your BSB-LAN firmware"
+    }
+  },
   "services": {
     "set_hot_water_schedule": {
       "description": "Set the hot water heating schedule for a BSB-LAN device.",
