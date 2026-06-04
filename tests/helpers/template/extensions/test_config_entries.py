@@ -120,7 +120,7 @@ async def test_config_entry_attr(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(**info)
     config_entry.add_to_hass(hass)
 
-    info["state"] = config_entries.ConfigEntryState.NOT_LOADED
+    info["state"] = "not_loaded"
 
     for key, value in info.items():
         assert render(
