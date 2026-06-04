@@ -1362,7 +1362,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==5.8.1
+infrared-protocols==6.0.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
