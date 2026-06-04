@@ -565,7 +565,7 @@ class Person(
         self._latitude = coordinates.attributes.get(ATTR_LATITUDE)
         self._longitude = coordinates.attributes.get(ATTR_LONGITUDE)
         self._gps_accuracy = coordinates.attributes.get(ATTR_GPS_ACCURACY)
-        self._in_zones = coordinates.attributes.get(ATTR_IN_ZONES, [])
+        self._in_zones = state.attributes.get(ATTR_IN_ZONES, [])
 
     @callback
     def _update_extra_state_attributes(self) -> None:

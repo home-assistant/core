@@ -1,8 +1,10 @@
 {
   "config": {
     "abort": {
+      "account_mismatch": "The credentials entered are for a different Vistapool account than the one being reconfigured.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,6 +14,16 @@
     },
     "flow_title": "Vistapool pool controller",
     "step": {
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The new password for your Vistapool account."
+        },
+        "description": "Update the stored password for {username}.",
+        "title": "Reconfigure Vistapool"
+      },
       "user": {
         "data": {
           "password": "Password",
@@ -92,6 +104,38 @@
     "button": {
       "led_pulse": {
         "name": "LED next color"
+      }
+    },
+    "number": {
+      "electrolysis_setpoint": {
+        "name": "Electrolysis setpoint"
+      },
+      "heating_maximum_temperature": {
+        "name": "Heating maximum temperature"
+      },
+      "heating_minimum_temperature": {
+        "name": "Heating minimum temperature"
+      },
+      "hydrolysis_setpoint": {
+        "name": "Hydrolysis setpoint"
+      },
+      "intel_temperature": {
+        "name": "Intel temperature"
+      },
+      "ph_maximum": {
+        "name": "pH maximum"
+      },
+      "ph_minimum": {
+        "name": "pH minimum"
+      },
+      "redox_setpoint": {
+        "name": "Redox setpoint"
+      },
+      "smart_maximum_temperature": {
+        "name": "Smart maximum temperature"
+      },
+      "smart_minimum_temperature": {
+        "name": "Smart minimum temperature"
       }
     },
     "sensor": {
