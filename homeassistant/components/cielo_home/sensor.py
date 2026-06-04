@@ -67,6 +67,7 @@ class CieloSensor(CieloDeviceEntity, SensorEntity):
     def native_value(self) -> float | int | None:
         """Return the native value of the sensor."""
         if self.entity_description.key == SENSOR_TEMPERATURE:
+            # current_temperature() returns None when unavailable.
             return self.client.current_temperature()
         if self.entity_description.key == SENSOR_HUMIDITY:
             return self.device_data.humidity if self.device_data else None
