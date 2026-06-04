@@ -22,13 +22,14 @@ class AqvifyBaseEntity(CoordinatorEntity[AqvifyCoordinator]):
         """Initialize the Aqvify entity."""
         super().__init__(coordinator)
 
+        account_id = self.coordinator.config_entry.unique_id
         self.device_key = device_key
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_key)},
+            identifiers={(DOMAIN, f"{account_id}_{device_key}")},
             name=coordinator.data.devices.devices[device_key].name,
             manufacturer="Aqvify",
             configuration_url="https://app.aqvify.com",
             serial_number=device_key,
         )
-        self._attr_unique_id = f"{device_key}_{description.key}"
+        self._attr_unique_id = f"{account_id}_{device_key}_{description.key}"
         self.entity_description = description
