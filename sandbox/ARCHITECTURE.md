@@ -11,16 +11,21 @@
 
 ## 1. Goal
 
-Run a Home Assistant integration's setup, config flow, entities, services, and
-events fully inside an **isolated subprocess** ("sandbox"), while the main HA
-instance presents a **single, unified view** that looks identical to running
-everything locally.
+Run a Home Assistant integration's setup, config flow, entities, services,
+events, and storage fully inside an **isolated subprocess** ("sandbox"), while
+the main HA instance presents a **single, unified view** that looks identical to
+running everything locally.
 
 A user who adds a light integration through the frontend ends up with a device
 plus entities in main's registries, working area targeting (`light.turn_on`
 against an area resolves the sandboxed lights like any other light), and the
-integration's services and events available on main — with the integration
-code only ever executing inside the sandbox.
+integration's services and events available on main — with the integration code
+only ever executing inside the sandbox.
+
+The sandbox is **stateless**: it holds no persistent state of its own. Its
+storage and restore-state route to main (§9), and even the integration's *code*
+is fetched at startup (§7) rather than living on the sandbox — so a sandbox is
+wipe-and-restart safe and could run anywhere, including a fresh container.
 
 ## 2. Components
 
@@ -266,27 +271,18 @@ isolation-by-construction (one channel per group).
 
 ## 10. Auth
 
-The sandbox is **not an authenticated principal inside HA** — it never opens a
-connection back to main and never acts on main's behalf, so it needs no
-credential to call into HA. The `--token` the manager once passed was **never
-used** (the runtime stored it and nothing read it), so it has been **dropped
-end-to-end** (`plans/plan-auth-context.md`): no `--token` argv, no
-`SandboxRuntime.token`, no `SANDBOX_TOKEN` env. When a real websocket consumer
-lands, the credential is redesigned then — fresh, scopes included — per the
-SUPERSEDED [`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md).
+The sandbox is **not an authenticated principal inside HA**: it never opens a
+connection back to main and never acts on main's behalf, so it holds **no
+credential and no user**. A sandbox-originated `Context` with no recognised id
+is `user_id=None` (§8) — the honest shape, since no user authored it — so there
+is nothing to fabricate. When a future websocket consumer needs the sandbox to
+authenticate to main, the credential is designed then, with scopes (prior
+thinking in the SUPERSEDED
+[`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md)).
 
-The per-group **system user is gone too.** Its only live use was the `user_id`
-main stamped on a freshly-minted sandbox `Context`; under the §8 model a
-sandbox-originated context with no recognised id is `user_id=None` — the honest
-shape, since no user authored it — so there is no reason to fabricate a user.
-`auth.py` is removed entirely.
-
-**Future work (not built):** a richer answer than `user_id=None` would be a
-`Context` carrying a **group attribute** identifying which sandbox group
-originated an action — useful for audit/logbook ("this came from the `custom`
-sandbox") without pretending a sandbox is a user. That needs a core `Context`
-field change and waits until audit attribution needs it; see
-[`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+A richer attribution than `user_id=None` — a `Context` carrying which sandbox
+**group** originated an action, for audit/logbook — is possible future work; it
+needs a core `Context` field change (see [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md)).
 
 Opt-in data sharing (state stream, entity/area registry) into the sandbox is a
 future feature; the locked-down default (everything off) stands, with the
@@ -295,8 +291,7 @@ design in [`docs/design-share-states.md`](docs/design-share-states.md).
 ## 11. Core HA touch surface
 
 The sandbox is deliberately small against core HA — three surfaces, each a
-declared public hook rather than an internal reach (the Iron Law: never
-monkey-patch private internals):
+declared public hook rather than a reach into private internals:
 
 - `config_entries.py` — the `router` attribute + `ConfigEntryRouter` Protocol (three call sites) and the first-class `ConfigEntry.sandbox` field.
 - `helpers/entity_component.py` — `EntityComponent.async_register_remote_platform`, so a sandbox-built `EntityPlatform` attaches without re-discovering the local integration.
