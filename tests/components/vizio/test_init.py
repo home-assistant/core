@@ -6,7 +6,10 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.media_player import MediaPlayerDeviceClass
+from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerDeviceClass,
+)
 from homeassistant.components.vizio import DATA_APPS
 from homeassistant.components.vizio.const import DOMAIN
 from homeassistant.const import (
@@ -15,7 +18,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     STATE_UNAVAILABLE,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -32,12 +34,12 @@ async def test_tv_load_and_unload(
 ) -> None:
     """Test loading and unloading TV entry."""
     await setup_integration(hass, mock_tv_config_entry)
-    assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
+    assert len(hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)) == 1
     assert DATA_APPS in hass.data
 
     assert await hass.config_entries.async_unload(mock_tv_config_entry.entry_id)
     await hass.async_block_till_done()
-    entities = hass.states.async_entity_ids(Platform.MEDIA_PLAYER)
+    entities = hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)
     assert len(entities) == 1
     for entity in entities:
         assert hass.states.get(entity).state == STATE_UNAVAILABLE
@@ -50,11 +52,11 @@ async def test_speaker_load_and_unload(
 ) -> None:
     """Test loading and unloading speaker entry."""
     await setup_integration(hass, mock_speaker_config_entry)
-    assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
+    assert len(hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)) == 1
 
     assert await hass.config_entries.async_unload(mock_speaker_config_entry.entry_id)
     await hass.async_block_till_done()
-    entities = hass.states.async_entity_ids(Platform.MEDIA_PLAYER)
+    entities = hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)
     assert len(entities) == 1
     for entity in entities:
         assert hass.states.get(entity).state == STATE_UNAVAILABLE
@@ -71,7 +73,7 @@ async def test_coordinator_update_failure(
 ) -> None:
     """Test coordinator update failure after 10 days."""
     await setup_integration(hass, mock_tv_config_entry)
-    assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
+    assert len(hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)) == 1
     assert DATA_APPS in hass.data
 
     # Failing 25 days in a row should result in a single log message
@@ -107,7 +109,7 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     config_entry_2.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry_2.entry_id)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 2
+    assert len(hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)) == 2
 
     # Unload first TV — coordinator should still be fetching apps
     assert await hass.config_entries.async_unload(mock_tv_config_entry.entry_id)
