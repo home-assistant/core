@@ -214,7 +214,7 @@ def async_schedule_next_cleanup(hass: HomeAssistant) -> None:
     if earliest_expires_at is None:
         return
 
-    delay = earliest_expires_at - dt_util.utcnow().timestamp()
+    delay = max(0, earliest_expires_at - dt_util.utcnow().timestamp())
 
     async def run_cleanup(_now: datetime) -> None:
         await async_cleanup_expired_live_activity_tokens(hass)

@@ -262,6 +262,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 class _MobileAppStore(Store[dict[str, Any]]):
+    """Store persisted mobile_app integration data."""
+
     async def _async_migrate_func(
         self,
         old_major_version: int,
