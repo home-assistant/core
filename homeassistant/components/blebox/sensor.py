@@ -57,9 +57,9 @@ SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="powerConsumption",
+        translation_key="power_consumption",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        icon="mdi:lightning-bolt",
     ),
     SensorEntityDescription(
         key="humidity",
