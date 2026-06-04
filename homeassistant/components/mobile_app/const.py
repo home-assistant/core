@@ -53,7 +53,7 @@ ATTR_LIVE_UPDATE = "live_update"
 ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN = "push_to_start_live_activity_token"
 ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
 ATTR_LIVE_ACTIVITY_EXPIRES_AT = "expires_at"
-ATTR_LIVE_ACTIVITY_TAG = "tag"
+ATTR_TAG = "tag"
 
 ATTR_TOKEN = "token"
 
