@@ -33,7 +33,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -92,7 +92,7 @@ async def test_flow_abort_without_channel(
 ) -> None:
     """Check abort flow if user has no channel."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -133,7 +133,7 @@ async def test_flow_abort_without_subscriptions(
 ) -> None:
     """Check abort flow if user has no subscriptions and no own channel."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -178,7 +178,7 @@ async def test_flow_without_subscriptions(
 ) -> None:
     """Check flow continues without subscriptions using own channel."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -241,7 +241,7 @@ async def test_flow_http_error(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -398,7 +398,7 @@ async def test_flow_exception(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -461,7 +461,7 @@ async def test_own_channel_included(
 ) -> None:
     """Test user's own channel is included in selectable channels."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

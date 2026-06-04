@@ -387,7 +387,7 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(
     assert len(hass.config_entries.async_entries("hue")) == 2
 
     result = await hass.config_entries.flow.async_init(
-        "hue",
+        DOMAIN,
         data={"host": "2.2.2.2"},
         context={"source": config_entries.SOURCE_IMPORT},
     )

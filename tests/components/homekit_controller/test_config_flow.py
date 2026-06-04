@@ -247,7 +247,7 @@ async def test_discovery_works(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -280,7 +280,7 @@ async def test_abort_duplicate_flow(hass: HomeAssistant, controller) -> None:
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -288,7 +288,7 @@ async def test_abort_duplicate_flow(hass: HomeAssistant, controller) -> None:
     assert result["step_id"] == "pair"
 
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -304,7 +304,7 @@ async def test_pair_already_paired_1(hass: HomeAssistant, controller) -> None:
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -321,7 +321,7 @@ async def test_unknown_domain_type(hass: HomeAssistant, controller) -> None:
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -339,7 +339,7 @@ async def test_id_missing(hass: HomeAssistant, controller) -> None:
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -356,7 +356,7 @@ async def test_discovery_ignored_model(hass: HomeAssistant, controller) -> None:
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -384,7 +384,7 @@ async def test_discovery_ignored_hk_bridge(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -412,7 +412,7 @@ async def test_discovery_does_not_ignore_non_homekit(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -443,7 +443,7 @@ async def test_discovery_broken_pairing_flag(hass: HomeAssistant, controller) ->
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -479,7 +479,7 @@ async def test_discovery_invalid_config_entry(hass: HomeAssistant, controller) -
         side_effect=AuthenticationError("Invalid pairing keys"),
     ):
         result = await hass.config_entries.flow.async_init(
-            "homekit_controller",
+            DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=discovery_info,
         )
@@ -518,7 +518,7 @@ async def test_discovery_ignored_config_entry(hass: HomeAssistant, controller) -
         side_effect=AuthenticationError("Invalid pairing keys"),
     ):
         result = await hass.config_entries.flow.async_init(
-            "homekit_controller",
+            DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=discovery_info,
         )
@@ -553,7 +553,7 @@ async def test_discovery_already_configured(hass: HomeAssistant, controller) -> 
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -591,7 +591,7 @@ async def test_discovery_already_configured_update_csharp(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -614,7 +614,7 @@ async def test_pair_abort_errors_on_start(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -638,7 +638,7 @@ async def test_pair_try_later_errors_on_start(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -678,7 +678,7 @@ async def test_pair_form_errors_on_start(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -729,7 +729,7 @@ async def test_pair_abort_errors_on_finish(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -772,7 +772,7 @@ async def test_pair_form_errors_on_finish(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -819,7 +819,7 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -870,7 +870,7 @@ async def test_user_works(hass: HomeAssistant, controller) -> None:
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -907,7 +907,7 @@ async def test_user_pairing_with_insecure_setup_code(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -946,7 +946,7 @@ async def test_user_pairing_with_insecure_setup_code(
 async def test_user_no_devices(hass: HomeAssistant, controller) -> None:
     """Test user initiated pairing where no devices discovered."""
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices"
@@ -962,7 +962,7 @@ async def test_user_no_unpaired_devices(hass: HomeAssistant, controller) -> None
 
     # Device discovery is requested
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -983,7 +983,7 @@ async def test_discovery_dismiss_existing_flow_on_paired(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -999,7 +999,7 @@ async def test_discovery_dismiss_existing_flow_on_paired(
     discovery_info.properties["sf"] = 0x00
     # Device is discovered again after pairing to someone else
     result2 = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -1022,7 +1022,7 @@ async def test_mdns_update_to_paired_during_pairing(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -1072,7 +1072,7 @@ async def test_mdns_update_to_paired_during_pairing(
     # Make sure when the device is discovered as paired via mdns
     # it does not abort pairing if it happens before pairing is finished
     result2 = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info_paired,
     )
@@ -1092,7 +1092,7 @@ async def test_discovery_no_bluetooth_support(hass: HomeAssistant, controller) -
         False,
     ):
         result = await hass.config_entries.flow.async_init(
-            "homekit_controller",
+            DOMAIN,
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED,
         )
@@ -1107,7 +1107,7 @@ async def test_bluetooth_not_homekit(hass: HomeAssistant, controller) -> None:
         True,
     ):
         result = await hass.config_entries.flow.async_init(
-            "homekit_controller",
+            DOMAIN,
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=NOT_HK_BLUETOOTH_SERVICE_INFO,
         )
@@ -1124,7 +1124,7 @@ async def test_bluetooth_valid_device_no_discovery(
         True,
     ):
         result = await hass.config_entries.flow.async_init(
-            "homekit_controller",
+            DOMAIN,
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED,
         )
@@ -1143,7 +1143,7 @@ async def test_bluetooth_valid_device_discovery_paired(
         True,
     ):
         result = await hass.config_entries.flow.async_init(
-            "homekit_controller",
+            DOMAIN,
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_PAIRED,
         )
@@ -1164,7 +1164,7 @@ async def test_bluetooth_valid_device_discovery_unpaired(
         True,
     ):
         result = await hass.config_entries.flow.async_init(
-            "homekit_controller",
+            DOMAIN,
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_UNPAIRED,
         )
@@ -1218,7 +1218,7 @@ async def test_discovery_updates_ip_when_config_entry_set_up(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -1256,7 +1256,7 @@ async def test_discovery_updates_ip_config_entry_not_set_up(
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )

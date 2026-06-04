@@ -1073,7 +1073,7 @@ async def test_connection_aborted_wrong_device(
     new_combined_info = AsyncMock(return_value=(device_info, [], []))
     mock_client.device_info_and_list_entities = new_combined_info
     result = await hass.config_entries.flow.async_init(
-        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -1153,7 +1153,7 @@ async def test_connection_aborted_wrong_device_same_name(
     new_combined_info = AsyncMock(return_value=(device_info, [], []))
     mock_client.device_info_and_list_entities = new_combined_info
     result = await hass.config_entries.flow.async_init(
-        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
 
     assert result["type"] is FlowResultType.ABORT
