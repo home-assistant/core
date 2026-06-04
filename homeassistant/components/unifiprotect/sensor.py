@@ -672,9 +672,9 @@ async def async_setup_entry(
     )
     entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
-    entities += _async_alarm_hub_entities(data)
 
     async_add_entities(entities)
+    async_add_entities(_async_alarm_hub_entities(data))
 
 
 @callback

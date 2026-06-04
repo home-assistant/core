@@ -96,6 +96,12 @@
       }
     },
     "binary_sensor": {
+      "alarm_hub_battery": {
+        "name": "Battery"
+      },
+      "alarm_hub_tamper": {
+        "name": "Tamper"
+      },
       "alarm_sound_detection": {
         "name": "Alarm sound detection"
       },

@@ -1,13 +1,18 @@
 """Component providing binary sensors for UniFi Protect."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 import dataclasses
 from typing import cast, override
 
 from uiprotect.data import (
     NVR,
+    AlarmHubBatteryStatus,
+    AlarmHubCoverStatus,
+    AlarmHubInputStatus,
+    AlarmHubInputType,
     Camera,
     Event,
+    LinkStation,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
@@ -28,6 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
+    BaseAlarmHubEntity,
     BaseProtectEntity,
     EventEntityMixin,
     PermRequired,
@@ -41,6 +47,16 @@ from .entity import (
 
 _KEY_DOOR = "door"
 PARALLEL_UPDATES = 0
+
+# Zones below ``AlarmHubInputStatus.ALARM`` are wiring problems, not triggers.
+_ALARM_HUB_INPUT_DEVICE_CLASS: dict[AlarmHubInputType, BinarySensorDeviceClass] = {
+    AlarmHubInputType.MOTION: BinarySensorDeviceClass.MOTION,
+    AlarmHubInputType.ENTRY: BinarySensorDeviceClass.OPENING,
+    AlarmHubInputType.SMOKE: BinarySensorDeviceClass.SMOKE,
+    # No dedicated glass-break class; SOUND is the closest fit.
+    AlarmHubInputType.GLASS_BREAK: BinarySensorDeviceClass.SOUND,
+    AlarmHubInputType.EMERGENCY_BUTTON: BinarySensorDeviceClass.SAFETY,
+}
 
 
 def _async_motion_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
@@ -726,6 +742,107 @@ def _async_nvr_entities(
     ]
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ProtectAlarmHubBinaryEntityDescription(BinarySensorEntityDescription):
+    """Describes a UniFi Protect alarm hub (public API) binary sensor."""
+
+    value_fn: Callable[[LinkStation], bool]
+
+
+def _alarm_hub_tamper(hub: LinkStation) -> bool:
+    """Return whether the alarm hub tamper cover is open."""
+    cover = hub.alarm_hub_cover
+    return cover is not None and cover.status is AlarmHubCoverStatus.OPEN
+
+
+def _alarm_hub_battery_problem(hub: LinkStation) -> bool:
+    """Return whether the backup battery is low or critical."""
+    battery = hub.alarm_hub_battery
+    return battery is not None and battery.battery_status in (
+        AlarmHubBatteryStatus.LOW,
+        AlarmHubBatteryStatus.CRITICAL,
+    )
+
+
+ALARM_HUB_BINARY_SENSORS: tuple[ProtectAlarmHubBinaryEntityDescription, ...] = (
+    ProtectAlarmHubBinaryEntityDescription(
+        key="tamper",
+        translation_key="alarm_hub_tamper",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        value_fn=_alarm_hub_tamper,
+    ),
+    ProtectAlarmHubBinaryEntityDescription(
+        key="battery",
+        translation_key="alarm_hub_battery",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_alarm_hub_battery_problem,
+    ),
+)
+
+
+class ProtectAlarmHubBinarySensor(BaseAlarmHubEntity, BinarySensorEntity):
+    """A hub-level binary sensor for a UniFi Protect alarm hub."""
+
+    entity_description: ProtectAlarmHubBinaryEntityDescription
+
+    @callback
+    def _async_update_attrs(self, hub: LinkStation) -> None:
+        super()._async_update_attrs(hub)
+        self._attr_is_on = self.entity_description.value_fn(hub)
+
+
+class ProtectAlarmHubZoneBinarySensor(BaseAlarmHubEntity, BinarySensorEntity):
+    """A wired-input (zone) binary sensor for a UniFi Protect alarm hub."""
+
+    def __init__(self, data: ProtectData, hub: LinkStation, input_id: int) -> None:
+        """Initialize the zone binary sensor."""
+        self._input_id = input_id
+        zone = hub.alarm_hub_inputs[input_id]
+        device_class = (
+            _ALARM_HUB_INPUT_DEVICE_CLASS.get(zone.input_type)
+            if zone.input_type is not None
+            else None
+        )
+        description = BinarySensorEntityDescription(
+            key=f"input_{input_id}",
+            device_class=device_class,
+        )
+        super().__init__(data, hub, description)
+        # The zone name comes from the device, so set it directly rather than
+        # via a translation key.
+        self._attr_name = zone.name or f"Zone {input_id}"
+
+    @callback
+    def _async_update_attrs(self, hub: LinkStation) -> None:
+        super()._async_update_attrs(hub)
+        zone = hub.alarm_hub_inputs.get(self._input_id)
+        if zone is None:
+            self._attr_available = False
+            return
+        self._attr_is_on = zone.status is AlarmHubInputStatus.ALARM
+
+
+@callback
+def _async_alarm_hub_entities(data: ProtectData) -> list[BaseAlarmHubEntity]:
+    """Build alarm hub binary sensors from the public bootstrap."""
+    api = data.api
+    if not api.has_public_bootstrap:
+        return []
+    entities: list[BaseAlarmHubEntity] = []
+    for hub in api.public_bootstrap.alarm_hubs.values():
+        entities += [
+            ProtectAlarmHubBinarySensor(data, hub, description)
+            for description in ALARM_HUB_BINARY_SENSORS
+        ]
+        entities += [
+            ProtectAlarmHubZoneBinarySensor(data, hub, input_id)
+            for input_id, zone in hub.alarm_hub_inputs.items()
+            if zone.input_type is not None
+        ]
+    return entities
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -755,3 +872,4 @@ async def async_setup_entry(
     entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
     async_add_entities(entities)
+    async_add_entities(_async_alarm_hub_entities(data))
