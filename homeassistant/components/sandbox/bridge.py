@@ -166,11 +166,14 @@ class _CallServiceBatcher:
 
     Proxy entities call :meth:`enqueue` for every method invocation. The
     batcher gathers everything that arrived this tick, fires one
-    ``sandbox/call_service`` per (domain, service, kwargs-shape) bucket
-    with a multi-entity ``target.entity_id`` list, and resolves all the
-    waiting futures together. Only fire-and-forget calls are batched — a
-    call needing a response bypasses the batcher — so there is no per-entity
-    response to demultiplex.
+    ``sandbox/call_service`` per (domain, service, kwargs-shape) bucket with a
+    multi-entity ``target.entity_id`` list, and resolves every waiting future
+    when that RPC completes — so each caller still learns when its call
+    finished and sees any error. A service call is never fire-and-forget;
+    batching only coalesces the *wire* call, not the await. What can't be
+    coalesced is a response *value* (every caller in a bucket would have to
+    share one), so a call needing a response bypasses the batcher and there is
+    no per-entity response to demultiplex here.
 
     Kwargs are not hashable (they include nested dicts/lists), so the key
     is the JSON-canonical form of the kwargs dict. Only entities that
@@ -196,8 +199,11 @@ class _CallServiceBatcher:
     ) -> Any:
         """Queue one entity into the next batched ``call_service`` RPC.
 
-        Only fire-and-forget calls are batched; a call that needs a response
-        bypasses the batcher (see :meth:`SandboxBridge.async_call_service`).
+        The returned awaitable resolves when the batched RPC completes (with
+        its result, or the raised error), so the caller always learns the call
+        finished. Only a response *value* can't be coalesced, so a call needing
+        a response bypasses the batcher (see
+        :meth:`SandboxBridge.async_call_service`).
         """
         # Sorted canonical form keys the bucket; bytes are hashable.
         kwargs_key = json_helper.json_bytes_sorted(service_data)
@@ -228,7 +234,7 @@ class _CallServiceBatcher:
         buckets = self._buckets
         self._buckets = {}
         for bucket in buckets.values():
-            asyncio.create_task(  # noqa: RUF006 — fire-and-forget; bucket.future is the join point
+            asyncio.create_task(  # noqa: RUF006 — detached task; callers await bucket.future, the join point
                 self._dispatch(bucket), name="sandbox:call_service:flush"
             )
 
@@ -326,12 +332,13 @@ class SandboxBridge:
     ) -> Any:
         """Forward one entity service call to the sandbox.
 
-        Fire-and-forget calls made in the same tick with matching ``(domain,
-        service, service_data)`` coalesce into a single RPC with a multi-entity
-        target. A call that needs a response (``return_response=True``) skips
-        the batcher: coalescing forces every caller in a bucket to share one
-        combined response, so a response call goes out as its own
-        single-entity RPC instead.
+        Calls made in the same tick with matching ``(domain, service,
+        service_data)`` coalesce into a single RPC with a multi-entity target.
+        Each caller still awaits that RPC's completion (and receives any
+        error), so the call is never fire-and-forget — only the *wire* call is
+        shared. A call that needs a response (``return_response=True``) cannot
+        share a coalesced bucket's single response, so it skips the batcher and
+        goes out as its own single-entity RPC instead.
 
         ``context`` is the main-side Context driving the entity call. It is
         remembered here (before the id is reduced to a bare wire value) so that
