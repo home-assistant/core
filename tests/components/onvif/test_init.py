@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from homeassistant.components.onvif.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -29,7 +30,7 @@ from tests.common import MockConfigEntry
 
 async def test_migrate_camera_entities_unique_ids(hass: HomeAssistant) -> None:
     """Test that camera entities unique ids get migrated properly."""
-    config_entry = MockConfigEntry(domain="onvif", unique_id=MAC)
+    config_entry = MockConfigEntry(domain=DOMAIN, unique_id=MAC)
     config_entry.add_to_hass(hass)
 
     entity_registry = er.async_get(hass)
@@ -119,7 +120,7 @@ async def test_migrate_camera_entities_unique_ids(hass: HomeAssistant) -> None:
 async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test setting up the config entry."""
     entry = MockConfigEntry(
-        domain="onvif",
+        domain=DOMAIN,
         title=NAME,
         unique_id=MAC,
         data={

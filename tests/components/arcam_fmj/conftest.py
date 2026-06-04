@@ -9,7 +9,7 @@ from arcam.fmj.client import Client, ResponsePacket
 from arcam.fmj.state import State
 import pytest
 
-from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
+from homeassistant.components.arcam_fmj.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
@@ -122,7 +122,7 @@ def state_2_fixture(client: Mock) -> State:
 def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Get a mock config entry."""
     config_entry = MockConfigEntry(
-        domain="arcam_fmj",
+        domain=DOMAIN,
         data=MOCK_CONFIG_ENTRY,
         title=MOCK_NAME,
         unique_id=MOCK_UUID,

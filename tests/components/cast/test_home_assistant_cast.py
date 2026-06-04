@@ -117,7 +117,7 @@ async def test_remove_entry(hass: HomeAssistant) -> None:
     """Test removing config entry removes user."""
     entry = MockConfigEntry(
         data={},
-        domain="cast",
+        domain=DOMAIN,
         title="Google Cast",
     )
 

@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import cast
+from homeassistant.components.cast import DOMAIN
 from homeassistant.components.cast.home_assistant_cast import CAST_USER_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -61,7 +62,7 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
 )
 async def test_single_instance(hass: HomeAssistant, source) -> None:
     """Test we only allow a single config flow."""
-    MockConfigEntry(domain="cast").add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
@@ -236,7 +237,7 @@ async def test_option_flow(
     basic_parameters = ["known_hosts"]
     extra_parameters = ["ignore_cec", "uuid"]
 
-    config_entry = MockConfigEntry(domain="cast", data=initial)
+    config_entry = MockConfigEntry(domain=DOMAIN, data=initial)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

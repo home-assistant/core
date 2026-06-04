@@ -30,7 +30,7 @@ MOCK_API_TOKEN = "psk_0000000000000000"
 async def setup_no_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
     MockConfigEntry(
-        domain="amberelectric",
+        domain=DOMAIN,
         data={
             CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,
@@ -53,7 +53,7 @@ async def setup_no_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
 async def setup_potential_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
     MockConfigEntry(
-        domain="amberelectric",
+        domain=DOMAIN,
         data={
             CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,
@@ -82,7 +82,7 @@ async def setup_potential_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
 async def setup_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
     MockConfigEntry(
-        domain="amberelectric",
+        domain=DOMAIN,
         data={
             CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,
@@ -144,7 +144,7 @@ def test_spike_sensor(hass: HomeAssistant) -> None:
 async def setup_inactive_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
     MockConfigEntry(
-        domain="amberelectric",
+        domain=DOMAIN,
         data={
             CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,
@@ -175,7 +175,7 @@ async def setup_inactive_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mo
 async def setup_active_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
     MockConfigEntry(
-        domain="amberelectric",
+        domain=DOMAIN,
         data={
             CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,

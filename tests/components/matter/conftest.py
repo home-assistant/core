@@ -10,6 +10,7 @@ from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
 
+from homeassistant.components.matter import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -65,7 +66,7 @@ async def integration_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MockConfigEntry:
     """Set up the Matter integration."""
-    entry = MockConfigEntry(domain="matter", data={"url": "ws://localhost:5580/ws"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

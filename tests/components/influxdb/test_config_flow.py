@@ -578,7 +578,7 @@ async def test_single_instance(
 ) -> None:
     """Test we cannot setup a second entry for InfluxDB."""
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config_base,
     )
 
@@ -728,7 +728,7 @@ async def test_single_instance_import(
 ) -> None:
     """Test we cannot setup a second entry for InfluxDB."""
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config_base,
     )
 

@@ -467,7 +467,7 @@ async def test_discovery_match_by_service_uuid_and_short_local_name(
     mock_bleak_scanner_start: MagicMock,
 ) -> None:
     """Test bluetooth discovery match by service_uuid and short local name."""
-    entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="00:00:00:00:00:01")
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -3543,7 +3543,7 @@ async def test_title_updated_if_mac_address(
 ) -> None:
     """Test the title is updated if it is the mac address."""
     entry = MockConfigEntry(
-        domain="bluetooth", title="00:00:00:00:00:01", unique_id="00:00:00:00:00:01"
+        domain=DOMAIN, title="00:00:00:00:00:01", unique_id="00:00:00:00:00:01"
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

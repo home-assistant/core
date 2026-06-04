@@ -17,6 +17,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import AddonError
+from homeassistant.components.mqtt import DOMAIN
 from homeassistant.components.mqtt.config_flow import (
     PWD_NOT_CHANGED,
     TRANSLATION_DESCRIPTION_PLACEHOLDERS,
@@ -548,7 +549,7 @@ async def test_manual_config_set(
 async def test_user_single_instance(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
-        domain="mqtt",
+        domain=DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     ).add_to_hass(hass)
@@ -563,7 +564,7 @@ async def test_user_single_instance(hass: HomeAssistant) -> None:
 async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
-        domain="mqtt",
+        domain=mqtt.DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     ).add_to_hass(hass)

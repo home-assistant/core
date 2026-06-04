@@ -16,7 +16,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.homekit_controller import config_flow
-from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
+from homeassistant.components.homekit_controller.const import DOMAIN, KNOWN_DEVICES
 from homeassistant.components.homekit_controller.storage import async_get_entity_storage
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -427,7 +427,7 @@ async def test_discovery_broken_pairing_flag(hass: HomeAssistant, controller) ->
     await controller.add_paired_device(Accessories(), "00:00:00:00:00:00")
 
     MockConfigEntry(
-        domain="homekit_controller",
+        domain=DOMAIN,
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
         unique_id="00:00:00:00:00:00",
     ).add_to_hass(hass)
@@ -461,7 +461,7 @@ async def test_discovery_invalid_config_entry(hass: HomeAssistant, controller) -
     pairing = await controller.add_paired_device(Accessories(), "00:00:00:00:00:00")
 
     MockConfigEntry(
-        domain="homekit_controller",
+        domain=DOMAIN,
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
         unique_id="00:00:00:00:00:00",
     ).add_to_hass(hass)
@@ -499,7 +499,7 @@ async def test_discovery_ignored_config_entry(hass: HomeAssistant, controller) -
     pairing = await controller.add_paired_device(Accessories(), "00:00:00:00:00:00")
 
     MockConfigEntry(
-        domain="homekit_controller",
+        domain=DOMAIN,
         data={},
         unique_id="00:00:00:00:00:00",
         source=config_entries.SOURCE_IGNORE,
@@ -535,7 +535,7 @@ async def test_discovery_ignored_config_entry(hass: HomeAssistant, controller) -
 async def test_discovery_already_configured(hass: HomeAssistant, controller) -> None:
     """Already configured."""
     entry = MockConfigEntry(
-        domain="homekit_controller",
+        domain=DOMAIN,
         data={
             "AccessoryIP": "4.4.4.4",
             "AccessoryPort": 66,
@@ -568,7 +568,7 @@ async def test_discovery_already_configured_update_csharp(
 ) -> None:
     """Already configured and csharp changes."""
     entry = MockConfigEntry(
-        domain="homekit_controller",
+        domain=DOMAIN,
         data={
             "AccessoryIP": "4.4.4.4",
             "AccessoryPort": 66,
@@ -1196,7 +1196,7 @@ async def test_discovery_updates_ip_when_config_entry_set_up(
 ) -> None:
     """Already configured updates ip when config entry set up."""
     entry = MockConfigEntry(
-        domain="homekit_controller",
+        domain=DOMAIN,
         data={
             "AccessoryIP": "4.4.4.4",
             "AccessoryPort": 66,
@@ -1235,7 +1235,7 @@ async def test_discovery_updates_ip_config_entry_not_set_up(
 ) -> None:
     """Already configured updates ip when the config entry is not set up."""
     entry = MockConfigEntry(
-        domain="homekit_controller",
+        domain=DOMAIN,
         data={
             "AccessoryIP": "4.4.4.4",
             "AccessoryPort": 66,
