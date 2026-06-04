@@ -608,9 +608,9 @@ async def test_reload_all(
     test2 = async_mock_service(hass, "test2", "reload")
     no_reload = async_mock_service(hass, "test3", "not_reload")
     notify = async_mock_service(hass, "notify", "reload")
-    core_config = async_mock_service(hass, "homeassistant", "reload_core_config")
+    core_config = async_mock_service(hass, DOMAIN, "reload_core_config")
     themes = async_mock_service(hass, "frontend", "reload_themes")
-    jinja = async_mock_service(hass, "homeassistant", "reload_custom_templates")
+    jinja = async_mock_service(hass, DOMAIN, "reload_custom_templates")
 
     with patch(
         "homeassistant.config.async_check_ha_config_file",
