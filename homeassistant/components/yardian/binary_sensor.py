@@ -93,7 +93,6 @@ async def async_setup_entry(
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             value_fn=_zone_value_factory(zone_id),
-            translation_placeholders={"zone": str(zone_id + 1)},
         )
         entities.append(YardianZoneBinarySensor(coordinator, description, zone_id))
 

@@ -42,15 +42,7 @@ async def test_turn_on_switch(
     """Test turning on a switch."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_registry = er.async_get(hass)
-
-    # Dynamically resolve the entity_id from the config entry
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    entity_id = next(
-        entry.entity_id for entry in entries if entry.domain == SWITCH_DOMAIN
-    )
+    entity_id = "switch.zone_1"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -70,15 +62,7 @@ async def test_turn_off_switch(
     """Test turning off a switch."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_registry = er.async_get(hass)
-
-    # Dynamically resolve the entity_id from the config entry
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    entity_id = next(
-        entry.entity_id for entry in entries if entry.domain == SWITCH_DOMAIN
-    )
+    entity_id = "switch.zone_1"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
