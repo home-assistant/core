@@ -42,15 +42,11 @@ def build_event(
     new_state: str | None = None,
 ) -> Event:
     """Create a pyoverkiz event object with a test-friendly interface."""
-    # A DeviceStateChangedEvent always carries the changed states; without them
-    # the coordinator handler is a silent no-op, so guard against building one.
-    if name is EventName.DEVICE_STATE_CHANGED and not device_states:
-        raise ValueError("DeviceStateChangedEvent requires device_states")
     return Event(
         name=name,
         device_url=device_url,
-        # device_states defaults to None here for caller convenience; Event
-        # expects a list, so normalize the omitted case to an empty list.
+        # Event's converter iterates device_states, so normalize the omitted
+        # case (None) to an empty list.
         device_states=device_states or [],
         exec_id=exec_id,
         new_state=new_state,
