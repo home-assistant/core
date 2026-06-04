@@ -9,13 +9,13 @@ from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import EventName, ExecutionState, Protocol
 from pyoverkiz.exceptions import (
-    BadCredentialsException,
-    InvalidEventListenerIdException,
-    MaintenanceException,
-    NotAuthenticatedException,
-    ServiceUnavailableException,
-    TooManyConcurrentRequestsException,
-    TooManyRequestsException,
+    BadCredentialsError,
+    InvalidEventListenerIdError,
+    MaintenanceError,
+    NotAuthenticatedError,
+    ServiceUnavailableError,
+    TooManyConcurrentRequestsError,
+    TooManyRequestsError,
 )
 from pyoverkiz.models import Device, Event, Place
 
@@ -68,7 +68,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self._default_update_interval = UPDATE_INTERVAL
 
         self.is_stateless = all(
-            device.protocol in (Protocol.RTS, Protocol.INTERNAL)
+            device.identifier.protocol in (Protocol.RTS, Protocol.INTERNAL)
             for device in devices
             if device.widget not in IGNORED_OVERKIZ_DEVICES
             and device.ui_class not in IGNORED_OVERKIZ_DEVICES
@@ -78,17 +78,17 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Fetch Overkiz data via event listener."""
         try:
             events = await self.client.fetch_events()
-        except (BadCredentialsException, NotAuthenticatedException) as exception:
+        except (BadCredentialsError, NotAuthenticatedError) as exception:
             raise ConfigEntryAuthFailed("Invalid authentication.") from exception
-        except TooManyConcurrentRequestsException as exception:
+        except TooManyConcurrentRequestsError as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
-        except TooManyRequestsException as exception:
+        except TooManyRequestsError as exception:
             raise UpdateFailed("Too many requests, try again later.") from exception
-        except MaintenanceException as exception:
+        except MaintenanceError as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
-        except ServiceUnavailableException as exception:
+        except ServiceUnavailableError as exception:
             raise UpdateFailed("Server is unavailable.") from exception
-        except InvalidEventListenerIdException as exception:
+        except InvalidEventListenerIdError as exception:
             raise UpdateFailed(exception) from exception
         except (TimeoutError, ClientConnectorError) as exception:
             LOGGER.debug("Failed to connect", exc_info=True)
@@ -100,9 +100,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             try:
                 await self.client.login()
                 self.devices = await self._get_devices()
-            except (BadCredentialsException, NotAuthenticatedException) as exception:
+            except (BadCredentialsError, NotAuthenticatedError) as exception:
                 raise ConfigEntryAuthFailed("Invalid authentication.") from exception
-            except TooManyRequestsException as exception:
+            except TooManyRequestsError as exception:
                 raise UpdateFailed("Too many requests, try again later.") from exception
 
             return self.devices
