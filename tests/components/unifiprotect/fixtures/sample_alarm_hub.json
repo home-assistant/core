@@ -881,9 +881,7 @@
         "statusLabel": "off",
         "mode": "dry-contact",
         "efuseAlert": "none",
-        "wiredPins": [
-          "com"
-        ]
+        "wiredPins": ["com"]
       },
       "1": {
         "pins": {
@@ -894,9 +892,7 @@
         "statusLabel": "off",
         "mode": "dry-contact",
         "efuseAlert": "none",
-        "wiredPins": [
-          "com"
-        ]
+        "wiredPins": ["com"]
       }
     },
     "emergencyTerminalStatus": {
