@@ -11,6 +11,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
+    DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_STT_OPTIONS,
@@ -29,7 +30,7 @@ from tests.common import MockConfigEntry
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
-        domain="google_generative_ai_conversation",
+        domain=DOMAIN,
         title="Google Generative AI Conversation",
         data={
             "api_key": "bla",
