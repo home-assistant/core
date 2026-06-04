@@ -408,3 +408,46 @@ async def test_credential_update_account_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "account_mismatch"
     assert mock_setup_entry.call_count == 0
+
+
+@pytest.mark.parametrize(("flow_starter", "step_id", "success_reason"), _FLOW_PARAMS)
+@pytest.mark.parametrize(
+    ("auth_exception", "expected_error"),
+    [
+        pytest.param(AquariteError("network"), "cannot_connect", id="cannot_connect"),
+        pytest.param(RuntimeError("boom"), "unknown", id="unknown"),
+    ],
+)
+async def test_credential_update_error_paths(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_vistapool_client: AsyncMock,
+    mock_vistapool_auth: MagicMock,
+    flow_starter: Any,
+    step_id: str,
+    success_reason: str,
+    auth_exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauth / reconfigure surfaces non-auth errors and recovers on retry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_vistapool_auth.authenticate.side_effect = auth_exception
+
+    result = await flow_starter(mock_config_entry, hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+    assert result["errors"] == {"base": expected_error}
+
+    mock_vistapool_auth.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == success_reason
+    assert mock_setup_entry.call_count == 1
