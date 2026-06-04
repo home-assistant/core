@@ -1,35 +1,50 @@
 {
   "alerts": {
-    "warnings": [
-      {
-        "title": "Air Quality Warning",
-        "date": "2026-06-04T10:35:16.386Z",
-        "alert_colour_level": "yellow",
-        "expiry_time": "2026-06-04T19:00:16.386Z",
-        "text": "Wildfire smoke is causing poor air quality. Conditions are expected to improve later this morning. Air quality and visibility due to wildfire smoke can fluctuate over short distances and can vary considerably from hour to hour. As smoke levels increase, health risks increase. Limit time outdoors. Consider reducing or rescheduling outdoor sports, activities and events.",
-        "area": "Yellowknife Region",
-        "status": "continued",
-        "confidence": "High",
-        "impact": "Moderate",
-        "alert_code": "AQW"
-      },
-      {
-        "title": "Wow, it is hot out there",
-        "date": "2026-06-04T10:35:16.386Z",
-        "alert_colour_level": "red",
-        "expiry_time": "2026-06-04T19:00:16.386Z",
-        "text": "It is so hot you can fry an egg on the pavement!",
-        "area": "Yellowknife Region",
-        "status": "continued",
-        "confidence": "High",
-        "impact": "Moderate",
-        "alert_code": "HOT"
-      }
-    ],
-    "watches": [],
-    "advisories": [],
-    "statements": [],
-    "endings": []
+    "warnings": {
+      "label": "Warnings",
+      "value": [
+        {
+          "title": "Air Quality Warning",
+          "date": "2026-06-04T10:35:16.386Z",
+          "alertColourLevel": "yellow",
+          "expiryTime": "2026-06-04T19:00:16.386Z",
+          "text": "Wildfire smoke is causing poor air quality. Conditions are expected to improve later this morning. Air quality and visibility due to wildfire smoke can fluctuate over short distances and can vary considerably from hour to hour. As smoke levels increase, health risks increase. Limit time outdoors. Consider reducing or rescheduling outdoor sports, activities and events.",
+          "area": "Yellowknife Region",
+          "status": "continued",
+          "confidence": "High",
+          "impact": "Moderate",
+          "alert_code": "AQW"
+        },
+        {
+          "title": "Wow, it is hot out there!",
+          "date": "2026-06-04T10:35:16.386Z",
+          "alertColourLevel": "red",
+          "expiry_time": "2026-06-04T19:00:16.386Z",
+          "text": "It is so hot you can fry an egg on the pavement!",
+          "area": "Yellowknife Region",
+          "status": "continued",
+          "confidence": "High",
+          "impact": "Moderate",
+          "alert_code": "HOT"
+        }
+      ]
+    },
+    "watches": {
+      "label": "Watches",
+      "value": []
+    },
+    "advisories": {
+      "label": "Advisories",
+      "value": []
+    },
+    "statements": {
+      "label": "Statements",
+      "value": []
+    },
+    "endings": {
+      "label": "Endings",
+      "value": []
+    }
   },
   "conditions": {
     "temperature": {

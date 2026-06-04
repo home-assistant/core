@@ -30,7 +30,7 @@
         'impact': 'Moderate',
         'status': 'continued',
         'text': 'It is so hot you can fry an egg on the pavement!',
-        'title': 'Wow, it is hot out there',
+        'title': 'Wow, it is hot out there!',
       }),
     ]),
     'watches': list([

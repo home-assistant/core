@@ -1,6 +1,6 @@
 """Define services for the Environment Canada integration."""
 
-from typing import Any, cast
+from typing import Any
 
 from env_canada import ECWeather
 import voluptuous as vol
@@ -14,6 +14,11 @@ from .const import DOMAIN
 
 SERVICE_GET_ALERTS = "get_alerts"
 SERVICE_GET_ALERTS_SCHEMA = vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string})
+
+SNAKE_MAPPING = {
+    "alertColourLevel": "alert_colour_level",
+    "expiryTime": "expiry_time",
+}
 
 
 async def _async_get_alerts(call: ServiceCall) -> dict[str, Any]:
@@ -29,20 +34,11 @@ async def _async_get_alerts(call: ServiceCall) -> dict[str, Any]:
             translation_key="not_connected",
         )
 
-    data = cast(dict[str, list[dict[str, Any]]], ec.alerts)
+    data: dict[str, Any] = ec.alerts
     return {
         k: [
-            {
-                (
-                    "alert_colour_level"
-                    if ik == "alertColourLevel"
-                    else "expiry_time"
-                    if ik == "expiryTime"
-                    else ik
-                ): iv
-                for ik, iv in item.items()
-            }
-            for item in v
+            {SNAKE_MAPPING.get(ik, ik): iv for ik, iv in item.items()}
+            for item in v["value"]
         ]
         for k, v in data.items()
     }
