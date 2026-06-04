@@ -126,7 +126,7 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def _async_setup(self) -> None:
         """Set up the Portainer Data Update Coordinator."""
         try:
-            await self.portainer.get_endpoints()
+            await self.portainer.portainer_system_status()
         except PortainerAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
