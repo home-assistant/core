@@ -286,7 +286,7 @@ async def test_set_invalid(hass: HomeAssistant) -> None:
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            "input_datetime",
+            DOMAIN,
             "set_datetime",
             {"entity_id": entity_id, "time": time_portion},
             blocking=True,
@@ -316,7 +316,7 @@ async def test_set_invalid_2(hass: HomeAssistant) -> None:
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            "input_datetime",
+            DOMAIN,
             "set_datetime",
             {"entity_id": entity_id, "time": time_portion, "datetime": dt_obj},
             blocking=True,
@@ -450,7 +450,7 @@ async def test_input_datetime_context(
     assert state is not None
 
     await hass.services.async_call(
-        "input_datetime",
+        DOMAIN,
         "set_datetime",
         {"entity_id": state.entity_id, "date": "2018-01-02"},
         blocking=True,

@@ -42,9 +42,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         ),
         patch("homeassistant.components.python_script.execute") as mock_ex,
     ):
-        await hass.services.async_call(
-            "python_script", "hello", {"some": "data"}, blocking=True
-        )
+        await hass.services.async_call(DOMAIN, "hello", {"some": "data"}, blocking=True)
 
     assert len(mock_ex.mock_calls) == 1
     test_hass, script, source, data = mock_ex.mock_calls[0][1]
@@ -392,7 +390,7 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await hass.services.async_call("python_script", "reload", {}, blocking=True)
+        await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
 
     assert not hass.services.has_service("python_script", "hello")
     assert hass.services.has_service("python_script", "hello2")
@@ -551,7 +549,7 @@ output = {"result": f"hello {data.get('name', 'World')}"}
         create=True,
     ):
         response = await hass.services.async_call(
-            "python_script",
+            DOMAIN,
             "hello",
             {"name": "paulus"},
             blocking=True,
@@ -595,7 +593,7 @@ no_output = {"result": f"hello {data.get('name', 'World')}"}
         create=True,
     ):
         response = await hass.services.async_call(
-            "python_script",
+            DOMAIN,
             "hello",
             {"name": "paulus"},
             blocking=True,
@@ -637,7 +635,7 @@ output = f"hello {data.get('name', 'World')}"
         pytest.raises(ServiceValidationError),
     ):
         await hass.services.async_call(
-            "python_script",
+            DOMAIN,
             "hello",
             {"name": "paulus"},
             blocking=True,

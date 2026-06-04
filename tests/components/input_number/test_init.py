@@ -334,7 +334,7 @@ async def test_input_number_context(
     assert state is not None
 
     await hass.services.async_call(
-        "input_number",
+        DOMAIN,
         "increment",
         {"entity_id": state.entity_id},
         True,

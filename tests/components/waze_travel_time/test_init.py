@@ -57,7 +57,7 @@ async def call_service_get_travel_times(
     if base_coordinates is not None:
         params["base_coordinates"] = base_coordinates
     return await hass.services.async_call(
-        "waze_travel_time",
+        DOMAIN,
         "get_travel_times",
         params,
         blocking=True,
@@ -131,7 +131,7 @@ async def test_service_get_travel_times_empty_response(
     """Test service get_travel_times."""
     mock_update.return_value = []
     response_data = await hass.services.async_call(
-        "waze_travel_time",
+        DOMAIN,
         "get_travel_times",
         {
             "origin": "location1",
