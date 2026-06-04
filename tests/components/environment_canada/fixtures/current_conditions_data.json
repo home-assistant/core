@@ -19,7 +19,7 @@
           "title": "Wow, it is hot out there!",
           "date": "2026-06-04T10:35:16.386Z",
           "alertColourLevel": "red",
-          "expiry_time": "2026-06-04T19:00:16.386Z",
+          "expiryTime": "2026-06-04T19:00:16.386Z",
           "text": "It is so hot you can fry an egg on the pavement!",
           "area": "Yellowknife Region",
           "status": "continued",
