@@ -106,13 +106,6 @@ class VictronSensor(DebouncedWriteEntity, VictronBaseEntity, SensorEntity):
         self._attr_native_value = VictronSensor._normalize_value(value)
         self.async_write_ha_state()
 
-    def _should_debounce_state_write(self) -> bool:
-        """Return if the current sensor state should be debounced."""
-        # bool is a subclass of int, but we only want real numeric sensor values.
-        return isinstance(self._attr_native_value, (int, float)) and not isinstance(
-            self._attr_native_value, bool
-        )
-
     @staticmethod
     def _normalize_value(value: Any) -> Any:
         """Normalize Victron enum values to their enum code."""

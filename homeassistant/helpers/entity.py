@@ -1753,11 +1753,20 @@ class DebouncedWriteEntity(Entity):
             self.state_write_debounce_interval = float(interval)
 
     def _should_debounce_state_write(self) -> bool:
-        """Return if state writes should be debounced."""
-        # bool is a subclass of int, but we only want real numeric sensor values.
-        return isinstance(self._attr_native_value, (int, float)) and not isinstance(
-            self._attr_native_value, bool
-        )
+        """Return if state writes should be debounced.
+
+        The default implementation skips debouncing for non-numeric values
+        (e.g. enums, strings) since those state changes are typically
+        infrequent and always meaningful.  For entities without a
+        ``native_value`` property (non-sensor entities), debouncing is
+        always applied.
+
+        Integrations may override this to customise debounce behaviour.
+        """
+        value = getattr(self, "native_value", _SENTINEL)
+        if value is _SENTINEL:
+            return True
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
 
     @callback
     def _async_should_write_ha_state(self) -> bool:
