@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from bleak.exc import BleakError
 import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -120,6 +121,9 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
     ("raise_error", "expected_error"),
     [
         (Exception("boom"), "unexpected_error"),
+        (TimeoutError("timeout"), "cannot_connect"),
+        (OSError("os error"), "cannot_connect"),
+        (BleakError("bleak error"), "cannot_connect"),
         (None, "cannot_connect"),
     ],
 )
@@ -227,6 +231,9 @@ async def test_async_step_bluetooth(hass: HomeAssistant) -> None:
     ("raise_error", "error_text"),
     [
         (Exception("boom"), "unexpected_error"),
+        (TimeoutError("timeout"), "cannot_connect"),
+        (OSError("os error"), "cannot_connect"),
+        (BleakError("bleak error"), "cannot_connect"),
         (None, "cannot_connect"),
     ],
 )

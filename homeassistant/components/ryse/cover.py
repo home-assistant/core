@@ -11,24 +11,23 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import RyseConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RyseConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RYSE Smart Shade cover from a config entry."""
-    device = RyseBLEDevice(entry.unique_id)
+    device = entry.runtime_data
     async_add_entities([RyseCoverEntity(device, entry)])
 
 
@@ -43,7 +42,7 @@ class RyseCoverEntity(CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    def __init__(self, device: RyseBLEDevice, config_entry: ConfigEntry) -> None:
+    def __init__(self, device: RyseBLEDevice, config_entry: RyseConfigEntry) -> None:
         """Initialize the Smart Shade cover entity."""
         self._device = device
 
@@ -52,16 +51,10 @@ class RyseCoverEntity(CoverEntity):
         self._attr_is_closed: bool | None = None
         self._attr_available: bool = False
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.address)},
-            name=config_entry.title,
             manufacturer="RYSE",
             model="SmartShade BLE",
             connections={(CONNECTION_BLUETOOTH, self._device.address)},
         )
-
-    # ------------------------------------------------------
-    #   Home Assistant entity lifecycle
-    # ------------------------------------------------------
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
@@ -83,10 +76,6 @@ class RyseCoverEntity(CoverEntity):
         if getattr(self._device, "update_callback", None) == self._update_position:
             self._device.update_callback = None
 
-    # ------------------------------------------------------
-    #   Device callback
-    # ------------------------------------------------------
-
     async def _update_position(self, position: int) -> None:
         """Update cover position when receiving notification."""
         if self._device.is_valid_position(position):
@@ -97,10 +86,6 @@ class RyseCoverEntity(CoverEntity):
                 "Updated cover position: raw=%d mapped=%d", position, real_position
             )
         self.async_write_ha_state()
-
-    # ------------------------------------------------------
-    #   Commands
-    # ------------------------------------------------------
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the shade."""
@@ -137,10 +122,6 @@ class RyseCoverEntity(CoverEntity):
         self._current_position = ha_position
         self.async_write_ha_state()
 
-    # ------------------------------------------------------
-    #   State refresh
-    # ------------------------------------------------------
-
     async def async_update(self) -> None:
         """Fetch the current state and position from the device."""
         try:
@@ -157,18 +138,11 @@ class RyseCoverEntity(CoverEntity):
             if self._current_position is None:
                 await self._device.send_get_position()
 
-        except (TimeoutError, OSError) as err:
+        except (TimeoutError, OSError, BleakError) as err:
             _LOGGER.warning(
                 "BLE communication error while reading device data: %s", err
             )
             self._attr_available = False
-        except Exception:
-            _LOGGER.exception("Unexpected error while reading device data")
-            self._attr_available = False
-
-    # ------------------------------------------------------
-    #   Properties
-    # ------------------------------------------------------
 
     @property
     def current_cover_position(self) -> int | None:

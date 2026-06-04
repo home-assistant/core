@@ -4,15 +4,15 @@ import asyncio
 import logging
 from typing import Any
 
+from bleak import BleakError
 from ryseble.bluetoothctl import is_pairing_ryse_device, pair_with_ble_device
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
 from .const import DOMAIN, MANUFACTURER_ID, MANUFACTURER_NAME, SERVICE_UUID
@@ -20,7 +20,31 @@ from .const import DOMAIN, MANUFACTURER_ID, MANUFACTURER_NAME, SERVICE_UUID
 _LOGGER = logging.getLogger(__name__)
 
 
-class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+async def _async_check_pairing(
+    device_info: BluetoothServiceInfoBleak,
+) -> BluetoothServiceInfoBleak | None:
+    """Check if device is pairing."""
+    try:
+        async with asyncio.timeout(5.0):
+            if await is_pairing_ryse_device(device_info.address):
+                return device_info
+    except TimeoutError as ex:
+        _LOGGER.debug(
+            "Timeout checking pairing status for %s: %s",
+            device_info.address,
+            ex,
+        )
+        return None
+    except Exception:
+        _LOGGER.exception(
+            "Unexpected error checking pairing status for %s",
+            device_info.address,
+        )
+        return None
+    return None
+
+
+class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for RYSE BLE Device."""
 
     def __init__(self) -> None:
@@ -51,19 +75,23 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            success = False
             try:
-                # You can use your existing pairing function here
                 success = await pair_with_ble_device(name, discovery_info.address)
-                if not success:
-                    errors["base"] = "cannot_connect"
-                else:
-                    return self.async_create_entry(
-                        title=name,
-                        data={},
-                    )
+            except TimeoutError, OSError, BleakError:
+                _LOGGER.error("Connection error during bluetooth confirm")
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error during bluetooth confirm")
                 errors["base"] = "unexpected_error"
+
+            if success:
+                return self.async_create_entry(
+                    title=name,
+                    data={},
+                )
+            if not errors:
+                errors["base"] = "cannot_connect"
 
         self._set_confirm_only()
         self.context["title_placeholders"] = {"name": name}
@@ -82,26 +110,25 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
-            name = self._discovered_devices.get(address)
+            name = self._discovered_devices[address]
 
-            if name is None:
-                _LOGGER.debug(
-                    "Address %s not found in discovered devices; re-running discovery",
-                    address,
-                )
-                errors["base"] = "device_not_selected"
-            else:
-                await self.async_set_unique_id(address, raise_on_progress=False)
-                self._abort_if_unique_id_configured()
+            await self.async_set_unique_id(address, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
 
-                try:
-                    success = await pair_with_ble_device(name, address)
-                    if success:
-                        return self.async_create_entry(title=name, data={})
-                    errors["base"] = "cannot_connect"
-                except Exception:
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unexpected_error"
+            success = False
+            try:
+                success = await pair_with_ble_device(name, address)
+            except TimeoutError, OSError, BleakError:
+                _LOGGER.error("Connection error during pairing")
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unexpected_error"
+
+            if success:
+                return self.async_create_entry(title=name, data={})
+            if not errors:
+                errors["base"] = "cannot_connect"
 
         current_ids = self._async_current_ids(include_ignore=False)
 
@@ -124,31 +151,9 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             candidates.append(info)
 
-        async def _check_pairing(
-            device_info: BluetoothServiceInfoBleak,
-        ) -> BluetoothServiceInfoBleak | None:
-            try:
-                async with asyncio.timeout(5.0):
-                    if await is_pairing_ryse_device(device_info.address):
-                        return device_info
-            except TimeoutError as ex:
-                _LOGGER.debug(
-                    "Timeout checking pairing status for %s: %s",
-                    device_info.address,
-                    ex,
-                )
-                return None
-            except Exception:
-                _LOGGER.exception(
-                    "Unexpected error checking pairing status for %s",
-                    device_info.address,
-                )
-                return None
-            return None
-
         if candidates:
             results = await asyncio.gather(
-                *(_check_pairing(info) for info in candidates)
+                *(_async_check_pairing(info) for info in candidates)
             )
             for device in results:
                 if device is not None:

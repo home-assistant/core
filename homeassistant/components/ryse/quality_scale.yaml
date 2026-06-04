@@ -53,7 +53,10 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      There is no information to update during discovery.
   discovery: done
   docs-data-update: todo
   docs-examples: todo
@@ -65,7 +68,10 @@ rules:
   dynamic-devices: done
   entity-category: todo
   entity-device-class: done
-  entity-disabled-by-default: done # No entities qualify to be disabled by default
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      No entities qualify to be disabled by default
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo

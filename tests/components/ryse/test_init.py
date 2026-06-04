@@ -1,5 +1,7 @@
 """Tests for RYSE init setup."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -19,11 +21,14 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@patch("homeassistant.components.ryse.async_ble_device_from_address")
 async def test_setup_and_unload(
+    mock_async_ble_device_from_address: MagicMock,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test integration setup and unload."""
+    mock_async_ble_device_from_address.return_value = MagicMock()
 
     config_entry = mock_config_entry
 

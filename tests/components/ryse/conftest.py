@@ -33,6 +33,5 @@ def mock_ryse_ble_device() -> Generator[MagicMock]:
     with patch(
         "homeassistant.components.ryse.cover.RyseBLEDevice",
         return_value=device,
-    ) as mock_cls:
-        mock_cls.return_value = device
+    ):
         yield device
