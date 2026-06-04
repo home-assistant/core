@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
-
 SWITCH_ENTITY_ID = "switch.kaku_id_123456_ch_1_output"
 
 

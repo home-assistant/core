@@ -23,7 +23,9 @@ type KlikAanKlikUitConfigEntry = ConfigEntry[KlikAanKlikUitRuntimeData]
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: KlikAanKlikUitConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: KlikAanKlikUitConfigEntry
+) -> bool:
     """Setup KlikAanKlikUit RC from a config entry."""
     transmitter_entity_id = entry.data[CONF_TRANSMITTER]
     if hass.states.get(transmitter_entity_id) is None:
@@ -39,7 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: KlikAanKlikUitConfigEntr
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: KlikAanKlikUitConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: KlikAanKlikUitConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

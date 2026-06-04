@@ -15,12 +15,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import KlikAanKlikUitConfigEntry
-from .const import (
-    CONF_CHANNEL,
-    CONF_GROUP,
-    DOMAIN,
-    format_device_summary,
-)
+from .const import CONF_CHANNEL, CONF_GROUP, DOMAIN, format_device_summary
 
 PARALLEL_UPDATES = 1
 
