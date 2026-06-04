@@ -64,17 +64,17 @@ repos:
         files: ^(homeassistant|tests|script)/.+\.py$
   - repo: local
     hooks:
-      # Drift guard for the checked-in sandbox_v2 protobuf gencode. Manual
+      # Drift guard for the checked-in sandbox protobuf gencode. Manual
       # stage only (grpcio-tools is not a project dep, so it bootstraps a
       # throwaway venv and degrades gracefully when uv is absent): run with
-      # `prek run --hook-stage manual sandbox-v2-proto-drift` or in a CI lane.
-      - id: sandbox-v2-proto-drift
-        name: sandbox_v2 protobuf gencode drift guard
-        entry: sandbox_v2/proto/check_drift.sh
+      # `prek run --hook-stage manual sandbox-proto-drift` or in a CI lane.
+      - id: sandbox-proto-drift
+        name: sandbox protobuf gencode drift guard
+        entry: sandbox/proto/check_drift.sh
         language: script
         pass_filenames: false
         stages: [manual]
-        files: ^sandbox_v2/proto/sandbox_v2\.proto$
+        files: ^sandbox/proto/sandbox\.proto$
       # Run mypy through our wrapper script in order to get the possible
       # pyenv and/or virtualenv activated; it may not have been e.g. if
       # committing from a GUI tool that was not launched from an activated
@@ -86,7 +86,7 @@ repos:
         require_serial: true
         types_or: [python, pyi]
         files: ^(homeassistant|pylint)/.+\.(py|pyi)$
-        # Checked-in protobuf gencode (sandbox_v2): the .py + .pyi pair trips
+        # Checked-in protobuf gencode (sandbox): the .py + .pyi pair trips
         # mypy's duplicate-module check, and it is machine-generated anyway.
         exclude: _pb2\.(py|pyi)$
       - id: pylint

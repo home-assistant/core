@@ -44,8 +44,8 @@ services:
     environment:
       # Forward-looking: the manager option that would place the control socket
       # on the shared volume. No such option exists yet — gap (a).
-      SANDBOX_V2_TRANSPORT: unix
-      SANDBOX_V2_SOCKET_PATH: /shared/sandbox.sock
+      SANDBOX_TRANSPORT: unix
+      SANDBOX_SOCKET_PATH: /shared/sandbox.sock
     # The sandbox container can only attach once main listens on (not spawns
     # into) the shared socket — gap (b).
     depends_on:

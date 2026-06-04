@@ -9,7 +9,7 @@
 # Degrades gracefully: if `uv` (needed to build the isolated protoc venv) is
 # not on PATH, it skips with a notice and exits 0 rather than blocking the
 # commit. This is why it is wired as a MANUAL-stage prek hook
-# (`prek run --hook-stage manual sandbox-v2-proto-drift`) / dedicated CI lane,
+# (`prek run --hook-stage manual sandbox-proto-drift`) / dedicated CI lane,
 # not an every-commit hook.
 
 set -euo pipefail

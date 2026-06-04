@@ -76,7 +76,7 @@ COMPONENTS_DIR = CORE_ROOT / "homeassistant" / "components"
 CORE_TESTS_DIR = CORE_ROOT / "tests" / "components"
 DEFAULT_CSV = _HERE / "COMPAT_FULL.csv"
 DEFAULT_REPORT_MD = _HERE / "COMPAT_FULL.md"
-ERRORS_DIR = Path(os.environ.get("SANDBOX_V2_ERRORS_DIR", "/tmp/sandbox_errors"))
+ERRORS_DIR = Path(os.environ.get("SANDBOX_ERRORS_DIR", "/tmp/sandbox_errors"))
 
 # Mirrors homeassistant/components/sandbox/const.py. Duplicated here
 # because importing the live module would require booting the core test
@@ -425,7 +425,7 @@ def write_report(
         )
     lines.append("")
     lines.append("Per-failure tracebacks are dumped under "
-                 "`${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}/<integration>/`.")
+                 "`${SANDBOX_ERRORS_DIR:-/tmp/sandbox_errors}/<integration>/`.")
     path.write_text("\n".join(lines) + "\n")
 
 
@@ -510,7 +510,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--errors-dir", type=Path, default=ERRORS_DIR,
-        help="Per-test error dump root (default: $SANDBOX_V2_ERRORS_DIR or /tmp/sandbox_errors).",
+        help="Per-test error dump root (default: $SANDBOX_ERRORS_DIR or /tmp/sandbox_errors).",
     )
     parser.add_argument(
         "--junit-dir", type=Path, default=ERRORS_DIR / "_junit",

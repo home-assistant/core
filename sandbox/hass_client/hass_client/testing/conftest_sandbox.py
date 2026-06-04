@@ -145,11 +145,11 @@ async def async_setup_subprocess_sandbox(
     """
     # Lazy import: testing package must not pull the HA integration
     # tree at import time.
-    from homeassistant.components.sandbox.const import DATA_SANDBOX_V2  # noqa: PLC0415
+    from homeassistant.components.sandbox.const import DATA_SANDBOX  # noqa: PLC0415
     from homeassistant.setup import async_setup_component  # noqa: PLC0415
 
     assert await async_setup_component(hass, "sandbox", {})
-    data = hass.data[DATA_SANDBOX_V2]
+    data = hass.data[DATA_SANDBOX]
     manager = data.manager
     if manager is None:  # pragma: no cover — defensive only
         raise RuntimeError("sandbox setup did not install a manager")

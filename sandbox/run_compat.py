@@ -43,7 +43,7 @@ DEFAULT_RESULTS_CSV = _HERE / "COMPAT.csv"
 # on every run. Auto-generated runs land in COMPAT_LATEST.md so reviewers
 # can diff against the curated baseline.
 DEFAULT_REPORT_MD = _HERE / "COMPAT_LATEST.md"
-ERRORS_DIR = Path(os.environ.get("SANDBOX_V2_ERRORS_DIR", "/tmp/sandbox_errors"))
+ERRORS_DIR = Path(os.environ.get("SANDBOX_ERRORS_DIR", "/tmp/sandbox_errors"))
 
 # Map CLI plugin choice → pytest ``-p`` argument.
 PLUGINS = {
