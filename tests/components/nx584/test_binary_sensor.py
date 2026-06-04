@@ -8,6 +8,7 @@ import pytest
 import requests
 
 from homeassistant.components.nx584 import binary_sensor as nx584
+from homeassistant.components.nx584.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -104,7 +105,7 @@ async def _test_assert_graceful_fail(
     hass: HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Test the failing."""
-    assert not await async_setup_component(hass, "nx584", config)
+    assert not await async_setup_component(hass, DOMAIN, config)
 
 
 @pytest.mark.usefixtures("client")
