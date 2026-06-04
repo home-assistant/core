@@ -157,7 +157,7 @@ async def test_esphome_device_service_calls_not_allowed(
         device_info={"esphome_version": "2023.3.0"},
     )
     await hass.async_block_till_done()
-    mock_esphome_test = async_mock_service(hass, "esphome", "test")
+    mock_esphome_test = async_mock_service(hass, DOMAIN, "test")
     device.mock_service_call(
         HomeassistantServiceCall(
             service="esphome.test",
