@@ -6,7 +6,7 @@ The integration owns three runtime objects, all hung off
 * :class:`SandboxManager` — supervises one subprocess per sandbox group
   ("main", "built-in", "custom"), lazily spawning them on first need.
 * :class:`SandboxFlowRouter` — installed as
-  ``hass.config_entries.router`` (Phase 4). Diverts new config flows to
+  ``hass.config_entries.router``. Diverts new config flows to
   sandbox runtimes and routes ``async_setup_entry`` for tagged entries.
 * :class:`SandboxBridge` (one per running sandbox) — owns the entity-side
   protocol: receives ``register_entity`` + ``state_changed`` pushes from
@@ -57,7 +57,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         data.bridges[group] = async_create_bridge(hass, group=group, channel=channel)
 
     async def _on_shutdown_reply(group: str, reply: Any) -> None:
-        """Persist the sandbox's restore-state snapshot (Phase 9).
+        """Persist the sandbox's restore-state snapshot.
 
         The runtime ships its ``RestoreEntity`` state in the shutdown
         reply (a ``ShutdownResult``) rather than via the sandbox store
@@ -100,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _on_stop(_event: Event) -> None:
         """Stop every sandbox process on HA shutdown.
 
-        Phase 9: ask each sandbox to unload its entries and flush
+        Ask each sandbox to unload its entries and flush
         ``RestoreEntity`` state through the ``current_sandbox`` store
         bridge before pulling the plug. ``async_stop_all`` then handles SIGTERM
         / SIGKILL for any sandbox that didn't ack the graceful request

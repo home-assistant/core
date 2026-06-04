@@ -1,4 +1,4 @@
-"""Unix-socket control-channel transport (transport T3).
+"""Unix-socket control-channel transport.
 
 Spawns the real ``python -m hass_client.sandbox`` runtime with the
 manager configured for the unix-socket transport: the manager opens a

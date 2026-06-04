@@ -54,8 +54,8 @@ ALWAYS_MAIN: frozenset[str] = frozenset(
         # objects with Path values + temp files before the entity method
         # runs. Neither bridge option intercepts at service-call level yet,
         # and resolution depends on camera/image bytes (deny-listed). Folded
-        # in the Phase 1 decision doc — revisit when ai_task is made
-        # sandbox-aware or we add service-handler-level interception.
+        # into ALWAYS_MAIN — revisit when ai_task is made sandbox-aware or
+        # we add service-handler-level interception.
         "ai_task",
         # image owns the same bytes-returning entity surface camera does;
         # the deny-list above catches integrations *providing* an image

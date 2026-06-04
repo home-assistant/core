@@ -234,12 +234,12 @@ class SandboxFlowProxy(ConfigFlow):
             )
 
         # Any other type (MENU, EXTERNAL_STEP, SHOW_PROGRESS, …) is
-        # explicitly out of Phase 4 scope; surface a noisy abort so a
-        # follow-up doesn't silently drop the flow on the floor.
+        # not supported; surface a noisy abort so a follow-up doesn't
+        # silently drop the flow on the floor.
         self._terminated = True
         _LOGGER.warning(
             "Sandbox %r returned unsupported flow result type %s for %s;"
-            " aborting (Phase 4 supports FORM/CREATE_ENTRY/ABORT only)",
+            " aborting (only FORM/CREATE_ENTRY/ABORT are supported)",
             self._sandbox_group,
             result_type,
             self._handler_key,

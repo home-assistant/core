@@ -1,4 +1,4 @@
-"""Phase 6 tests for :class:`hass_client.event_mirror.EventMirror`."""
+"""Tests for :class:`hass_client.event_mirror.EventMirror`."""
 
 import asyncio
 import tempfile

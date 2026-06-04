@@ -1,7 +1,7 @@
 """Sandbox — subprocess lifecycle and supervision.
 
-Phase 3 building block. The manager owns one supervised subprocess per
-sandbox group (``main`` / ``built-in`` / ``custom``); higher phases call
+The manager owns one supervised subprocess per sandbox group
+(``main`` / ``built-in`` / ``custom``); callers invoke
 :meth:`SandboxManager.ensure_started` lazily as config entries are routed.
 
 The contract between manager and runtime is:
@@ -118,7 +118,7 @@ class SandboxProcess:
         manager's loop.
 
         ``on_shutdown_reply`` is invoked with the runtime's reply to
-        :data:`MSG_SHUTDOWN` (Phase 9) so the caller can persist any
+        :data:`MSG_SHUTDOWN` so the caller can persist any
         ``restore_state`` payload before the subprocess exits.
         """
         self.group = group
@@ -225,7 +225,7 @@ class SandboxProcess:
             self._state = "stopped"
 
     async def async_graceful_shutdown(self, *, timeout: float) -> bool:
-        """Phase 9: ask the runtime to unload + flush, then wait for exit.
+        """Ask the runtime to unload + flush, then wait for exit.
 
         Sends ``sandbox/shutdown`` over the live channel and waits up
         to ``timeout`` for the runtime to reply and then exit on its
@@ -551,7 +551,7 @@ class SandboxManager:
         back). Unix is opt-in so existing deployments keep using stdio.
 
         ``on_channel_ready`` is invoked once a sandbox's control channel is
-        live; Phase 4's router uses it to register inbound flow handlers
+        live; the router uses it to register inbound flow handlers
         (e.g., ``sandbox/notify_flow_changed``).
         """
         self._hass = hass
@@ -637,7 +637,7 @@ class SandboxManager:
         )
 
     async def async_graceful_shutdown_all(self, *, timeout: float) -> None:
-        """Phase 9: ask every running sandbox to shut down gracefully.
+        """Ask every running sandbox to shut down gracefully.
 
         Best-effort fan-out. Sandboxes that did not ack inside ``timeout``
         are left for :meth:`async_stop_all` to clean up with SIGTERM /

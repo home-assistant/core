@@ -96,7 +96,7 @@ async def test_always_main_domains_pin_to_main(
 async def test_phase1_spike_late_additions_pin_to_main(
     hass: HomeAssistant, domain: str
 ) -> None:
-    """ai_task and image were folded into ALWAYS_MAIN by the Phase 1 spike.
+    """ai_task and image are folded into ALWAYS_MAIN.
 
     Pinned as their own test so the regression message is unambiguous if
     someone removes them from the deny-list without reading the decision doc.
@@ -152,7 +152,7 @@ async def test_each_incompatible_platform_forces_main(
 
 
 async def test_image_is_domain_not_platform_level(hass: HomeAssistant) -> None:
-    """Phase 1 decision: `image` lives in ALWAYS_MAIN, not the platform list.
+    """`image` lives in ALWAYS_MAIN, not the platform list.
 
     Camera covers the bytes-platform case; image entities returning bytes
     drive the domain-level rule. Lock the shape so a future cleanup doesn't

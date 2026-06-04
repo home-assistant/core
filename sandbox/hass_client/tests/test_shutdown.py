@@ -1,4 +1,4 @@
-"""Phase 9 tests for :class:`hass_client.sandbox.SandboxRuntime` shutdown.
+"""Tests for :class:`hass_client.sandbox.SandboxRuntime` shutdown.
 
 The runtime registers ``sandbox/shutdown`` once its channel is up.
 These tests exercise:
@@ -165,7 +165,7 @@ async def test_shutdown_fires_final_write_event(
     runtime_pair: tuple[SandboxRuntime, Channel, asyncio.Task[int]],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Phase 12: the shutdown handler fires EVENT_HOMEASSISTANT_FINAL_WRITE.
+    """The shutdown handler fires EVENT_HOMEASSISTANT_FINAL_WRITE.
 
     Concurrent channel dispatcher means the FINAL_WRITE fire-and-drain
     inside the shutdown handler no longer deadlocks against re-entrant
@@ -191,13 +191,13 @@ async def test_shutdown_flushes_pending_delay_save(
     runtime_pair: tuple[SandboxRuntime, Channel, asyncio.Task[int]],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Phase 12: ``async_delay_save`` writes flush through the store bridge.
+    """``async_delay_save`` writes flush through the store bridge.
 
     Without the concurrent channel dispatcher this would deadlock: the
     Store's FINAL_WRITE listener would re-enter the same channel reader
-    that is dispatching the shutdown handler. With Phase 12 the inner
-    ``store_save`` lands on the main-side handler while the shutdown
-    handler is still running.
+    that is dispatching the shutdown handler. The concurrent dispatcher
+    lets the inner ``store_save`` land on the main-side handler while the
+    shutdown handler is still running.
     """
     runtime, main_channel, _task = runtime_pair
     hass = runtime._flow_runner.hass  # noqa: SLF001

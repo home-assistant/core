@@ -1,4 +1,4 @@
-"""Tests for the Phase 5 :class:`SandboxBridge` — main-side entity bridge."""
+"""Tests for the :class:`SandboxBridge` — main-side entity bridge."""
 
 import asyncio
 from typing import Any
@@ -41,8 +41,8 @@ async def _wire(
 
 @pytest.fixture
 def ignore_translations_for_mock_domains() -> list[str]:
-    """Suppress strings.json checks for the Phase 6 mock domains."""
-    return ["phase6_demo", "phase6_local"]
+    """Suppress strings.json checks for the service-mirror mock domains."""
+    return ["mirror_demo", "mirror_local"]
 
 
 @pytest.fixture(name="entry")
@@ -553,23 +553,23 @@ async def test_register_service_installs_forwarder(hass: HomeAssistant) -> None:
         result = await sandbox_channel.call(
             "sandbox/register_service",
             pb.RegisterService(
-                domain="phase6_demo",
+                domain="mirror_demo",
                 service="do_thing",
                 supports_response="none",
             ),
         )
         assert result.installed is True
-        assert hass.services.has_service("phase6_demo", "do_thing")
+        assert hass.services.has_service("mirror_demo", "do_thing")
 
         await hass.services.async_call(
-            "phase6_demo", "do_thing", {"foo": "bar"}, blocking=True
+            "mirror_demo", "do_thing", {"foo": "bar"}, blocking=True
         )
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
     assert len(seen_calls) == 1
-    assert seen_calls[0].domain == "phase6_demo"
+    assert seen_calls[0].domain == "mirror_demo"
     assert seen_calls[0].service == "do_thing"
     assert struct_to_dict(seen_calls[0].service_data) == {"foo": "bar"}
 
@@ -614,14 +614,14 @@ async def test_forwarded_context_restores_on_echoed_state(
         await sandbox_channel.call(
             "sandbox/register_service",
             pb.RegisterService(
-                domain="phase6_demo", service="do_thing", supports_response="none"
+                domain="mirror_demo", service="do_thing", supports_response="none"
             ),
         )
 
         # The user who pressed the button that triggered the sandboxed action.
         user_context = Context(user_id="user-1", parent_id="parent-1")
         await hass.services.async_call(
-            "phase6_demo", "do_thing", {}, blocking=True, context=user_context
+            "mirror_demo", "do_thing", {}, blocking=True, context=user_context
         )
         assert forwarded_ids == [user_context.id]
 
@@ -659,13 +659,13 @@ async def test_register_service_skips_existing_handler(
     async def _local(_call: Any) -> None:
         return None
 
-    hass.services.async_register("phase6_local", "noop", _local)
+    hass.services.async_register("mirror_local", "noop", _local)
 
     try:
         result = await sandbox_channel.call(
             "sandbox/register_service",
             pb.RegisterService(
-                domain="phase6_local",
+                domain="mirror_local",
                 service="noop",
                 supports_response="none",
             ),
@@ -676,7 +676,7 @@ async def test_register_service_skips_existing_handler(
 
     assert result.installed is False
     # The existing handler is still in place — the bridge didn't replace it.
-    assert hass.services.has_service("phase6_local", "noop")
+    assert hass.services.has_service("mirror_local", "noop")
 
 
 async def test_unregister_service_removes_forwarder(
@@ -689,23 +689,23 @@ async def test_unregister_service_removes_forwarder(
         await sandbox_channel.call(
             "sandbox/register_service",
             pb.RegisterService(
-                domain="phase6_demo",
+                domain="mirror_demo",
                 service="stop",
                 supports_response="none",
             ),
         )
-        assert hass.services.has_service("phase6_demo", "stop")
+        assert hass.services.has_service("mirror_demo", "stop")
 
         result = await sandbox_channel.call(
             "sandbox/unregister_service",
-            pb.UnregisterService(domain="phase6_demo", service="stop"),
+            pb.UnregisterService(domain="mirror_demo", service="stop"),
         )
     finally:
         await main_channel.close()
         await sandbox_channel.close()
 
     assert result.removed is True
-    assert not hass.services.has_service("phase6_demo", "stop")
+    assert not hass.services.has_service("mirror_demo", "stop")
 
 
 async def test_fire_event_lands_on_main_bus(hass: HomeAssistant) -> None:

@@ -1,4 +1,4 @@
-"""End-to-end subprocess tests for Phase 4.
+"""End-to-end subprocess tests.
 
 Spawns the real ``python -m hass_client.sandbox`` runtime and exercises
 the JSON-line control channel: handshake → ping round-trip → graceful

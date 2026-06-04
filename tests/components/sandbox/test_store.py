@@ -1,4 +1,4 @@
-"""Phase 8 tests for the main-side Store handlers on :class:`SandboxBridge`.
+"""Tests for the main-side Store handlers on :class:`SandboxBridge`.
 
 We exercise the three ``sandbox/store_*`` handlers via the in-memory
 channel pair, with the bridge wired against the real ``hass`` config
@@ -53,10 +53,10 @@ async def test_store_save_writes_to_namespaced_path(hass: HomeAssistant) -> None
     wrapped = {
         "version": 1,
         "minor_version": 1,
-        "key": "phase8_demo",
+        "key": "demo_key",
         "data": {"hello": "world"},
     }
-    save = pb.StoreSave(key="phase8_demo")
+    save = pb.StoreSave(key="demo_key")
     save.data.update(wrapped)
     try:
         result = await sandbox_channel.call("sandbox/store_save", save)
@@ -65,7 +65,7 @@ async def test_store_save_writes_to_namespaced_path(hass: HomeAssistant) -> None
         await sandbox_channel.close()
 
     assert result.ok
-    path = _store_path(hass, "built-in", "phase8_demo")
+    path = _store_path(hass, "built-in", "demo_key")
     assert path.is_file()
     # The file holds the wrapped Store payload verbatim.
     assert json.loads(path.read_text(encoding="utf-8")) == wrapped
@@ -77,15 +77,15 @@ async def test_store_load_returns_saved_payload(hass: HomeAssistant) -> None:
     wrapped = {
         "version": 2,
         "minor_version": 3,
-        "key": "phase8_demo",
+        "key": "demo_key",
         "data": {"counter": 42},
     }
-    save = pb.StoreSave(key="phase8_demo")
+    save = pb.StoreSave(key="demo_key")
     save.data.update(wrapped)
     try:
         await sandbox_channel.call("sandbox/store_save", save)
         loaded = await sandbox_channel.call(
-            "sandbox/store_load", pb.StoreLoad(key="phase8_demo")
+            "sandbox/store_load", pb.StoreLoad(key="demo_key")
         )
     finally:
         await main_channel.close()

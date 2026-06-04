@@ -29,7 +29,7 @@ Main → Sandbox calls:
   fetches the code before setup (see ``hass_client.sources``).
 * ``sandbox/entry_unload`` — ask the sandbox to unload an entry by id.
 * ``sandbox/call_service``  — generic service dispatch (shared with
-  Phase 6's main→sandbox service mirroring path). Payload mirrors a
+  the main→sandbox service mirroring path). Payload mirrors a
   ``ServiceCall``: ``(domain, service, target, service_data, context,
   return_response)``. Returns either ``None`` or a service-response dict.
 
@@ -39,7 +39,7 @@ Sandbox → Main calls:
   entity, here's its description". Main builds the proxy and replies
   ``{"entity_id": <main-side id>}`` so the sandbox can route later
   ``call_service`` requests back to the right local entity. Optional
-  ``device_info`` field (Phase 19): a JSON-flattened ``DeviceInfo`` dict
+  ``device_info`` field: a JSON-flattened ``DeviceInfo`` dict
   — sets become lists of two-element lists (``identifiers`` /
   ``connections``), tuples become lists (``via_device``), and
   ``entry_type`` is the enum's string value. When present, main calls
@@ -48,28 +48,28 @@ Sandbox → Main calls:
 * ``sandbox/unregister_entity`` — symmetric counterpart.
 * ``sandbox/state_changed``   — push (no response). Carries the
   marshalled state delta for one entity.
-* ``sandbox/register_service`` (Phase 6) — sandbox tells main "I just
+* ``sandbox/register_service`` — sandbox tells main "I just
   registered a service, please mirror it". Main installs a thin handler
   that forwards calls back over the shared ``sandbox/call_service``
   channel.
-* ``sandbox/unregister_service`` (Phase 6) — symmetric counterpart.
-* ``sandbox/fire_event`` (Phase 6) — push (no response). The sandbox
+* ``sandbox/unregister_service`` — symmetric counterpart.
+* ``sandbox/fire_event`` — push (no response). The sandbox
   forwards each ``<owned_domain>_*`` event so main listeners (notably
   ``automation``) can react as if the integration ran locally.
-* ``sandbox/store_load`` (Phase 8) — sandbox-side ``Store.async_load``
+* ``sandbox/store_load`` — sandbox-side ``Store.async_load``
   proxies to this RPC. Payload ``{"key": str}``; response is the wrapped
   ``{"version", "minor_version", "key", "data"}`` dict the sandbox last
   saved, or ``None`` if no data exists yet. The group is implicit from
   the channel — each :class:`SandboxBridge` only ever serves one group.
-* ``sandbox/store_save`` (Phase 8) — sandbox-side ``Store`` flush.
+* ``sandbox/store_save`` — sandbox-side ``Store`` flush.
   Payload ``{"key": str, "data": dict}``; main writes the wrapped dict
   to ``<config>/.storage/sandbox/<group>/<key>`` atomically. Response
   is ``{"ok": True}``.
-* ``sandbox/store_remove`` (Phase 8) — sandbox-side
+* ``sandbox/store_remove`` — sandbox-side
   ``Store.async_remove``. Payload ``{"key": str}``; main unlinks the
   file (if any). Response is ``{"ok": True}``.
 
-Main → Sandbox shutdown (Phase 9):
+Main → Sandbox shutdown:
 
 * ``sandbox/shutdown`` — ask the runtime to unload its entries, dump
   ``RestoreEntity`` state, fire ``EVENT_HOMEASSISTANT_FINAL_WRITE`` so any

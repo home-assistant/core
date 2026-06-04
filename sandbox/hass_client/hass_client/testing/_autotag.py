@@ -11,8 +11,7 @@ classifies the entry's domain and, if it routes to a sandbox group,
 sets :attr:`ConfigEntry.sandbox` to the matching group name before
 the original ``add_to_hass`` adds it to the manager. Setting the
 field rather than mutating ``entry.data`` keeps the autotag invisible
-to integration tests that assert on data contents (the Phase 17 fix
-the BACKLOG had as the single highest-leverage gap).
+to integration tests that assert on data contents.
 
 The classifier here is a synchronous filesystem-only re-implementation
 of :func:`homeassistant.components.sandbox.classifier.classify`.

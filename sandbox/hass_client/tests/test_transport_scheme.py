@@ -1,4 +1,4 @@
-"""Runtime-side transport selection + unix channel (transport T3).
+"""Runtime-side transport selection + unix channel.
 
 The HA Core suite owns the manager-driven subprocess coverage. These
 tests pin the runtime side: ``--url`` scheme → transport kind, the

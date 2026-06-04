@@ -1,4 +1,4 @@
-"""Sandbox-side service-registration mirror (Phase 6).
+"""Sandbox-side service-registration mirror.
 
 Watches ``EVENT_SERVICE_REGISTERED`` / ``EVENT_SERVICE_REMOVED`` on the
 sandbox bus. For each registration whose domain is in
@@ -6,7 +6,7 @@ sandbox bus. For each registration whose domain is in
 main with the metadata main needs to install a forwarding handler. Same
 shape for removals via ``sandbox/unregister_service``.
 
-Schemas are intentionally not serialised in Phase 6 — the sandbox is the
+Schemas are intentionally not serialised — the sandbox is the
 authoritative validator (the call comes back over
 ``sandbox/call_service`` and is run through ``services.async_call``
 on the sandbox side, where the real schema lives). Main only needs

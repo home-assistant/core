@@ -1,4 +1,4 @@
-"""Tests for the Phase 6 :class:`ApprovedDomains` gate."""
+"""Tests for the :class:`ApprovedDomains` gate."""
 
 from hass_client.approved_domains import ApprovedDomains
 

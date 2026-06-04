@@ -1,4 +1,4 @@
-"""Phase 3 tests for the sandbox lifecycle manager.
+"""Tests for the sandbox lifecycle manager.
 
 These exercise the real subprocess machinery — the runtime entry point at
 ``python -m hass_client.sandbox`` is spawned for the happy path; the

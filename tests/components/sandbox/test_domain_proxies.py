@@ -1,4 +1,4 @@
-"""Per-domain smoke tests for the 28 Phase-13 proxy entities.
+"""Per-domain smoke tests for the 28 proxy entities.
 
 Each parametrised case:
 
@@ -11,7 +11,7 @@ Each parametrised case:
    ``sandbox/call_service`` RPC carries the expected ``(domain,
    service)`` plus an entity-targeted target list.
 
-The 4 proxies that already shipped in Phase 5 (light / switch / sensor /
+The 4 "rich" proxies (light / switch / sensor /
 binary_sensor) have dedicated coverage in ``test_bridge.py``; this file
 holds the 28 additions plus ``scene`` (which is in ``ALWAYS_MAIN`` but
 still ships a proxy for symmetry).
@@ -381,7 +381,7 @@ async def test_phase13_proxy_smoke(
     method_kwargs: dict[str, Any],
     expected_service: str,
 ) -> None:
-    """Each Phase-13 proxy registers, accepts state, and translates a method."""
+    """Each proxy registers, accepts state, and translates a method."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
 
     calls: list[pb.CallService] = []

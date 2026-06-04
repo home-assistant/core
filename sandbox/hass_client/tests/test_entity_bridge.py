@@ -1,4 +1,4 @@
-"""Phase 5 tests for :class:`hass_client.entity_bridge.EntityBridge`.
+"""Tests for :class:`hass_client.entity_bridge.EntityBridge`.
 
 The bridge listens for ``EVENT_STATE_CHANGED`` on the sandbox-private
 :class:`HomeAssistant`. We drive it by registering a fake entity into a

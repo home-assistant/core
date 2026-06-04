@@ -1,4 +1,4 @@
-"""Phase 6 tests for :class:`hass_client.service_mirror.ServiceMirror`.
+"""Tests for :class:`hass_client.service_mirror.ServiceMirror`.
 
 Drives the mirror against a real sandbox-private :class:`HomeAssistant`
 (via :class:`hass_client.flow_runner.FlowRunner`) and an in-memory

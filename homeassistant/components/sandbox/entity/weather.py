@@ -25,7 +25,7 @@ class SandboxWeatherEntity(SandboxProxyEntity, WeatherEntity):
 
     Forecasts are computed by the sandbox-side ``WeatherEntity`` and
     pushed through the ``weather.get_forecasts`` service path, not over
-    the entity-method bridge — Phase 13 only proxies the condition +
+    the entity-method bridge — the proxy only mirrors the condition +
     instantaneous attributes.
     """
 

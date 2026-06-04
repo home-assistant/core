@@ -2,7 +2,7 @@
 
 Pairs with ``categorize_failures.py``. Reads ``BACKLOG_FAILURES.json``
 (``{bucket → {integration → [{node_id, excerpt}]}}``) and writes the
-section-per-bucket Markdown the Phase 16 spec asks for.
+section-per-bucket Markdown backlog.
 
 The "Proposed fix" stub is intentionally left as a TODO marker per
 section — that field needs human judgement (file paths, rough size,
@@ -38,55 +38,56 @@ BUCKET_BLURB: dict[str, str] = {
         " a snapshot that pre-dates the tag. Not a sandbox bridge bug."
     ),
     "proxy-missing": (
-        "Phase 13 shipped proxies for all 32 entity domains. Any hit here"
+        "The bridge ships proxies for all 32 entity domains. Any hit here"
         " means the integration registers an entity in a domain the bridge"
         " doesn't recognise — either a new domain landed in HA Core or the"
         " dispatch map missed one."
     ),
     "data-schema-stripped": (
-        "Phase 14 added a `voluptuous_serialize`-based round-trip so flow"
+        "The bridge does a `voluptuous_serialize`-based round-trip so flow"
         " schemas survive the bridge. Any hit here means a `vol.Schema`"
         " shape the serializer can't represent (custom validators, untagged"
         " `vol.Any`, etc.)."
     ),
     "service-schema-missing": (
         "Mirror of `data-schema-stripped` for `hass.services.async_register`."
-        " Phase 14 ships the same bridge for service schemas; gaps here are"
+        " The same bridge serialises service schemas; gaps here are"
         " edge cases (custom validators, schema-on-the-fly registrations)."
     ),
     "unique-id-not-propagated": (
-        "Phase 14 marshals `flow.context['unique_id']` into the proxy. Hits"
+        "The bridge marshals `flow.context['unique_id']` into the proxy. Hits"
         " here are flow shapes that set unique_id outside the standard"
         " `async_set_unique_id` path (e.g. discovery flows that abort"
         " inside `async_step_user`)."
     ),
     "restore-state-not-applied": (
-        "Phase 9 warm-loads `RestoreStateData` from"
+        "The runtime warm-loads `RestoreStateData` from"
         " `<config>/.storage/sandbox/<group>/core.restore_state`. Hits"
         " here mean an integration's restore-state assertion fires before"
         " the warm-load completes, or expects state the previous run never"
         " persisted."
     ),
     "context-not-propagated": (
-        "Phase 6 forwards events with the sandbox-side `context_id` but does"
-        " NOT honour it for main's user/origin resolution. Integration tests"
+        "The event mirror forwards events with the sandbox-side `context_id`"
+        " but does NOT honour it for main's user/origin resolution. Integration"
+        " tests"
         " that assert on `context.user_id` or `context.parent_id` fail here."
         " Carrying a richer Context shape is post-v2 work."
     ),
     "re-entrant-channel": (
-        "Phase 12 made the channel dispatcher concurrent so a handler can"
+        "The channel dispatcher is concurrent so a handler can"
         " issue `channel.call(...)`. Hits here mean a re-entrant shape we"
         " haven't seen — the semaphore cap might be too aggressive, or a"
         " handler chain exceeds the in-flight ceiling."
     ),
     "store-key-rejected": (
-        "Phase 8's `RemoteStore` validator rejects keys containing `/`, `\\`,"
+        "The `RemoteStore` validator rejects keys containing `/`, `\\`,"
         " NUL, `.`, or `..`. An integration using one of those characters"
         " trips this. Probably wants a translation step on the sandbox side"
         " rather than relaxing the validator."
     ),
     "flow-step-not-async": (
-        "Phase 4's flow proxy expects every step on the integration's"
+        "The flow proxy expects every step on the integration's"
         " `ConfigFlow` to be an async coroutine. A sync step would emit a"
         " `coroutine 'async_step_*' was never awaited` warning that this"
         " bucket catches."
@@ -97,7 +98,7 @@ BUCKET_BLURB: dict[str, str] = {
         " has a bug or the platform-set should grow."
     ),
     "non-idempotent-service-handler": (
-        "The `ai_task`/`image` shape Phase 1 surfaced — the service handler"
+        "The `ai_task`/`image` shape — the service handler"
         " does material work before calling the entity method. Today's"
         " resolution is `ALWAYS_MAIN`; integrations that hit this should"
         " join that set or sandbox-handler interception needs designing"
@@ -144,12 +145,12 @@ def _bucket_priority(name: str) -> int:
 def render_backlog(payload: dict[str, dict[str, list[dict[str, str]]]]) -> str:
     """Render the BACKLOG.md draft."""
     lines: list[str] = [
-        "# Sandbox — Phase 16 backlog",
+        "# Sandbox — compat sweep backlog",
         "",
         "**Auto-generated draft** from `BACKLOG_FAILURES.json`."
         " `generate_backlog.py` writes the skeleton; the *Proposed fix* and"
         " *Estimated size* lines need human curation before this lands as the"
-        " final Phase 16 deliverable.",
+        " final deliverable.",
         "",
         "Sections are ordered by integration count (largest first). Within"
         " each section the affected-integration roll-up is capped at 10 — the"

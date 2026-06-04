@@ -1,4 +1,4 @@
-"""Phase 1 entity-bridge spike.
+"""Entity-bridge spike.
 
 Two protocols are implemented in parallel:
 

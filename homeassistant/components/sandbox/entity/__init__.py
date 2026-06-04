@@ -7,9 +7,8 @@ service-handler kwarg filtering (``light.filter_turn_on_params``,
 ``climate`` schema validation, …) and frontend rendering see the same
 shape they would for a local entity.
 
-Phase 5 ships proxies for the small "rich" set the spike and tests
-exercise. The remaining domains from the v1 list use the same mechanical
-pattern — see ``plan.md`` Phase 5's deferral note.
+A small "rich" set of domains ships typed proxies; the remaining
+domains use the same mechanical pattern.
 """
 
 import contextlib
