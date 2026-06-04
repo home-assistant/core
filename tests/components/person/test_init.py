@@ -236,18 +236,19 @@ async def test_setup_two_trackers(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    # Router tracker at home with gps_accuracy — the person entity gets latitude,
-    # longitude and accuracy from the home zone (the coordinates source), not
-    # from the router tracker's own attributes.
+    # Router tracker at home — the person entity gets latitude, longitude and
+    # accuracy from the home zone (the coordinates source), not from the router
+    # tracker's own attributes. `in_zones`, however, is propagated from the
+    # source tracker.
     # Note: a router tracker would not really have gps_accuracy; it is set here
-    # (together with in_zones=["zone.fake"]) only to assert it is NOT propagated.
+    # only to assert it is NOT propagated.
     hass.states.async_set(
         DEVICE_TRACKER,
         "home",
         {
             ATTR_SOURCE_TYPE: SourceType.ROUTER,
             ATTR_GPS_ACCURACY: 99,
-            ATTR_IN_ZONES: ["zone.fake"],
+            ATTR_IN_ZONES: ["zone.home"],
         },
     )
     await hass.async_block_till_done()
@@ -255,6 +256,7 @@ async def test_setup_two_trackers(
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes == expected_attributes | {
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 32.87336,
         ATTR_LONGITUDE: -117.22743,
         ATTR_SOURCE: DEVICE_TRACKER,
@@ -447,6 +449,7 @@ async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) ->
             _GPS_NOT_HOME,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER,
@@ -459,6 +462,7 @@ async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) ->
             _SCANNER_OFFICE,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER,
@@ -573,6 +577,7 @@ async def test_state_priority_overrides_recency(
             _ROUTER_HOME,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER_2,
