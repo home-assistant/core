@@ -73,6 +73,7 @@
       "state": {
         "docked": "Docked",
         "error": "[%key:common::state::error%]",
+        "idle": "[%key:common::state::idle%]",
         "mowing": "Mowing",
         "paused": "[%key:common::state::paused%]",
         "returning": "Returning"
@@ -91,6 +92,10 @@
     "start_mowing": {
       "description": "Starts a lawn mower's mowing task.",
       "name": "Start lawn mower"
+    },
+    "stop": {
+      "description": "Stops a lawn mower's current task.",
+      "name": "Stop lawn mower"
     }
   },
   "title": "Lawn mower",

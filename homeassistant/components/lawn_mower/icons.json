@@ -30,6 +30,9 @@
     },
     "start_mowing": {
       "service": "mdi:play"
+    },
+    "stop": {
+      "service": "mdi:stop"
     }
   },
   "triggers": {
