@@ -14,7 +14,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
 )
-from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_GPS_ACCURACY,
@@ -460,7 +459,7 @@ class Person(
         """Register device trackers."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
-            self._parse_source_state(state, state)
+            self._parse_source_state(state)
 
         if self.hass.is_running:
             # Update person now if hass is already running.
@@ -510,7 +509,7 @@ class Person(
     @callback
     def _update_state(self) -> None:
         """Update the state."""
-        latest_non_gps_home = latest_not_home = latest_gps = latest = coordinates = None
+        latest_non_gps_home = latest_not_home = latest_gps = latest = None
         for entity_id in self._config[CONF_DEVICE_TRACKERS]:
             state = self.hass.states.get(entity_id)
 
@@ -526,23 +525,13 @@ class Person(
 
         if latest_non_gps_home:
             latest = latest_non_gps_home
-            if (
-                latest_non_gps_home.attributes.get(ATTR_LATITUDE) is None
-                and latest_non_gps_home.attributes.get(ATTR_LONGITUDE) is None
-                and (home_zone := self.hass.states.get(ENTITY_ID_HOME))
-            ):
-                coordinates = home_zone
-            else:
-                coordinates = latest_non_gps_home
         elif latest_gps:
             latest = latest_gps
-            coordinates = latest_gps
         else:
             latest = latest_not_home
-            coordinates = latest_not_home
 
-        if latest and coordinates:
-            self._parse_source_state(latest, coordinates)
+        if latest:
+            self._parse_source_state(latest)
         else:
             self._attr_state = None
             self._source = None
@@ -555,16 +544,16 @@ class Person(
         self.async_write_ha_state()
 
     @callback
-    def _parse_source_state(self, state: State, coordinates: State) -> None:
+    def _parse_source_state(self, state: State) -> None:
         """Parse source state and set person attributes.
 
         This is a device tracker state or the restored person state.
         """
         self._attr_state = state.state
         self._source = state.entity_id
-        self._latitude = coordinates.attributes.get(ATTR_LATITUDE)
-        self._longitude = coordinates.attributes.get(ATTR_LONGITUDE)
-        self._gps_accuracy = coordinates.attributes.get(ATTR_GPS_ACCURACY)
+        self._latitude = state.attributes.get(ATTR_LATITUDE)
+        self._longitude = state.attributes.get(ATTR_LONGITUDE)
+        self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
         self._in_zones = state.attributes.get(ATTR_IN_ZONES, [])
 
     @callback
