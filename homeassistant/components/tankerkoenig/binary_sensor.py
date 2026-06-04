@@ -1,6 +1,7 @@
 """Tankerkoenig binary sensor integration."""
 
 import logging
+from typing import Any
 
 from aiotankerkoenig import PriceInfo, Station, Status
 
@@ -53,11 +54,15 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         super().__init__(coordinator, station)
         self._station_id = station.id
         self._attr_unique_id = f"{station.id}_status"
-        attrs = {}
+        attrs: dict[str, Any] = {}
         if station.opening_times:
             attrs["opening_times"] = [
-                {"start": ot.start, "end": ot.end, "text": ot.text}
-                for ot in station.opening_times
+                {
+                    "start": opening_time.start,
+                    "end": opening_time.end,
+                    "text": opening_time.text,
+                }
+                for opening_time in station.opening_times
             ]
         if station.whole_day is not None:
             attrs["whole_day"] = station.whole_day
