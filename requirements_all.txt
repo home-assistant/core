@@ -1228,8 +1228,10 @@ hass-nabucasa==2.2.0
 hass-splunk==0.1.4
 
 # homeassistant.components.assist_satellite
-# homeassistant.components.conversation
 hassil==3.5.0
+
+# homeassistant.components.conversation
+hassil==3.6.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.2.1
