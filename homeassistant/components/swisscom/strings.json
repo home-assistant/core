@@ -1,0 +1,32 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Swisscom Internet-Box.",
+          "password": "The administrator password printed on the bottom of the box.",
+          "username": "The administrator username, normally \"admin\"."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_credentials_required": {
+      "description": "Configuring the {integration_title} integration through YAML is deprecated. The integration now requires a username and password to authenticate to your Internet-Box, which cannot be safely carried over from YAML.\n\nSet up the integration through the UI to provide your credentials (your existing host `{host}` will need to be re-entered), then remove the `{domain}` entry from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    }
+  }
+}
