@@ -1,7 +1,7 @@
 # Home Assistant Sandbox
 
-This directory is the home for the sandbox rewrite (renamed from its earlier
-`_v2` suffix once v1 was gone). The sandbox runs Home Assistant integrations in
+This directory is the home for the sandbox rewrite (it dropped its earlier
+versioned suffix once v1 was gone). The sandbox runs Home Assistant integrations in
 isolated subprocesses while main keeps a single unified view of devices,
 entities, services, and events.
 
@@ -43,7 +43,7 @@ second condition), as a deliberate call relying on git history for rollback.
   Kept as the design record for whenever the sandbox→main websocket
   actually lands (the credential is redesigned fresh then).
 - [`docs/design-share-states.md`](docs/design-share-states.md) —
-  design for the post-v2 state-sharing consumer that replaces the
+  design for the post-launch state-sharing consumer that replaces the
   Phase 7 `share_*` flags Phase 20 deleted. Covers entity_id
   alignment, the `share/subscribe_*` protocol, main-side filtering,
   and the open questions.
@@ -95,7 +95,7 @@ shipped + tested; the pip/egress runtime is not validated here.
 
 ## Core HA files modified (high-review surface)
 
-v2 touches three core HA surfaces. Each is intentional, small, and was
+the sandbox touches three core HA surfaces. Each is intentional, small, and was
 introduced by a specific phase — see the matching STATUS file for
 the rationale.
 
@@ -124,7 +124,7 @@ the rationale.
 
 Iron Law: do **not** monkey-patch private internals. v1's direct
 write to `EntityComponent._platforms` is the cautionary tale —
-v2 took the slightly bigger PR to add the public hook instead. The
+the sandbox took the slightly bigger PR to add the public hook instead. The
 Phase 8 `Store` rebinding was the same smell; plan-sandbox-context
 replaced it with the declared `current_sandbox` core HA hook.
 
@@ -145,7 +145,7 @@ took the codebase from Phase 11 to Phase 17. What's still open:
 - **v1 removal. DONE (2026-05-28).** The numeric gate (Phase 11) was cleared
   by Phase 17 (99.67 % full sweep, 99.97 % v1 baseline). v1 (`../sandbox/` +
   `../homeassistant/components/sandbox/` + `tests/components/sandbox/`) was
-  removed ahead of the "v2 shipped a stable release" condition, relying on git
+  removed ahead of the "the sandbox shipped a stable release" condition, relying on git
   history for rollback.
 - **Diagnostic snapshot drift / clock-pinning.** Phase 17's
   `BACKLOG.md` documents two test-side residuals: ~30 diagnostic
@@ -159,7 +159,7 @@ took the codebase from Phase 11 to Phase 17. What's still open:
   can't express server-side queries. Add a query-shaped RPC if the
   compat sweep ever surfaces an integration that needs them.
 - **Non-idempotent service handlers** (`ai_task`, `image`).
-  `ALWAYS_MAIN` punt for v2; v3 spec on service-handler-level
+  `ALWAYS_MAIN` punt for the sandbox; a future spec on service-handler-level
   interception or sandbox-aware integration hooks is the long-term
   fix. See the Phase 1 spike doc.
 - **Cross-sandbox in-process dependencies (ESPHome serial / BLE

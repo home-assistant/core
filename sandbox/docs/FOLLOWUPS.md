@@ -190,7 +190,7 @@ concurrency=6 (well inside the 30–90 min budget the plan called out).
 test-level. Categoriser hit rate 98.6 % (clearing the ≥95 % gate).
 **640 of 664 failures (96.4 %) are the same `__sandbox_group` autotag
 noise Phase 15 already flagged**, just amplified — the single highest-
-leverage fix in the entire v2 codebase. Two real bridge findings,
+leverage fix in the entire sandbox codebase. Two real bridge findings,
 both scoped to two integrations: `dependencies-not-shared` (10
 failures on `azure_event_hub` + `atag`) and `proxy-missing` (5
 failures on `atag`). Both turned out to be autotag perturbation in
@@ -225,7 +225,7 @@ after-hook fires too late). The fix that works is to attach
 `sandbox=<group>` to the `ConfigFlowResult` on the CREATE_ENTRY path so
 `ConfigEntriesFlowManager.async_finish_flow`'s entry constructor reads
 it via `result.get("sandbox")` — same plumbing shape `minor_version` /
-`options` / `subentries` already use. V2 read sites in `router.py` and
+`options` / `subentries` already use. Read sites in `router.py` and
 `proxy_flow.py` consult `entry.sandbox`; the autotag patch sets
 `entry.sandbox` via `object.__setattr__` instead of mutating
 `entry.data`. `SANDBOX_GROUP_KEY` is fully gone.
@@ -245,10 +245,10 @@ fixture perturbation, not real bridge bugs. 112 residual failures are
 that didn't pin the wall clock, 5 environmental rows from Phase 16.
 
 **Files.** Core HA: `config_entries.py` (additive field + flow-result
-plumbing). V2: `router.py` + `proxy_flow.py` + `_autotag.py` +
+plumbing). Sandbox: `router.py` + `proxy_flow.py` + `_autotag.py` +
 `categorize_failures.py`. Tests: `tests/common.py` (`MockConfigEntry`
 gets `sandbox=` kwarg) + 6 new `tests/test_config_entries.py` cases +
-v2 test updates. Reports: `COMPAT.md` + `COMPAT_FULL.md` + `BACKLOG.md`
+sandbox test updates. Reports: `COMPAT.md` + `COMPAT_FULL.md` + `BACKLOG.md`
 + `BACKLOG_FAILURES.json` + companion `.csv` files all regenerated.
 
 ---
@@ -304,11 +304,11 @@ freshly minted on each spawn — only the scoping disappears.
 one-token-per-system-user invariant instead of matching a scope set.
 Back-compat: the auth-store load path pops a legacy `scopes` key if
 present (option A — silent drop, no storage-version bump), covered by a
-regression test; v2 is unreleased so the only on-disk scoped tokens are
+regression test; the sandbox is unreleased so the only on-disk scoped tokens are
 dev machines on this branch.
 
 **Outcome.** Core HA's auth surface is back to its pre-Phase-7 shape; the
-v2 core-HA touch list shrinks from four surfaces to three.
+sandbox core-HA touch list shrinks from four surfaces to three.
 [`auth-scoping-decision.md`](auth-scoping-decision.md) is kept as a
 SUPERSEDED design record for the eventual re-introduction.
 
@@ -348,7 +348,7 @@ main → sandbox → back.
 
 **Outcome.** The sandbox provably cannot fabricate attribution: the wire
 carries only a `context_id` string, and main owns every `Context` it
-produces. The v2 core-HA touch list is unchanged (this is all inside the
+produces. The sandbox core-HA touch list is unchanged (this is all inside the
 integration + runtime). A richer audit answer — a `Context` group
 attribute — is left as a follow-up below.
 
@@ -404,7 +404,7 @@ for the per-failure-category remediation table.
   compat sweep ever surfaces an integration that depends on these
   surfaces.
 - **Non-idempotent service handlers** (`ai_task`, `image`).
-  `ALWAYS_MAIN` punt for v2; v3 spec on service-handler-level
+  `ALWAYS_MAIN` punt for the sandbox; a future spec on service-handler-level
   interception or sandbox-aware integration hooks. See the Phase 1
   spike doc.
 - **Cross-sandbox in-process dependencies (ESPHome serial / BLE

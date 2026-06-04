@@ -1525,7 +1525,7 @@
           the subprocess exits 0 on its own.
         </li>
         <li>
-          The reply lands in <code>SandboxV2Data</code>'s
+          The reply lands in <code>SandboxData</code>'s
           <code>on_shutdown_reply</code> callback, which writes
           <code>restore_state</code> to
           <code
@@ -2264,7 +2264,7 @@
         <code>run_compat.py</code> drives either plugin against a list of
         integration test directories, parses pytest's summary line, and writes
         <code>COMPAT.csv</code> + <code>COMPAT.md</code>. Per-failure output
-        lands in <code>${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}</code>.
+        lands in <code>${SANDBOX_ERRORS_DIR:-/tmp/sandbox_errors}</code>.
         <code>run_compat_full.py</code> drives it across all 807
         classifier-routable, config-entry-based integrations and captures JUnit
         per-test; <code>categorize_failures.py</code> buckets every failure into
