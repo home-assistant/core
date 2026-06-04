@@ -1,7 +1,5 @@
 """Support for Cielo Home sensors."""
 
-from dataclasses import dataclass
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -16,19 +14,13 @@ from .const import SENSOR_HUMIDITY, SENSOR_TEMPERATURE
 from .coordinator import CieloDataUpdateCoordinator, CieloHomeConfigEntry
 from .entity import CieloDeviceEntity
 
-
-@dataclass(frozen=True, kw_only=True)
-class CieloSensorEntityDescription(SensorEntityDescription):
-    """Describes a Cielo sensor entity."""
-
-
-SENSOR_DESCRIPTIONS: tuple[CieloSensorEntityDescription, ...] = (
-    CieloSensorEntityDescription(
+SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key=SENSOR_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    CieloSensorEntityDescription(
+    SensorEntityDescription(
         key=SENSOR_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -58,13 +50,13 @@ async def async_setup_entry(
 class CieloSensor(CieloDeviceEntity, SensorEntity):
     """Representation of a Cielo Home sensor."""
 
-    entity_description: CieloSensorEntityDescription
+    entity_description: SensorEntityDescription
 
     def __init__(
         self,
         coordinator: CieloDataUpdateCoordinator,
         device_id: str,
-        entity_description: CieloSensorEntityDescription,
+        entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, device_id)
