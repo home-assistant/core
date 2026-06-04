@@ -501,6 +501,12 @@
       "message": "This mower does not support work areas."
     }
   },
+  "issues": {
+    "invalid_mower": {
+      "description": "The mower \"{mower_name}\" cannot be added because Husqvarna reports it with invalid data. The mower is ignored by the integration.",
+      "title": "The mower {mower_name} cannot be added"
+    }
+  },
   "selector": {
     "override_modes": {
       "options": {
