@@ -1,6 +1,7 @@
 """The ViCare integration."""
 
 from contextlib import suppress
+from datetime import datetime, timedelta
 import logging
 import os
 
@@ -34,6 +35,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import MY_AUTH_CALLBACK_PATH
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .api import ConfigEntryAuth
@@ -49,6 +51,8 @@ from .types import ViCareConfigEntry, ViCareData, ViCareDevice
 from .utils import get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
+
+EMPTY_ACCOUNT_RECHECK_INTERVAL = timedelta(hours=6)
 
 
 async def async_migrate_entry(
@@ -172,12 +176,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
     if not entry.runtime_data.devices:
-        # All known devices reported `isOnline() == False`. This is common when
-        # the integration is set up while the Viessmann gateway is still booting
-        # (e.g. after a power outage). Raise so HA core retries setup with
-        # backoff instead of leaving the entry permanently empty until a manual
-        # reload.
-        raise ConfigEntryNotReady("No online ViCare devices found")
+        if not entry.runtime_data.client.devices:
+            # The account itself has no devices attached. This happens when a
+            # user sets up the integration before registering hardware in the
+            # ViCare app. Schedule a periodic reload so new devices are picked
+            # up later, but keep the cadence low so an account that stays empty
+            # does not hammer the API.
+            _LOGGER.info(
+                "ViCare account has no devices; re-checking every %s",
+                EMPTY_ACCOUNT_RECHECK_INTERVAL,
+            )
+
+            async def _reload_entry(_now: datetime) -> None:
+                await hass.config_entries.async_reload(entry.entry_id)
+
+            entry.async_on_unload(
+                async_track_time_interval(
+                    hass, _reload_entry, EMPTY_ACCOUNT_RECHECK_INTERVAL
+                )
+            )
+            return True
+        # Devices exist on the account but every one reports
+        # `isOnline() == False`. Typical cause: the integration is set up while
+        # the Viessmann gateway is still booting (e.g. after a power outage)
+        # and HA was back faster than the gateway. Raise so HA core retries
+        # setup with its usual backoff instead of leaving the entry
+        # permanently empty until a manual reload.
+        raise ConfigEntryNotReady("All ViCare devices are currently offline")
 
     for device in entry.runtime_data.devices:
         # Migration can be removed in 2025.4.0

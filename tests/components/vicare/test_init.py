@@ -317,12 +317,15 @@ async def test_setup_entry_invalid_credentials(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_entry_no_online_devices(
+async def test_setup_entry_all_devices_offline(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup raises ConfigEntryNotReady when no devices are online."""
+    """Test setup raises ConfigEntryNotReady when all known devices are offline."""
     mock_config_entry.add_to_hass(hass)
+
+    client = Mock()
+    client.devices = [Mock()]  # account has at least one device, but all offline
 
     with (
         patch(
@@ -330,13 +333,38 @@ async def test_setup_entry_no_online_devices(
         ),
         patch(
             f"{MODULE}._setup_vicare_api",
-            return_value=ViCareData(client=Mock(), devices=[]),
+            return_value=ViCareData(client=client, devices=[]),
         ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_empty_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup completes when the account has no devices, then reloads later."""
+    mock_config_entry.add_to_hass(hass)
+
+    client = Mock()
+    client.devices = []  # truly empty ViCare account
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=ViCareData(client=client, devices=[]),
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_entry_invalid_configuration(
