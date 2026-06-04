@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
     await coordinator.async_config_entry_first_refresh()
 
     # Start websocket listener for push updates
-    coordinator.start_websocket()
+    await coordinator.start_websocket()
 
     entry.runtime_data = coordinator
 
