@@ -429,6 +429,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
+        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
+        stop_tilt_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
         key=UIClass.ROLLER_SHUTTER,
@@ -849,6 +852,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         target_value = target_closure.value_as_int
 
         if current_value is None or target_value is None:
+            return None
+
+        if current_value in (_POSITION_MY, _POSITION_UNKNOWN):
             return None
 
         return current_value - target_value

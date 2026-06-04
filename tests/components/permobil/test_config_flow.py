@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.permobil import config_flow
+from homeassistant.components.permobil.const import DOMAIN
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_REGION, CONF_TOKEN, CONF_TTL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -276,7 +277,7 @@ async def test_config_flow_reauth_success(
     my_permobil.request_application_token.return_value = reauth_token
 
     mock_entry = MockConfigEntry(
-        domain="permobil",
+        domain=DOMAIN,
         data=VALID_DATA,
     )
     mock_entry.add_to_hass(hass)
@@ -316,7 +317,7 @@ async def test_config_flow_reauth_fail_invalid_code(
     reauth_invalid_code = "567890"  # pretend this code is invalid/incorrect
     my_permobil.request_application_token.side_effect = MyPermobilAPIException
     mock_entry = MockConfigEntry(
-        domain="permobil",
+        domain=DOMAIN,
         data=VALID_DATA,
     )
     mock_entry.add_to_hass(hass)
@@ -348,7 +349,7 @@ async def test_config_flow_reauth_fail_code_request(
     """Test the config flow reauth."""
     my_permobil.request_application_code.side_effect = MyPermobilAPIException
     mock_entry = MockConfigEntry(
-        domain="permobil",
+        domain=DOMAIN,
         data=VALID_DATA,
     )
     mock_entry.add_to_hass(hass)
