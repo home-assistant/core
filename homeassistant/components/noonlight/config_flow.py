@@ -1,13 +1,11 @@
 """Config flow for the Noonlight integration."""
 
-import logging
 from typing import Any
 
 from noonlight_dispatch import (
     NoonlightAuthError,
     NoonlightClient,
     NoonlightConnectionError,
-    NoonlightError,
     NoonlightResponseError,
 )
 import voluptuous as vol
@@ -23,8 +21,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class _CannotConnect(Exception):
@@ -53,8 +49,6 @@ async def _validate_credentials(hass: HomeAssistant, token: str) -> None:
     except NoonlightResponseError as err:
         if err.status_code != 404:
             raise _CannotConnect from err
-    except NoonlightError as err:
-        _LOGGER.debug("Noonlight validation probe returned: %s", err)
 
 
 class NoonlightConfigFlow(ConfigFlow, domain=DOMAIN):

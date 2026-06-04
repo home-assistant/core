@@ -35,3 +35,21 @@ async def test_api_reachable_off_when_unauthorized(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == "off"
+
+
+@respx.mock
+async def test_api_reachable_on_when_probe_succeeds(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A 2xx probe (reachable + authorized) reports the sensor on."""
+    respx.get(url__regex=STATUS_RE).mock(
+        return_value=Response(200, json={"status": "ACTIVE"})
+    )
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
