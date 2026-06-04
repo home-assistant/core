@@ -236,7 +236,7 @@ aiocomelit==2.0.3
 aiodhcpwatcher==1.2.7
 
 # homeassistant.components.dhcp
-aiodiscover==3.2.4
+aiodiscover==3.3.1
 
 # homeassistant.components.dnsip
 aiodns==4.0.4
@@ -733,7 +733,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==1.1.1
+cached-ipaddress==1.1.2
 
 # homeassistant.components.caldav
 caldav==2.1.0
@@ -1326,7 +1326,7 @@ icalendar==6.3.1
 icmplib==3.0.4
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.6.5
+idasen-ha==2.7.0
 
 # homeassistant.components.idrive_e2
 idrive-e2-client==0.1.1
