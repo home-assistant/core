@@ -126,4 +126,43 @@ async def test_temperature_sensor_fahrenheit_unit(
 
     state = hass.states.get("sensor.living_room_living_room_temperature")
     assert state is not None
+    assert state.state == "22"
     assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
+
+
+async def test_temperature_sensor_unknown_unit_defaults_to_celsius(
+    hass: HomeAssistant,
+    mock_cielo_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_cielo_device_api: MagicMock,
+) -> None:
+    """Test temperature sensor defaults to Celsius when device reports unknown unit."""
+    mock_cielo_device_api.temperature_unit.return_value = "unknown"
+
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.living_room_living_room_temperature")
+    assert state is not None
+    assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.CELSIUS
+
+
+async def test_temperature_sensor_none_unit_defaults_to_celsius(
+    hass: HomeAssistant,
+    mock_cielo_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_cielo_device_api: MagicMock,
+) -> None:
+    """Test temperature sensor defaults to Celsius when device reports no unit."""
+    mock_cielo_device_api.temperature_unit.return_value = None
+
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.living_room_living_room_temperature")
+    assert state is not None
+    assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.CELSIUS
