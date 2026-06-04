@@ -59,11 +59,8 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
-    ATTR_LIVE_ACTIVITY_EXPIRES_AT,
-    ATTR_LIVE_ACTIVITY_TAG,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
-    ATTR_PUSH_TOKEN,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
     ATTR_SENSOR_DISABLED,
@@ -112,7 +109,7 @@ from .helpers import (
     safe_registration,
     webhook_response,
 )
-from .live_activity import remove_live_activity_token, store_live_activity_token
+from .live_activity.webhook import register_live_activity_webhook_commands
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,6 +169,9 @@ def validate_schema(schema):
         return validate_and_run
 
     return wrapper
+
+
+register_live_activity_webhook_commands(WEBHOOK_COMMANDS, validate_schema)
 
 
 async def handle_webhook(
@@ -775,53 +775,4 @@ async def webhook_scan_tag(
         hass.data[DOMAIN][DATA_DEVICES][config_entry.data[CONF_WEBHOOK_ID]].id,
         registration_context(config_entry.data),
     )
-    return empty_okay_response()
-
-
-@WEBHOOK_COMMANDS.register("live_activity_token")
-@validate_schema(
-    {
-        vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
-        vol.Required(ATTR_PUSH_TOKEN): cv.string,
-        vol.Required(ATTR_LIVE_ACTIVITY_EXPIRES_AT): cv.positive_float,
-    }
-)
-async def webhook_update_live_activity_token(
-    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
-) -> Response:
-    """Store a Live Activity APNs token sent by the iOS app."""
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    store_live_activity_token(
-        hass,
-        webhook_id,
-        data[ATTR_LIVE_ACTIVITY_TAG],
-        data[ATTR_PUSH_TOKEN],
-        data[ATTR_LIVE_ACTIVITY_EXPIRES_AT],
-    )
-
-    return empty_okay_response()
-
-
-@WEBHOOK_COMMANDS.register("live_activity_dismissed")
-@validate_schema(
-    {
-        vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
-    }
-)
-async def webhook_live_activity_dismissed(
-    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, str]
-) -> Response:
-    """Remove a stored Live Activity token when the activity ends on device."""
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
-
-    if not remove_live_activity_token(hass, webhook_id, activity_tag):
-        # Typically means the token already expired via the cleanup loop or
-        # the activity predates this code shipping — both expected, not a bug.
-        _LOGGER.debug(
-            "Received live_activity_dismissed for tag %s but no tokens stored for webhook %s",
-            activity_tag,
-            webhook_id,
-        )
-
     return empty_okay_response()
