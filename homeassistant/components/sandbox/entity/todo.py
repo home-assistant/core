@@ -32,10 +32,10 @@ class SandboxTodoListEntity(SandboxProxyEntity, TodoListEntity):
     @property
     def todo_items(self) -> list[TodoItem] | None:
         """Item iteration happens on the sandbox side; do not proxy items."""
-        # The Phase-13 proxy only mirrors state + service calls. Listing
-        # items is a server-side query that needs the same bridge plumbing
-        # ``calendar`` does and is deferred until those operations get a
-        # cross-process protocol (out of scope for this phase).
+        # The proxy only mirrors state + service calls. Listing items is a
+        # server-side query that needs the same bridge plumbing ``calendar``
+        # does and is deferred until those operations get a cross-process
+        # protocol.
         return None
 
     async def async_create_todo_item(self, item: TodoItem) -> None:

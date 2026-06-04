@@ -1,4 +1,4 @@
-"""Phase 19 tests — device_info bridging from the sandbox to main's registries."""
+"""Tests — device_info bridging from the sandbox to main's registries."""
 
 from typing import Any
 
@@ -180,7 +180,7 @@ async def test_area_assignment_propagates_to_proxy(
     assert device is not None
     dr.async_get(hass).async_update_device(device.id, area_id=area.id)
     # The proxy's entity_registry entry inherits area through HA's standard
-    # device → entity area-resolution path (no Phase 19 code involvement).
+    # device → entity area-resolution path (no sandbox code involvement).
     refreshed_device = dr.async_get(hass).async_get(device.id)
     assert refreshed_device is not None
     assert refreshed_device.area_id == area.id

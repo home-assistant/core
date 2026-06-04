@@ -13,7 +13,7 @@ class SandboxCalendarEntity(SandboxProxyEntity, CalendarEntity):
 
     Calendar service calls go through the standard ``calendar.*`` service
     handlers; the listing/iteration APIs are server-side queries we don't
-    proxy in Phase 13 (no test infra exercises them yet).
+    proxy (no test infra exercises them yet).
     """
 
     @property

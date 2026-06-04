@@ -1,4 +1,4 @@
-"""Phase 9 tests for graceful shutdown orchestration.
+"""Tests for graceful shutdown orchestration.
 
 The main side spawns the real ``python -m hass_client.sandbox``
 runtime, calls :meth:`SandboxManager.async_graceful_shutdown_all`, and

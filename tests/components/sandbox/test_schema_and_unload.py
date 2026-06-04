@@ -1,6 +1,6 @@
-"""Phase 14 follow-ups for sandbox.
+"""Schema bridging, unique_id propagation, and the unload hook.
 
-Covers four pieces that Phase 5 / 6 deferred and Phase 14 fills in:
+Covers four pieces:
 
 * The serialised :class:`vol.Schema` bridge for flow forms and mirrored
   services (the proxy reconstructs a usable schema from the wire shape).
@@ -99,14 +99,14 @@ def _wired_sandbox(
 
 @pytest.fixture
 def ignore_translations_for_mock_domains() -> list[str]:
-    """Suppress strings.json checks for the Phase 14 mock domains."""
+    """Suppress strings.json checks for the mock domains."""
     return [
-        "phase14_schema",
-        "phase14_unique",
-        "phase14_duplicate",
-        "phase14_unload",
-        "phase14_local",
-        "phase14_svc",
+        "mock_schema",
+        "mock_unique",
+        "mock_duplicate",
+        "mock_unload",
+        "mock_local",
+        "mock_svc",
     ]
 
 
@@ -214,14 +214,14 @@ async def test_flow_form_renders_reconstructed_schema(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
     """A FORM with a serialised data_schema arrives on main with the schema."""
-    mock_integration(hass, MockModule("phase14_schema"))
+    mock_integration(hass, MockModule("mock_schema"))
     serialized_schema = [
         {"name": "host", "type": "string", "required": True},
     ]
     form = pb.FlowResult(
         type=FlowResultType.FORM.value,
         flow_id="sandbox-flow-schema",
-        handler="phase14_schema",
+        handler="mock_schema",
         step_id="user",
     )
     form.data_schema.extend(serialized_schema)
@@ -236,7 +236,7 @@ async def test_flow_form_renders_reconstructed_schema(
     ):
         await _install_router(hass, manager)
         result = await hass.config_entries.flow.async_init(
-            "phase14_schema", context={"source": SOURCE_USER}
+            "mock_schema", context={"source": SOURCE_USER}
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -258,7 +258,7 @@ async def test_register_service_with_schema_validates_on_main(
 ) -> None:
     """Sandbox-mirrored service uses its reconstructed schema on main calls."""
     main_channel, sandbox_channel = make_channel_pair(
-        name_a="main-phase14", name_b="sandbox-phase14"
+        name_a="main-mock", name_b="sandbox-mock"
     )
     bridge = SandboxBridge(hass, group="built-in", channel=main_channel)
     main_channel.start()
@@ -277,7 +277,7 @@ async def test_register_service_with_schema_validates_on_main(
     ]
 
     register_service = pb.RegisterService(
-        domain="phase14_svc",
+        domain="mock_svc",
         service="do_thing",
         supports_response="none",
     )
@@ -291,12 +291,12 @@ async def test_register_service_with_schema_validates_on_main(
 
         with pytest.raises(vol.Invalid):
             await hass.services.async_call(
-                "phase14_svc", "do_thing", {"wrong": "field"}, blocking=True
+                "mock_svc", "do_thing", {"wrong": "field"}, blocking=True
             )
         assert seen == []
 
         await hass.services.async_call(
-            "phase14_svc", "do_thing", {"host": "1.2.3.4"}, blocking=True
+            "mock_svc", "do_thing", {"host": "1.2.3.4"}, blocking=True
         )
         assert len(seen) == 1
         assert struct_to_dict(seen[0].service_data) == {"host": "1.2.3.4"}
@@ -315,11 +315,11 @@ async def test_unique_id_propagates_to_proxy_context(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
     """A sandbox-side ``unique_id`` is mirrored onto the proxy's context."""
-    mock_integration(hass, MockModule("phase14_unique"))
+    mock_integration(hass, MockModule("mock_unique"))
     form = pb.FlowResult(
         type=FlowResultType.FORM.value,
         flow_id="sandbox-flow-uid",
-        handler="phase14_unique",
+        handler="mock_unique",
         step_id="user",
     )
     form.context.update({"source": SOURCE_USER, "unique_id": "abc-123"})
@@ -334,11 +334,11 @@ async def test_unique_id_propagates_to_proxy_context(
     ):
         await _install_router(hass, manager)
         result = await hass.config_entries.flow.async_init(
-            "phase14_unique", context={"source": SOURCE_USER}
+            "mock_unique", context={"source": SOURCE_USER}
         )
         # The framework now reads unique_id off the proxy's context;
         # ``async_progress_by_handler`` surfaces it for duplicate checks.
-        progress = hass.config_entries.flow.async_progress_by_handler("phase14_unique")
+        progress = hass.config_entries.flow.async_progress_by_handler("mock_unique")
 
     assert result["type"] is FlowResultType.FORM
     assert len(progress) == 1
@@ -349,11 +349,11 @@ async def test_duplicate_unique_id_aborts_second_flow(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
     """A second flow with the same propagated unique_id aborts on main."""
-    mock_integration(hass, MockModule("phase14_duplicate"))
+    mock_integration(hass, MockModule("mock_duplicate"))
     form_a = pb.FlowResult(
         type=FlowResultType.FORM.value,
         flow_id="sandbox-flow-dup-a",
-        handler="phase14_duplicate",
+        handler="mock_duplicate",
         step_id="user",
     )
     form_a.context.update({"source": SOURCE_USER, "unique_id": "dup-1"})
@@ -361,7 +361,7 @@ async def test_duplicate_unique_id_aborts_second_flow(
     form_b = pb.FlowResult(
         type=FlowResultType.FORM.value,
         flow_id="sandbox-flow-dup-b",
-        handler="phase14_duplicate",
+        handler="mock_duplicate",
         step_id="user",
     )
     form_b.context.update({"source": SOURCE_USER, "unique_id": "dup-1"})
@@ -376,13 +376,13 @@ async def test_duplicate_unique_id_aborts_second_flow(
     ):
         await _install_router(hass, manager)
         first = await hass.config_entries.flow.async_init(
-            "phase14_duplicate", context={"source": SOURCE_USER}
+            "mock_duplicate", context={"source": SOURCE_USER}
         )
         # The framework's duplicate-detection guard fires inside the
         # second `async_init`. See `_check_in_progress_by_unique_id`.
         try:
             second = await hass.config_entries.flow.async_init(
-                "phase14_duplicate", context={"source": SOURCE_USER}
+                "mock_duplicate", context={"source": SOURCE_USER}
             )
         except AbortFlow as err:
             second = {
@@ -406,7 +406,7 @@ async def test_async_unload_consults_router_for_sandboxed_entry(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
     """ConfigEntries.async_unload calls the router for sandbox-tagged entries."""
-    mock_integration(hass, MockModule("phase14_unload"))
+    mock_integration(hass, MockModule("mock_unload"))
     with (
         _wired_sandbox(manager, group="built-in", responses=[]) as stub,
         patch(
@@ -416,7 +416,7 @@ async def test_async_unload_consults_router_for_sandboxed_entry(
     ):
         await _install_router(hass, manager)
         entry = MockConfigEntry(
-            domain="phase14_unload",
+            domain="mock_unload",
             data={"host": "1.2.3.4"},
             sandbox="built-in",
         )
@@ -444,11 +444,11 @@ async def test_async_unload_falls_through_for_non_sandboxed_entry(
 
     mock_integration(
         hass,
-        MockModule("phase14_local", async_unload_entry=_async_unload_entry),
+        MockModule("mock_local", async_unload_entry=_async_unload_entry),
     )
     await _install_router(hass, manager)
 
-    entry = MockConfigEntry(domain="phase14_local", data={"host": "1.2.3.4"})
+    entry = MockConfigEntry(domain="mock_local", data={"host": "1.2.3.4"})
     entry.add_to_hass(hass)
     # Mark loaded directly; we're not exercising async_setup here.
     entry.mock_state(hass, ConfigEntryState.LOADED)

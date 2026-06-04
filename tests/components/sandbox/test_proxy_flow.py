@@ -156,8 +156,8 @@ async def test_full_flow_user_to_create_entry(
     assert struct_to_dict(stub.step_calls[0].user_input) == {"host": "1.2.3.4"}
 
     # The new ConfigEntry is tagged with the sandbox group via the
-    # ConfigEntry.sandbox first-class field (Phase 17 — keeps the tag
-    # off entry.data where integration tests assert on it).
+    # ConfigEntry.sandbox first-class field (keeps the tag off entry.data
+    # where integration tests assert on it).
     entries = hass.config_entries.async_entries("test_proxy_full")
     assert len(entries) == 1
     assert entries[0].sandbox == "built-in"

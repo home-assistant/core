@@ -1,4 +1,4 @@
-"""Phase 3 client-side tests for ``hass_client.sandbox``.
+"""Client-side tests for ``hass_client.sandbox``.
 
 The HA Core test suite owns the integration-level coverage (subprocess
 spawn, restart budget, multi-group). These tests pin the runtime's
@@ -50,9 +50,9 @@ async def test_runtime_starts_in_locked_down_sharing_posture(
 ) -> None:
     """The sandbox HA sees only its own entities — no subscription to main.
 
-    Phase 20 dropped the unwired ``share_*`` config surface; the
-    locked-down posture is now a property of the runtime itself rather
-    than a config flag. See ``sandbox/docs/design-share-states.md``
+    There is no ``share_*`` config surface; the locked-down posture is
+    a property of the runtime itself rather than a config flag. See
+    ``sandbox/docs/design-share-states.md``
     for the future opt-in design.
     """
     runtime = SandboxRuntime(
@@ -87,7 +87,7 @@ async def test_runtime_shuts_down_on_request(
         url="ws://x",
         group="built-in",
         # Pytest captures stdin/stdout; skip channel setup for this
-        # in-process shutdown test (Phase 4 covers the real stdio path
+        # in-process shutdown test (the real stdio path is covered
         # via the manager-driven subprocess tests).
         channel_factory=_noop_channel_factory,
     )

@@ -1,4 +1,4 @@
-"""Phase 1 spike — compare Options A and B on a 100-light area call.
+"""Entity-bridge spike — compare Options A and B on a 100-light area call.
 
 Each test:
 
@@ -107,7 +107,7 @@ async def test_option_a_correctness_and_latency(
     """Option A: method-forward RPC must work and stay under the budget."""
     result = await _measure("A", main_hass, sandbox_hass)
     pytest.option_a_result = result  # type: ignore[attr-defined]
-    # Generous bound — Phase 1 plan target is ~50ms for 100 entities.
+    # Generous bound — the target is ~50ms for 100 entities.
     assert result["median"] < 1.0, f"Option A median too slow: {result}"
 
 
@@ -139,7 +139,7 @@ async def test_report_comparison() -> None:
                 await sandbox_hass.async_stop(force=True)
                 await main_hass.async_stop(force=True)
 
-    print("\n=== Phase 1 spike — light.turn_on area call ===")
+    print("\n=== Entity-bridge spike — light.turn_on area call ===")
     print(f"Entities: {LIGHT_COUNT}, iterations: {ITERATIONS}\n")
     print(
         f"{'option':<8}{'median (ms)':>14}{'min (ms)':>12}"

@@ -1,4 +1,4 @@
-"""Phase 5 tests for :class:`hass_client.entry_runner.EntryRunner`.
+"""Tests for :class:`hass_client.entry_runner.EntryRunner`.
 
 Exercises the sandbox-side ``sandbox/entry_setup`` round-trip plus the
 ``sandbox/call_service`` channel.
@@ -86,35 +86,35 @@ async def test_entry_setup_calls_integration_setup_entry(
     async def _async_unload_entry(_hass: Any, _entry: ConfigEntry) -> bool:
         return True
 
-    class _DemoFlow(ConfigFlow, domain="phase5_demo"):
+    class _DemoFlow(ConfigFlow, domain="demo_setup"):
         VERSION = 1
 
     # `ConfigFlow.__init_subclass__` adds _DemoFlow to HANDLERS — clean it
     # back up at teardown so other tests don't see a stale handler.
-    assert "phase5_demo" in ha_config_entries.HANDLERS
+    assert "demo_setup" in ha_config_entries.HANDLERS
 
     # Stand up a fake integration in the loader caches. Both the main
     # module and the config_flow module must be present in DATA_COMPONENTS
     # — entry.async_setup imports the latter before calling
     # async_setup_entry.
-    module = ModuleType("homeassistant.components.phase5_demo")
-    module.DOMAIN = "phase5_demo"
+    module = ModuleType("homeassistant.components.demo_setup")
+    module.DOMAIN = "demo_setup"
     module.async_setup_entry = _async_setup_entry  # type: ignore[attr-defined]
     module.async_unload_entry = _async_unload_entry  # type: ignore[attr-defined]
-    config_flow_module = ModuleType("homeassistant.components.phase5_demo.config_flow")
-    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase5_demo"] = module
-    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase5_demo.config_flow"] = (
+    config_flow_module = ModuleType("homeassistant.components.demo_setup.config_flow")
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["demo_setup"] = module
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["demo_setup.config_flow"] = (
         config_flow_module
     )
-    runner.hass.config.components.add("phase5_demo")
+    runner.hass.config.components.add("demo_setup")
 
     integration = ha_loader.Integration(
         runner.hass,
-        "homeassistant.components.phase5_demo",
+        "homeassistant.components.demo_setup",
         None,
         {
-            "domain": "phase5_demo",
-            "name": "Phase 5 Demo",
+            "domain": "demo_setup",
+            "name": "Demo Setup",
             "config_flow": True,
             "documentation": "https://example.com",
             "iot_class": "local_polling",
@@ -127,11 +127,11 @@ async def test_entry_setup_calls_integration_setup_entry(
     runner.hass.data[ha_loader.DATA_INTEGRATIONS] = runner.hass.data.get(
         ha_loader.DATA_INTEGRATIONS, {}
     )
-    runner.hass.data[ha_loader.DATA_INTEGRATIONS]["phase5_demo"] = integration
+    runner.hass.data[ha_loader.DATA_INTEGRATIONS]["demo_setup"] = integration
 
     payload = pb.EntrySetup(
         entry_id="test_entry_id_5",
-        domain="phase5_demo",
+        domain="demo_setup",
         title="Demo",
         source="user",
         version=1,
@@ -158,7 +158,7 @@ async def test_entry_setup_reports_failure_reason(
 
     payload = pb.EntrySetup(
         entry_id="missing_entry_id",
-        domain="phase5_missing",
+        domain="demo_missing",
         title="Missing",
         source="user",
         version=1,

@@ -193,7 +193,7 @@ async def test_push_message_is_one_way(channels: tuple) -> None:
 async def test_handler_can_call_back_without_deadlock(channels: tuple) -> None:
     """A handler that issues channel.call mid-execution doesn't deadlock.
 
-    Phase 12: dispatch runs in a task so the reader keeps draining the
+    Dispatch runs in a task so the reader keeps draining the
     wire — the nested call's reply can be picked up while the outer
     handler is still suspended.
     """

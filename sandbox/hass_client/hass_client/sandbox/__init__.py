@@ -3,21 +3,21 @@
 Composes the sandbox's per-process services:
 
 * :class:`FlowRunner` — drives integration ``ConfigFlow`` instances
-  out-of-process (Phase 4).
+  out-of-process.
 * :class:`EntryRunner` — accepts ``sandbox/entry_setup`` pushes and
-  runs ``async_setup_entry`` against the sandbox-private HA (Phase 5).
+  runs ``async_setup_entry`` against the sandbox-private HA.
 * :class:`EntityBridge` — pushes entity registrations + state changes
-  back to main (Phase 5).
+  back to main.
 * :class:`ServiceMirror` / :class:`EventMirror` — mirror service
   registrations and ``<owned_domain>_*`` events up to main, gated by
-  :class:`ApprovedDomains` (Phase 6).
+  :class:`ApprovedDomains`.
 
 The handshake: open the control channel (transport selected by the
 ``--url`` scheme — ``stdio://`` by default, ``unix://<path>`` to dial back
 to the manager's unix socket), send a :data:`MSG_READY` frame as the first
 message, warm-load restore state, register handlers, then idle until
 SIGTERM (or until main asks for a graceful shutdown over the channel — see
-Phase 9's :meth:`SandboxRuntime._handle_shutdown`).
+:meth:`SandboxRuntime._handle_shutdown`).
 """
 
 import asyncio
@@ -173,7 +173,7 @@ class SandboxRuntime:
                 "one event loop? (see plan Risk #3)"
             )
             sandbox_token = current_sandbox.set(ChannelSandboxBridge(self._channel))
-            # Phase 9: start the channel reader first so the warm-load
+            # Start the channel reader first so the warm-load
             # round-trip can resolve, then pre-load this sandbox group's
             # restore-state cache. The contextvar (set above) routes the
             # load to main. The data lives on main under
@@ -241,7 +241,7 @@ class SandboxRuntime:
         return await _open_stdio_channel(name=self.group)
 
     async def _handle_shutdown(self, _payload: object) -> pb.ShutdownResult:
-        """Phase 9: unload entries, flush restore state, then exit cleanly.
+        """Unload entries, flush restore state, then exit cleanly.
 
         Runs inside the channel dispatcher so the reply is written before
         the runtime starts its teardown. The actual shutdown event is set
@@ -257,7 +257,7 @@ class SandboxRuntime:
     async def _run_graceful_shutdown(self) -> pb.ShutdownResult:
         """Unload every loaded entry and snapshot RestoreEntity state.
 
-        Phase 12 fires ``EVENT_HOMEASSISTANT_FINAL_WRITE`` and waits for
+        Fires ``EVENT_HOMEASSISTANT_FINAL_WRITE`` and waits for
         the bus to drain so ``Store``s with pending ``async_delay_save``
         writes flush to main via the ``current_sandbox`` bridge — the
         now-concurrent channel dispatcher means the re-entrant
@@ -269,7 +269,7 @@ class SandboxRuntime:
         is owned by the runtime's explicit warm-load / shutdown-dump path,
         not by an integration's ``Store``, so it doesn't ride the
         FINAL_WRITE flush. Shipping it back in the reply keeps the data
-        path symmetric with Phase 9 — main writes it via
+        path symmetric with the warm-load — main writes it via
         :meth:`SandboxBridge._handle_store_save`-style atomic write.
         """
         flow_runner = self._flow_runner
@@ -291,7 +291,7 @@ class SandboxRuntime:
             if ok:
                 unloaded += 1
 
-        # Phase 12: fire FINAL_WRITE so ``async_delay_save``-using
+        # Fire FINAL_WRITE so ``async_delay_save``-using
         # ``Store``s flush their pending data. Concurrent channel
         # dispatcher means each bridge write can re-enter the channel
         # without deadlocking against this handler.
@@ -333,7 +333,7 @@ async def _load_restore_state(hass: Any) -> None:
     periodic ``async_setup_dump`` listener via ``start.async_at_start``,
     which only fires on a fully-started HA. The sandbox's HA never goes
     through ``async_start``, so we skip that listener and rely on
-    Phase 9's shutdown handler to force the final dump.
+    the shutdown handler to force the final dump.
 
     No store swap is needed: ``RestoreStateData`` builds a vanilla
     ``Store``, and ``Store.async_load`` reads ``current_sandbox`` at call
