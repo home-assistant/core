@@ -1,6 +1,6 @@
 """Define services for the Environment Canada integration."""
 
-from typing import Any
+from typing import Any, cast
 
 from env_canada import ECWeather
 import voluptuous as vol
@@ -28,7 +28,24 @@ async def _async_get_alerts(call: ServiceCall) -> dict[str, Any]:
             translation_domain=DOMAIN,
             translation_key="not_connected",
         )
-    return ec.alerts
+
+    data = cast(dict[str, list[dict[str, Any]]], ec.alerts)
+    return {
+        k: [
+            {
+                (
+                    "alert_colour_level"
+                    if ik == "alertColourLevel"
+                    else "expiry_time"
+                    if ik == "expiryTime"
+                    else ik
+                ): iv
+                for ik, iv in item.items()
+            }
+            for item in v
+        ]
+        for k, v in data.items()
+    }
 
 
 @callback
