@@ -64,18 +64,26 @@ async def test_async_setup_entry_creates_entities(
 
     async_add_entities.assert_called_once()
     entities_arg = async_add_entities.call_args[0][0]
-    update_before_add = async_add_entities.call_args[0][1]
-
-    assert update_before_add is True
     assert len(entities_arg) == 2
     assert all(isinstance(entity, TFAmeSensorEntity) for entity in entities_arg)
-
     assert sorted(tfa_me_mock_coordinator.sensor_entity_list) == sorted(
         [
             "sensor.017654321_a01234588_temperature",
             "sensor.017654321_a01234589_temperature",
         ]
     )
+
+    # Try to add an already existing ID (100% test coverage)
+    tfa_me_mock_coordinator.data.entities = {
+        "sensor.017654321_a01234588_temperature": {
+            "value": "23.5",
+            "unit": "°C",
+            "ts": "123456789",
+        }
+    }
+    entry.runtime_data = tfa_me_mock_coordinator
+    async_add_entities = MagicMock()
+    await async_setup_entry(hass, entry, async_add_entities)
 
 
 def test_get_entity_description_invalid_measurement_raises() -> None:

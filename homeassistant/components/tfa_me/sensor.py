@@ -3,8 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-
-# import logging
 from typing import Any
 
 from tfa_me_ha_local.history import SensorHistory
@@ -16,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -223,28 +221,44 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TFA.me as Sensor."""
-
-    # Get coordinator
     coordinator = entry.runtime_data
-    # Initialize first refresh/request and wait for parsed JSON data from coordinator
-    sensors_start = []
-    for unique_id in coordinator.data.entities:
-        if unique_id not in coordinator.sensor_entity_list:
-            try:
-                sensor_id = extract_sensor_id(unique_id)
-                new_entity: TFAmeSensorEntity = TFAmeSensorEntity(
-                    coordinator, sensor_id, unique_id
-                )
 
-            except ValueError:
-                # LOGGER.debug("Skipping invalid TFA.me unique ID %s: %s", unique_id, err)
+    @callback
+    def async_add_new_entities() -> None:
+        """Add new sensor entities from coordinator data."""
+        if coordinator.data is None:
+            return
+
+        new_entities: list[TFAmeSensorEntity] = []
+
+        for unique_id in coordinator.data.entities:
+            if unique_id in coordinator.sensor_entity_list:
+                # Skipping knownTFA.me unique ID
                 continue
 
-            sensors_start.append(new_entity)
+            try:
+                sensor_id = extract_sensor_id(unique_id)
+            except ValueError:
+                # Skipping invalid TFA.me unique ID
+                continue
+
+            new_entities.append(
+                TFAmeSensorEntity(
+                    coordinator,
+                    sensor_id,
+                    unique_id,
+                )
+            )
             coordinator.sensor_entity_list.append(unique_id)
 
-    # Add all entities
-    async_add_entities(sensors_start, True)
+        if new_entities:
+            async_add_entities(new_entities)
+
+    # At HA start add known entities
+    async_add_new_entities()
+
+    # With every coordinator update search for new sensors
+    entry.async_on_unload(coordinator.async_add_listener(async_add_new_entities))
 
 
 class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity):
