@@ -487,6 +487,31 @@ async def test_zone_bypass_error_none(hass: HomeAssistant) -> None:
     assert await hub.async_set_zone_bypass(1, bypassed=True, pin="1234") is True
 
 
+async def test_zone_bypass_handles_rejected_result(hass: HomeAssistant) -> None:
+    """Verify zone bypass surfaces rejected client results."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.87",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = SimpleNamespace(
+        async_set_zone_bypass=AsyncMock(
+            return_value=SimpleNamespace(ok=False, error=RuntimeError("denied"))
+        )
+    )
+
+    with pytest.raises(HomeAssistantError, match="Zone bypass failed: denied"):
+        await hub.async_set_zone_bypass(1, bypassed=True, pin="1234")
+
+    hub._client.async_set_zone_bypass.return_value = SimpleNamespace(
+        ok=False, error=None
+    )
+    assert await hub.async_set_zone_bypass(1, bypassed=True, pin="1234") is False
+
+
 async def test_arm_area_modes_and_errors(hass: HomeAssistant) -> None:
     """Verify arm modes and error handling."""
     hub = Elke27Hub(
@@ -514,6 +539,29 @@ async def test_arm_area_modes_and_errors(hass: HomeAssistant) -> None:
         await hub.async_arm_area(1, ArmMode.ARMED_AWAY, "1234")
 
     hub._client = None
+    assert await hub.async_arm_area(1, ArmMode.ARMED_AWAY, "1234") is False
+
+
+async def test_arm_area_handles_rejected_result(hass: HomeAssistant) -> None:
+    """Verify arm area surfaces rejected client results."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.88",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = SimpleNamespace(
+        async_arm_area=AsyncMock(
+            return_value=SimpleNamespace(ok=False, error=RuntimeError("denied"))
+        )
+    )
+
+    with pytest.raises(HomeAssistantError, match="Area arming failed: denied"):
+        await hub.async_arm_area(1, ArmMode.ARMED_AWAY, "1234")
+
+    hub._client.async_arm_area.return_value = SimpleNamespace(ok=False, error=None)
     assert await hub.async_arm_area(1, ArmMode.ARMED_AWAY, "1234") is False
 
 
@@ -560,6 +608,29 @@ async def test_disarm_pin_and_error_none(hass: HomeAssistant) -> None:
         await hub.async_disarm_area(1, "aa")
     hub._client.async_disarm_area.side_effect = None
     assert await hub.async_disarm_area(1, "1234") is True
+
+
+async def test_disarm_area_handles_rejected_result(hass: HomeAssistant) -> None:
+    """Verify disarm area surfaces rejected client results."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.90",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = SimpleNamespace(
+        async_disarm_area=AsyncMock(
+            return_value=SimpleNamespace(ok=False, error=RuntimeError("denied"))
+        )
+    )
+
+    with pytest.raises(HomeAssistantError, match="Area disarm failed: denied"):
+        await hub.async_disarm_area(1, "1234")
+
+    hub._client.async_disarm_area.return_value = SimpleNamespace(ok=False, error=None)
+    assert await hub.async_disarm_area(1, "1234") is False
 
 
 async def test_handle_connection_event_no_client(hass: HomeAssistant) -> None:

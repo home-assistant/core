@@ -51,6 +51,26 @@ def _raise_command_error(action: str, error: BaseException) -> None:
     raise HomeAssistantError(message) from error
 
 
+def _command_succeeded(action: str, result: Any) -> bool:
+    """Return whether a client command result was accepted."""
+    if result is None:
+        return True
+    if isinstance(result, bool):
+        return result
+    ok = getattr(result, "ok", None)
+    if ok is None:
+        return True
+    if ok:
+        return True
+    error = getattr(result, "error", None)
+    if isinstance(error, BaseException):
+        _raise_command_error(action, error)
+    if error:
+        message = f"{action} failed: {error}"
+        raise HomeAssistantError(message)
+    return False
+
+
 class Elke27Hub:
     """Manage a single Elke27 client instance."""
 
@@ -267,10 +287,12 @@ class Elke27Hub:
             bypassed,
         )
         try:
-            await client.async_set_zone_bypass(zone_id, bypassed=bypassed, pin=pin)
+            result = await client.async_set_zone_bypass(
+                zone_id, bypassed=bypassed, pin=pin
+            )
         except (Elke27Error, Elke27InvalidArgument, ValueError) as err:
             _raise_command_error("Zone bypass", err)
-        return True
+        return _command_succeeded("Zone bypass", result)
 
     async def async_arm_area(
         self,
@@ -292,7 +314,7 @@ class Elke27Hub:
         arm_mode = _normalize_arm_mode(mode)
 
         try:
-            await client.async_arm_area(
+            result = await client.async_arm_area(
                 area_id,
                 mode=arm_mode,
                 pin=pin,
@@ -303,7 +325,7 @@ class Elke27Hub:
             raise
         except (Elke27Error, Elke27InvalidArgument, ValueError) as err:
             _raise_command_error("Area arming", err)
-        return True
+        return _command_succeeded("Area arming", result)
 
     def _resubscribe_typed_callbacks(self, client: Elke27Client) -> None:
         """Re-register typed callbacks on a new client connection."""
@@ -366,7 +388,7 @@ class Elke27Hub:
             raise Elke27PinRequiredError(msg)
 
         try:
-            await client.async_disarm_area(
+            result = await client.async_disarm_area(
                 area_id,
                 pin=pin,
                 auto_stay_cancel=auto_stay_cancel,
@@ -376,7 +398,7 @@ class Elke27Hub:
             raise
         except (Elke27Error, Elke27InvalidArgument, ValueError) as err:
             _raise_command_error("Area disarm", err)
-        return True
+        return _command_succeeded("Area disarm", result)
 
     def _handle_connection_event(self, event: Any) -> None:
         """Handle connection lifecycle events from the client."""
