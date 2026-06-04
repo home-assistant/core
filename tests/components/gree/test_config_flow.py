@@ -17,6 +17,8 @@ from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
+_PATCH_BIND = "homeassistant.components.gree.config_flow.async_create_and_bind_device"
+
 
 async def test_user_step_shows_menu(hass: HomeAssistant) -> None:
     """Test that the user step shows a menu with scan and manual options."""
@@ -86,10 +88,7 @@ async def test_manual_step_success(
         name="test-device", ipAddress="192.168.1.100", mac="aabbcc112233"
     )
 
-    with patch(
-        "homeassistant.components.gree.config_flow.Device",
-        return_value=mock_device,
-    ):
+    with patch(_PATCH_BIND, return_value=mock_device):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -116,13 +115,7 @@ async def test_manual_step_cannot_connect(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test manual step shows error when device cannot be reached."""
-    mock_device = build_device_mock()
-    mock_device.bind = AsyncMock(side_effect=DeviceTimeoutError())
-
-    with patch(
-        "homeassistant.components.gree.config_flow.Device",
-        return_value=mock_device,
-    ):
+    with patch(_PATCH_BIND, side_effect=DeviceTimeoutError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -136,7 +129,6 @@ async def test_manual_step_cannot_connect(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
-        mock_device.bind.assert_awaited_once()
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 0
@@ -157,10 +149,7 @@ async def test_manual_step_already_configured(
         name="test-device", ipAddress="192.168.1.200", mac="aabbcc112233"
     )
 
-    with patch(
-        "homeassistant.components.gree.config_flow.Device",
-        return_value=mock_device,
-    ):
+    with patch(_PATCH_BIND, return_value=mock_device):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -184,10 +173,7 @@ async def test_manual_step_no_mac_uses_ip_as_unique_id(
         name="test-device", ipAddress="192.168.1.100", mac=None
     )
 
-    with patch(
-        "homeassistant.components.gree.config_flow.Device",
-        return_value=mock_device,
-    ):
+    with patch(_PATCH_BIND, return_value=mock_device):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -236,10 +222,7 @@ async def test_manual_step_allowed_alongside_discovery_entry(
         name="test-device", ipAddress="192.168.1.100", mac="aabbcc112233"
     )
 
-    with patch(
-        "homeassistant.components.gree.config_flow.Device",
-        return_value=mock_device,
-    ):
+    with patch(_PATCH_BIND, return_value=mock_device):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -262,13 +245,7 @@ async def test_manual_step_unexpected_error(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test manual step shows error on unexpected exception during bind."""
-    mock_device = build_device_mock()
-    mock_device.bind = AsyncMock(side_effect=Exception("unexpected"))
-
-    with patch(
-        "homeassistant.components.gree.config_flow.Device",
-        return_value=mock_device,
-    ):
+    with patch(_PATCH_BIND, side_effect=Exception("unexpected")):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -282,7 +259,6 @@ async def test_manual_step_unexpected_error(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
-        mock_device.bind.assert_awaited_once()
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 0

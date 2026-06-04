@@ -3,7 +3,6 @@
 import logging
 from typing import Any
 
-from greeclimate.device import Device, DeviceInfo
 from greeclimate.discovery import Discovery
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 import voluptuous as vol
@@ -13,7 +12,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.util.network import is_ipv4_address
 
-from .const import DEFAULT_PORT, DISCOVERY_TIMEOUT, DOMAIN
+from .const import DISCOVERY_TIMEOUT, DOMAIN
+from .coordinator import async_create_and_bind_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle network scan step."""
+        # DOMAIN as unique ID limits discovery to one entry; manual entries use MAC/IP.
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()
 
@@ -68,11 +69,8 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
             if not is_ipv4_address(ip_address):
                 errors["ip_address"] = "invalid_host"
             else:
-                device_info = DeviceInfo(ip_address, DEFAULT_PORT, "", "")
-                device = Device(device_info)
-
                 try:
-                    await device.bind()
+                    device = await async_create_and_bind_device(ip_address)
                 except (DeviceNotBoundError, DeviceTimeoutError) as err:
                     _LOGGER.debug(
                         "Failed to connect to Gree device at %s: %s", ip_address, err

@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from greeclimate.device import Device, DeviceInfo
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 
 from homeassistant.components.network import async_get_ipv4_broadcast_addresses
@@ -14,12 +13,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DEFAULT_PORT, DISCOVERY_SCAN_INTERVAL
+from .const import DISCOVERY_SCAN_INTERVAL
 from .coordinator import (
     DeviceDataUpdateCoordinator,
     DiscoveryService,
     GreeConfigEntry,
     GreeRuntimeData,
+    async_create_and_bind_device,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,10 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
     if CONF_IP_ADDRESS in entry.data:
         # Static IP mode: bind directly, no scanning
         ip_address = entry.data[CONF_IP_ADDRESS]
-        device_info = DeviceInfo(ip_address, DEFAULT_PORT, "", "")
-        device = Device(device_info)
         try:
-            await device.bind()
+            device = await async_create_and_bind_device(ip_address)
         except (DeviceNotBoundError, DeviceTimeoutError) as err:
             raise ConfigEntryNotReady(
                 f"Unable to connect to Gree device at {ip_address}"

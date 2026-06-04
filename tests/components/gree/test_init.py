@@ -14,6 +14,8 @@ from .common import build_device_mock
 
 from tests.common import MockConfigEntry
 
+_PATCH_BIND = "homeassistant.components.gree.async_create_and_bind_device"
+
 
 async def test_setup_simple(hass: HomeAssistant) -> None:
     """Test gree integration is setup."""
@@ -67,10 +69,7 @@ async def test_setup_static_ip(hass: HomeAssistant) -> None:
     mock_device = build_device_mock(ipAddress="192.168.1.100")
 
     with (
-        patch(
-            "homeassistant.components.gree.Device",
-            return_value=mock_device,
-        ),
+        patch(_PATCH_BIND, return_value=mock_device),
         patch(
             "homeassistant.components.gree.climate.async_setup_entry",
             return_value=True,
@@ -86,7 +85,6 @@ async def test_setup_static_ip(hass: HomeAssistant) -> None:
         assert len(climate_setup.mock_calls) == 1
         assert len(switch_setup.mock_calls) == 1
         assert entry.state is ConfigEntryState.LOADED
-        mock_device.bind.assert_awaited_once()
 
 
 async def test_setup_static_ip_bind_failure(hass: HomeAssistant) -> None:
@@ -97,18 +95,11 @@ async def test_setup_static_ip_bind_failure(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    mock_device = build_device_mock(ipAddress="192.168.1.100")
-    mock_device.bind = AsyncMock(side_effect=DeviceTimeoutError())
-
-    with patch(
-        "homeassistant.components.gree.Device",
-        return_value=mock_device,
-    ):
+    with patch(_PATCH_BIND, side_effect=DeviceTimeoutError()):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
         assert entry.state is ConfigEntryState.SETUP_RETRY
-        mock_device.bind.assert_awaited_once()
 
 
 async def test_setup_static_ip_unexpected_bind_error(hass: HomeAssistant) -> None:
@@ -119,15 +110,8 @@ async def test_setup_static_ip_unexpected_bind_error(hass: HomeAssistant) -> Non
     )
     entry.add_to_hass(hass)
 
-    mock_device = build_device_mock(ipAddress="192.168.1.100")
-    mock_device.bind = AsyncMock(side_effect=OSError("Network unreachable"))
-
-    with patch(
-        "homeassistant.components.gree.Device",
-        return_value=mock_device,
-    ):
+    with patch(_PATCH_BIND, side_effect=OSError("Network unreachable")):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
         assert entry.state is ConfigEntryState.SETUP_RETRY
-        mock_device.bind.assert_awaited_once()

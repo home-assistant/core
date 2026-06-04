@@ -11,6 +11,7 @@
     },
     "step": {
       "manual": {
+        "description": "Enter the IP address of your Gree device.",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]"
         }
