@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 import logging
 import random
 
@@ -822,6 +822,7 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
 
     entity_description: ThinQEnergySensorEntityDescription
     _stop_update: Callable[[], None] | None = None
+    _last_fetch_date: date | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
@@ -850,14 +851,6 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
         """Return True if entity is available."""
         return super().available or self.native_value is not None
 
-    @property
-    def last_reset(self) -> datetime | None:
-        """Return last reset time for sensors that reset at midnight."""
-        if not self.entity_description.reset_at_midnight:
-            return None
-        local_now = dt_util.now()
-        return datetime.combine(local_now.date(), time.min, local_now.tzinfo)
-
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""
         await self._async_update_and_schedule()
@@ -881,14 +874,24 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
                 self.coordinator.update_energy_at_time_of_day,
                 next_update.tzinfo,
             )
+        start_date = (self.entity_description.start_date_fn(local_now)).date()
+        end_date = (self.entity_description.end_date_fn(local_now)).date()
         try:
             self._attr_native_value = await self.coordinator.api.async_get_energy_usage(
                 energy_property=self.property_id,
                 period=self.entity_description.usage_period,
-                start_date=(self.entity_description.start_date_fn(local_now)).date(),
-                end_date=(self.entity_description.end_date_fn(local_now)).date(),
+                start_date=start_date,
+                end_date=end_date,
                 detail=False,
             )
+            if (
+                self.entity_description.reset_at_midnight
+                and start_date != self._last_fetch_date
+            ):
+                self._attr_last_reset = datetime.combine(
+                    start_date, time.min, local_now.tzinfo
+                )
+                self._last_fetch_date = start_date
         except ThinQAPIException as exc:
             _LOGGER.warning(
                 "[%s:%s] Failed to fetch energy usage data. reason=%s",

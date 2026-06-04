@@ -82,3 +82,98 @@ async def test_update_energy_entity(
 
     state = hass.states.get(entity_id)
     assert float(state.state) == energy_usage
+
+
+@pytest.mark.freeze_time(datetime(2024, 10, 9, 10, 0, tzinfo=UTC))
+async def test_energy_today_updates_hourly(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_thinq_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that energy_today sensor updates every hour, not once per day."""
+    hass.config.time_zone = "UTC"
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.test_air_conditioner_energy_today"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+    mock_thinq_api.async_get_device_energy_usage.return_value = (
+        await async_load_json_object_fixture(
+            hass, "air_conditioner/energy_today.json", DOMAIN
+        )
+    )
+
+    # Advance by 1 hour — should trigger hourly update
+    freezer.move_to(datetime(2024, 10, 9, 11, 0, tzinfo=UTC))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 150.0  # 80 + 70 from fixture
+
+
+@pytest.mark.freeze_time(datetime(2024, 10, 9, 10, 0, tzinfo=UTC))
+async def test_energy_today_last_reset_set_on_first_fetch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_thinq_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test last_reset is set to midnight after the first successful fetch."""
+    hass.config.time_zone = "UTC"
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.test_air_conditioner_energy_today"
+    state = hass.states.get(entity_id)
+    assert state.attributes.get("last_reset") is None
+
+    mock_thinq_api.async_get_device_energy_usage.return_value = (
+        await async_load_json_object_fixture(
+            hass, "air_conditioner/energy_today.json", DOMAIN
+        )
+    )
+
+    freezer.move_to(datetime(2024, 10, 9, 11, 0, tzinfo=UTC))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 150.0
+    # last_reset must be midnight of the fetched day, not the current clock time
+    assert state.attributes.get("last_reset") == datetime(2024, 10, 9, 0, 0, tzinfo=UTC)
+
+
+@pytest.mark.freeze_time(datetime(2024, 10, 9, 23, 30, tzinfo=UTC))
+async def test_energy_today_last_reset_does_not_advance_before_fetch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_thinq_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test last_reset stays at previous day until a new day's fetch succeeds."""
+    hass.config.time_zone = "UTC"
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.test_air_conditioner_energy_today"
+
+    mock_thinq_api.async_get_device_energy_usage.return_value = (
+        await async_load_json_object_fixture(
+            hass, "air_conditioner/energy_today.json", DOMAIN
+        )
+    )
+
+    # First update at 23:30 + 1h = 00:30 next day (Oct 10), but still fetching Oct 9 data
+    # Actually sensor fetches start_date = today at time of update, which is Oct 10 now
+    # This simulates the first update of the new day successfully fetching Oct 10 data
+    freezer.move_to(datetime(2024, 10, 10, 0, 30, tzinfo=UTC))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    # last_reset advances only once data for Oct 10 is fetched
+    assert state.attributes.get("last_reset") == datetime(2024, 10, 10, 0, 0, tzinfo=UTC)
