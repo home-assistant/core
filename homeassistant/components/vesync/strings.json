@@ -155,11 +155,11 @@
     }
   },
   "exceptions": {
-    "api_response_error": { "message": "API response error" },
+    "api_response_error": { "message": "The VeSync server returned an error" },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
-    "server_error": { "message": "Server error occurred" }
+    "server_error": { "message": "The VeSync server returned an error" }
   },
   "services": {
     "update_devices": {
