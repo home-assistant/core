@@ -3,10 +3,11 @@
 from unittest.mock import Mock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from uiprotect.data import LinkStation, PublicBootstrap
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .utils import MockUFPFixture, init_entry
 
@@ -196,3 +197,28 @@ async def test_alarm_hub_in_diagnostics(
     # Anonymized: the real MAC must not leak.
     assert hub["mac"] != ALARM_HUB_MAC
     assert "alarmHub" in hub
+
+
+async def test_alarm_hub_device_and_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    ufp_with_alarm_hub: MockUFPFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot the alarm hub device and all of its entities."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, ALARM_HUB_MAC)})
+    assert device is not None
+    assert device == snapshot(name="device")
+
+    entries = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+    assert entries
+    for entry in sorted(entries, key=lambda e: e.entity_id):
+        assert entry == snapshot(name=entry.entity_id)
+        assert hass.states.get(entry.entity_id) == snapshot(
+            name=f"{entry.entity_id}-state"
+        )
