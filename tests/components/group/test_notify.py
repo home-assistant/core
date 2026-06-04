@@ -270,7 +270,7 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "group",
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
