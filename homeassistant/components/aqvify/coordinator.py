@@ -56,9 +56,9 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
             _data = await self.api_client.async_get_devices()
             devices = AqvifyDevices(_data)
         except ClientResponseError as err:
-            raise UpdateFailed(f"Error communicating with device: {err}") from err
+            raise UpdateFailed(f"Error communicating with Aqvify API: {err}") from err
         except TimeoutError as err:
-            raise UpdateFailed(f"Unexpected response: {err}") from err
+            raise UpdateFailed(f"Timeout communicating with Aqvify API: {err}") from err
 
         device_data = {}
         for device in devices.devices.values():
@@ -67,9 +67,13 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 _data = await self.api_client.async_get_device_latest_data(device_key)
                 device_data[device_key] = AqvifyDeviceData(_data)
             except ClientResponseError as err:
-                raise UpdateFailed(f"Error communicating with device: {err}") from err
+                raise UpdateFailed(
+                    f"Error communicating with Aqvify API: {err}"
+                ) from err
             except TimeoutError as err:
-                raise UpdateFailed(f"Unexpected response: {err}") from err
+                raise UpdateFailed(
+                    f"Timeout communicating with Aqvify API: {err}"
+                ) from err
 
         return AqvifyCoordinatorData(
             account_id=str(self.config_entry.unique_id),
