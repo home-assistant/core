@@ -58,15 +58,15 @@ async def async_setup_entry(
 
         entities: list[OPNsenseSensorEntity] = []
         for mac_address in coordinator.data:
-            for sensor in SENSOR_DESCRIPTIONS:
-                unique_id = f"{mac_address}_{sensor.key}"
+            for sensor_description in SENSOR_DESCRIPTIONS:
+                unique_id = f"{mac_address}_{sensor_description.key}"
                 if unique_id in coordinator.tracked_devices:
                     continue
                 entities.append(
                     OPNsenseSensorEntity(
                         coordinator,
                         mac_address,
-                        sensor,
+                        sensor_description,
                     )
                 )
                 coordinator.tracked_devices.add(unique_id)
@@ -126,9 +126,10 @@ class OPNsenseSensorEntity(
     @property
     def native_value(self) -> datetime | str | None:
         """Return sensor value."""
-        device_data = self.device_data
-        if not device_data:
+        if not self.available:
             return None
+
+        device_data = self.device_data
 
         value = device_data.get(self.entity_description.data_key)
         if value in (None, ""):
