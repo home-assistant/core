@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Mapping
-from contextlib import suppress
 import os
 from typing import TYPE_CHECKING, Any
 
@@ -17,7 +16,6 @@ from music_assistant_models.enums import (
     QueueOption,
     RepeatMode as MassRepeatMode,
 )
-from music_assistant_models.errors import MediaNotFoundError
 from music_assistant_models.event import MassEvent
 from music_assistant_models.media_items import ItemMapping, MediaItemType, Track
 from music_assistant_models.player_queue import PlayerQueue
@@ -437,25 +435,26 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         username: str | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
+        # verify username availability
+        if username is not None:
+            users = await self.mass.auth.list_users()
+            available_usernames = [
+                user.username
+                for user in users
+                if user.enabled and user.role != UserRole.GUEST
+            ]
+            if username not in available_usernames:
+                raise ServiceValidationError(
+                    f"The username {username} does not exist. Available usernames are {', '.join(available_usernames)}."
+                )
+
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None
         # work out (all) uri(s) to play
         for media_id_str in media_id:
-            # URL or URI string
-            if "://" in media_id_str:
-                media_uris.append(media_id_str)
-                continue
-            # try content id as library id
-            if media_type and media_id_str.isnumeric():
-                with suppress(MediaNotFoundError):
-                    item = await self.mass.music.get_item(
-                        MediaType(media_type), media_id_str, "library"
-                    )
-                    if isinstance(item, MediaItemType | ItemMapping) and item.uri:
-                        media_uris.append(item.uri)
-                    continue
-            # try local accessible filename
-            elif await asyncio.to_thread(os.path.isfile, media_id_str):
+            if await self.mass.music.verify_item_uri(
+                uri=media_id_str, username_or_user_id=username
+            ) or await asyncio.to_thread(os.path.isfile, media_id_str):
                 media_uris.append(media_id_str)
                 continue
             # last resort: search for media item by name/search
@@ -464,6 +463,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 artist=artist,
                 album=album,
                 media_type=MediaType(media_type) if media_type else None,
+                username_or_user_id=username,
             ):
                 if TYPE_CHECKING:
                     assert item.uri is not None
@@ -481,19 +481,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             queue_id = queue.queue_id
         else:
             queue_id = self.player_id
-
-        # verify username availability
-        if username is not None:
-            users = await self.mass.auth.list_users()
-            available_usernames = [
-                user.username
-                for user in users
-                if user.enabled and user.role != UserRole.GUEST
-            ]
-            if username not in available_usernames:
-                raise ServiceValidationError(
-                    f"The username {username} does not exist. Available usernames are {', '.join(available_usernames)}."
-                )
 
         await self.mass.player_queues.play_media(
             queue_id,
