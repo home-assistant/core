@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.upnp.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -110,3 +111,40 @@ async def test_upnp_sensors(
         ).state
         == "40.0"
     )
+
+
+async def test_upnp_sensors_no_rollover_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no-rollover sensors are disabled by default and can be enabled."""
+    disabled_entity_id = "sensor.mock_name_download_speed_without_rollover_handling"
+    other_disabled_entity_ids = (
+        "sensor.mock_name_upload_speed_without_rollover_handling",
+        "sensor.mock_name_packet_download_speed_without_rollover_handling",
+        "sensor.mock_name_packet_upload_speed_without_rollover_handling",
+    )
+
+    assert hass.states.get(disabled_entity_id) is None
+    for entity_id in other_disabled_entity_ids:
+        assert hass.states.get(entity_id) is None
+
+    entry = entity_registry.async_get(disabled_entity_id)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    for entity_id in other_disabled_entity_ids:
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    entity_registry.async_update_entity(disabled_entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    enabled_state = hass.states.get(disabled_entity_id)
+    assert enabled_state is not None
+    assert enabled_state.state == "unknown"
