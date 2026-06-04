@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.tasmota.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
@@ -15,7 +16,7 @@ async def test_mqtt_abort_if_existing_entry(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Check MQTT flow aborts when an entry already exist."""
-    MockConfigEntry(domain="tasmota").add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_MQTT}
@@ -184,7 +185,7 @@ async def test_user_single_instance(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test we only allow a single config flow."""
-    MockConfigEntry(domain="tasmota").add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_USER}
