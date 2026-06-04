@@ -124,6 +124,18 @@ hass.config_entries.flow.async_init(handler=DOMAIN)
         ),
         pytest.param(
             """
+hass.states.async_entity_ids(DOMAIN)
+""",
+            id="async_entity_ids",
+        ),
+        pytest.param(
+            """
+hass.states.async_entity_ids((DOMAIN, SENSOR_DOMAIN))
+""",
+            id="async_entity_ids_tuple",
+        ),
+        pytest.param(
+            """
 some_other_function(hass, "other", {})
 """,
             id="unrelated_function",
@@ -215,6 +227,20 @@ hass.config_entries.flow.async_init(handler=OTHER)
 """,
             ("OTHER", "hass.config_entries.flow.async_init"),
             id="flow_async_init_kwarg",
+        ),
+        pytest.param(
+            """
+hass.states.async_entity_ids(OTHER)
+""",
+            ("OTHER", "hass.states.async_entity_ids"),
+            id="async_entity_ids",
+        ),
+        pytest.param(
+            """
+hass.states.async_entity_ids((DOMAIN, OTHER))
+""",
+            ("(DOMAIN, OTHER)", "hass.states.async_entity_ids"),
+            id="async_entity_ids_tuple",
         ),
     ],
 )

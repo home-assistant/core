@@ -267,14 +267,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TAMPER_BINARY_SENSOR,
     ),
-    DeviceCategory.LDCG: (
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.TEMPER_ALARM,
-            device_class=BinarySensorDeviceClass.TAMPER,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-        TAMPER_BINARY_SENSOR,
-    ),
+    DeviceCategory.LDCG: (TAMPER_BINARY_SENSOR,),
     DeviceCategory.MC: (
         TuyaBinarySensorEntityDescription(
             key=DPCode.STATUS,
