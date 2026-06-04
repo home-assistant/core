@@ -176,4 +176,6 @@ async def test_energy_today_last_reset_does_not_advance_before_fetch(
 
     state = hass.states.get(entity_id)
     # last_reset advances only once data for Oct 10 is fetched
-    assert state.attributes.get("last_reset") == datetime(2024, 10, 10, 0, 0, tzinfo=UTC)
+    assert state.attributes.get("last_reset") == datetime(
+        2024, 10, 10, 0, 0, tzinfo=UTC
+    )
