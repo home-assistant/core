@@ -49,10 +49,7 @@ class MigrateToGroupSensorFlow(RepairsFlow):
             config = dict(self.entry.options)
             config[CONF_ENTITIES] = config.pop(CONF_ENTITY_IDS)
             config.pop(CONF_ROUND_DIGITS)
-            # Set group sensor defaults
             config[CONF_HIDE_MEMBERS] = False
-            # config[CONF_IGNORE_NON_NUMERIC] = False
-            # config[CONF_GROUP_TYPE] = SENSOR_DOMAIN
             config["old_config_entry_id"] = self.entry.entry_id
 
             import_result = await self.hass.config_entries.flow.async_init(
