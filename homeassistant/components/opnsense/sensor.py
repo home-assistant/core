@@ -101,12 +101,17 @@ class OPNsenseSensorEntity(
         self._device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, mac_address)}
         )
-        device_data = self.device_data
-        if device_data:
+        if self.available:
+            device_data = self.device_data
             if hostname := device_data.get("hostname"):
                 self._device_info["default_name"] = str(hostname)
             if manufacturer := device_data.get("manufacturer"):
                 self._device_info["default_manufacturer"] = str(manufacturer)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._mac_address in self.coordinator.data
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -114,11 +119,9 @@ class OPNsenseSensorEntity(
         return self._device_info
 
     @property
-    def device_data(self) -> DeviceDetails | None:
+    def device_data(self) -> DeviceDetails:
         """Return device data for current device."""
-        if self.coordinator.data and self._mac_address in self.coordinator.data:
-            return self.coordinator.data[self._mac_address]
-        return None
+        return self.coordinator.data[self._mac_address]
 
     @property
     def native_value(self) -> datetime | str | None:
