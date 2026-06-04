@@ -15,10 +15,12 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 import pytest
+from watchdog.events import FileCreatedEvent, FileModifiedEvent
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http
 from homeassistant.components.cloud import CloudNotAvailable
+from homeassistant.components.http import HomeAssistantHTTP, _SSLReloadHandler
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -1025,3 +1027,54 @@ async def test_reload_ssl_certificate_coalescing(
 
     # The _ssl_reload_pending flag should be false after a single reload
     assert hass.http._ssl_reload_pending is False
+
+
+async def test_ssl_reload_handler_filters_events() -> None:
+    """Test that _SSLReloadHandler only reacts to watched files."""
+    reloads: list[int] = []
+
+    def on_change() -> None:
+        reloads.append(1)
+
+    watched = frozenset({"/etc/ssl/cert.pem", "/etc/ssl/key.pem"})
+    handler = _SSLReloadHandler(watched, on_change)
+
+    # Event on a watched file should trigger
+    handler.on_any_event(FileModifiedEvent("/etc/ssl/cert.pem"))
+    assert len(reloads) == 1
+
+    # Event on an unwatched file should be ignored
+    handler.on_any_event(FileCreatedEvent("/etc/ssl/unrelated.txt"))
+    assert len(reloads) == 1
+
+    # Event with bytes path should still trigger
+    handler.on_any_event(FileModifiedEvent(b"/etc/ssl/key.pem"))
+    assert len(reloads) == 2
+
+
+async def test_ssl_watcher_stop_guard() -> None:
+    """Test that _debounce_ssl_reload is a no-op when watcher is stopping."""
+    # Create a minimal instance to test the stopping guard
+    http_server = HomeAssistantHTTP.__new__(HomeAssistantHTTP)
+    http_server._ssl_watcher_stopping = True
+    http_server._ssl_reload_debounce_handle = None
+
+    # When stopping, _debounce_ssl_reload should return without scheduling
+    http_server._debounce_ssl_reload()
+    assert http_server._ssl_reload_debounce_handle is None
+
+
+async def test_ssl_reload_schedule_coalescing() -> None:
+    """Test that _schedule_reload coalesces when a reload is already running."""
+    http_server = HomeAssistantHTTP.__new__(HomeAssistantHTTP)
+    http_server._ssl_reload_debounce_handle = None
+    # Simulate a running reload task with a no-op coroutine
+    http_server._ssl_reload_task = asyncio.create_task(
+        asyncio.sleep(0), name="test-reload"
+    )
+    http_server._ssl_reload_pending = False
+
+    # First call should set pending and return (task is already "running")
+    http_server._schedule_reload()
+    assert http_server._ssl_reload_pending is True
+    assert http_server._ssl_reload_task is not None  # Unchanged
