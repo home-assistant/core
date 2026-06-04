@@ -57,13 +57,14 @@ async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
                 serial="1234",
                 model="E27",
                 firmware="1.0",
+                panel_name="Snapshot Panel",
             )
         )
     )
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
 
     device_info = device_info_for_entry(hub, coordinator, entry)
-    assert device_info["name"] == "Panel A"
+    assert device_info["name"] == "Snapshot Panel"
     assert device_info["serial_number"] == "1234"
     assert device_info["connections"] == {
         ("mac", "aa:bb:cc:dd:ee:ff"),
@@ -130,6 +131,24 @@ async def test_device_info_uses_title_fallback(hass: HomeAssistant) -> None:
     device_info = device_info_for_entry(hub, coordinator, entry)
 
     assert device_info["name"] == "Panel\x00 One"
+
+
+async def test_device_info_uses_hub_panel_name_fallback(hass: HomeAssistant) -> None:
+    """Verify hub panel name is used when the snapshot has no panel name."""
+    entry = MockConfigEntry(
+        domain="elke27",
+        title="Entry Panel",
+        data={CONF_HOST: "192.168.1.10", CONF_CLIENT_ID: "entryclientid"},
+    )
+    entry.add_to_hass(hass)
+    hub = _Hub()
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    coordinator.async_set_updated_data(_snapshot())
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+
+    device_info = device_info_for_entry(hub, coordinator, entry)
+
+    assert device_info["name"] == "Panel A"
 
 
 def test_build_unique_id() -> None:

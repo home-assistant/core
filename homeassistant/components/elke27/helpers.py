@@ -21,7 +21,7 @@ def device_info_for_entry(
     """Build device info for entities tied to a config entry."""
     snapshot = coordinator.data
     panel_info = snapshot.panel
-    panel_name = hub.panel_name or entry.title
+    panel_name = panel_info.panel_name or hub.panel_name or entry.title
     try:
         formatted_mac = format_mac(str(panel_info.mac)) if panel_info.mac else None
     except ValueError:
