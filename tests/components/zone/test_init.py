@@ -884,7 +884,7 @@ async def test_state(hass: HomeAssistant) -> None:
     state = hass.states.get("zone.test_zone")
     assert state
     assert state.state == "1"
-    assert sorted(state.attributes[ATTR_PERSONS]) == ["person.person2"]
+    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
 
     state = hass.states.get("zone.home")
     assert state
