@@ -53,7 +53,6 @@ class RabbitAirAirQualitySensor(RabbitAirBaseEntity, SensorEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, entry)
-        del self._attr_name
         self._attr_unique_id = f"{entry.unique_id}_{self.entity_description.key}"
         self._attr_native_value = _quality_value(coordinator.data.quality)
 

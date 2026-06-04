@@ -32,7 +32,6 @@ class RabbitAirBaseEntity(CoordinatorEntity[RabbitAirDataUpdateCoordinator]):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_name = entry.title
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.data[CONF_MAC])},

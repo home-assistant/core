@@ -53,3 +53,28 @@ async def test_air_quality_sensor(
     registry_entry = entity_registry.async_get("sensor.rabbit_air_air_quality")
     assert registry_entry
     assert registry_entry.unique_id == f"{TEST_UNIQUE_ID}_air_quality"
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_no_air_quality_sensor_when_quality_is_none(hass: HomeAssistant) -> None:
+    """Test the air quality sensor is not created when quality is unavailable."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_ACCESS_TOKEN: TEST_TOKEN,
+            CONF_MAC: TEST_MAC,
+        },
+        title=TEST_TITLE,
+        unique_id=TEST_UNIQUE_ID,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "rabbitair.UdpClient.get_state",
+        return_value=get_mock_state(quality=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.rabbit_air_air_quality") is None

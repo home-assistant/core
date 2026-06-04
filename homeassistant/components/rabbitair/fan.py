@@ -61,6 +61,7 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, entry)
+        self._attr_name = entry.title
 
         if self._is_model(Model.MinusA2):
             self._attr_preset_modes = list(PRESET_MODES)
