@@ -28,7 +28,7 @@ from hass_client.testing.pytest_plugin import (
 )
 import pytest
 
-from homeassistant.components.sandbox.const import DATA_SANDBOX_V2
+from homeassistant.components.sandbox.const import DATA_SANDBOX
 from homeassistant.core import HomeAssistant
 
 
@@ -56,7 +56,7 @@ async def test_inprocess_plugin_wires_manager_and_bridge(
     hass: HomeAssistant, in_process_sandbox: InProcessSandbox
 ) -> None:
     """The plugin installs a bridge for the group and parks a fake process."""
-    data = hass.data[DATA_SANDBOX_V2]
+    data = hass.data[DATA_SANDBOX]
     assert in_process_sandbox.group == DEFAULT_GROUP
     assert DEFAULT_GROUP in data.channels
     assert DEFAULT_GROUP in data.bridges
@@ -77,7 +77,7 @@ async def test_inprocess_plugin_round_trips_ping(
     Calling ``sandbox/ping`` on the manager-side channel reaches the
     runtime's handler and returns the same payload a subprocess would.
     """
-    data = hass.data[DATA_SANDBOX_V2]
+    data = hass.data[DATA_SANDBOX]
     channel = data.channels[DEFAULT_GROUP]
     result = await asyncio.wait_for(channel.call("sandbox/ping", None), timeout=2.0)
     assert result.pong == "sandbox"
@@ -87,7 +87,7 @@ async def test_inprocess_plugin_returns_existing_sandbox_on_ensure_started(
     hass: HomeAssistant, in_process_sandbox: InProcessSandbox
 ) -> None:
     """``ensure_started`` returns the pre-installed sandbox without spawning."""
-    data = hass.data[DATA_SANDBOX_V2]
+    data = hass.data[DATA_SANDBOX]
     manager = data.manager
     assert manager is not None
     existing = manager.get(DEFAULT_GROUP)

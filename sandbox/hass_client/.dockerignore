@@ -1,12 +1,12 @@
-# Build-context excludes for the Sandbox v2 runtime image.
+# Build-context excludes for the Sandbox runtime image.
 #
 # IMPORTANT — which .dockerignore actually applies:
 # The documented build uses the REPO ROOT as context
-# (`docker build -f sandbox_v2/hass_client/Dockerfile -t sandbox_v2_test .`),
+# (`docker build -f sandbox/hass_client/Dockerfile -t sandbox_test .`),
 # because the image installs the local `homeassistant` checkout. With the repo
 # root as context, Docker reads the repo-root `.dockerignore` (which already
 # excludes .git, tests, .venv, docs, config, __pycache__) — NOT this file.
-# THIS file applies only when the build context is `sandbox_v2/hass_client/`
+# THIS file applies only when the build context is `sandbox/hass_client/`
 # itself. It is kept self-sufficient for that case and to document intent.
 
 # Version control / CI
@@ -37,7 +37,7 @@ Dockerfile
 .dockerignore
 docker-compose*.yml
 
-# Sandbox v2 sub-trees not needed in the runtime image
+# Sandbox sub-trees not needed in the runtime image
 docs
 plans
 *.md
