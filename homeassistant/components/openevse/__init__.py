@@ -18,8 +18,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
     """Set up OpenEVSE from a config entry."""
     charger = OpenEVSE(
         entry.data[CONF_HOST],
-        entry.data.get(CONF_USERNAME, ""),
-        entry.data.get(CONF_PASSWORD, ""),
+        entry.data.get(CONF_USERNAME) or "",
+        entry.data.get(CONF_PASSWORD) or "",
         session=async_get_clientsession(hass),
     )
 
