@@ -955,9 +955,7 @@ async def test_reload_ssl_certificate_service_exists(
     assert hass.services.has_service("http", "reload_ssl_certificate")
 
 
-async def test_ssl_auto_reload_disabled(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
+async def test_ssl_auto_reload_disabled(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test that setting ssl_auto_reload to false disables the watcher."""
     cert_path, key_path, _ = await hass.async_add_executor_job(
         _setup_empty_ssl_pem_files, tmp_path
@@ -1002,9 +1000,7 @@ async def test_reload_ssl_certificate_coalescing(
     )
 
     context = server_context_modern()
-    await hass.async_add_executor_job(
-        _create_self_signed_cert, cert_path, key_path
-    )
+    await hass.async_add_executor_job(_create_self_signed_cert, cert_path, key_path)
 
     with patch(
         "homeassistant.util.ssl.server_context_modern",
