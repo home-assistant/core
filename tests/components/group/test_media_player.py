@@ -105,7 +105,8 @@ async def test_state_reporting(hass: HomeAssistant) -> None:
     Otherwise, the group state is idle if all group members are idle.
     Otherwise, the group state is paused if all group members are paused.
     Otherwise, the group state is playing if all group members are playing.
-    Otherwise, the group state is on if at least one group member is not off, unavailable or unknown.
+    Otherwise, the group state is on if at least one group member is
+    not off, unavailable or unknown.
     Otherwise, the group state is off.
     """
     await async_setup_component(

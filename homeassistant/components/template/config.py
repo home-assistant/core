@@ -18,6 +18,7 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
@@ -59,6 +60,7 @@ from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
+    device_tracker as device_tracker_platform,
     event as event_platform,
     fan as fan_platform,
     image as image_platform,
@@ -119,7 +121,10 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
             invalid = {CONF_TRIGGERS, CONF_ACTIONS}
             if found_invalid := invalid.intersection(set(obj.keys())):
                 raise vol.Invalid(
-                    f"Unsupported option(s) found for domain {found_domains.pop()}, please remove ({', '.join(found_invalid)}) from your configuration",
+                    f"Unsupported option(s) found for domain"
+                    f" {found_domains.pop()}, please remove"
+                    f" ({', '.join(found_invalid)})"
+                    " from your configuration",
                 )
 
         return obj
@@ -154,7 +159,8 @@ def validate_trigger_format(
         [CONF_SENSORS, CONF_BINARY_SENSORS, *PLATFORMS]
     ):
         _LOGGER.warning(
-            "Invalid template configuration found, trigger option is missing matching domain"
+            "Invalid template configuration found,"
+            " trigger option is missing matching domain"
         )
         create_trigger_format_issue(hass, raw_config, CONF_TRIGGERS)
 
@@ -194,6 +200,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             ),
             vol.Optional(COVER_DOMAIN): vol.All(
                 cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
+            ),
+            vol.Optional(DEVICE_TRACKER_DOMAIN): vol.All(
+                cv.ensure_list, [device_tracker_platform.TRACKER_YAML_SCHEMA]
             ),
             vol.Optional(EVENT_DOMAIN): vol.All(
                 cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
@@ -299,8 +308,10 @@ async def _async_resolve_template_config(
     # Trigger based template entities retain CONF_VARIABLES because the variables are
     # always executed between the trigger and action.
     elif CONF_TRIGGERS not in config and CONF_VARIABLES in config:
-        # State based template entities have 2 layers of variables.  Variables at the section level
-        # and variables at the entity level should be merged together at the entity level.
+        # State based template entities have 2 layers of
+        # variables. Variables at the section level and
+        # variables at the entity level should be merged
+        # together at the entity level.
         section_variables = config.pop(CONF_VARIABLES)
         platform_config: list[ConfigType] | ConfigType
         platforms = [platform for platform in PLATFORMS if platform in config]

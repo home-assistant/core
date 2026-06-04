@@ -148,7 +148,7 @@ async def test_coordinator_dhw_config_update_error(
     mock_bsblan: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinator handling when DHW config update fails but keeps existing data."""
+    """Test coordinator when DHW config update fails but keeps existing data."""
     # First, set up the integration successfully
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

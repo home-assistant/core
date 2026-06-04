@@ -2,12 +2,13 @@
 
 import asyncio
 from dataclasses import replace
+from functools import partial
 import logging
 import os
 import struct
 from typing import Any
 
-from aiohasupervisor import SupervisorError
+from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
     GreenOptions,
     HomeAssistantOptions,
@@ -19,12 +20,12 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.components import frontend
 from homeassistant.components.homeassistant import async_set_stop_handler
-from homeassistant.components.homeassistant.const import DATA_STOP_HANDLER
 from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
 )
+from homeassistant.components.onboarding import async_is_onboarded
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
@@ -301,6 +302,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="supervisor_not_connected",
         ) from err
 
+    # During onboarding, Supervisor may be out of date. Attempt an update now
+    # so that core loads against an up-to-date Supervisor. A
+    # SupervisorBadRequestError means there is no update available, proceed
+    # normally. No exception means an update was triggered and we must wait for
+    # it to complete. Any other SupervisorError means something unexpected went
+    # wrong and we cannot proceed right now.
+    if not async_is_onboarded(hass):
+        try:
+            await supervisor_client.supervisor.update()
+        except SupervisorBadRequestError:
+            pass  # No update available, proceed normally.
+        except SupervisorError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="supervisor_not_connected",
+            ) from err
+        else:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="supervisor_update_pending",
+            )
+
     # Get or create a refresh token for the Supervisor user
     user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
     if user.refresh_tokens:
@@ -348,17 +371,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await supervisor_client.homeassistant.stop()
 
     # Install a custom handler for the homeassistant.restart / stop services,
-    # and restore the previous one when this entry unloads.
-    prev_stop_handler = hass.data.get(DATA_STOP_HANDLER)
+    # and restore the default one when this entry unloads.
     async_set_stop_handler(hass, _async_stop)
+    entry.async_on_unload(partial(async_set_stop_handler, hass))
 
-    def _restore_stop_handler() -> None:
-        if prev_stop_handler is not None:
-            async_set_stop_handler(hass, prev_stop_handler)
-        else:
-            hass.data.pop(DATA_STOP_HANDLER, None)
-
-    entry.async_on_unload(_restore_stop_handler)
     last_timezone = None
     last_country = None
 
@@ -413,7 +429,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Setup hardware integration for the detected board type
-    # This is done after the initial data refresh to ensure that the board info is available.
+    # This is done after the initial data refresh to ensure that
+    # the board info is available.
     os_info = get_os_info(hass)
     if (board := os_info.get("board")) is not None and (
         hw_integration := HARDWARE_INTEGRATIONS.get(board)
@@ -423,7 +440,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     # Check for deprecated setup and create issues if needed.
-    # This is done after the initial data refresh to ensure that the info needed is available.
+    # This is done after the initial data refresh to ensure that
+    # the info needed is available.
     _check_deprecated_setup(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

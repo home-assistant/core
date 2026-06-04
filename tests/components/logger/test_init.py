@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components import logger
-from homeassistant.components.logger import LOGSEVERITY
+from homeassistant.components.logger import DOMAIN, LOGSEVERITY
 from homeassistant.components.logger.helpers import SAVE_DELAY_LONG
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
@@ -24,7 +24,7 @@ ZONE_NS = f"{COMPONENTS_NS}.zone"
 GROUP_NS = f"{COMPONENTS_NS}.group"
 CONFIGED_NS = "otherlibx"
 UNCONFIG_NS = "unconfigurednamespace"
-INTEGRATION = "test_component"
+INTEGRATION = "test_logging"
 INTEGRATION_NS = f"homeassistant.components.{INTEGRATION}"
 
 
@@ -140,7 +140,7 @@ async def test_setting_level(hass: HomeAssistant) -> None:
     # Test set default level
     with patch("logging.getLogger", mocks.__getitem__):
         await hass.services.async_call(
-            "logger", "set_default_level", {"level": "fatal"}, blocking=True
+            DOMAIN, "set_default_level", {"level": "fatal"}, blocking=True
         )
     assert len(mocks[""].orig_setLevel.mock_calls) == 2
     assert mocks[""].orig_setLevel.mock_calls[1][1][0] == LOGSEVERITY["FATAL"]
@@ -148,7 +148,7 @@ async def test_setting_level(hass: HomeAssistant) -> None:
     # Test update other loggers
     with patch("logging.getLogger", mocks.__getitem__):
         await hass.services.async_call(
-            "logger",
+            DOMAIN,
             "set_level",
             {"test.child": "info", "new_logger": "notset"},
             blocking=True,

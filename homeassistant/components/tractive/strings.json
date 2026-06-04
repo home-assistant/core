@@ -20,18 +20,15 @@
       }
     }
   },
+  "device": {
+    "tracker": {
+      "name": "Tracker {id}"
+    }
+  },
   "entity": {
     "binary_sensor": {
-      "tracker_battery_charging": {
-        "name": "Tracker battery charging"
-      },
       "tracker_power_saving": {
-        "name": "Tracker power saving"
-      }
-    },
-    "device_tracker": {
-      "tracker": {
-        "name": "Tracker"
+        "name": "Power saving"
       }
     },
     "sensor": {
@@ -50,11 +47,8 @@
       "rest_time": {
         "name": "Rest time"
       },
-      "tracker_battery_level": {
-        "name": "Tracker battery"
-      },
       "tracker_state": {
-        "name": "Tracker state",
+        "name": "Status",
         "state": {
           "inaccurate_position": "Inaccurate position",
           "not_reporting": "Not reporting",
@@ -69,11 +63,19 @@
         "name": "Live tracking"
       },
       "tracker_buzzer": {
-        "name": "Tracker buzzer"
+        "name": "Buzzer"
       },
       "tracker_led": {
-        "name": "Tracker LED"
+        "name": "LED"
       }
+    }
+  },
+  "exceptions": {
+    "failed_to_turn_off": {
+      "message": "An error occurred while trying to turn off {entity}"
+    },
+    "failed_to_turn_on": {
+      "message": "An error occurred while trying to turn on {entity}"
     }
   }
 }
