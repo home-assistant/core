@@ -53,11 +53,20 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         super().__init__(coordinator, station)
         self._station_id = station.id
         self._attr_unique_id = f"{station.id}_status"
+        attrs = {}
+        if station.opening_times:
+            attrs["opening_times"] = [
+                {"start": ot.start, "end": ot.end, "text": ot.text}
+                for ot in station.opening_times
+            ]
+        if station.whole_day is not None:
+            attrs["whole_day"] = station.whole_day
+
         if coordinator.show_on_map:
-            self._attr_extra_state_attributes = {
-                ATTR_LATITUDE: station.lat,
-                ATTR_LONGITUDE: station.lng,
-            }
+            attrs[ATTR_LATITUDE] = station.lat
+            attrs[ATTR_LONGITUDE] = station.lng
+
+        self._attr_extra_state_attributes = attrs
 
     @property
     def is_on(self) -> bool | None:
