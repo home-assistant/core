@@ -1,29 +1,37 @@
 {
   "alerts": {
     "warnings": {
-      "value": [],
-      "label": "Warnings"
+      "label": "Warnings",
+      "value": []
     },
     "watches": {
-      "value": [],
-      "label": "Watches"
-    },
-    "advisories": {
+      "label": "Watches",
       "value": [
         {
-          "title": "Frost Advisory",
-          "date": "Monday October 03, 2022 at 15:05 EDT"
+          "title": "Severe Thunderstorm Watch",
+          "date": "2026-06-04T01:11:57.362Z",
+          "alertColourLevel": "yellow",
+          "expiryTime": "2026-06-04T17:11:57.362Z",
+          "text": "Conditions are favourable for the development of severe thunderstorms that may be capable of producing strong wind gusts, large hail and heavy rain. Locations: Portions of southern Manitoba. Potential rainfall rates: locally 30 to 50 mm per hour in thunderstorms. Potential wind gusts: 90 km/h or higher in thunderstorms. Time span: Continuing through this evening. Remarks: Thunderstorms, some of which may be severe, continue to track across parts of southern Manitoba starting this evening.",
+          "area": "City of Winnipeg",
+          "status": "continued",
+          "confidence": "High",
+          "impact": "Moderate",
+          "alert_code": "STV"
         }
-      ],
-      "label": "Advisories"
+      ]
+    },
+    "advisories": {
+      "label": "Advisories",
+      "value": []
     },
     "statements": {
-      "value": [],
-      "label": "Statements"
+      "label": "Statements",
+      "value": []
     },
     "endings": {
-      "value": [],
-      "label": "Endings"
+      "label": "Endings",
+      "value": []
     }
   },
   "conditions": {

@@ -4,10 +4,6 @@
     'advisories': dict({
       'label': 'Advisories',
       'value': list([
-        dict({
-          'date': 'Monday October 03, 2022 at 15:05 EDT',
-          'title': 'Frost Advisory',
-        }),
       ]),
     }),
     'endings': dict({
@@ -28,6 +24,18 @@
     'watches': dict({
       'label': 'Watches',
       'value': list([
+        dict({
+          'alertColourLevel': 'yellow',
+          'alert_code': 'STV',
+          'area': 'City of Winnipeg',
+          'confidence': 'High',
+          'date': '2026-06-04T01:11:57.362Z',
+          'expiryTime': '2026-06-04T17:11:57.362Z',
+          'impact': 'Moderate',
+          'status': 'continued',
+          'text': 'Conditions are favourable for the development of severe thunderstorms that may be capable of producing strong wind gusts, large hail and heavy rain. Locations: Portions of southern Manitoba. Potential rainfall rates: locally 30 to 50 mm per hour in thunderstorms. Potential wind gusts: 90 km/h or higher in thunderstorms. Time span: Continuing through this evening. Remarks: Thunderstorms, some of which may be severe, continue to track across parts of southern Manitoba starting this evening.',
+          'title': 'Severe Thunderstorm Watch',
+        }),
       ]),
     }),
   })
