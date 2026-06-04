@@ -150,8 +150,7 @@ class SandboxProxyEntity(Entity):
         """Forward a service call to the sandbox.
 
         Domain proxies translate each entity method into one of these
-        calls (the spike's Option B). The bridge coalesces calls made in
-        the same tick into a single multi-entity RPC.
+        calls (the spike's Option B); the bridge sends one RPC per call.
 
         ``self._context`` is the main-side Context the service framework set
         for this call. Passing it lets the bridge remember it, so a state

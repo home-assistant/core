@@ -424,6 +424,19 @@ for the per-failure-category remediation table.
   consumer's send-call to the producer. Worth a small spec before any
   cross-sandbox split actually trips this.
 
+- **Coalesce same-tick entity service calls (perf optimisation).** Each proxy
+  method call currently forwards as its own `sandbox/call_service` RPC. An
+  earlier iteration batched calls made in the same event-loop tick for one
+  `(domain, service, service_data)` into a single multi-entity RPC, so a
+  200-light area call paid one round-trip instead of 200. It was dropped to
+  keep the first iteration simple. Reintroduce it as a pure dispatch-layer
+  optimisation behind `SandboxBridge.async_call_service`: gather the tick's
+  calls, fire one RPC per coalesced bucket, and resolve every caller's future
+  when it completes — each caller must still learn when its call finished and
+  see any error (a service call is never fire-and-forget). Only response-less
+  calls can coalesce: a `return_response=True` call needs its own response, so
+  it stays a single-entity RPC.
+
 For per-failure remediation (residual `test-only` failures, the rare
 `unknown` bucket entries, environmental rows) see
 [`../BACKLOG.md`](../BACKLOG.md).

@@ -7,7 +7,7 @@
 > rather than a wired-but-unused config flag. The chain: the concurrent
 > channel dispatcher (Phase 12), all 32 domain proxies (Phase 13),
 > `data_schema` / service-schema marshalling + `unique_id` propagation
-> + the 200-light perf benchmark + the `async_unload_entry` core hook
+> + the `async_unload_entry` core hook
 > (Phase 14), the v1-baseline compat sweep (Phase 15), the
 > 807-integration cross-sweep + categorised backlog (Phase 16), the
 > `ConfigEntry.sandbox` field that lifted the test-level pass rate
@@ -336,11 +336,11 @@ sole core change). The proxy holds a cached state + attributes dict
 fed by `state_changed`; `state`, `available`, and per-domain typed
 properties (`is_on`, `brightness`, `hs_color`, …) read from the cache.
 
-Proxy method calls (e.g., `async_turn_on`) translate into
-`sandbox/call_service` RPCs via a per-loop-tick batcher
-(`_CallServiceBatcher`) that coalesces matching
-`(domain, service, service_data)` calls into one multi-entity RPC — so
-a 200-light area call pays one RPC, not 200.
+Proxy method calls (e.g., `async_turn_on`) translate into one
+`sandbox/call_service` RPC each. Coalescing same-tick calls for one service
+into a single multi-entity RPC (so a 200-light area call pays one round-trip,
+not 200) is a noted future optimisation — see
+[`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md); the first iteration keeps it simple.
 
 Exception translation rebuilds sandbox-side `vol.Invalid` /
 `vol.MultipleInvalid` as the real exception (with its `.path`) from a
@@ -370,13 +370,6 @@ override `sandbox_apply_state` to set the mangled attribute directly.
 Unknown-domain registrations still fall back to the generic
 `SandboxProxyEntity` (state + attributes work; domain-typed properties
 don't).
-
-The Phase 14 perf benchmark
-([`test_perf.py`](../tests/components/sandbox/test_perf.py))
-registers 200 proxy lights, area-targets `light.turn_on`, and asserts
-the batcher coalesces the 200 entity invocations into ≤2 RPCs in under
-500 ms. A regression that broke same-tick coalescing would fail
-loudly.
 
 ## Service & event mirroring
 

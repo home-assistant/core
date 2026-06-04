@@ -305,10 +305,10 @@ async def test_proxy_method_translates_to_call_service(
     assert struct_to_dict(calls[0].target) == {"entity_id": ["light.bedroom"]}
 
 
-async def test_proxy_method_batches_concurrent_calls(
+async def test_proxy_method_concurrent_calls_each_own_rpc(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
-    """Many entities targeted in one tick coalesce into one ``call_service``."""
+    """Each proxy method call forwards as its own single-entity ``call_service``."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
     calls: list[pb.CallService] = []
 
@@ -334,8 +334,6 @@ async def test_proxy_method_batches_concurrent_calls(
             await sandbox_channel.call("sandbox/register_entity", register)
             sandbox_ids.append(f"light.bulb_{idx}")
 
-        # Call turn_on on every proxy "simultaneously" (no awaits between
-        # them) — the batcher should see all of them in the same tick.
         async def _invoke(sandbox_id: str) -> None:
             proxy = bridge._entities[sandbox_id]
             await proxy.async_turn_on()
@@ -345,10 +343,11 @@ async def test_proxy_method_batches_concurrent_calls(
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert len(calls) == 1
-    assert calls[0].domain == "light"
-    assert calls[0].service == "turn_on"
-    assert sorted(struct_to_dict(calls[0].target)["entity_id"]) == sorted(sandbox_ids)
+    # One RPC per entity call (no coalescing in the first iteration).
+    assert len(calls) == len(sandbox_ids)
+    assert all(c.domain == "light" and c.service == "turn_on" for c in calls)
+    targeted = sorted(struct_to_dict(c.target)["entity_id"][0] for c in calls)
+    assert targeted == sorted(sandbox_ids)
 
 
 async def test_proxy_method_exception_translated(
