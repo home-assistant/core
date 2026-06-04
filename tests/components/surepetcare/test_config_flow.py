@@ -121,7 +121,7 @@ async def test_flow_entry_already_exists(
 ) -> None:
     """Test user input for config_entry that already exists."""
     first_entry = MockConfigEntry(
-        domain="surepetcare",
+        domain=DOMAIN,
         data={
             "username": "test-username",
             "password": "test-password",
@@ -152,7 +152,7 @@ async def test_reauthentication(
 ) -> None:
     """Test surepetcare reauthentication."""
     old_entry = MockConfigEntry(
-        domain="surepetcare",
+        domain=DOMAIN,
         data={
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
@@ -189,7 +189,7 @@ async def test_reauthentication(
 async def test_reauthentication_failure(hass: HomeAssistant) -> None:
     """Test surepetcare reauthentication failure."""
     old_entry = MockConfigEntry(
-        domain="surepetcare",
+        domain=DOMAIN,
         data=INPUT_DATA,
         unique_id="USERID",
     )
@@ -219,7 +219,7 @@ async def test_reauthentication_failure(hass: HomeAssistant) -> None:
 async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
     """Test surepetcare reauthentication failure."""
     old_entry = MockConfigEntry(
-        domain="surepetcare",
+        domain=DOMAIN,
         data=INPUT_DATA,
         unique_id="USERID",
     )
@@ -249,7 +249,7 @@ async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
 async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
     """Test surepetcare reauthentication failure."""
     old_entry = MockConfigEntry(
-        domain="surepetcare",
+        domain=DOMAIN,
         data=INPUT_DATA,
         unique_id="USERID",
     )

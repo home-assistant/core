@@ -18,7 +18,7 @@ async def test_get_triggers(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test we get the expected triggers from a yolink flexfob."""
-    config_entry = MockConfigEntry(domain="yolink", data={})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -95,7 +95,7 @@ async def test_get_triggers_exception(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test get triggers when device type not flexfob."""
-    config_entry = MockConfigEntry(domain="yolink", data={})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entity = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,

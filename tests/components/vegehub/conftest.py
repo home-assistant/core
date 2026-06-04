@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.vegehub import DOMAIN
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -68,7 +69,7 @@ def mock_vegehub() -> Generator[Any]:
 async def fixture_mocked_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock VegeHub config entry."""
     return MockConfigEntry(
-        domain="vegehub",
+        domain=DOMAIN,
         data={
             CONF_MAC: TEST_SIMPLE_MAC,
             CONF_IP_ADDRESS: TEST_IP,

@@ -987,7 +987,7 @@ async def integration_fixture(
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org"},
         unique_id=str(client.driver.controller.home_id),
     )

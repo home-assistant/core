@@ -23,6 +23,7 @@ from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, assist_satellite, intent
+from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.assist_satellite import WyomingAssistSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.const import STATE_ON
@@ -43,7 +44,7 @@ async def setup_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     we can patch functions before the satellite task is run during setup.
     """
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,

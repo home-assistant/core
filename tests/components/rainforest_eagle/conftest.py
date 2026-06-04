@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry
 def config_entry_200(hass: HomeAssistant) -> MockConfigEntry:
     """Return a config entry."""
     entry = MockConfigEntry(
-        domain="rainforest_eagle",
+        domain=DOMAIN,
         data={
             CONF_CLOUD_ID: MOCK_CLOUD_ID,
             CONF_HOST: "192.168.1.55",
@@ -60,7 +60,7 @@ async def setup_rainforest_200(
 async def setup_rainforest_100(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
     """Set up rainforest."""
     MockConfigEntry(
-        domain="rainforest_eagle",
+        domain=DOMAIN,
         data={
             CONF_CLOUD_ID: MOCK_CLOUD_ID,
             CONF_HOST: "192.168.1.55",
