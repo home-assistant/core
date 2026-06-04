@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -29,14 +28,14 @@ class OPNsenseSensorDescription(SensorEntityDescription):
 SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
     OPNsenseSensorDescription(
         key="expires",
-        name="Expires",
+        translation_key="expires",
         data_key="expires",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
     ),
     OPNsenseSensorDescription(
         key="interface",
-        name="Interface",
+        translation_key="interface",
         data_key="intf_description",
         icon="mdi:lan",
     ),
@@ -97,7 +96,6 @@ class OPNsenseSensorEntity(
         """Initialize the sensor entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = None if description.name is UNDEFINED else description.name
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address
 

@@ -43,6 +43,16 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "expires": {
+        "name": "Expires"
+      },
+      "interface": {
+        "name": "Interface"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Connection failure while connecting to OPNsense API endpoint at {url}"
