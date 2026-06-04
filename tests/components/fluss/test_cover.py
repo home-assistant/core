@@ -96,14 +96,14 @@ async def test_cover_unavailable_when_offline(
     assert hass.states.get(ENTITY_ID_1).state == STATE_UNAVAILABLE
 
 
-async def test_cover_unavailable_on_transient_status_error(
+async def test_cover_unavailable_on_status_error(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A failed per-device status fetch raises UpdateFailed and marks the cover unavailable."""
+    """A failed per-device status fetch fails the refresh and marks the cover unavailable."""
     mock_api_client.async_get_device_status.return_value = {
         "status": {"internetConnected": True, "openCloseStatus": "Closed"}
     }
