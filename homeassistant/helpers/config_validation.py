@@ -38,7 +38,6 @@ from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_BELOW,
     CONF_CHOOSE,
-    CONF_COMMENT,
     CONF_CONDITION,
     CONF_CONDITIONS,
     CONF_CONTINUE_ON_ERROR,
@@ -61,6 +60,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_IF,
     CONF_MATCH,
+    CONF_NOTE,
     CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
@@ -1459,7 +1459,7 @@ SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
 SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
-    vol.Remove(CONF_COMMENT): str,  # Is only used in frontend
+    vol.Remove(CONF_NOTE): str,  # Is only used in frontend
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
@@ -1527,7 +1527,7 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
 
 CONDITION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
-    vol.Remove(CONF_COMMENT): str,  # Is only used in frontend
+    vol.Remove(CONF_NOTE): str,  # Is only used in frontend
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
@@ -1862,7 +1862,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
-        vol.Remove(CONF_COMMENT): str,  # Is only used in frontend
+        vol.Remove(CONF_NOTE): str,  # Is only used in frontend
     }
 )
 
@@ -1953,6 +1953,7 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             [
                 {
                     vol.Optional(CONF_ALIAS): string,
+                    vol.Remove(CONF_NOTE): str,  # Is only used in frontend
                     vol.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
                     vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }
