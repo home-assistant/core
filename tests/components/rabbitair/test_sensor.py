@@ -1,0 +1,55 @@
+"""Test the Rabbit Air sensor platform."""
+
+from unittest.mock import patch
+
+import pytest
+from rabbitair import Quality
+
+from homeassistant.components.rabbitair.const import DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .test_config_flow import (
+    TEST_HOST,
+    TEST_MAC,
+    TEST_TITLE,
+    TEST_TOKEN,
+    TEST_UNIQUE_ID,
+    get_mock_state,
+)
+
+from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_air_quality_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the air quality sensor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_ACCESS_TOKEN: TEST_TOKEN,
+            CONF_MAC: TEST_MAC,
+        },
+        title=TEST_TITLE,
+        unique_id=TEST_UNIQUE_ID,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "rabbitair.UdpClient.get_state",
+        return_value=get_mock_state(quality=Quality.High),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.rabbit_air_air_quality")
+    assert state
+    assert state.state == "high"
+
+    registry_entry = entity_registry.async_get("sensor.rabbit_air_air_quality")
+    assert registry_entry
+    assert registry_entry.unique_id == f"{TEST_UNIQUE_ID}_air_quality"
