@@ -1,7 +1,12 @@
 """Tests for the Lutron Caseta integration."""
 
+from unittest.mock import patch
+
+from pylutron_caseta.color_value import WarmCoolColorValue
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -34,7 +39,6 @@ async def test_light_unique_id(
 
 async def test_previous_brightness(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test brightness tracked and restored."""
     await async_setup_integration(hass, MockBridge)
@@ -165,3 +169,51 @@ async def test_previous_brightness_zero_not_remembered(
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 25
+
+
+class MockBridgeWithColorLight(MockBridge):
+    """Mock bridge that also exposes a color-temperature-capable light."""
+
+    def load_devices(self):
+        """Add a white-tune light to the standard mock devices."""
+        devices = super().load_devices()
+        devices["903"] = {
+            "device_id": "903",
+            "current_state": 50,
+            "fan_speed": None,
+            "zone": "903",
+            "name": "Kitchen_Color Light",
+            "button_groups": None,
+            "type": "WhiteTune",
+            "model": None,
+            "serial": 5442323,
+            "tilt": None,
+            "area": "1025",
+            "white_tuning_range": {"Min": 2700, "Max": 6500},
+            "color": WarmCoolColorValue(3000),
+        }
+        return devices
+
+
+async def test_color_only_turn_on_preserves_brightness(
+    hass: HomeAssistant,
+) -> None:
+    """Test a color-only turn-on does not override the current brightness."""
+    mock_entry = await async_setup_integration(hass, MockBridgeWithColorLight)
+
+    entity_id = "light.kitchen_color_light"
+    bridge = mock_entry.runtime_data.bridge
+
+    with patch.object(bridge, "set_value", wraps=bridge.set_value) as mock_set_value:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_COLOR_TEMP_KELVIN: 3000},
+            target={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # A color-only change must leave brightness untouched, i.e. value=None
+    assert mock_set_value.call_args is not None
+    assert mock_set_value.call_args.kwargs["value"] is None

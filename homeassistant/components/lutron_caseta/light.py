@@ -193,21 +193,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             await self._async_set_warm_dim(white_color)
             return
 
-        brightness: int | None
-
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs.pop(ATTR_BRIGHTNESS)
-            # Only remember non-zero levels, so a later turn-on without an
-            # explicit brightness never restores the light to "off"
-            if brightness:
-                self._prev_brightness = brightness
-        # No explicit brightness: use last known non-zero brightness
-        elif self._prev_brightness is None:
-            # No history at all: default to full brightness
-            brightness = 255
-        else:
-            brightness = self._prev_brightness
-
+        # Parse the color first, so a color-only call can leave brightness alone
         color: LutronColorMode | None = None
         hs_color: tuple[float, float] | None = kwargs.pop(ATTR_HS_COLOR, None)
         kelvin_color: int | None = kwargs.pop(ATTR_COLOR_TEMP_KELVIN, None)
@@ -216,6 +202,23 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             color = FullColorValue(hs_color[0], hs_color[1])
         elif kelvin_color is not None:
             color = WarmCoolColorValue(kelvin_color)
+
+        brightness: int | None
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs.pop(ATTR_BRIGHTNESS)
+            # Only remember non-zero levels, so a later turn-on without an
+            # explicit brightness never restores the light to "off"
+            if brightness:
+                self._prev_brightness = brightness
+        elif color is not None:
+            # Color-only change: pass None so the device keeps its brightness
+            brightness = None
+        elif self._prev_brightness is None:
+            # No history at all: default to full brightness
+            brightness = 255
+        else:
+            # Restore the last known non-zero brightness
+            brightness = self._prev_brightness
 
         await self._async_set_brightness(brightness, color, **kwargs)
 

@@ -38,6 +38,7 @@ _LEAP_DEVICE_TYPES = {
         "TempInWallPaddleDimmer",
         "WallDimmerWithPreset",
         "Dimmed",
+        "WhiteTune",
     ],
     "switch": [
         "WallSwitch",
