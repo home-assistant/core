@@ -20,7 +20,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "The new password for your Vistapool account."
+          "password": "The password for your Vistapool account."
         },
         "description": "The stored password for {username} is no longer accepted by Vistapool. Enter the current password to restore the connection.",
         "title": "Reauthenticate Vistapool"
