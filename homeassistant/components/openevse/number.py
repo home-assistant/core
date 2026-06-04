@@ -43,9 +43,9 @@ NUMBER_TYPES: tuple[OpenEVSENumberDescription, ...] = (
     OpenEVSENumberDescription(
         key="charge_rate",
         translation_key="charge_rate",
-        value_fn=lambda ev: float(ev.max_current_soft or 0),
-        min_value_fn=lambda ev: float(ev.min_amps or 0),
-        max_value_fn=lambda ev: float(ev.max_amps or 0),
+        value_fn=lambda ev: int(ev.max_current_soft or 0),
+        min_value_fn=lambda ev: int(ev.min_amps or 0),
+        max_value_fn=lambda ev: int(ev.max_amps or 0),
         set_value_fn=lambda ev, value: ev.set_current(int(value)),
         native_step=1.0,
         entity_category=EntityCategory.CONFIG,
