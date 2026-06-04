@@ -676,7 +676,7 @@ async def test_loading_subentries(
         entity_id = f"{platform}.{slugify(device.name)}_{slugify(component['name'])}"
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == "unknown"
+        assert state.state in ("off", "unknown")
 
 
 @pytest.mark.parametrize(

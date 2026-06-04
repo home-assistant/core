@@ -3242,7 +3242,7 @@ async def test_migrate_of_incompatible_config_entry(
                 "command_topic": "test-topic",
                 "command_template": "{{ value }}",
                 "state_topic": "test-topic",
-                "value_template": "{{ value_json.value }}",
+                "state_value_template": "{{ value_json.value }}",
                 "fan_speed_settings": {
                     "percentage_command_template": "{{ value }}",
                     "percentage_command_topic": "test-topic/pct",
@@ -3801,7 +3801,7 @@ async def test_migrate_of_incompatible_config_entry(
                 "command_topic": "test-topic",
                 "command_template": "{{ value }}",
                 "state_topic": "test-topic",
-                "value_template": "{{ value_json.value }}",
+                "state_value_template": "{{ value_json.value }}",
                 "optimistic": True,
                 "available_tones": ["Happy hour", "Cooling alarm"],
                 "support_duration": True,
