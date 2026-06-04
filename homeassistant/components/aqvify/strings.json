@@ -16,7 +16,6 @@
         "data_description": {
           "api_key": "Your Aqvify API key"
         },
-
         "description": "Navigate to your [Aqvify account]({aqvify_url}), copy your API key, and paste it below."
       }
     }

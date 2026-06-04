@@ -45,7 +45,7 @@ def mock_aqvify_client(
     device_fixture,
     device_data_fixture,
 ) -> Generator[MagicMock]:
-    """Mock an Aqify client."""
+    """Mock an Aqvify client."""
 
     with (
         patch(
@@ -78,10 +78,11 @@ def load_device_data_file() -> str:
 
 
 @pytest.fixture
-async def device_fixture(hass: HomeAssistant, load_device_file: str) -> dict[str, Any]:
+async def device_fixture(
+    hass: HomeAssistant, load_device_file: str
+) -> list[dict[str, Any]]:
     """Fixture for device."""
     return await async_load_json_array_fixture(hass, load_device_file, DOMAIN)
-    # return load_json_value_fixture(load_device_file, DOMAIN)
 
 
 @pytest.fixture
