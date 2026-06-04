@@ -224,3 +224,24 @@ async def test_alarm_hub_device_and_entities(
         assert hass.states.get(entry.entity_id) == snapshot(
             name=f"{entry.entity_id}-state"
         )
+
+
+async def test_alarm_hub_disconnected_battery(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A disconnected backup battery (sparse payload) degrades gracefully."""
+    assert alarm_hub.alarm_hub is not None
+    alarm_hub.alarm_hub["battery"] = {"connection": "disconnected"}
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    # Battery problem sensor is not "on" when the status is unknown/absent.
+    battery = hass.states.get("binary_sensor.alarm_hub_battery")
+    assert battery is not None
+    assert battery.state == "off"
+
+    # Voltage is unknown rather than raising.
+    voltage = hass.states.get("sensor.alarm_hub_battery_voltage")
+    assert voltage is not None
+    assert voltage.state == "unknown"
