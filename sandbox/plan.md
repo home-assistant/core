@@ -62,18 +62,18 @@ A user adding a light integration through the frontend should end up with:
 - YAML-only integrations (no config entry → no sandbox).
 - Frontend UI changes. Routing is transparent; surfacing "which integration
   runs where" is a follow-up.
-- Migration tooling from v1 sandbox config entries to v2. v1 stays as-is;
-  users opt into v2 by enabling it.
+- Migration tooling from v1 sandbox config entries to the sandbox. v1 stays as-is;
+  users opt into the sandbox by enabling it.
 - Hot-reload of sandbox processes without HA restart.
 
 ## Architecture decisions (resolved)
 
 | Decision | Choice |
 |---|---|
-| **v2 vs v1** | Fresh rewrite. v1 removed 2026-05-28 (recover from git history). |
+| **Lineage** | Fresh rewrite. v1 removed 2026-05-28 (recover from git history). |
 | **Assignment rules** | Computed at runtime from manifest + platform inspection. No new user config. |
 | **Frontend scope** | Backend-only. Frontend is unchanged; integration setup transparently routes. |
-| **v1 limitations** | All addressed in v2 (auth scope, data isolation, Store routing, graceful shutdown). |
+| **v1 limitations** | All addressed in the sandbox (auth scope, data isolation, Store routing, graceful shutdown). |
 | **State sync** | Main subscribes to sandbox's state stream (symmetric with how main → sandbox sharing works). |
 | **Service/event mirroring** | Sandbox pushes registrations to main at registration time; dynamic registrations notify explicitly. |
 | **Platform compat** | Explicit deny-list (`stt`, `tts`, `conversation`, `assist_satellite`, `wake_word`, `image`, `script`, `automation`, `scene`, …). |
@@ -105,7 +105,7 @@ does significant work (e.g., `ai_task._resolve_attachments` fetches bytes
 and writes temp files) *before* calling the entity method, and the entity
 method's kwargs don't satisfy the original service schema any more.
 Neither bridge option handles this cleanly; both are intercepting at the
-wrong layer. Resolution paths (out of scope for v2 phases 1–11):
+wrong layer. Resolution paths (out of scope for the sandbox phases 1–11):
 
 1. **Service-handler-level interception** — forward raw service data to
    the sandbox before the handler runs; sandbox-side handler runs against
@@ -133,7 +133,7 @@ ends with a verification step.
   const, __init__, strings, translations)
 - [ ] Pin `sandbox` in `CODEOWNERS` and add to dev requirements where
   needed. **Do not** touch `requirements_all.txt` — generated.
-  *(Deferred until v2 is ready to ship; not blocking Phase 3+.)*
+  *(Deferred until the sandbox is ready to ship; not blocking Phase 3+.)*
 
 ### Phase 1 — Entity bridge spike ✅ COMPLETE
 
@@ -444,8 +444,8 @@ hook are reused unchanged.
   - [x] Main re-fires the event on its own bus. *(For Phase 6 the
     re-fire uses a fresh local context — the sandbox's `context_id`
     is forwarded on the wire but not honoured by main's user/origin
-    resolution. v2 calls this out as intentional; carrying a richer
-    `Context` shape is post-v2 work.)*
+    resolution. the sandbox calls this out as intentional; carrying a richer
+    `Context` shape is post-launch work.)*
 - [x] Tests:
   - [x] Sandboxed integration registers a service → main can call it
     (`tests/components/sandbox/test_bridge.py::test_register_service_installs_forwarder`).
@@ -507,7 +507,7 @@ the dispatcher directly via a hand-built scoped token.
     first. The `SharingConfig` flag is carried into the runtime today
     so the consumer can hang off it later.)*
   - [x] Knob lives in the sandbox group's runtime data (not user-facing
-    in v2; default `False` for `custom`, default `True` for `built-in`
+    in the sandbox; default `False` for `custom`, default `True` for `built-in`
     is sensible — tracked as decision). *(Implemented as
     `SandboxGroupConfig` + `DEFAULT_GROUP_CONFIGS`. `built-in` and
     `main` default to all-on; `custom` falls back to all-off.)*
@@ -657,7 +657,7 @@ module-attribute rebinding can't reach it) and calling
 Lands the two pytest plugins (in-process + real-subprocess) and the
 compat lane runner under `sandbox/hass_client/hass_client/testing/`
 + `sandbox/run_compat.py`. The v1 wording ("drop-in `HomeAssistant`
-→ `RemoteHomeAssistant`") is reinterpreted for v2's subprocess
+→ `RemoteHomeAssistant`") is reinterpreted for the sandbox's subprocess
 architecture: there is no `RemoteHomeAssistant` class — integration
 code runs in a sandbox subprocess against its own `HomeAssistant`. The
 two lanes correspond to *how that subprocess is materialised* — the
@@ -681,18 +681,18 @@ COMPAT.csv on every invocation.
     `async_setup_inprocess_sandbox()` helper for tests that want to
     plug into the same wiring without the fixture.
     *(v1's plan called this "drop-in `HomeAssistant` →
-    `RemoteHomeAssistant`"; v2 has no `RemoteHomeAssistant` so the
+    `RemoteHomeAssistant`"; the sandbox has no `RemoteHomeAssistant` so the
     equivalent "fast compat" lane skips the subprocess instead.)*
 - [x] `sandbox/hass_client/hass_client/testing/conftest_sandbox.py`:
   - [x] Real-subprocess fixture — `sandbox_subprocess` plus
     `async_setup_subprocess_sandbox()`. Uses the integration's default
     `SandboxManager` so subprocess spawn matches production exactly.
-    *(v1's "real-websocket" framing doesn't apply — v2's manager↔runtime
+    *(v1's "real-websocket" framing doesn't apply — the sandbox's manager↔runtime
     transport is stdio, not a websocket. The control-plane substitute
     is the real subprocess.)*
-  - [x] No module-level socket monkey-patch needed: v2's transport is
+  - [x] No module-level socket monkey-patch needed: the sandbox's transport is
     stdin/stdout pipes, not network sockets. v1's `pytest-socket`
-    workaround simply has no v2 analogue.
+    workaround simply has no sandbox analogue.
   - [x] Freezer detection: `pytest_collection_modifyitems` adds a skip
     marker to any test whose `fixturenames` includes `freezer`, or
     that's explicitly tagged `@pytest.mark.no_sandbox_freezer`. The
@@ -703,7 +703,7 @@ COMPAT.csv on every invocation.
   - [x] `sandbox/run_compat.py` — runs `pytest -p <plugin>` against
     a given list of integration test directories, parses pytest's
     summary line, writes `COMPAT.csv` + `COMPAT.md`. Per-failure
-    output captured under `$SANDBOX_V2_ERRORS_DIR` (default
+    output captured under `$SANDBOX_ERRORS_DIR` (default
     `/tmp/sandbox_errors`).
   - [x] `sandbox/COMPAT.md` seeded with the runner's usage + plugin
     matrix. *(Re-running v1's 33-integration list is deferred to a
@@ -725,7 +725,7 @@ Phase-1-through-10 status block, and a directory-local `CLAUDE.md`
 points future Claude sessions at `OVERVIEW.md` / `plan.md` / the
 per-phase `STATUS-*.md` files. The v1 removal item stays deferred per
 plan — `sandbox/` and `homeassistant/components/sandbox/` remain
-untouched until v2 matches v1's compat numbers (Phase 10b) and ships
+untouched until the sandbox matches v1's compat numbers (Phase 10b) and ships
 at least one stable release. **No core HA files touched** — Phase 11
 is documentation only.
 
@@ -736,17 +736,17 @@ is documentation only.
   - [x] `sandbox/docs/auth-scoping-decision.md` (Phase 7)
 - [x] `sandbox/README.md` — same shape as `sandbox/README.md`, with
   a note that v1 still lives in `sandbox/`.
-- [x] CLAUDE.md / AGENTS.md updates if needed (point Claude to v2 docs).
+- [x] CLAUDE.md / AGENTS.md updates if needed (point Claude to sandbox docs).
   *(Shipped as a directory-local `sandbox/CLAUDE.md` — auto-loads
   when Claude works inside `sandbox/`, matches the
   `sandbox/CLAUDE.md` pattern for v1. The repo-root `CLAUDE.md` /
   `AGENTS.md` stay focused on core-wide guidance and do not call out
-  v2 specifically — the directory-local file is the right hop.)*
+  the sandbox specifically — the directory-local file is the right hop.)*
 - [ ] **Defer**: removing v1 (`sandbox/` and
-  `homeassistant/components/sandbox/`). Keep v1 around until v2 has
+  `homeassistant/components/sandbox/`). Keep v1 around until the sandbox has
   matched v1's compat numbers and at least one stable release.
   *(Deferred per plan — re-evaluate after Phase 10b's compat sweep
-  lands a real baseline and v2 ships at least one stable release.)*
+  lands a real baseline and the sandbox ships at least one stable release.)*
 
 ### Phase 12 — 9b: Concurrent channel dispatcher ✅ COMPLETE
 
@@ -976,7 +976,7 @@ instead so the curated baseline survives ad-hoc runs.
   would close the gap. *(99.19% — just below the threshold. The
   single follow-up that closes the gap is "move the sandbox-group
   tag off `entry.data`" — carry the group on a side-channel
-  (`hass.data[DATA_SANDBOX_V2].group_for_entry`) or re-derive via
+  (`hass.data[DATA_SANDBOX].group_for_entry`) or re-derive via
   classifier on every router lookup. Either approach eliminates the
   autotag's observable footprint and the 62 test-only failures
   vanish. v1 removal stays deferred until that follow-up lands and a
@@ -1028,7 +1028,7 @@ documentation only.
     integration. The outer concurrency is what actually shrinks the
     sweep from ~70 min serial to ~12 min wall.)*
   - [x] Per-test failure tracebacks captured via `--junit-xml` and
-    dumped under `$SANDBOX_V2_ERRORS_DIR/<domain>/<class>__<name>.txt`
+    dumped under `$SANDBOX_ERRORS_DIR/<domain>/<class>__<name>.txt`
     so the categoriser can walk them without re-running pytest.
   - [x] Per-integration summary line printed at completion:
     `<domain> -> <status> (Np/Nf/Ne/Ns) in <duration>s | ETA: <min>m`.
@@ -1082,7 +1082,7 @@ attaches the group to the FlowResult on CREATE_ENTRY, and
 into `ConfigEntry.sandbox` *before* `async_setup` runs (which is why
 post-construction `async_update_entry` doesn't work — the entry is
 already half-set-up by the time the framework dispatches the
-after-hook). `SANDBOX_GROUP_KEY` is gone; nothing in the v2 codebase
+after-hook). `SANDBOX_GROUP_KEY` is gone; nothing in the sandbox codebase
 references `__sandbox_group` any more.
 
 Headline numbers — the Phase 15 baseline climbed from
@@ -1116,7 +1116,7 @@ also flagged) — the bridge buckets (`proxy-missing`,
     field at construction time. The two extra lines stay within the
     "minimal and reviewable" bar — same shape as `minor_version` /
     `options` / `subentries` are already plumbed.)*
-- [x] Update v2 read sites:
+- [x] Update sandbox read sites:
   - [x] `homeassistant/components/sandbox/router.py` — every
     `entry.data.get(SANDBOX_GROUP_KEY)` → `entry.sandbox`. Includes the
     flow-creation classifier consult and the setup/unload intercepts.
@@ -1131,7 +1131,7 @@ also flagged) — the bridge buckets (`proxy-missing`,
     `entry.sandbox is None` and fall through to the local setup path.
     Tagging the FlowResult solves the order-of-ops problem cleanly.)*
   - [x] `homeassistant/components/sandbox/const.py` — `SANDBOX_GROUP_KEY`
-    is no longer needed. Delete it; v2 hasn't shipped, no migration owed.
+    is no longer needed. Delete it; the sandbox hasn't shipped, no migration owed.
     *(`SANDBOX_GROUP_KEY` lived in `proxy_flow.py`, not `const.py`;
     deleted there.)*
   - [x] `sandbox/hass_client/hass_client/testing/_autotag.py` — the
@@ -1140,7 +1140,7 @@ also flagged) — the bridge buckets (`proxy-missing`,
     trick the autotag already uses). **Stops mutating `entry.data` —
     that's the entire point of this phase.**
 - [x] Tests:
-  - [x] Update every existing v2 test that asserts on `__sandbox_group`
+  - [x] Update every existing sandbox test that asserts on `__sandbox_group`
     in `entry.data` to instead assert on `entry.sandbox`. Grep for
     `__sandbox_group` and `SANDBOX_GROUP_KEY` across the codebase to find
     all sites. *(`test_router.py`, `test_proxy_flow.py`, `test_perf.py`,
@@ -1410,7 +1410,7 @@ all repoint at the design doc instead of just naming the deferral;
     bidirectional device targeting (service mirror already covers
     that), frontend surfacing of the allow-list.
   - [x] **Why now (link to v1 limitation)** — v1 saw all of main's
-    data via the system-user token; Phase 7 locked v2 down; this
+    data via the system-user token; Phase 7 locked the sandbox down; this
     doc captures the controlled opt-in we still owe.
   - [x] Referenced from `sandbox/CLAUDE.md`'s "Open follow-ups",
     `sandbox/OVERVIEW.md`'s "Future work", and
@@ -1465,7 +1465,7 @@ Regenerate translations after `strings.json` edits:
 - **Core changes are unavoidable.** Phases 4, 5, and 7 each add a small
   hook into core (`config_entries.py`, `entity_component.py`,
   `auth/models.py`). Each one should be a standalone, reviewed PR before
-  v2 lands. Iron Law: do not monkey-patch private internals — v1's
+  the sandbox lands. Iron Law: do not monkey-patch private internals — v1's
   direct write to `EntityComponent._platforms` is the cautionary tale.
 - **Performance under fan-out.** A 200-light area call should not stall
   the loop on websocket round-trips. The Phase 1 spike must measure
@@ -1498,7 +1498,7 @@ Regenerate translations after `strings.json` edits:
 5. **Non-idempotent service handlers** (surfaced by Phase 1 spike): when
    do we tackle service-handler-level interception or sandbox-aware
    integration hooks? `ai_task` / `image` are punted to `ALWAYS_MAIN`
-   for v2; this is a v3 / post-Phase-11 spec.
+   for the sandbox; this is a future / post-Phase-11 spec.
 
 ## Files this plan will create or significantly change
 
@@ -1538,7 +1538,7 @@ homeassistant/components/sandbox/
 ├── store.py                                        (new, Phase 8)
 └── entity/                                         (new — 32 proxy classes, Phase 5)
 
-# Core changes (small, each its own PR before v2 lands)
+# Core changes (small, each its own PR before the sandbox lands)
 homeassistant/config_entries.py                     (modified — flow_router hook, setup intercept)
 homeassistant/helpers/entity_component.py           (modified — async_register_remote_platform)
 homeassistant/auth/models.py                        (modified — RefreshToken.scopes)

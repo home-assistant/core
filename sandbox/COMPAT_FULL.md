@@ -854,4 +854,4 @@ Walked `homeassistant/components/`, applied the Phase 16 filters:
 | zwave_js | pass | 611 | 0 | 0 | 0 | 60.2 |  |
 | zwave_me | pass | 8 | 0 | 0 | 0 | 2.2 |  |
 
-Per-failure tracebacks are dumped under `${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}/<integration>/`.
+Per-failure tracebacks are dumped under `${SANDBOX_ERRORS_DIR:-/tmp/sandbox_errors}/<integration>/`.

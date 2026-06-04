@@ -5,7 +5,7 @@ integrations in isolated subprocesses while the main instance keeps a
 single, unified view of devices, entities, services, and events.
 
 v1 (`../sandbox/` plus `../homeassistant/components/sandbox/`) is kept
-around for reference and comparison until v2 has matched v1's compat
+around for reference and comparison until the sandbox has matched v1's compat
 numbers and shipped at least one stable release. See
 [`OVERVIEW.md`](OVERVIEW.md) for the full architecture and
 [`plan.md`](plan.md) for the phase-by-phase task list.
@@ -69,7 +69,7 @@ python run_compat.py input_boolean light switch
 ```
 
 [`COMPAT.md`](COMPAT.md) is the compat-lane report; per-failure
-output lands in `${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}`.
+output lands in `${SANDBOX_ERRORS_DIR:-/tmp/sandbox_errors}`.
 
 ## Status
 

@@ -12,7 +12,7 @@ the sandbox-group tag off `entry.data` onto the new first-class
 `ConfigEntry.sandbox` field, eliminating the autotag's
 `entry.data == {}` and `+ '__sandbox_group'` snapshot noise.
 
-|                              | v2 (Phase 17) | v2 (Phase 15) | v1 (baseline) |
+|                              | Phase 17 | Phase 15 | v1 (baseline) |
 | ---                          |          ---: |          ---: |          ---: |
 | Integrations                 |            37 |            37 |            37 |
 | Fully passing                |            35 |            29 |            35 |
@@ -30,7 +30,7 @@ diffs that report `+ 'sandbox': 'built-in'` at the top level of
 `entry.as_dict()` — the autotag is still tagging the entry, the new
 `sandbox` field is now visible in diagnostics output, and the
 pre-Phase-17 snapshots don't include it. The fix is one
-snapshot-update per integration (out of v2's scope; it lives in the
+snapshot-update per integration (out of the sandbox's scope; it lives in the
 integration's tests/).
 
 ## Bucketed triage
@@ -53,7 +53,7 @@ at the top level. The bridge half is unchanged from a successful pass;
 only the snapshot needs a refresh.
 
 Per-failure pytest output for each `issues` row lives under
-`${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}/<integration>.txt`.
+`${SANDBOX_ERRORS_DIR:-/tmp/sandbox_errors}/<integration>.txt`.
 
 ## Recommendation
 
@@ -62,7 +62,7 @@ the plan calls out. Phase 17 closes the dominant
 test-noise bucket Phase 15 / Phase 16 surfaced; the residual diff is
 two diagnostic snapshots that would update with one
 `pytest --snapshot-update tests/components/{proximity,utility_meter}/`.
-That update is out of v2's scope — the snapshots live in the
+That update is out of the sandbox's scope — the snapshots live in the
 respective integrations' test trees, not under `sandbox/`.
 
 The bridge code paths the compat lane exercises — router setup,
@@ -72,10 +72,10 @@ integration in this run.
 
 ### Where this leaves v1 removal
 
-The numeric trigger Phase 15 set ("v2 matches v1's compat numbers and
+The numeric trigger Phase 15 set ("the sandbox matches v1's compat numbers and
 clears ≥ 99.5 %") is now satisfied. Phase 11's deferred
 v1-removal item can be re-evaluated; the remaining condition the plan
-attaches to it ("v2 has shipped at least one stable release") is a
+attaches to it ("the sandbox has shipped at least one stable release") is a
 release-process step rather than a code change.
 
 ## How to read this
@@ -85,7 +85,7 @@ run with the sandbox plugin active. Statuses:
 
 - **`pass`** — every collected test passed.
 - **`issues`** — at least one failure or error. The pytest output is
-  written to `${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}/<integration>.txt`
+  written to `${SANDBOX_ERRORS_DIR:-/tmp/sandbox_errors}/<integration>.txt`
   so reviewers can dig in.
 - **`timeout`** — the integration hit the per-run timeout (default 5 min).
   Often signals an integration that needs deny-listing (e.g. it spawns

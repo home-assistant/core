@@ -1,6 +1,6 @@
 # Entity-bridge decision (Phase 1)
 
-> **Decision:** adopt **Option B — action-call forwarding** for the v2 entity
+> **Decision:** adopt **Option B — action-call forwarding** for the sandbox entity
 > bridge. The proxy entity translates each entity method into a standard
 > `services.async_call("<domain>", "<service>", target={"entity_id": [...]})`
 > round-trip over the shared `sandbox/call_service` transport.

@@ -18,7 +18,7 @@
 > `scopes` set lives on `RefreshToken` itself (no subclass, no new
 > token type); the websocket dispatcher enforces it per command via a
 > shared `_scope_allows` helper. The scope set granted to sandbox
-> tokens is `{"sandbox_v2/", "auth/current_user"}` — one prefix grant
+> tokens is `{"sandbox/", "auth/current_user"}` — one prefix grant
 > for the full sandbox namespace plus a single exact-match entry so
 > the runtime can confirm which user it authenticated as. Opt-in
 > data sharing rides alongside the scope set as
@@ -53,7 +53,7 @@ Limitations":
   exfiltrate data from unrelated integrations.
 
 Both were fundamentally per-command gating bolted onto a
-fully-privileged token. v2 needed a token that the platform itself
+fully-privileged token. the sandbox needed a token that the platform itself
 treats as restricted, with the restriction checked centrally.
 
 ## Options considered
@@ -139,8 +139,8 @@ Two forms, chosen to keep the dispatcher fast (no regex, no
 per-message allocation):
 
 - **Prefix grant** — an entry ending in `/` matches any command
-  whose type starts with that prefix. `"sandbox_v2/"` permits every
-  `sandbox_v2/*` command without listing them individually. This is
+  whose type starts with that prefix. `"sandbox/"` permits every
+  `sandbox/*` command without listing them individually. This is
   the form sandbox tokens use for their namespace.
 - **Exact match** — any other entry must equal the command type
   verbatim. `"auth/current_user"` lets the runtime call exactly
@@ -153,11 +153,11 @@ choice now.
 
 ### Sandbox-side issuance
 
-`homeassistant/components/sandbox_v2/auth.py` is the sandbox-private
+`homeassistant/components/sandbox/auth.py` is the sandbox-private
 helper. The contract:
 
-- One **dedicated system user per group** (`"Sandbox v2: built-in"`,
-  `"Sandbox v2: custom"`, `"Sandbox v2: main"`). System users are
+- One **dedicated system user per group** (`"Sandbox: built-in"`,
+  `"Sandbox: custom"`, `"Sandbox: main"`). System users are
   the right shape — they're not displayable in the frontend, they
   don't have a password, and they already exist for similar
   internal-token use cases.
@@ -220,7 +220,7 @@ to see main's state can opt in explicitly by overriding
   default is permissive, and the field isn't user-facing in the
   frontend — but a future hardening pass might want a separate
   `auth.async_create_scoped_refresh_token` helper that's the only
-  caller allowed to set the field. Not blocking for v2.
+  caller allowed to set the field. Not blocking for the sandbox.
 - **Scope checks are O(scopes) per command.** Sandbox tokens carry
   two entries, so two comparisons per dispatch — not measurable.
   If a future consumer ships a token with hundreds of exact-match
@@ -232,9 +232,9 @@ to see main's state can opt in explicitly by overriding
   comparison is set-based, so order doesn't leak into behaviour.
 - **No supervisor/instance collision handling.** Two HA processes
   (e.g. dev and prod) sharing the same auth store would each create
-  their own `Sandbox v2: built-in` user with the same name. Same
+  their own `Sandbox: built-in` user with the same name. Same
   shape as the existing supervisor user collision pattern — not new
-  in v2 — but worth noting if multi-instance auth stores ever land.
+  in the sandbox — but worth noting if multi-instance auth stores ever land.
 - **`_client_id_for_group` exists but isn't used.** Kept for the
   case where the rotation-on-each-call story flips and the refresh
   token needs a stable `client_id` for dedupe. Wire it in if/when
@@ -259,7 +259,7 @@ to see main's state can opt in explicitly by overriding
   this is `_scope_allows` plus a per-event scope check on the
   subscription's emit path.
 - **Frontend surfacing of the knob.** `SandboxGroupConfig` is not
-  user-facing in v2 — to lock down `built-in` today, you override
+  user-facing in the sandbox — to lock down `built-in` today, you override
   `group_configs=` in code. Phase 11+ follow-up.
 - **Token rotation on subprocess respawn.** See the trade-off
   above. Decide alongside the websocket-connection PR.
@@ -268,11 +268,11 @@ to see main's state can opt in explicitly by overriding
 
 | Test | What it asserts |
 |---|---|
-| `tests/components/sandbox_v2/test_auth.py` | The issuance helper creates exactly one system user per group, reuses the matching refresh token, and stamps the right scope set on the resulting token. |
-| `tests/components/websocket_api/test_scopes.py` | A scoped token is rejected (`Unauthorized`) for an out-of-scope command (`light.turn_on`); accepted for `sandbox_v2/*`; rejected for `auth/sign_path`; accepted for `auth/current_user`. |
+| `tests/components/sandbox/test_auth.py` | The issuance helper creates exactly one system user per group, reuses the matching refresh token, and stamps the right scope set on the resulting token. |
+| `tests/components/websocket_api/test_scopes.py` | A scoped token is rejected (`Unauthorized`) for an out-of-scope command (`light.turn_on`); accepted for `sandbox/*`; rejected for `auth/sign_path`; accepted for `auth/current_user`. |
 | `tests/auth/test_init.py` | Scoped refresh tokens round-trip through the auth store (sorted-list on disk, frozenset on load). Pre-existing tokens without the `scopes` key load as `scopes=None`. |
-| `sandbox_v2/hass_client/tests/test_sharing_config.py` | `SharingConfig` parses the `--share-*` CLI flags; defaults are all-False; the runtime stores it on `SandboxRuntime.sharing`. |
-| `sandbox_v2/hass_client/tests/test_sandbox_runtime.py::test_runtime_starts_in_locked_down_sharing_posture` | A freshly-spawned runtime with the default config sees `hass.states.async_all() == []` (the locked-down posture's no-subscription contract). |
+| `sandbox/hass_client/tests/test_sharing_config.py` | `SharingConfig` parses the `--share-*` CLI flags; defaults are all-False; the runtime stores it on `SandboxRuntime.sharing`. |
+| `sandbox/hass_client/tests/test_sandbox_runtime.py::test_runtime_starts_in_locked_down_sharing_posture` | A freshly-spawned runtime with the default config sees `hass.states.async_all() == []` (the locked-down posture's no-subscription contract). |
 
 The websocket dispatcher tests run against the ordinary
 `hass_ws_client` fixture handed a scoped access token, so the

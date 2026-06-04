@@ -36,9 +36,9 @@ sandboxed lights like any other light), the integration's services +
 events available on main — with the integration code only ever running
 inside the sandbox.
 
-## How v2 differs from v1
+## How the sandbox differs from the removed v1
 
-| | v1 (`sandbox/`) | v2 (`sandbox/`) |
+| | v1 (removed) | current |
 |---|---|---|
 | Routing | `entry.options["sandbox"]` set by hand | Computed at runtime from manifest + platform inspection ([`classifier.py`](../homeassistant/components/sandbox/classifier.py)) |
 | Transport | Live websocket connection back to main | Protobuf `Channel` over a pluggable transport (stdio by default, unix socket opt-in; websocket later) |
@@ -190,7 +190,7 @@ On `EVENT_HOMEASSISTANT_STOP` the integration runs:
    encoder), returns it in the reply, then schedules its own shutdown
    event via `call_soon` *after* the reply is queued so the subprocess
    exits 0 on its own.
-3. The reply lands in `SandboxV2Data`'s `on_shutdown_reply` callback,
+3. The reply lands in `SandboxData`'s `on_shutdown_reply` callback,
    which writes `restore_state` to
    `<config>/.storage/sandbox/<group>/core.restore_state` via the
    bridge's store server.
@@ -505,7 +505,7 @@ constructed.
 Registries (entity/device/area/auth) that load during the sandbox's
 startup *before* the channel is up keep their local tempdir backing.
 Routing the HA-internals Stores too is a larger decision deferred to
-post-v2.
+post-launch.
 
 ## Test infrastructure
 
@@ -525,7 +525,7 @@ The compat lane runner
 integration test directories, parses pytest's summary line, and writes
 [`COMPAT.csv`](COMPAT.csv) + [`COMPAT_LATEST.md`](COMPAT_LATEST.md)
 (the curated baseline lives in [`COMPAT.md`](COMPAT.md)). Per-failure
-output lands in `${SANDBOX_V2_ERRORS_DIR:-/tmp/sandbox_errors}`.
+output lands in `${SANDBOX_ERRORS_DIR:-/tmp/sandbox_errors}`.
 
 [`run_compat_full.py`](run_compat_full.py) is the wider cross-sweep
 runner Phase 16 landed: asyncio + JUnit XML + outer concurrency,
@@ -543,8 +543,8 @@ integrations pass on the broader sweep (99.67 % test-level — above the
 ## Where the design is still open
 
 These are the items the per-phase STATUS files flagged forward as
-explicit non-goals for v2's first pass. They're tracked separately so
-v2 itself stays reviewable. The closed-since-Phase-11 items are listed
+explicit non-goals for the sandbox's first pass. They're tracked separately so
+the sandbox itself stays reviewable. The closed-since-Phase-11 items are listed
 in [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) with the causal chain to
 the phase that resolved each one.
 
@@ -557,7 +557,7 @@ the phase that resolved each one.
   remaining open questions. The actual consumer + main-side handlers
   are owed in a future phase against that design.
 - **Non-idempotent service handlers** (`ai_task` and friends).
-  Punted to `ALWAYS_MAIN` for v2; a v3 spec on service-handler-level
+  Punted to `ALWAYS_MAIN` for the sandbox; a future spec on service-handler-level
   interception or sandbox-aware integration hooks is the long-term
   fix. The Phase 1 spike doc has the full write-up.
 - **v1 removal. DONE (2026-05-28).** The numeric gate Phase 11 set was
