@@ -1777,7 +1777,7 @@ async def test_automation_bad_config_validation(
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both automations are setup
-    assert set(hass.states.async_entity_ids("automation")) == {
+    assert set(hass.states.async_entity_ids(DOMAIN)) == {
         "automation.bad_automation",
         "automation.good_automation",
     }

@@ -205,7 +205,7 @@ async def test_setup_with_invalid_configs(
     """Test setup with invalid configs."""
     assert await async_setup_component(hass, "script", {"script": config})
 
-    assert len(hass.states.async_entity_ids("script")) == nbr_script_entities
+    assert len(hass.states.async_entity_ids(DOMAIN)) == nbr_script_entities
 
 
 @pytest.mark.parametrize(
@@ -261,7 +261,7 @@ async def test_bad_config_validation_critical(
     )
 
     # Make sure one bad script does not prevent other scripts from setting up
-    assert hass.states.async_entity_ids("script") == ["script.good_script"]
+    assert hass.states.async_entity_ids(DOMAIN) == ["script.good_script"]
 
 
 @pytest.mark.parametrize(
@@ -337,7 +337,7 @@ async def test_bad_config_validation(
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both scripts are setup
-    assert set(hass.states.async_entity_ids("script")) == {
+    assert set(hass.states.async_entity_ids(DOMAIN)) == {
         "script.bad_script",
         "script.good_script",
     }
@@ -1518,7 +1518,7 @@ async def test_setup_with_duplicate_scripts(
         },
     )
     assert "Duplicate script detected with name: 'duplicate'" in caplog.text
-    assert len(hass.states.async_entity_ids("script")) == 1
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 1
 
 
 async def test_websocket_config(
