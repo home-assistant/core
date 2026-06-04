@@ -27,8 +27,6 @@ from .identity import build_client_identity, derive_client_id, normalize_identif
 
 CONF_ACCESS_CODE = "access_code"
 CONF_PASSPHRASE = "passphrase"
-CONF_PANEL_INFO = "panel_info"
-CONF_TABLE_INFO = "table_info"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -82,7 +80,6 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         client = _create_client()
         link_keys: LinkKeys | None = None
         panel_info: dict[str, Any] = {}
-        table_info: dict[str, Any] = {}
         try:
             link_keys = await client.async_link(
                 host=host,
@@ -103,7 +100,6 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
             snapshot = client.snapshot
             panel_info = _snapshot_to_dict(snapshot.panel)
-            table_info = _snapshot_to_dict(snapshot.table_info)
         except InvalidCredentials:
             errors["base"] = "invalid_auth"
         except Elke27AuthError:
@@ -148,13 +144,8 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(panel_unique_id)
         self._abort_if_unique_id_configured(updates=data)
 
-        options: dict[str, Any] = {
-            CONF_PANEL_INFO: panel_info,
-            CONF_TABLE_INFO: table_info,
-        }
-
         title = _panel_name(panel_info) or host
-        return self.async_create_entry(title=title, data=data, options=options)
+        return self.async_create_entry(title=title, data=data)
 
 
 def _create_client() -> Elke27Client:

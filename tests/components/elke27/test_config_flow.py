@@ -252,8 +252,6 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         assert result2["data"][CONF_CLIENT_ID] == config_flow.derive_client_id(
             result["flow_id"]
         )
-        assert "panel_info" in result2["options"]
-        assert "table_info" in result2["options"]
         client.async_disconnect.assert_awaited_once()
 
 

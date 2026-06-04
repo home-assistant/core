@@ -48,6 +48,8 @@ def unique_base(entry: Elke27ConfigEntry) -> str:
     client_id = entry.data.get(CONF_CLIENT_ID)
     if client_id:
         return str(client_id)
+    # Real config entries get a unique ID during config flow. This fallback is
+    # kept for defensive construction and older test fixtures without one.
     return entry.entry_id
 
 

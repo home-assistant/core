@@ -13,6 +13,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -78,11 +79,11 @@ class Elke27AreaAlarmControlPanel(
         )
         panel_identifier = unique_base(entry)
         area_identifier = build_unique_id(panel_identifier, f"area:{area.area_id}")
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, area_identifier)},
-            "name": area.name or f"Area {area.area_id}",
-            "via_device": (DOMAIN, panel_identifier),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, area_identifier)},
+            name=area.name or f"Area {area.area_id}",
+            via_device=(DOMAIN, panel_identifier),
+        )
 
     @property
     def area(self) -> AreaState | None:
