@@ -45,7 +45,6 @@ ATTR_PUSH_RATE_LIMITS_RESETS_AT = "resetsAt"
 ATTR_PUSH_RATE_LIMITS_SUCCESSFUL = "successful"
 ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
 
-# Apple ActivityKit attributes
 ATTR_LIVE_UPDATE = "live_update"
 # Core keeps the push-to-start token registered by the device separate from
 # per-activity update tokens. The relay receives the selected token as
