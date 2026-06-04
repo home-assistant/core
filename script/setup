@@ -18,7 +18,22 @@ mkdir -p config
 
 if [ ! -n "$VIRTUAL_ENV" ]; then
   if [ -x "$(command -v uv)" ]; then
-    uv venv .venv
+    if ! uv venv .venv; then
+      if [ -s .python-version ] && [ -x "$(command -v pyenv)" ]; then
+        PYTHON_VERSION=$(head -n 1 .python-version)
+        PYTHON_MINOR_VERSION=${PYTHON_VERSION%.*}
+        PYENV_VERSION=$(PYENV_VERSION=system pyenv latest "$PYTHON_MINOR_VERSION" 2>/dev/null || true)
+        if [ -n "$PYENV_VERSION" ] && [ "$PYENV_VERSION" != "$PYTHON_VERSION" ]; then
+          PYENV_PYTHON=$(PYENV_VERSION="$PYENV_VERSION" pyenv which python)
+          echo "Python $PYTHON_VERSION is unavailable; using pyenv Python $PYENV_VERSION."
+          uv venv --python "$PYENV_PYTHON" .venv
+        else
+          exit 1
+        fi
+      else
+        exit 1
+      fi
+    fi
   else
     python3 -m venv .venv
   fi
