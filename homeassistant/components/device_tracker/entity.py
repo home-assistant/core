@@ -48,11 +48,13 @@ from .const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    ATTR_TRACKING_TYPE,
     CONF_ASSOCIATED_ZONE,
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
     LOGGER,
     SourceType,
+    TrackingType,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -238,6 +240,9 @@ class TrackerEntity(
     """Base class for a tracked device."""
 
     entity_description: TrackerEntityDescription
+    _attr_capability_attributes: dict[str, Any] = {
+        ATTR_TRACKING_TYPE: TrackingType.POSITION
+    }
     _attr_in_zones: list[str] | None = None
     _attr_latitude: float | None = None
     _attr_location_accuracy: float = 0
@@ -411,6 +416,9 @@ class BaseScannerEntity(BaseTrackerEntity):
     addresses being used to identify the device.
     """
 
+    _attr_capability_attributes: dict[str, Any] = {
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+    }
     _scanner_option_associated_zone: str = zone.ENTITY_ID_HOME
     _scanner_option_associated_zone_unsub: CALLBACK_TYPE | None = None
 

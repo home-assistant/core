@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -51,6 +53,7 @@
       'longitude': 1,
       'ring_state': 'STOPPED',
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
       'voip_state': 'OFFLINE',
     }),
     'context': <ANY>,

@@ -40,6 +40,13 @@
             "gps": "GPS",
             "router": "Router"
           }
+        },
+        "tracking_type": {
+          "name": "Tracking type",
+          "state": {
+            "connection": "Connection",
+            "position": "Position"
+          }
         }
       }
     }

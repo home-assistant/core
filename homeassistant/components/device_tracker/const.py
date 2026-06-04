@@ -25,6 +25,18 @@ class SourceType(StrEnum):
     BLUETOOTH_LE = "bluetooth_le"
 
 
+class TrackingType(StrEnum):
+    """Tracking type for device trackers.
+
+    Describes how the tracker determines presence: by the device's geographic
+    position (e.g. GPS) or by its connection to a known endpoint (e.g. a router
+    or beacon associated with a zone).
+    """
+
+    CONNECTION = "connection"
+    POSITION = "position"
+
+
 CONF_SCAN_INTERVAL: Final = "interval_seconds"
 SCAN_INTERVAL: Final = timedelta(seconds=12)
 
@@ -47,6 +59,7 @@ ATTR_IN_ZONES: Final = "in_zones"
 ATTR_LOCATION_NAME: Final = "location_name"
 ATTR_MAC: Final = "mac"
 ATTR_SOURCE_TYPE: Final = "source_type"
+ATTR_TRACKING_TYPE: Final = "tracking_type"
 ATTR_CONSIDER_HOME: Final = "consider_home"
 ATTR_IP: Final = "ip"
 
