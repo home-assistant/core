@@ -47,6 +47,11 @@ ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
 
 # Apple ActivityKit attributes
 ATTR_LIVE_UPDATE = "live_update"
+# Core keeps the push-to-start token registered by the device separate from
+# per-activity update tokens. The relay receives the selected token as
+# live_activity_token, but app_data stores the reusable start token under a
+# distinct key so it is not confused with tag-scoped update/end tokens.
+ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN = "push_to_start_live_activity_token"
 ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
 ATTR_LIVE_ACTIVITY_EXPIRES_AT = "expires_at"
 ATTR_LIVE_ACTIVITY_TAG = "tag"
@@ -107,7 +112,7 @@ SCHEMA_APP_DATA = vol.Schema(
         # will connect via websocket channel to receive
         # push notifications.
         vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
-        vol.Optional(ATTR_LIVE_ACTIVITY_TOKEN): cv.string,
+        vol.Optional(ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )

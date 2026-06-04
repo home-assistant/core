@@ -47,6 +47,7 @@ from .const import (
     ATTR_PUSH_RATE_LIMITS_MAXIMUM,
     ATTR_PUSH_RATE_LIMITS_RESETS_AT,
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
+    ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     ATTR_TOKEN,
@@ -281,7 +282,9 @@ class MobileAppNotificationService(BaseNotificationService):
         if stored_token_valid:
             return stored[ATTR_TOKEN], LiveActivityEvent.UPDATE
 
-        if push_to_start := entry.data[ATTR_APP_DATA].get(ATTR_LIVE_ACTIVITY_TOKEN):
+        if push_to_start := entry.data[ATTR_APP_DATA].get(
+            ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN
+        ):
             return push_to_start, LiveActivityEvent.START
 
         return None
