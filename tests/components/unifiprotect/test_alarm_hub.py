@@ -11,6 +11,8 @@ from homeassistant.helpers import entity_registry as er
 from .utils import MockUFPFixture, init_entry
 
 from tests.common import load_json_object_fixture
+from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 DOMAIN = "unifiprotect"
 
@@ -176,3 +178,21 @@ async def test_alarm_hub_zone_triggered_state(
     state = hass.states.get("binary_sensor.alarm_hub_hallway")
     assert state is not None
     assert state.state == "on"
+
+
+async def test_alarm_hub_in_diagnostics(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Alarm hubs are included (anonymized) in config entry diagnostics."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, ufp_with_alarm_hub.entry)
+
+    assert "alarm_hubs" in diag
+    assert len(diag["alarm_hubs"]) == 1
+    hub = diag["alarm_hubs"][0]
+    # Anonymized: the real MAC must not leak.
+    assert hub["mac"] != ALARM_HUB_MAC
+    assert "alarmHub" in hub
