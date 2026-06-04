@@ -81,7 +81,7 @@ INITIAL_FETCH_CLIENT_METHODS = [
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.SENSOR, Platform.SWITCH]
 

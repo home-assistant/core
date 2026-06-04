@@ -55,7 +55,7 @@ _FAN_SPEED_PERCENTAGE_KEY = (
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.FAN]
 
