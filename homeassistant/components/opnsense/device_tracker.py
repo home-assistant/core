@@ -2,9 +2,11 @@
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import OPNsenseDeviceTrackerCoordinator
 from .types import DeviceDetails, OPNsenseConfigEntry
 
@@ -50,7 +52,14 @@ class OPNsenseDeviceTrackerEntity(
     ) -> None:
         """Initialize the device tracker entity."""
         super().__init__(coordinator)
-        self._attr_mac_address = mac_address
+        self._attr_mac_address = format_mac(mac_address)
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Return a stable object ID based on domain and MAC address."""
+        if self.mac_address is None:
+            return None
+        return f"{DOMAIN}_{self.mac_address.replace(':', '_')}"
 
     @property
     def device_data(self) -> DeviceDetails | None:
@@ -80,7 +89,9 @@ class OPNsenseDeviceTrackerEntity(
         """Return the primary IP address of the device."""
         device_data = self.device_data
         if device_data:
-            return device_data.get("ip")
+            ip = device_data.get("ip")
+            if ip is not None:
+                return str(ip)
         return None
 
     @property
@@ -89,5 +100,6 @@ class OPNsenseDeviceTrackerEntity(
         device_data = self.device_data
         if device_data:
             hostname = device_data.get("hostname")
-            return hostname or None
+            if hostname is not None:
+                return str(hostname)
         return None
