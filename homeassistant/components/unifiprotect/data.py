@@ -15,6 +15,7 @@ from uiprotect.data import (
     Camera,
     Event,
     EventType,
+    LinkStation,
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
@@ -96,6 +97,9 @@ class ProtectData:
         ] = defaultdict(set)
         self._public_subscriptions: defaultdict[
             str, set[Callable[[PublicDeviceModel | None], None]]
+        ] = defaultdict(set)
+        self._alarm_hub_subscriptions: defaultdict[
+            str, set[Callable[[LinkStation], None]]
         ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
@@ -310,6 +314,8 @@ class ProtectData:
             self._async_signal_relay_update(relay)
         for siren in api.public_bootstrap.sirens.values():
             self._async_signal_siren_update(siren)
+        for hub in api.public_bootstrap.alarm_hubs.values():
+            self._async_signal_alarm_hub_update(hub)
         # Migrated entities (e.g. battery) recompute from their cached object.
         for subscriptions in self._public_subscriptions.values():
             for update_callback in subscriptions:
@@ -602,6 +608,33 @@ class ProtectData:
             "PublicDeviceModel | None",
             api.public_bootstrap.get(device.model, device.id),
         )
+
+    @callback
+    def async_subscribe_alarm_hub(
+        self, mac: str, update_callback: Callable[[LinkStation], None]
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for alarm hub updates."""
+        self._alarm_hub_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_alarm_hub, mac, update_callback)
+
+    @callback
+    def _async_unsubscribe_alarm_hub(
+        self, mac: str, update_callback: Callable[[LinkStation], None]
+    ) -> None:
+        """Remove an alarm hub callback subscriber."""
+        self._alarm_hub_subscriptions[mac].remove(update_callback)
+        if not self._alarm_hub_subscriptions[mac]:
+            del self._alarm_hub_subscriptions[mac]
+
+    @callback
+    def _async_signal_alarm_hub_update(self, hub: LinkStation) -> None:
+        """Call the callbacks for an alarm hub mac."""
+        mac = hub.mac
+        if not (subscriptions := self._alarm_hub_subscriptions.get(mac)):
+            return
+        _LOGGER.debug("Updating alarm hub: %s (%s)", hub.name, mac)
+        for update_callback in subscriptions:
+            update_callback(hub)
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
