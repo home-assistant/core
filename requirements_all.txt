@@ -212,7 +212,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.5
+aioautomower==2.7.6
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -285,7 +285,7 @@ aioharmony==1.0.8
 aiohasupervisor==0.4.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.36.0
+aiohomeconnect==0.36.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -474,7 +474,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.6.5
+airos==0.6.8
 
 # homeassistant.components.airpatrol
 airpatrol==0.1.0
@@ -1365,7 +1365,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==5.8.1
+infrared-protocols==6.0.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1743,7 +1743,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.1.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.1.1
+onvif-zeep-async==4.2.0
 
 # homeassistant.components.onvif
 onvif_parsers==2.3.0
