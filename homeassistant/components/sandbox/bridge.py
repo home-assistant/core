@@ -1,6 +1,6 @@
 """Main-side bridge — owns the per-sandbox entity registry + outbound dispatch.
 
-Responsibilities (Phase 5):
+Responsibilities:
 
 * Hold a :class:`SandboxBridge` per sandbox group. Each one knows its
   :class:`Channel` plus the set of proxy entities the sandbox has
@@ -24,9 +24,10 @@ Responsibilities (Phase 5):
   callers would have raised locally (``vol.Invalid`` → ``TypeError``,
   unknown service / entity → ``HomeAssistantError``).
 
-Phase 8 adds the Store routing handlers (``sandbox/store_load`` /
-``store_save`` / ``store_remove``). A per-group :class:`_SandboxStoreServer`
-backs them, writing each key to ``<config>/.storage/sandbox/<group>/<key>``.
+The Store routing handlers (``sandbox/store_load`` /
+``store_save`` / ``store_remove``) are backed by a per-group
+:class:`_SandboxStoreServer`, writing each key to
+``<config>/.storage/sandbox/<group>/<key>``.
 Scope isolation is by construction — each bridge owns one channel for
 one group, so a sandbox can't reach another sandbox's files.
 """
@@ -167,7 +168,9 @@ class _CallServiceBatcher:
     batcher gathers everything that arrived this tick, fires one
     ``sandbox/call_service`` per (domain, service, kwargs-shape) bucket
     with a multi-entity ``target.entity_id`` list, and resolves all the
-    waiting futures with the same response.
+    waiting futures together. Only fire-and-forget calls are batched — a
+    call needing a response bypasses the batcher — so there is no per-entity
+    response to demultiplex.
 
     Kwargs are not hashable (they include nested dicts/lists), so the key
     is the JSON-canonical form of the kwargs dict. Only entities that
@@ -179,7 +182,7 @@ class _CallServiceBatcher:
     def __init__(self, bridge: SandboxBridge) -> None:
         """Initialise the batcher with its owning bridge."""
         self._bridge = bridge
-        self._buckets: dict[tuple[str, str, str], _BatchBucket] = {}
+        self._buckets: dict[tuple[str, str, bytes], _BatchBucket] = {}
         self._flush_handle: asyncio.Handle | None = None
 
     async def enqueue(
@@ -190,14 +193,14 @@ class _CallServiceBatcher:
         sandbox_entity_id: str,
         service_data: dict[str, Any],
         context_id: str | None = None,
-        return_response: bool = False,
     ) -> Any:
-        """Queue one entity into the next batched ``call_service`` RPC."""
-        import json  # noqa: PLC0415 — local import keeps json off integration boot path
+        """Queue one entity into the next batched ``call_service`` RPC.
 
-        kwargs_key = json.dumps(
-            service_data, sort_keys=True, separators=(",", ":"), default=str
-        )
+        Only fire-and-forget calls are batched; a call that needs a response
+        bypasses the batcher (see :meth:`SandboxBridge.async_call_service`).
+        """
+        # Sorted canonical form keys the bucket; bytes are hashable.
+        kwargs_key = json_helper.json_bytes_sorted(service_data)
         bucket_key = (domain, service, kwargs_key)
         bucket = self._buckets.get(bucket_key)
         if bucket is None:
@@ -207,7 +210,6 @@ class _CallServiceBatcher:
                 service=service,
                 service_data=service_data,
                 context_id=context_id,
-                return_response=return_response,
                 future=future,
             )
             self._buckets[bucket_key] = bucket
@@ -238,7 +240,7 @@ class _CallServiceBatcher:
                 target={"entity_id": bucket.sandbox_entity_ids},
                 service_data=bucket.service_data,
                 context_id=bucket.context_id,
-                return_response=bucket.return_response,
+                return_response=False,
             )
         except BaseException as err:  # noqa: BLE001
             if not bucket.future.done():
@@ -256,7 +258,6 @@ class _BatchBucket:
     service: str
     service_data: dict[str, Any]
     context_id: str | None
-    return_response: bool
     future: asyncio.Future[Any]
     sandbox_entity_ids: list[str] = field(default_factory=list)
 
@@ -325,24 +326,36 @@ class SandboxBridge:
     ) -> Any:
         """Forward one entity service call to the sandbox.
 
-        Calls made in the same tick with matching ``(domain, service,
-        service_data)`` coalesce into a single RPC with a multi-entity
-        target.
+        Fire-and-forget calls made in the same tick with matching ``(domain,
+        service, service_data)`` coalesce into a single RPC with a multi-entity
+        target. A call that needs a response (``return_response=True``) skips
+        the batcher: coalescing forces every caller in a bucket to share one
+        combined response, so a response call goes out as its own
+        single-entity RPC instead.
 
         ``context`` is the main-side Context driving the entity call. It is
-        remembered here (before the batcher reduces it to a bare id) so that
+        remembered here (before the id is reduced to a bare wire value) so that
         when the sandbox echoes the same id back on a resulting state change
         or event, :meth:`_resolve_context` restores the original
         ``parent_id`` / ``user_id`` instead of minting a fresh attribution.
         """
         self._remember_context(context)
+        context_id = context.id if context is not None else None
+        if return_response:
+            return await self._raw_call_service(
+                domain=domain,
+                service=service,
+                target={"entity_id": [sandbox_entity_id]},
+                service_data=service_data,
+                context_id=context_id,
+                return_response=True,
+            )
         return await self._batcher.enqueue(
             domain=domain,
             service=service,
             sandbox_entity_id=sandbox_entity_id,
             service_data=service_data,
-            context_id=context.id if context is not None else None,
-            return_response=return_response,
+            context_id=context_id,
         )
 
     async def _raw_call_service(
@@ -590,7 +603,7 @@ class SandboxBridge:
         return pb.UnregisterServiceResult(ok=True, removed=True)
 
     async def _handle_store_load(self, msg: pb.StoreLoad) -> pb.StoreLoadResult:
-        """Serve a sandbox-side ``Store.async_load`` (Phase 8)."""
+        """Serve a sandbox-side ``Store.async_load``."""
         data = await self._store_server.async_load(_validate_key(msg.key))
         result = pb.StoreLoadResult()
         if data is not None:
@@ -598,7 +611,7 @@ class SandboxBridge:
         return result
 
     async def _handle_store_save(self, msg: pb.StoreSave) -> pb.StoreSaveResult:
-        """Persist a sandbox-side ``Store.async_save`` flush (Phase 8)."""
+        """Persist a sandbox-side ``Store.async_save`` flush."""
         await self._store_server.async_save(
             _validate_key(msg.key), struct_to_dict(msg.data)
         )
