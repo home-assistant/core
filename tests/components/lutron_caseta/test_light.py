@@ -43,7 +43,7 @@ async def test_previous_brightness(
     """Test brightness tracked and restored."""
     await async_setup_integration(hass, MockBridge)
 
-    caseta_entity_id = "light.kitchen_other_lights"
+    caseta_entity_id = "light.kitchen_kitchen_other_lights"
 
     # 1. Turn on with explicit brightness 25
     await hass.services.async_call(
@@ -94,7 +94,7 @@ async def test_previous_brightness_physical_switch(
     """Test that brightness set via a physical switch is restored on next turn-on."""
     mock_entry = await async_setup_integration(hass, MockBridge)
 
-    caseta_entity_id = "light.kitchen_other_lights"
+    caseta_entity_id = "light.kitchen_kitchen_other_lights"
     bridge = mock_entry.runtime_data.bridge
 
     # Simulate the physical dimmer setting brightness to 72 (Lutron 0-100 scale).
@@ -133,7 +133,7 @@ async def test_previous_brightness_zero_not_remembered(
     """Test that a zero brightness is not remembered as the restore level."""
     await async_setup_integration(hass, MockBridge)
 
-    caseta_entity_id = "light.kitchen_other_lights"
+    caseta_entity_id = "light.kitchen_kitchen_other_lights"
 
     # 1. Establish a non-zero previous brightness of 25
     await hass.services.async_call(
@@ -201,7 +201,7 @@ async def test_color_only_turn_on_preserves_brightness(
     """Test a color-only turn-on does not override the current brightness."""
     mock_entry = await async_setup_integration(hass, MockBridgeWithColorLight)
 
-    entity_id = "light.kitchen_color_light"
+    entity_id = "light.kitchen_kitchen_color_light"
     bridge = mock_entry.runtime_data.bridge
 
     with patch.object(bridge, "set_value", wraps=bridge.set_value) as mock_set_value:
