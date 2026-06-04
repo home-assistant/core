@@ -953,3 +953,79 @@ async def test_reload_ssl_certificate_service_exists(
         await hass.async_block_till_done()
 
     assert hass.services.has_service("http", "reload_ssl_certificate")
+
+
+async def test_ssl_auto_reload_disabled(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test that setting ssl_auto_reload to false disables the watcher."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "http": {
+                        "ssl_certificate": cert_path,
+                        "ssl_key": key_path,
+                        "ssl_auto_reload": False,
+                    }
+                },
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # The watcher should not have been started
+    assert hass.http._ssl_watcher is None
+    # The service should still be registered
+    assert hass.services.has_service("http", "reload_ssl_certificate")
+
+
+async def test_reload_ssl_certificate_coalescing(
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that rapid reload requests are coalesced, not duplicated."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    context = server_context_modern()
+    await hass.async_add_executor_job(
+        _create_self_signed_cert, cert_path, key_path
+    )
+
+    with patch(
+        "homeassistant.util.ssl.server_context_modern",
+        return_value=context,
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # Simulate rapid reload requests while one is in-flight
+    # First reload should succeed
+    result1 = await hass.async_add_executor_job(hass.http.reload_ssl_certificate)
+    assert result1 is True
+    assert "Successfully reloaded SSL certificate" in caplog.text
+
+    # The _ssl_reload_pending flag should be false after a single reload
+    assert hass.http._ssl_reload_pending is False
