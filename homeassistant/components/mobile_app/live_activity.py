@@ -169,13 +169,13 @@ def async_schedule_next_cleanup(hass: HomeAssistant) -> None:
     delay = earliest_expires_at - dt_util.utcnow().timestamp()
 
     async def run_cleanup(_now: datetime) -> None:
-        await async_cleanup_expired_tokens(hass)
+        await async_cleanup_expired_live_activity_tokens(hass)
 
     async_call_later(hass, delay, run_cleanup)
 
 
-async def async_cleanup_expired_tokens(hass: HomeAssistant) -> None:
-    """Remove expired tokens and reschedule the next sweep at the earliest expiry.
+async def async_cleanup_expired_live_activity_tokens(hass: HomeAssistant) -> None:
+    """Remove expired Live Activity tokens and reschedule the next sweep.
 
     Runs as a one-shot callback scheduled by ``async_schedule_next_cleanup``. After
     sweeping, if any tokens remain it calls ``async_schedule_next_cleanup`` again to

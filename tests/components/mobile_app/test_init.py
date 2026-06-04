@@ -22,7 +22,7 @@ from homeassistant.components.mobile_app.const import (
     STORAGE_VERSION_MINOR,
 )
 from homeassistant.components.mobile_app.live_activity import (
-    async_cleanup_expired_tokens,
+    async_cleanup_expired_live_activity_tokens,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
@@ -777,7 +777,7 @@ async def test_live_activity_cleanup_task_removes_expired_tokens(
     }
 
     with patch.object(hass.data[DOMAIN][DATA_STORE], "async_save") as mock_save:
-        await async_cleanup_expired_tokens(hass)
+        await async_cleanup_expired_live_activity_tokens(hass)
 
     assert "wh-test" not in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     mock_save.assert_called_once()

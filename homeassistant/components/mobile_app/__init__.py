@@ -58,7 +58,7 @@ from .const import (
 )
 from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
-from .live_activity import async_cleanup_expired_tokens
+from .live_activity import async_cleanup_expired_live_activity_tokens
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
@@ -85,7 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = {
         DATA_CONFIG_ENTRIES: {},
-        DATA_DELETED_IDS: app_config[DATA_DELETED_IDS],
+        DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
         DATA_DEVICES: {},
         DATA_LIVE_ACTIVITY_TOKENS: app_config[DATA_LIVE_ACTIVITY_TOKENS],
         DATA_PUSH_CHANNEL: {},
@@ -93,7 +93,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
     }
 
-    hass.async_create_task(async_cleanup_expired_tokens(hass))
+    # Apple ActivityKit Live Activity tokens can expire while Home Assistant
+    # is stopped; prune stale persisted tokens and schedule the next cleanup.
+    hass.async_create_task(async_cleanup_expired_live_activity_tokens(hass))
 
     hass.http.register_view(RegistrationsView())
 
