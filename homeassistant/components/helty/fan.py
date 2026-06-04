@@ -2,17 +2,18 @@
 
 from typing import Any
 
-from pyhelty import FanMode
+from pyhelty import FanMode, HeltyError
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
 
-from .const import PRESET_BOOST, PRESET_FREE_COOLING, PRESET_NIGHT
+from .const import DOMAIN, PRESET_BOOST, PRESET_FREE_COOLING, PRESET_NIGHT
 from .coordinator import HeltyConfigEntry, HeltyDataUpdateCoordinator
 from .entity import HeltyEntity
 
@@ -116,5 +117,11 @@ class HeltyFan(HeltyEntity, FanEntity):
         await self._async_set_mode(FanMode.OFF)
 
     async def _async_set_mode(self, mode: FanMode) -> None:
-        await self.coordinator.client.async_set_fan_mode(mode)
+        try:
+            await self.coordinator.client.async_set_fan_mode(mode)
+        except HeltyError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_fan_mode_failed",
+            ) from err
         await self.coordinator.async_request_refresh()
