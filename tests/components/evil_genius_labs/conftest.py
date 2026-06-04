@@ -74,6 +74,6 @@ async def setup_evil_genius_labs(
             platforms,
         ),
     ):
-        assert await async_setup_component(hass, "evil_genius_labs", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield

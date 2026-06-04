@@ -231,7 +231,7 @@ async def test_loading_pipelines_from_storage(
         },
     }
 
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
@@ -291,7 +291,7 @@ async def test_migrate_pipeline_store(
         },
     }
 
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
@@ -303,7 +303,7 @@ async def test_migrate_pipeline_store(
 @pytest.mark.usefixtures("disable_tts_entity")
 async def test_create_default_pipeline(hass: HomeAssistant) -> None:
     """Test async_create_default_pipeline."""
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
@@ -341,7 +341,7 @@ async def test_create_default_pipeline(hass: HomeAssistant) -> None:
 
 async def test_get_pipeline(hass: HomeAssistant) -> None:
     """Test async_get_pipeline."""
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
@@ -357,7 +357,7 @@ async def test_get_pipeline(hass: HomeAssistant) -> None:
 
 async def test_get_pipelines(hass: HomeAssistant) -> None:
     """Test async_get_pipelines."""
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
@@ -404,7 +404,7 @@ async def test_default_pipeline_no_stt_tts(
     """Test async_get_pipeline."""
     hass.config.country = ha_country
     hass.config.language = ha_language
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
@@ -468,7 +468,7 @@ async def test_default_pipeline(
         patch.object(mock_stt_provider_entity, "_supported_languages", MANY_LANGUAGES),
         patch.object(mock_tts_provider, "_supported_languages", MANY_LANGUAGES),
     ):
-        assert await async_setup_component(hass, "assist_pipeline", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
@@ -499,7 +499,7 @@ async def test_default_pipeline_unsupported_stt_language(
 ) -> None:
     """Test async_get_pipeline."""
     with patch.object(mock_stt_provider_entity, "_supported_languages", ["smurfish"]):
-        assert await async_setup_component(hass, "assist_pipeline", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
@@ -530,7 +530,7 @@ async def test_default_pipeline_unsupported_tts_language(
 ) -> None:
     """Test async_get_pipeline."""
     with patch.object(mock_tts_provider, "_supported_languages", ["smurfish"]):
-        assert await async_setup_component(hass, "assist_pipeline", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
@@ -558,7 +558,7 @@ async def test_update_pipeline(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test async_update_pipeline."""
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     pipelines = async_get_pipelines(hass)
     pipelines = list(pipelines)

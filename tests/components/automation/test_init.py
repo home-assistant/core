@@ -2926,7 +2926,7 @@ async def test_blueprint_automation(
     """Test blueprint automation."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -2961,7 +2961,7 @@ async def test_blueprint_automation_legacy_schema(
     """Test blueprint automation where the blueprint is using legacy schema."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -3021,7 +3021,7 @@ async def test_blueprint_automation_override(
     """Test blueprint automation where the automation config overrides the blueprint."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -3097,7 +3097,7 @@ async def test_blueprint_automation_bad_config(
     """Test blueprint automation with bad inputs."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -3136,7 +3136,7 @@ async def test_blueprint_automation_fails_substitution(
     ):
         assert await async_setup_component(
             hass,
-            "automation",
+            DOMAIN,
             {
                 "automation": {
                     "use_blueprint": {

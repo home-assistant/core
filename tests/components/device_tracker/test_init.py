@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components import device_tracker, zone
 from homeassistant.components.device_tracker import (
+    DOMAIN,
     SourceType,
     TrackerEntity,
     const,
@@ -794,7 +795,7 @@ async def test_modern_platform_setup(hass: HomeAssistant) -> None:
     )
 
     await async_setup_component(hass, "homeassistant", {})
-    await async_setup_component(hass, "device_tracker", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, test_domain, {})
     await hass.async_block_till_done()
 
