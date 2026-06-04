@@ -13,6 +13,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 
 from . import setup_integration
 from .conftest import DOMAIN
@@ -138,7 +139,7 @@ async def test_import_flow_success(
         CONF_PASSWORD: "secret",
     }
 
-    issue_registry = hass.data["issue_registry"]
+    issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is not None
 
 

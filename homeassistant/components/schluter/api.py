@@ -45,6 +45,7 @@ def _to_celsius(value: int) -> float:
 
 
 def _parse_thermostat(data: dict) -> SchluterThermostat:
+    """Parse a raw API thermostat dict into a SchluterThermostat dataclass."""
     return SchluterThermostat(
         serial_number=data["SerialNumber"],
         name=data["Room"],
