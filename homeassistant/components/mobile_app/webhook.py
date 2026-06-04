@@ -59,7 +59,7 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
-    ATTR_EXPIRES_AT,
+    ATTR_LIVE_ACTIVITY_EXPIRES_AT,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_PUSH_TOKEN,
@@ -788,7 +788,7 @@ async def webhook_scan_tag(
     {
         vol.Required(ATTR_TAG): cv.string,
         vol.Required(ATTR_PUSH_TOKEN): cv.string,
-        vol.Required(ATTR_EXPIRES_AT): cv.positive_float,
+        vol.Required(ATTR_LIVE_ACTIVITY_EXPIRES_AT): cv.positive_float,
     }
 )
 async def webhook_update_live_activity_token(
@@ -803,7 +803,7 @@ async def webhook_update_live_activity_token(
     was_empty = not live_activity_tokens
     live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
         ATTR_TOKEN: data[ATTR_PUSH_TOKEN],
-        ATTR_EXPIRES_AT: data[ATTR_EXPIRES_AT],
+        ATTR_LIVE_ACTIVITY_EXPIRES_AT: data[ATTR_LIVE_ACTIVITY_EXPIRES_AT],
     }
     # Debounce disk writes: ActivityKit can hand a fresh per-tag token to the
     # iOS app multiple times in quick succession (e.g. when several activities

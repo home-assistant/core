@@ -43,9 +43,11 @@ ATTR_PUSH_RATE_LIMITS_RESETS_AT = "resetsAt"
 ATTR_PUSH_RATE_LIMITS_SUCCESSFUL = "successful"
 ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
 
+# Apple ActivityKit attributes
 ATTR_LIVE_UPDATE = "live_update"
 ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
-ATTR_EXPIRES_AT = "expires_at"
+ATTR_LIVE_ACTIVITY_EXPIRES_AT = "expires_at"
+
 ATTR_TOKEN = "token"
 ATTR_TAG = "tag"
 

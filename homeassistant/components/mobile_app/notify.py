@@ -2,7 +2,6 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
-from enum import StrEnum
 from functools import partial
 from http import HTTPStatus
 import logging
@@ -38,7 +37,7 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
-    ATTR_EXPIRES_AT,
+    ATTR_LIVE_ACTIVITY_EXPIRES_AT,
     ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_LIVE_UPDATE,
     ATTR_OS_VERSION,
@@ -54,6 +53,7 @@ from .const import (
     ATTR_WEBHOOK_ID,
     CLEAR_NOTIFICATION,
     DATA_CONFIG_ENTRIES,
+    # Apple ActivityKit per-activity push tokens, stored by webhook_id and tag
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
@@ -63,18 +63,11 @@ from .const import (
     STORAGE_SAVE_DELAY_SECONDS,
 )
 from .helpers import device_info, savable_state
+from .live_activity import LiveActivityEvent
 from .push_notification import PushChannel
 from .util import supports_push
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class LiveActivityEvent(StrEnum):
-    """Apple ActivityKit lifecycle action the relay should apply to a Live Activity push."""
-
-    START = "start"
-    UPDATE = "update"
-    END = "end"
 
 
 async def async_setup_entry(
@@ -273,7 +266,7 @@ class MobileAppNotificationService(BaseNotificationService):
         stored = device_tokens.get(tag)
         stored_token_valid = (
             stored is not None
-            and stored[ATTR_EXPIRES_AT] > dt_util.utcnow().timestamp()
+            and stored[ATTR_LIVE_ACTIVITY_EXPIRES_AT] > dt_util.utcnow().timestamp()
         )
 
         # clear_notification ends a known activity; if no token is stored for

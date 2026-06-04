@@ -644,6 +644,7 @@ async def test_unload_preserves_live_activity_tokens(
             "data": {
                 "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "expires_at": dt_util.utcnow().timestamp() + 3600,
             },
         },
     )
@@ -670,6 +671,7 @@ async def test_remove_entry_cleans_live_activity_tokens(
             "data": {
                 "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "expires_at": dt_util.utcnow().timestamp() + 3600,
             },
         },
     )

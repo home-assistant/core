@@ -2,13 +2,27 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import datetime
+from enum import StrEnum
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_EXPIRES_AT, DATA_LIVE_ACTIVITY_TOKENS, DATA_STORE, DOMAIN
+from .const import (
+    ATTR_LIVE_ACTIVITY_EXPIRES_AT,
+    DATA_LIVE_ACTIVITY_TOKENS,
+    DATA_STORE,
+    DOMAIN,
+)
 from .helpers import savable_state
+
+
+class LiveActivityEvent(StrEnum):
+    """Apple ActivityKit lifecycle action the relay should apply to a Live Activity push."""
+
+    START = "start"
+    UPDATE = "update"
+    END = "end"
 
 
 @callback
@@ -24,7 +38,7 @@ def async_schedule_next_cleanup(hass: HomeAssistant) -> None:
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     earliest_expires_at = min(
         (
-            token[ATTR_EXPIRES_AT]
+            token[ATTR_LIVE_ACTIVITY_EXPIRES_AT]
             for device_tokens in tokens.values()
             for token in device_tokens.values()
         ),
@@ -57,7 +71,7 @@ async def async_cleanup_expired_tokens(hass: HomeAssistant) -> None:
     for webhook_id in list(tokens):
         device_tokens = tokens[webhook_id]
         for tag, data in list(device_tokens.items()):
-            if data[ATTR_EXPIRES_AT] <= now:
+            if data[ATTR_LIVE_ACTIVITY_EXPIRES_AT] <= now:
                 del device_tokens[tag]
                 changed = True
         if not device_tokens:
