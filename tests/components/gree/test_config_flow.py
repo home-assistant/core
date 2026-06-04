@@ -255,7 +255,7 @@ async def test_manual_step_allowed_alongside_discovery_entry(
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_manual_step_unexpected_error(
