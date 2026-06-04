@@ -9,7 +9,6 @@ from typing import Any, Self, cast
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import device_tracker
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_LATITUDE,
@@ -511,8 +510,13 @@ class Zone(collection.CollectionEntity):
     @callback
     def _state_is_in_zone(self, state: State | None) -> bool:
         """Return if given state is in zone."""
+
+        from homeassistant.components.device_tracker import (  # noqa: PLC0415
+            ATTR_IN_ZONES,
+        )
+
         return (
             state is not None
-            and device_tracker.ATTR_IN_ZONES in state.attributes
-            and self.entity_id in state.attributes[device_tracker.ATTR_IN_ZONES]
+            and ATTR_IN_ZONES in state.attributes
+            and self.entity_id in state.attributes[ATTR_IN_ZONES]
         )
