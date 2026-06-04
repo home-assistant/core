@@ -3,10 +3,10 @@
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientResponseError
+from pyaqvify import AqvifyAuthException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.aqvify.config_flow import AqvifyAuthException
 from homeassistant.components.aqvify.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant

@@ -1,6 +1,5 @@
 """Test the Aqvify init."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock
 
 from pyaqvify import AqvifyAuthException
@@ -18,7 +17,7 @@ from tests.common import MockConfigEntry
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
-    mock_aqvify_client: Generator[MagicMock],
+    mock_aqvify_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test load and unload entry."""
@@ -44,7 +43,7 @@ async def test_load_unload_entry(
 )
 async def test_setup_entry_with_error(
     hass: HomeAssistant,
-    mock_aqvify_client: Generator[MagicMock],
+    mock_aqvify_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     error: Exception | None,
     expected_state: ConfigEntryState,
@@ -59,7 +58,7 @@ async def test_setup_entry_with_error(
 
 async def test_device_registry_integration(
     hass: HomeAssistant,
-    mock_aqvify_client: Generator[MagicMock],
+    mock_aqvify_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
