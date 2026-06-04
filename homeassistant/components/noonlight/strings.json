@@ -1,27 +1,22 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This Noonlight endpoint is already configured."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "base_url_required": "A custom base URL is required for the 'custom' environment.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
       "user": {
         "data": {
-          "api_token": "API token",
-          "base_url": "Custom base URL",
-          "environment": "Environment"
+          "api_token": "API token"
         },
         "data_description": {
-          "api_token": "Long-lived token from your Noonlight account portal.",
-          "base_url": "Only used when the environment is 'custom'; the full base URL of your Noonlight endpoint.",
-          "environment": "Production reaches real responders. Sandbox is safe for testing. Choose custom to point at your own endpoint."
+          "api_token": "Long-lived token from your Noonlight account portal."
         },
-        "description": "Enter your Noonlight API token and choose which environment to target. Use sandbox for testing — it never alerts real responders.",
-        "title": "Noonlight credentials"
+        "description": "Enter your Noonlight API token to connect Home Assistant to Noonlight.",
+        "title": "Connect to Noonlight"
       }
     }
   },
@@ -29,15 +24,6 @@
     "binary_sensor": {
       "api_reachable": {
         "name": "API reachable"
-      }
-    }
-  },
-  "selector": {
-    "environment": {
-      "options": {
-        "custom": "Custom base URL",
-        "production": "Production (real responders)",
-        "sandbox": "Sandbox (testing)"
       }
     }
   }

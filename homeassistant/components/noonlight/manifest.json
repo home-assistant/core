@@ -8,5 +8,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["noonlight-dispatch==0.1.1"]
+  "requirements": ["noonlight-dispatch==0.1.1"],
+  "single_config_entry": true
 }

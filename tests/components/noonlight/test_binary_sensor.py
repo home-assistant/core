@@ -9,7 +9,7 @@ from .conftest import STATUS_RE
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = "binary_sensor.noonlight_sandbox_api_reachable"
+ENTITY_ID = "binary_sensor.noonlight_api_reachable"
 
 
 async def test_api_reachable_on(

@@ -6,20 +6,12 @@ import logging
 from noonlight_dispatch import NoonlightClient, NoonlightError, NoonlightResponseError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONF_API_TOKEN,
-    CONF_BASE_URL,
-    CONF_ENVIRONMENT,
-    DEFAULT_ENVIRONMENT,
-    DOMAIN,
-    POLL_INTERVAL,
-    PROBE_ALARM_ID,
-    resolve_base_url,
-)
+from .const import DOMAIN, POLL_INTERVAL, PROBE_ALARM_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,12 +32,7 @@ class NoonlightCoordinator(DataUpdateCoordinator[bool]):
             name=DOMAIN,
             update_interval=timedelta(seconds=POLL_INTERVAL),
         )
-        environment = entry.data.get(CONF_ENVIRONMENT, DEFAULT_ENVIRONMENT)
-        self.api = NoonlightClient(
-            get_async_client(hass),
-            entry.data[CONF_API_TOKEN],
-            base_url=resolve_base_url(environment, entry.data.get(CONF_BASE_URL)),
-        )
+        self.api = NoonlightClient(get_async_client(hass), entry.data[CONF_API_TOKEN])
 
     async def _async_update_data(self) -> bool:
         """Probe Noonlight and report whether it is reachable + authorized.
