@@ -2351,7 +2351,8 @@ class ConfigEntries:
                 options=entry["options"],
                 pref_disable_new_entities=entry["pref_disable_new_entities"],
                 pref_disable_polling=entry["pref_disable_polling"],
-                # Optional — pre-Phase-17 entries don't carry this key.
+                # Only sandboxed entries persist this key (as_dict writes it
+                # solely when set), so non-sandboxed entries lack it.
                 sandbox=entry.get("sandbox"),
                 source=entry["source"],
                 subentries_data=entry["subentries"],

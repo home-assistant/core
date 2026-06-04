@@ -475,10 +475,6 @@ class AuthStore:
             else:
                 last_used_at = None
 
-            # Silently drop the legacy ``scopes`` key written by the
-            # reverted Phase-7 sandbox auth-scoping mechanism. Pre-existing
-            # on-disk tokens may still carry it; it is no longer read.
-            rt_dict.pop("scopes", None)
             token = models.RefreshToken(
                 id=rt_dict["id"],
                 user=users[rt_dict["user_id"]],
