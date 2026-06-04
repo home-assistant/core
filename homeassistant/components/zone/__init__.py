@@ -430,7 +430,6 @@ class Zone(collection.CollectionEntity):
         config = self._config
         name: str = config[CONF_NAME]
         self._attr_name = name
-        self._case_folded_name = name.casefold()
         self._attr_unique_id = config.get(CONF_ID)
         self._attr_icon = config.get(CONF_ICON)
 
