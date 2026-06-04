@@ -56,9 +56,8 @@ class SwisscomConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during Swisscom config flow")
                 errors["base"] = "unknown"
             else:
-                if info.base_mac:
-                    await self.async_set_unique_id(format_mac(info.base_mac))
-                    self._abort_if_unique_id_configured()
+                await self.async_set_unique_id(format_mac(info.base_mac))
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=info.model_name or "Internet-Box", data=user_input
                 )

@@ -95,26 +95,6 @@ async def test_user_flow_duplicate(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_flow_no_base_mac_creates_entry_without_unique_id(
-    hass: HomeAssistant, mock_swisscom_client: MagicMock
-) -> None:
-    """Test the entry is created without a unique ID when the box reports no MAC."""
-    mock_swisscom_client.get_box_info.return_value.base_mac = ""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_MODEL_NAME
-    assert result["data"] == USER_INPUT
-    assert result["result"].unique_id is None
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_no_model_name_uses_default_title(
     hass: HomeAssistant, mock_swisscom_client: MagicMock
 ) -> None:
