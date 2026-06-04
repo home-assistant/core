@@ -8,7 +8,7 @@ from aiohttp import ClientError, web_exceptions
 from pydaikin.exceptions import DaikinException
 import pytest
 
-from homeassistant.components.daikin.const import KEY_MAC
+from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -59,7 +59,7 @@ def mock_daikin_discovery():
 async def test_user(hass: HomeAssistant, mock_daikin) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        "daikin",
+        DOMAIN,
         context={"source": SOURCE_USER},
     )
 
@@ -67,7 +67,7 @@ async def test_user(hass: HomeAssistant, mock_daikin) -> None:
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
-        "daikin",
+        DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST},
     )
@@ -81,7 +81,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
     """Test we abort if Daikin is already setup."""
     MockConfigEntry(domain="daikin", unique_id=MAC).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        "daikin",
+        DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, KEY_MAC: MAC},
     )
@@ -105,7 +105,7 @@ async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) 
     mock_daikin.side_effect = s_effect
 
     result = await hass.config_entries.flow.async_init(
-        "daikin",
+        DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, KEY_MAC: MAC},
     )
@@ -117,7 +117,7 @@ async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) 
 async def test_api_password_abort(hass: HomeAssistant) -> None:
     """Test device abort."""
     result = await hass.config_entries.flow.async_init(
-        "daikin",
+        DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, CONF_API_KEY: "aa", CONF_PASSWORD: "aa"},
     )
@@ -149,7 +149,7 @@ async def test_discovery_zeroconf(
 ) -> None:
     """Test discovery/zeroconf step."""
     result = await hass.config_entries.flow.async_init(
-        "daikin",
+        DOMAIN,
         context={"source": source},
         data=data,
     )
@@ -158,7 +158,7 @@ async def test_discovery_zeroconf(
 
     MockConfigEntry(domain="daikin", unique_id=unique_id).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        "daikin",
+        DOMAIN,
         context={"source": SOURCE_USER, "unique_id": unique_id},
         data={CONF_HOST: HOST},
     )
@@ -167,7 +167,7 @@ async def test_discovery_zeroconf(
     assert result["reason"] == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
-        "daikin",
+        DOMAIN,
         context={"source": source},
         data=data,
     )

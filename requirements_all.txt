@@ -1347,7 +1347,7 @@ ihcsdk==2.8.12
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==2.2.0
+imgw_pib==2.2.2
 
 # homeassistant.components.incomfort
 incomfort-client==0.7.0
@@ -1806,7 +1806,7 @@ p1monitor==3.2.0
 paho-mqtt==2.1.0
 
 # homeassistant.components.paj_gps
-pajgps-api==0.3.1
+pajgps-api==0.4.0
 
 # homeassistant.components.panasonic_bluray
 panacotta==0.2
