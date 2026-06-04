@@ -10,8 +10,7 @@ from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DO
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MOCK_ADDRESS, MOCK_MAC, MOCK_PASSWORD, MOCK_USERNAME
 
@@ -73,16 +72,19 @@ async def test_setup_entry_no_devices_raises(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_entry_no_address_raises_retry(
+async def test_setup_entry_no_address_loads_and_registers(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     mock_cloud_account: AsyncMock,
 ) -> None:
-    """Test setup retries when no device has a known LAN address yet.
+    """Test setup with no known LAN address loads and registers the device.
 
-    The cloud returns each device's credentials but never its LAN IP, so an
-    entry with no resolved addresses cannot reach any device. Setup must raise
-    ConfigEntryNotReady (not load empty) so Home Assistant retries while DHCP
-    discovery resolves the addresses.
+    The cloud returns each device's credentials but never its LAN IP. Without a
+    resolved address the device cannot be polled, so it creates no entity — but
+    it is registered with its MAC so "registered_devices" DHCP discovery can
+    supply the IP and reload the entry. Setup must not retry (which would hammer
+    the cloud API) since retrying can never resolve the address.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -94,9 +96,11 @@ async def test_setup_entry_no_address_raises_retry(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    # The device's MAC is registered so a later DHCP discovery can supply its IP.
-    assert format_mac(MOCK_MAC) in entry.data[CONF_ADDRESSES]
+    assert entry.state is ConfigEntryState.LOADED
+    assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC))}
+    )
 
 
 async def test_setup_entry_resolves_address_from_entry(
@@ -115,11 +119,11 @@ async def test_setup_entry_resolves_address_from_entry(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # The entity only exists because the address resolved; an unresolved address
-    # would have raised ConfigEntryNotReady instead of creating a coordinator.
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
-    assert mock_config_entry.data[CONF_ADDRESSES][format_mac(MOCK_MAC)] == MOCK_ADDRESS
+    assert mock_config_entry.data[CONF_ADDRESSES][dr.format_mac(MOCK_MAC)] == (
+        MOCK_ADDRESS
+    )
 
 
 async def test_setup_entry_skips_incomplete_devices(

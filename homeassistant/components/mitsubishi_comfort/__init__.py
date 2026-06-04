@@ -14,8 +14,8 @@ from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionE
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_ADDRESSES,
@@ -32,13 +32,14 @@ _LOGGER = logging.getLogger(__name__)
 def _make_device(
     info: DeviceInfo,
     serial: str,
+    address: str,
     session,
 ) -> IndoorUnit | KumoStation:
     """Create the appropriate device instance from DeviceInfo."""
     cls = IndoorUnit if info.is_indoor_unit else KumoStation
     return cls(
         name=info.label,
-        address=info.address,
+        address=address,
         password_b64=info.password,
         crypto_serial_hex=info.crypto_serial,
         serial=serial,
@@ -71,15 +72,25 @@ async def async_setup_entry(
             translation_key="no_devices",
         )
 
-    # The cloud supplies each device's password, crypto serial, and MAC, but not
-    # its LAN IP. Resolve the IP from the DHCP-discovered address cache (keyed by
-    # MAC) and register every owned MAC so async_step_dhcp knows which addresses
-    # belong to this entry.
+    # The cloud provides each device's MAC but never its LAN IP. Register every
+    # device with its MAC so the manifest's "registered_devices" DHCP matcher
+    # tracks it; DHCP discovery then supplies the IP via async_step_dhcp.
+    device_registry = dr.async_get(hass)
+    owned_macs = {dr.format_mac(info.mac) for info in devices.values()}
+    for serial, info in devices.items():
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, serial)},
+            connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(info.mac))},
+            manufacturer="Mitsubishi",
+            name=info.label,
+            serial_number=serial,
+        )
+
+    # Resolved IPs are stored keyed by MAC. Drop any for devices that are no
+    # longer on the account.
     stored: dict[str, str] = entry.data.get(CONF_ADDRESSES, {})
-    # Keep an entry for every owned MAC (defaulting to ""), dropping MACs for
-    # devices no longer on the account.
-    addresses = {format_mac(info.mac): "" for info in devices.values()}
-    addresses.update({mac: ip for mac, ip in stored.items() if mac in addresses})
+    addresses = {mac: ip for mac, ip in stored.items() if mac in owned_macs}
     if addresses != stored:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_ADDRESSES: addresses}
@@ -87,25 +98,15 @@ async def async_setup_entry(
 
     coordinators: dict[str, MitsubishiComfortCoordinator] = {}
     for serial, info in devices.items():
-        info.address = addresses.get(format_mac(info.mac)) or info.address
-        if not info.address or not info.password or not info.crypto_serial:
-            _LOGGER.debug(
-                "Device %s has no known LAN address yet; it will be added once "
-                "discovered on the network",
-                info.label,
-            )
+        address = addresses.get(dr.format_mac(info.mac))
+        if not address or not info.password or not info.crypto_serial:
+            # No LAN address yet: the device is registered, so DHCP discovery
+            # supplies its IP and reloads the entry to add it.
+            _LOGGER.debug("Device %s has no known LAN address yet", info.label)
             continue
-        device = _make_device(info, serial, session)
+        device = _make_device(info, serial, address, session)
         coordinators[serial] = MitsubishiComfortCoordinator(
             hass, entry, device, info.mac
-        )
-
-    if not coordinators:
-        # No device has a usable LAN address yet. Raise so Home Assistant retries
-        # with backoff; DHCP discovery will fill in addresses and reload the entry.
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="no_devices_reachable",
         )
 
     await asyncio.gather(

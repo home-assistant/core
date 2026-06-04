@@ -11,10 +11,10 @@ from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DO
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .conftest import MOCK_MAC
+from .conftest import MOCK_MAC, MOCK_SERIAL
 
 from tests.common import MockConfigEntry
 
@@ -125,13 +125,25 @@ def _dhcp_info(ip: str, mac: str = MOCK_MAC) -> DhcpServiceInfo:
     )
 
 
+def _register_device(
+    device_registry: dr.DeviceRegistry, entry: MockConfigEntry, mac: str = MOCK_MAC
+) -> None:
+    """Register a device with a MAC connection, as setup does."""
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_SERIAL)},
+        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))},
+    )
+
+
 async def test_dhcp_updates_address_and_reloads(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test DHCP discovery records a new IP for a known device and reloads."""
+    """Test DHCP discovery records a new IP for a registered device and reloads."""
     mock_config_entry.add_to_hass(hass)
-    formatted_mac = format_mac(MOCK_MAC)
+    _register_device(device_registry, mock_config_entry)
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
@@ -144,16 +156,20 @@ async def test_dhcp_updates_address_and_reloads(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_ADDRESSES][formatted_mac] == "192.168.1.250"
+    assert mock_config_entry.data[CONF_ADDRESSES][dr.format_mac(MOCK_MAC)] == (
+        "192.168.1.250"
+    )
     mock_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 async def test_dhcp_same_address_does_not_reload(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test DHCP discovery of an unchanged IP does not trigger a reload."""
     mock_config_entry.add_to_hass(hass)
+    _register_device(device_registry, mock_config_entry)
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
@@ -169,12 +185,14 @@ async def test_dhcp_same_address_does_not_reload(
     mock_reload.assert_not_called()
 
 
-async def test_dhcp_unknown_device_ignored(
+async def test_dhcp_unregistered_device_ignored(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test DHCP discovery of a MAC not owned by any entry changes nothing."""
+    """Test DHCP discovery of a MAC with no registered device changes nothing."""
     mock_config_entry.add_to_hass(hass)
+    _register_device(device_registry, mock_config_entry)
     original = dict(mock_config_entry.data[CONF_ADDRESSES])
 
     with patch(
