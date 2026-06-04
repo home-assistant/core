@@ -44,9 +44,13 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], str | None]:
         """Check if we can connect to the OpenEVSE charger."""
 
-        charger = OpenEVSE(
-            host, user or "", password or "", session=async_get_clientsession(self.hass)
-        )
+        kwargs = {}
+        if user is not None:
+            kwargs["user"] = user
+        if password is not None:
+            kwargs["pwd"] = password
+
+        charger = OpenEVSE(host, session=async_get_clientsession(self.hass), **kwargs)
         try:
             result = await charger.test_and_get()
         except TimeoutError:

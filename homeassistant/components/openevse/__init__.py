@@ -16,11 +16,17 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
     """Set up OpenEVSE from a config entry."""
+    kwargs = {}
+
+    if (username := entry.data.get(CONF_USERNAME)) is not None:
+        kwargs["user"] = username
+    if (password := entry.data.get(CONF_PASSWORD)) is not None:
+        kwargs["pwd"] = password
+
     charger = OpenEVSE(
         entry.data[CONF_HOST],
-        entry.data.get(CONF_USERNAME) or "",
-        entry.data.get(CONF_PASSWORD) or "",
         session=async_get_clientsession(hass),
+        **kwargs,
     )
 
     try:
