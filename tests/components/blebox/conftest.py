@@ -66,9 +66,11 @@ def mock_feature(category, spec, set_spec: bool = True, **kwargs):
     return feature_mock
 
 
-def mock_config(ip_address="172.100.123.4"):
+def mock_config(ip_address="172.100.123.4", unique_id="abcd0123ef5678"):
     """Return a Mock of the HA entity config."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80})
+    return MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80}, unique_id=unique_id
+    )
 
 
 @pytest.fixture(name="config_entry")

@@ -27,6 +27,7 @@ from homeassistant.components.openai_conversation.const import (
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
+    DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
@@ -53,7 +54,7 @@ def mock_config_entry(
     """Mock a config entry."""
     entry = MockConfigEntry(
         title="OpenAI",
-        domain="openai_conversation",
+        domain=DOMAIN,
         data={
             "api_key": "bla",
         },
