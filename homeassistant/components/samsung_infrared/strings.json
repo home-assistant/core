@@ -128,7 +128,8 @@
   "selector": {
     "device_type": {
       "options": {
-        "tv": "TV"
+        "tv": "TV",
+        "ac": "Air Conditioner"
       }
     }
   }

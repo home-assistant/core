@@ -27,6 +27,7 @@ from .const import (
 
 DEVICE_TYPE_NAMES: dict[SamsungDeviceType, str] = {
     SamsungDeviceType.TV: "TV",
+    SamsungDeviceType.AC: "Air Conditioner",
 }
 
 
