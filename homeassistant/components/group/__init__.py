@@ -141,26 +141,30 @@ async def async_clean_import(hass: HomeAssistant, entry: ConfigEntry) -> None:
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, old_config_entry_id)
     old_entity_entry = entities[0] if entities else None
+
+    # Update options to not run migration again
+    new_options = dict(entry.options)
+    new_options.pop("old_config_entry_id")
+    hass.config_entries.async_update_entry(entry, options=new_options)
+
     if not old_config_entry or not old_entity_entry:
-        # User has manually removed it before we came here
+        # User has manually removed the entry or entity before we came here
         # Skip the migration and just continue with setting up the group sensor
         _LOGGER.warning(
-            "Min/Max helper has already been removed, setting up group sensor without migration"
+            "Min/Max helper was already removed, setting up group sensor without migration"
         )
-    else:
-        if TYPE_CHECKING:
-            assert old_entity_entry.config_entry_id
-        await hass.config_entries.async_unload(old_entity_entry.config_entry_id)
-        entity_reg.async_update_entity_platform(
-            old_entity_entry.entity_id,
-            DOMAIN,
-            new_config_entry_id=entry.entry_id,
-            new_unique_id=entry.entry_id,
-        )
-        new_options = dict(entry.options)
-        new_options.pop("old_config_entry_id")
-        hass.config_entries.async_update_entry(entry, options=new_options)
-        await hass.config_entries.async_remove(old_entity_entry.config_entry_id)
+        return
+
+    if TYPE_CHECKING:
+        assert old_entity_entry.config_entry_id
+    await hass.config_entries.async_unload(old_entity_entry.config_entry_id)
+    entity_reg.async_update_entity_platform(
+        old_entity_entry.entity_id,
+        DOMAIN,
+        new_config_entry_id=entry.entry_id,
+        new_unique_id=entry.entry_id,
+    )
+    await hass.config_entries.async_remove(old_entity_entry.config_entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

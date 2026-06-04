@@ -4,11 +4,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.group import (
-    CONF_ENTITIES,
-    CONF_HIDE_MEMBERS,
-    DOMAIN as GROUP_DOMAIN,
-)
+from homeassistant.components.group import CONF_HIDE_MEMBERS, DOMAIN as GROUP_DOMAIN
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
@@ -16,6 +12,7 @@ from homeassistant.components.repairs import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
