@@ -38,7 +38,7 @@ from .proxy_flow import SandboxFlowProxy
 from .sources import SandboxSourceError, async_resolve_integration_source
 
 if TYPE_CHECKING:
-    from . import SandboxV2Data
+    from . import SandboxData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class SandboxFlowRouter:
         hass: HomeAssistant,
         manager: SandboxManager,
         *,
-        data: SandboxV2Data | None = None,
+        data: SandboxData | None = None,
     ) -> None:
         """Initialise the router with the active sandbox manager."""
         self._hass = hass

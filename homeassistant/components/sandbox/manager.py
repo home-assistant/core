@@ -64,15 +64,15 @@ _TRANSPORTS = (TRANSPORT_STDIO, TRANSPORT_UNIX)
 ShutdownReplyCallback = Callable[[str, Any], Awaitable[None]]
 
 
-class SandboxV2Error(Exception):
+class SandboxError(Exception):
     """Base class for sandbox lifecycle errors."""
 
 
-class SandboxStartError(SandboxV2Error):
+class SandboxStartError(SandboxError):
     """Sandbox did not reach the ``running`` state."""
 
 
-class SandboxFailedError(SandboxV2Error):
+class SandboxFailedError(SandboxError):
     """Sandbox crashed more than the configured restart limit allows."""
 
 
@@ -677,10 +677,10 @@ __all__ = [
     "TRANSPORT_UNIX",
     "CommandFactory",
     "SandboxConfig",
+    "SandboxError",
     "SandboxFailedError",
     "SandboxManager",
     "SandboxProcess",
     "SandboxStartError",
-    "SandboxV2Error",
     "ShutdownReplyCallback",
 ]

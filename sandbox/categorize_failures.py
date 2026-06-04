@@ -1,7 +1,7 @@
 """Bucket sandbox compat-sweep failures into named categories.
 
 Pairs with ``run_compat_full.py``. The runner dumps a per-test traceback
-into ``$SANDBOX_V2_ERRORS_DIR/<integration>/<path>__<name>.txt``; this
+into ``$SANDBOX_ERRORS_DIR/<integration>/<path>__<name>.txt``; this
 script walks that tree, runs each file through an ordered list of
 signature matchers, and writes:
 
@@ -43,7 +43,7 @@ import re
 
 _HERE = Path(__file__).resolve().parent
 DEFAULT_ERRORS_DIR = Path(
-    os.environ.get("SANDBOX_V2_ERRORS_DIR", "/tmp/sandbox_errors")
+    os.environ.get("SANDBOX_ERRORS_DIR", "/tmp/sandbox_errors")
 )
 DEFAULT_BACKLOG_JSON = _HERE / "BACKLOG_FAILURES.json"
 
@@ -93,12 +93,12 @@ RULES: tuple[Rule, ...] = (
     # line in the diff. Same root cause as ``__sandbox_group`` — the
     # autotag synthesises the field for compat coverage, the snapshot
     # was captured pre-autotag. Fix: refresh the snapshot in the
-    # integration's test tree (out of v2 scope).
+    # integration's test tree (out of sandbox scope).
     Rule("test-only", _compile(r"\+\s+'sandbox'\s*:\s*'(?:built-in|custom|main)'")),
     # Snapshot drift on ``'created_at'`` / ``'modified_at'``: tests that
     # didn't pin the wall clock with freezegun, so the snapshot's
     # baked-in timestamp doesn't match the new run's. Environmental,
-    # not a v2 bridge issue; fix is for the integration's test to use
+    # not a sandbox bridge issue; fix is for the integration's test to use
     # ``@pytest.mark.freeze_time``. Matches both Syrupy diff form
     # (``+ 'created_at': ...``) and pytest dict-diff form
     # (``'created_at': '<iso>', 'data': ...``).
@@ -367,7 +367,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--errors-dir", type=Path, default=DEFAULT_ERRORS_DIR,
         help=("Per-test error dump root "
-              "(default: $SANDBOX_V2_ERRORS_DIR or /tmp/sandbox_errors)."),
+              "(default: $SANDBOX_ERRORS_DIR or /tmp/sandbox_errors)."),
     )
     parser.add_argument(
         "--out", type=Path, default=DEFAULT_BACKLOG_JSON,

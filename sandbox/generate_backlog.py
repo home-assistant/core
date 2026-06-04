@@ -35,7 +35,7 @@ BUCKET_BLURB: dict[str, str] = {
         "Test scaffolding noise — the compat-lane autotag patch mutates"
         " `entry.data` to add `__sandbox_group`, and some helper-integration"
         " tests or Syrupy snapshots assert the entry data is empty / matches"
-        " a snapshot that pre-dates the tag. Not a v2 bridge bug."
+        " a snapshot that pre-dates the tag. Not a sandbox bridge bug."
     ),
     "proxy-missing": (
         "Phase 13 shipped proxies for all 32 entity domains. Any hit here"

@@ -1,7 +1,7 @@
 """Sandbox — run integrations in isolated subprocesses.
 
 The integration owns three runtime objects, all hung off
-:class:`SandboxV2Data`:
+:class:`SandboxData`:
 
 * :class:`SandboxManager` — supervises one subprocess per sandbox group
   ("main", "built-in", "custom"), lazily spawning them on first need.
@@ -26,7 +26,7 @@ from homeassistant.helpers.typing import ConfigType
 from ._proto import sandbox_pb2 as pb
 from .bridge import SandboxBridge, async_create_bridge
 from .channel import Channel
-from .const import DATA_SANDBOX_V2, DOMAIN
+from .const import DATA_SANDBOX, DOMAIN
 from .manager import SandboxManager
 from .router import SandboxFlowRouter
 
@@ -36,7 +36,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @dataclass
-class SandboxV2Data:
+class SandboxData:
     """Global Sandbox runtime data."""
 
     manager: SandboxManager | None = None
@@ -47,8 +47,8 @@ class SandboxV2Data:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sandbox integration."""
-    data = SandboxV2Data()
-    hass.data[DATA_SANDBOX_V2] = data
+    data = SandboxData()
+    hass.data[DATA_SANDBOX] = data
 
     def _on_channel_ready(group: str, channel: Channel) -> None:
         # Drop any prior bridge for this group (a sandbox restart hands us

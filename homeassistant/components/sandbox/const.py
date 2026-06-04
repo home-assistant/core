@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import SandboxV2Data
+    from . import SandboxData
 
 DOMAIN = "sandbox"
 
-DATA_SANDBOX_V2: HassKey[SandboxV2Data] = HassKey(DOMAIN)
+DATA_SANDBOX: HassKey[SandboxData] = HassKey(DOMAIN)
 
 # Proxy entities all register under the shared ``sandbox`` platform_name,
 # so the entity-registry uniqueness key ``(domain, "sandbox", unique_id)``
