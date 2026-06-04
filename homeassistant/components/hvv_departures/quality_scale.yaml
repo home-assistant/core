@@ -9,20 +9,30 @@ rules:
     status: todo
     comment: >-
       The DataUpdateCoordinator is defined inline inside async_setup_entry in
-      binary_sensor.py rather than in a dedicated coordinator.py. There is also
-      no shared base entity in entity.py.
+      binary_sensor.py rather than in a dedicated coordinator.py.
+      The sensor.py should also use the dedicated coordinator.
+
+      Nice to have: a shared base entity in entity.py.
   config-flow-test-coverage:
     status: todo
     comment: >-
       A test verifying that the config flow prevents duplicate entries is
       missing. This is related to the missing unique-config-entry
       implementation.
+      All tests should end in CREATE_ENTRY or ABORT to test that the flow is
+      able to recover.
   config-flow:
     status: todo
     comment: >-
       The config flow is functional but does not use data_description in
       strings.json to give users context for the input fields (host,
       username, password).
+
+      Todos that are not blocking `done`:
+      - Move to a sub entry flow for adding stations (single config flow
+        for auth, sub entry for every station)
+      - Remove `host` as there is no expected use case for
+        other-than-default hosts
   dependency-transparency: done
   docs-actions:
     status: exempt
