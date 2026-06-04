@@ -91,7 +91,6 @@ async def test_user_flow_retry_learn(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing_mode"
-    assert result["errors"] == {"base": "no_response"}
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert len(mock_rf_entity.send_command_calls) == 2
@@ -102,50 +101,6 @@ async def test_user_flow_retry_learn(
         result["flow_id"], user_input={"device_responded": True}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_invalid_device_id(
-    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
-) -> None:
-    """Test validation for invalid device ID."""
-    result = await _start_user_flow(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
-            CONF_DEVICE_ID: -1,
-            CONF_CHANNEL: 1,
-            CONF_GROUP: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_DEVICE_ID: "invalid_device_id"}
-    hass.config_entries.flow.async_abort(result["flow_id"])
-
-
-async def test_invalid_channel(
-    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
-) -> None:
-    """Test validation for invalid channel."""
-    result = await _start_user_flow(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
-            CONF_DEVICE_ID: 123456,
-            CONF_CHANNEL: 17,
-            CONF_GROUP: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_CHANNEL: "invalid_channel"}
-    hass.config_entries.flow.async_abort(result["flow_id"])
 
 
 async def test_unique_id_already_configured(

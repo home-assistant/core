@@ -63,19 +63,6 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
             channel: int = user_input[CONF_CHANNEL]
             group: bool = user_input[CONF_GROUP]
 
-            if not (0 <= device_id <= 0x3FFFFFF):
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=self._async_user_schema(transmitters, user_input),
-                    errors={CONF_DEVICE_ID: "invalid_device_id"},
-                )
-            if not (1 <= channel <= 16):
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=self._async_user_schema(transmitters, user_input),
-                    errors={CONF_CHANNEL: "invalid_channel"},
-                )
-
             registry = er.async_get(self.hass)
             entity_entry = registry.async_get(transmitter)
             assert entity_entry is not None
@@ -137,11 +124,7 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=self._device_data,
                 )
 
-            return self.async_show_form(
-                step_id="pairing_mode",
-                data_schema=vol.Schema({}),
-                errors={"base": "no_response"},
-            )
+            return await self.async_step_pairing_mode()
 
         return self.async_show_form(
             step_id="pairing_result",
@@ -181,6 +164,8 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                 device_id_key: vol.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
+                            min=0,
+                            max=0x3FFFFFF,
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
@@ -192,6 +177,8 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                 ): vol.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
+                            min=1,
+                            max=16,
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),

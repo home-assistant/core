@@ -5,11 +5,7 @@
       "no_compatible_transmitters": "No compatible radio frequency transmitter is available for this integration.",
       "no_transmitters": "[%key:common::config_flow::abort::no_radio_frequency_transmitters%]"
     },
-    "error": {
-      "invalid_channel": "Channel must be between 1 and 16.",
-      "invalid_device_id": "Device ID must be between 0 and 67108863.",
-      "no_response": "No response detected. Put the device in pairing mode again and retry."
-    },
+    "error": {},
     "step": {
       "pairing_mode": {
         "description": "Bring device into learn mode by pushing it's button for more than 2 seconds, then press Ok.",
