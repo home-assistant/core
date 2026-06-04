@@ -41,6 +41,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'FreeBSD router',
       'icon': 'mdi:router-network',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '192.168.50.1',
       'mac': '00:00:00:00:00:01',
       'source_type': <SourceType.ROUTER: 'router'>,
@@ -95,6 +98,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'PC_HOME',
       'icon': 'mdi:desktop-tower',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '192.168.50.3',
       'mac': '00:00:00:00:00:03',
       'source_type': <SourceType.ROUTER: 'router'>,
@@ -149,6 +155,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Samsung The Frame 55',
       'icon': 'mdi:television',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '192.168.50.2',
       'mac': '00:00:00:00:00:02',
       'source_type': <SourceType.ROUTER: 'router'>,

@@ -58,6 +58,18 @@
     }
   },
   "entity": {
+    "event": {
+      "voice_event": {
+        "name": "Voice event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "triggered": "Triggered"
+            }
+          }
+        }
+      }
+    },
     "notify": {
       "announce": {
         "name": "Announce"
@@ -102,6 +114,9 @@
     "entry_not_loaded": {
       "message": "Entry not loaded: {entry}"
     },
+    "invalid_auth": {
+      "message": "Invalid authentication credentials: {error}"
+    },
     "invalid_device_id": {
       "message": "Invalid device ID specified: {device_id}"
     },
@@ -110,6 +125,9 @@
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
+    },
+    "unknown_exception": {
+      "message": "Unknown error occurred: {error}"
     }
   },
   "selector": {

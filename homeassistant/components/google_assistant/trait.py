@@ -1637,7 +1637,9 @@ class ArmDisArmTrait(_Trait):
         AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
         AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
         AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+            AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+        ),
         AlarmControlPanelState.TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
     }
     """The list of states to support in increasing security state."""
@@ -2726,7 +2728,11 @@ class ChannelTrait(_Trait):
         if (
             domain == media_player.DOMAIN
             and (features & MediaPlayerEntityFeature.PLAY_MEDIA)
-            and device_class == media_player.MediaPlayerDeviceClass.TV
+            and device_class
+            in (
+                media_player.MediaPlayerDeviceClass.TV,
+                media_player.MediaPlayerDeviceClass.PROJECTOR,
+            )
         ):
             return True
 

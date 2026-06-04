@@ -105,6 +105,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aidot": {
+      "name": "AiDot",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airgradient": {
       "name": "AirGradient",
       "integration_type": "device",
@@ -570,7 +576,7 @@
       "name": "Ambient Radio Weather Network",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "aseko_pool_live": {
       "name": "Aseko Pool Live",
@@ -1648,6 +1654,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "edifier_infrared": {
+      "name": "Edifier Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "edimax": {
       "name": "Edimax",
       "integration_type": "hub",
@@ -1656,7 +1668,7 @@
     },
     "edl21": {
       "name": "EDL21",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1854,6 +1866,12 @@
       "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "envertech_evt800": {
+      "name": "ENVERTECH EVT800",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "environment_canada": {
       "name": "Environment Canada",
@@ -2731,6 +2749,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "guntamatic": {
+      "name": "Guntamatic",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "habitica": {
       "name": "Habitica",
       "integration_type": "service",
@@ -2836,6 +2860,12 @@
       "iot_standards": [
         "zwave"
       ]
+    },
+    "helty": {
+      "name": "Helty Flow",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
@@ -3205,6 +3235,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "imou": {
+      "name": "Imou",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "improv_ble": {
       "name": "Improv via BLE",
       "integration_type": "device",
@@ -3562,12 +3598,6 @@
     "konnected": {
       "name": "Konnected",
       "integrations": {
-        "konnected": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_push",
-          "name": "Konnected.io (Legacy)"
-        },
         "konnected_esphome": {
           "integration_type": "virtual",
           "config_flow": false,
@@ -3752,6 +3782,12 @@
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "LG ThinQ"
+        },
+        "lg_tv_rs232": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "LG TV via Serial"
         },
         "webostv": {
           "integration_type": "device",
@@ -4026,8 +4062,20 @@
     },
     "marantz": {
       "name": "Marantz",
-      "integration_type": "virtual",
-      "supported_by": "denonavr"
+      "integrations": {
+        "marantz": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "denonavr",
+          "name": "Marantz"
+        },
+        "marantz_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Marantz Infrared"
+        }
+      }
     },
     "martec": {
       "name": "Martec",
@@ -4589,11 +4637,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "national_grid_us": {
-      "name": "National Grid US",
-      "integration_type": "virtual",
-      "supported_by": "opower"
-    },
     "neato": {
       "name": "Neato Botvac",
       "integration_type": "hub",
@@ -5052,8 +5095,8 @@
     },
     "opensensemap": {
       "name": "openSenseMap",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "opensky": {
@@ -5100,7 +5143,7 @@
     "opnsense": {
       "name": "OPNsense",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "opower": {
@@ -5179,6 +5222,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "ovhcloud_ai_endpoints": {
+      "name": "OVHcloud AI Endpoints",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "ovo_energy": {
       "name": "OVO Energy",
@@ -6091,6 +6140,12 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "Samsung Family Hub"
+        },
+        "samsung_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Samsung Infrared"
         },
         "samsungtv": {
           "integration_type": "device",
@@ -7733,6 +7788,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "vistapool": {
+      "name": "Vistapool",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "vivotek": {
       "name": "VIVOTEK",
       "integration_type": "device",
@@ -8186,6 +8247,12 @@
     },
     "yolink": {
       "name": "YoLink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
+    "yoto": {
+      "name": "Yoto",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"

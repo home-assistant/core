@@ -8,10 +8,10 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.rest import create_rest_data_from_config
-from homeassistant.components.rest.data import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
     DEFAULT_TIMEOUT,
 )
-from homeassistant.components.rest.schema import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
     DEFAULT_METHOD,
     METHODS,
 )
@@ -190,7 +190,7 @@ SENSOR_SETTINGS = vol.Schema(
 )
 SENSOR_SETUP = vol.Schema(
     # Name field is no longer allowed in config flow schemas
-    # pylint: disable-next=hass-config-flow-name-field
+    # pylint: disable-next=home-assistant-config-flow-name-field
     {vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector()}
 ).extend(SENSOR_SETTINGS.schema)
 

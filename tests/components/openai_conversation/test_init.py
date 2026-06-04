@@ -118,7 +118,7 @@ async def test_generate_image_service(
         ),
     ) as mock_create:
         response = await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_image",
             service_data,
             blocking=True,
@@ -154,7 +154,7 @@ async def test_generate_image_service_error(
         pytest.raises(HomeAssistantError, match="Error generating image: Reason"),
     ):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_image",
             {
                 "config_entry": mock_config_entry.entry_id,
@@ -182,7 +182,7 @@ async def test_generate_image_service_error(
         pytest.raises(HomeAssistantError, match="No image returned"),
     ):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_image",
             {
                 "config_entry": mock_config_entry.entry_id,
@@ -212,7 +212,7 @@ async def test_generate_content_service_with_image_not_allowed_path(
         ),
     ):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_content",
             {
                 "config_entry": mock_config_entry.entry_id,
@@ -245,7 +245,7 @@ async def test_invalid_config_entry(
     }
     with pytest.raises(ServiceValidationError, match=error):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             service_name,
             service_data,
             blocking=True,
@@ -473,7 +473,7 @@ async def test_generate_content_service(
         )
 
         response = await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_content",
             service_data,
             blocking=True,
@@ -505,13 +505,16 @@ async def test_generate_content_service(
                 "prompt": "Picture of a dog",
                 "filenames": ["/a/b/c.jpg", "d/e/f.png"],
             },
-            "Cannot read `d/e/f.png`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`",
+            "Cannot read `d/e/f.png`, no access to path;"
+            " `allowlist_external_dirs` may need to be adjusted"
+            " in `configuration.yaml`",
             [True, True],
             [True, False],
         ),
         (
             {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.mov"]},
-            "Only images and PDF are supported by the OpenAI API,`/a/b/c.mov` is not an image file or PDF",
+            "Only images and PDF are supported by the OpenAI"
+            " API,`/a/b/c.mov` is not an image file or PDF",
             [True],
             [True],
         ),
@@ -543,7 +546,7 @@ async def test_generate_content_service_invalid(
     ):
         with pytest.raises(HomeAssistantError, match=error):
             await hass.services.async_call(
-                "openai_conversation",
+                DOMAIN,
                 "generate_content",
                 service_data,
                 blocking=True,
@@ -572,7 +575,7 @@ async def test_generate_content_service_error(
         pytest.raises(HomeAssistantError, match="Error generating content: Reason"),
     ):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_content",
             {
                 "config_entry": mock_config_entry.entry_id,
@@ -612,7 +615,7 @@ async def test_service_auth_error(
         pytest.raises(HomeAssistantError, match="Authentication error"),
     ):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             service_name,
             {
                 "config_entry": mock_config_entry.entry_id,
@@ -935,7 +938,7 @@ async def test_migration_from_v1_with_same_keys(
     assert not entry.options
     assert (
         len(entry.subentries) == 5
-    )  # Two conversation subentries + one AI task subentry + one STT subentry + one TTS subentry
+    )  # 2 conversation + 1 AI task + 1 STT + 1 TTS subentry
 
     # Check both conversation subentries exist with correct data
     conversation_subentries = [
@@ -1176,6 +1179,7 @@ async def test_migration_from_v1_disabled(
         for subentry in entry.subentries.values()
         if subentry.subentry_type == "tts"
     ]
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if entry.minor_version == 4:
         assert len(stt_subentries) == 0
         assert len(tts_subentries) == 0

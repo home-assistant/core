@@ -145,7 +145,9 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
             await self.connection.write_coil(data)
         except WriteDeniedException:
             LOGGER.debug(
-                "Denied write on address %d with value %s. This is likely already the value the pump has internally",
+                "Denied write on address %d with value %s."
+                " This is likely already the value"
+                " the pump has internally",
                 coil.address,
                 value,
             )
