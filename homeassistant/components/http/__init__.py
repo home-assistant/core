@@ -12,7 +12,7 @@ from pathlib import Path
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, TypedDict, cast
+from typing import Any, Final, cast
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter
@@ -37,7 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir, storage
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.http import (
     KEY_ALLOW_CONFIGURED_CORS,
@@ -60,7 +60,29 @@ from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import DOMAIN, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER  # noqa: F401
+from .config import async_load_config
+from .const import (  # noqa: F401
+    CONF_BASE_URL,
+    CONF_CORS_ORIGINS,
+    CONF_IP_BAN_ENABLED,
+    CONF_LOGIN_ATTEMPTS_THRESHOLD,
+    CONF_SERVER_HOST,
+    CONF_SERVER_PORT,
+    CONF_SSL_CERTIFICATE,
+    CONF_SSL_KEY,
+    CONF_SSL_PEER_CERTIFICATE,
+    CONF_SSL_PROFILE,
+    CONF_TRUSTED_PROXIES,
+    CONF_USE_X_FORWARDED_FOR,
+    CONF_USE_X_FRAME_OPTIONS,
+    DEFAULT_CORS,
+    DOMAIN,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+    NO_LOGIN_ATTEMPT_THRESHOLD,
+    SSL_INTERMEDIATE,
+    SSL_MODERN,
+)
 from .cors import setup_cors
 from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
@@ -70,37 +92,12 @@ from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .web_runner import HomeAssistantTCPSite, HomeAssistantUnixSite
 
-CONF_SERVER_HOST: Final = "server_host"
-CONF_SERVER_PORT: Final = "server_port"
-CONF_BASE_URL: Final = "base_url"
-CONF_SSL_CERTIFICATE: Final = "ssl_certificate"
-CONF_SSL_PEER_CERTIFICATE: Final = "ssl_peer_certificate"
-CONF_SSL_KEY: Final = "ssl_key"
-CONF_CORS_ORIGINS: Final = "cors_allowed_origins"
-CONF_USE_X_FORWARDED_FOR: Final = "use_x_forwarded_for"
-CONF_USE_X_FRAME_OPTIONS: Final = "use_x_frame_options"
-CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
-CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
-CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
-CONF_SSL_PROFILE: Final = "ssl_profile"
-
-SSL_MODERN: Final = "modern"
-SSL_INTERMEDIATE: Final = "intermediate"
-
 _LOGGER: Final = logging.getLogger(__name__)
 
 DEFAULT_DEVELOPMENT: Final = "0"
-# Cast to be able to load custom cards.
-# My to be able to check url and version info.
-DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
-NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
 
 MAX_CLIENT_SIZE: Final = 1024**2 * 16
 MAX_LINE_SIZE: Final = 24570
-
-STORAGE_KEY: Final = DOMAIN
-STORAGE_VERSION: Final = 1
-SAVE_DELAY: Final = 180
 
 _HAS_IPV6 = hasattr(socket, "AF_INET6")
 _DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
@@ -154,30 +151,6 @@ _STATIC_CLASSES = {
 }
 
 
-class ConfData(TypedDict, total=False):
-    """Typed dict for config data."""
-
-    server_host: list[str]
-    server_port: int
-    base_url: str
-    ssl_certificate: str
-    ssl_peer_certificate: str
-    ssl_key: str
-    cors_allowed_origins: list[str]
-    use_x_forwarded_for: bool
-    use_x_frame_options: bool
-    trusted_proxies: list[IPv4Network | IPv6Network]
-    login_attempts_threshold: int
-    ip_ban_enabled: bool
-    ssl_profile: str
-
-
-async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
-    """Return the last known working config."""
-    store = storage.Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
-    return await store.async_load()
-
-
 class ApiConfig:
     """Configuration settings for API server."""
 
@@ -201,10 +174,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # we import aiohttp_fast_zlib
     (await async_import_module(hass, "aiohttp_fast_zlib")).enable()
 
-    conf: ConfData | None = config.get(DOMAIN)
+    # Deferred import: websocket_api declares http as its manifest
+    # dependency and imports back into this package at module load
+    # (websocket_api/http.py -> homeassistant.components.http). A top-level
+    # import of .websocket_api here would re-enter the still-loading
+    # websocket_api package and fail when applying its decorators
+    # (e.g. @websocket_api.require_admin).
+    websocket_api_module = await async_import_module(
+        hass, "homeassistant.components.http.websocket_api"
+    )
 
-    if conf is None:
-        conf = cast(ConfData, HTTP_SCHEMA({}))
+    conf = await async_load_config(hass, config)
+
+    websocket_api_module.async_register_websocket_commands(hass)
 
     if CONF_SERVER_HOST in conf and is_hassio(hass):
         issue_id = "server_host_deprecated_hassio"
@@ -271,9 +253,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Start the server."""
         with async_start_setup(hass, integration="http", phase=SetupPhases.SETUP):
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
-            # We already checked it's not None.
-            assert conf is not None
-            await start_http_server_and_save_config(hass, dict(conf), server)
+            await server.start()
 
     async_when_setup_or_start(hass, "frontend", start_server)
 
@@ -709,23 +689,3 @@ class HomeAssistantHTTP:
             await self.site.stop()
         if self.runner is not None:
             await self.runner.cleanup()
-
-
-async def start_http_server_and_save_config(
-    hass: HomeAssistant, conf: dict, server: HomeAssistantHTTP
-) -> None:
-    """Startup the http server and save the config."""
-    await server.start()
-
-    # If we are set up successful, we store the HTTP settings for recovery mode.
-    store: storage.Store[dict[str, Any]] = storage.Store(
-        hass, STORAGE_VERSION, STORAGE_KEY
-    )
-
-    if CONF_TRUSTED_PROXIES in conf:
-        conf[CONF_TRUSTED_PROXIES] = [
-            str(cast(IPv4Network | IPv6Network, ip).network_address)
-            for ip in conf[CONF_TRUSTED_PROXIES]
-        ]
-
-    store.async_delay_save(lambda: conf, SAVE_DELAY)

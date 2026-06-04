@@ -2261,5 +2261,5 @@ def disable_http_server() -> Generator[None]:
     This prevents the HTTP server from starting in tests that setup
     integrations which depend on the HTTP component.
     """
-    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+    with patch("homeassistant.components.http.HomeAssistantHTTP.start"):
         yield
