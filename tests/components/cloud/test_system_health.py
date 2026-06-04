@@ -11,9 +11,9 @@ from hass_nabucasa.iot_base import DisconnectReason
 from hass_nabucasa.remote import Certificate, CertificateStatus
 
 from homeassistant.components.cloud.const import DOMAIN
-from homeassistant.util.dt import UTC
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import UTC
 
 from tests.common import get_system_health_info
 from tests.test_util.aiohttp import AiohttpClientMocker
