@@ -47,9 +47,9 @@ ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
 ATTR_LIVE_UPDATE = "live_update"
 ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
 ATTR_LIVE_ACTIVITY_EXPIRES_AT = "expires_at"
+ATTR_LIVE_ACTIVITY_TAG = "tag"
 
 ATTR_TOKEN = "token"
-ATTR_TAG = "tag"
 
 CLEAR_NOTIFICATION = "clear_notification"
 

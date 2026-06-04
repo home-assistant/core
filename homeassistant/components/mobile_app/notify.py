@@ -38,6 +38,7 @@ from .const import (
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
     ATTR_LIVE_ACTIVITY_EXPIRES_AT,
+    ATTR_LIVE_ACTIVITY_TAG,
     ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_LIVE_UPDATE,
     ATTR_OS_VERSION,
@@ -48,7 +49,6 @@ from .const import (
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
-    ATTR_TAG,
     ATTR_TOKEN,
     ATTR_WEBHOOK_ID,
     CLEAR_NOTIFICATION,
@@ -255,7 +255,7 @@ class MobileAppNotificationService(BaseNotificationService):
         while a new or expired tag must use the device's push-to-start token.
         """
         notification_data = data.get(ATTR_DATA) or {}
-        tag = notification_data.get(ATTR_TAG)
+        tag = notification_data.get(ATTR_LIVE_ACTIVITY_TAG)
         if not tag:
             return None
 
@@ -296,7 +296,7 @@ class MobileAppNotificationService(BaseNotificationService):
         live_activity_tag: str | None = None
         if resolved := self._resolve_live_activity_push(entry, data):
             live_activity_token, live_activity_event = resolved
-            live_activity_tag = (data.get(ATTR_DATA) or {}).get(ATTR_TAG)
+            live_activity_tag = (data.get(ATTR_DATA) or {}).get(ATTR_LIVE_ACTIVITY_TAG)
             data = {
                 **data,
                 ATTR_DATA: {

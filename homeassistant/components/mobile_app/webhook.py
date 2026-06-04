@@ -60,6 +60,7 @@ from .const import (
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
     ATTR_LIVE_ACTIVITY_EXPIRES_AT,
+    ATTR_LIVE_ACTIVITY_TAG,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_PUSH_TOKEN,
@@ -76,7 +77,6 @@ from .const import (
     ATTR_SENSOR_UNIQUE_ID,
     ATTR_SENSOR_UOM,
     ATTR_SUPPORTS_ENCRYPTION,
-    ATTR_TAG,
     ATTR_TEMPLATE,
     ATTR_TEMPLATE_VARIABLES,
     ATTR_TOKEN,
@@ -786,7 +786,7 @@ async def webhook_scan_tag(
 @WEBHOOK_COMMANDS.register("live_activity_token")
 @validate_schema(
     {
-        vol.Required(ATTR_TAG): cv.string,
+        vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
         vol.Required(ATTR_PUSH_TOKEN): cv.string,
         vol.Required(ATTR_LIVE_ACTIVITY_EXPIRES_AT): cv.positive_float,
     }
@@ -796,7 +796,7 @@ async def webhook_update_live_activity_token(
 ) -> Response:
     """Store a Live Activity APNs token sent by the iOS app."""
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    activity_tag = data[ATTR_TAG]
+    activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
 
     live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     # Empty-before-add means no cleanup loop is running; start one.
@@ -820,7 +820,7 @@ async def webhook_update_live_activity_token(
 @WEBHOOK_COMMANDS.register("live_activity_dismissed")
 @validate_schema(
     {
-        vol.Required(ATTR_TAG): cv.string,
+        vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
     }
 )
 async def webhook_live_activity_dismissed(
@@ -828,7 +828,7 @@ async def webhook_live_activity_dismissed(
 ) -> Response:
     """Remove a stored Live Activity token when the activity ends on device."""
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    activity_tag = data[ATTR_TAG]
+    activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
 
     live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     if webhook_id in live_activity_tokens:
