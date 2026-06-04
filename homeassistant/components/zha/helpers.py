@@ -201,7 +201,6 @@ ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 SIGNAL_REMOVE_ENTITIES = "zha_remove_entities"
 SIGNAL_REMOVE_ENTITY = "zha_remove_entity"
-GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 SIGNAL_ADD_ENTITIES = "zha_add_entities"
 ENTITIES = "entities"
 
