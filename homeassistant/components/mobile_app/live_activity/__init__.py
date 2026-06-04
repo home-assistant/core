@@ -53,23 +53,7 @@ class LiveActivityRemotePush:
 
     data: dict[str, Any]
     target_push_token: str | None = None
-    _hass: HomeAssistant | None = None
-    _webhook_id: str | None = None
-    _activity_tag: str | None = None
-    _event: LiveActivityEvent | None = None
-
-    @callback
-    def async_handle_success(self) -> None:
-        """Clean up ActivityKit state after a successful remote send."""
-        if (
-            self._event != LiveActivityEvent.END
-            or self._hass is None
-            or self._webhook_id is None
-            or self._activity_tag is None
-        ):
-            return
-
-        remove_live_activity_token(self._hass, self._webhook_id, self._activity_tag)
+    success_callback: Callable[[], None] | None = None
 
 
 def prepare_live_activity_remote_push(
