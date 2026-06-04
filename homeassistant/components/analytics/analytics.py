@@ -299,12 +299,8 @@ class Analytics:
             self._data = AnalyticsData.from_dict(stored)
 
         if self.supervisor and not self.onboarded:
-            # This may raise HassioNotReadyError if Supervisor was unreachable
-            # during setup of the Supervisor integration. That will fail setup
-            # of this integration. However there is no better option at this time
-            # since we need to get the diagnostic setting from Supervisor to correctly
-            # setup this integration and we can't raise ConfigEntryNotReady to
-            # trigger a retry from async_setup.
+            # This may raise HassioNotReadyError if Supervisor was unreachable.
+            # The caller is responsible for handling this and triggering a retry.
             supervisor_info = hassio.get_supervisor_info(self._hass)
 
             # User have not configured analytics, get this setting from the supervisor
@@ -349,10 +345,10 @@ class Analytics:
             await self._save()
 
         if self.supervisor:
-            # get_supervisor_info was called during setup so we can't get here
-            # if it raised. The others may raise HassioNotReadyError if only some
-            # data was successfully fetched from Supervisor
-            supervisor_info = hassio.get_supervisor_info(hass)
+            # Try to pull Supervisor information, but don't fail if some or all
+            # of it is unavailable due to setup failures in the hassio integration.
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                supervisor_info = hassio.get_supervisor_info(hass)
             with contextlib.suppress(hassio.HassioNotReadyError):
                 operating_system_info = hassio.get_os_info(hass)
             with contextlib.suppress(hassio.HassioNotReadyError):
@@ -612,7 +608,8 @@ class Analytics:
 
                 else:
                     LOGGER.warning(
-                        "Unexpected status code %s when submitting snapshot analytics to %s",
+                        "Unexpected status code %s when submitting"
+                        " snapshot analytics to %s",
                         response.status,
                         url,
                     )
@@ -814,7 +811,8 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
             if not isinstance(integration_config, AnalyticsModifications):
                 LOGGER.error(  # type: ignore[unreachable]
-                    "Calling async_modify_analytics for integration '%s' did not return an AnalyticsConfig",
+                    "Calling async_modify_analytics for integration"
+                    " '%s' did not return an AnalyticsConfig",
                     integration_domain,
                 )
                 integration_configs[integration_domain] = AnalyticsModifications(
@@ -828,7 +826,8 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
     # We need to refer to other devices, for example in `via_device` field.
     # We don't however send the original device ids outside of Home Assistant,
-    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
+    # instead we refer to devices by
+    # (integration_domain, index_in_integration_device_list).
     device_id_mapping: dict[str, tuple[str, int]] = {}
 
     # Fill out information about devices

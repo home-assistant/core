@@ -5,12 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.xthings_cloud.const import (
-    CONF_EMAIL,
-    CONF_REFRESH_TOKEN,
-    CONF_TOKEN,
-    DOMAIN,
-)
+from homeassistant.components.xthings_cloud.const import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 
 from .const import MOCK_EMAIL, MOCK_REFRESH_TOKEN, MOCK_TOKEN, MOCK_USER_ID
 
@@ -48,6 +44,9 @@ def device_fixtures() -> list[str]:
         "XT-LT050",
         "XT-LT100",
         "XT-LT200",
+        "XT-PL50",
+        "XT-PL100",
+        "XT-LK50",
     ]
 
 

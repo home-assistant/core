@@ -9,6 +9,7 @@
     "bms_connection_lost": "BMS connection lost",
     "bulk": "Bulk",
     "bulk_time_limit_exceeded": "Bulk time limit exceeded",
+    "charge_current_limit": "Charge current limit",
     "charger_current_reversed": "Charger current reversed",
     "charger_only": "Charger only",
     "charger_over_current": "Charger over current",
@@ -46,6 +47,7 @@
     "inverter_only": "Inverter only",
     "inverting": "Inverting",
     "lost_communication_with_device": "Lost communication with device",
+    "low_battery_alarm": "Low battery alarm",
     "low_power": "Low power",
     "max_power_today": "Max power today",
     "max_power_yesterday": "Max power yesterday",
@@ -55,6 +57,7 @@
     "no_error": "No error",
     "not_available": "Not available",
     "not_connected": "Not connected",
+    "not_used": "Not used",
     "ok": "Ok",
     "output_apparent_power_phase": "Output apparent power {phase}",
     "output_current_phase": "Output current {phase}",
@@ -68,6 +71,7 @@
     "power_phase": "Power {phase}",
     "power_supply": "Power supply",
     "pv_bus_voltage": "PV bus voltage",
+    "pv_current": "PV current",
     "pv_power_total": "PV power total",
     "recharging": "Recharging",
     "repeated_absorption": "Repeated absorption",
@@ -76,6 +80,7 @@
     "scheduled_recharging": "Scheduled recharging",
     "self_consumption": "Self-consumption",
     "sensor_battery_voltage": "Sensor battery voltage",
+    "shore": "Shore",
     "shore_power": "Shore power",
     "starting_up": "Starting up",
     "state": "State",
@@ -211,6 +216,9 @@
       "solarcharger_load_state": {
         "name": "Load state"
       },
+      "switch_output_state": {
+        "name": "[%key:component::victron_gx::common::state%]"
+      },
       "system_dynamicess_active": {
         "name": "Dynamic ESS active"
       },
@@ -222,6 +230,14 @@
       },
       "vebus_inverter_connected": {
         "name": "[%key:common::state::connected%]"
+      },
+      "vebus_inverter_remote_generator_selected": {
+        "name": "Remote generator selected"
+      }
+    },
+    "button": {
+      "platform_device_reboot": {
+        "name": "Device reboot"
       }
     },
     "device_tracker": {
@@ -231,7 +247,7 @@
     },
     "number": {
       "alternator_charge_current_limit": {
-        "name": "Charge current limit"
+        "name": "[%key:component::victron_gx::common::charge_current_limit%]"
       },
       "evcharger_set_current": {
         "name": "Charge current setpoint"
@@ -305,8 +321,14 @@
       "multiplus_assist_current_boost_factor": {
         "name": "Assist current boost factor"
       },
+      "solarcharger_charge_current_limit": {
+        "name": "[%key:component::victron_gx::common::charge_current_limit%]"
+      },
       "switch_output_dimming": {
         "name": "Dimming"
+      },
+      "switch_output_state": {
+        "name": "[%key:component::victron_gx::common::state%]"
       },
       "system_ac_export_limit": {
         "name": "AC export limit"
@@ -382,21 +404,34 @@
           "off": "[%key:common::state::off%]"
         }
       },
-      "system_ess_batterylife_state": {
-        "name": "ESS BatteryLife state",
+      "switch_output_state": {
+        "name": "[%key:component::victron_gx::common::state%]"
+      },
+      "system_ac_input_1_type": {
+        "name": "AC input 1 source type",
         "state": {
-          "keep_batteries_charged": "'Keep batteries charged' mode enabled",
-          "recharge": "Recharge, SoC dropped 5% or more below minimum SoC",
-          "recharge_no_battery_life": "Recharge, SoC dropped 5% or more below minimum SoC (No BatteryLife)",
-          "self_consumption": "[%key:component::victron_gx::common::self_consumption%]",
-          "self_consumption_soc_above_min": "Self-consumption, SoC at or above minimum SoC",
-          "self_consumption_soc_at_100": "Self-consumption, SoC at 100%",
-          "self_consumption_soc_below_min": "Self-consumption, SoC is below minimum SoC",
-          "self_consumption_soc_exceeds_85": "Self-consumption, SoC exceeds 85%",
-          "soc_below_battery_life_dynamic_soc_limit": "SoC below BatteryLife dynamic SoC limit",
-          "soc_below_soc_limit_24_hours": "SoC has been below SoC limit for more than 24 hours. Charging battery with 5 amps",
-          "sustain": "Multi/Quattro is in sustain",
-          "with_battery_life": "Optimized mode with BatteryLife"
+          "generator": "[%key:component::victron_gx::common::generator%]",
+          "grid": "[%key:component::victron_gx::common::grid%]",
+          "not_used": "[%key:component::victron_gx::common::not_used%]",
+          "shore": "[%key:component::victron_gx::common::shore%]"
+        }
+      },
+      "system_ac_input_2_type": {
+        "name": "AC input 2 source type",
+        "state": {
+          "generator": "[%key:component::victron_gx::common::generator%]",
+          "grid": "[%key:component::victron_gx::common::grid%]",
+          "not_used": "[%key:component::victron_gx::common::not_used%]",
+          "shore": "[%key:component::victron_gx::common::shore%]"
+        }
+      },
+      "system_ess_batterylife_state": {
+        "name": "[%key:component::victron_gx::common::ess_mode%]",
+        "state": {
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
+          "keep_batteries_charged": "Keep batteries charged",
+          "optimized_battery_life": "Optimized (with BatteryLife)",
+          "optimized_no_battery_life": "Optimized (without BatteryLife)"
         }
       },
       "system_ess_mode": {
@@ -535,8 +570,7 @@
         "name": "Average discharge"
       },
       "battery_capacity": {
-        "name": "Capacity",
-        "unit_of_measurement": "Ah"
+        "name": "Capacity"
       },
       "battery_cell_cell_id_voltage": {
         "name": "Cell {cell_id} voltage"
@@ -556,12 +590,10 @@
         "name": "Charged energy"
       },
       "battery_consumed_amphours": {
-        "name": "Consumed amp-hours",
-        "unit_of_measurement": "Ah"
+        "name": "Consumed amp-hours"
       },
       "battery_cumulative_ah_drawn": {
-        "name": "Cumulative Ah drawn",
-        "unit_of_measurement": "Ah"
+        "name": "Cumulative Ah drawn"
       },
       "battery_current": {
         "name": "DC bus current"
@@ -597,8 +629,7 @@
         }
       },
       "battery_installed_capacity": {
-        "name": "Installed capacity",
-        "unit_of_measurement": "Ah"
+        "name": "Installed capacity"
       },
       "battery_internal_failure": {
         "name": "Internal failure",
@@ -701,8 +732,7 @@
         "name": "[%key:component::victron_gx::common::temperature%]"
       },
       "battery_time_since_last_full_charge": {
-        "name": "Time since last full charge",
-        "unit_of_measurement": "seconds"
+        "name": "Time since last full charge"
       },
       "battery_time_to_go": {
         "name": "Time to go"
@@ -960,6 +990,9 @@
       "evcharger_total_energy": {
         "name": "Total energy"
       },
+      "generator_next_test_run": {
+        "name": "Next test run"
+      },
       "generator_run_state": {
         "name": "Run state",
         "state": {
@@ -1115,6 +1148,32 @@
       "inverter_total_pv_yield_user": {
         "name": "[%key:component::victron_gx::common::total_pv_yield_user%]"
       },
+      "meteo_alarm_low_battery": {
+        "name": "[%key:component::victron_gx::common::low_battery_alarm%]",
+        "state": {
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
+        }
+      },
+      "meteo_battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "meteo_cell_temperature": {
+        "name": "Cell temperature"
+      },
+      "meteo_installation_power": {
+        "name": "Installation power"
+      },
+      "meteo_irradiance": {
+        "name": "Irradiance"
+      },
+      "meteo_time_since_last_sun": {
+        "name": "Time since last sun"
+      },
+      "meteo_todays_yield": {
+        "name": "Today's yield"
+      },
       "multi_acin1_to_acout": {
         "name": "AC-in-1 to AC-out"
       },
@@ -1130,6 +1189,9 @@
       "multi_acin_voltage_phase": {
         "name": "[%key:component::victron_gx::common::voltage_on_phase%]"
       },
+      "multi_acout_current_phase": {
+        "name": "Output current on {phase}"
+      },
       "multi_acout_output_current_phase": {
         "name": "AC-out-{output} current on {phase}"
       },
@@ -1139,11 +1201,17 @@
       "multi_acout_output_voltage_phase": {
         "name": "AC-out-{output} voltage on {phase}"
       },
+      "multi_acout_power_phase": {
+        "name": "Output power on {phase}"
+      },
       "multi_acout_to_acin1": {
         "name": "AC-out to AC-in-1"
       },
       "multi_acout_to_inverter": {
         "name": "AC-out to inverter"
+      },
+      "multi_acout_voltage_phase": {
+        "name": "Output voltage on {phase}"
       },
       "multi_active_input": {
         "name": "[%key:component::victron_gx::common::active_ac_input%]",
@@ -1185,6 +1253,9 @@
       },
       "multi_mppt_mppt_id_yield_yesterday": {
         "name": "MPPT {mppt_id} yield yesterday"
+      },
+      "multi_mppt_mpptnumber_current": {
+        "name": "MPPT {mpptnumber} current"
       },
       "multi_mppt_mpptnumber_power": {
         "name": "MPPT {mpptnumber} power"
@@ -1353,6 +1424,9 @@
           "voltage_current_limited": "[%key:component::victron_gx::common::voltage_current_limited%]"
         }
       },
+      "solarcharger_pv_current": {
+        "name": "[%key:component::victron_gx::common::pv_current%]"
+      },
       "solarcharger_state": {
         "name": "[%key:component::victron_gx::common::state%]",
         "state": {
@@ -1388,6 +1462,9 @@
       },
       "solarcharger_time_in_float_today": {
         "name": "Time in float today"
+      },
+      "solarcharger_tracker_tracker_current": {
+        "name": "PV tracker {tracker} current"
       },
       "solarcharger_tracker_tracker_max_power_today": {
         "name": "Tracker {tracker} max power today"
@@ -1430,6 +1507,9 @@
       },
       "solarcharger_yield_yesterday": {
         "name": "[%key:component::victron_gx::common::yield_yesterday%]"
+      },
+      "switch_output_state": {
+        "name": "[%key:component::victron_gx::common::state%]"
       },
       "system_ac_active_input_source": {
         "name": "AC active input source",
@@ -1500,7 +1580,7 @@
         "name": "DC consumption"
       },
       "system_dc_pv_current": {
-        "name": "PV current"
+        "name": "[%key:component::victron_gx::common::pv_current%]"
       },
       "system_dc_pv_energy": {
         "name": "PV energy"
@@ -1587,6 +1667,23 @@
       },
       "system_dynamicess_target_soc": {
         "name": "Dynamic ESS target SoC"
+      },
+      "system_ess_batterylife_state_sensor": {
+        "name": "ESS BatteryLife state",
+        "state": {
+          "keep_batteries_charged": "'Keep batteries charged' mode enabled",
+          "recharge": "Recharge, SoC dropped 5% or more below minimum SoC",
+          "recharge_no_battery_life": "Recharge, SoC dropped 5% or more below minimum SoC (No BatteryLife)",
+          "self_consumption": "[%key:component::victron_gx::common::self_consumption%]",
+          "self_consumption_soc_above_min": "Self-consumption, SoC at or above minimum SoC",
+          "self_consumption_soc_at_100": "Self-consumption, SoC at 100%",
+          "self_consumption_soc_below_min": "Self-consumption, SoC is below minimum SoC",
+          "self_consumption_soc_exceeds_85": "Self-consumption, SoC exceeds 85%",
+          "soc_below_battery_life_dynamic_soc_limit": "SoC below BatteryLife dynamic SoC limit",
+          "soc_below_soc_limit_24_hours": "SoC has been below SoC limit for more than 24 hours. Charging battery with 5 amps",
+          "sustain": "Multi/Quattro is in sustain",
+          "with_battery_life": "Optimized mode with BatteryLife"
+        }
       },
       "system_generator_load_phase": {
         "name": "Genset load {phase}"
@@ -1795,7 +1892,7 @@
         }
       },
       "vebus_inverter_alarm_low_battery": {
-        "name": "Low battery alarm",
+        "name": "[%key:component::victron_gx::common::low_battery_alarm%]",
         "state": {
           "alarm": "[%key:component::victron_gx::common::alarm%]",
           "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
@@ -1950,6 +2047,9 @@
       "generator_manual_start": {
         "name": "Manual start"
       },
+      "hub4_force_charge": {
+        "name": "Force charge"
+      },
       "multi_disable_charge": {
         "name": "ESS disable charge"
       },
@@ -1978,13 +2078,19 @@
         "name": "Relay {relay} state"
       },
       "system_settings_overvoltage_feedin": {
-        "name": "PV DC overvoltage feed-in"
+        "name": "DC-coupled PV - feed in excess"
+      },
+      "system_settings_prevent_ac_feedin": {
+        "name": "AC-coupled PV - feed in excess"
       },
       "vebus_device_device_number_power_assist_enabled": {
         "name": "{device_number} PowerAssist enabled"
       },
       "vebus_inverter_ignoreacin1_onoff_control": {
         "name": "Control ignore AC-in-1"
+      },
+      "vebus_inverter_prefer_renewable_energy": {
+        "name": "Prefer renewable energy"
       },
       "vebus_inverter_setting_alarm_grid_lost": {
         "name": "Grid lost alarm setting"

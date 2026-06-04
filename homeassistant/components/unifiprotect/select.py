@@ -21,6 +21,7 @@ from uiprotect.data import (
     MountType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
+    PublicHdrMode,
     RecordingMode,
     Sensor,
     Viewer,
@@ -184,11 +185,15 @@ async def _set_paired_camera(obj: Light | Sensor | Doorlock, camera_id: str) -> 
 async def _set_doorbell_message(obj: Camera, message: str) -> None:
     if message.startswith(DoorbellMessageType.CUSTOM_MESSAGE.value):
         message = message.rsplit(":", maxsplit=1)[-1]
-        await obj.set_lcd_text(DoorbellMessageType.CUSTOM_MESSAGE, text=message)
+        await obj.set_lcd_message_public(
+            DoorbellMessageType.CUSTOM_MESSAGE, text=message
+        )
     elif message == TYPE_EMPTY_VALUE:
+        # Public API has no endpoint to clear the LCD message; fall back to
+        # the non-deprecated legacy helper.
         await obj.set_lcd_text(None)
     else:
-        await obj.set_lcd_text(DoorbellMessageType(message))
+        await obj.set_lcd_message_public(DoorbellMessageType(message))
 
 
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
@@ -204,6 +209,18 @@ async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
     else:
         slot = int(patrol_slot)
         await obj.ptz_patrol_start_public(slot=slot)
+
+
+_HDR_MODE_MAP = {
+    "auto": PublicHdrMode.AUTO,
+    "always": PublicHdrMode.ON,
+    "off": PublicHdrMode.OFF,
+}
+
+
+async def _set_hdr_mode(obj: Camera, mode: str) -> None:
+    """Set HDR mode via the public API."""
+    await obj.set_hdr_mode_public(_HDR_MODE_MAP[mode])
 
 
 PTZ_PATROL_DESCRIPTION = ProtectSelectEntityDescription[Camera](
@@ -258,14 +275,14 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_set_method="set_chime_type",
         ufp_perm=PermRequired.WRITE,
     ),
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Camera](
         key="hdr_mode",
         translation_key="hdr_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_hdr",
         ufp_options=HDR_MODES,
         ufp_value="hdr_mode_display",
-        ufp_set_method="set_hdr_mode",
+        ufp_set_method_fn=_set_hdr_mode,
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -329,7 +346,6 @@ VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Viewer](
         key="viewer",
         translation_key="liveview",
-        entity_category=None,
         ufp_options_fn=_get_viewer_options,
         ufp_value_fn=_get_viewer_current,
         ufp_set_method_fn=_set_liveview,

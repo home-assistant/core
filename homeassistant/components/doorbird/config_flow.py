@@ -54,7 +54,7 @@ def _schema_with_defaults(
             vol.Required(CONF_HOST, default=host): str,
             **AUTH_VOL_DICT,
             # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=hass-config-flow-name-field
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Optional(CONF_NAME, default=name): str,
         }
     )
@@ -116,7 +116,8 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
         This method performs the following verification steps:
         1. Ensures that the stored credentials work before updating the entry.
-        2. Verifies that the device at the discovered IP address has the expected MAC address.
+        2. Verifies that the device at the discovered IP
+           address has the expected MAC address.
         """
         info, errors = await self._async_validate_or_error(
             {

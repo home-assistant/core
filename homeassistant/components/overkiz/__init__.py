@@ -93,8 +93,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
             server=SUPPORTED_SERVERS[entry.data[CONF_HUB]],
         )
 
-    await _async_migrate_entries(hass, entry)
-
     try:
         await client.login()
         setup = await client.get_setup()
@@ -131,7 +129,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
 
     if coordinator.is_stateless:
         LOGGER.debug(
-            "All devices have an assumed state. Update interval has been reduced to: %s",
+            "All devices have an assumed state."
+            " Update interval has been reduced to: %s",
             UPDATE_INTERVAL_ALL_ASSUMED_STATE,
         )
         coordinator.set_update_interval(UPDATE_INTERVAL_ALL_ASSUMED_STATE)
@@ -195,20 +194,37 @@ async def async_unload_entry(
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _async_migrate_entries(
-    hass: HomeAssistant, config_entry: OverkizDataConfigEntry
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
 ) -> bool:
-    """Migrate old entries to new unique IDs."""
+    """Migrate old entry."""
+    if entry.version > 1:
+        return False
+
+    if entry.version == 1 and entry.minor_version < 2:
+        await _async_migrate_strenum_unique_ids(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    return True
+
+
+async def _async_migrate_strenum_unique_ids(
+    hass: HomeAssistant, config_entry: OverkizDataConfigEntry
+) -> None:
+    """Migrate entities to the StrEnum-style unique IDs."""
     entity_registry = er.async_get(hass)
 
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
-        # Python 3.11 treats (str, Enum) and StrEnum in a different way
-        # Since pyOverkiz switched to StrEnum, we need to rewrite the unique ids once to the new style
+        # Python 3.11 treats (str, Enum) and StrEnum
+        # differently. Since pyOverkiz switched to StrEnum, we
+        # need to rewrite the unique ids once to the new style.
         #
-        # io://xxxx-xxxx-xxxx/3541212-OverkizState.CORE_DISCRETE_RSSI_LEVEL -> io://xxxx-xxxx-xxxx/3541212-core:DiscreteRSSILevelState
-        # internal://xxxx-xxxx-xxxx/alarm/0-UIWidget.TSKALARM_CONTROLLER -> internal://xxxx-xxxx-xxxx/alarm/0-TSKAlarmController
-        # io://xxxx-xxxx-xxxx/xxxxxxx-UIClass.ON_OFF -> io://xxxx-xxxx-xxxx/xxxxxxx-OnOff
+        # OverkizState.CORE_DISCRETE_RSSI_LEVEL
+        #   -> core:DiscreteRSSILevelState
+        # UIWidget.TSKALARM_CONTROLLER
+        #   -> TSKAlarmController
+        # UIClass.ON_OFF -> OnOff
         if (key := entry.unique_id.split("-")[-1]).startswith(
             ("OverkizState", "UIWidget", "UIClass")
         ):
@@ -235,7 +251,8 @@ async def _async_migrate_entries(
                 entry.domain, entry.platform, new_unique_id
             ):
                 LOGGER.debug(
-                    "Cannot migrate to unique_id '%s', already exists for '%s'. Entity will be removed",
+                    "Cannot migrate to unique_id '%s', already"
+                    " exists for '%s'. Entity will be removed",
                     new_unique_id,
                     existing_entity_id,
                 )
@@ -250,8 +267,6 @@ async def _async_migrate_entries(
         return None
 
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
-
-    return True
 
 
 def create_local_client(
@@ -274,7 +289,8 @@ def create_cloud_client(
     hass: HomeAssistant, username: str, password: str, server: OverkizServer
 ) -> OverkizClient:
     """Create Overkiz cloud client."""
-    # To allow users with multiple accounts/hubs, we create a new session so they have separate cookies
+    # To allow users with multiple accounts/hubs, we create a
+    # new session so they have separate cookies
     session = async_create_clientsession(hass)
 
     return OverkizClient(

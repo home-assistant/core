@@ -101,7 +101,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PORT: self.port,
                     }
                 )
-                # No auth needed, so we can proceed to a confirmation step without fields
+                # No auth needed, so we can proceed to a
+                # confirmation step without fields
                 self._auth_required = False
 
         # Proceed to get credentials
@@ -366,7 +367,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 format_mac(self.mac), raise_on_progress=raise_on_progress
             )
 
-        # Skip unique_id configuration check during reauth to prevent "already_configured" abort
+        # Skip unique_id configuration check during reauth
+        # to prevent "already_configured" abort
         if not is_reauth:
             # Always allow updating host/port for both user and discovery flows
             # This ensures connectivity is maintained when devices change IP addresses

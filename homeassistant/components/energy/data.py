@@ -138,6 +138,9 @@ class GridSourceType(TypedDict):
 
     cost_adjustment_day: float
 
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
+
 
 class SolarSourceType(TypedDict):
     """Dictionary holding the source of energy production."""
@@ -147,6 +150,9 @@ class SolarSourceType(TypedDict):
     stat_energy_from: str
     stat_rate: NotRequired[str]
     config_entry_solar_forecast: list[str] | None
+
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
 
 
 class BatterySourceType(TypedDict):
@@ -165,6 +171,9 @@ class BatterySourceType(TypedDict):
 
     # statistic_id of a sensor (unit %) reporting the battery state of charge
     stat_soc: NotRequired[str]
+
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
 
 
 class GasSourceType(TypedDict):
@@ -187,7 +196,7 @@ class GasSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/m³)
 
     # An optional custom name for display in energy graphs
-    name: str | None
+    name: NotRequired[str]
 
 
 class WaterSourceType(TypedDict):
@@ -210,7 +219,7 @@ class WaterSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/m³)
 
     # An optional custom name for display in energy graphs
-    name: str | None
+    name: NotRequired[str]
 
 
 type SourceType = (
@@ -232,7 +241,7 @@ class DeviceConsumption(TypedDict):
     stat_rate: NotRequired[str]
 
     # An optional custom name for display in energy graphs
-    name: str | None
+    name: NotRequired[str]
 
     # An optional statistic_id identifying a device
     # that includes this device's consumption in its total
@@ -368,8 +377,9 @@ POWER_CONFIG_SCHEMA = vol.All(
 GRID_POWER_SOURCE_SCHEMA = vol.All(
     vol.Schema(
         {
-            # stat_rate and power_config are both optional schema keys, but the validator
-            # requires that at least one is provided; power_config takes precedence
+            # stat_rate and power_config are both optional
+            # schema keys, but the validator requires that at
+            # least one is provided; power_config takes precedence
             vol.Optional("stat_rate"): str,
             vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
         }
@@ -431,7 +441,8 @@ def _grid_ensure_at_least_one_stat(
         and val.get("power_config") is None
     ):
         raise vol.Invalid(
-            "Grid must have at least one of: import meter, export meter, or power sensor"
+            "Grid must have at least one of: import meter,"
+            " export meter, or power sensor"
         )
     return val
 
@@ -462,6 +473,7 @@ GRID_SOURCE_SCHEMA = vol.All(
             vol.Optional("stat_rate"): str,
             vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
             vol.Required("cost_adjustment_day"): vol.Coerce(float),
+            vol.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
@@ -481,6 +493,7 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
         vol.Required("stat_energy_from"): str,
         vol.Optional("stat_rate"): str,
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
+        vol.Optional("name"): str,
     }
 )
 BATTERY_SOURCE_SCHEMA = vol.Schema(
@@ -493,6 +506,7 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("stat_rate"): str,
         vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
         vol.Optional("stat_soc"): str,
+        vol.Optional("name"): str,
     }
 )
 
@@ -615,7 +629,8 @@ def _migrate_legacy_grid_to_unified(
     Migration pairs arrays by index position:
     - flow_from[i], flow_to[i], and power[i] combine into grid connection i
     - If arrays have different lengths, missing entries get None for that field
-    - The number of grid connections equals max(len(flow_from), len(flow_to), len(power))
+    - The number of grid connections equals
+      max(len(flow_from), len(flow_to), len(power))
     """
     flow_from = old_grid.get("flow_from", [])
     flow_to = old_grid.get("flow_to", [])

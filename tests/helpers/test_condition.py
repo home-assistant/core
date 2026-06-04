@@ -748,6 +748,25 @@ async def test_or_condition_shorthand(hass: HomeAssistant) -> None:
     assert test.async_check()
 
 
+async def test_shorthand_template_condition_in_or(hass: HomeAssistant) -> None:
+    """Test shorthand template condition inside or block doesn't crash."""
+    config = {
+        "condition": "or",
+        "conditions": [
+            '{{ states("sensor.test") == "on" }}',
+            {"condition": "state", "entity_id": "sensor.other", "state": "on"},
+        ],
+    }
+    config = await condition.async_validate_condition_config(hass, config)
+    assert config["conditions"][0]["condition"] == "template"
+
+    # Verify the condition can actually be evaluated at runtime
+    test = await condition.async_from_config(hass, config)
+    hass.states.async_set("sensor.test", "on")
+    hass.states.async_set("sensor.other", "off")
+    assert test.async_check()
+
+
 async def test_not_condition(hass: HomeAssistant) -> None:
     """Test the 'not' condition."""
     config = {
@@ -2186,6 +2205,90 @@ async def test_condition_template_error(hass: HomeAssistant) -> None:
         test.async_check()
 
 
+@pytest.mark.parametrize(
+    ("value_template", "expectation", "expected_template_errors", "expected_result"),
+    [
+        # Undefined variable used in a way that raises (e.g. attribute access)
+        (
+            "{{ trigger.to_state.attributes.event_type == 'double_press' }}",
+            pytest.raises(ConditionError),
+            ["'trigger' is undefined"],
+            {},
+        ),
+        # Undefined variable used in a way that only warns
+        (
+            "{{ no_such_variable }}",
+            does_not_raise(),
+            ["'no_such_variable' is undefined"],
+            {"result": False, "entities": []},
+        ),
+        # A single render can emit more than one message
+        (
+            "{{ foo }}{{ bar }}",
+            does_not_raise(),
+            ["'foo' is undefined", "'bar' is undefined"],
+            {"result": False, "entities": []},
+        ),
+    ],
+)
+async def test_condition_template_error_traced_not_logged(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    value_template: str,
+    expectation: AbstractContextManager,
+    expected_template_errors: list[str],
+    expected_result: dict[str, Any],
+) -> None:
+    """Test template errors are added to the trace and not logged when opted in.
+
+    The subscribe_condition websocket command re-evaluates a condition every
+    second and opts in via trace.record_template_errors(). Template variable
+    errors must then be recorded in the trace instead of being logged repeatedly.
+    """
+    caplog.set_level(logging.WARNING)
+    config = {"condition": "template", "value_template": value_template}
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    with expectation, trace.record_template_errors():
+        test.async_check()
+
+    # The template errors are recorded in the trace...
+    condition_trace = trace.trace_get(clear=False)
+    trace.trace_clear()
+    trace_element = condition_trace[""][0]
+    assert trace_element.template_errors == expected_template_errors
+    assert (trace_element._result or {}) == expected_result
+
+    # ...and not logged
+    assert "Template variable" not in caplog.text
+
+
+async def test_condition_template_error_logged_without_opt_in(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test template errors are logged when recording is not opted in.
+
+    An active trace is not enough to suppress logging; the consumer must opt in
+    via trace.record_template_errors(). Without it, the error is logged as usual
+    and not recorded in the trace.
+    """
+    caplog.set_level(logging.WARNING)
+    config = {"condition": "template", "value_template": "{{ no_such_variable }}"}
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert test.async_check() is False
+
+    assert "Template variable warning: 'no_such_variable' is undefined" in caplog.text
+    condition_trace = trace.trace_get(clear=False)
+    trace.trace_clear()
+    assert condition_trace[""][0].template_errors == []
+
+
 async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:
     """Test template condition render false with invalid results."""
     config = {"condition": "template", "value_template": "{{ 'string' }}"}
@@ -2390,7 +2493,7 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
 async def test_get_condition_platform_registers_conditions(
     hass: HomeAssistant,
 ) -> None:
-    """Test _async_get_condition_platform registers conditions and notifies subscribers."""
+    """Test _async_get_condition_platform registers and notifies."""
 
     class MockCondition(Condition):
         """Mock condition."""
@@ -2834,7 +2937,8 @@ async def test_async_get_all_descriptions(
     ):
         new_descriptions = await condition.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
-    # No light conditions added, they are gated by the automation.new_triggers_conditions
+    # No light conditions added, they are gated by the
+    # automation.new_triggers_conditions
     # labs flag
     assert new_descriptions == expected_descriptions
 
@@ -3098,7 +3202,7 @@ async def test_subscribe_conditions_experimental_conditions(
     new_triggers_conditions_enabled: bool,
     expected_events: list[set[str]],
 ) -> None:
-    """Test condition.async_subscribe_platform_events doesn't send events for disabled conditions."""
+    """Test async_subscribe_platform_events skips disabled conditions."""
     # Return empty conditions.yaml for light integration, the actual condition
     # descriptions are irrelevant for this test
     light_condition_descriptions = ""
@@ -3155,7 +3259,7 @@ async def test_subscribe_conditions_no_conditions(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test condition.async_subscribe_platform_events doesn't send events for platforms without conditions."""
+    """Test async_subscribe_platform_events skips platforms without conditions."""
     # Return empty conditions.yaml for light integration, the actual condition
     # descriptions are irrelevant for this test
     light_condition_descriptions = ""
@@ -3250,7 +3354,8 @@ async def _setup_numerical_condition(
         ({"threshold": {"type": "below", "value": {"number": 50}}}, "25", True),
         ({"threshold": {"type": "below", "value": {"number": 50}}}, "50", False),
         ({"threshold": {"type": "below", "value": {"number": 50}}}, "75", False),
-        # above and below (range)
+        # between (range) — limits are inclusive, so a value exactly equal
+        # to either bound is treated as "inside" and matches
         (
             {
                 "threshold": {
@@ -3271,7 +3376,7 @@ async def _setup_numerical_condition(
                 }
             },
             "20",
-            False,
+            True,
         ),
         (
             {
@@ -3282,7 +3387,7 @@ async def _setup_numerical_condition(
                 }
             },
             "80",
-            False,
+            True,
         ),
         (
             {
@@ -3305,6 +3410,64 @@ async def _setup_numerical_condition(
             },
             "90",
             False,
+        ),
+        # outside (inverse of between) — limits are inclusive on the between
+        # side, so a value exactly equal to either bound is "inside" and
+        # does NOT match outside
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "50",
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "20",
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "80",
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "10",
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "90",
+            True,
         ),
     ],
 )
@@ -3734,7 +3897,7 @@ async def test_numerical_condition_with_unit_entity_reference(
 async def test_numerical_condition_with_unit_entity_reference_incompatible_unit(
     hass: HomeAssistant,
 ) -> None:
-    """Test numerical condition returns false when entity reference has incompatible unit."""
+    """Test numerical condition returns false with incompatible unit."""
     test = await _setup_numerical_condition_with_unit(
         hass,
         condition_options={
@@ -5015,7 +5178,7 @@ async def test_state_condition_attr_duration_entity_added_to_target(
 async def test_state_condition_attr_duration_entity_removed_from_target(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test that _valid_since is evicted when an entity is removed from the tracked set."""
+    """Test _valid_since is evicted when entity is removed from tracked set."""
     label_reg = lr.async_get(hass)
     label = label_reg.async_create("Test Duration Remove")
 
@@ -5259,8 +5422,9 @@ async def test_state_condition_primary_entities_only(
     hass.states.async_set(primary_id, STATE_ON)
     hass.states.async_set(diagnostic_id, STATE_OFF)
     await hass.async_block_till_done()
-    # If diagnostic is included (primary_entities_only=False), behavior=all fails because
-    # the diagnostic entity is off. If excluded, only the primary is checked and it's on.
+    # If diagnostic is included (primary_entities_only=False),
+    # behavior=all fails because the diagnostic entity is off.
+    # If excluded, only the primary is checked and it's on.
     assert test.async_check() is primary_entities_only
 
     # Both on - true regardless of flag
@@ -5295,8 +5459,9 @@ async def test_numerical_condition_primary_entities_only(
     hass.states.async_set(primary_id, "75")
     hass.states.async_set(diagnostic_id, "25")
     await hass.async_block_till_done()
-    # If diagnostic is included (primary_entities_only=False), behavior=all fails because
-    # the diagnostic value is below the threshold. If excluded, only the primary is
+    # If diagnostic is included (primary_entities_only=False),
+    # behavior=all fails because the diagnostic value is below
+    # the threshold. If excluded, only the primary is
     # checked and it's above.
     assert test.async_check() is primary_entities_only
 
@@ -5358,7 +5523,7 @@ async def test_state_condition_primary_entities_only_with_duration(
 async def test_async_from_config_calls_async_setup_on_checker(
     hass: HomeAssistant,
 ) -> None:
-    """Test that async_from_config calls async_setup on ConditionChecker from factory path."""
+    """Test async_from_config calls async_setup on ConditionChecker."""
 
     class StubChecker(condition.ConditionChecker):
         """Stub checker to track async_setup calls."""
