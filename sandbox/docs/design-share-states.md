@@ -1,4 +1,4 @@
-# Sync-states design (post-v2)
+# Sync-states design (post-launch)
 
 > **Status:** design only. Phase 7 wired the scoped sandbox token and a
 > per-group `share_*` config; Phase 20 deleted that config because
@@ -17,7 +17,7 @@ sees.
 
 v1 sandbox gave the sandbox the system user's full access token and
 therefore unconditional read access to all of main's data. Phase 7
-locked v2 down by default — the sandbox sees only its own
+locked the sandbox down by default — the sandbox sees only its own
 entities/services/events. The locked-down posture is the right
 default; we just owe a controlled opt-in.
 
@@ -82,7 +82,7 @@ opening a second connection.
 ## Filtering on main's send-side
 
 Per-sandbox allow-list, configured at sandbox-startup time. Coarse
-grain is fine for v3 — entity-domain-level allow-listing covers the
+grain is fine for a future version — entity-domain-level allow-listing covers the
 main use cases (`["light.*", "sensor.*"]`, etc.). Filtering happens
 **before** the push hits the wire so a state-change-heavy main does
 not fan out N copies of every event to every sandbox.
@@ -109,7 +109,7 @@ trust boundary tight for untrusted integrations.
   carries the sandbox-owned entities via the existing bridge, so a
   second sandbox subscribing to `share/subscribe_states` would see
   them transparently. The cost is one extra hop per state change. Lean
-  one-way for v3 and add bidirectional only if a real integration
+  one-way for a future version and add bidirectional only if a real integration
   needs it.
 - **Mirrored registries: write-through behaviour.** What happens if a
   sandbox calls `er.async_remove(entity_id)` for a main-owned entity?
