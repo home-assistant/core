@@ -611,9 +611,19 @@ class ThinQEnergySensorEntityDescription(SensorEntityDescription):
     start_date_fn: Callable[[datetime], datetime]
     end_date_fn: Callable[[datetime], datetime]
     update_interval: timedelta = timedelta(days=1)
+    reset_at_midnight: bool = False
 
 
 ENERGY_USAGE_SENSORS: tuple[ThinQEnergySensorEntityDescription, ...] = (
+    ThinQEnergySensorEntityDescription(
+        key="today",
+        translation_key="energy_usage_today",
+        usage_period=USAGE_DAILY,
+        start_date_fn=lambda today: today,
+        end_date_fn=lambda today: today,
+        update_interval=timedelta(hours=1),
+        reset_at_midnight=True,
+    ),
     ThinQEnergySensorEntityDescription(
         key="yesterday",
         translation_key="energy_usage_yesterday",
@@ -840,6 +850,14 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
         """Return True if entity is available."""
         return super().available or self.native_value is not None
 
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return last reset time for sensors that reset at midnight."""
+        if not self.entity_description.reset_at_midnight:
+            return None
+        local_now = dt_util.now()
+        return datetime.combine(local_now.date(), time.min, local_now.tzinfo)
+
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""
         await self._async_update_and_schedule()
@@ -851,11 +869,15 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
             dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
         )
         next_update = local_now + self.entity_description.update_interval
-        if self.coordinator.update_energy_at_time_of_day is not None:
-            # calculate next_update time by combining tomorrow
-            # and update_energy_at_time_of_day
+        if (
+            self.coordinator.update_energy_at_time_of_day is not None
+            and self.entity_description.update_interval >= timedelta(days=1)
+        ):
+            # For daily sensors: align to a consistent time of day to avoid
+            # clock drift and reduce the chance of multiple sensors fetching
+            # simultaneously across restarts.
             next_update = datetime.combine(
-                (next_update).date(),
+                next_update.date(),
                 self.coordinator.update_energy_at_time_of_day,
                 next_update.tzinfo,
             )
