@@ -291,7 +291,7 @@ async def test_significant_state_change() -> None:
         (
             {ATTR_WEATHER_PRESSURE: 100},
             {
-                ATTR_WEATHER_PRESSURE: 100.1,
+                ATTR_WEATHER_PRESSURE: 100.11,
                 ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.KPA,
             },
             True,
