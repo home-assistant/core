@@ -27,9 +27,9 @@ from homeassistant.core import HomeAssistant
 from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_numerical_attribute_changed_trigger_states,
@@ -146,7 +146,7 @@ async def test_temperature_trigger_options_validation(
         ),
     ],
 )
-async def test_temperature_trigger_sensor_behavior_any(
+async def test_temperature_trigger_sensor_behavior_each(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -157,7 +157,7 @@ async def test_temperature_trigger_sensor_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test trigger fires for sensor entities with device_class temperature."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
@@ -224,7 +224,7 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
+async def test_temperature_trigger_sensor_crossed_threshold_behavior_all(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -234,8 +234,8 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test crossed_threshold trigger fires on last sensor state change."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold trigger fires when all sensors have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
@@ -274,7 +274,7 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
         ),
     ],
 )
-async def test_temperature_trigger_climate_behavior_any(
+async def test_temperature_trigger_climate_behavior_each(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -285,7 +285,7 @@ async def test_temperature_trigger_climate_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test temperature trigger fires for climate entities."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -354,7 +354,7 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
+async def test_temperature_trigger_climate_crossed_threshold_behavior_all(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -364,8 +364,8 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test crossed_threshold trigger fires on last climate state change."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold trigger fires when all climate entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -404,7 +404,7 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
         ),
     ],
 )
-async def test_temperature_trigger_water_heater_behavior_any(
+async def test_temperature_trigger_water_heater_behavior_each(
     hass: HomeAssistant,
     target_water_heaters: dict[str, list[str]],
     trigger_target_config: dict,
@@ -415,7 +415,7 @@ async def test_temperature_trigger_water_heater_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test temperature trigger fires for water_heater entities."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
@@ -484,7 +484,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first
         ),
     ],
 )
-async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
+async def test_temperature_trigger_water_heater_crossed_threshold_behavior_all(
     hass: HomeAssistant,
     target_water_heaters: dict[str, list[str]],
     trigger_target_config: dict,
@@ -494,8 +494,8 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test crossed_threshold fires on last water_heater state change."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold fires when all water_heater entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
@@ -536,7 +536,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
         ),
     ],
 )
-async def test_temperature_trigger_weather_behavior_any(
+async def test_temperature_trigger_weather_behavior_each(
     hass: HomeAssistant,
     target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -547,7 +547,7 @@ async def test_temperature_trigger_weather_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test temperature trigger fires for weather entities."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_weathers,
         trigger_target_config=trigger_target_config,
@@ -618,7 +618,7 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_temperature_trigger_weather_crossed_threshold_behavior_last(
+async def test_temperature_trigger_weather_crossed_threshold_behavior_all(
     hass: HomeAssistant,
     target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -628,8 +628,8 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test crossed_threshold fires on last weather state change."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold fires when all weather entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_weathers,
         trigger_target_config=trigger_target_config,

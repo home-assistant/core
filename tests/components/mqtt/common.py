@@ -319,6 +319,33 @@ MOCK_SUBENTRY_COVER_COMPONENT = {
         "entity_picture": "https://example.com/b37acf667fa04c688ad7dfb27de2178b",
     },
 }
+MOCK_SUBENTRY_DATE_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47411": {
+        "platform": "date",
+        "name": "Delivery day",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47411",
+    },
+}
+MOCK_SUBENTRY_DATETIME_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47412": {
+        "platform": "datetime",
+        "name": "Maintenance service",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "timezone": "GMT",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47412",
+    },
+}
 MOCK_SUBENTRY_FAN_COMPONENT = {
     "717f924ae9ca4fe9864d845d75d23c9f": {
         "platform": "fan",
@@ -327,7 +354,7 @@ MOCK_SUBENTRY_FAN_COMPONENT = {
         "entity_category": None,
         "state_topic": "test-topic",
         "command_template": "{{ value }}",
-        "value_template": "{{ value_json.value }}",
+        "state_value_template": "{{ value_json.value }}",
         "percentage_command_topic": "test-topic/pct",
         "percentage_state_topic": "test-topic/pct",
         "percentage_command_template": "{{ value }}",
@@ -610,7 +637,7 @@ MOCK_SUBENTRY_SIREN_COMPONENT = {
         "state_topic": "test-topic",
         "command_template": "{{ value }}",
         "command_off_template": "{{ value }}",
-        "value_template": "{{ value_json.value }}",
+        "state_value_template": "{{ value_json.value }}",
         "payload_off": "OFF",
         "payload_on": "ON",
         "available_tones": ["Happy hour", "Cooling alarm"],
@@ -651,6 +678,19 @@ MOCK_SUBENTRY_TEXT_COMPONENT = {
         "value_template": "{{ value_json.value }}",
         "retain": False,
         "entity_picture": "https://example.com/09261f6feed443e7b7d5f3fbe2a47413",
+    },
+}
+MOCK_SUBENTRY_TIME_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "time",
+        "name": "Happy hour",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47413",
     },
 }
 MOCK_SUBENTRY_VALVE_COMPONENT_STATE = {
@@ -800,6 +840,14 @@ MOCK_COVER_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_COVER_COMPONENT,
 }
+MOCK_DATE_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_DATE_COMPONENT,
+}
+MOCK_DATETIME_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_DATETIME_COMPONENT,
+}
 MOCK_FAN_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_FAN_COMPONENT,
@@ -876,6 +924,10 @@ MOCK_TEXT_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_TEXT_COMPONENT,
 }
+MOCK_TIME_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_TIME_COMPONENT,
+}
 MOCK_VALVE_SUBENTRY_DATA_STATE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_VALVE_COMPONENT_STATE,
@@ -905,11 +957,13 @@ MOCK_SUBENTRY_DATA_SET_MIX = {
             },
         }
     },
-    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1
+    "components": MOCK_SUBENTRY_FAN_COMPONENT
+    | MOCK_SUBENTRY_NOTIFY_COMPONENT1
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
     | MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT
     | MOCK_SUBENTRY_SWITCH_COMPONENT
-    | MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL,
+    | MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL
+    | MOCK_SUBENTRY_SIREN_COMPONENT,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 _SENTINEL = object()
 

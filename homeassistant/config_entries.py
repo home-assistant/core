@@ -138,6 +138,8 @@ SAVE_DELAY = 1
 
 DISCOVERY_COOLDOWN = 1
 
+SETUP_RETRY_MAX_WAIT = 600  # 10 minutes
+
 ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
 UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
 
@@ -833,7 +835,7 @@ class ConfigEntry[_DataT = Any]:
                 auth_message,
             )
             logger.debug("Full exception", exc_info=True)
-            self.async_start_reauth(hass)
+            self.async_start_reauth_if_available(hass)
         except ConfigEntryNotReady as exc:
             message = str(exc)
             error_reason_translation_key = exc.translation_key
@@ -845,7 +847,7 @@ class ConfigEntry[_DataT = Any]:
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
             )
-            wait_time = 2 ** min(self._tries, 4) * 5 + (
+            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
@@ -1303,6 +1305,19 @@ class ConfigEntry[_DataT = Any]:
             f"config entry reauth {self.title} {self.domain} {self.entry_id}",
             eager_start=True,
         )
+
+    @callback
+    def async_start_reauth_if_available(
+        self,
+        hass: HomeAssistant,
+        context: ConfigFlowContext | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reauth flow only if the integration implements one."""
+        handler = HANDLERS.get(self.domain)
+        if handler is None or not hasattr(handler, "async_step_reauth"):
+            return
+        self.async_start_reauth(hass, context, data)
 
     async def _async_init_reauth(
         self,
