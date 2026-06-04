@@ -51,7 +51,7 @@ def _make_entry() -> MockConfigEntry:
 async def _call_ptz(hass: HomeAssistant, continuous_duration: float) -> None:
     """Call the onvif.ptz service with the given continuous_duration."""
     await hass.services.async_call(
-        "onvif",
+        DOMAIN,
         "ptz",
         {
             "entity_id": "camera.testcamera_mainstream",
