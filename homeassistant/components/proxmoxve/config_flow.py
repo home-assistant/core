@@ -41,6 +41,7 @@ from .const import (
     CONF_VMS,
     DEFAULT_PORT,
     DEFAULT_REALM,
+    DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     NODE_ONLINE,
@@ -79,14 +80,14 @@ TOKEN_SCHEMA = vol.Schema(
 
 def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Validate the user input and fetch data (sync, for executor)."""
-    auth_kwargs = {
-        "password": data.get(CONF_PASSWORD),
-    }
-    if data.get(CONF_TOKEN):
-        auth_kwargs = {
+    auth_kwargs = (
+        {
             "token_name": data[CONF_TOKEN_ID],
             "token_value": data[CONF_TOKEN_SECRET],
         }
+        if data.get(CONF_TOKEN)
+        else {"password": data.get(CONF_PASSWORD)}
+    )
     data = sanitize_config_entry(data)
     try:
         client = ProxmoxAPI(
@@ -94,6 +95,7 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
             port=data[CONF_PORT],
             user=data[CONF_USERNAME],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            timeout=DEFAULT_TIMEOUT,
             **auth_kwargs,
         )
     except AuthenticationError as err:
@@ -121,6 +123,9 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
         raise ProxmoxNoNodesFound from err
     except requests.exceptions.ConnectionError as err:
         raise ProxmoxConnectionError from err
+
+    if not nodes:
+        raise ProxmoxNoNodesFound("No nodes found")
 
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:

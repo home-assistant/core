@@ -5,11 +5,11 @@ import json
 
 from freezegun.api import FrozenDateTimeFactory
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
 import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.growatt_server import async_migrate_entry
 from homeassistant.components.growatt_server.const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
@@ -20,7 +20,6 @@ from homeassistant.components.growatt_server.const import (
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
-    V1_API_ERROR_WRONG_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -70,7 +69,7 @@ async def test_device_info(
         (
             growattServer.GrowattV1ApiError(
                 message="API Error",
-                error_code=V1_API_ERROR_WRONG_DOMAIN,
+                error_code=GrowattV1ApiErrorCode.WRONG_DOMAIN,
                 error_msg="Invalid JSON",
             ),
             ConfigEntryState.SETUP_ERROR,
@@ -78,6 +77,14 @@ async def test_device_info(
         (
             json.decoder.JSONDecodeError("Invalid JSON", "", 0),
             ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            growattServer.GrowattV1ApiError(
+                message="Rate limited",
+                error_code=GrowattV1ApiErrorCode.RATE_LIMITED,
+                error_msg="Access frequency limit",
+            ),
+            ConfigEntryState.SETUP_RETRY,
         ),
     ],
 )
@@ -323,6 +330,7 @@ async def test_classic_api_setup(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_growatt_v1_api", "mock_growatt_classic_api")
 async def test_migrate_config_without_auth_type(
     hass: HomeAssistant,
     config_data: dict[str, str],
@@ -344,10 +352,8 @@ async def test_migrate_config_without_auth_type(
     )
 
     mock_config_entry.add_to_hass(hass)
-
-    # Execute migration
-    migration_result = await async_migrate_entry(hass, mock_config_entry)
-    assert migration_result is True
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify version was updated to 1.1
     assert mock_config_entry.version == 1
@@ -355,6 +361,9 @@ async def test_migrate_config_without_auth_type(
 
     # Verify auth_type field was added during migration
     assert mock_config_entry.data[CONF_AUTH_TYPE] == expected_auth_type
+
+    # Verify setup completed successfully after migration
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_migrate_legacy_config_no_auth_fields(
@@ -375,16 +384,13 @@ async def test_migrate_legacy_config_no_auth_fields(
     )
 
     mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Migration should succeed (only updates version)
-    migration_result = await async_migrate_entry(hass, mock_config_entry)
-    assert migration_result is True
-
-    # Verify version was updated
+    # Migration succeeds (version bumped) but setup fails due to missing auth fields
     assert mock_config_entry.version == 1
     assert mock_config_entry.minor_version == 1
-
-    # Note: Setup will fail later due to missing auth fields in async_setup_entry
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
@@ -602,7 +608,6 @@ async def test_migrate_version_bump(
     This test verifies that:
     - Migration successfully resolves DEFAULT_PLANT_ID ("0") to actual plant_id
     - Config entry version is bumped from 1.0 to 1.1
-    - API instance is cached for setup to reuse (rate limit optimization)
     """
     # Create a version 1.0 config entry with DEFAULT_PLANT_ID
     mock_config_entry = MockConfigEntry(
@@ -620,7 +625,7 @@ async def test_migrate_version_bump(
         minor_version=0,
     )
 
-    # Mock successful API responses for migration
+    # Mock successful API responses for migration and setup
     mock_growatt_classic_api.login.return_value = {
         "success": True,
         "user": {"id": 123456},
@@ -628,12 +633,13 @@ async def test_migrate_version_bump(
     mock_growatt_classic_api.plant_list.return_value = {
         "data": [{"plantId": "RESOLVED_PLANT_789", "plantName": "My Plant"}]
     }
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
 
     mock_config_entry.add_to_hass(hass)
-
-    # Execute migration
-    migration_result = await async_migrate_entry(hass, mock_config_entry)
-    assert migration_result is True
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify version was updated to 1.1
     assert mock_config_entry.version == 1
@@ -642,8 +648,8 @@ async def test_migrate_version_bump(
     # Verify plant_id was resolved to actual plant_id (not DEFAULT_PLANT_ID)
     assert mock_config_entry.data[CONF_PLANT_ID] == "RESOLVED_PLANT_789"
 
-    # Verify API instance was cached for setup to reuse
-    assert f"{CACHED_API_KEY}{mock_config_entry.entry_id}" in hass.data[DOMAIN]
+    # Verify setup completed successfully after migration
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_reuses_cached_api_from_migration(
@@ -706,15 +712,11 @@ async def test_setup_reuses_cached_api_from_migration(
     }
 
     mock_config_entry.add_to_hass(hass)
-
-    # Run migration first (resolves plant_id and caches authenticated API)
-    await async_migrate_entry(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify migration successfully resolved plant_id
     assert mock_config_entry.data[CONF_PLANT_ID] == "RESOLVED_PLANT_789"
-
-    # Now setup the integration (should reuse cached API from migration)
-    await setup_integration(hass, mock_config_entry)
 
     # Verify integration loaded successfully
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -770,12 +772,11 @@ async def test_migrate_failure_returns_false(
     )
 
     mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Execute migration (should fail gracefully)
-    migration_result = await async_migrate_entry(hass, mock_config_entry)
-
-    # Verify migration returned False (will retry on next restart)
-    assert migration_result is False
+    # Verify migration failed (entry is in migration error state)
+    assert mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
     # Verify version was NOT bumped (remains 1.0)
     assert mock_config_entry.version == 1
@@ -789,6 +790,7 @@ async def test_migrate_failure_returns_false(
     assert "Migration will retry on next restart" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_growatt_classic_api")
 async def test_migrate_already_migrated(
     hass: HomeAssistant,
 ) -> None:
@@ -809,10 +811,8 @@ async def test_migrate_already_migrated(
     )
 
     mock_config_entry.add_to_hass(hass)
-
-    # Call migration function
-    migration_result = await async_migrate_entry(hass, mock_config_entry)
-    assert migration_result is True
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify version remains 1.1 (no change)
     assert mock_config_entry.version == 1
@@ -820,6 +820,9 @@ async def test_migrate_already_migrated(
 
     # Plant ID should remain unchanged
     assert mock_config_entry.data[CONF_PLANT_ID] == "specific_plant_123"
+
+    # Verify setup completed successfully
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.usefixtures("init_integration")

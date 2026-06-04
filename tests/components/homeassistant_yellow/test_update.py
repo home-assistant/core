@@ -11,7 +11,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
-from homeassistant.components.homeassistant_yellow.const import RADIO_DEVICE
+from homeassistant.components.homeassistant_yellow.const import DOMAIN, RADIO_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -27,7 +27,7 @@ async def test_yellow_update_entity(hass: HomeAssistant) -> None:
     # Set up the Yellow integration
     yellow_config_entry = MockConfigEntry(
         title="Home Assistant Yellow",
-        domain="homeassistant_yellow",
+        domain=DOMAIN,
         data={
             "firmware": "ezsp",
             "firmware_version": "7.3.1.0 build 0",
@@ -115,7 +115,7 @@ async def test_yellow_update_entity_state(
     # Set up the Yellow integration
     yellow_config_entry = MockConfigEntry(
         title="Home Assistant Yellow",
-        domain="homeassistant_yellow",
+        domain=DOMAIN,
         data={
             "firmware": firmware,
             "firmware_version": version,
