@@ -6,10 +6,10 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     FAN_HIGH,
-    HVACMode,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACMode,
 )
 from homeassistant.components.samsung_infrared.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON
@@ -39,7 +39,6 @@ async def test_samsung_infrared_climate_services(hass: HomeAssistant) -> None:
         "homeassistant.components.samsung_infrared.climate.SamsungIrClimate._send_command",
         new_callable=AsyncMock,
     ) as mock_send_command:
-
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
