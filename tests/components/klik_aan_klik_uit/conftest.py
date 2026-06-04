@@ -20,11 +20,10 @@ TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
 
 @pytest.fixture
 def mock_config_entry(
-    hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
+    entity_registry: er.EntityRegistry,
 ) -> MockConfigEntry:
     """Return a mock config entry for Kaku RC setup."""
-    entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
     assert entity_entry is not None
 

@@ -70,14 +70,14 @@ repos:
       # shell.
       - id: mypy
         name: mypy
-        entry: script/run-in-env.sh python3 -m mypy
+        entry: script/run-in-env.sh mypy
         language: script
         require_serial: true
         types_or: [python, pyi]
         files: ^(homeassistant|pylint)/.+\.(py|pyi)$
       - id: pylint
         name: pylint
-        entry: script/run-in-env.sh python3 -m pylint --ignore-missing-annotations=y
+        entry: script/run-in-env.sh pylint --ignore-missing-annotations=y
         language: script
         require_serial: true
         types_or: [python, pyi]

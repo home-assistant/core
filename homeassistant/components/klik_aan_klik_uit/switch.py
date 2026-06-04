@@ -6,7 +6,6 @@ from rf_protocols.commands.kaku import KakuCommand
 
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -15,10 +14,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import KlikAanKlikUitConfigEntry
 from .const import (
     CONF_CHANNEL,
     CONF_GROUP,
-    CONF_TRANSMITTER,
     DOMAIN,
     format_device_summary,
 )
@@ -28,7 +27,7 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: KlikAanKlikUitConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the KlikAanKlikUit switch entity."""
@@ -42,9 +41,9 @@ class KlikAanKlikUitSwitch(SwitchEntity, RestoreEntity):
     _attr_name = "Output"
     _attr_should_poll = False
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: KlikAanKlikUitConfigEntry) -> None:
         """Initialize the switch."""
-        self._transmitter: str = entry.data[CONF_TRANSMITTER]
+        self._transmitter = entry.runtime_data.transmitter_entity_id
         self._device_id: int = entry.data[CONF_DEVICE_ID]
         self._channel: int = entry.data[CONF_CHANNEL]
         self._group: bool = entry.data[CONF_GROUP]
