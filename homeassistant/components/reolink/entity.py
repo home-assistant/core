@@ -228,7 +228,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
                 via_device=(DOMAIN, parent_dev_id),
-                name=f"{self._host.api.camera_name(channel)} lens {channel}",
+                name=f"{self._host.api.camera_name(dev_ch)} lens {channel}",
                 model=self._host.api.camera_model(channel),
                 manufacturer=self._host.api.manufacturer,
                 configuration_url=self._conf_url,

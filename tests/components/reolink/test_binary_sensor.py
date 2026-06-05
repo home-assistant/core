@@ -72,6 +72,11 @@ async def test_dual_lens_sub_devices(
     reolink_host.is_nvr = False
     reolink_host.channels = [0, 1]
     reolink_host.stream_channels = [0, 1]
+    # a Reolink Duo reports a junk name like "2" for the second channel,
+    # the lens sub-device names should be based on the channel 0 name
+    reolink_host.camera_name.side_effect = lambda ch: (
+        TEST_CAM_NAME if ch == 0 else str(ch + 1)
+    )
 
     # an entity of a previous version attached to the host device
     # should be moved to the lens sub-device, keeping its entity_id
