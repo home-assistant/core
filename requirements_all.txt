@@ -420,7 +420,7 @@ aiosolaredge==1.0.2
 aiosteamist==1.0.1
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.13.1
+aiostreammagic==2.13.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==6.1.1
