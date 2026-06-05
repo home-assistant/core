@@ -17,8 +17,9 @@
 > (Phase 20). v1 (`../sandbox/`) was removed 2026-05-28 — recover from
 > git history if needed. See [`plan.md`](plan.md) for
 > the phase-by-phase task list, [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md)
-> for the narrative history of Phases 12+, and the per-phase
-> `STATUS-phase-N.md` files for what each phase shipped, what it
+> for the narrative history of Phases 12+, and the
+> [`status/`](status/) landing notes (`STATUS-phase-N.md` +
+> `STATUS-plan-*.md`) for what each phase/plan shipped, what it
 > deferred, and what it flagged forward.
 
 ## Goal
@@ -594,9 +595,9 @@ the phase that resolved each one.
 
 ## Where to look in the code
 
-The per-phase `STATUS-phase-N.md` files in this directory are the
-authoritative record of what each phase actually built, what it
-deferred, and what it flagged for the next phase. For a quick map:
+The landing notes under [`status/`](status/) (`STATUS-phase-N.md` +
+`STATUS-plan-*.md`) are the authoritative record of what each phase/plan
+actually built, what it deferred, and what it flagged forward. For a quick map:
 
 | Concern | HA Core side | Sandbox side |
 |---|---|---|
