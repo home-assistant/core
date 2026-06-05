@@ -26,6 +26,7 @@ from homeassistant.config_entries import (
     ConfigFlowContext,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.translation import async_invalidate_translations
 from homeassistant.loader import async_get_integration
 
 from ._proto import sandbox_pb2 as pb
@@ -165,6 +166,10 @@ class SandboxFlowRouter:
         group = entry.sandbox
         if group is None:
             return None
+        # A reload re-fetches the integration code (possibly at a new commit
+        # ref) and re-runs setup, so its translation strings may have changed.
+        # Drop the cached strings; the next frontend fetch re-pulls them.
+        async_invalidate_translations(self._hass, {entry.domain})
         sandbox = self._manager.get(group)
         if sandbox is None or sandbox.channel is None:
             return True
