@@ -213,6 +213,13 @@ turn_on:
           min: 0
           max: 100
           unit_of_measurement: "%"
+    brightness_pct_adjust: &brightness_pct_adjust
+      filter: *brightness_support
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
     brightness_step_pct: &brightness_step_pct
       filter: *brightness_support
       selector:
@@ -261,6 +268,12 @@ turn_on:
           selector:
             number:
               min: 0
+              max: 255
+        brightness_adjust: &brightness_adjust
+          filter: *brightness_support
+          selector:
+            number:
+              min: 1
               max: 255
         brightness_step: &brightness_step
           filter: *brightness_support
@@ -311,7 +324,7 @@ adjust:
     transition: *transition
     rgb_color: *rgb_color
     color_temp_kelvin: *color_temp_kelvin
-    brightness_pct: *brightness_pct
+    brightness_pct: *brightness_pct_adjust
     effect: *effect
     advanced_fields:
       collapsed: true
@@ -321,7 +334,7 @@ adjust:
         color_name: *color_name
         hs_color: *hs_color
         xy_color: *xy_color
-        brightness: *brightness
+        brightness: *brightness_adjust
         brightness_step: *brightness_step
         brightness_step_pct: *brightness_step_pct
         white: *white

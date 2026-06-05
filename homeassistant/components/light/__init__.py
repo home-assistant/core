@@ -580,6 +580,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "light.adjust does not accept zero brightness or white values"
             )
 
+        if not light.is_on and (
+            ATTR_BRIGHTNESS_STEP in raw_params
+            or ATTR_BRIGHTNESS_STEP_PCT in raw_params
+        ):
+            return
+
         params = process_turn_on_params(hass, light, raw_params)
 
         if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
