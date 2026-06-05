@@ -75,18 +75,14 @@ def device_removed_event(device_url: str) -> DeviceRemovedEvent:
 
 
 def execution_state_changed_event(
-    exec_id: str, new_state: ExecutionState
+    exec_id: str, new_state: ExecutionState, old_state: ExecutionState
 ) -> ExecutionStateChangedEvent:
-    """Build an EXECUTION_STATE_CHANGED event.
-
-    ExecutionStateChangedEvent requires both new_state and old_state; tests only
-    assert on new_state, so old_state defaults to the same value.
-    """
+    """Build an EXECUTION_STATE_CHANGED event."""
     return ExecutionStateChangedEvent(
         name=EventName.EXECUTION_STATE_CHANGED,
         exec_id=exec_id,
         new_state=new_state,
-        old_state=new_state,
+        old_state=old_state,
     )
 
 

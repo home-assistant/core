@@ -707,6 +707,7 @@ async def test_cover_tilt_services(
             execution_state_changed_event(
                 exec_id="exec-1",
                 new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
             )
         ],
     )
@@ -894,6 +895,7 @@ async def test_cover_state_updates(
             execution_state_changed_event(
                 exec_id="exec-1",
                 new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
             )
         ],
     )
