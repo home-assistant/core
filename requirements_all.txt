@@ -1353,7 +1353,7 @@ imgw_pib==2.2.2
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.8.3
+indevolt-api==1.8.5
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -3153,7 +3153,7 @@ temperusb==1.6.1
 tesla-fleet-api==1.4.7
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.5.2
+tesla-powerwall==0.5.3
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.1.0
