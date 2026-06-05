@@ -13,7 +13,7 @@ _ONE_SECOND = 1.0
 
 
 def test_defaults() -> None:
-    "Test voice command segmenter defaults."
+    """Test voice command segmenter defaults."""
     segmenter = VoiceCommandSegmenter()
 
     assert segmenter.timeout_seconds == DEFAULT_COMMAND_TIMEOUT_SECONDS

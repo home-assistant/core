@@ -1162,7 +1162,7 @@ async def test_get_pipeline(
         "wake_word_entity": None,
         "wake_word_id": None,
         "prefer_local_intents": False,
-        "command_timeout_seconds": 45.0,
+        "command_timeout_seconds": 15.0,
     }
 
     # Get conversation agent as pipeline
@@ -1189,7 +1189,7 @@ async def test_get_pipeline(
         "wake_word_entity": None,
         "wake_word_id": None,
         "prefer_local_intents": False,
-        "command_timeout_seconds": 45.0,
+        "command_timeout_seconds": 15.0,
     }
 
     await client.send_json_auto_id(
