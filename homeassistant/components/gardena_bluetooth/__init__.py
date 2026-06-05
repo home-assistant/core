@@ -53,7 +53,9 @@ async def async_get_product_type(hass: HomeAssistant, address: str) -> ProductTy
         await bluetooth.async_process_advertisements(
             hass,
             _data_callback,
-            {"address": address},
+            bluetooth.BluetoothCallbackMatcher(
+                address=address, manufacturer_id=ManufacturerData.company
+            ),
             mode=bluetooth.BluetoothScanningMode.ACTIVE,
             timeout=PRODUCT_TYPE_TIMEOUT,
         )
@@ -81,7 +83,9 @@ async def async_get_products(hass: HomeAssistant) -> dict[str, ManufacturerData]
         await bluetooth.async_process_advertisements(
             hass,
             _data_callback,
-            {"manufacturer_id": ManufacturerData.company},
+            bluetooth.BluetoothCallbackMatcher(
+                manufacturer_id=ManufacturerData.company
+            ),
             mode=bluetooth.BluetoothScanningMode.ACTIVE,
             timeout=PRODUCTS_SCAN_TIMEOUT,
         )
