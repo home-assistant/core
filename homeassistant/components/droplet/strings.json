@@ -36,15 +36,15 @@
       "high_flow": {
         "name": "High flow alert",
         "state": {
-          "off": "Inactive",
-          "on": "Active"
+          "off": "None",
+          "on": "Live alert!"
         }
       },
       "unusual_flow": {
         "name": "Unusual flow alert",
         "state": {
-          "off": "Inactive",
-          "on": "Active"
+          "off": "None",
+          "on": "Live alert!"
         }
       }
     },
