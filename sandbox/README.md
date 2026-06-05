@@ -23,8 +23,9 @@ numbers and shipped at least one stable release. See
     enforces it (Phase 7).
 - `plan.md` — the implementation plan that drives this work.
 - `OVERVIEW.md` — architecture document.
-- `STATUS-phase-N.md` — per-phase landing notes: what each phase
-  built, what it deferred, what it flagged forward.
+- `status/` — per-phase (`STATUS-phase-N.md`) and per-plan
+  (`STATUS-plan-*.md`) landing notes: what each phase/plan built, what it
+  deferred, what it flagged forward.
 - `run_compat.py` + `COMPAT.md` — compat-lane runner and report.
 
 The HA Core side of the integration lives at
@@ -122,8 +123,8 @@ Phases 0–17 landed:
   pass rate from 98.07 % to **99.67 %** (above the 99.5 %
   v1-removal threshold).
 
-The per-phase `STATUS-phase-N.md` files are the authoritative record
-of what each phase actually built, what it deferred, and what it
-flagged forward; [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) tells the
+The `status/` landing notes (`STATUS-phase-N.md` + `STATUS-plan-*.md`) are
+the authoritative record of what each phase/plan actually built, what it
+deferred, and what it flagged forward; [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) tells the
 narrative story of Phases 12–17 (what each one's predecessor
 flagged, what landed, the outcome).

@@ -26,8 +26,9 @@ second condition), as a deliberate call relying on git history for rollback.
   ([`docs/design-share-states.md`](docs/design-share-states.md))
   rather than dead-flag carrying. See
   [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) for the narrative.
-- [`STATUS-phase-N.md`](.) — the authoritative landing notes for each
-  phase. **Always check the latest STATUS file before assuming
+- [`status/`](status/) — per-phase (`STATUS-phase-N.md`) and per-plan
+  (`STATUS-plan-*.md`) landing notes, the authoritative record of what each
+  phase/plan shipped. **Always check the relevant STATUS file before assuming
   something is wired up the way the plan describes** — phases
   deliberately defer or simplify items and note exactly what
   changed.
