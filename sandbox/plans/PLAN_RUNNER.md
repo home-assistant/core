@@ -16,13 +16,14 @@ the window. One plan per session, sequentially.
 
 ## Steps
 
-### 1. Write the brief
+### 1. Compose the brief
 
 The brief is the sub-session's whole instruction set: which plan to read, the
 locked decisions, hard rules, build steps, the exact tests/greps to run, and —
-critically — to **write a STATUS marker file LAST**. Keep it in a file
-(`/tmp/<name>-brief.md`) or compose it inline — either way you pipe it on
-stdin in the next step.
+critically — to **write a STATUS marker file LAST**. You pipe it on stdin in
+the next step (claude-screen pastes whatever you pipe, multi-line and all), so
+source it from wherever is convenient — a heredoc, or a scratch file you
+already have it in.
 
 Hard rules every brief repeats:
 - **Execute the plan with the `phx:work` skill** — step through the plan's
@@ -41,6 +42,11 @@ included — using bracketed paste and a separate submit keystroke, so the whole
 brief lands as one message:
 
 ```bash
+# from a heredoc:
+~/dev/claude-screen <name> /home/paulus/dev/hass/core <<'BRIEF'
+…brief…
+BRIEF
+# …or from a scratch file you already have it in:
 ~/dev/claude-screen <name> /home/paulus/dev/hass/core < /tmp/<name>-brief.md
 ```
 
