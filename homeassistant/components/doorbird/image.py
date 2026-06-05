@@ -6,7 +6,6 @@
 # deprecate them via a repair issue once users have had time to migrate.
 
 from dataclasses import dataclass
-import logging
 
 import aiohttp
 
@@ -17,6 +16,7 @@ from homeassistant.components.image import (
     infer_image_type,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -25,7 +25,6 @@ from .const import DOMAIN
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 
-_LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15
 
 
@@ -103,12 +102,10 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             image_bytes = await self._door_station.device.get_image(
                 self._image_url, timeout=_TIMEOUT
             )
-        except TimeoutError:
-            _LOGGER.error("DoorBird %s: Image timed out", self.name)
-            return None
         except aiohttp.ClientError as error:
-            _LOGGER.error("DoorBird %s: Error getting image: %s", self.name, error)
-            return None
+            raise HomeAssistantError(
+                f"Error getting image from DoorBird: {error}"
+            ) from error
         content_type = infer_image_type(image_bytes) or "image/jpeg"
         self._cached_image = Image(content_type=content_type, content=image_bytes)
         self._attr_content_type = content_type
