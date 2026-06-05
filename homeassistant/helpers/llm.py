@@ -720,6 +720,21 @@ def _get_exposed_entities(
         if include_state:
             info["state"] = state.state
 
+            # Format numeric states with configured display precision
+            if (entity_entry is not None) and (
+                sensor_options := entity_entry.options.get("sensor")
+            ):
+                if (
+                    precision := sensor_options.get("display_precision")
+                ) is not None or (
+                    precision := sensor_options.get("suggested_display_precision")
+                ) is not None:
+                    try:
+                        numeric_state = float(state.state)
+                        info["state"] = f"{numeric_state:z.{precision}f}"
+                    except ValueError:
+                        pass  # no formatting
+
             # Convert timestamp device_class states from UTC to local time
             if state.attributes.get("device_class") == "timestamp" and state.state:
                 if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
