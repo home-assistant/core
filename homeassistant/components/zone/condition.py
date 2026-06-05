@@ -80,6 +80,11 @@ def zone(
     ):
         return False
 
+    # Prefer the in_zones attribute reported by the entity (e.g. person,
+    # device_tracker) over recomputing membership from coordinates.
+    if (in_zones := entity.attributes.get(ATTR_IN_ZONES)) is not None:
+        return zone_ent.entity_id in in_zones
+
     latitude = entity.attributes.get(ATTR_LATITUDE)
     longitude = entity.attributes.get(ATTR_LONGITUDE)
 

@@ -53,6 +53,16 @@ _LOGGER = logging.getLogger(__name__)
 
 _EVENT_DESCRIPTION = {EVENT_ENTER: "entering", EVENT_LEAVE: "leaving"}
 
+
+def _state_has_zone_info(state: State) -> bool:
+    """Return True if the state can be matched against a zone.
+
+    An ``in_zones`` attribute (e.g. from a scanner-based tracker) is sufficient
+    even when the state has no coordinates.
+    """
+    return ATTR_IN_ZONES in state.attributes or location.has_location(state)
+
+
 _LEGACY_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
     vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
     vol.Required(CONF_ZONE): cv.entity_id,
@@ -127,8 +137,8 @@ class LegacyZoneTrigger(Trigger):
             from_s = zone_event.data["old_state"]
             to_s = zone_event.data["new_state"]
 
-            if (from_s and not location.has_location(from_s)) or (
-                to_s and not location.has_location(to_s)
+            if (from_s and not _state_has_zone_info(from_s)) or (
+                to_s and not _state_has_zone_info(to_s)
             ):
                 return
 

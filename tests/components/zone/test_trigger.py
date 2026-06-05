@@ -125,6 +125,55 @@ async def test_if_fires_on_zone_enter(
     assert len(service_calls) == 2
 
 
+@pytest.mark.parametrize(
+    "coords",
+    [
+        # Coordinates stay inside the zone the whole time, so a coordinate-based
+        # trigger would never see an enter transition.
+        pytest.param(
+            {"latitude": 32.880586, "longitude": -117.237564},
+            id="with_coordinates",
+        ),
+        # No coordinates at all; a coordinate-based trigger could not evaluate.
+        pytest.param({}, id="without_coordinates"),
+    ],
+)
+async def test_if_fires_on_zone_enter_via_in_zones(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    coords: dict[str, float],
+) -> None:
+    """Test the zone trigger fires based on in_zones, not coordinates.
+
+    Only the entity's in_zones attribute changes (from empty to the zone), and
+    that is what drives the enter event.
+    """
+    hass.states.async_set("test.entity", "hello", {**coords, "in_zones": []})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "test.entity",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Only in_zones changes; any coordinates are left unchanged.
+    hass.states.async_set("test.entity", "hello", {**coords, "in_zones": ["zone.test"]})
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
 async def test_if_fires_on_zone_enter_uuid(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

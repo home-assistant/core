@@ -225,6 +225,74 @@ async def test_multiple_zones(hass: HomeAssistant) -> None:
     assert not test.async_check()
 
 
+async def test_zone_condition_prefers_in_zones_over_coordinates(
+    hass: HomeAssistant,
+) -> None:
+    """Test the legacy zone condition prefers in_zones over coordinates.
+
+    When the entity reports an ``in_zones`` attribute it is authoritative;
+    coordinates are only consulted as a fallback for entities that don't
+    report it.
+    """
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+    )
+
+    # in_zones lists the zone but the coordinates are far away -> in_zones wins.
+    hass.states.async_set(
+        "device_tracker.person",
+        "home",
+        {"latitude": 50.0, "longitude": 50.0, "in_zones": ["zone.home"]},
+    )
+    assert zone_condition.zone(hass, "zone.home", "device_tracker.person") is True
+
+    # in_zones is empty but the coordinates are inside the zone -> in_zones wins.
+    hass.states.async_set(
+        "device_tracker.person",
+        "not_home",
+        {"latitude": 2.1, "longitude": 1.1, "in_zones": []},
+    )
+    assert zone_condition.zone(hass, "zone.home", "device_tracker.person") is False
+
+    # in_zones lists a different zone -> not in the target zone.
+    hass.states.async_set(
+        "device_tracker.person",
+        "work",
+        {"latitude": 2.1, "longitude": 1.1, "in_zones": ["zone.work"]},
+    )
+    assert zone_condition.zone(hass, "zone.home", "device_tracker.person") is False
+
+
+async def test_zone_condition_falls_back_to_coordinates(hass: HomeAssistant) -> None:
+    """Test the legacy zone condition uses coordinates without an in_zones attr.
+
+    Coordinate-only entities (e.g. geo_location) report no ``in_zones``.
+    """
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+    )
+
+    # Inside the zone by coordinates, no in_zones attribute.
+    hass.states.async_set(
+        "geo_location.quake",
+        "1.0",
+        {"latitude": 2.1, "longitude": 1.1},
+    )
+    assert zone_condition.zone(hass, "zone.home", "geo_location.quake") is True
+
+    # Outside the zone by coordinates.
+    hass.states.async_set(
+        "geo_location.quake",
+        "1.0",
+        {"latitude": 50.0, "longitude": 50.0},
+    )
+    assert zone_condition.zone(hass, "zone.home", "geo_location.quake") is False
+
+
 # --- New-style zone condition tests ---
 
 ZONE_HOME = "zone.home"
