@@ -96,6 +96,7 @@ homeassistant.components.aprs.*
 homeassistant.components.apsystems.*
 homeassistant.components.aqualogic.*
 homeassistant.components.aquostv.*
+homeassistant.components.aqvify.*
 homeassistant.components.aranet.*
 homeassistant.components.arcam_fmj.*
 homeassistant.components.arris_tg2492lg.*
