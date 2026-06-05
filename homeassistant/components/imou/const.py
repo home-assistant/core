@@ -32,8 +32,15 @@ PARAM_HEADER_DETECT = "header_detect"
 
 CONF_OPTION_LIVE_RESOLUTION = "live_resolution"
 CONF_OPTION_UPDATE_INTERVAL = "update_interval"
-LIVE_RESOLUTION_SD = "SD"
+# Config entry option values (selector keys; must be [a-z0-9-_]+ for translations).
+LIVE_RESOLUTION_HD = "hd"
+LIVE_RESOLUTION_SD = "sd"
 DEFAULT_LIVE_RESOLUTION = LIVE_RESOLUTION_SD
+# pyimouapi async_get_device_stream resolution argument values.
+PYIMOUAPI_LIVE_RESOLUTIONS: dict[str, str] = {
+    LIVE_RESOLUTION_HD: "HD",
+    LIVE_RESOLUTION_SD: "SD",
+}
 MIN_UPDATE_INTERVAL_SECONDS = 30
 MAX_UPDATE_INTERVAL_SECONDS = 900
 DEFAULT_UPDATE_INTERVAL_SECONDS = 120

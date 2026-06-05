@@ -74,8 +74,8 @@
     },
     "live_resolution": {
       "options": {
-        "HD": "HD",
-        "SD": "SD"
+        "hd": "HD",
+        "sd": "SD"
       }
     }
   }

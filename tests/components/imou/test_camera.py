@@ -3,12 +3,7 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pyimouapi.const import (
-    PARAM_HD,
-    PARAM_MOTION_DETECT,
-    PARAM_STATE,
-    PARAM_STORAGE_USED,
-)
+from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE, PARAM_STORAGE_USED
 from pyimouapi.exceptions import ImouException
 import pytest
 
@@ -20,7 +15,9 @@ from homeassistant.components.imou.camera import (
 from homeassistant.components.imou.const import (
     CONF_OPTION_LIVE_RESOLUTION,
     DEFAULT_LIVE_RESOLUTION,
+    LIVE_RESOLUTION_HD,
     PARAM_HEADER_DETECT,
+    PYIMOUAPI_LIVE_RESOLUTIONS,
 )
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
@@ -141,7 +138,7 @@ async def test_camera_stream_source(
     init_integration.async_get_device_stream.assert_awaited_once()
     call = init_integration.async_get_device_stream.await_args
     assert call is not None
-    assert call.args[1] == DEFAULT_LIVE_RESOLUTION
+    assert call.args[1] == PYIMOUAPI_LIVE_RESOLUTIONS[DEFAULT_LIVE_RESOLUTION]
     assert call.args[2] == PYIMOUAPI_LIVE_PROTOCOL
 
 
@@ -169,7 +166,7 @@ async def test_camera_stream_source_uses_live_resolution_option(
     """Stream source honors the live resolution config entry option."""
     hass.config_entries.async_update_entry(
         mock_config_entry,
-        options={CONF_OPTION_LIVE_RESOLUTION: PARAM_HD},
+        options={CONF_OPTION_LIVE_RESOLUTION: LIVE_RESOLUTION_HD},
     )
     init_integration.async_get_device_stream.return_value = TEST_STREAM_URL
 
@@ -178,7 +175,7 @@ async def test_camera_stream_source_uses_live_resolution_option(
 
     call = init_integration.async_get_device_stream.await_args
     assert call is not None
-    assert call.args[1] == PARAM_HD
+    assert call.args[1] == PYIMOUAPI_LIVE_RESOLUTIONS[LIVE_RESOLUTION_HD]
     assert call.args[2] == PYIMOUAPI_LIVE_PROTOCOL
 
 

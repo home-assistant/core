@@ -15,6 +15,7 @@ from .const import (
     CONF_OPTION_LIVE_RESOLUTION,
     DEFAULT_LIVE_RESOLUTION,
     PARAM_HEADER_DETECT,
+    PYIMOUAPI_LIVE_RESOLUTIONS,
     imou_device_identifier,
 )
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
@@ -78,10 +79,13 @@ class ImouCamera(ImouEntity, Camera):
     async def stream_source(self) -> str | None:
         """Return the live stream URL from the Imou cloud."""
         options = self.coordinator.config_entry.options
+        resolution = options.get(
+            CONF_OPTION_LIVE_RESOLUTION, DEFAULT_LIVE_RESOLUTION
+        )
         try:
             return await self.coordinator.device_manager.async_get_device_stream(
                 self.device,
-                options.get(CONF_OPTION_LIVE_RESOLUTION, DEFAULT_LIVE_RESOLUTION),
+                PYIMOUAPI_LIVE_RESOLUTIONS[resolution],
                 PYIMOUAPI_LIVE_PROTOCOL,
             )
         except ImouException as err:

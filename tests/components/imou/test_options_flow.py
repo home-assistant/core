@@ -1,10 +1,9 @@
 """Tests for the Imou options flow."""
 
-from pyimouapi.const import PARAM_HD
-
 from homeassistant.components.imou.const import (
     CONF_OPTION_LIVE_RESOLUTION,
     CONF_OPTION_UPDATE_INTERVAL,
+    LIVE_RESOLUTION_HD,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -26,13 +25,13 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_OPTION_LIVE_RESOLUTION: PARAM_HD,
+            CONF_OPTION_LIVE_RESOLUTION: LIVE_RESOLUTION_HD,
             CONF_OPTION_UPDATE_INTERVAL: 90,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {
-        CONF_OPTION_LIVE_RESOLUTION: PARAM_HD,
+        CONF_OPTION_LIVE_RESOLUTION: LIVE_RESOLUTION_HD,
         CONF_OPTION_UPDATE_INTERVAL: 90,
     }

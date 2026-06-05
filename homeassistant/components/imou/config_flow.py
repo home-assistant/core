@@ -3,7 +3,6 @@
 import logging
 from typing import Any
 
-from pyimouapi.const import PARAM_HD
 from pyimouapi.exceptions import (
     ConnectFailedException,
     ImouException,
@@ -39,6 +38,7 @@ from .const import (
     DEFAULT_LIVE_RESOLUTION,
     DEFAULT_UPDATE_INTERVAL_SECONDS,
     DOMAIN,
+    LIVE_RESOLUTION_HD,
     LIVE_RESOLUTION_SD,
     MAX_UPDATE_INTERVAL_SECONDS,
     MIN_UPDATE_INTERVAL_SECONDS,
@@ -129,7 +129,7 @@ class ImouOptionsFlow(OptionsFlow):
                             default=DEFAULT_LIVE_RESOLUTION,
                         ): SelectSelector(
                             SelectSelectorConfig(
-                                options=[PARAM_HD, LIVE_RESOLUTION_SD],
+                                options=[LIVE_RESOLUTION_HD, LIVE_RESOLUTION_SD],
                                 translation_key=CONF_OPTION_LIVE_RESOLUTION,
                                 mode=SelectSelectorMode.DROPDOWN,
                             )
