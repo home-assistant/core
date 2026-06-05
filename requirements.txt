@@ -7,7 +7,7 @@ aiodns==4.0.4
 aiogithubapi==26.0.0
 aiohttp-asyncmdnsresolver==0.2.0
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.13.5
+aiohttp==3.14.0
 aiohttp_cors==0.8.1
 aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
@@ -25,12 +25,12 @@ cryptography==48.0.0
 fnv-hash-fast==2.0.3
 ha-ffmpeg==3.2.2
 hass-nabucasa==2.2.0
-hassil==3.5.0
+hassil==3.6.0
 home-assistant-bluetooth==2.0.0
 home-assistant-intents==2026.6.1
 httpx==0.28.1
 ifaddr==0.2.0
-infrared-protocols==5.8.0
+infrared-protocols==6.0.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.47.0
@@ -55,7 +55,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.11.16
+uv==0.11.17
 voluptuous-openapi==0.3.0
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2

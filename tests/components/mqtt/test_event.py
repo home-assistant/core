@@ -7,7 +7,8 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import event, mqtt
+from homeassistant.components import event
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.event import MQTT_EVENT_ATTRIBUTES_BLOCKED
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -56,7 +57,7 @@ from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         event.DOMAIN: {
             "name": "test",
             "state_topic": "test-topic",
@@ -186,7 +187,7 @@ async def test_setting_event_value_with_invalid_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 event.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -319,7 +320,7 @@ async def test_discovery_update_availability(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 event.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -405,7 +406,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 event.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -630,7 +631,7 @@ async def test_entity_category(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 event.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
