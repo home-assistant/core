@@ -229,55 +229,56 @@ class HassImportsFormatChecker(BaseChecker):
 
     def visit_import(self, node: nodes.Import) -> None:
         """Check for improper `import _` invocations."""
-        for other_module, _alias in node.names:
-            if other_module.startswith(f"{self.current_package}."):
-                # Same package: should be using relative import style
+        for module, _alias in node.names:
+            if module.startswith(f"{self.current_package}."):
                 self.add_message("home-assistant-relative-import", node=node)
                 continue
             if (
-                # Check if it is importing from a component module
-                (other_parsed := parse_module(other_module))
-                and other_parsed.module is not None
-                # It is only allowed in tests for the same component
-                and not (
-                    self.current_package.startswith(
-                        f"tests.components.{other_parsed.domain}"
-                    )
-                )
+                module.startswith("homeassistant.components.")
+                and len(module.split(".")) > 3
             ):
+                if (
+                    self.current_package.startswith("tests.components.")
+                    and self.current_package.split(".")[2] == module.split(".")[2]
+                ):
+                    # Ignore check if the component being tested matches
+                    # the component being imported from
+                    continue
                 self.add_message("home-assistant-component-root-import", node=node)
 
     def _visit_importfrom_relative(
         self, current_package: str, node: nodes.ImportFrom
     ) -> None:
         """Check for improper 'from ._ import _' invocations."""
-        if not self.current_component:
+        if not (current_component := self.current_component):
             return
 
-        self._check_for_constant_alias(node, self.current_component)
+        split_package = current_package.split(".")
+
+        self._check_for_constant_alias(node, current_component, current_component)
 
         if node.level <= 1:
             # No need to check relative import
             return
 
-        package_depth = current_package.count(".")
-        if not node.modname and package_depth == node.level:
+        if not node.modname and len(split_package) == node.level + 1:
             for name in node.names:
                 # Allow relative import to component root
-                if name[0] != self.current_component:
+                if name[0] != current_component:
                     self.add_message("home-assistant-absolute-import", node=node)
                     return
             return
-        if package_depth < node.level + 1:
+        if len(split_package) < node.level + 2:
             self.add_message("home-assistant-absolute-import", node=node)
 
     def _check_for_constant_alias(
         self,
         node: nodes.ImportFrom,
+        current_component: str | None,
         imported_component: str,
     ) -> bool:
         """Check for hass-import-constant-alias."""
-        if self.current_component == imported_component:
+        if current_component == imported_component:
             # Check for `from homeassistant.components.self import DOMAIN as XYZ`
             for name, alias in node.names:
                 if name == "DOMAIN" and (alias is not None and alias != "DOMAIN"):
@@ -308,18 +309,19 @@ class HassImportsFormatChecker(BaseChecker):
     def _check_for_component_root_import(
         self,
         node: nodes.ImportFrom,
-        is_component_root: bool,
+        current_component: str | None,
+        imported_parts: list[str],
         imported_component: str,
     ) -> bool:
         """Check for hass-component-root-import."""
         if (
-            self.current_component == imported_component
+            current_component == imported_component
             or imported_component in _IGNORE_ROOT_IMPORT
         ):
             return True
 
         # Check for `from homeassistant.components.other.module import something`
-        if not is_component_root:
+        if len(imported_parts) > 3:
             self.add_message("home-assistant-component-root-import", node=node)
             return False
 
@@ -331,26 +333,29 @@ class HassImportsFormatChecker(BaseChecker):
 
         return True
 
-    def _check_for_relative_import(self, node: nodes.ImportFrom) -> bool:
+    def _check_for_relative_import(
+        self,
+        current_package: str,
+        node: nodes.ImportFrom,
+        current_component: str | None,
+    ) -> bool:
         """Check for hass-relative-import."""
-        if node.modname == self.current_package or node.modname.startswith(
-            f"{self.current_package}."
+        if node.modname == current_package or node.modname.startswith(
+            f"{current_package}."
         ):
             self.add_message("home-assistant-relative-import", node=node)
             return False
 
         for root in ("homeassistant", "tests"):
-            if self.current_package.startswith(f"{root}.components."):
+            if current_package.startswith(f"{root}.components."):
                 if node.modname == f"{root}.components":
                     for name in node.names:
-                        if name[0] == self.current_component:
+                        if name[0] == current_component:
                             self.add_message(
                                 "home-assistant-relative-import", node=node
                             )
                             return False
-                elif node.modname.startswith(
-                    f"{root}.components.{self.current_component}."
-                ):
+                elif node.modname.startswith(f"{root}.components.{current_component}."):
                     self.add_message("home-assistant-relative-import", node=node)
                     return False
 
@@ -358,25 +363,31 @@ class HassImportsFormatChecker(BaseChecker):
 
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
         """Check for improper 'from _ import _' invocations."""
-        if not self.current_package:
-            return
         if node.level is not None:
             self._visit_importfrom_relative(self.current_package, node)
             return
 
+        current_component = self.current_component
         # Checks for hass-relative-import
-        if not self._check_for_relative_import(node):
+        if not self._check_for_relative_import(
+            self.current_package, node, current_component
+        ):
             return
 
-        if other_parsed := parse_module(node.modname):
+        if node.modname.startswith("homeassistant.components."):
+            imported_parts = node.modname.split(".")
+            imported_component = imported_parts[2]
+
             # Checks for hass-component-root-import
             if not self._check_for_component_root_import(
-                node, other_parsed.module is None, other_parsed.domain
+                node, current_component, imported_parts, imported_component
             ):
                 return
 
             # Checks for hass-import-constant-alias
-            if not self._check_for_constant_alias(node, other_parsed.domain):
+            if not self._check_for_constant_alias(
+                node, current_component, imported_component
+            ):
                 return
 
         # Checks for hass-deprecated-import
