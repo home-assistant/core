@@ -893,10 +893,10 @@ async def test_start_conversation_default_preannounce(
                 ],
                 "preannounce": False,
             },
-            "jazz at 42 percent volume",
+            "jazz at forty two percent volume",
             AssistSatelliteAnswer(
                 id="jazz_with_volume",
-                sentence="jazz at 42 percent volume",
+                sentence="jazz at forty two percent volume",
                 slots={"volume": 42},
             ),
             False,

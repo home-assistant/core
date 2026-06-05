@@ -707,7 +707,7 @@ async def test_inline_range_list(hass: HomeAssistant) -> None:
             "automation": {
                 "trigger": {
                     "platform": "conversation",
-                    "command": ["set brightness to {0..100:brightness}%"],
+                    "command": ["set brightness to {0..100:brightness} percent"],
                 },
                 "action": {
                     "set_conversation_response": "Brightness set to {{trigger.slots.brightness|int}} percent",
@@ -720,7 +720,7 @@ async def test_inline_range_list(hass: HomeAssistant) -> None:
         "conversation",
         "process",
         {
-            "text": "set brightness to 42%",
+            "text": "set brightness to forty two percent",
         },
         blocking=True,
         return_response=True,
