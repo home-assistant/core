@@ -665,6 +665,11 @@
       "config_flow": false,
       "iot_class": "assumed_state"
     },
+    "avosdim": {
+      "name": "Avosdim",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "awair": {
       "name": "Awair",
       "integration_type": "hub",
@@ -1653,6 +1658,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "edifier_infrared": {
+      "name": "Edifier Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "edimax": {
       "name": "Edimax",
@@ -6904,7 +6915,7 @@
     "swisscom": {
       "name": "Swisscom Internet-Box",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "switchbee": {

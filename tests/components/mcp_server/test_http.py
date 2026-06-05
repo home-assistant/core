@@ -19,7 +19,7 @@ import pytest
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.mcp_server.const import STATELESS_LLM_API
+from homeassistant.components.mcp_server.const import DOMAIN, STATELESS_LLM_API
 from homeassistant.components.mcp_server.http import (
     MESSAGES_API,
     SSE_API,
@@ -219,7 +219,7 @@ async def test_http_sse_multiple_config_entries(
     """
 
     config_entry = MockConfigEntry(
-        domain="mcp_server", data={CONF_LLM_HASS_API: ["llm-api-id"]}
+        domain=DOMAIN, data={CONF_LLM_HASS_API: ["llm-api-id"]}
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
