@@ -112,13 +112,6 @@ class ImouCamera(ImouEntity, Camera):
         )
 
     @property
-    def is_streaming(self) -> bool:
-        """Return True when the camera stream worker is running."""
-        if self.stream is None:
-            return False
-        return self.stream._thread is not None and self.stream._thread.is_alive()  # noqa: SLF001
-
-    @property
     def motion_detection_enabled(self) -> bool:
         """Return True when human and/or motion detection switch is on."""
         header = self.device.switches.get(PARAM_HEADER_DETECT)
