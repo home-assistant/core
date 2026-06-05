@@ -1,7 +1,7 @@
 """The Brands integration."""
 
 from collections import deque
-from collections.abc import Mapping
+from collections.abc import Container, Mapping
 from http import HTTPStatus
 import logging
 from pathlib import Path
@@ -118,8 +118,8 @@ class _BrandsBaseView(HomeAssistantView):
 
     @callback
     @override
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> set[str]:
-        """Return a set of valid auth tokens, which can be used for query token authentication."""
+    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
+        """Return valid auth tokens, which can be used for query token authentication."""
         return self._hass.data[DOMAIN]
 
     async def _serve_from_custom_integration(

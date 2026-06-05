@@ -2,7 +2,7 @@
 
 import asyncio
 import collections
-from collections.abc import Mapping
+from collections.abc import Container, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -324,12 +324,12 @@ class ImageView(HomeAssistantView):
 
     @callback
     @override
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> set[str]:
-        """Return a set of valid auth tokens, which can be used for query token authentication."""
+    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
+        """Return valid auth tokens, which can be used for query token authentication."""
         if (image_entity := self.component.get_entity(match_info["entity_id"])) is None:
-            return set()
+            return ()
 
-        return set(image_entity.access_tokens)
+        return image_entity.access_tokens
 
     @callback
     def _get_image_entity(self, entity_id: str) -> ImageEntity:

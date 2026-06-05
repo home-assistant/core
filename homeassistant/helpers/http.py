@@ -1,6 +1,6 @@
 """Helper to track the current http request."""
 
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Container, Mapping
 from contextvars import ContextVar
 from http import HTTPStatus
 import inspect
@@ -213,6 +213,6 @@ class HomeAssistantView:
                 allow_cors(route)
 
     @callback
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> set[str]:
-        """Return a set of valid auth tokens, which can be used for query token authentication."""
-        return set()
+    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
+        """Return valid auth tokens, which can be used for query token authentication."""
+        return ()

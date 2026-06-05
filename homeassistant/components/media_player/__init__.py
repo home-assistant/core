@@ -2,7 +2,7 @@
 
 import asyncio
 import collections
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Container, Mapping
 from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
@@ -1264,12 +1264,12 @@ class MediaPlayerImageView(HomeAssistantView):
 
     @callback
     @override
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> set[str]:
-        """Return a set of valid auth tokens, which can be used for query token authentication."""
+    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
+        """Return valid auth tokens, which can be used for query token authentication."""
         if (player := self.component.get_entity(match_info["entity_id"])) is None:
-            return set()
+            return ()
 
-        return {player.access_token}
+        return (player.access_token,)
 
     async def get(
         self,

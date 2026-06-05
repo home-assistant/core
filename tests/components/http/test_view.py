@@ -61,7 +61,7 @@ async def test_handling_unauthorized(mock_request: Mock) -> None:
     with pytest.raises(HTTPUnauthorized):
         await request_handler_factory(
             mock_request.app[KEY_HASS],
-            Mock(requires_auth=False),
+            Mock(requires_auth=False, use_query_token_for_auth=False),
             AsyncMock(side_effect=Unauthorized),
         )(mock_request)
 
@@ -71,7 +71,7 @@ async def test_handling_invalid_data(mock_request: Mock) -> None:
     with pytest.raises(HTTPBadRequest):
         await request_handler_factory(
             mock_request.app[KEY_HASS],
-            Mock(requires_auth=False),
+            Mock(requires_auth=False, use_query_token_for_auth=False),
             AsyncMock(side_effect=vol.Invalid("yo")),
         )(mock_request)
 
@@ -81,7 +81,7 @@ async def test_handling_service_not_found(mock_request: Mock) -> None:
     with pytest.raises(HTTPInternalServerError):
         await request_handler_factory(
             mock_request.app[KEY_HASS],
-            Mock(requires_auth=False),
+            Mock(requires_auth=False, use_query_token_for_auth=False),
             AsyncMock(side_effect=ServiceNotFound("test", "test")),
         )(mock_request)
 
@@ -90,7 +90,7 @@ async def test_not_running(mock_request_with_stopping: Mock) -> None:
     """Test we get a 503 when not running."""
     response = await request_handler_factory(
         mock_request_with_stopping.app[KEY_HASS],
-        Mock(requires_auth=False),
+        Mock(requires_auth=False, use_query_token_for_auth=False),
         AsyncMock(side_effect=Unauthorized),
     )(mock_request_with_stopping)
     assert response.status == HTTPStatus.SERVICE_UNAVAILABLE
@@ -101,7 +101,7 @@ async def test_invalid_handler(mock_request: Mock) -> None:
     with pytest.raises(TypeError):
         await request_handler_factory(
             mock_request.app[KEY_HASS],
-            Mock(requires_auth=False),
+            Mock(requires_auth=False, use_query_token_for_auth=False),
             AsyncMock(return_value=["not valid"]),
         )(mock_request)
 
@@ -120,7 +120,7 @@ async def test_requires_auth_includes_www_authenticate(
     ):
         await request_handler_factory(
             mock_request.app[KEY_HASS],
-            Mock(requires_auth=True),
+            Mock(requires_auth=True, use_query_token_for_auth=False),
             AsyncMock(),
         )(mock_request)
     assert exc_info.value.headers["WWW-Authenticate"] == (
@@ -143,7 +143,7 @@ async def test_requires_auth_omits_www_authenticate_without_url(
     ):
         await request_handler_factory(
             mock_request.app[KEY_HASS],
-            Mock(requires_auth=True),
+            Mock(requires_auth=True, use_query_token_for_auth=False),
             AsyncMock(),
         )(mock_request)
     assert "WWW-Authenticate" not in exc_info.value.headers
@@ -212,7 +212,7 @@ async def test_requires_auth_www_authenticate_prefer_external(
     with pytest.raises(HTTPUnauthorized) as exc_info:
         await request_handler_factory(
             hass,
-            Mock(requires_auth=True),
+            Mock(requires_auth=True, use_query_token_for_auth=False),
             AsyncMock(),
         )(mock_current_request)
 

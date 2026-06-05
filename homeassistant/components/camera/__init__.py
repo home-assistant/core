@@ -2,7 +2,7 @@
 
 import asyncio
 import collections
-from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from collections.abc import Awaitable, Callable, Container, Coroutine, Mapping
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
@@ -784,12 +784,12 @@ class CameraView(HomeAssistantView):
 
     @callback
     @override
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> set[str]:
-        """Return a set of valid auth tokens, which can be used for query token authentication."""
+    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
+        """Return valid auth tokens, which can be used for query token authentication."""
         if (camera := self.component.get_entity(match_info["entity_id"])) is None:
-            return set()
+            return ()
 
-        return set(camera.access_tokens)
+        return camera.access_tokens
 
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
