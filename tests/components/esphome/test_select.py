@@ -175,11 +175,11 @@ async def test_wake_word_select_headless_voice_assistant(
     assert satellite is not None
     assert satellite.async_get_configuration().available_wake_words
 
-    state = hass.states.get("select.test_wake_word")
+    state = hass.states.get(satellite.get_wake_word_entity(0))
     assert state is not None
     assert state.state == "Hey Jarvis"
 
-    state_2 = hass.states.get("select.test_wake_word_2")
+    state_2 = hass.states.get(satellite.get_wake_word_entity(1))
     assert state_2 is not None
     assert state_2.state == NO_WAKE_WORD
 
