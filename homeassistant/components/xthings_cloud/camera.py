@@ -146,7 +146,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             channel_arn = kvs_data.get("channel_arn")
             viewer = kvs_data.get("viewer")
 
-            if not all([region, channel_arn, isinstance(viewer, dict)]):
+            if not region or not channel_arn or not isinstance(viewer, dict):
                 send_message(
                     WebRTCError(code="kvs_error", message="Invalid KVS credentials")
                 )
@@ -183,12 +183,8 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                     return
 
                 sdp_m_line_index = cand.get("sdpMLineIndex")
-                if (
-                    sdp_m_line_index is not None
-                    and (
-                        not isinstance(sdp_m_line_index, int)
-                        or sdp_m_line_index < 0
-                    )
+                if sdp_m_line_index is not None and (
+                    not isinstance(sdp_m_line_index, int) or sdp_m_line_index < 0
                 ):
                     LOGGER.debug("Skipping ICE candidate with invalid sdpMLineIndex")
                     return
@@ -268,9 +264,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         """Remove WebRTC session state and return the KVS client."""
         self._open_sessions.discard(session_id)
         self._pending_candidates.pop(session_id, None)
-        kvs_client = self._kvs_sessions.pop(session_id, None)
-
-        return kvs_client
+        return self._kvs_sessions.pop(session_id, None)
 
     def close_webrtc_session(self, session_id: str) -> None:
         """Close WebRTC session and clean up KVS signaling."""
