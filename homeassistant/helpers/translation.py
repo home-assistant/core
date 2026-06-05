@@ -1,7 +1,7 @@
 """Translation string lookup helpers."""
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Awaitable, Callable, Iterable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
@@ -20,6 +20,7 @@ from homeassistant.loader import (
     async_get_config_flows,
     async_get_integrations,
 )
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import load_json
 
 from . import singleton
@@ -28,6 +29,23 @@ _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
+
+# A sandbox translation provider supplies frontend strings for sandboxed
+# integrations whose code (and therefore translations/<lang>.json) is not on
+# main's disk — a custom integration running in an isolated sandbox process.
+# Called inside the cache load with the requested languages and the full
+# component set; returns ``{language: {domain: <raw strings.json dict>}}`` for
+# only the domains it owns. It must never raise (a dead sandbox degrades to
+# empty) so a sandbox can't wedge the frontend translation path. Registered by
+# the sandbox integration so core stays sandbox-agnostic — mirrors the
+# ``sandbox.sources`` source-resolver convention.
+type SandboxTranslationProvider = Callable[
+    [list[str], set[str]], Awaitable[dict[str, dict[str, Any]]]
+]
+
+DATA_SANDBOX_TRANSLATION_PROVIDERS: HassKey[list[SandboxTranslationProvider]] = HassKey(
+    "sandbox_translation_providers"
+)
 
 
 def recursive_flatten(
@@ -157,6 +175,24 @@ class _TranslationCache:
         """Return if the given components are loaded for the language."""
         return components.issubset(self.cache_data.loaded.get(language, set()))
 
+    @callback
+    def async_invalidate(self, components: set[str]) -> None:
+        """Drop cached + loaded state for ``components`` across all languages.
+
+        Translations are otherwise never evicted (see :meth:`async_load`), so
+        there is no other way to refresh strings that changed on the source.
+        The sandbox calls this when a custom integration is re-fetched at a new
+        commit ref (or its entry reloads): the integration's strings may have
+        changed, and the next :meth:`async_load` re-runs the provider overlay
+        for the dropped components.
+        """
+        for loaded in self.cache_data.loaded.values():
+            loaded -= components
+        for by_category in self.cache_data.cache.values():
+            for category_cache in by_category.values():
+                for component in components & category_cache.keys():
+                    del category_cache[component]
+
     async def async_load(
         self,
         language: str,
@@ -229,6 +265,9 @@ class _TranslationCache:
         translation_by_language_strings = await _async_get_component_strings(
             self.hass, languages, components, integrations
         )
+        await self._async_overlay_sandbox_strings(
+            languages, components, translation_by_language_strings
+        )
 
         # English is always the fallback language so we load them first
         self._build_category_cache(
@@ -251,6 +290,35 @@ class _TranslationCache:
                 loaded_english_components.update(components)
 
         loaded[language].update(components)
+
+    async def _async_overlay_sandbox_strings(
+        self,
+        languages: list[str],
+        components: set[str],
+        translation_by_language_strings: dict[str, dict[str, Any]],
+    ) -> None:
+        """Splice sandboxed integrations' strings onto the disk-loaded set.
+
+        A sandboxed custom integration has no code — and so no
+        ``translations/<lang>.json`` — on main:
+        :func:`async_get_integrations` returned an ``IntegrationNotFound`` for
+        it, and :func:`_async_get_component_strings` produced an empty entry.
+        Registered providers fetch the real strings over the sandbox channel;
+        we merge them in *before* :meth:`_build_category_cache` so they go
+        through the same flatten / English-fallback / ``loaded`` machinery as
+        disk strings. A provider claims only the domains it owns and never
+        raises (a dead channel degrades to empty), so a sandbox cannot wedge
+        the frontend translation path.
+        """
+        providers = self.hass.data.get(DATA_SANDBOX_TRANSLATION_PROVIDERS)
+        if not providers:
+            return
+        for provider in providers:
+            overlay = await provider(languages, components)
+            for language, by_domain in overlay.items():
+                translation_by_language_strings.setdefault(language, {}).update(
+                    by_domain
+                )
 
     def _validate_placeholders(
         self,
@@ -417,6 +485,42 @@ async def async_load_integrations(hass: HomeAssistant, integrations: set[str]) -
     await _async_get_translations_cache(hass).async_load(
         hass.config.language, integrations
     )
+
+
+@callback
+def async_register_sandbox_translation_provider(
+    hass: HomeAssistant, provider: SandboxTranslationProvider
+) -> Callable[[], None]:
+    """Register a provider of sandboxed integrations' translation strings.
+
+    The sandbox integration registers one of these so core stays
+    sandbox-agnostic (mirrors ``async_register_sandbox_source_resolver``). The
+    provider is awaited inside the translation cache load and returns
+    ``{language: {domain: raw_strings}}`` for only the domains it owns; every
+    other domain keeps its on-disk result. See
+    :data:`SandboxTranslationProvider`.
+
+    Returns a callback that unregisters the provider.
+    """
+    providers = hass.data.setdefault(DATA_SANDBOX_TRANSLATION_PROVIDERS, [])
+    providers.append(provider)
+
+    @callback
+    def _unregister() -> None:
+        providers.remove(provider)
+
+    return _unregister
+
+
+@callback
+def async_invalidate_translations(hass: HomeAssistant, components: set[str]) -> None:
+    """Evict cached translations for ``components`` across all languages.
+
+    Used by the sandbox when a sandboxed integration's strings may have
+    changed (re-fetch at a new ref / entry reload); the next load re-runs the
+    provider overlay for those components.
+    """
+    _async_get_translations_cache(hass).async_invalidate(components)
 
 
 @callback
