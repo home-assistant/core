@@ -420,7 +420,7 @@ def async_register_rpi_firmware_in_dev_reg(
         identifiers={(DOMAIN, "rpi_firmware")},
         manufacturer="Raspberry Pi",
         model=SupervisorEntityModel.RPI_FIRMWARE,
-        name="Raspberry Pi",
+        name="Raspberry Pi Firmware",
         entry_type=dr.DeviceEntryType.SERVICE,
         via_device=(DOMAIN, "OS"),
     )

@@ -2120,7 +2120,7 @@ async def test_rpi_firmware_device(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, "rpi_firmware")})
     assert device is not None
-    assert device.name == "Raspberry Pi"
+    assert device.name == "Raspberry Pi Firmware"
 
     os_device = device_registry.async_get_device(identifiers={(DOMAIN, "OS")})
     assert os_device is not None

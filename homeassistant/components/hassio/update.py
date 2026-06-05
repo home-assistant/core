@@ -325,12 +325,12 @@ class SupervisorRPiFirmwareUpdateEntity(UpdateEntity):
     """
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_title = "Raspberry Pi Firmware"
-    _attr_translation_key = "rpi_firmware_update"
 
     def __init__(self, firmware: RaspberryPiFirmwareInfo) -> None:
         """Initialize entity.
