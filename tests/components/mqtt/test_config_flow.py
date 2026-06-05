@@ -2586,8 +2586,7 @@ async def test_reconfigure_no_changed_password(
         "expected_minor_version",
     ),
     [
-        (1, 1, MOCK_ENTRY_DATA | MOCK_ENTRY_OPTIONS, {}, 1, 2),
-        (1, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 1, 2),
+        (1, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 2, 1),
         (2, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 2, 1),
     ],
 )
@@ -2621,6 +2620,42 @@ async def test_migrate_config_entry(
     )
     assert config_entry.version == expected_version
     assert config_entry.minor_version == expected_minor_version
+
+
+@pytest.mark.parametrize(
+    (
+        "version",
+        "minor_version",
+        "data",
+        "options",
+    ),
+    [
+        (1, 1, MOCK_ENTRY_DATA | MOCK_ENTRY_OPTIONS, {}),
+    ],
+)
+@pytest.mark.usefixtures("mock_reload_after_entry_update")
+async def test_migrate_config_entry_fails_on_unsupported_version(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    version: int,
+    minor_version: int,
+    data: dict[str, Any],
+    options: dict[str, Any],
+) -> None:
+    """Test migrating a config entry filais on not supported version."""
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    # Mock to a migratable or compatbible config entry version
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data=data,
+        options=options,
+        version=version,
+        minor_version=minor_version,
+    )
+    await hass.async_block_till_done()
+    # Starting MQTT should fail
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
 
 
 @pytest.mark.parametrize(
