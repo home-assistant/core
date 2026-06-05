@@ -139,12 +139,14 @@
       "device_tracker": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
+          "in_zones": "Zones",
           "latitude": "Latitude",
           "longitude": "Longitude",
           "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
+          "in_zones": "Defines a template that returns a list of zones the device tracker is currently in. The template should return a list of zone entity IDs. If the device tracker is not in any zone, the template should return an empty list.",
           "latitude": "Defines a template to get the latitude of the device tracker. Valid values are numbers between `-90` and `90`.",
           "longitude": "Defines a template to get the longitude of the device tracker. Valid values are numbers between `-180` and `180`.",
           "name": "[%key:common::config_flow::data::name%]"
@@ -482,6 +484,7 @@
           "binary_sensor": "[%key:component::binary_sensor::title%]",
           "button": "[%key:component::button::title%]",
           "cover": "[%key:component::cover::title%]",
+          "device_tracker": "[%key:component::device_tracker::title%]",
           "event": "[%key:component::event::title%]",
           "fan": "[%key:component::fan::title%]",
           "image": "[%key:component::image::title%]",
@@ -714,11 +717,13 @@
       "device_tracker": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
+          "in_zones": "[%key:component::template::config::step::device_tracker::data::in_zones%]",
           "latitude": "[%key:component::template::config::step::device_tracker::data::latitude%]",
           "longitude": "[%key:component::template::config::step::device_tracker::data::longitude%]"
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
+          "in_zones": "[%key:component::template::config::step::device_tracker::data_description::in_zones%]",
           "latitude": "[%key:component::template::config::step::device_tracker::data_description::latitude%]",
           "longitude": "[%key:component::template::config::step::device_tracker::data_description::longitude%]"
         },

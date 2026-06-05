@@ -1,7 +1,7 @@
 """Tests for the Duco sensor platform."""
 
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from duco_connectivity import (
     DucoConnectionError,
@@ -22,6 +22,8 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import setup_platform_integration
+
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
@@ -34,11 +36,7 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up only the sensor platform for testing."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.duco.PLATFORMS", [Platform.SENSOR]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    return mock_config_entry
+    return await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -85,15 +83,22 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_coordinator_update_marks_unavailable(
+@pytest.mark.parametrize(
+    ("exception_type", "exception_message"),
+    [
+        pytest.param(DucoConnectionError, "offline", id="connection_error"),
+        pytest.param(DucoError, "api error", id="duco_error"),
+    ],
+)
+async def test_coordinator_update_failure_marks_unavailable(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    exception_type: type[DucoError],
+    exception_message: str,
 ) -> None:
-    """Test that sensor entities become unavailable when the coordinator fails."""
-    mock_duco_client.async_get_nodes = AsyncMock(
-        side_effect=DucoConnectionError("offline")
-    )
+    """Test sensor entities become unavailable when the coordinator update fails."""
+    mock_duco_client.async_get_nodes.side_effect = exception_type(exception_message)
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -104,42 +109,34 @@ async def test_coordinator_update_marks_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_coordinator_update_duco_error_marks_unavailable(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test sensor entities become unavailable when async_get_nodes raises DucoError."""
-    mock_duco_client.async_get_nodes = AsyncMock(side_effect=DucoError("api error"))
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get("sensor.office_co2_carbon_dioxide")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(DucoError("lan info error"), id="duco_error"),
+        pytest.param(DucoConnectionError("lan info offline"), id="connection_error"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_lan_info_duco_error_marks_unavailable(
+async def test_lan_info_failures_keep_node_entities_available(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    exception: Exception,
 ) -> None:
-    """Test entities become unavailable when async_get_lan_info raises DucoError."""
-    mock_duco_client.async_get_lan_info = AsyncMock(
-        side_effect=DucoError("lan info error")
-    )
+    """Test node entities stay available when LAN info retrieval fails."""
+    mock_duco_client.async_get_lan_info = AsyncMock(side_effect=exception)
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.office_co2_carbon_dioxide")
+    assert state is not None
+    assert state.state == "405"
 
     state = hass.states.get("sensor.living_signal_strength")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == "-60"
 
 
 @pytest.mark.parametrize(
@@ -190,10 +187,9 @@ async def test_deregistered_node_removes_device(
     mock_sensor_nodes: list[Node],
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test a node disappearing from the API removes its device from the registry."""
-    device_registry = dr.async_get(hass)
-
     # Verify node 2 (UCCO2 RF sensor) device exists before deregistration.
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_2")}

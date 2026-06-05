@@ -1,7 +1,5 @@
 """Device tracker support for OPNsense routers."""
 
-from typing import Any
-
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -98,20 +96,3 @@ class OPNsenseDeviceTrackerEntity(
             hostname = device_data.get("hostname")
             return hostname or None
         return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        device_data = self.device_data
-        if not device_data:
-            return {}
-
-        attrs = {}
-        if manufacturer := device_data.get("manufacturer"):
-            attrs["manufacturer"] = manufacturer
-        if interface := device_data.get("intf_description"):
-            attrs["interface"] = interface
-        if expires := device_data.get("expires"):
-            attrs["expires"] = expires
-
-        return attrs

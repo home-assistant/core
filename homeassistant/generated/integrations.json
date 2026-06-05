@@ -576,7 +576,7 @@
       "name": "Ambient Radio Weather Network",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "aseko_pool_live": {
       "name": "Aseko Pool Live",
@@ -1654,6 +1654,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "edifier_infrared": {
+      "name": "Edifier Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "edimax": {
       "name": "Edimax",
       "integration_type": "hub",
@@ -1860,6 +1866,12 @@
       "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "envertech_evt800": {
+      "name": "ENVERTECH EVT800",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "environment_canada": {
       "name": "Environment Canada",
@@ -2849,6 +2861,12 @@
         "zwave"
       ]
     },
+    "helty": {
+      "name": "Helty Flow",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "here_travel_time": {
       "name": "HERE Travel Time",
       "integration_type": "service",
@@ -3216,6 +3234,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "imou": {
+      "name": "Imou",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "improv_ble": {
       "name": "Improv via BLE",
@@ -3759,6 +3783,12 @@
           "iot_class": "cloud_push",
           "name": "LG ThinQ"
         },
+        "lg_tv_rs232": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "LG TV via Serial"
+        },
         "webostv": {
           "integration_type": "device",
           "config_flow": true,
@@ -3766,12 +3796,6 @@
           "name": "LG webOS TV"
         }
       }
-    },
-    "lg_tv_rs232": {
-      "name": "LG TV via Serial",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
     },
     "libre_hardware_monitor": {
       "name": "Libre Hardware Monitor",

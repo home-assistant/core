@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import setup
-from homeassistant.components import zone
+from homeassistant.components import device_tracker, zone
 from homeassistant.components.zone import ATTR_RADIUS, DOMAIN
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -820,6 +820,7 @@ async def test_state(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person1",
         "Test Zone",
+        {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
     )
     await hass.async_block_till_done()
 
@@ -837,6 +838,7 @@ async def test_state(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person2",
         "TEST zone",
+        {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
     )
     await hass.async_block_till_done()
 
@@ -857,6 +859,25 @@ async def test_state(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person1",
         "home",
+        {device_tracker.ATTR_IN_ZONES: ["zone.home"]},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("zone.test_zone")
+    assert state
+    assert state.state == "1"
+    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
+
+    state = hass.states.get("zone.home")
+    assert state
+    assert state.state == "1"
+    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
+
+    # Person entity is in two zones
+    hass.states.async_set(
+        "person.person1",
+        "home",
+        {device_tracker.ATTR_IN_ZONES: ["zone.home", "zone.test_zone"]},
     )
     await hass.async_block_till_done()
 
@@ -874,6 +895,7 @@ async def test_state(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person1",
         "not_home",
+        {device_tracker.ATTR_IN_ZONES: []},
     )
     await hass.async_block_till_done()
 
