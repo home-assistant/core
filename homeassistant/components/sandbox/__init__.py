@@ -21,6 +21,9 @@ from typing import Any
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.translation import (
+    async_register_sandbox_translation_provider,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from ._proto import sandbox_pb2 as pb
@@ -29,6 +32,7 @@ from .channel import Channel
 from .const import DATA_SANDBOX, DOMAIN
 from .manager import SandboxManager
 from .router import SandboxFlowRouter
+from .translation import SandboxTranslationProvider
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,6 +101,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.config_entries.router = router
 
+    # Feed sandboxed integrations' frontend translations into core's cache.
+    # Built-in domains read main's own disk; only customs pull over RPC.
+    translation_provider = SandboxTranslationProvider(hass, data)
+    unregister_translation_provider = async_register_sandbox_translation_provider(
+        hass, translation_provider.async_get_translations
+    )
+
     async def _on_stop(_event: Event) -> None:
         """Stop every sandbox process on HA shutdown.
 
@@ -107,6 +118,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         within the grace.
         """
         hass.config_entries.router = None
+        unregister_translation_provider()
         await manager.async_graceful_shutdown_all(timeout=manager.shutdown_grace)
         await manager.async_stop_all()
         data.channels.clear()
