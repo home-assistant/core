@@ -16,15 +16,13 @@ the window. One plan per session, sequentially.
 
 ## Steps
 
-### 1. Write a brief to a tempfile
+### 1. Write the brief
 
 The brief is the sub-session's whole instruction set: which plan to read, the
 locked decisions, hard rules, build steps, the exact tests/greps to run, and —
-critically — to **write a STATUS marker file LAST**.
-
-```
-/tmp/<name>-brief.md
-```
+critically — to **write a STATUS marker file LAST**. Keep it in a file
+(`/tmp/<name>-brief.md`) or compose it inline — either way you pipe it on
+stdin in the next step.
 
 Hard rules every brief repeats:
 - **Execute the plan with the `phx:work` skill** — step through the plan's
@@ -38,12 +36,12 @@ Hard rules every brief repeats:
 
 ### 2. Spawn the session
 
-Multi-line text piped to `claude-screen` does **not** land reliably (the TUI
-submits mid-paste). Always pipe a **single line** pointing at the brief:
+Pipe the brief straight in. `claude-screen` detects a multi-line prompt and
+auto-stashes it to a tempfile, pasting a single-line `Read … and follow it`
+pointer for you (a multi-line paste would otherwise submit mid-prompt):
 
 ```bash
-echo "Read /tmp/<name>-brief.md and follow every instruction in it exactly." \
-  | ~/dev/claude-screen <name> /home/paulus/dev/hass/core
+~/dev/claude-screen <name> /home/paulus/dev/hass/core < /tmp/<name>-brief.md
 ```
 
 Use an **unambiguous full `<name>`** — `screen -p` matches by prefix, so a
@@ -98,10 +96,9 @@ Then advance to the next plan.
 
 ## Gotchas (all bit at least once)
 
-- **Single-line file-handoff only** — multi-line stdin to `claude-screen` is
-  unreliable.
 - **Confirm the prompt submitted** — a first-run banner can swallow it; send
-  `$'\r'` to nudge.
+  `$'\r'` to nudge. (`claude-screen` handles the multi-line→file stashing
+  itself, so you just pipe the brief.)
 - **`screen -p` is prefix-match** — use full, distinct window names.
 - **STATUS is written last** — its presence means done; nothing earlier does.
 - **Avoid git ops in the repo while a sub-session is mid-write** — index
