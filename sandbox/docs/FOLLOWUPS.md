@@ -8,9 +8,9 @@ follow-ups that closed those forward-flags in turn. This file is the
 phase's landing.
 
 Per-failure remediation entries live in [`BACKLOG.md`](../BACKLOG.md);
-deep landing notes live in the per-phase `STATUS-phase-N.md` files in
-the parent directory. FOLLOWUPS.md is the connective tissue between
-them.
+deep landing notes live in the [`status/`](../status/) files
+(`STATUS-phase-N.md` + `STATUS-plan-*.md`). FOLLOWUPS.md is the connective
+tissue between them.
 
 ---
 

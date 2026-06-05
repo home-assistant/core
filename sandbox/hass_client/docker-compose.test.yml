@@ -5,7 +5,7 @@
 # │ INTENDED two-container shape so it is ready when the manager grows the  │
 # │ capabilities below. It is valid YAML (`docker compose config` parses    │
 # │ it), but `docker compose up` will not produce a working sandbox today.  │
-# │ See docs/docker.md → "Compose harness gap" and STATUS-plan-docker.md.   │
+# │ See docs/docker.md "Compose harness gap" + status/STATUS-plan-docker.md │
 # └───────────────────────────────────────────────────────────────────────┘
 #
 # Why it can't run yet (two manager gaps, neither hacked here):
