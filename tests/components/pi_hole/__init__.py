@@ -328,11 +328,6 @@ def _create_mocked_hole(
 def _patch_api_version_detection(mocked_hole: MagicMock) -> Generator[None]:
     """Patch API version detection."""
 
-    async def is_v6_api_side_effect(*_args, **_kwargs) -> bool:
-        if mocked_hole.wrong_host:
-            raise HoleConnectionError("Cannot fetch data from Pi-hole: err")
-        return mocked_hole.api_version == 6
-
     async def v6_api_authentication_required_side_effect(*_args, **_kwargs):
         if mocked_hole.wrong_host:
             raise HoleConnectionError("Cannot fetch data from Pi-hole: err")
@@ -341,12 +336,6 @@ def _patch_api_version_detection(mocked_hole: MagicMock) -> Generator[None]:
         return mocked_hole.v6_authentication_required
 
     with ExitStack() as stack:
-        stack.enter_context(
-            patch(
-                "homeassistant.components.pi_hole._async_is_v6_api",
-                side_effect=is_v6_api_side_effect,
-            )
-        )
         stack.enter_context(
             patch(
                 "homeassistant.components.pi_hole._async_v6_api_authentication_required",

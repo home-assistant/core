@@ -1,9 +1,10 @@
 """Test pi_hole component."""
 
 import logging
-from unittest.mock import ANY, AsyncMock
+from unittest.mock import ANY, AsyncMock, patch
 
-from hole.exceptions import HoleError
+from aiohttp import DummyCookieJar
+from hole.exceptions import HoleConnectionError, HoleError
 import pytest
 
 from homeassistant.components import pi_hole, switch
@@ -68,10 +69,13 @@ async def test_determine_api_version_v6_without_authentication(
     ("status", "response_json"),
     [
         (200, []),
+        (200, {}),
+        (200, {"foo": "bar"}),
+        (200, {"version": "v6.0.0"}),
         (500, {"error": {"key": "internal_error"}}),
     ],
 )
-async def test_is_v6_api_with_unexpected_response(
+async def test_v6_api_authentication_required_with_unexpected_response(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     status: int,
@@ -84,7 +88,72 @@ async def test_is_v6_api_with_unexpected_response(
         json=response_json,
     )
 
-    assert not await pi_hole._async_is_v6_api(hass, CONFIG_DATA_DEFAULTS)
+    assert (
+        await pi_hole._async_v6_api_authentication_required(hass, CONFIG_DATA_DEFAULTS)
+        is None
+    )
+
+
+async def test_v6_api_authentication_required_with_invalid_json(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test ignoring invalid JSON from the Pi-hole v6 version API."""
+    aioclient_mock.get(
+        "http://1.2.3.4:80/api/info/version",
+        status=200,
+        text="not-json",
+    )
+
+    assert (
+        await pi_hole._async_v6_api_authentication_required(hass, CONFIG_DATA_DEFAULTS)
+        is None
+    )
+
+
+async def test_v6_api_authentication_required_with_connection_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test raising connection errors from the Pi-hole v6 version API."""
+    with (
+        patch(
+            "homeassistant.components.pi_hole.api_by_version",
+            return_value=AsyncMock(
+                get_versions=AsyncMock(side_effect=HoleConnectionError("err"))
+            ),
+        ),
+        pytest.raises(HoleConnectionError),
+    ):
+        await pi_hole._async_v6_api_authentication_required(hass, CONFIG_DATA_DEFAULTS)
+
+
+async def test_v6_probe_session_cleanup(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test cleaning up the temporary v6 probe session."""
+    aioclient_mock.get(
+        "http://1.2.3.4:80/api/info/version",
+        status=401,
+        json={"error": {"key": "unauthorized", "message": "Unauthorized"}},
+    )
+    session = pi_hole._async_create_v6_session(
+        hass, DEFAULT_VERIFY_SSL, auto_cleanup=False
+    )
+
+    with patch(
+        "homeassistant.components.pi_hole._async_create_v6_session",
+        return_value=session,
+    ) as create_session:
+        assert (
+            await pi_hole._async_v6_api_authentication_required(
+                hass, CONFIG_DATA_DEFAULTS
+            )
+            is True
+        )
+
+    create_session.assert_called_once_with(hass, DEFAULT_VERIFY_SSL, auto_cleanup=False)
+    assert session.closed
 
 
 @pytest.mark.parametrize(
@@ -109,6 +178,9 @@ async def test_setup_api_v6(
             protocol="http",
             version=6,
             verify_tls=DEFAULT_VERIFY_SSL,
+        )
+        assert isinstance(
+            patched_init_hole.call_args.kwargs["session"].cookie_jar, DummyCookieJar
         )
 
 

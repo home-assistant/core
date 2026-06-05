@@ -1,13 +1,14 @@
 """The pi_hole component."""
 
-import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 import logging
 from typing import Any, Literal
 
 import aiohttp
 from aiohttp import DummyCookieJar
 from hole import Hole, HoleV5, HoleV6
-from hole.exceptions import HoleConnectionError, HoleError
+from hole.exceptions import HoleAuthenticationError, HoleConnectionError, HoleError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,10 +17,9 @@ from homeassistant.const import (
     CONF_LOCATION,
     CONF_SSL,
     CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_CLOSE,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
@@ -30,10 +30,6 @@ from .const import CONF_STATISTICS_ONLY, DOMAIN
 from .coordinator import PiHoleConfigEntry, PiHoleData, PiHoleUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_V6_CLIENTSESSIONS = f"{DOMAIN}_v6_clientsessions"
-V6_API_RESPONSE_EXCEPTIONS = (aiohttp.ContentTypeError, ValueError)
-
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -115,6 +111,7 @@ def api_by_version(
     entry: dict[str, Any],
     version: int,
     password: str | None = None,
+    session: aiohttp.ClientSession | None = None,
 ) -> HoleV5 | HoleV6:
     """Create a pi-hole API object by API version number.
 
@@ -124,7 +121,7 @@ def api_by_version(
     if password is None:
         password = entry.get(CONF_API_KEY, "")
     if version == 6:
-        session = _async_get_v6_session(hass, entry[CONF_VERIFY_SSL])
+        session = session or _async_create_v6_session(hass, entry[CONF_VERIFY_SSL])
     else:
         session = async_get_clientsession(hass, entry[CONF_VERIFY_SSL])
     hole_kwargs = {
@@ -145,72 +142,46 @@ def api_by_version(
 
 
 @callback
-def _async_get_v6_session(
-    hass: HomeAssistant, verify_ssl: bool
+def _async_create_v6_session(
+    hass: HomeAssistant, verify_ssl: bool, *, auto_cleanup: bool = True
 ) -> aiohttp.ClientSession:
-    """Get a session with an isolated cookie jar for the Pi-hole v6 API.
-
-    The session opts out of the auto-cleanup tied to the current config entry,
-    since the cache is shared across entries — otherwise the first entry to
-    unload would detach a session still in use by the others. Lifetime is
-    bound to Home Assistant shutdown instead.
-    """
-    sessions: dict[bool, aiohttp.ClientSession] = hass.data.setdefault(
-        DATA_V6_CLIENTSESSIONS, {}
+    """Create a session with an isolated cookie jar for the Pi-hole v6 API."""
+    return async_create_clientsession(
+        hass,
+        verify_ssl,
+        auto_cleanup=auto_cleanup,
+        cookie_jar=DummyCookieJar(),
     )
-    session = sessions.get(verify_ssl)
-    if session is None or session.closed:
-        session = async_create_clientsession(
-            hass, verify_ssl, auto_cleanup=False, cookie_jar=DummyCookieJar()
-        )
-        sessions[verify_ssl] = session
 
-        @callback
-        def _close(_event: Event) -> None:
-            if sessions.get(verify_ssl) is not session:
-                return
-            if not session.closed:
-                session.detach()
-            sessions.pop(verify_ssl, None)
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _close)
-    return session
+@asynccontextmanager
+async def _async_v6_session(
+    hass: HomeAssistant, verify_ssl: bool
+) -> AsyncIterator[aiohttp.ClientSession]:
+    """Yield a short-lived isolated session for one-shot Pi-hole v6 requests."""
+    session = _async_create_v6_session(hass, verify_ssl, auto_cleanup=False)
+    try:
+        yield session
+    finally:
+        session.detach()
 
 
 async def _async_v6_api_authentication_required(
     hass: HomeAssistant, entry: dict[str, Any]
 ) -> bool | None:
     """Return if the v6 API requires auth, or None when v6 is not detected."""
-    protocol = "https" if entry.get(CONF_SSL) else "http"
-    session = _async_get_v6_session(hass, entry[CONF_VERIFY_SSL])
-    url = f"{protocol}://{entry[CONF_HOST]}/api/info/version"
+    async with _async_v6_session(hass, entry[CONF_VERIFY_SSL]) as session:
+        hole_v6 = api_by_version(hass, entry, 6, password="", session=session)
+        try:
+            await hole_v6.get_versions()
+        except HoleConnectionError:
+            raise
+        except HoleAuthenticationError:
+            return True
+        except HoleError:
+            return None
 
-    async with asyncio.timeout(5):
-        async with session.get(url) as response:
-            try:
-                data: Any = await response.json()
-            except V6_API_RESPONSE_EXCEPTIONS:
-                return None
-
-            if not isinstance(data, dict):
-                return None
-
-            if response.status == 200:
-                if isinstance(data.get("version"), dict):
-                    return False
-                return None
-
-            if response.status == 401:
-                error = data.get("error")
-                if isinstance(error, dict) and error.get("key") == "unauthorized":
-                    return True
-
-    return None
-
-
-async def _async_is_v6_api(hass: HomeAssistant, entry: dict[str, Any]) -> bool:
-    """Check if the Pi-hole instance exposes the v6 API."""
-    return (await _async_v6_api_authentication_required(hass, entry)) is not None
+        return False
 
 
 async def determine_api_version(
@@ -226,14 +197,14 @@ async def determine_api_version(
     """
 
     try:
-        if await _async_is_v6_api(hass, entry):
+        if await _async_v6_api_authentication_required(hass, entry) is not None:
             _LOGGER.debug(
                 "Response from v6 API without auth, Pi-hole API version 6 probably"
                 " detected at %s",
                 entry[CONF_HOST],
             )
             return 6
-    except (TimeoutError, aiohttp.ClientError) as err:
+    except HoleConnectionError as err:
         _LOGGER.error(
             "Unexpected error connecting to Pi-hole v6 API at %s: %s. Trying version"
             " 5 API",

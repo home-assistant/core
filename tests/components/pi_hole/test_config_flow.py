@@ -1,5 +1,9 @@
 """Test pi_hole config flow."""
 
+from unittest.mock import patch
+
+from hole.exceptions import HoleConnectionError
+
 from homeassistant.components import pi_hole
 from homeassistant.components.pi_hole.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
@@ -48,6 +52,7 @@ async def test_flow_user_with_api_key_v6(hass: HomeAssistant) -> None:
         )
         # we have had no response from the server yet, so we expect an error
         assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
+        assert mocked_hole.instances[-1].session.closed
 
         # now we have a valid passiword
         result = await hass.config_entries.flow.async_configure(
@@ -59,6 +64,7 @@ async def test_flow_user_with_api_key_v6(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == CONFIG_ENTRY_WITH_API_KEY
         mock_setup.assert_called_once()
+        assert mocked_hole.instances[-1].session.closed
 
         # duplicated server
         result = await hass.config_entries.flow.async_init(
@@ -143,6 +149,27 @@ async def test_flow_user_without_api_key_v6_auth_required(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
+
+
+async def test_flow_user_v6_auth_probe_error(hass: HomeAssistant) -> None:
+    """Test user initialized flow with a v6 auth probe connection error."""
+    mocked_hole = _create_mocked_hole(has_data=False, api_version=6)
+    with (
+        _patch_init_hole(mocked_hole),
+        patch(
+            "homeassistant.components.pi_hole.config_flow._async_v6_api_authentication_required",
+            side_effect=HoleConnectionError("err"),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONFIG_FLOW_USER,
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_user_with_api_key_v5(hass: HomeAssistant) -> None:

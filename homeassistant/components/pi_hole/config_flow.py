@@ -4,8 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import aiohttp
-from hole.exceptions import HoleError
+from hole.exceptions import HoleConnectionError, HoleError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -22,6 +21,7 @@ from homeassistant.const import (
 from . import (
     Hole,
     _async_v6_api_authentication_required,
+    _async_v6_session,
     api_by_version,
     determine_api_version,
 )
@@ -34,8 +34,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-V6_API_CONNECTION_EXCEPTIONS = (TimeoutError, aiohttp.ClientError)
 
 
 class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -143,14 +141,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self._config[CONF_HOST],
                 CONF_LOCATION: self._config[CONF_LOCATION],
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_API_KEY,
-                        default=self._config.get(CONF_API_KEY, ""),
-                    ): str
-                }
-            ),
+            data_schema=vol.Schema({vol.Optional(CONF_API_KEY): str}),
             errors=errors,
         )
 
@@ -166,7 +157,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 authentication_required = await _async_v6_api_authentication_required(
                     self.hass, self._config
                 )
-            except V6_API_CONNECTION_EXCEPTIONS:
+            except HoleConnectionError:
                 return {"base": "cannot_connect"}
 
             if authentication_required is False:
@@ -181,13 +172,22 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             if not self._config.get(CONF_API_KEY):
                 return {CONF_API_KEY: "invalid_auth"}
 
-            pi_hole: Hole = api_by_version(self.hass, self._config, version)
-            try:
-                await pi_hole.authenticate()
-                _LOGGER.debug("Success authenticating with pihole API version: %s", 6)
-            except HoleError:
-                _LOGGER.debug("Failed authenticating with pihole API version: %s", 6)
-                return {CONF_API_KEY: "invalid_auth"}
+            async with _async_v6_session(
+                self.hass, self._config[CONF_VERIFY_SSL]
+            ) as session:
+                try:
+                    pi_hole: Hole = api_by_version(
+                        self.hass, self._config, version, session=session
+                    )
+                    await pi_hole.authenticate()
+                    _LOGGER.debug(
+                        "Success authenticating with pihole API version: %s", 6
+                    )
+                except HoleError:
+                    _LOGGER.debug(
+                        "Failed authenticating with pihole API version: %s", 6
+                    )
+                    return {CONF_API_KEY: "invalid_auth"}
 
         elif version == 5:
             pi_hole = api_by_version(self.hass, self._config, version)
