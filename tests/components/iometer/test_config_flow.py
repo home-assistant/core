@@ -146,6 +146,28 @@ async def test_zeroconf_flow_abort_no_meter(
     assert result["reason"] == "no_readings"
 
 
+async def test_zeroconf_flow_abort_no_status_received(
+    hass: HomeAssistant,
+    mock_iometer_client: MagicMock,
+) -> None:
+    """Test zeroconf flow aborts when watch_status ends without yielding a status."""
+
+    async def empty_watch():
+        return
+        yield  # makes this an async generator
+
+    mock_iometer_client.watch_status.side_effect = empty_watch
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 @pytest.mark.parametrize(
     ("exception", "error_key"),
     [
@@ -273,3 +295,32 @@ async def test_flow_abort_duplicate(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_no_status_received(
+    hass: HomeAssistant,
+    mock_iometer_client: MagicMock,
+) -> None:
+    """Test user flow shows error when watch_status ends without yielding a status."""
+
+    async def empty_watch():
+        return
+        yield  # makes this an async generator
+
+    mock_iometer_client.watch_status.side_effect = empty_watch
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: IP_ADDRESS},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
