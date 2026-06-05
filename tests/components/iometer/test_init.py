@@ -2,9 +2,17 @@
 
 import asyncio
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from iometer import Status
+from iometer import (
+    IOmeterConnectionError,
+    IOmeterNoReadingsError,
+    IOmeterNoStatusError,
+    IOmeterTimeoutError,
+    Reading,
+    Status,
+)
+import pytest
 
 from homeassistant.components.iometer.const import DOMAIN
 from homeassistant.components.iometer.coordinator import IOMeterCoordinator
@@ -64,3 +72,93 @@ async def test_async_setup_entry_connection_error(
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert not result
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_first_data_timeout(
+    hass: HomeAssistant,
+    mock_iometer_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when the 30s timeout waiting for first SSE data expires."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_timeout = MagicMock()
+    mock_timeout.return_value.__aenter__ = AsyncMock(side_effect=TimeoutError)
+    mock_timeout.return_value.__aexit__ = AsyncMock(return_value=False)
+
+    with patch(
+        "homeassistant.components.iometer.coordinator.asyncio.timeout",
+        mock_timeout,
+    ):
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert not result
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(IOmeterTimeoutError("timeout"), id="timeout"),
+        pytest.param(IOmeterNoReadingsError("no readings"), id="no-readings"),
+        pytest.param(IOmeterConnectionError("connection error"), id="connection-error"),
+        pytest.param(RuntimeError("unexpected"), id="unexpected"),
+    ],
+)
+async def test_reading_stream_reconnects(
+    hass: HomeAssistant,
+    mock_iometer_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    reading_queue: asyncio.Queue[Reading],
+    exception: Exception,
+) -> None:
+    """Test reading stream reconnects after error."""
+    call_count = 0
+
+    async def watch_readings_with_error():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise exception
+        yield await reading_queue.get()
+
+    mock_iometer_client.watch_readings.side_effect = watch_readings_with_error
+
+    with patch("homeassistant.components.iometer.coordinator.asyncio.sleep"):
+        await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert call_count >= 2
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(IOmeterTimeoutError("timeout"), id="timeout"),
+        pytest.param(IOmeterNoStatusError("no status"), id="no-status"),
+        pytest.param(IOmeterConnectionError("connection error"), id="connection-error"),
+        pytest.param(RuntimeError("unexpected"), id="unexpected"),
+    ],
+)
+async def test_status_stream_reconnects(
+    hass: HomeAssistant,
+    mock_iometer_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    status_queue: asyncio.Queue[Status],
+    exception: Exception,
+) -> None:
+    """Test status stream reconnects after error."""
+    call_count = 0
+
+    async def watch_status_with_error():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise exception
+        yield await status_queue.get()
+
+    mock_iometer_client.watch_status.side_effect = watch_status_with_error
+
+    with patch("homeassistant.components.iometer.coordinator.asyncio.sleep"):
+        await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert call_count >= 2
