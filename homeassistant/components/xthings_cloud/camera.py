@@ -304,13 +304,17 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         """Close WebRTC session and clean up KVS signaling."""
         kvs_client = self._remove_webrtc_session(session_id)
         if kvs_client:
-            self.hass.async_create_task(kvs_client.async_close())
+            self.hass.async_create_task(self._async_close_kvs_client(kvs_client))
 
     async def async_close_webrtc_session(self, session_id: str) -> None:
         """Close WebRTC session and await KVS signaling cleanup."""
         kvs_client = self._remove_webrtc_session(session_id)
         if kvs_client:
-            try:
-                await kvs_client.async_close()
-            except Exception as err:  # noqa: BLE001
-                LOGGER.warning("Failed to close KVS WebRTC session: %s", err)
+            await self._async_close_kvs_client(kvs_client)
+
+    async def _async_close_kvs_client(self, kvs_client: KvsSignalingClient) -> None:
+        """Close a KVS signaling client and log close failures."""
+        try:
+            await kvs_client.async_close()
+        except Exception as err:  # noqa: BLE001
+            LOGGER.warning("Failed to close KVS WebRTC session: %s", err)
