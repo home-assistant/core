@@ -113,7 +113,17 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up LocknAlert MQTT Alarm control panel through YAML and through MQTT discovery."""
+    """Set up LocknAlert MQTT alarm control panel entities for a config entry.
+
+    Delegates to :func:`~.entity.async_setup_entity_entry_helper` which
+    registers discovery and YAML-based entity creation.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        config_entry (ConfigEntry): The locknalert_mqtt config entry.
+        async_add_entities (AddConfigEntryEntitiesCallback): Callback used to
+            register newly discovered or configured entities with HA.
+    """
     async_setup_entity_entry_helper(
         hass,
         config_entry,
@@ -126,7 +136,12 @@ async def async_setup_entry(
 
 
 class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
-    """Representation of a LocknAlert MQTT Alarm status."""
+    """HA alarm control panel entity that bridges a LocknAlert MQTT alarm panel.
+
+    Subscribes to the configured state topic to receive alarm state updates and
+    publishes command payloads rendered through the command template to the
+    command topic when an arm/disarm/trigger action is invoked.
+    """
 
     _default_name = DEFAULT_NAME
     _entity_id_format = alarm.ENTITY_ID_FORMAT
@@ -134,11 +149,19 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
     @staticmethod
     def config_schema() -> vol.Schema:
-        """Return the config schema."""
+        """Return the discovery schema used to validate this entity's config.
+
+        Returns:
+            vol.Schema: The voluptuous schema for alarm control panel discovery.
+        """
         return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config: ConfigType) -> None:
-        """(Re)Setup the entity."""
+        """Apply a (new) config dict to the entity, wiring up templates and features.
+
+        Args:
+            config (ConfigType): Validated configuration dictionary for this entity.
+        """
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE),
             entity=self,
@@ -162,7 +185,16 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         self._attr_code_arm_required = bool(self._config[CONF_CODE_ARM_REQUIRED])
 
     def _state_message_received(self, msg: ReceiveMessage) -> None:
-        """Run when new MQTT message has been received."""
+        """Handle an incoming state MQTT message and update alarm state.
+
+        Renders the payload through the value template, validates it against the
+        known AlarmControlPanelState values, and writes the result to
+        ``_attr_alarm_state``.  Unexpected or empty payloads are logged and
+        discarded.
+
+        Args:
+            msg (ReceiveMessage): The received MQTT message containing topic and payload.
+        """
         payload = self._value_template(msg.payload)
         if not payload.strip():  # No output from template, ignore
             _LOGGER.debug(
@@ -192,19 +224,20 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
-        """(Re)Subscribe to topics."""
+        """Register topic subscriptions, replacing any previously registered ones."""
         self.add_subscription(
             CONF_STATE_TOPIC, self._state_message_received, {"_attr_alarm_state"}
         )
 
     async def _subscribe_topics(self) -> None:
-        """(Re)Subscribe to topics."""
+        """Activate the prepared topic subscriptions with the MQTT broker."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
-        """Send disarm command.
+        """Send the disarm command to the alarm via MQTT.
 
-        This method is a coroutine.
+        Args:
+            code (str | None): User-supplied disarm code, or ``None`` if not provided.
         """
         code_required: bool = self._config[CONF_CODE_DISARM_REQUIRED]
         if code_required and not self._validate_code(code, "disarming"):
@@ -213,9 +246,11 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await self._publish(code, payload)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
-        """Send arm home command.
+        """Send the arm-home command to the alarm via MQTT.
 
-        This method is a coroutine.
+        Args:
+            code (str | None): User-supplied arm code, or ``None`` if not
+                provided.
         """
         code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, "arming home"):
@@ -224,9 +259,11 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await self._publish(code, action)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
-        """Send arm away command.
+        """Send the arm-away command to the alarm via MQTT.
 
-        This method is a coroutine.
+        Args:
+            code (str | None): User-supplied arm code, or ``None`` if not
+                provided.
         """
         code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, "arming away"):
@@ -235,9 +272,11 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await self._publish(code, action)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
-        """Send arm night command.
+        """Send the arm-night command to the alarm via MQTT.
 
-        This method is a coroutine.
+        Args:
+            code (str | None): User-supplied arm code, or ``None`` if not
+                provided.
         """
         code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, "arming night"):
@@ -246,9 +285,11 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await self._publish(code, action)
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
-        """Send arm vacation command.
+        """Send the arm-vacation command to the alarm via MQTT.
 
-        This method is a coroutine.
+        Args:
+            code (str | None): User-supplied arm code, or ``None`` if not
+                provided.
         """
         code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, "arming vacation"):
@@ -257,9 +298,11 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await self._publish(code, action)
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
-        """Send arm custom bypass command.
+        """Send the arm-custom-bypass command to the alarm via MQTT.
 
-        This method is a coroutine.
+        Args:
+            code (str | None): User-supplied arm code, or ``None`` if not
+                provided.
         """
         code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, "arming custom bypass"):
@@ -268,9 +311,11 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await self._publish(code, action)
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
-        """Send trigger command.
+        """Send the trigger command to the alarm via MQTT.
 
-        This method is a coroutine.
+        Args:
+            code (str | None): User-supplied trigger code, or ``None`` if not
+                provided.
         """
         code_required: bool = self._config[CONF_CODE_TRIGGER_REQUIRED]
         if code_required and not self._validate_code(code, "triggering"):
@@ -279,13 +324,34 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await self._publish(code, action)
 
     async def _publish(self, code: str | None, action: str) -> None:
-        """Publish via MQTT."""
+        """Render the command template and publish the result to the command topic.
+
+        Args:
+            code (str | None): The user-supplied code, passed as the
+                ``code`` variable into the command template.
+            action (str): The alarm action payload (e.g. ``"ARM_AWAY"``),
+                passed as the ``action`` variable into the command template.
+        """
         variables = {"action": action, "code": code}
         payload = self._command_template(None, variables=variables)
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
     def _validate_code(self, code: str | None, state: str) -> bool:
-        """Validate given code."""
+        """Return True if *code* satisfies the configured code requirement.
+
+        Validation passes when no code is configured, when *code* exactly
+        matches the configured code, or when the configured code is one of the
+        remote-code sentinels (``REMOTE_CODE`` or ``REMOTE_CODE_TEXT``) and
+        a non-empty *code* was supplied.  Failures are logged as warnings.
+
+        Args:
+            code (str | None): The code supplied by the user, or ``None``.
+            state (str): Human-readable action description used in the warning
+                log (e.g. ``"disarming"``, ``"arming away"``).
+
+        Returns:
+            bool: ``True`` if the code is valid, ``False`` otherwise.
+        """
         conf_code: str | None = self._config.get(CONF_CODE)
         check = bool(
             conf_code is None

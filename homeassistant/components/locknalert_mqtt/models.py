@@ -54,15 +54,31 @@ class MqttOriginInfo(TypedDict, total=False):
 
 
 class EntityTopicState:
-    """Manage entity state write requests for subscribed topics."""
+    """Batch and drain HA entity state-write requests triggered by MQTT messages.
+
+    Each time a message arrives on a subscribed topic, one or more entities may
+    need their HA state updated.  Rather than writing state immediately inside
+    the per-subscription callback (which runs inside the paho message handler),
+    entities register a pending write here, and :meth:`process_write_state_requests`
+    drains the batch once per message after all callbacks have run.
+    """
 
     def __init__(self) -> None:
-        """Register topic."""
+        """Initialise with an empty pending-write registry."""
         self.subscribe_calls: dict[str, Entity] = {}
 
     @callback
     def process_write_state_requests(self, msg: MQTTMessage) -> None:
-        """Process the write state requests."""
+        """Drain all pending state-write requests triggered by *msg*.
+
+        Called once per incoming MQTT message after all subscription callbacks
+        have run.  Each registered entity has ``async_write_ha_state`` called;
+        errors are logged and do not abort processing of remaining entities.
+
+        Args:
+            msg (MQTTMessage): The paho MQTT message that triggered the writes,
+                used only for diagnostic logging when a write fails.
+        """
         while self.subscribe_calls:
             entity_id, entity = self.subscribe_calls.popitem()
             try:
@@ -87,13 +103,61 @@ class EntityTopicState:
 
     @callback
     def write_state_request(self, entity: Entity) -> None:
-        """Register write state request."""
+        """Register *entity* for a deferred state write.
+
+        The write is not performed immediately; it is deferred until
+        :meth:`process_write_state_requests` is called for the current message.
+        Registering the same entity twice before the batch is drained is safe —
+        the dict keyed by entity_id is idempotent.
+
+        Args:
+            entity (Entity): The entity whose HA state should be written after
+                the current message has been fully processed.
+        """
         self.subscribe_calls[entity.entity_id] = entity
 
 
 @dataclass
 class MqttData:
-    """Keep the MQTT entry data."""
+    """Runtime state for a single locknalert_mqtt config entry.
+
+    Stored in ``hass.data[DATA_MQTT]`` and shared by all modules that need
+    access to the MQTT client, discovery state, or reload machinery.
+
+    Attributes:
+        client (MQTT): The HA-aware MQTT client connected to the bridge.
+        config (list[ConfigType]): Parsed YAML configuration items for this
+            entry (``locknalert_mqtt:`` section from ``configuration.yaml``).
+        data_config_flow_lock (asyncio.Lock): Prevents concurrent config-flow
+            operations that touch shared entry data.
+        discovery_discovered_and_disabled (dict): Maps a discovery hash to an
+            entity registry index tuple for disabled-entity cleanup.
+        discovery_already_discovered (set): Discovery hashes that have
+            already been processed and are considered active.
+        discovery_pending_discovered (dict): Discovery hashes that have been
+            seen but whose setup is not yet complete.
+        discovery_registry_hooks (dict): Cancellable entity-registry hooks
+            registered during discovery, keyed by discovery hash.
+        discovery_unsubscribe (list[CALLBACK_TYPE]): Cancellables for the
+            MQTT discovery topic subscriptions.
+        integration_unsubscribe (dict[str, CALLBACK_TYPE]): Integration-level
+            MQTT topic subscriptions that are not tied to specific entities.
+        last_discovery (float): ``time.monotonic()`` timestamp of the most
+            recent discovery message, used for cooldown calculations.
+        platforms_loaded (set): Platform names that have been forwarded and
+            set up via the config entry.
+        reload_dispatchers (list[CALLBACK_TYPE]): Cancellables for update
+            listeners and discovery dispatchers registered during setup.
+        reload_handlers (dict[str, CALLBACK_TYPE]): Per-platform reload
+            callbacks invoked when the YAML configuration is reloaded.
+        reload_schema (dict[str, VolSchemaType]): Per-platform validation
+            schemas used when reloading YAML configuration.
+        state_write_requests (EntityTopicState): Batches deferred entity
+            state writes triggered by incoming MQTT messages.
+        subscriptions_to_restore (set[Subscription]): Subscriptions saved
+            during unload so they can be reinstated on reload.
+        tags (dict): Arbitrary per-device tag data indexed by device identifier.
+    """
 
     client: MQTT
     config: list[ConfigType]
@@ -125,7 +189,16 @@ class MqttData:
 
 @dataclass(slots=True)
 class MqttComponentConfig:
-    """(component, object_id, node_id, discovery_payload)."""
+    """Parsed component descriptor extracted from an MQTT discovery message.
+
+    Attributes:
+        component (str): Platform name, e.g. ``"alarm_control_panel"``.
+        object_id (str): Unique object identifier within the component.
+        node_id (str | None): Optional node (device) identifier that prefixes
+            the discovery topic; ``None`` when the topic has no node segment.
+        discovery_payload (MQTTDiscoveryPayload): The full discovery payload
+            dict from which this component config was extracted.
+    """
 
     component: str
     object_id: str

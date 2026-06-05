@@ -1,4 +1,9 @@
-"""Config flow for MQTT."""
+"""Config flow for the LocknAlert MQTT integration.
+
+Handles user-initiated setup, zeroconf discovery, re-authentication, broker
+settings validation, and subentry management for MQTT-connected LocknAlert
+bridge devices.
+"""
 
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
@@ -342,7 +347,20 @@ ALARM_CONTROL_PANEL_CODE_MODE = SelectSelector(
 
 @callback
 def default_alarm_control_panel_code(config: dict[str, Any]) -> str:
-    """Return alarm control panel code based on the stored code and code mode."""
+    """Return alarm control panel code based on the stored code and code mode.
+
+    Translates the ``alarm_control_panel_code_mode`` UI field back to the
+    underlying code value stored in the config entry, inserting or stripping
+    the magic remote-code sentinel strings as appropriate.
+
+    Args:
+        config (dict[str, Any]): Current component configuration including
+            ``alarm_control_panel_code_mode`` and optionally ``CONF_CODE``.
+
+    Returns:
+        str: The code value to pre-populate in the form, which may be a magic
+            sentinel string for remote validation modes or a plain local code.
+    """
     code: str
     if config["alarm_control_panel_code_mode"] in _CODE_VALIDATION_MODE:
         # Return magic value for remote code validation

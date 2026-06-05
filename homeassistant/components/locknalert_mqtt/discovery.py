@@ -89,7 +89,23 @@ MIGRATE_DISCOVERY_SCHEMA = vol.Schema(
 
 
 class MQTTDiscoveryPayload(dict[str, Any]):
-    """Class to hold and MQTT discovery payload and discovery data."""
+    """Class to hold an MQTT discovery payload and associated discovery metadata.
+
+    Extends ``dict[str, Any]`` so it can be used directly as the configuration
+    mapping while carrying extra bookkeeping attributes that are set after
+    parsing:
+
+    Attributes:
+        device_discovery (bool): ``True`` when this payload originates from a
+            device-based discovery topic (``homeassistant/device/…``).
+        migrate_discovery (bool): ``True`` when the payload carries a migration
+            request (``migrate_discovery`` / ``migr_discvry`` key) rather than
+            actual component configuration.
+        discovery_data (DiscoveryInfoType): Mapping that holds the discovery
+            hash, the raw payload reference, and the originating MQTT topic.
+            Populated by ``async_discovery_message_received`` before the
+            payload is dispatched.
+    """
 
     device_discovery: bool = False
     migrate_discovery: bool = False
@@ -98,7 +114,15 @@ class MQTTDiscoveryPayload(dict[str, Any]):
 
 @dataclass(frozen=True)
 class MQTTIntegrationDiscoveryConfig:
-    """Class to hold an integration discovery playload."""
+    """Class to hold an integration discovery payload.
+
+    Attributes:
+        integration (str): The integration domain that should handle the
+            discovered service (e.g. ``"tasmota"``).
+        msg (ReceiveMessage): The raw MQTT message that triggered discovery,
+            retained so it can be replayed if the resulting config entry is
+            later removed.
+    """
 
     integration: str
     msg: ReceiveMessage
@@ -106,8 +130,15 @@ class MQTTIntegrationDiscoveryConfig:
 
 @callback
 def _async_process_discovery_migration(payload: MQTTDiscoveryPayload) -> bool:
-    """Process a discovery migration request in the discovery payload."""
-    # Allow abbreviation
+    """Process a discovery migration request in the discovery payload.
+
+    Args:
+        payload (MQTTDiscoveryPayload): The payload to inspect and mutate.
+
+    Returns:
+        bool: ``True`` when a migration request was detected and processed
+        (the payload is cleared); ``False`` otherwise.
+    """
     if migr_discvry := (payload.pop("migr_discvry", None)):
         payload[CONF_MIGRATE_DISCOVERY] = migr_discvry
     if CONF_MIGRATE_DISCOVERY in payload:

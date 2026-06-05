@@ -23,7 +23,22 @@ ATTR_THIS = "this"
 def convert_outgoing_mqtt_payload(
     payload: PublishPayloadType,
 ) -> PublishPayloadType:
-    """Ensure correct raw MQTT payload is passed as bytes for publishing."""
+    r"""Convert a quoted bytes literal string to raw bytes before publishing.
+
+    When a Jinja2 template renders a ``bytes`` value it produces a string
+    such as ``"b'\x00\x01'"`` rather than the raw bytes object.  This
+    function detects that pattern and evaluates it back to ``bytes`` using
+    :func:`ast.literal_eval`.  All other payload types are returned unchanged.
+
+    Args:
+        payload (PublishPayloadType): The value to check and optionally
+            convert.  May be ``str``, ``bytes``, ``int``, ``float``, or
+            ``None``.
+
+    Returns:
+        PublishPayloadType: Raw ``bytes`` if *payload* was a quoted bytes
+            literal, otherwise the original *payload* unchanged.
+    """
     if isinstance(payload, str) and payload.startswith(("b'", 'b"')):
         try:
             native_object = literal_eval(payload)
@@ -37,7 +52,20 @@ def convert_outgoing_mqtt_payload(
 
 
 class MqttCommandTemplateException(ServiceValidationError):
-    """Handle MqttCommandTemplate exceptions."""
+    """Raised when a command template fails to render a publish payload.
+
+    Wraps the underlying :class:`~homeassistant.exceptions.TemplateError`
+    with additional context (entity id, template source, value) so that
+    the error appears as a user-readable service validation failure in the
+    Home Assistant UI.
+
+    Args:
+        base_exception (Exception): The original template rendering error.
+        command_template (str): The Jinja2 template source that failed.
+        value (PublishPayloadType): The payload value passed to the template.
+        entity_id (str | None): The entity id whose command triggered the
+            rendering, or ``None`` if called outside an entity context.
+    """
 
     _message: str
 
@@ -49,7 +77,7 @@ class MqttCommandTemplateException(ServiceValidationError):
         value: PublishPayloadType,
         entity_id: str | None = None,
     ) -> None:
-        """Initialize exception."""
+        """Initialise with structured translation placeholders and a log message."""
         super().__init__(base_exception, *args)
         value_log = str(value)
         self.translation_domain = DOMAIN
@@ -71,7 +99,19 @@ class MqttCommandTemplateException(ServiceValidationError):
 
 
 class MqttCommandTemplate:
-    """Class for rendering MQTT payload with command templates."""
+    """Renders Jinja2 command templates into MQTT publish payloads.
+
+    Wraps a Home Assistant :class:`~homeassistant.helpers.template.Template`
+    and injects ``value``, ``entity_id``, ``name``, and ``this`` variables
+    automatically so entity actions can produce dynamic payloads without
+    boilerplate.
+
+    Args:
+        command_template (template.Template | None): The Jinja2 template to
+            render, or ``None`` to pass values through unchanged.
+        entity (Entity | None): The entity whose state is exposed as ``this``
+            inside the template, or ``None`` for template-only contexts.
+    """
 
     def __init__(
         self,
@@ -79,7 +119,7 @@ class MqttCommandTemplate:
         *,
         entity: Entity | None = None,
     ) -> None:
-        """Instantiate a command template."""
+        """Initialise the template wrapper and optional entity reference."""
         self._template_state: template.TemplateStateFromEntityId | None = None
         self._command_template = command_template
         self._entity = entity
@@ -90,7 +130,26 @@ class MqttCommandTemplate:
         value: PublishPayloadType = None,
         variables: TemplateVarsType = None,
     ) -> PublishPayloadType:
-        """Render or convert the command template with given value or variables."""
+        """Render the command template and return the resulting publish payload.
+
+        If no template was supplied the *value* is returned directly.
+        The template receives ``value``, ``entity_id``, ``name``, ``this``,
+        and any extra *variables* as its render context.
+
+        Args:
+            value (PublishPayloadType): The base value exposed as ``value``
+                inside the template.  Defaults to ``None``.
+            variables (TemplateVarsType): Additional variables merged into
+                the render context, or ``None`` for no extras.
+
+        Returns:
+            PublishPayloadType: The rendered payload, already passed through
+                :func:`convert_outgoing_mqtt_payload` to handle bytes literals.
+
+        Raises:
+            MqttCommandTemplateException: If the template raises a
+                :class:`~homeassistant.exceptions.TemplateError`.
+        """
         if self._command_template is None:
             return value
 
@@ -124,7 +183,22 @@ class MqttCommandTemplate:
 
 
 class MqttValueTemplateException(TemplateError):
-    """Handle MqttValueTemplate exceptions."""
+    """Raised when a value template fails to render a received MQTT payload.
+
+    Wraps the underlying template error with the entity id, template source,
+    default value, and incoming payload so the failure can be logged with
+    enough context to diagnose the problem.
+
+    Args:
+        base_exception (Exception): The original template rendering error.
+        value_template (str): The Jinja2 template source that failed.
+        default (ReceivePayloadType | PayloadSentinel): The fallback value
+            that would have been used on failure, for logging purposes.
+        payload (ReceivePayloadType): The raw MQTT payload that was passed
+            to the template.
+        entity_id (str | None): The entity id being updated, or ``None``
+            if called outside an entity context.
+    """
 
     _message: str
 
@@ -137,7 +211,7 @@ class MqttValueTemplateException(TemplateError):
         payload: ReceivePayloadType,
         entity_id: str | None = None,
     ) -> None:
-        """Initialize exception."""
+        """Initialise with a human-readable error message."""
         super().__init__(base_exception, *args)
         entity_id_log = "" if entity_id is None else f" for entity '{entity_id}'"
         default_log = str(default)
@@ -156,7 +230,21 @@ class MqttValueTemplateException(TemplateError):
 
 
 class MqttValueTemplate:
-    """Class for rendering MQTT value template with possible json values."""
+    """Renders Jinja2 value templates against incoming MQTT payloads.
+
+    Wraps a Home Assistant :class:`~homeassistant.helpers.template.Template`
+    and injects ``entity_id``, ``name``, ``this``, and any static
+    *config_attributes* so that entity state sensors can transform raw
+    payloads into HA-compatible values without boilerplate.
+
+    Args:
+        value_template (template.Template | None): The Jinja2 template to
+            render, or ``None`` to pass payloads through unchanged.
+        entity (Entity | None): The entity whose state is exposed as ``this``
+            inside the template, or ``None`` for template-only contexts.
+        config_attributes (TemplateVarsType): Static variables merged into
+            the render context at construction time, or ``None`` for none.
+    """
 
     def __init__(
         self,
@@ -165,7 +253,7 @@ class MqttValueTemplate:
         entity: Entity | None = None,
         config_attributes: TemplateVarsType = None,
     ) -> None:
-        """Instantiate a value template."""
+        """Initialise the template wrapper, entity reference, and static attributes."""
         self._template_state: template.TemplateStateFromEntityId | None = None
         self._value_template = value_template
         self._config_attributes = config_attributes
@@ -178,7 +266,33 @@ class MqttValueTemplate:
         default: ReceivePayloadType | PayloadSentinel = PayloadSentinel.NONE,
         variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
-        """Render with possible json value or pass-though a received MQTT value."""
+        """Render the value template against an incoming MQTT payload.
+
+        If no template was supplied the *payload* is returned directly.
+        The template is rendered with HA's JSON-aware method, which
+        automatically parses JSON payloads and exposes their fields as
+        template variables.  When *default* is ``PayloadSentinel.NONE`` any
+        template error raises an exception; otherwise the error is logged and
+        *default* is returned.
+
+        Args:
+            payload (ReceivePayloadType): The raw MQTT message payload
+                (``str`` or ``bytes``) to render the template against.
+            default (ReceivePayloadType | PayloadSentinel): The value to
+                return on template error, or ``PayloadSentinel.NONE`` to
+                raise instead.
+            variables (TemplateVarsType): Extra variables merged into the
+                render context, or ``None`` for none.
+
+        Returns:
+            ReceivePayloadType: The rendered result, which may be a
+                ``str``, ``int``, ``float``, ``list``, ``dict``, or the
+                *default* value on error.
+
+        Raises:
+            MqttValueTemplateException: If the template raises and *default*
+                is ``PayloadSentinel.NONE``.
+        """
         rendered_payload: ReceivePayloadType
 
         if self._value_template is None:

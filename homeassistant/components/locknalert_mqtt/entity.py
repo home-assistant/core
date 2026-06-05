@@ -1,4 +1,9 @@
-"""MQTT (entity) component mixins and helpers."""
+"""MQTT (entity) component mixins and helpers.
+
+Provides base classes, mixins, and helper functions used by all MQTT platform
+entity implementations, including availability tracking, JSON attribute
+subscriptions, discovery lifecycle management, and device registry integration.
+"""
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine

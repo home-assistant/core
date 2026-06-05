@@ -52,7 +52,23 @@ def async_fire_mqtt_message(
     retain: bool = False,
     properties: mqtt_client.Properties | None = None,
 ) -> None:
-    """Fire an MQTT message through the LocknAlert MQTT integration."""
+    """Simulate an incoming MQTT message through the locknalert_mqtt integration.
+
+    Constructs a paho :class:`~paho.mqtt.client.MQTTMessage` and passes it
+    directly to the integration's ``_async_mqtt_on_message`` handler, bypassing
+    the broker entirely.  String payloads are automatically encoded to UTF-8.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        topic (str): The MQTT topic of the simulated message.
+        payload (bytes | str): The message payload.  Strings are encoded to
+            UTF-8 bytes automatically.
+        qos (int): MQTT quality-of-service level of the simulated message.
+        retain (bool): Whether the simulated message should be flagged as
+            retained.
+        properties (mqtt_client.Properties | None): Optional MQTT v5 properties
+            to attach to the message.
+    """
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
 
@@ -925,7 +941,17 @@ type _StateDataType = (
 
 
 def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
-    """Test of a call."""
+    """Flatten all recorded paho subscribe call arguments into a single list.
+
+    Handles both single-topic and batch-topic paho subscribe calls.
+
+    Args:
+        mqtt_client_mock (MqttMockPahoClient): The mock paho client whose
+            ``subscribe.mock_calls`` are inspected.
+
+    Returns:
+        list[Any]: All subscribe call argument tuples, flattened one level.
+    """
     all_calls = []
     for call_l1 in mqtt_client_mock.subscribe.mock_calls:
         if isinstance(call_l1[1][0], list):
@@ -941,11 +967,23 @@ def help_custom_config(
     mqtt_base_config: ConfigType,
     mqtt_entity_configs: Iterable[ConfigType],
 ) -> ConfigType:
-    """Tweak a default config for parametrization.
+    """Build a parametrised MQTT config from a base config plus per-entity overrides.
 
-    Returns a custom config to be used as parametrization for with hass_config,
-    based on the supplied mqtt_base_config and updated with mqtt_entity_configs.
-    For each item in mqtt_entity_configs an entity instance is added to the config.
+    Deep-copies *mqtt_base_config* and replaces the entity list under
+    ``locknalert_mqtt.<mqtt_entity_domain>`` with one entry per item in
+    *mqtt_entity_configs*, each merged on top of the base entity config.
+
+    Args:
+        mqtt_entity_domain (str): The HA platform domain, e.g.
+            ``"alarm_control_panel"``.
+        mqtt_base_config (ConfigType): The base ``{locknalert_mqtt: {domain: {...}}}``
+            config dict to start from.
+        mqtt_entity_configs (Iterable[ConfigType]): Dicts of overrides; one
+            entity instance is generated per item.
+
+    Returns:
+        ConfigType: A new config dict with the entity list replaced by the
+            generated instances.
     """
     config: ConfigType = copy.deepcopy(mqtt_base_config)
     entity_instances: list[ConfigType] = []
@@ -962,7 +1000,17 @@ def help_custom_config(
 async def help_test_availability_when_connection_lost(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, domain: str
 ) -> None:
-    """Test availability after MQTT disconnection."""
+    """Verify a platform entity becomes unavailable when the MQTT connection drops.
+
+    Simulates a disconnection by setting ``mqtt_mock.connected = False`` and
+    dispatching :data:`~.const.MQTT_CONNECTION_STATE`.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator for
+            the locknalert_mqtt config entry.
+        domain (str): HA platform domain under test (e.g. ``"alarm_control_panel"``).
+    """
     mqtt_mock = await mqtt_mock_entry()
     await hass.async_block_till_done()
 
@@ -983,7 +1031,18 @@ async def help_test_availability_without_topic(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test availability without defined availability topic."""
+    """Verify a platform entity is available when no availability topic is configured.
+
+    Asserts that ``availability_topic`` is absent from *config* and that the
+    entity state is not ``STATE_UNAVAILABLE`` after setup.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Entity config dict that must not contain
+            ``availability_topic``.
+    """
     assert "availability_topic" not in config[mqtt.DOMAIN][domain]
     await mqtt_mock_entry()
     await hass.async_block_till_done()
@@ -1001,9 +1060,23 @@ async def help_test_default_availability_payload(
     state_topic: str | None = None,
     state_message: str | None = None,
 ) -> None:
-    """Test availability by default payload with defined topic.
+    """Verify availability tracking with the default ``online`` / ``offline`` payloads.
 
-    This is a test helper for the MqttAvailability mixin.
+    Injects ``availability_topic`` into *config*, sets up the entry, then
+    fires ``"online"`` and ``"offline"`` messages and asserts entity state
+    changes.  Optionally verifies that a state message received while offline
+    does not make the entity available until an ``"online"`` payload arrives.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict.
+        no_assumed_state (bool): When ``True``, also asserts that the entity
+            does not have ``assumed_state`` after becoming available.
+        state_topic (str | None): Optional extra topic to fire a state message
+            on while the entity is offline, to confirm it stays offline.
+        state_message (str | None): Payload for *state_topic*.
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
@@ -1048,9 +1121,22 @@ async def help_test_custom_availability_payload(
     state_topic: str | None = None,
     state_message: str | None = None,
 ) -> None:
-    """Test availability by custom payload with defined topic.
+    """Verify availability tracking with custom ``good`` / ``nogood`` payloads.
 
-    This is a test helper for the MqttAvailability mixin.
+    Injects ``availability_topic``, ``payload_available = "good"``, and
+    ``payload_not_available = "nogood"`` into *config*, then asserts entity
+    state changes in the same way as
+    :func:`help_test_default_availability_payload`.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict.
+        no_assumed_state (bool): When ``True``, also asserts no
+            ``assumed_state`` after becoming available.
+        state_topic (str | None): Optional topic to fire while offline.
+        state_message (str | None): Payload for *state_topic*.
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
@@ -1093,9 +1179,16 @@ async def help_test_setting_attribute_via_mqtt_json_message(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test the setting of attribute via MQTT with JSON payload.
+    """Verify JSON-formatted MQTT payloads populate entity attributes.
 
-    This is a test helper for the MqttAttributes mixin.
+    Injects ``json_attributes_topic = "attr-topic"`` into *config*, fires a
+    JSON payload ``{"val": "100"}`` and asserts the ``val`` attribute is set.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict.
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
@@ -1116,9 +1209,19 @@ async def help_test_setting_blocked_attribute_via_mqtt_json_message(
     config: ConfigType,
     extra_blocked_attributes: frozenset[str] | None,
 ) -> None:
-    """Test the setting of blocked attribute via MQTT with JSON payload.
+    """Verify that blocked entity attributes cannot be overwritten via MQTT JSON.
 
-    This is a test helper for the MqttAttributes mixin.
+    Fires JSON payloads targeting every attribute in
+    :data:`~.entity.MQTT_ATTRIBUTES_BLOCKED` and in *extra_blocked_attributes*
+    and asserts none of them are reflected on the entity state.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict used for discovery setup.
+        extra_blocked_attributes (frozenset[str] | None): Additional platform-
+            specific attributes that should also be blocked, or ``None``.
     """
     await mqtt_mock_entry()
     extra_blocked_attribute_list = list(extra_blocked_attributes or [])
@@ -1148,9 +1251,17 @@ async def help_test_setting_attribute_with_template(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test the setting of attribute via MQTT with JSON payload.
+    """Verify that a ``json_attributes_template`` transforms the JSON payload before extracting attributes.
 
-    This is a test helper for the MqttAttributes mixin.
+    Injects ``json_attributes_topic`` and a template that selects the ``Timer1``
+    sub-object, fires a nested JSON payload, and asserts that the ``Arm`` and
+    ``Time`` attributes are correctly extracted from the sub-object.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict.
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
@@ -1178,9 +1289,18 @@ async def help_test_update_with_json_attrs_not_dict(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test attributes get extracted from a JSON result.
+    """Verify that a non-dict JSON payload is rejected and logged as an error.
 
-    This is a test helper for the MqttAttributes mixin.
+    Fires a JSON array payload on the attributes topic and asserts the ``val``
+    attribute is not set and that ``"JSON result was not a dictionary"`` appears
+    in the log.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        caplog (pytest.LogCaptureFixture): Log capture fixture for assertion.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict.
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
@@ -1202,9 +1322,18 @@ async def help_test_update_with_json_attrs_bad_json(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test JSON validation of attributes.
+    """Verify that a malformed JSON attributes payload is rejected and logged as an error.
 
-    This is a test helper for the MqttAttributes mixin.
+    Fires an invalid JSON string on the attributes topic and asserts that the
+    ``val`` attribute is absent and that ``"Erroneous JSON"`` appears in the
+    log.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        caplog (pytest.LogCaptureFixture): Log capture fixture for assertion.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict.
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
@@ -1225,9 +1354,17 @@ async def help_test_discovery_update_attr(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test update of discovered MQTTAttributes.
+    """Verify that the attributes topic subscription updates correctly after a discovery re-config.
 
-    This is a test helper for the MqttAttributes mixin.
+    Sets up with ``json_attributes_topic = "attr-topic1"``, publishes a
+    value, then re-discovers with ``"attr-topic2"`` and verifies the old
+    subscription is cancelled and the new one is active.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict.
     """
     await mqtt_mock_entry()
     # Add JSON attributes settings to config
@@ -1262,7 +1399,14 @@ async def help_test_discovery_update_attr(
 async def help_test_unique_id(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, domain: str
 ) -> None:
-    """Test unique id option only creates one entity per unique_id."""
+    """Verify that duplicate unique_ids result in only one entity being created.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator
+            that must have been configured with duplicate unique_ids.
+        domain (str): HA platform domain under test.
+    """
     await mqtt_mock_entry()
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(domain)) == 1
@@ -1274,9 +1418,16 @@ async def help_test_discovery_removal(
     domain: str,
     data: str,
 ) -> None:
-    """Test removal of discovered component.
+    """Verify that an entity is removed when an empty discovery payload is received.
 
-    This is a test helper for the MqttDiscoveryUpdate mixin.
+    Fires *data* on the discovery topic to create the entity, then fires an
+    empty string to remove it, and asserts the entity state is gone.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        data (str): JSON discovery payload string for the entity to create.
     """
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
@@ -1302,9 +1453,25 @@ async def help_test_discovery_update(
     state_data1: _StateDataType | None = None,
     state_data2: _StateDataType | None = None,
 ) -> None:
-    """Test update of discovered component.
+    """Verify entity config is updated correctly when a new discovery payload arrives.
 
-    This is a test helper for the MqttDiscoveryUpdate mixin.
+    Fires *discovery_config1* (with extra unknown keys to test forward-compat),
+    optionally fires *state_data1* messages and asserts their effects, then
+    fires *discovery_config2* and asserts the entity is updated (renamed to
+    ``"Milk"``).
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        discovery_config1 (DiscoveryInfoType): First discovery payload dict
+            (entity named ``"Beer"``).
+        discovery_config2 (DiscoveryInfoType): Second discovery payload dict
+            (entity named ``"Milk"``).
+        state_data1 (_StateDataType | None): Optional MQTT messages to fire
+            and assert after the first discovery, or ``None``.
+        state_data2 (_StateDataType | None): Optional MQTT messages to fire
+            and assert after the second discovery, or ``None``.
     """
     await mqtt_mock_entry()
     # Add some future configuration to the configurations
@@ -1364,9 +1531,18 @@ async def help_test_discovery_update_unchanged(
     data1: str,
     discovery_update: MagicMock,
 ) -> None:
-    """Test update of discovered component without changes.
+    """Verify that an identical discovery payload does not trigger an entity update.
 
-    This is a test helper for the MqttDiscoveryUpdate mixin.
+    Fires *data1* twice on the discovery topic and asserts that
+    *discovery_update* is not called on the second fire.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        data1 (str): JSON discovery payload string.
+        discovery_update (MagicMock): Mock of the entity's discovery-update
+            method whose ``called`` attribute is checked.
     """
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
@@ -1389,7 +1565,21 @@ async def help_test_discovery_broken(
     data1: str,
     data2: str,
 ) -> None:
-    """Test handling of bad discovery message."""
+    """Verify that a malformed discovery payload is rejected and a valid one still works.
+
+    Fires *data1* (expected to fail validation) and asserts no ``beer`` entity
+    is created, then fires *data2* (valid) and asserts the ``milk`` entity is
+    created.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        data1 (str): Invalid JSON discovery payload (entity named ``"Beer"``
+            that should be rejected).
+        data2 (str): Valid JSON discovery payload (entity named ``"Milk"``
+            that should succeed).
+    """
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
     await hass.async_block_till_done()
@@ -1419,7 +1609,29 @@ async def help_test_encoding_subscribable_topics(
     init_payload: tuple[str, str] | None = None,
     skip_raw_test: bool = False,
 ) -> None:
-    """Test handling of incoming encoded payload."""
+    """Verify a subscribable topic correctly handles UTF-8, UTF-16, and raw-bytes encoding.
+
+    Creates three discovery entities with different ``encoding`` settings
+    (``"utf-8"``, ``"utf-16"``, ``""``) and fires the same logical value
+    encoded appropriately for each, then asserts the resulting entity state
+    or attribute value matches the expected output.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict.
+        topic (str): Config key of the subscribable topic being tested
+            (e.g. ``"state_topic"``).
+        value (str): The string value to encode and publish.
+        attribute (str | None): Entity attribute to read for the assertion,
+            or ``None`` to read ``state.state``.
+        attribute_value (Any): Expected attribute value, or ``None`` to use
+            *value* directly.
+        init_payload (tuple[str, str] | None): ``(topic_key, payload_string)``
+            to fire before the test payload, e.g. to switch the device on.
+        skip_raw_test (bool): When ``True``, skip the raw-bytes encoding test.
+    """
 
     async def _test_encoding(
         hass: HomeAssistant,
@@ -1548,9 +1760,17 @@ async def help_test_entity_device_info_with_identifier(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test device registry integration.
+    """Verify device registry fields are populated from discovery config using identifiers.
 
-    This is a test helper for the MqttDiscoveryUpdate mixin.
+    Discovers an entity with :data:`DEFAULT_CONFIG_DEVICE_INFO_ID` and asserts
+    that name, manufacturer, model, hw_version, sw_version, area, and
+    configuration_url are correctly written to the device registry.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict (device fields are injected).
     """
     await mqtt_mock_entry()
     # Add device settings to config
@@ -1584,9 +1804,17 @@ async def help_test_entity_device_info_with_connection(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test device registry integration.
+    """Verify device registry fields are populated from discovery config using MAC connection.
 
-    This is a test helper for the MqttDiscoveryUpdate mixin.
+    Discovers an entity with :data:`DEFAULT_CONFIG_DEVICE_INFO_MAC` and asserts
+    the connection tuple, name, manufacturer, model, and area are correctly
+    written to the device registry.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict (device fields are injected).
     """
     await mqtt_mock_entry()
     # Add device settings to config
@@ -1622,7 +1850,17 @@ async def help_test_entity_device_info_remove(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test device registry remove."""
+    """Verify that the device and entity registry entries are removed when an empty discovery payload is received.
+
+    Discovers an entity and then fires an empty discovery payload; asserts
+    both the entity and device registry entries are gone.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict (device fields are injected).
+    """
     await mqtt_mock_entry()
     # Add device settings to config
     config = copy.deepcopy(config[mqtt.DOMAIN][domain])
@@ -1654,9 +1892,16 @@ async def help_test_entity_device_info_update(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test device registry update.
+    """Verify that device registry fields update when a discovery re-config changes them.
 
-    This is a test helper for the MqttDiscoveryUpdate mixin.
+    Discovers an entity with name ``"Beer"``, then re-discovers with name
+    ``"Milk"`` and asserts the device registry entry is updated.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict (device fields are injected).
     """
     await mqtt_mock_entry()
     # Add device settings to config
@@ -1692,9 +1937,20 @@ async def help_test_entity_name(
     expected_friendly_name: str | None = None,
     device_class: str | None = None,
 ) -> None:
-    """Test device name setup with and without a device_class set.
+    """Verify entity naming with and without a device_class override.
 
-    This is a test helper for the _setup_common_attributes_from_config mixin.
+    When *device_class* is supplied the entity ``name`` is removed from the
+    config so HA derives the name from the device class.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict (device fields injected).
+        expected_friendly_name (str | None): Expected ``state.name`` after
+            ``"Beer "`` prefix is prepended, or ``None`` to skip assertion.
+        device_class (str | None): Device class to set on the entity config,
+            or ``None`` to use the configured name.
     """
     await mqtt_mock_entry()
     # Add device settings to config
@@ -1730,7 +1986,19 @@ async def help_test_entity_id_update_subscriptions(
     config: ConfigType,
     topics: list[str] | None = None,
 ) -> None:
-    """Test MQTT subscriptions are managed when entity_id is updated."""
+    """Verify MQTT subscriptions are re-registered when an entity_id is changed.
+
+    Renames the entity from ``test`` to ``milk`` via the entity registry and
+    asserts that all topic subscriptions are re-created for the new entity_id.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict (``unique_id`` injected).
+        topics (list[str] | None): Expected subscription topics; defaults to
+            ``["avty-topic", "test-topic"]`` if ``None``.
+    """
     # Add unique_id to config
     config = copy.deepcopy(config)
     config[mqtt.DOMAIN][domain]["unique_id"] = "TOTALLY_UNIQUE"
@@ -1785,7 +2053,19 @@ async def help_test_entity_id_update_discovery_update(
     config: ConfigType,
     topic: str | None = None,
 ) -> None:
-    """Test MQTT discovery update after entity_id is updated."""
+    """Verify discovery re-config works correctly after an entity_id rename.
+
+    Renames the entity then fires an updated discovery payload and verifies
+    that the entity remains functional under its new id.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict (``unique_id`` injected).
+        topic (str | None): Availability topic to subscribe to; defaults to
+            ``"avty-topic"`` if ``None``.
+    """
     # Add unique_id to config
     await mqtt_mock_entry()
     config = copy.deepcopy(config)
@@ -1831,7 +2111,17 @@ async def help_test_entity_icon_and_entity_picture(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test entity picture and icon."""
+    """Verify entity icon and entity_picture are set from discovery config.
+
+    Discovers three entity variants — no icon/picture, with entity_picture,
+    and with icon — and asserts that each attribute is correctly set or absent.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict (device fields injected).
+    """
     await mqtt_mock_entry()
     # Add device settings to config
     config = copy.deepcopy(config[mqtt.DOMAIN][domain])
@@ -1893,7 +2183,32 @@ async def help_test_publishing_with_custom_encoding(
     tpl_par: str = "value",
     tpl_output: PublishPayloadType = None,
 ) -> None:
-    """Test a service with publishing MQTT payload with different encoding."""
+    """Verify payload encoding behaviour for a command-publishing service.
+
+    Creates five discovery entities with different encoding configurations
+    (UTF-8, UTF-16, raw/no encoding, invalid encoding, and template+raw),
+    calls *service* on each, and asserts that the MQTT client receives the
+    payload in the expected encoding or that the appropriate error is logged.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        caplog (pytest.LogCaptureFixture): Log capture fixture for error
+            assertion.
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict.
+        service (str): The HA service name to call (e.g. ``"alarm_disarm"``).
+        topic (str): Config key of the command topic (e.g.
+            ``"command_topic"``).
+        parameters (dict[str, Any] | None): Extra service call data beyond
+            ``entity_id``, or ``None``.
+        payload (str): The expected publish payload string.
+        template (str | None): Config key of the command template to test with
+            raw encoding, or ``None`` to skip that sub-test.
+        tpl_par (str): Template variable name used in the template expression.
+        tpl_output (PublishPayloadType): Expected output when the template
+            renders with raw encoding, or ``None`` to use the default.
+    """
     # prepare config for tests
     test_config: dict[str, dict[str, Any]] = {
         "test1": {"encoding": None, "cmd_tpl": False},
@@ -2004,7 +2319,19 @@ async def help_test_reloadable(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test reloading an MQTT platform."""
+    """Verify that calling the reload service replaces YAML-configured entities.
+
+    Starts the entry with two old entities, then triggers a reload with three
+    new entities and asserts that only the new ones exist afterwards.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_client_mock (MqttMockPahoClient): The mock paho client; its
+            ``connect`` return value is set to ``0`` (success).
+        domain (str): HA platform domain under test.
+        config (ConfigType): Base entity config dict used to generate old and
+            new entity configurations.
+    """
     # Set up with empty config
     config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     # Create and test an old config of 2 entities based on the config supplied
@@ -2062,7 +2389,15 @@ async def help_test_reloadable(
 
 
 async def help_test_unload_config_entry(hass: HomeAssistant) -> None:
-    """Test unloading the MQTT config entry."""
+    """Verify the locknalert_mqtt config entry unloads cleanly.
+
+    Asserts the entry is currently ``LOADED``, calls ``async_unload``, and
+    then asserts it transitions to ``NOT_LOADED``.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance with a loaded
+            locknalert_mqtt config entry.
+    """
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     assert mqtt_config_entry.state is ConfigEntryState.LOADED
 
@@ -2079,7 +2414,19 @@ async def help_test_unload_config_entry_with_platform(
     domain: str,
     config: dict[str, dict[str, Any]],
 ) -> None:
-    """Test unloading the MQTT config entry with a specific platform domain."""
+    """Verify that both YAML-configured and discovery-created entities are removed on unload.
+
+    Sets up one entity via YAML and one via discovery, unloads the entry, and
+    asserts both entities are gone.  Also verifies that a discovery message
+    fired after unload does not recreate the entity.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_mock_entry (MqttMockHAClientGenerator): Entry setup generator.
+        domain (str): HA platform domain under test.
+        config (dict[str, dict[str, Any]]): Base config used for both YAML and
+            discovery setup.
+    """
     # prepare setup through configuration.yaml
     config_setup: dict[str, dict[str, Any]] = copy.deepcopy(config)
     config_setup[mqtt.DOMAIN][domain]["name"] = "config_setup"
@@ -2121,7 +2468,19 @@ async def help_test_unload_config_entry_with_platform(
 async def help_test_skipped_async_ha_write_state(
     hass: HomeAssistant, topic: str, payload1: str, payload2: str
 ) -> None:
-    """Test entity.async_ha_write_state is only called on changes."""
+    """Verify ``async_write_ha_state`` is only called when the state actually changes.
+
+    Fires *payload1* and asserts one write, then fires *payload2* (same value)
+    and asserts no additional write, then fires *payload1* again and asserts
+    another write.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        topic (str): MQTT topic to publish test payloads on.
+        payload1 (str): First payload value.
+        payload2 (str): Second payload value (expected to produce the same
+            entity state as *payload1* so the write is skipped).
+    """
     with patch(
         "homeassistant.components.locknalert_mqtt.entity.MqttEntity.async_write_ha_state"
     ) as mock_async_ha_write_state:

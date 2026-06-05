@@ -83,6 +83,19 @@ DEFAULT_FEATURES = (
 
 
 def _alarm_config(**extra) -> dict:
+    """Build a minimal locknalert_mqtt alarm control panel config dict.
+
+    Merges *extra* keyword arguments into the base config containing
+    ``name``, ``state_topic``, and ``command_topic``.
+
+    Args:
+        **extra: Additional config keys and values to merge into the base
+            config (e.g. ``code="1234"`` or ``code_arm_required=False``).
+
+    Returns:
+        dict: A ``{locknalert_mqtt: {alarm_control_panel: ...}}`` config dict
+            suitable for use as ``hass_config`` fixture data.
+    """
     base = {
         "name": "test",
         "state_topic": "alarm/state",

@@ -54,7 +54,19 @@ def publish(
     retain: bool | None = False,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
-    """Publish message to an MQTT topic."""
+    """Schedule an MQTT publish as a fire-and-forget task.
+
+    Delegates to async_publish via hass.async_create_task so callers
+    do not need to await the result.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        topic (str): MQTT topic to publish to.
+        payload (PublishPayloadType): Message payload.
+        qos (int | None): MQTT quality-of-service level (0, 1, or 2).
+        retain (bool | None): Whether the broker should retain the message.
+        encoding (str | None): Encoding used to convert non-bytes payloads.
+    """
     hass.async_create_task(async_publish(hass, topic, payload, qos, retain, encoding))
 
 
@@ -66,7 +78,23 @@ async def async_publish(
     retain: bool | None = False,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
-    """Publish message to an MQTT topic."""
+    """Publish a message to an MQTT topic asynchronously.
+
+    Encodes non-bytes payloads according to ``encoding`` before forwarding
+    them to the underlying client.  Raises if the integration is not set up.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        topic (str): MQTT topic to publish to.
+        payload (PublishPayloadType): Message payload.
+        qos (int | None): MQTT quality-of-service level (0, 1, or 2).
+        retain (bool | None): Whether the broker should retain the message.
+        encoding (str | None): Encoding used to convert non-bytes payloads.
+
+    Raises:
+        HomeAssistantError: If the integration is not configured or the
+            payload cannot be encoded with the requested encoding.
+    """
     if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             translation_key="mqtt_not_setup_cannot_publish",
@@ -112,14 +140,25 @@ def async_on_subscribe_done(
     qos: int,
     on_subscribe_status: CALLBACK_TYPE,
 ) -> CALLBACK_TYPE:
-    """Call on_subscribe_done when the matched subscription was completed.
+    """Invoke a callback once the given topic subscription is acknowledged.
 
-    If a subscription is already present the callback will call
-    on_subscribe_status directly.
-    Call the returned callback to stop and cleanup status monitoring.
+    If an active (non-pending) subscription for the topic already exists,
+    ``on_subscribe_status`` is scheduled immediately via the event loop.
+    Otherwise it is called when the broker acknowledges the subscription.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        topic (str): The MQTT topic being monitored.
+        qos (int): The QoS level of the subscription to monitor.
+        on_subscribe_status (CALLBACK_TYPE): Callable invoked once the
+            subscription is confirmed.
+
+    Returns:
+        CALLBACK_TYPE: Call this to stop monitoring the subscription status.
     """
 
     async def _sync_mqtt_subscribe(subscriptions: list[tuple[str, int]]) -> None:
+        """Dispatch on_subscribe_status when the target subscription appears."""
         if (topic, qos) not in subscriptions:
             return
         hass.loop.call_soon(on_subscribe_status)
@@ -145,9 +184,19 @@ async def async_subscribe(
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> CALLBACK_TYPE:
-    """Subscribe to an MQTT topic.
+    """Subscribe to an MQTT topic and return an unsubscribe callback.
 
-    Call the return value to unsubscribe.
+    Thin async wrapper around async_subscribe_internal.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        topic (str): MQTT topic filter to subscribe to.
+        msg_callback (MessageCallbackType): Callable invoked for each received message.
+        qos (int): MQTT quality-of-service level for the subscription.
+        encoding (str | None): Encoding used to decode incoming message payloads.
+
+    Returns:
+        CALLBACK_TYPE: Call this to remove the subscription.
     """
     return async_subscribe_internal(hass, topic, msg_callback, qos, encoding)
 
@@ -161,13 +210,24 @@ def async_subscribe_internal(
     encoding: str | None = DEFAULT_ENCODING,
     job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
-    """Subscribe to an MQTT topic.
+    """Subscribe to an MQTT topic (internal API; subject to change without notice).
 
-    This function is internal to the MQTT integration
-    and may change at any time. It should not be considered
-    a stable API.
+    Delegates directly to the underlying MQTT client after validating that
+    the integration is configured.
 
-    Call the return value to unsubscribe.
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        topic (str): MQTT topic filter to subscribe to.
+        msg_callback (MessageCallbackType): Callable invoked for each received message.
+        qos (int): MQTT quality-of-service level for the subscription.
+        encoding (str | None): Encoding used to decode incoming message payloads.
+        job_type (HassJobType | None): Execution model hint for the callback.
+
+    Returns:
+        CALLBACK_TYPE: Call this to remove the subscription.
+
+    Raises:
+        HomeAssistantError: If the integration is not configured.
     """
     try:
         mqtt_data = hass.data[DATA_MQTT]
@@ -195,7 +255,26 @@ def subscribe(
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> Callable[[], None]:
-    """Subscribe to an MQTT topic."""
+    """Subscribe to an MQTT topic from a non-async (threaded) context.
+
+    Schedules :func:`async_subscribe` on the event-loop thread using
+    :func:`asyncio.run_coroutine_threadsafe` and blocks until the
+    subscription is registered.  The returned callable uses
+    ``loop.call_soon_threadsafe`` to cancel the subscription without
+    the overhead of ``hass.add_job``.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        topic (str): MQTT topic filter to subscribe to.
+        msg_callback (MessageCallbackType): Callable invoked for each
+            received message.
+        qos (int): MQTT quality-of-service level for the subscription.
+        encoding (str | None): Encoding used to decode incoming payloads.
+
+    Returns:
+        Callable[[], None]: Call this from any thread to remove the
+            subscription.
+    """
     async_remove = asyncio.run_coroutine_threadsafe(
         async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
@@ -212,14 +291,32 @@ def subscribe(
 
 
 class MQTT(_LibMQTT):
-    """HA-aware MQTT client backed by aiolocknalert."""
+    """HA-aware MQTT client that wires aiolocknalert into the HA event system.
+
+    Subclasses :class:`aiolocknalert.client.MQTT` and connects the three
+    library callback hooks to HA dispatcher signals and lifecycle events:
+
+    * ``on_connection_state_changed`` → :data:`~.const.MQTT_CONNECTION_STATE`
+    * ``on_subscriptions_acknowledged`` → :data:`~.const.MQTT_PROCESSED_SUBSCRIPTIONS`
+    * ``on_reauth_required`` → :meth:`~homeassistant.config_entries.ConfigEntry.async_start_reauth`
+
+    Also registers ``EVENT_HOMEASSISTANT_STARTED`` and ``EVENT_HOMEASSISTANT_STOP``
+    listeners so the client lifecycle is tied to HA startup and shutdown.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        config_entry (ConfigEntry): The locknalert_mqtt config entry owning
+            this client, used for reauth triggering.
+        conf (dict): Merged config-entry data and options containing broker
+            address, credentials, TLS settings, birth/will messages, etc.
+    """
 
     _mqtt_data: MqttData
 
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, conf: dict
     ) -> None:
-        """Initialize the MQTT client."""
+        """Wire HA dispatcher signals and lifecycle listeners to the library client."""
         super().__init__(conf)
         self.hass = hass
         self.config_entry = config_entry
@@ -246,11 +343,32 @@ class MQTT(_LibMQTT):
         _userdata: None,
         msg: mqtt.MQTTMessage,
     ) -> None:
+        """Handle an incoming MQTT message and drain pending HA state writes.
+
+        Calls the parent implementation to dispatch the message to all
+        matching subscriptions, then flushes any deferred
+        :meth:`~.models.EntityTopicState.write_state_request` entries so
+        entity states are written to HA in a single batch per message.
+
+        Args:
+            _mqttc (mqtt.Client): The paho client instance (unused).
+            _userdata (None): paho user data (unused).
+            msg (mqtt.MQTTMessage): The received paho MQTT message.
+        """
         super()._async_mqtt_on_message(_mqttc, _userdata, msg)
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
     async def async_initialize(self, mqtt_data: MqttData) -> None:
-        """Store HA-specific data then start the MQTT client."""
+        """Store runtime data and start the MQTT client.
+
+        Saves *mqtt_data* for use by :meth:`_async_mqtt_on_message`, then
+        lazily imports the ``aiolocknalert.async_client`` module under an HA
+        setup-phase pause so the import is tracked correctly, before calling
+        the library's ``async_start`` to initialise the paho client.
+
+        Args:
+            mqtt_data (MqttData): The runtime data store for this config entry.
+        """
         self._mqtt_data = mqtt_data
         with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PACKAGES):
             await async_import_module(self.hass, "aiolocknalert.async_client")
@@ -265,7 +383,27 @@ class MQTT(_LibMQTT):
         encoding: str | None = None,
         job_type: HassJobType | None = None,
     ) -> Callable[[], None]:
-        """Set up a subscription to a topic with the provided qos."""
+        """Register an MQTT subscription with HA-aware callback dispatch.
+
+        Wraps the library's ``async_subscribe`` to infer the
+        :class:`~homeassistant.core.HassJobType` for *msg_callback* and,
+        for non-callback job types, wraps the callable with
+        :func:`~homeassistant.util.logging.catch_log_exception` so
+        exceptions are logged rather than silently swallowed.
+
+        Args:
+            topic (str): MQTT topic filter to subscribe to.
+            msg_callback (MessageCallbackType): Callable invoked for each
+                received message.
+            qos (int): MQTT quality-of-service level (0, 1, or 2).
+            encoding (str | None): Payload encoding, or ``None`` for raw
+                bytes.
+            job_type (HassJobType | None): Execution model override; inferred
+                automatically when ``None``.
+
+        Returns:
+            Callable[[], None]: Call this to remove the subscription.
+        """
         if job_type is None:
             job_type = get_hassjob_callable_job_type(msg_callback)
         if job_type is not HassJobType.Callback:
@@ -277,7 +415,24 @@ class MQTT(_LibMQTT):
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
-        """Publish an MQTT message."""
+        """Publish an MQTT message, translating broker errors to HA exceptions.
+
+        Delegates to the library's ``async_publish`` and converts any
+        :class:`~aiolocknalert.client.MQTTError` into a
+        :class:`~homeassistant.exceptions.HomeAssistantError` with a
+        user-readable translation key.
+
+        Args:
+            topic (str): MQTT topic to publish to.
+            payload (PublishPayloadType): Message payload (``str``, ``bytes``,
+                ``int``, ``float``, or ``None``).
+            qos (int): MQTT quality-of-service level (0, 1, or 2).
+            retain (bool): Whether the broker should retain the message.
+
+        Raises:
+            HomeAssistantError: If the broker returns an error for the
+                publish operation.
+        """
         try:
             await super().async_publish(topic, payload, qos, retain)
         except MQTTError as err:
@@ -288,7 +443,13 @@ class MQTT(_LibMQTT):
             ) from err
 
     def cleanup(self) -> None:
-        """Clean up HA listeners."""
+        """Cancel all HA event and dispatcher listeners registered during init.
+
+        Pops and invokes each cancellable stored in ``_cleanup_on_unload``
+        (the ``EVENT_HOMEASSISTANT_STOP`` bus listener and the
+        ``async_at_started`` callback) then delegates to the library's
+        ``cleanup`` to release its internal state.
+        """
         while self._cleanup_on_unload:
             self._cleanup_on_unload.pop()()
         super().cleanup()

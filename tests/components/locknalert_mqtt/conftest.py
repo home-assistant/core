@@ -35,12 +35,23 @@ ENTRY_DEFAULT_BIRTH_MESSAGE = {
 
 @pytest.fixture(autouse=True)
 def patch_hass_config(mock_hass_config: None) -> None:
-    """Patch configuration.yaml."""
+    """Patch configuration.yaml to an empty dict for each test.
+
+    Prevents accidental bleed from a developer's real ``configuration.yaml``
+    into the test environment.  Automatically applied to every test in this
+    module via ``autouse=True``.
+    """
 
 
 @pytest.fixture
 def temp_dir_prefix() -> str:
-    """Set an alternate temp dir prefix."""
+    """Return a unique prefix used when naming the integration's temp directory.
+
+    Returns:
+        str: A short prefix string (``"test"``) that is combined with a random
+            suffix to prevent temp-directory collisions between parallel test
+            runs.
+    """
     return "test"
 
 
@@ -48,7 +59,16 @@ def temp_dir_prefix() -> str:
 async def mock_temp_dir(
     hass: HomeAssistant, tmp_path: Path, temp_dir_prefix: str
 ) -> AsyncGenerator[str]:
-    """Mock the certificate temp directory."""
+    """Redirect TLS certificate temp files to pytest's isolated tmp_path.
+
+    Patches both ``tempfile.gettempdir`` and ``TEMP_DIR_NAME`` inside
+    :mod:`~homeassistant.components.locknalert_mqtt.util` so certificate
+    files are written to a throwaway directory that is cleaned up automatically
+    after each test.
+
+    Yields:
+        str: The mocked ``TEMP_DIR_NAME`` value (prefix + random hex suffix).
+    """
     temp_dir_name = (
         f"home-assistant-locknalert-mqtt-{temp_dir_prefix}-{getrandbits(10):03x}"
     )
@@ -67,7 +87,24 @@ async def mock_temp_dir(
 
 @pytest.fixture
 def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
-    """Fixture to mock the locknalert_mqtt MQTT client."""
+    """Yield a mock paho MQTT client wired into the locknalert_mqtt integration.
+
+    Patches :class:`~aiolocknalert.client.AsyncMQTTClient` with a
+    :class:`~unittest.mock.MagicMock` that:
+
+    * Fires HA MQTT messages and publish mid callbacks when ``publish`` is
+      called.
+    * Fires subscribe/unsubscribe mid callbacks when ``subscribe`` /
+      ``unsubscribe`` are called.
+    * Simulates a successful broker connection and socket events on
+      ``connect``.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+
+    Yields:
+        MqttMockPahoClient: The configured mock client instance.
+    """
     mid: int = 0
 
     def get_mid() -> int:
@@ -152,7 +189,20 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
 
 @pytest.fixture
 def mock_debouncer(hass: HomeAssistant) -> Generator[asyncio.Event]:
-    """Mock EnsureJobAfterCooldown."""
+    """Yield an asyncio.Event that fires whenever a debounced job completes.
+
+    Replaces :class:`~aiolocknalert.client.EnsureJobAfterCooldown` with a
+    subclass that sets the event after each execution, letting tests wait for
+    debounced operations (e.g. subscribe batching) without sleeping.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+
+    Yields:
+        asyncio.Event: Call ``await event.wait()`` to block until the next
+            debounced job finishes; call ``event.clear()`` before the
+            triggering action to reset for the next wait.
+    """
     task_done = asyncio.Event()
 
     class MockDebouncer(EnsureJobAfterCooldown):
@@ -179,7 +229,28 @@ async def mqtt_mock_entry(
     mqtt_config_entry_options: dict[str, Any] | None,
     mqtt_config_subentries_data: tuple[ConfigSubentryData] | None,
 ) -> AsyncGenerator[MqttMockHAClientGenerator]:
-    """Set up a locknalert_mqtt config entry."""
+    """Yield a coroutine that sets up a locknalert_mqtt config entry on demand.
+
+    Creates a :class:`~tests.common.MockConfigEntry` with the provided data,
+    options, and subentries, wraps the real ``MQTT`` class with a
+    :class:`~unittest.mock.MagicMock`, and yields a ``setup()`` coroutine.
+    Calling ``await setup()`` actually loads the entry and returns the mock
+    client so tests can assert on publish/subscribe calls.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_client_mock (MqttMockPahoClient): The mock paho client fixture.
+        mqtt_config_entry_data (dict[str, Any] | None): Config entry data;
+            defaults to ``{CONF_BROKER: "mock-broker"}`` if ``None``.
+        mqtt_config_entry_options (dict[str, Any] | None): Config entry
+            options; defaults to ``{CONF_BIRTH_MESSAGE: {}}`` if ``None``.
+        mqtt_config_subentries_data (tuple[ConfigSubentryData] | None): Sub-
+            entry data for device subentries, or ``None`` for none.
+
+    Yields:
+        MqttMockHAClientGenerator: An async callable that loads the config
+            entry and returns the :class:`MqttMockHAClient`.
+    """
     if mqtt_config_entry_data is None:
         mqtt_config_entry_data = {
             locknalert_mqtt.CONF_BROKER: "mock-broker",
@@ -248,7 +319,22 @@ async def setup_with_birth_msg_client_mock(
     mqtt_config_entry_options: dict[str, Any] | None,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> AsyncGenerator[MqttMockPahoClient]:
-    """Test sending birth message."""
+    """Set up a locknalert_mqtt entry with zero-delay debouncers and wait for the birth message.
+
+    Patches all cooldown constants to ``0.0`` so subscriptions are flushed
+    immediately, then subscribes to the birth-message topic and waits until
+    the birth message is received before yielding.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        mqtt_config_entry_data (dict[str, Any] | None): Config entry data.
+        mqtt_config_entry_options (dict[str, Any] | None): Config entry options.
+        mqtt_client_mock (MqttMockPahoClient): The mock paho client fixture.
+
+    Yields:
+        MqttMockPahoClient: The mock paho client after the birth message has
+            been published.
+    """
     birth = asyncio.Event()
     with (
         patch(
@@ -282,16 +368,34 @@ async def setup_with_birth_msg_client_mock(
 
 @pytest.fixture
 def recorded_calls() -> list[ReceiveMessage]:
-    """Fixture to hold recorded calls."""
+    """Return an empty list that accumulates MQTT messages for assertion.
+
+    Returns:
+        list[ReceiveMessage]: Mutable list shared with the :func:`record_calls`
+            fixture; append-only during the test.
+    """
     return []
 
 
 @pytest.fixture
 def record_calls(recorded_calls: list[ReceiveMessage]) -> MessageCallbackType:
-    """Fixture to record calls."""
+    """Return a callback that appends each received MQTT message to ``recorded_calls``.
+
+    Intended to be passed as a ``msg_callback`` to
+    :func:`~homeassistant.components.locknalert_mqtt.async_subscribe`.
+
+    Args:
+        recorded_calls (list[ReceiveMessage]): The shared list to append to,
+            provided by the :func:`recorded_calls` fixture.
+
+    Returns:
+        MessageCallbackType: A ``@callback``-decorated function that records
+            received messages.
+    """
 
     @callback
     def record_calls(msg: ReceiveMessage) -> None:
+        """Append *msg* to the shared recorded_calls list."""
         recorded_calls.append(msg)
 
     return record_calls

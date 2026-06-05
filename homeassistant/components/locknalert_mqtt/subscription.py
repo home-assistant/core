@@ -14,7 +14,26 @@ from .models import MessageCallbackType
 
 @dataclass(slots=True, kw_only=True)
 class EntitySubscription:
-    """Class to hold data about an active entity topic subscription."""
+    """Active MQTT topic subscription bound to a single entity config key.
+
+    Tracks whether the subscription needs to be created, kept, or replaced
+    when an entity's configuration changes.  Instances are stored in a
+    ``dict[str, EntitySubscription]`` keyed by the config field name
+    (e.g. ``"state_topic"``).
+
+    Attributes:
+        hass (HomeAssistant): The Home Assistant instance.
+        topic (str | None): MQTT topic to subscribe to, or ``None`` to skip.
+        message_callback (MessageCallbackType): Called for each received message.
+        should_subscribe (bool | None): Tracks whether a new subscription
+            should be established.  ``None`` means not yet evaluated.
+        unsubscribe_callback (Callable[[], None] | None): Cancels the active
+            subscription when called.  ``None`` if not currently subscribed.
+        qos (int): MQTT quality-of-service level (0, 1, or 2).
+        encoding (str | None): Payload encoding, or ``None`` for raw bytes.
+        entity_id (str | None): Entity id used for diagnostic logging.
+        job_type (HassJobType | None): Execution model hint for the callback.
+    """
 
     hass: HomeAssistant
     topic: str | None
@@ -29,7 +48,20 @@ class EntitySubscription:
     def resubscribe_if_necessary(
         self, _hass: HomeAssistant, other: EntitySubscription | None
     ) -> None:
-        """Re-subscribe to the new topic if necessary."""
+        """Determine whether to keep, replace, or create the MQTT subscription.
+
+        Compares this (desired) subscription against *other* (the previous
+        subscription for the same config key).  If the topic, QoS, or encoding
+        has changed, the old subscription is cancelled and this instance is
+        marked for re-subscription.  If nothing changed, the existing
+        unsubscribe callback is inherited so the live subscription is kept.
+
+        Args:
+            _hass (HomeAssistant): The Home Assistant instance (unused, kept for
+                API consistency with dispatcher connect callbacks).
+            other (EntitySubscription | None): The previous subscription state,
+                or ``None`` if no subscription existed before.
+        """
         if not self._should_resubscribe(other):
             if TYPE_CHECKING:
                 assert other
@@ -48,7 +80,13 @@ class EntitySubscription:
 
     @callback
     def subscribe(self) -> None:
-        """Subscribe to a topic."""
+        """Establish the MQTT subscription if one is pending.
+
+        Called after :func:`resubscribe_if_necessary` has set
+        ``should_subscribe = True``.  Registers the subscription with the
+        underlying MQTT client and stores the returned unsubscribe callback.
+        Does nothing if the subscription is not pending or if ``topic`` is empty.
+        """
         if not self.should_subscribe or not self.topic:
             return
         self.unsubscribe_callback = async_subscribe_internal(
@@ -61,7 +99,19 @@ class EntitySubscription:
         )
 
     def _should_resubscribe(self, other: EntitySubscription | None) -> bool:
-        """Check if we should re-subscribe to the topic using the old state."""
+        """Return True if the subscription parameters have changed.
+
+        A new subscription is required whenever the topic, QoS, or encoding
+        differs from the previous state, or when no previous state exists.
+
+        Args:
+            other (EntitySubscription | None): The previous subscription state,
+                or ``None`` if this is the first time the topic is configured.
+
+        Returns:
+            bool: ``True`` if a new subscription must be created, ``False`` if
+                the existing subscription can be reused.
+        """
         if other is None:
             return True
 
@@ -82,17 +132,32 @@ def async_prepare_subscribe_topics(
     sub_state: dict[str, EntitySubscription] | None,
     topics: dict[str, dict[str, Any]],
 ) -> dict[str, EntitySubscription]:
-    """Prepare (re)subscribe to a set of MQTT topics.
+    """Build a new subscription state, cancelling any topics that were removed.
 
-    State is kept in sub_state and a dictionary mapping from the subscription
-    key to the subscription state.
+    Compares *topics* (the desired subscriptions) against *sub_state* (the
+    currently active subscriptions).  For each key in *topics* the previous
+    :class:`EntitySubscription` (if any) is compared; subscriptions whose
+    topic, QoS, or encoding changed are queued for replacement.  Any key that
+    no longer appears in *topics* has its subscription cancelled immediately.
 
-    After this function has been called, async_subscribe_topics must be called to
-    finalize any new subscriptions.
+    Call :func:`async_subscribe_topics` after this function to actually
+    register the pending subscriptions with the MQTT client.
 
-    Please note that the sub state must not be shared between multiple
-    sets of topics. Every call to async_subscribe_topics must always
-    contain _all_ the topics the subscription state should manage.
+    The returned dict must not be shared between independent sets of topics:
+    every call must include **all** keys that the caller wants to manage.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        sub_state (dict[str, EntitySubscription] | None): The current
+            subscription state, or ``None`` on first call.
+        topics (dict[str, dict[str, Any]]): Desired subscriptions keyed by an
+            arbitrary config-key name.  Each value is a dict with at least a
+            ``"msg_callback"`` key and optionally ``"topic"``, ``"qos"``,
+            ``"encoding"``, ``"entity_id"``, and ``"job_type"``.
+
+    Returns:
+        dict[str, EntitySubscription]: The updated subscription state to be
+            passed to subsequent calls.
     """
     current_subscriptions: dict[str, EntitySubscription]
     current_subscriptions = sub_state if sub_state is not None else {}
@@ -128,7 +193,17 @@ def async_subscribe_topics(
     hass: HomeAssistant,
     sub_state: dict[str, EntitySubscription],
 ) -> None:
-    """(Re)Subscribe to a set of MQTT topics."""
+    """Finalise pending subscriptions prepared by :func:`async_prepare_subscribe_topics`.
+
+    Iterates over *sub_state* and calls :meth:`EntitySubscription.subscribe`
+    on each entry that has been marked as needing a new subscription.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance (passed through for
+            API consistency; subscriptions are registered via the stored client).
+        sub_state (dict[str, EntitySubscription]): Current subscription state
+            returned by :func:`async_prepare_subscribe_topics`.
+    """
     async_subscribe_topics_internal(hass, sub_state)
 
 
@@ -137,10 +212,15 @@ def async_subscribe_topics_internal(
     hass: HomeAssistant,
     sub_state: dict[str, EntitySubscription],
 ) -> None:
-    """(Re)Subscribe to a set of MQTT topics.
+    """Activate pending subscriptions (internal API; do not call from outside this integration).
 
-    This function is internal to the MQTT integration and should not be called
-    from outside the integration.
+    Called by :func:`async_subscribe_topics` and by entity mixins that
+    subscribe directly without going through the public helper.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        sub_state (dict[str, EntitySubscription]): Subscription state whose
+            pending entries should be registered with the MQTT client.
     """
     for sub in sub_state.values():
         sub.subscribe()
@@ -151,7 +231,19 @@ if TYPE_CHECKING:
     def async_unsubscribe_topics(
         hass: HomeAssistant, sub_state: dict[str, EntitySubscription] | None
     ) -> dict[str, EntitySubscription]:
-        """Unsubscribe from all MQTT topics managed by async_subscribe_topics."""
+        """Cancel all subscriptions in *sub_state* and return an empty state dict.
+
+        Convenience alias for calling :func:`async_prepare_subscribe_topics`
+        with an empty *topics* dict, which cancels every active subscription.
+
+        Args:
+            hass (HomeAssistant): The Home Assistant instance.
+            sub_state (dict[str, EntitySubscription] | None): The current
+                subscription state, or ``None``.
+
+        Returns:
+            dict[str, EntitySubscription]: An empty subscription state dict.
+        """
 
 
 async_unsubscribe_topics = partial(async_prepare_subscribe_topics, topics={})

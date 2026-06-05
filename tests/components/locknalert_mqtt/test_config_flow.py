@@ -64,7 +64,23 @@ def _make_zeroconf_info(
     host: str = MOCK_BRIDGE_HOST,
     api_port: int | None = None,
 ) -> ZeroconfServiceInfo:
-    """Build a ZeroconfServiceInfo for a LocknAlert bridge."""
+    """Build a :class:`~homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo` for a LocknAlert bridge.
+
+    Constructs the service info object that the Zeroconf/mDNS integration
+    passes to the config flow's ``async_step_zeroconf``.
+
+    Args:
+        serial (str): Bridge serial number used as the hostname prefix and
+            discovery name.  Defaults to :data:`MOCK_BRIDGE_SERIAL`.
+        host (str): IPv4 address of the bridge.  Defaults to
+            :data:`MOCK_BRIDGE_HOST`.
+        api_port (int | None): Optional API port to include in the TXT
+            properties under ``DISCOVERY_ATTR_API_PORT``; omitted if ``None``.
+
+    Returns:
+        ZeroconfServiceInfo: A fully populated service info instance ready
+            to pass to the config flow.
+    """
     properties: dict = {}
     if api_port is not None:
         properties[DISCOVERY_ATTR_API_PORT] = str(api_port)
