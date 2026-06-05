@@ -1,18 +1,29 @@
 """The KEBA P40 integration."""
 
-from homeassistant.config_entries import ConfigEntry
+from keba_kecontact_p40 import KebaP40Client
+
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import PLATFORMS
-
-type KebaP40ConfigEntry = ConfigEntry[None]
+from .coordinator import KebaP40ConfigEntry, KebaP40DataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KebaP40ConfigEntry) -> bool:
     """Set up KEBA P40 from a config entry."""
-    entry.runtime_data = None
-    raise ConfigEntryNotReady("Integration setup not yet implemented")
+    client = KebaP40Client(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PASSWORD],
+        session=async_get_clientsession(hass, verify_ssl=False),
+        port=entry.data[CONF_PORT],
+    )
+    assert entry.unique_id is not None
+    coordinator = KebaP40DataUpdateCoordinator(hass, entry, client, entry.unique_id)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: KebaP40ConfigEntry) -> bool:

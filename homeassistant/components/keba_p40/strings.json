@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {},
+        "description": ""
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed. Please check your credentials."
+    },
+    "update_failed": {
+      "message": "Failed to communicate with the KEBA P40 wallbox."
+    }
+  }
+}
