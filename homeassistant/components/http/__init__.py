@@ -913,8 +913,7 @@ class HomeAssistantHTTP:
             with contextlib.suppress(RuntimeError):
                 loop.call_soon_threadsafe(self._debounce_ssl_reload)
 
-        on_change: Callable[[], None] = _on_change
-        handler = _SSLReloadHandler(frozenset(watched_paths), on_change)
+        handler = _SSLReloadHandler(frozenset(watched_paths), _on_change)
 
         self._ssl_watcher = Observer()
         for watch_dir in watch_dirs:
