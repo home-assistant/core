@@ -3,9 +3,8 @@
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from aiolocknalert.client import MQTTError
+import pytest
 
 from homeassistant.components.locknalert_mqtt.client import (
     async_publish,
@@ -17,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.typing import MqttMockHAClientGenerator
-
 
 # ---------------------------------------------------------------------------
 # publish (fire-and-forget wrapper)
@@ -59,7 +57,9 @@ async def test_async_publish_no_encoding_non_bytes_logs_error(
 ) -> None:
     """Non-bytes payload with encoding=None logs an error and returns without publishing."""
     await mqtt_mock_entry()
-    with caplog.at_level(logging.ERROR, logger="homeassistant.components.locknalert_mqtt"):
+    with caplog.at_level(
+        logging.ERROR, logger="homeassistant.components.locknalert_mqtt"
+    ):
         await async_publish(hass, "test/topic", "payload", encoding=None)
     assert "no encoding set" in caplog.text
 
@@ -71,7 +71,9 @@ async def test_async_publish_invalid_encoding_logs_error(
 ) -> None:
     """Invalid encoding name logs an error and returns without publishing."""
     await mqtt_mock_entry()
-    with caplog.at_level(logging.ERROR, logger="homeassistant.components.locknalert_mqtt"):
+    with caplog.at_level(
+        logging.ERROR, logger="homeassistant.components.locknalert_mqtt"
+    ):
         await async_publish(hass, "test/topic", "payload", encoding="nonexistent-enc")
     assert "Can't encode payload" in caplog.text
 
@@ -137,12 +139,14 @@ async def test_async_subscribe_internal_raises_when_entry_disabled(
     """Raises HomeAssistantError when the config entry is disabled."""
     await mqtt_mock_entry()
     callback = MagicMock()
-    with patch(
-        "homeassistant.components.locknalert_mqtt.client.mqtt_config_entry_enabled",
-        return_value=False,
+    with (
+        patch(
+            "homeassistant.components.locknalert_mqtt.client.mqtt_config_entry_enabled",
+            return_value=False,
+        ),
+        pytest.raises(HomeAssistantError),
     ):
-        with pytest.raises(HomeAssistantError):
-            async_subscribe_internal(hass, "test/topic", callback)
+        async_subscribe_internal(hass, "test/topic", callback)
 
 
 async def test_async_subscribe_internal_returns_unsubscribe(
@@ -169,10 +173,12 @@ async def test_mqtt_async_publish_raises_ha_error_on_mqtt_error(
     """MQTTError from broker is translated to HomeAssistantError."""
     await mqtt_mock_entry()
 
-    with patch(
-        "aiolocknalert.client.MQTT.async_publish",
-        new_callable=AsyncMock,
-        side_effect=MQTTError("broker rejected publish"),
+    with (
+        patch(
+            "aiolocknalert.client.MQTT.async_publish",
+            new_callable=AsyncMock,
+            side_effect=MQTTError("broker rejected publish"),
+        ),
+        pytest.raises(HomeAssistantError),
     ):
-        with pytest.raises(HomeAssistantError):
-            await async_publish(hass, "test/topic", "payload")
+        await async_publish(hass, "test/topic", "payload")

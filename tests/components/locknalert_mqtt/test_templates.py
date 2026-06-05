@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 
-
 # --- convert_outgoing_mqtt_payload ---
 
 
@@ -46,9 +45,7 @@ from homeassistant.helpers import template
         "syntax_error_unchanged",
     ],
 )
-def test_convert_outgoing_mqtt_payload(
-    payload: object, expected: object
-) -> None:
+def test_convert_outgoing_mqtt_payload(payload: object, expected: object) -> None:
     """Test convert_outgoing_mqtt_payload with various input types."""
     assert convert_outgoing_mqtt_payload(payload) == expected
 
@@ -289,9 +286,7 @@ def test_mqtt_value_template_missing_json_key_renders_empty(
     """Missing JSON key renders as empty string; default is not used for attribute errors."""
     tpl = template.Template("{{ value_json.missing_key }}", hass)
     vt = MqttValueTemplate(tpl)
-    result = vt.async_render_with_possible_json_value(
-        '{"other": 1}', default="DEFAULT"
-    )
+    result = vt.async_render_with_possible_json_value('{"other": 1}', default="DEFAULT")
     assert result == ""
 
 
@@ -319,5 +314,7 @@ def test_mqtt_value_template_error_includes_entity_id(hass: HomeAssistant) -> No
     tpl.hass = hass
     vt = MqttValueTemplate(tpl, entity=entity)
     with pytest.raises(MqttValueTemplateException) as exc_info:
-        vt.async_render_with_possible_json_value("payload", default=PayloadSentinel.NONE)
+        vt.async_render_with_possible_json_value(
+            "payload", default=PayloadSentinel.NONE
+        )
     assert "sensor.test" in str(exc_info.value)

@@ -14,7 +14,7 @@ from homeassistant.components.locknalert_mqtt.const import (
     ATTR_RETAIN,
     ATTR_TOPIC,
 )
-from homeassistant.components.locknalert_mqtt.models import DATA_MQTT, ReceiveMessage
+from homeassistant.components.locknalert_mqtt.models import ReceiveMessage
 from homeassistant.components.locknalert_mqtt.util import (
     EnsureJobAfterCooldown,
     async_cleanup_device_registry,
@@ -39,7 +39,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from tests.typing import MqttMockHAClientGenerator
-
 
 # ---------------------------------------------------------------------------
 # valid_topic
@@ -612,6 +611,7 @@ async def test_ensure_job_after_cooldown_logs_ha_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """HomeAssistantError raised in the callback is logged, not propagated."""
+
     async def failing_job() -> None:
         raise HomeAssistantError("something went wrong")
 
