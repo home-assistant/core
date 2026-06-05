@@ -3515,6 +3515,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "keba_p40": {
+      "name": "KEBA P40",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "keenetic_ndms2": {
       "name": "Keenetic NDMS2 Router",
       "integration_type": "device",

@@ -1410,6 +1410,9 @@ justnimbus==0.7.4
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.1.0
 
+# homeassistant.components.keba_p40
+keba-kecontact-p40==0.1.0
+
 # homeassistant.components.keba
 keba-kecontact==1.3.0
 
