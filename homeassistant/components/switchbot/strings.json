@@ -270,6 +270,18 @@
             }
           }
         }
+      },
+      "standing_fan_light": {
+        "name": "Night Light",
+        "state_attributes": {
+          "effect": {
+            "name": "[%key:component::light::common::field_brightness_step_name%]",
+            "state": {
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]"
+            }
+          }
+        }
       }
     },
     "lock": {

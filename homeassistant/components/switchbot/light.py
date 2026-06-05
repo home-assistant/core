@@ -1,5 +1,6 @@
 """Switchbot integration light platform."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, cast
 
@@ -21,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity, SwitchbotSwitchedEntity, exception_handler
+from .entity import SwitchbotEntity, exception_handler
 
 SWITCHBOT_COLOR_MODE_TO_HASS = {
     SwitchBotColorMode.RGB: ColorMode.RGB,
@@ -116,9 +117,7 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
         self.async_write_ha_state()
 
 
-class SwitchbotStandingFanLightEntity(
-    SwitchbotSwitchedEntity, LightEntity, RestoreEntity
-):
+class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntity):
     """Representation of a Switchbot standing fan light."""
 
     _device: switchbot.SwitchbotStandingFan
@@ -128,7 +127,7 @@ class SwitchbotStandingFanLightEntity(
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_color_mode = ColorMode.ONOFF
     _attr_effect_list = [NightLightState.LEVEL_1.name, NightLightState.LEVEL_2.name]
-    _attr_effect = NightLightState.LEVEL_1.name
+    _attr_effect = NightLightState.OFF.name
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the entity."""
@@ -161,13 +160,22 @@ class SwitchbotStandingFanLightEntity(
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        _LOGGER.debug("Updating light attributes for %s", self._address)
+        night_light_state = NightLightState(self._device.get_night_light_state())
+        _LOGGER.debug(
+            "Updating light attribute %s, address %s", night_light_state, self._address
+        )
+        if night_light_state == NightLightState.OFF:
+            self._attr_is_on = False
+            self._attr_effect = NightLightState.OFF.name
+        else:
+            self._attr_is_on = True
+            self._attr_effect = night_light_state.name
 
-    # @property
-    # def extra_state_attributes(self) -> Mapping[str, Any]:
-    #     """Return the state attributes."""
-    #     _LOGGER.debug("Getting extra state attributes for %s", self._address)
-    #     return {**super().extra_state_attributes, "effect": self._attr_effect}
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return the state attributes."""
+        _LOGGER.debug("Getting extra state attributes for %s", self._address)
+        return {**super().extra_state_attributes, "effect": self._attr_effect}
 
     # @property
     # def extra_restore_state_data(self) -> ExtraStoredData | None:
@@ -180,8 +188,6 @@ class SwitchbotStandingFanLightEntity(
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
         _LOGGER.debug("async_adding_to_hass %s", last_state)
-        if last_state:
-            pass
 
 
 class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
