@@ -2,7 +2,6 @@
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
@@ -11,6 +10,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -48,10 +48,7 @@ async def async_setup_scanner(
         data=import_data,
     )
 
-    if (
-        result["type"] == data_entry_flow.FlowResultType.ABORT
-        and result.get("reason") == "cannot_connect"
-    ):
+    if result["type"] is FlowResultType.ABORT and result["reason"] == "cannot_connect":
         ir.async_create_issue(
             hass,
             DOMAIN,
