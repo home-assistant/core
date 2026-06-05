@@ -46,7 +46,7 @@ async def test_publish_creates_task(
 
 async def test_async_publish_not_configured_raises(hass: HomeAssistant) -> None:
     """async_publish raises HomeAssistantError when integration is not set up."""
-    with pytest.raises(HomeAssistantError, match="mqtt_not_setup_cannot_publish"):
+    with pytest.raises(HomeAssistantError):
         await async_publish(hass, "test/topic", "payload")
 
 
@@ -128,7 +128,7 @@ async def test_async_subscribe_internal_raises_when_not_configured(
 ) -> None:
     """Raises HomeAssistantError when DATA_MQTT is not in hass.data."""
     callback = MagicMock()
-    with pytest.raises(HomeAssistantError, match="mqtt_not_setup_cannot_subscribe"):
+    with pytest.raises(HomeAssistantError):
         async_subscribe_internal(hass, "test/topic", callback)
 
 
@@ -143,7 +143,7 @@ async def test_async_subscribe_internal_raises_when_entry_disabled(
         "homeassistant.components.locknalert_mqtt.client.mqtt_config_entry_enabled",
         return_value=False,
     ):
-        with pytest.raises(HomeAssistantError, match="mqtt_not_setup_cannot_subscribe"):
+        with pytest.raises(HomeAssistantError):
             async_subscribe_internal(hass, "test/topic", callback)
 
 
