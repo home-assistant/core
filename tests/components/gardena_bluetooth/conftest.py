@@ -178,7 +178,7 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
 
 @pytest.fixture
 def get_product_type_event() -> Generator[asyncio.Event]:
-    """Track manufacturer data requests with an event."""
+    """Track product type data requests with an event."""
 
     event = asyncio.Event()
 
