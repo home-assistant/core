@@ -106,6 +106,59 @@ async def test_invalid_handler(mock_request: Mock) -> None:
         )(mock_request)
 
 
+async def test_query_token_auth_valid(mock_request: Mock) -> None:
+    """Test authentication with a valid query token."""
+    mock_request.get = Mock(return_value=False)
+    mock_request.query = {"token": "valid-token"}
+    handler = AsyncMock(return_value=None)
+
+    response = await request_handler_factory(
+        mock_request.app[KEY_HASS],
+        Mock(
+            requires_auth=False,
+            use_query_token_for_auth=True,
+            get_valid_auth_tokens=Mock(return_value={"valid-token"}),
+        ),
+        handler,
+    )(mock_request)
+
+    assert response.status == HTTPStatus.OK
+    handler.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "query",
+    [{"token": "wrong-token"}, {}],
+    ids=["invalid_token", "missing_token"],
+)
+async def test_query_token_auth_unauthorized(
+    mock_request: Mock, query: dict[str, str]
+) -> None:
+    """Test an invalid or missing query token is rejected."""
+    mock_request.get = Mock(return_value=False)
+    mock_request.query = query
+    handler = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.helpers.network.get_url",
+            return_value="https://example.com",
+        ),
+        pytest.raises(HTTPUnauthorized),
+    ):
+        await request_handler_factory(
+            mock_request.app[KEY_HASS],
+            Mock(
+                requires_auth=False,
+                use_query_token_for_auth=True,
+                get_valid_auth_tokens=Mock(return_value={"valid-token"}),
+            ),
+            handler,
+        )(mock_request)
+
+    handler.assert_not_awaited()
+
+
 async def test_requires_auth_includes_www_authenticate(
     mock_request: Mock,
 ) -> None:
