@@ -153,6 +153,26 @@ message CallServiceResult {
   optional ServiceResponse response = 1;    // unset when no response returned
 }
 
+// --- get_translations (main -> sandbox) -----------------------------------
+
+// Pull a sandboxed integration's frontend translation strings. Main issues
+// this per sandbox group, batching every owned (custom) domain into one
+// request. Built-in domains never cross the wire — main reads its own
+// byte-identical disk copy.
+message GetTranslations {
+  string language = 1;             // single language per request (e.g. "en")
+  repeated string domains = 2;     // the domains main wants strings for
+}
+
+message GetTranslationsResult {
+  string language = 1;
+  // { domain: <raw strings.json dict> } — the un-flattened nesting a
+  // translations/<lang>.json holds, with `title` already filled in from the
+  // integration name (main has no Integration for a custom domain so it
+  // cannot run that fallback). Domains the sandbox does not own are omitted.
+  google.protobuf.Struct strings = 2;
+}
+
 // --- shutdown / ping (main -> sandbox) ------------------------------------
 
 message Shutdown {}

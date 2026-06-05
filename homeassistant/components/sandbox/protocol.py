@@ -32,6 +32,14 @@ Main → Sandbox calls:
   the main→sandbox service mirroring path). Payload mirrors a
   ``ServiceCall``: ``(domain, service, target, service_data, context,
   return_response)``. Returns either ``None`` or a service-response dict.
+* ``sandbox/get_translations`` — pull a sandboxed integration's frontend
+  translation strings. Payload ``{language, domains: [str]}`` (main batches
+  every owned custom domain of one group into a single request). Response
+  ``{language, strings: {domain: <raw strings.json dict>}}`` — the
+  un-flattened nesting a ``translations/<lang>.json`` holds, with ``title``
+  pre-filled from the integration name (main has no ``Integration`` for a
+  custom domain, so it cannot run that fallback). Built-in domains never
+  cross the wire — main reads its byte-identical disk copy.
 
 Sandbox → Main calls:
 
@@ -92,6 +100,7 @@ MSG_READY: Final = "sandbox/ready"
 MSG_ENTRY_SETUP: Final = "sandbox/entry_setup"
 MSG_ENTRY_UNLOAD: Final = "sandbox/entry_unload"
 MSG_CALL_SERVICE: Final = "sandbox/call_service"
+MSG_GET_TRANSLATIONS: Final = "sandbox/get_translations"
 MSG_SHUTDOWN: Final = "sandbox/shutdown"
 
 # Sandbox → Main
@@ -111,6 +120,7 @@ __all__ = [
     "MSG_ENTRY_SETUP",
     "MSG_ENTRY_UNLOAD",
     "MSG_FIRE_EVENT",
+    "MSG_GET_TRANSLATIONS",
     "MSG_READY",
     "MSG_REGISTER_ENTITY",
     "MSG_REGISTER_SERVICE",
