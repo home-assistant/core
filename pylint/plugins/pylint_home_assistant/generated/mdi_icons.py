@@ -7,7 +7,6 @@ from typing import Final
 
 FRONTEND_VERSION: Final[str] = "20260527.4"
 
-
 MDI_ICONS: Final[set[str]] = {
     "ab-testing",
     "abacus",
