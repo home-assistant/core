@@ -478,6 +478,73 @@ async def test_adjust_service_only_adjusts_on_lights(
     assert ent2.last_call("turn_on") is None
 
 
+async def test_adjust_service_rejects_zero_brightness(
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
+) -> None:
+    """Test adjust service rejects zero brightness values."""
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(vol.MultipleInvalid):
+        await hass.services.async_call(
+            light.DOMAIN,
+            light.SERVICE_ADJUST,
+            {
+                ATTR_ENTITY_ID: mock_light_entities[0].entity_id,
+                light.ATTR_BRIGHTNESS: 0,
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(vol.MultipleInvalid):
+        await hass.services.async_call(
+            light.DOMAIN,
+            light.SERVICE_ADJUST,
+            {
+                ATTR_ENTITY_ID: mock_light_entities[0].entity_id,
+                light.ATTR_BRIGHTNESS_PCT: 0,
+            },
+            blocking=True,
+        )
+
+
+async def test_adjust_service_rejects_step_resolving_to_zero(
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
+) -> None:
+    """Test adjust service rejects steps that resolve to zero brightness."""
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+
+    ent1 = mock_light_entities[0]
+    ent1.supported_color_modes = {light.ColorMode.BRIGHTNESS}
+    ent1.color_mode = light.ColorMode.BRIGHTNESS
+    ent1._attr_brightness = 10
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="light.adjust does not accept zero brightness or white values",
+    ):
+        await hass.services.async_call(
+            light.DOMAIN,
+            light.SERVICE_ADJUST,
+            {
+                ATTR_ENTITY_ID: ent1.entity_id,
+                light.ATTR_BRIGHTNESS_STEP: -10,
+            },
+            blocking=True,
+        )
+
+
 @pytest.mark.parametrize(
     ("profile_name", "last_call", "expected_data"),
     [

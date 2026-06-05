@@ -1558,6 +1558,69 @@ async def test_adjust_service_call_targets_on_members_for_all_group(
     assert entities[1].last_call("turn_on") is None
 
 
+async def test_adjust_service_call_reaches_nested_all_group(
+    hass: HomeAssistant,
+) -> None:
+    """Test adjust on a parent group still reaches a nested all-group."""
+    entities = [
+        MockLight("test1", STATE_ON),
+        MockLight("test2", STATE_OFF),
+        MockLight("test3", STATE_OFF),
+    ]
+    setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
+
+    for entity in entities:
+        entity.supported_color_modes = {ColorMode.BRIGHTNESS}
+        entity.color_mode = ColorMode.BRIGHTNESS
+        entity.brightness = 64
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "name": "Inner Group",
+                    "entities": ["light.test1", "light.test2"],
+                    "all": "true",
+                },
+                {
+                    "platform": DOMAIN,
+                    "name": "Outer Group",
+                    "entities": ["light.inner_group", "light.test3"],
+                    "all": "false",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # The nested all-group reports off while only one child is on.
+    assert hass.states.get("light.inner_group").state == STATE_OFF
+    assert hass.states.get("light.outer_group").state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_ADJUST,
+        {ATTR_ENTITY_ID: "light.outer_group", ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+
+    assert hass.states.get("light.test1").state == STATE_ON
+    assert hass.states.get("light.test1").attributes[ATTR_BRIGHTNESS] == 128
+    assert hass.states.get("light.test2").state == STATE_OFF
+    assert hass.states.get("light.test3").state == STATE_OFF
+
+    _, data = entities[0].last_call("turn_on")
+    assert data == {ATTR_BRIGHTNESS: 128}
+    assert entities[1].last_call("turn_on") is None
+    assert entities[2].last_call("turn_on") is None
+
+
 async def test_service_call_effect(hass: HomeAssistant) -> None:
     """Test service calls."""
     await async_setup_component(

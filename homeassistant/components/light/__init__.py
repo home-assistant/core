@@ -175,6 +175,8 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
 VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
+VALID_BRIGHTNESS_ADJUST = vol.All(vol.Coerce(int), vol.Range(min=1, max=255))
+VALID_BRIGHTNESS_PCT_ADJUST = vol.All(vol.Coerce(float), vol.Range(min=0.001, max=100))
 VALID_FLASH = vol.In([FLASH_SHORT, FLASH_LONG])
 
 LIGHT_TURN_ON_SCHEMA: VolDictType = {
@@ -221,8 +223,8 @@ LIGHT_TURN_OFF_SCHEMA: VolDictType = {
 
 LIGHT_ADJUST_SCHEMA: VolDictType = {
     ATTR_TRANSITION: VALID_TRANSITION,
-    vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-    vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+    vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_ADJUST,
+    vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT_ADJUST,
     vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
     vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
@@ -248,7 +250,7 @@ LIGHT_ADJUST_SCHEMA: VolDictType = {
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
         vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
     ),
-    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): vol.Any(True, VALID_BRIGHTNESS),
+    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): vol.Any(True, VALID_BRIGHTNESS_ADJUST),
     ATTR_EFFECT: cv.string,
 }
 
@@ -567,10 +569,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not call.data["params"]:
             return
 
-        params = process_turn_on_params(hass, light, call.data["params"])
+        raw_params = call.data["params"]
+
+        if (
+            raw_params.get(ATTR_BRIGHTNESS) == 0
+            or raw_params.get(ATTR_BRIGHTNESS_PCT) == 0
+            or raw_params.get(ATTR_WHITE) == 0
+        ):
+            raise HomeAssistantError(
+                "light.adjust does not accept zero brightness or white values"
+            )
+
+        params = process_turn_on_params(hass, light, raw_params)
 
         if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
-            return
+            raise HomeAssistantError(
+                "light.adjust does not accept zero brightness or white values"
+            )
 
         await light.async_adjust(**filter_turn_on_params(light, params))
 

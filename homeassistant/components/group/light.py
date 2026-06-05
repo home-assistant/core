@@ -191,9 +191,13 @@ class LightGroup(GroupEntity, LightEntity):
             key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
         }
         entity_ids = [
-            entity_id
+            state.entity_id
             for entity_id in self._entity_ids
-            if self.hass.states.is_state(entity_id, STATE_ON)
+            if (state := self.hass.states.get(entity_id)) is not None
+            and (
+                state.state == STATE_ON
+                or isinstance(state.attributes.get(ATTR_ENTITY_ID), list)
+            )
         ]
         if not entity_ids:
             return
