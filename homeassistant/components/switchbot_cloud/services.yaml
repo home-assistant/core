@@ -1,4 +1,4 @@
-ai_art_frame_upload_image:
+upload_art_frame_image:
   fields:
     device_id:
       required: true

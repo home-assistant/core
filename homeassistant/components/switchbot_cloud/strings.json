@@ -103,7 +103,7 @@
     }
   },
   "services": {
-    "ai_art_frame_upload_image": {
+    "upload_art_frame_image": {
       "description": "Upload third-party web images to the device.",
       "fields": {
         "device_id": {
