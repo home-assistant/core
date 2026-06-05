@@ -533,6 +533,23 @@ async def async_get_integration_descriptions(
         }
         custom_flows[integration_key][integration.domain] = metadata
 
+    # Merge sandbox-only customs (code never on disk) so the picker can list
+    # them. On-disk customs carry richer metadata and a domain may appear in
+    # both, so the disk scan above wins on collision.
+    for domain, descriptor in async_get_sandbox_catalog(hass).items():
+        if domain in custom_flows["integration"] or domain in custom_flows["helper"]:
+            continue
+        integration_type = descriptor.get("integration_type", "integration")
+        integration_key = "helper" if integration_type == "helper" else "integration"
+        custom_flows[integration_key][domain] = {
+            "config_flow": descriptor.get("config_flow", False),
+            "integration_type": integration_type,
+            "iot_class": descriptor.get("iot_class"),
+            "name": descriptor.get("name", domain),
+            "single_config_entry": descriptor.get("single_config_entry", False),
+            "overwrites_built_in": False,
+        }
+
     return {"core": core_flows, "custom": custom_flows}
 
 

@@ -19,6 +19,7 @@ from homeassistant.loader import (
     Integration,
     async_get_config_flows,
     async_get_integrations,
+    async_get_sandbox_catalog,
 )
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import load_json
@@ -131,15 +132,24 @@ async def _async_get_component_strings(
             _load_translations_files_by_language, files_to_load_by_language
         )
 
+    # Sandbox-only customs have no on-disk Integration, so their title falls
+    # back to the catalog descriptor instead (name, or a localized title).
+    catalog = async_get_sandbox_catalog(hass)
+
     for language in languages:
         loaded_translations = loaded_translations_by_language.setdefault(language, {})
         for domain in components:
             # Translations that miss "title" will get integration put in.
             component_translations = loaded_translations.setdefault(domain, {})
-            if "title" not in component_translations and (
-                integration := integrations.get(domain)
-            ):
+            if "title" in component_translations:
+                continue
+            if integration := integrations.get(domain):
                 component_translations["title"] = integration.name
+            elif descriptor := catalog.get(domain):
+                title_translations = descriptor.get("title_translations") or {}
+                component_translations["title"] = title_translations.get(
+                    language, descriptor.get("name") or domain
+                )
 
         translations_by_language.setdefault(language, {}).update(loaded_translations)
 

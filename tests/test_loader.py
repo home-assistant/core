@@ -838,6 +838,94 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
         mock_get.assert_called_once_with(hass)
 
 
+@pytest.mark.parametrize(
+    ("descriptor", "expected_bucket", "expected_metadata"),
+    [
+        pytest.param(
+            {
+                "domain": "sandboxed_custom",
+                "name": "Sandboxed Custom",
+                "config_flow": True,
+                "integration_type": "integration",
+                "iot_class": "cloud_polling",
+                "single_config_entry": True,
+            },
+            "integration",
+            {
+                "config_flow": True,
+                "integration_type": "integration",
+                "iot_class": "cloud_polling",
+                "name": "Sandboxed Custom",
+                "single_config_entry": True,
+                "overwrites_built_in": False,
+            },
+            id="full-integration",
+        ),
+        pytest.param(
+            {
+                "domain": "sandboxed_helper",
+                "name": "Sandboxed Helper",
+                "integration_type": "helper",
+            },
+            "helper",
+            {
+                "config_flow": False,
+                "integration_type": "helper",
+                "iot_class": None,
+                "name": "Sandboxed Helper",
+                "single_config_entry": False,
+                "overwrites_built_in": False,
+            },
+            id="minimal-helper-defaults",
+        ),
+    ],
+)
+async def test_get_integration_descriptions_includes_sandbox_catalog(
+    hass: HomeAssistant,
+    descriptor: loader.SandboxIntegrationDescriptor,
+    expected_bucket: str,
+    expected_metadata: dict[str, Any],
+) -> None:
+    """A registered catalog provider surfaces a sandbox-only custom in the picker."""
+    unregister = loader.async_register_sandbox_catalog_provider(
+        hass, lambda: [descriptor]
+    )
+    try:
+        with patch("homeassistant.loader.async_get_custom_components", return_value={}):
+            descriptions = await loader.async_get_integration_descriptions(hass)
+    finally:
+        unregister()
+
+    assert descriptions["custom"][expected_bucket][descriptor["domain"]] == (
+        expected_metadata
+    )
+
+
+async def test_sandbox_catalog_does_not_override_on_disk_custom(
+    hass: HomeAssistant,
+) -> None:
+    """An on-disk custom carries richer metadata, so it wins a domain collision."""
+    on_disk = _get_test_integration(hass, "sandboxed_custom", True)
+    unregister = loader.async_register_sandbox_catalog_provider(
+        hass,
+        lambda: [{"domain": "sandboxed_custom", "name": "Catalog Name"}],
+    )
+    try:
+        with patch(
+            "homeassistant.loader.async_get_custom_components",
+            return_value={"sandboxed_custom": on_disk},
+        ):
+            descriptions = await loader.async_get_integration_descriptions(hass)
+    finally:
+        unregister()
+
+    # The on-disk manifest name, not the catalog's, is served.
+    assert (
+        descriptions["custom"]["integration"]["sandboxed_custom"]["name"]
+        == "sandboxed_custom"
+    )
+
+
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_custom_component_overwriting_core(hass: HomeAssistant) -> None:
     """Test loading a custom component that overwrites a core component."""
