@@ -2685,7 +2685,7 @@ async def test_process_advertisements_triggers_active_scan_of_correct_duration(
         ) as mock_register,
         patch.object(
             HomeAssistantBluetoothManager, "async_request_active_scan"
-        ) as mock_register_active,
+        ) as mock_request_active_scan,
         pytest.raises(TimeoutError),
     ):
         await async_process_advertisements(
@@ -2696,7 +2696,7 @@ async def test_process_advertisements_triggers_active_scan_of_correct_duration(
             timeout,
         )
     mock_register.assert_called_once_with("aa:44:33:11:23:45", None, None)
-    mock_register_active.assert_called_once_with(timeout)
+    mock_request_active_scan.assert_called_once_with(timeout)
     mock_cancel.assert_called_once()
 
 
