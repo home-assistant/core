@@ -22,6 +22,7 @@ from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID, P
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
@@ -356,6 +357,14 @@ async def make_new_device_data(
             target_list.append((device, coordinator))
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Switchbot Cloud."""
+    if not hass.services.has_service(DOMAIN, AI_ART_FRAME_UPLOAD_IMAGE_SERVICE):
+        async_register_services(hass)
+
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
 ) -> bool:
@@ -385,9 +394,6 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await _initialize_webhook(hass, entry, api, coordinators_by_id)
-
-    if not hass.services.has_service(DOMAIN, AI_ART_FRAME_UPLOAD_IMAGE_SERVICE):
-        async_register_services(hass)
 
     return True
 

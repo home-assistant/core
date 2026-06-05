@@ -5,7 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from switchbot_api import Device
 
-from homeassistant.components.switchbot_cloud import DOMAIN
+from homeassistant.components.switchbot_cloud import (
+    AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
+    DOMAIN,
+)
 from homeassistant.components.switchbot_cloud.service import async_register_services
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -51,7 +54,7 @@ async def test_upload_image_success(
     ) as mock_send:
         await hass.services.async_call(
             DOMAIN,
-            "ai_art_frame_upload_image",
+            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
             {"device_id": device.id, "image_url": "https://example.com/img.jpg"},
             blocking=True,
         )
@@ -74,7 +77,7 @@ async def test_upload_image_no_device_id_raises(
     with pytest.raises(ServiceValidationError, match="Target Device ID is required"):
         await hass.services.async_call(
             DOMAIN,
-            "ai_art_frame_upload_image",
+            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
             {"image_url": "https://example.com/img.jpg"},
             blocking=True,
         )
@@ -106,7 +109,7 @@ async def test_upload_image_wrong_model_skips(
     ) as mock_send:
         await hass.services.async_call(
             DOMAIN,
-            "ai_art_frame_upload_image",
+            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
             {"device_id": device.id, "image_url": "https://example.com/img.jpg"},
             blocking=True,
         )
@@ -122,7 +125,7 @@ async def test_no_entries_raises(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            "ai_art_frame_upload_image",
+            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
             {"device_id": "some-id", "image_url": "https://example.com/img.jpg"},
             blocking=True,
         )
@@ -141,7 +144,7 @@ async def test_device_not_in_registry_skips(
     ) as mock_send:
         await hass.services.async_call(
             DOMAIN,
-            "ai_art_frame_upload_image",
+            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
             {
                 "device_id": "nonexistent-device-id",
                 "image_url": "https://example.com/img.jpg",
@@ -174,7 +177,7 @@ async def test_entry_not_matched_raises(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "ai_art_frame_upload_image",
+            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
             {"device_id": device.id, "image_url": "https://example.com/img.jpg"},
             blocking=True,
         )
