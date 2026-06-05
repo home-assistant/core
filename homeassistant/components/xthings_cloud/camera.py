@@ -4,6 +4,7 @@ import asyncio
 from collections import OrderedDict
 from typing import Any
 
+from aiohttp import ClientError
 from ha_xthings_cloud import KvsSignalingClient, XthingsCloudApiError
 from webrtc_models import RTCIceCandidateInit
 
@@ -28,6 +29,13 @@ from .coordinator import XthingsCloudConfigEntry, XthingsCloudCoordinator
 MAX_PENDING_ICE_CANDIDATES = 50
 MAX_PENDING_WEBRTC_SESSIONS = 100
 MAX_CLOSED_WEBRTC_SESSIONS = 100
+KVS_EXCEPTIONS = (
+    XthingsCloudApiError,
+    ClientError,
+    TimeoutError,
+    ValueError,
+    TypeError,
+)
 
 
 async def async_setup_entry(
@@ -198,11 +206,16 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
 
             # Bridge: convert dict ICE candidates to HA WebRTCCandidate objects
             def _on_ice(cand: dict) -> None:
+                candidate = cand.get("candidate")
+                if not candidate:
+                    LOGGER.debug("Skipping ICE candidate without candidate value")
+                    return
+
                 try:
                     send_message(
                         WebRTCCandidate(
                             candidate=RTCIceCandidateInit(
-                                candidate=cand.get("candidate", ""),
+                                candidate=candidate,
                                 sdp_mid=cand.get("sdpMid"),
                                 sdp_m_line_index=cand.get("sdpMLineIndex"),
                             )
@@ -220,6 +233,13 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 on_ice_candidate=_on_ice,
             )
 
+            if not answer_sdp:
+                send_message(
+                    WebRTCError(code="kvs_error", message="No answer SDP from KVS")
+                )
+                await self.async_close_webrtc_session(session_id)
+                return
+
             pending_candidates = self._pending_candidates.get(session_id, [])
             for cand in pending_candidates:
                 try:
@@ -228,21 +248,15 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                         sdp_mid=cand.sdp_mid,
                         sdp_m_line_index=cand.sdp_m_line_index,
                     )
-                except Exception as err:  # noqa: BLE001
+                except KVS_EXCEPTIONS as err:
                     LOGGER.warning("Failed to send cached ICE candidate: %s", err)
 
             # Clear candidates only after attempting to send them all
             self._pending_candidates.pop(session_id, None)
 
-            if answer_sdp:
-                send_message(WebRTCAnswer(answer=answer_sdp))
-            else:
-                send_message(
-                    WebRTCError(code="kvs_error", message="No answer SDP from KVS")
-                )
-                await self.async_close_webrtc_session(session_id)
+            send_message(WebRTCAnswer(answer=answer_sdp))
 
-        except Exception as err:  # noqa: BLE001
+        except KVS_EXCEPTIONS as err:
             LOGGER.exception("KVS WebRTC failed: %s", err)
             send_message(
                 WebRTCError(code="kvs_error", message="WebRTC negotiation failed")
@@ -267,7 +281,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                     sdp_mid=candidate.sdp_mid,
                     sdp_m_line_index=candidate.sdp_m_line_index,
                 )
-            except Exception as err:  # noqa: BLE001
+            except KVS_EXCEPTIONS as err:
                 LOGGER.warning("Failed to send ICE candidate: %s", err)
                 await self.async_close_webrtc_session(session_id)
         else:
@@ -316,5 +330,5 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         """Close a KVS signaling client and log close failures."""
         try:
             await kvs_client.async_close()
-        except Exception as err:  # noqa: BLE001
+        except KVS_EXCEPTIONS as err:
             LOGGER.warning("Failed to close KVS WebRTC session: %s", err)

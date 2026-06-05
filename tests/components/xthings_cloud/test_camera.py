@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientError
 from ha_xthings_cloud import XthingsCloudApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -160,7 +161,14 @@ async def test_webrtc_offer(
         "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
     ) as mock_kvs_client_class:
         mock_kvs_client = mock_kvs_client_class.return_value
-        mock_kvs_client.async_get_answer_sdp = AsyncMock(return_value="mock_answer_sdp")
+
+        async def mock_get_answer_sdp(_offer_sdp, on_ice_candidate):
+            on_ice_candidate({"sdpMid": "mock_sdp_mid", "sdpMLineIndex": 0})
+            return "mock_answer_sdp"
+
+        mock_kvs_client.async_get_answer_sdp = AsyncMock(
+            side_effect=mock_get_answer_sdp
+        )
 
         mock_send_message = MagicMock()
 
@@ -238,7 +246,7 @@ async def test_webrtc_candidate_caching_and_flush(
         await camera_entity.async_on_webrtc_candidate(session_id, candidate)
         assert mock_kvs_client.async_send_ice_candidate.call_count == 2
 
-        mock_kvs_client.async_send_ice_candidate.side_effect = RuntimeError(
+        mock_kvs_client.async_send_ice_candidate.side_effect = ClientError(
             "Send failed"
         )
         await camera_entity.async_on_webrtc_candidate(session_id, candidate)
@@ -470,17 +478,28 @@ async def test_webrtc_offer_no_answer_sdp(
     camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
     assert camera_entity is not None
 
+    session_id = "mock_session_id"
+    await camera_entity.async_on_webrtc_candidate(
+        session_id,
+        RTCIceCandidateInit(
+            candidate="mock_candidate_string",
+            sdp_mid="mock_sdp_mid",
+            sdp_m_line_index=0,
+        ),
+    )
+
     with patch(
         "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
     ) as mock_kvs_client_class:
         mock_kvs_client = mock_kvs_client_class.return_value
         mock_kvs_client.async_get_answer_sdp = AsyncMock(return_value=None)
+        mock_kvs_client.async_send_ice_candidate = AsyncMock()
         mock_kvs_client.async_close = AsyncMock()
         mock_send_message = MagicMock()
 
         await camera_entity.async_handle_async_webrtc_offer(
             offer_sdp="mock_offer_sdp",
-            session_id="mock_session_id",
+            session_id=session_id,
             send_message=mock_send_message,
         )
 
@@ -489,6 +508,7 @@ async def test_webrtc_offer_no_answer_sdp(
         assert isinstance(call_arg, WebRTCError)
         assert call_arg.code == "kvs_error"
         assert call_arg.message == "No answer SDP from KVS"
+        mock_kvs_client.async_send_ice_candidate.assert_not_called()
         mock_kvs_client.async_close.assert_awaited_once()
 
 
@@ -498,7 +518,9 @@ async def test_webrtc_offer_unexpected_error(
     mock_api_client: AsyncMock,
 ) -> None:
     """Test WebRTC offer handling when an unexpected error occurs."""
-    mock_api_client.async_get_camera_webrtc.side_effect = RuntimeError("KVS failed")
+    mock_api_client.async_get_camera_webrtc.side_effect = XthingsCloudApiError(
+        "KVS failed"
+    )
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
         await setup_integration(hass, mock_config_entry)
 
