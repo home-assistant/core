@@ -1,7 +1,7 @@
 """Data update coordinator for the Sonarr integration."""
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TypeVar, cast
 
 from aiopyarr import (
@@ -17,6 +17,7 @@ from aiopyarr import (
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
 
+from homeassistant.components.calendar import CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -96,20 +97,68 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
         raise NotImplementedError
 
 
+def _get_calendar_event(episode: SonarrCalendar) -> CalendarEvent | None:
+    """Return a CalendarEvent from a SonarrCalendar episode."""
+    if not (air_date := getattr(episode, "airDateUtc", None)):
+        return None
+    if air_date.tzinfo is None:
+        air_date = air_date.replace(tzinfo=UTC)
+    runtime = getattr(episode.series, "runtime", None) or 60
+    end = air_date + timedelta(minutes=runtime)
+    episode_id = f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
+    series_title = getattr(episode.series, "title", None)
+    episode_title = getattr(episode, "title", None)
+    summary = " - ".join(filter(None, [series_title, episode_id, episode_title]))
+    return CalendarEvent(
+        summary=summary,
+        start=air_date,
+        end=end,
+        description=getattr(episode, "overview", None) or "",
+    )
+
+
 class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalendar]]):
     """Calendar update coordinator."""
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SonarrConfigEntry,
+        host_configuration: PyArrHostConfiguration,
+        api_client: SonarrClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hass, config_entry, host_configuration, api_client)
+        self.event: CalendarEvent | None = None
+
     async def _fetch_data(self) -> list[SonarrCalendar]:
-        """Fetch the movies data."""
+        """Fetch the calendar data."""
         local = dt_util.start_of_local_day().replace(microsecond=0)
         start = dt_util.as_utc(local)
         end = start + timedelta(days=self.config_entry.options[CONF_UPCOMING_DAYS])
-        return cast(
+        episodes = cast(
             list[SonarrCalendar],
             await self.api_client.async_get_calendar(
                 start_date=start, end_date=end, include_series=True
             ),
         )
+        self.event = next(
+            (e for ep in episodes if (e := _get_calendar_event(ep)) is not None),
+            None,
+        )
+        return episodes
+
+    async def async_get_events(
+        self, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
+        """Get all events in a specific time frame."""
+        episodes = cast(
+            list[SonarrCalendar],
+            await self.api_client.async_get_calendar(
+                start_date=start_date, end_date=end_date, include_series=True
+            ),
+        )
+        return [e for ep in episodes if (e := _get_calendar_event(ep)) is not None]
 
 
 class CommandsDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[Command]]):
