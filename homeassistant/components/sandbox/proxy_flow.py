@@ -67,6 +67,15 @@ class SandboxFlowProxy(ConfigFlow):
         self._sandbox_flow_id: str | None = None
         self._terminated: bool = False
 
+    @property
+    def sandbox_group(self) -> str:
+        """The sandbox group this in-progress flow forwards to.
+
+        Read by the translation provider to resolve a brand-new custom
+        integration's group before any ``ConfigEntry`` exists.
+        """
+        return self._sandbox_group
+
     def __getattribute__(self, name: str) -> Any:
         """Catch every ``async_step_*`` access and forward to the sandbox.
 
