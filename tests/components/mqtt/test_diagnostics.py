@@ -6,6 +6,7 @@ from unittest.mock import ANY
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -29,7 +30,7 @@ async def test_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     mqtt_mock = await mqtt_mock_entry()
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     mqtt_mock.connected = True
 
     await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
@@ -167,7 +168,7 @@ async def test_redact_diagnostics(
     expected_config["data"]["password"] = "**REDACTED**"
     expected_config["data"]["username"] = "**REDACTED**"
 
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     mqtt_mock.connected = True
 
     # Discover a device with a device tracker
