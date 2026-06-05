@@ -137,6 +137,10 @@ async def test_daily_events(
 @pytest.mark.freeze_time("2024-01-15 12:00:00")
 @pytest.mark.parametrize("location_data", ["Jerusalem"], indirect=True)
 @pytest.mark.parametrize(
+    "calendar_events",
+    [{CONF_DAILY_EVENTS: [DailyCalendarEventType.DATE]}],
+)
+@pytest.mark.parametrize(
     ("language", "expected_summary"),
     [("en", "5 Sh'vat 5784"), ("he", "ה' שבט ה' תשפ\"ד")],
 )
@@ -152,10 +156,13 @@ async def test_daily_events_localized(
     and does not propagate from the coordinator to the task serving calendar
     requests, so this guards against the calendar ignoring the configured
     language (in particular an ``en`` config falling back to Hebrew).
+
+    Only the Hebrew date event is enabled so the assertion does not depend on
+    the (translated) description text to locate it.
     """
     events = await get_calendar_events(hass, DAILY_EVENTS, dt.datetime(2024, 1, 15))
-    date_event = next(e for e in events if e["description"].startswith("Hebrew date"))
-    assert date_event["summary"] == expected_summary
+    assert len(events) == 1
+    assert events[0]["summary"] == expected_summary
 
 
 @pytest.mark.parametrize("location_data", ["New York"], indirect=True)
@@ -179,6 +186,8 @@ async def test_event_strings_use_configured_language(
 
     assert mock_get_translations.call_args_list
     assert all(call.args[1] == "he" for call in mock_get_translations.call_args_list)
+    # The integration language must not leak back into the system language.
+    assert hass.config.language == "en"
 
 
 # ─── Yearly Events: Weekly Torah Portion ──────────────────────────────
