@@ -8,6 +8,7 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.const import Module
+from pylint_home_assistant.helpers.module_info import parse_module
 
 
 @dataclass
@@ -213,23 +214,21 @@ class HassImportsFormatChecker(BaseChecker):
     }
     options = ()
 
-    def __init__(self, linter: PyLinter) -> None:
-        """Initialize the HassImportsFormatChecker."""
-        super().__init__(linter)
-        self.current_package: str | None = None
+    current_package: str
+    current_component: str | None
 
     def visit_module(self, node: nodes.Module) -> None:
         """Determine current package."""
-        if node.package:
-            self.current_package = node.name
-        else:
+        self.current_package = node.name
+        if not node.package:
             # Strip name of the current module
             self.current_package = node.name[: node.name.rfind(".")]
 
+        parsed_module = parse_module(node.name, include_test=True)
+        self.current_component = parsed_module.domain if parsed_module else None
+
     def visit_import(self, node: nodes.Import) -> None:
         """Check for improper `import _` invocations."""
-        if self.current_package is None:
-            return
         for module, _alias in node.names:
             if module.startswith(f"{self.current_package}."):
                 self.add_message("home-assistant-relative-import", node=node)
@@ -251,15 +250,12 @@ class HassImportsFormatChecker(BaseChecker):
         self, current_package: str, node: nodes.ImportFrom
     ) -> None:
         """Check for improper 'from ._ import _' invocations."""
-        if not current_package.startswith(
-            ("homeassistant.components.", "tests.components.")
-        ):
+        if not self.current_component:
             return
 
         split_package = current_package.split(".")
-        current_component = split_package[2]
 
-        self._check_for_constant_alias(node, current_component, current_component)
+        self._check_for_constant_alias(node, self.current_component)
 
         if node.level <= 1:
             # No need to check relative import
@@ -268,7 +264,7 @@ class HassImportsFormatChecker(BaseChecker):
         if not node.modname and len(split_package) == node.level + 1:
             for name in node.names:
                 # Allow relative import to component root
-                if name[0] != current_component:
+                if name[0] != self.current_component:
                     self.add_message("home-assistant-absolute-import", node=node)
                     return
             return
@@ -278,11 +274,10 @@ class HassImportsFormatChecker(BaseChecker):
     def _check_for_constant_alias(
         self,
         node: nodes.ImportFrom,
-        current_component: str | None,
         imported_component: str,
     ) -> bool:
         """Check for hass-import-constant-alias."""
-        if current_component == imported_component:
+        if self.current_component == imported_component:
             # Check for `from homeassistant.components.self import DOMAIN as XYZ`
             for name, alias in node.names:
                 if name == "DOMAIN" and (alias is not None and alias != "DOMAIN"):
@@ -313,13 +308,12 @@ class HassImportsFormatChecker(BaseChecker):
     def _check_for_component_root_import(
         self,
         node: nodes.ImportFrom,
-        current_component: str | None,
         imported_parts: list[str],
         imported_component: str,
     ) -> bool:
         """Check for hass-component-root-import."""
         if (
-            current_component == imported_component
+            self.current_component == imported_component
             or imported_component in _IGNORE_ROOT_IMPORT
         ):
             return True
@@ -373,15 +367,9 @@ class HassImportsFormatChecker(BaseChecker):
             self._visit_importfrom_relative(self.current_package, node)
             return
 
-        # Cache current component
-        current_component: str | None = None
-        for root in ("homeassistant", "tests"):
-            if self.current_package.startswith(f"{root}.components."):
-                current_component = self.current_package.split(".")[2]
-
         # Checks for hass-relative-import
         if not self._check_for_relative_import(
-            self.current_package, node, current_component
+            self.current_package, node, self.current_component
         ):
             return
 
@@ -391,14 +379,12 @@ class HassImportsFormatChecker(BaseChecker):
 
             # Checks for hass-component-root-import
             if not self._check_for_component_root_import(
-                node, current_component, imported_parts, imported_component
+                node, imported_parts, imported_component
             ):
                 return
 
             # Checks for hass-import-constant-alias
-            if not self._check_for_constant_alias(
-                node, current_component, imported_component
-            ):
+            if not self._check_for_constant_alias(node, imported_component):
                 return
 
         # Checks for hass-deprecated-import
