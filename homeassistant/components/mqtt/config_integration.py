@@ -5,8 +5,6 @@ import voluptuous as vol
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
-DEFAULT_TLS_PROTOCOL = "auto"
-
 CONFIG_SCHEMA_BASE = vol.Schema(
     {
         Platform.ALARM_CONTROL_PANEL.value: vol.All(cv.ensure_list, [dict]),
@@ -39,9 +37,4 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.VALVE.value: vol.All(cv.ensure_list, [dict]),
         Platform.WATER_HEATER.value: vol.All(cv.ensure_list, [dict]),
     }
-)
-
-
-CLIENT_KEY_AUTH_MSG = (
-    "client_key and client_cert must both be present in the MQTT broker configuration"
 )
