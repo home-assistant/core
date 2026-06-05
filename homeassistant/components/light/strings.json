@@ -334,6 +334,73 @@
     }
   },
   "services": {
+    "adjust": {
+      "description": "Adjusts the properties of one or more lights without turning on lights that are off.",
+      "fields": {
+        "brightness": {
+          "description": "[%key:component::light::common::field_brightness_description%]",
+          "name": "[%key:component::light::common::field_brightness_name%]"
+        },
+        "brightness_pct": {
+          "description": "[%key:component::light::common::field_brightness_pct_description%]",
+          "name": "[%key:component::light::common::field_brightness_pct_name%]"
+        },
+        "brightness_step": {
+          "description": "[%key:component::light::common::field_brightness_step_description%]",
+          "name": "[%key:component::light::common::field_brightness_step_name%]"
+        },
+        "brightness_step_pct": {
+          "description": "[%key:component::light::common::field_brightness_step_pct_description%]",
+          "name": "[%key:component::light::common::field_brightness_step_pct_name%]"
+        },
+        "color_name": {
+          "description": "[%key:component::light::common::field_color_name_description%]",
+          "name": "[%key:component::light::common::field_color_name_name%]"
+        },
+        "color_temp_kelvin": {
+          "description": "[%key:component::light::common::field_color_temp_kelvin_description%]",
+          "name": "[%key:component::light::common::field_color_temp_kelvin_name%]"
+        },
+        "effect": {
+          "description": "[%key:component::light::common::field_effect_description%]",
+          "name": "[%key:component::light::common::field_effect_name%]"
+        },
+        "hs_color": {
+          "description": "[%key:component::light::common::field_hs_color_description%]",
+          "name": "[%key:component::light::common::field_hs_color_name%]"
+        },
+        "rgb_color": {
+          "description": "[%key:component::light::common::field_rgb_color_description%]",
+          "name": "[%key:component::light::common::field_rgb_color_name%]"
+        },
+        "rgbw_color": {
+          "description": "[%key:component::light::common::field_rgbw_color_description%]",
+          "name": "[%key:component::light::common::field_rgbw_color_name%]"
+        },
+        "rgbww_color": {
+          "description": "[%key:component::light::common::field_rgbww_color_description%]",
+          "name": "[%key:component::light::common::field_rgbww_color_name%]"
+        },
+        "transition": {
+          "description": "[%key:component::light::common::field_transition_description%]",
+          "name": "[%key:component::light::common::field_transition_name%]"
+        },
+        "white": {
+          "description": "[%key:component::light::common::field_white_description%]",
+          "name": "[%key:component::light::common::field_white_name%]"
+        },
+        "xy_color": {
+          "description": "[%key:component::light::common::field_xy_color_description%]",
+          "name": "[%key:component::light::common::field_xy_color_name%]"
+        }
+      },
+      "name": "Adjust light",
+      "sections": {
+        "advanced_fields": {
+          "name": "[%key:component::light::common::section_advanced_fields_name%]"
+        }
+      }
+    },
     "toggle": {
       "description": "Toggles one or more lights, from on to off, or off to on, based on their current state.",
       "fields": {

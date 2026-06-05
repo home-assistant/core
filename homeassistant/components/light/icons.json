@@ -27,6 +27,9 @@
     }
   },
   "services": {
+    "adjust": {
+      "service": "mdi:lightbulb-on-50"
+    },
     "toggle": {
       "service": "mdi:lightbulb"
     },
