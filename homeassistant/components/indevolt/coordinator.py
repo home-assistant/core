@@ -181,39 +181,33 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="failed_to_execute_realtime_action",
             )
 
-        match action:
-            case IndevoltRealtimeAction.CHARGE:
-                self.async_set_updated_data(
-                    {
-                        **self.data,
-                        IndevoltConfig.READ_ENERGY_MODE: IndevoltEnergyMode.REAL_TIME_CONTROL,
-                        IndevoltConfig.READ_REALTIME_STATE: IndevoltRealtimeState.CHARGING,
-                        IndevoltConfig.READ_REALTIME_TARGET_SOC: target_soc,
-                        IndevoltConfig.READ_REALTIME_POWER_LIMIT: power,
-                    }
-                )
+        rt_config: dict[
+            IndevoltRealtimeAction,
+            tuple[IndevoltRealtimeState, int, int],
+        ] = {
+            IndevoltRealtimeAction.CHARGE: (
+                IndevoltRealtimeState.CHARGING,
+                target_soc,
+                power,
+            ),
+            IndevoltRealtimeAction.DISCHARGE: (
+                IndevoltRealtimeState.DISCHARGING,
+                target_soc,
+                power,
+            ),
+            IndevoltRealtimeAction.STOP: (IndevoltRealtimeState.STANDBY, 0, 0),
+        }
 
-            case IndevoltRealtimeAction.DISCHARGE:
-                self.async_set_updated_data(
-                    {
-                        **self.data,
-                        IndevoltConfig.READ_ENERGY_MODE: IndevoltEnergyMode.REAL_TIME_CONTROL,
-                        IndevoltConfig.READ_REALTIME_STATE: IndevoltRealtimeState.DISCHARGING,
-                        IndevoltConfig.READ_REALTIME_TARGET_SOC: target_soc,
-                        IndevoltConfig.READ_REALTIME_POWER_LIMIT: power,
-                    }
-                )
-
-            case IndevoltRealtimeAction.STOP:
-                self.async_set_updated_data(
-                    {
-                        **self.data,
-                        IndevoltConfig.READ_ENERGY_MODE: IndevoltEnergyMode.REAL_TIME_CONTROL,
-                        IndevoltConfig.READ_REALTIME_STATE: IndevoltRealtimeState.STANDBY,
-                        IndevoltConfig.READ_REALTIME_TARGET_SOC: 0,
-                        IndevoltConfig.READ_REALTIME_POWER_LIMIT: 0,
-                    }
-                )
+        state, target_soc, power = rt_config[action]
+        self.async_set_updated_data(
+            {
+                **self.data,
+                IndevoltConfig.READ_ENERGY_MODE: IndevoltEnergyMode.REAL_TIME_CONTROL,
+                IndevoltConfig.READ_REALTIME_STATE: state,
+                IndevoltConfig.READ_REALTIME_TARGET_SOC: target_soc,
+                IndevoltConfig.READ_REALTIME_POWER_LIMIT: power,
+            }
+        )
 
     def get_emergency_soc(self) -> int:
         """Get the emergency SOC value."""
