@@ -1,0 +1,33 @@
+{
+  "serialNumber": "21900042",
+  "number": 1,
+  "model": "P40 Pro",
+  "alias": "Garage",
+  "firmwareVersion": "1.2.3",
+  "firmwareVersionMetering": "4.5.6",
+  "firmwareVersionSafety": "7.8.9",
+  "ipAddress": "192.168.1.50",
+  "state": "CHARGING",
+  "vehiclePlugged": true,
+  "sessionActive": true,
+  "maxCurrent": 32000,
+  "maxPhases": 3,
+  "phaseUsed": "L1_L2_L3",
+  "permanentlyLocked": false,
+  "reserved": false,
+  "authorizationEnabled": true,
+  "errorCode": "0",
+  "meter": {
+    "meterValue": 1706672700,
+    "totalActivePower": 11040000,
+    "totalPowerFactor": 999,
+    "phasesSupported": 3,
+    "currentOffered": 16000,
+    "temperature": 2416,
+    "lines": [
+      { "socketPhase": "L1", "current": 16000, "voltage": 230 },
+      { "socketPhase": "L2", "current": 16000, "voltage": 231 },
+      { "socketPhase": "L3", "current": 16000, "voltage": 229 }
+    ]
+  }
+}
