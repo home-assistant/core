@@ -106,7 +106,7 @@ async def async_migrate_entry(
         new_options = {**config_entry.options}
 
         if config_entry.minor_version < 2:
-            # Add defaults only if they’re not already present
+            # Add defaults only if they're not already present
             if "stt_auto_language" not in new_options:
                 new_options["stt_auto_language"] = False
             if "stt_model" not in new_options:

@@ -1,7 +1,7 @@
 """Tests for the Sonos Media Player platform."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
+import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -87,6 +87,7 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
@@ -1347,6 +1348,61 @@ async def test_play_media_announce(
     soco.play_uri.assert_called_with(content_id, force_radio=False)
 
 
+@pytest.mark.parametrize(
+    ("content_id", "expect_warning"),
+    [
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.mp3",
+            False,
+            id="mp3_no_warning",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.wav",
+            False,
+            id="wav_no_warning",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.flac",
+            True,
+            id="flac_warns_and_plays",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123",
+            False,
+            id="no_extension_no_warning",
+        ),
+    ],
+)
+async def test_play_media_announce_format_warning(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    sonos_websocket,
+    content_id: str,
+    expect_warning: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that announce logs a warning for unsupported file formats."""
+    caplog.clear()
+    caplog.set_level(
+        logging.WARNING, logger="homeassistant.components.sonos.media_player"
+    )
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    warning_logged = "only supports MP3 and WAV" in caplog.text
+    assert warning_logged == expect_warning
+
+
 async def test_media_get_queue(
     hass: HomeAssistant,
     soco: MockSoCo,
@@ -1477,7 +1533,7 @@ async def test_position_updates(
     assert state.attributes[ATTR_MEDIA_POSITION] == 42
     # updated_at should be recent
     updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-    assert updated_at == datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
+    assert updated_at == dt_util.utcnow()
 
     # Position only updated by 1 second; should not update attributes
     new_track_info = current_track_info.copy()
@@ -1507,8 +1563,7 @@ async def test_position_updates(
         await hass.async_block_till_done(wait_background_tasks=True)
         state = hass.states.get(entity_id)
         assert state.attributes[ATTR_MEDIA_POSITION] == 70
-        # pylint: disable-next=home-assistant-enforce-utcnow
-        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == datetime.now(UTC)
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
 
 
 @pytest.mark.parametrize(

@@ -110,17 +110,15 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
     "Home Climate Panel": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
     "WeatherStation": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.SENSOR,)
+        True, entity_config=(Platform.SENSOR,)
     ),
-    "Meter": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
-    "MeterPlus": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
-    "WoIOSensor": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
-    "Hub 2": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
-    "MeterPro": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
-    "MeterPro(CO2)": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.SENSOR,)
-    ),
+    "Meter": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
+    "MeterPlus": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
+    "WoIOSensor": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
+    "Hub 2": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
+    "MeterPro": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
+    "MeterPro(CO2)": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
 }
