@@ -175,8 +175,8 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 )
                 return
 
-            if not all(
-                key in viewer
+            if any(
+                key not in viewer
                 for key in ("AccessKeyId", "SecretAccessKey", "SessionToken")
             ):
                 send_message(
