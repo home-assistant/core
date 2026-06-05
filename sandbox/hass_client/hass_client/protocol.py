@@ -18,6 +18,7 @@ MSG_READY: Final = "sandbox/ready"
 MSG_ENTRY_SETUP: Final = "sandbox/entry_setup"
 MSG_ENTRY_UNLOAD: Final = "sandbox/entry_unload"
 MSG_CALL_SERVICE: Final = "sandbox/call_service"
+MSG_GET_TRANSLATIONS: Final = "sandbox/get_translations"
 MSG_SHUTDOWN: Final = "sandbox/shutdown"
 
 # Sandbox → Main
@@ -37,6 +38,7 @@ __all__ = [
     "MSG_ENTRY_SETUP",
     "MSG_ENTRY_UNLOAD",
     "MSG_FIRE_EVENT",
+    "MSG_GET_TRANSLATIONS",
     "MSG_READY",
     "MSG_REGISTER_ENTITY",
     "MSG_REGISTER_SERVICE",

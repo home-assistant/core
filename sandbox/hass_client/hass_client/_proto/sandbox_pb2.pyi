@@ -183,6 +183,22 @@ class CallServiceResult(_message.Message):
     response: ServiceResponse
     def __init__(self, response: _Optional[_Union[ServiceResponse, _Mapping]] = ...) -> None: ...
 
+class GetTranslations(_message.Message):
+    __slots__ = ("language", "domains")
+    LANGUAGE_FIELD_NUMBER: _ClassVar[int]
+    DOMAINS_FIELD_NUMBER: _ClassVar[int]
+    language: str
+    domains: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, language: _Optional[str] = ..., domains: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class GetTranslationsResult(_message.Message):
+    __slots__ = ("language", "strings")
+    LANGUAGE_FIELD_NUMBER: _ClassVar[int]
+    STRINGS_FIELD_NUMBER: _ClassVar[int]
+    language: str
+    strings: _struct_pb2.Struct
+    def __init__(self, language: _Optional[str] = ..., strings: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+
 class Shutdown(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
