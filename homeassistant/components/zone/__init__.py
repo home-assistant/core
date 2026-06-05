@@ -112,13 +112,15 @@ def async_in_zones(
 ) -> tuple[State | None, list[str]]:
     """Find zones which contain the given latitude and longitude.
 
-    Returns a tuple of the closest active zone and a list of all zones which
-    contain the given latitude and longitude. The list of zones is sorted by
-    distance and then by radius so that the closest and smallest zone is first.
+    Returns a tuple of the active zone and a list of all zones which contain the
+    given latitude and longitude. The active zone is the smallest containing
+    zone, using distance to the zone center as a tie breaker. The list of zones
+    is sorted by radius and then by distance so that the smallest and closest
+    zone is first.
 
     This method must be run in the event loop.
     """
-    # Sort entity IDs so that we are deterministic if equal distance to 2 zones
+    min_radius: float = sys.maxsize
     min_dist: float = sys.maxsize
     closest: State | None = None
     zones: list[tuple[str, float, float]] = []
@@ -157,23 +159,22 @@ def async_in_zones(
         if zone_attrs.get(ATTR_PASSIVE):
             continue
 
-        # If have a closest and its not closer than the closest skip it
+        # Prefer the smallest zone, using distance to its center as a tie
+        # breaker. Skip this zone if it is not smaller and not equally sized but
+        # closer than the current best.
         if closest and not (
-            zone_dist < min_dist
-            or (
-                # If same distance, prefer smaller zone
-                zone_dist == min_dist and zone_radius < closest.attributes[ATTR_RADIUS]
-            )
+            zone_radius < min_radius
+            or (zone_radius == min_radius and zone_dist < min_dist)
         ):
             continue
 
-        # We got here which means it closer than the previous known closest
-        # or equal distance but this one is smaller.
+        min_radius = zone_radius
         min_dist = zone_dist
         closest = zone
 
-    # Sort by distance and then by radius so the closest and smallest zone is first.
-    zones.sort(key=lambda x: (x[1], x[2]))
+    # Sort by radius and then by distance so the smallest and closest zone is
+    # first.
+    zones.sort(key=lambda x: (x[2], x[1]))
     return (closest, [itm[0] for itm in zones])
 
 
