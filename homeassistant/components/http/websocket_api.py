@@ -5,6 +5,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.homeassistant import (
+    DOMAIN as HASS_DOMAIN,
+    SERVICE_HOMEASSISTANT_RESTART,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
@@ -28,9 +32,16 @@ async def websocket_get_config(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Return the active HTTP configuration (the confirmed-working ``stable`` slot)."""
+    """Return the HTTP configuration.
+
+    ``stable`` is the confirmed-working config
+    ``pending`` is an unconfirmed config awaiting promotion, or ``None``.
+    """
     store = await async_get_and_load_store(hass)
-    connection.send_result(msg["id"], store.stable)
+    connection.send_result(
+        msg["id"],
+        {"stable": store.stable, "pending": store.pending},
+    )
 
 
 @websocket_api.require_admin
@@ -46,15 +57,20 @@ async def websocket_set_config(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Store a new pending HTTP configuration.
+    """Store a new pending HTTP configuration and restart to apply it.
 
-    The new config is not applied until Home Assistant is restarted
-    and the user promotes it via ``http/config/promote``. Until then
-    the existing ``stable`` config remains the recovery fallback.
+    Restart whenever the pending slot changes, so the runtime config is
+    refreshed. The result reports whether a restart was triggered via
+    ``{"restart": bool}``.
     """
     store = await async_get_and_load_store(hass)
+    previous_pending = store.pending
     await store.async_set_pending(msg[ATTR_CONFIG])
-    connection.send_result(msg["id"])
+    restart = store.pending != previous_pending
+    connection.send_result(msg["id"], {"restart": restart})
+
+    if restart:
+        await hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
 
 
 @websocket_api.require_admin
