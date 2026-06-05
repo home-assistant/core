@@ -51,7 +51,7 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.components.locknalert_mqtt.common import async_fire_mqtt_message
+from .common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 TEST_SINGLE_CONFIGS = [
