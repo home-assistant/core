@@ -15,7 +15,6 @@ from homeassistant.components.camera import (
     WebRTCError,
     WebRTCSendMessage,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -23,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER
-from .coordinator import XthingsCloudCoordinator
+from .coordinator import XthingsCloudConfigEntry, XthingsCloudCoordinator
 
 # Bound WebRTC caches to avoid unbounded memory growth from delayed candidates.
 MAX_PENDING_ICE_CANDIDATES = 50
@@ -33,15 +32,15 @@ MAX_CLOSED_WEBRTC_SESSIONS = 100
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: XthingsCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up camera platform."""
-    coordinator: XthingsCloudCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     entities = [
         XthingsCloudCamera(coordinator, device_id, device_data)
         for device_id, device_data in coordinator.data.items()
-        if device_data.get("type") == "camera"
+        if device_data["type"] == "camera"
     ]
     async_add_entities(entities)
 
@@ -51,6 +50,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(
         self,
@@ -65,12 +65,11 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self._attr_unique_id = device_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name=device_data.get("name", "Xthings Camera"),
+            name=device_data["name"],
             manufacturer="Xthings",
-            model=device_data.get("model", "Unknown"),
+            model=device_data["model"],
             sw_version=device_data.get("version"),
         )
-        self._attr_supported_features = CameraEntityFeature.STREAM
         self._cached_image: bytes | None = None
         self._cached_snapshot_url: str | None = None
         self._snapshot_task: asyncio.Task[None] | None = None
@@ -90,13 +89,15 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
     @property
     def is_on(self) -> bool:
         """Return true if on."""
-        return self.device_data.get("online", False)
+        return True
 
     @property
     def available(self) -> bool:
         """Return true if device is available."""
-        return self.coordinator.last_update_success and self.device_data.get(
-            "online", False
+        return (
+            super().available
+            and self._device_id in self.coordinator.data
+            and self.device_data["online"]
         )
 
     async def async_camera_image(
@@ -151,8 +152,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
 
         self._pending_candidates.clear()
         await super().async_will_remove_from_hass()
-
-    # --- WebRTC support (HA 2024.1+ only) ---
 
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
