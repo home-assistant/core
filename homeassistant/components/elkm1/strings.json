@@ -43,7 +43,7 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "address": "IP address, domain name, or serial device path. For serial use format 'tty[:baud]'.",
+          "address": "IP address, domain name, or serial device path. For serial, use the format 'tty[:baud]'.",
           "password": "The password to authenticate with the Elk-M1 panel.",
           "prefix": "Optional unique prefix to distinguish multiple Elk-M1 panels.",
           "protocol": "Protocol to use when connecting to the Elk-M1 (secure, non-secure, serial, etc.).",
