@@ -113,7 +113,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         if image:
             self._cached_image = image
             self._cached_snapshot_url = snapshot_url
-        return self._cached_image
+        return image
 
     def _handle_coordinator_update(self) -> None:
         """Check for new snapshot on coordinator update."""
