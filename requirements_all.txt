@@ -551,9 +551,6 @@ arris-tg2492lg==2.2.0
 # homeassistant.components.arwn
 arwn-client==0.2.1
 
-# homeassistant.components.ampio
-asmog==0.0.6
-
 # homeassistant.components.asuswrt
 asusrouter==1.21.3
 
