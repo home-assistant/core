@@ -1,7 +1,10 @@
 """Tests for the Gardena Bluetooth integration."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
+from homeassistant.components import bluetooth
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
@@ -120,3 +123,29 @@ async def setup_entry(
         await hass.async_block_till_done()
 
     return mock_entry
+
+
+@contextmanager
+def constant_advertisements() -> Generator[None]:
+    """Run time will executing co-routine."""
+
+    async def _advertisements(
+        hass: HomeAssistant,
+        callback: bluetooth.models.ProcessAdvertisementCallback,
+        match_dict: bluetooth.match.BluetoothCallbackMatcher,
+        mode: bluetooth.BluetoothScanningMode,
+        timeout: int,
+    ) -> bluetooth.BluetoothServiceInfoBleak:
+
+        last = None
+        for advertisement in bluetooth.async_discovered_service_info(hass):
+            callback(advertisement)
+            last = advertisement
+        if not last:
+            raise TimeoutError
+        return last
+
+    with (
+        patch.object(bluetooth, "async_process_advertisements", new=_advertisements),
+    ):
+        yield

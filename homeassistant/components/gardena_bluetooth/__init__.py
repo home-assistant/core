@@ -1,15 +1,17 @@
 """The Gardena Bluetooth integration."""
 
+from contextlib import suppress
 import logging
 
 from bleak.backends.device import BLEDevice
 from gardena_bluetooth.client import CachedConnection, Client
-from gardena_bluetooth.const import ProductType
-from gardena_bluetooth.scan import async_get_manufacturer_data
+from gardena_bluetooth.const import ScanService
+from gardena_bluetooth.parse import ManufacturerData, ProductType
+from habluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ADDRESS, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import (
@@ -30,6 +32,60 @@ PLATFORMS: list[Platform] = [
 ]
 LOGGER = logging.getLogger(__name__)
 DISCONNECT_DELAY = 5
+PRODUCTS_SCAN_TIMEOUT = 10
+PRODUCT_TYPE_TIMEOUT = 30
+
+
+async def async_get_product_type(hass: HomeAssistant, address: str) -> ProductType:
+    """Get a product type for the given address."""
+
+    data = ManufacturerData()
+
+    def _data_callback(info: BluetoothServiceInfoBleak) -> bool:
+        _LOGGER.debug("Processing advertisement from %s: %s", info.address, info)
+        if info.device.address != address:
+            return False
+
+        data.update(info.manufacturer_data.get(ManufacturerData.company, b""))
+        return data.product_type is not ProductType.UNKNOWN
+
+    with suppress(TimeoutError):
+        await bluetooth.async_process_advertisements(
+            hass,
+            _data_callback,
+            {"address": address},
+            mode=bluetooth.BluetoothScanningMode.ACTIVE,
+            timeout=PRODUCT_TYPE_TIMEOUT,
+        )
+    return data.product_type
+
+
+async def async_get_products(hass: HomeAssistant) -> dict[str, ManufacturerData]:
+    """Get all products that are currently advertising."""
+    products: dict[str, ManufacturerData] = {}
+
+    def _data_callback(info: BluetoothServiceInfoBleak) -> bool:
+        _LOGGER.debug("Processing advertisement from %s: %s", info.address, info)
+        if ScanService not in info.service_uuids:
+            return False
+
+        raw = info.manufacturer_data.get(ManufacturerData.company, b"")
+        if (data := products.get(info.device.address)) is None:
+            data = ManufacturerData()
+            products[info.device.address] = data
+
+        data.update(raw)
+        return False
+
+    with suppress(TimeoutError):
+        await bluetooth.async_process_advertisements(
+            hass,
+            _data_callback,
+            {"manufacturer_id": ManufacturerData.company},
+            mode=bluetooth.BluetoothScanningMode.ACTIVE,
+            timeout=PRODUCTS_SCAN_TIMEOUT,
+        )
+    return products
 
 
 def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
@@ -53,12 +109,7 @@ async def async_setup_entry(
 
     address = entry.data[CONF_ADDRESS]
 
-    try:
-        mfg_data = await async_get_manufacturer_data({address})
-    except TimeoutError as exc:
-        raise ConfigEntryNotReady("Unable to find product type") from exc
-
-    product_type = mfg_data[address].product_type
+    product_type = await async_get_product_type(hass, address)
     if product_type is ProductType.UNKNOWN:
         raise ConfigEntryNotReady("Unable to find product type")
 
