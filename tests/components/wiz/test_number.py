@@ -7,7 +7,6 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.wiz.number import NUMBERS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -22,22 +21,15 @@ from . import (
 )
 
 
-def test_ratio_support_without_state() -> None:
-    """Test ratio support detection without an available device state."""
-    bulb = _mocked_wizlight(None, None, FAKE_TURNABLE_BULB)
-    bulb.state = None
-    ratio_description = next(
-        (
-            description
-            for description in NUMBERS
-            if description.key == "dual_head_ratio"
-        ),
-        None,
-    )
+async def test_ratio_not_created_without_ratio(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the ratio entity is not created for lights that report no ratio."""
+    await async_setup_integration(hass, bulb_type=FAKE_TURNABLE_BULB)
 
-    assert ratio_description is not None
-    assert ratio_description.supported_fn is not None
-    assert not ratio_description.supported_fn(bulb)
+    entity_id = "number.mock_title_dual_head_ratio"
+    assert entity_registry.async_get(entity_id) is None
+    assert hass.states.get(entity_id) is None
 
 
 async def test_speed_operation(
