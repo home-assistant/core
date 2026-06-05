@@ -1,7 +1,8 @@
 """Data update coordinator for the Sonarr integration."""
 
+import asyncio
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import TypeVar, cast
 
 from aiopyarr import (
@@ -60,6 +61,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
     """Data update coordinator for the Sonarr integration."""
 
     config_entry: SonarrConfigEntry
+    _update_interval = timedelta(seconds=30)
 
     def __init__(
         self,
@@ -74,7 +76,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
             logger=LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=self._update_interval,
         )
         self.api_client = api_client
         self.host_configuration = host_configuration
@@ -130,6 +132,7 @@ class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalen
         """Initialize the coordinator."""
         super().__init__(hass, config_entry, host_configuration, api_client)
         self.event: CalendarEvent | None = None
+        self._events: list[CalendarEvent] = []
 
     async def _fetch_data(self) -> list[SonarrCalendar]:
         """Fetch the calendar data."""
@@ -151,14 +154,43 @@ class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalen
     async def async_get_events(
         self, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
-        """Get all events in a specific time frame."""
-        episodes = cast(
-            list[SonarrCalendar],
-            await self.api_client.async_get_calendar(
-                start_date=start_date, end_date=end_date, include_series=True
-            ),
+        """Get cached events and request missing dates."""
+        cutoff = dt_util.now().date() - timedelta(days=30)
+        self._events = [
+            e
+            for e in self._events
+            if (e.start.date() if isinstance(e.start, datetime) else e.start) >= cutoff
+        ]
+        _days = (end_date - start_date).days
+        cached_dates = {
+            e.start.date() if isinstance(e.start, datetime) else e.start
+            for e in self._events
+        }
+        await asyncio.gather(
+            *(
+                self._async_get_events(d)
+                for d in ((start_date + timedelta(days=x)).date() for x in range(_days))
+                if d not in cached_dates
+            )
         )
-        return [e for ep in episodes if (e := _get_calendar_event(ep)) is not None]
+        return self._events
+
+    async def _async_get_events(self, _date: date) -> None:
+        """Fetch events for a specific date and extend the cache."""
+        _start = datetime(_date.year, _date.month, _date.day, tzinfo=UTC)
+        self._events.extend(
+            e
+            for ep in cast(
+                list[SonarrCalendar],
+                await self.api_client.async_get_calendar(
+                    start_date=_start,
+                    end_date=_start + timedelta(days=1),
+                    include_series=True,
+                ),
+            )
+            if (e := _get_calendar_event(ep)) is not None
+            and e.summary not in (ev.summary for ev in self._events)
+        )
 
 
 class CommandsDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[Command]]):

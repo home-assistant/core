@@ -1,6 +1,6 @@
 """The tests for the Sonarr calendar platform."""
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -51,6 +51,32 @@ async def test_calendar(
 
     state = hass.states.get(CALENDAR_ENTITY_ID)
     assert state.state == STATE_OFF
+
+
+async def test_calendar_async_get_events(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    mock_sonarr: MagicMock,
+) -> None:
+    """Test that async_get_events uses the in-memory cache for repeated calls."""
+    freezer.move_to("2014-01-27T00:00:00+00:00")
+    coordinator = init_integration.runtime_data.upcoming
+    start = datetime(2014, 1, 27, tzinfo=UTC)
+    end = start + timedelta(days=1)
+
+    events = await coordinator.async_get_events(start, end)
+    assert len(events) == 1
+    assert (
+        events[0].summary
+        == "Bob's Burgers - S04E11 - Easy Com-mercial, Easy Go-mercial"
+    )
+    call_count = mock_sonarr.async_get_calendar.call_count
+
+    # Second call for the same range is served from cache; no new API call.
+    events = await coordinator.async_get_events(start, end)
+    assert len(events) == 1
+    assert mock_sonarr.async_get_calendar.call_count == call_count
 
 
 async def test_calendar_no_data(
