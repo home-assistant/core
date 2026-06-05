@@ -1,7 +1,6 @@
 """Tests for locknalert_mqtt templates module."""
 
-import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import jinja2
 import pytest

@@ -1,15 +1,17 @@
 """Tests for locknalert_mqtt client module."""
 
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+from aiolocknalert.client import MQTTError
 
 from homeassistant.components.locknalert_mqtt.client import (
     async_publish,
     async_subscribe_internal,
     publish,
 )
-from homeassistant.components.locknalert_mqtt.const import DOMAIN
 from homeassistant.components.locknalert_mqtt.models import DATA_MQTT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -56,8 +58,6 @@ async def test_async_publish_no_encoding_non_bytes_logs_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Non-bytes payload with encoding=None logs an error and returns without publishing."""
-    import logging
-
     await mqtt_mock_entry()
     with caplog.at_level(logging.ERROR, logger="homeassistant.components.locknalert_mqtt"):
         await async_publish(hass, "test/topic", "payload", encoding=None)
@@ -70,8 +70,6 @@ async def test_async_publish_invalid_encoding_logs_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Invalid encoding name logs an error and returns without publishing."""
-    import logging
-
     await mqtt_mock_entry()
     with caplog.at_level(logging.ERROR, logger="homeassistant.components.locknalert_mqtt"):
         await async_publish(hass, "test/topic", "payload", encoding="nonexistent-enc")
@@ -83,7 +81,7 @@ async def test_async_publish_bytes_payload_sent_directly(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Bytes payload is forwarded to the MQTT client without encoding."""
-    mqtt_mock = await mqtt_mock_entry()
+    await mqtt_mock_entry()
     mqtt_data = hass.data[DATA_MQTT]
     mqtt_data.client.async_publish = AsyncMock()
     await async_publish(hass, "test/topic", b"\x00\x01", qos=0, retain=False)
@@ -169,8 +167,6 @@ async def test_mqtt_async_publish_raises_ha_error_on_mqtt_error(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """MQTTError from broker is translated to HomeAssistantError."""
-    from aiolocknalert.client import MQTTError
-
     await mqtt_mock_entry()
 
     with patch(

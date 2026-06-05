@@ -3,7 +3,6 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,21 +13,12 @@ from homeassistant.components.locknalert_mqtt.const import (
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
-    CONF_BIRTH_MESSAGE,
-    CONF_BROKER,
-    DEFAULT_QOS,
-    DEFAULT_RETAIN,
 )
-from homeassistant.components.locknalert_mqtt.models import (
-    DATA_MQTT,
-    DATA_MQTT_AVAILABLE,
-)
+from homeassistant.components.locknalert_mqtt.models import DATA_MQTT, ReceiveMessage
 from homeassistant.components.locknalert_mqtt.util import (
-    AVAILABILITY_TIMEOUT,
     EnsureJobAfterCooldown,
     async_cleanup_device_registry,
     async_create_certificate_temp_files,
-    async_forward_entry_setup_and_setup_discovery,
     async_wait_for_mqtt_client,
     check_state_too_long,
     get_file_path,
@@ -46,6 +36,7 @@ from homeassistant.components.locknalert_mqtt.util import (
 from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 
 from tests.typing import MqttMockHAClientGenerator
 
@@ -251,8 +242,6 @@ def test_valid_birth_will_invalid_topic_raises() -> None:
 
 def test_check_state_too_long_short_state() -> None:
     """Returns False and does not log when state is within limit."""
-    from homeassistant.components.locknalert_mqtt.models import ReceiveMessage
-
     msg = MagicMock(spec=ReceiveMessage)
     msg.topic = "test/topic"
     logger = logging.getLogger("test")
@@ -261,8 +250,6 @@ def test_check_state_too_long_short_state() -> None:
 
 def test_check_state_too_long_too_long_state(caplog: pytest.LogCaptureFixture) -> None:
     """Returns True and logs a warning when state exceeds the limit."""
-    from homeassistant.components.locknalert_mqtt.models import ReceiveMessage
-
     msg = MagicMock(spec=ReceiveMessage)
     msg.topic = "test/topic"
     logger = logging.getLogger("test_check_state")
@@ -525,8 +512,6 @@ async def test_async_cleanup_device_registry_removes_entry(
 ) -> None:
     """Config entry link is removed from device when no entities remain."""
     await mqtt_mock_entry()
-    from homeassistant.helpers import device_registry as dr
-
     device_registry = dr.async_get(hass)
     config_entry = hass.config_entries.async_entries("locknalert_mqtt")[0]
     device = device_registry.async_get_or_create(
@@ -554,8 +539,6 @@ async def test_async_cleanup_device_registry_noop_when_config_entry_id_none(
 ) -> None:
     """Does nothing when config_entry_id is None."""
     await mqtt_mock_entry()
-    from homeassistant.helpers import device_registry as dr
-
     device_registry = dr.async_get(hass)
     config_entry = hass.config_entries.async_entries("locknalert_mqtt")[0]
     device = device_registry.async_get_or_create(
