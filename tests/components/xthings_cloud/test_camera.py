@@ -9,13 +9,9 @@ from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import WebRTCAnswer, WebRTCError, async_get_image
-from homeassistant.components.xthings_cloud.camera import (
-    MAX_CLOSED_WEBRTC_SESSIONS,
-    MAX_PENDING_ICE_CANDIDATES,
-    MAX_PENDING_WEBRTC_SESSIONS,
-)
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_device_by_id, setup_integration
@@ -82,12 +78,12 @@ async def test_camera_image(
     )
 
 
-async def test_camera_image_fetch_error_keeps_cached_image(
+async def test_camera_image_fetch_error_returns_no_image(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
 ) -> None:
-    """Test camera image fetch errors keep serving cached image."""
+    """Test camera image fetch errors return no image."""
     mock_api_client.async_get_snapshot.return_value = b"image_data"
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
         await setup_integration(hass, mock_config_entry)
@@ -102,8 +98,8 @@ async def test_camera_image_fetch_error_keeps_cached_image(
         "Request failed"
     )
 
-    image = await async_get_image(hass, "camera.front_door_camera")
-    assert image.content == b"image_data"
+    with pytest.raises(HomeAssistantError, match="Unable to get image"):
+        await async_get_image(hass, "camera.front_door_camera")
     mock_api_client.async_get_snapshot.assert_called_with(
         "https://example.com/new_snapshot.jpg"
     )
@@ -164,6 +160,13 @@ async def test_webrtc_offer(
 
         async def mock_get_answer_sdp(_offer_sdp, on_ice_candidate):
             on_ice_candidate({"sdpMid": "mock_sdp_mid", "sdpMLineIndex": 0})
+            on_ice_candidate(
+                {
+                    "candidate": "mock_candidate_string",
+                    "sdpMid": "mock_sdp_mid",
+                    "sdpMLineIndex": -1,
+                }
+            )
             return "mock_answer_sdp"
 
         mock_kvs_client.async_get_answer_sdp = AsyncMock(
@@ -196,7 +199,7 @@ async def test_webrtc_candidate_caching_and_flush(
     mock_api_client: AsyncMock,
 ) -> None:
     """Test ICE candidate caching and flushing on offer."""
-    mock_api_client.async_get_camera_webrtc.return_value = {
+    kvs_data = {
         "region": "us-east-1",
         "channel_arn": "arn:aws:kinesisvideo:us-east-1:111111111111:channel/test/123",
         "viewer": {
@@ -218,8 +221,11 @@ async def test_webrtc_candidate_caching_and_flush(
         sdp_m_line_index=0,
     )
 
-    # Call async_on_webrtc_candidate before session exists
-    await camera_entity.async_on_webrtc_candidate(session_id, candidate)
+    async def mock_get_camera_webrtc(_device_id):
+        await camera_entity.async_on_webrtc_candidate(session_id, candidate)
+        return kvs_data
+
+    mock_api_client.async_get_camera_webrtc.side_effect = mock_get_camera_webrtc
 
     with patch(
         "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
@@ -283,8 +289,6 @@ async def test_webrtc_session_cleanup(
         sdp_m_line_index=0,
     )
 
-    await camera_entity.async_on_webrtc_candidate(session_id, candidate)
-
     with patch(
         "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
     ) as mock_kvs_client_class:
@@ -345,88 +349,6 @@ async def test_webrtc_session_cleanup_on_entity_removal(
     mock_kvs_client.async_close.assert_awaited_once()
 
 
-async def test_webrtc_closed_session_eviction_keeps_recent_sessions(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client: AsyncMock,
-) -> None:
-    """Test closed WebRTC sessions evict the oldest entry first."""
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
-
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
-    assert camera_entity is not None
-
-    for index in range(MAX_CLOSED_WEBRTC_SESSIONS + 1):
-        camera_entity.close_webrtc_session(f"mock_session_id_{index}")
-
-    assert "mock_session_id_0" not in camera_entity._closed_sessions
-    assert (
-        f"mock_session_id_{MAX_CLOSED_WEBRTC_SESSIONS}"
-        in camera_entity._closed_sessions
-    )
-
-
-async def test_webrtc_pending_candidate_sessions_are_globally_limited(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client: AsyncMock,
-) -> None:
-    """Test pending WebRTC candidate sessions evict the oldest entry first."""
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
-
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
-    assert camera_entity is not None
-
-    candidate = RTCIceCandidateInit(
-        candidate="mock_candidate_string",
-        sdp_mid="mock_sdp_mid",
-        sdp_m_line_index=0,
-    )
-
-    for index in range(MAX_PENDING_WEBRTC_SESSIONS + 1):
-        await camera_entity.async_on_webrtc_candidate(
-            f"mock_session_id_{index}", candidate
-        )
-
-    assert len(camera_entity._pending_candidates) == MAX_PENDING_WEBRTC_SESSIONS
-    assert "mock_session_id_0" not in camera_entity._pending_candidates
-    assert (
-        f"mock_session_id_{MAX_PENDING_WEBRTC_SESSIONS}"
-        in camera_entity._pending_candidates
-    )
-
-
-async def test_webrtc_pending_candidates_are_limited_per_session(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test pending WebRTC candidates are limited per session."""
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
-
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
-    assert camera_entity is not None
-
-    candidate = RTCIceCandidateInit(
-        candidate="mock_candidate_string",
-        sdp_mid="mock_sdp_mid",
-        sdp_m_line_index=0,
-    )
-    session_id = "mock_session_id"
-
-    for _ in range(MAX_PENDING_ICE_CANDIDATES + 1):
-        await camera_entity.async_on_webrtc_candidate(session_id, candidate)
-
-    assert len(camera_entity._pending_candidates[session_id]) == (
-        MAX_PENDING_ICE_CANDIDATES
-    )
-    assert "KVS: Dropped ICE candidate, cache limit reached" in caplog.text
-
-
 async def test_webrtc_offer_kvs_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -479,15 +401,6 @@ async def test_webrtc_offer_no_answer_sdp(
     assert camera_entity is not None
 
     session_id = "mock_session_id"
-    await camera_entity.async_on_webrtc_candidate(
-        session_id,
-        RTCIceCandidateInit(
-            candidate="mock_candidate_string",
-            sdp_mid="mock_sdp_mid",
-            sdp_m_line_index=0,
-        ),
-    )
-
     with patch(
         "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
     ) as mock_kvs_client_class:
