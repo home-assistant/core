@@ -768,6 +768,39 @@ async def test_call_service_resyncs_on_failure(
     assert pushed_state.state == STATE_OFF
 
 
+async def test_call_service_resyncs_on_unexpected_exception(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """A non-HomeAssistantError raised by the service must still trigger resync.
+
+    blocking=True surfaces every exception, not just HomeAssistantError. Without
+    the broad fallback we'd regress the previous swallow-everything safety net
+    that HA provided for non-blocking dispatch.
+    """
+    entity_id = "homekit.accessory"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(hass, hk_driver, "Home Accessory", entity_id, 2, {})
+    async_mock_service(
+        hass,
+        "cover",
+        "open_cover",
+        raise_exception=RuntimeError("third-party blew up"),
+    )
+
+    with patch.object(acc, "async_update_state") as mock_update_state:
+        acc.async_call_service(
+            "cover", "open_cover", {ATTR_ENTITY_ID: entity_id}, "value"
+        )
+        await hass.async_block_till_done()
+
+    mock_update_state.assert_called_once()
+    pushed_state = mock_update_state.call_args.args[0]
+    assert pushed_state.entity_id == entity_id
+    assert pushed_state.state == STATE_OFF
+
+
 def test_home_bridge(hk_driver) -> None:
     """Test HomeBridge class."""
     bridge = HomeBridge("hass", hk_driver, BRIDGE_NAME)

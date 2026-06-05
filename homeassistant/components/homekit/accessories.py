@@ -648,16 +648,18 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
 
         async def _call() -> None:
+            # blocking=True so exceptions from the service handler reach us;
+            # HA's non-blocking dispatch wraps them in
+            # _run_service_call_catch_exceptions and we'd never see the
+            # failure. We re-establish the same swallow-and-log safety net
+            # below, plus re-sync the HomeKit state so pyhap's optimistic
+            # target characteristic doesn't strand the tile on the
+            # requested action.
             try:
                 await self.hass.services.async_call(
                     domain, service, service_data, blocking=True, context=context
                 )
             except HomeAssistantError as err:
-                # pyhap optimistically advanced the target characteristic from
-                # the controller's request; the entity state never changed, so
-                # async_update_state won't fire naturally. Re-push current
-                # state so the HomeKit tile reverts instead of being stuck on
-                # the requested action.
                 _LOGGER.warning(
                     "%s: %s.%s failed (%s); re-syncing HomeKit state",
                     self.entity_id,
@@ -665,8 +667,17 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
                     service,
                     err,
                 )
-                if (state := self.hass.states.get(self.entity_id)) is not None:
-                    self.async_update_state(state)
+            except Exception:
+                _LOGGER.exception(
+                    "%s: %s.%s raised unexpectedly; re-syncing HomeKit state",
+                    self.entity_id,
+                    domain,
+                    service,
+                )
+            else:
+                return
+            if (state := self.hass.states.get(self.entity_id)) is not None:
+                self.async_update_state(state)
 
         self.hass.async_create_task(_call(), eager_start=True)
 
