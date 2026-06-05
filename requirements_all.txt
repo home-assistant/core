@@ -1862,7 +1862,7 @@ poolsense==0.0.8
 powerfox==2.1.1
 
 # homeassistant.components.powersensor_au
-powersensor-local==2.1.2
+powersensor-local==2.2.0
 
 # homeassistant.components.prana
 prana-api-client==0.12.0

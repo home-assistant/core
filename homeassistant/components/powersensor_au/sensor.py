@@ -170,6 +170,8 @@ SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     PowersensorSensorEntityDescription(
         key="device_role",
         translation_key="device_role",
+        device_class=SensorDeviceClass.ENUM,
+        options=["appliance", "house_net", "solar", "unknown", "water"],
         entity_category=EntityCategory.DIAGNOSTIC,
         event="role",
         message_key="role",
@@ -286,6 +288,8 @@ PLUG_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     PowersensorSensorEntityDescription(
         key="device_role",
         translation_key="device_role",
+        device_class=SensorDeviceClass.ENUM,
+        options=["appliance", "house_net", "solar", "unknown", "water"],
         entity_category=EntityCategory.DIAGNOSTIC,
         event="role",
         message_key="role",
@@ -437,8 +441,6 @@ class PowersensorEntity(SensorEntity):
 
     def _schedule_unavailable(self) -> None:
         """(Re-)schedule the unavailability timer."""
-        if not self.hass:
-            return
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
         self._remove_unavailability_tracker = async_call_later(
@@ -471,34 +473,6 @@ class PowersensorEntity(SensorEntity):
             async_dispatcher_connect(self.hass, self._signal, self._handle_update)
         )
         self.async_on_remove(self._cancel_unavailability_tracker)
-
-    def _rename_based_on_role(self) -> bool:
-        """Return True if a role change requires refreshing device translation data.
-
-        Subclass hook: return True to trigger a device registry update with the
-        new translation_key after a role change.  Default is False (no rename).
-        """
-        return False
-
-    @callback
-    def _handle_role_update(self, mac: str, role: str | None) -> None:
-        """Handle a role update signal for this device."""
-        if self._mac != mac or self._role == role:
-            return
-
-        self._role = role
-        if not self._rename_based_on_role():
-            return
-
-        device_registry = dr.async_get(self.hass)
-        info = self.device_info
-        device_registry.async_get_or_create(
-            config_entry_id=self._config_entry_id,
-            identifiers={(DOMAIN, self._mac)},
-            translation_key=info.get("translation_key"),
-            translation_placeholders=info.get("translation_placeholders"),
-        )
-        self.async_write_ha_state()
 
     @callback
     def _handle_update(self, event: str | None, message: dict[str, Any]) -> None:
@@ -566,12 +540,22 @@ class PowersensorSensorEntity(PowersensorEntity):
             None: "unknown_sensor",
         }.get(self._role, "unknown_sensor")
 
-    def _rename_based_on_role(self) -> bool:
-        expected = self._get_translation_key()
-        if self._current_translation_key != expected:
-            self._current_translation_key = expected
-            return True
-        return False
+    @callback
+    def _handle_role_update(self, mac: str, role: str | None) -> None:
+        """Handle a role update, refreshing the device registry translation key."""
+        if self._mac != mac or self._role == role:
+            return
+        self._role = role
+        self._current_translation_key = self._get_translation_key()
+        device_registry = dr.async_get(self.hass)
+        info = self.device_info
+        device_registry.async_get_or_create(
+            config_entry_id=self._config_entry_id,
+            identifiers={(DOMAIN, self._mac)},
+            translation_key=info.get("translation_key"),
+            translation_placeholders=info.get("translation_placeholders"),
+        )
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to data-update signal and also ROLE_UPDATE_SIGNAL.

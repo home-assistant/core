@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from powersensor_local import VirtualHousehold
-from powersensor_local.devices import PowersensorDevices
+from powersensor_local.zeroconf_devices import PowersensorZeroconfDevices
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -36,7 +36,7 @@ class PowersensorRuntimeData:
 
     vhh: VirtualHousehold
     dispatcher: PowersensorMessageDispatcher
-    devices: PowersensorDevices
+    devices: PowersensorZeroconfDevices
 
 
 type PowersensorConfigEntry = ConfigEntry[PowersensorRuntimeData]

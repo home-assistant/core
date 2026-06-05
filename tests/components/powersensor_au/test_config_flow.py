@@ -1,16 +1,14 @@
-"""Tests for the powersensor_au Home Assistant  config_flow.
-
-This module includes various unit tests to ensure that the configuration flow for
-the power sensor component works correctly.
-"""
+"""Tests for the powersensor_au config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
+from powersensor_local import VirtualHousehold
 import pytest
 
 from homeassistant import config_entries
 import homeassistant.components.powersensor_au
+from homeassistant.components.powersensor_au.config_flow import PowersensorConfigFlow
 from homeassistant.components.powersensor_au.const import (
     DOMAIN,
     ROLE_UNKNOWN,
@@ -24,16 +22,18 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-MAC = "a4cf1218f158"
+from tests.common import MockConfigEntry
+
+PLUG_MAC = "a4cf1218f158"
 SECOND_MAC = "a4cf1218f160"
 
 
 @pytest.fixture(autouse=True)
-def bypass_setup(monkeypatch: pytest.MonkeyPatch):
-    """A pytest fixture to bypass the actual setup of the powersensor_au component during tests.
-
-    It replaces the async_setup_entry method with a mock that returns True.
-    """
+def bypass_setup(
+    monkeypatch: pytest.MonkeyPatch,
+    mock_async_zeroconf: MagicMock,
+) -> None:
+    """Bypass actual entry setup and prevent real zeroconf socket from opening."""
     monkeypatch.setattr(
         homeassistant.components.powersensor_au,
         "async_setup_entry",
@@ -41,24 +41,25 @@ def bypass_setup(monkeypatch: pytest.MonkeyPatch):
     )
 
 
-def validate_config_data(data):
-    """Validates the configuration data received from the powersensor_au config flow.
-
-    Args:
-        data (dict): The configuration data to be validated.
-
-    Raises:
-        AssertionError: If the configuration data does not meet the expected format.
-    """
-    # CFG_DEVICES removed in refactor; discovery is runtime-only
-    assert isinstance(data["roles"], dict)
-
-
-### Tests ################################################
+def _zc_info(mac: str, ip: str = "192.168.0.33") -> ZeroconfServiceInfo:
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(ip),
+        ip_addresses=[ip_address(ip)],
+        hostname=f"Powersensor-gateway-{mac}-civet.local",
+        name=f"Powersensor-gateway-{mac}-civet._powersensor._udp.local",
+        port=49476,
+        type="_powersensor._udp.local.",
+        properties={"version": "1", "id": mac},
+    )
 
 
-async def test_user(hass: HomeAssistant) -> None:
-    """Tests the user-initiated configuration flow for the powersensor_au."""
+# ---------------------------------------------------------------------------
+# User flow
+# ---------------------------------------------------------------------------
+
+
+async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
+    """User-initiated flow reaches the confirm form then creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -66,439 +67,19 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result["step_id"] == "manual_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": result["step_id"]},
+        result["flow_id"], user_input={}
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    validate_config_data(result["data"])
+    assert isinstance(result["data"]["roles"], dict)
 
 
-async def test_zeroconf(hass: HomeAssistant) -> None:
-    """Tests the zeroconf-initiated configuration flow for the powersensor_au."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.0.33"),
-            ip_addresses=[ip_address("192.168.0.33")],
-            hostname=f"Powersensor-gateway-{MAC}-civet.local",
-            name=f"Powersensor-gateway-{MAC}-civet._powersensor._udp.local",
-            port=49476,
-            type="_powersensor._udp.local.",
-            properties={
-                "version": "1",
-                "id": f"{MAC}",
-            },
-        ),
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": result["step_id"]},
-    )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    validate_config_data(result["data"])
-
-
-async def test_zeroconf_two_plugs(hass: HomeAssistant) -> None:
-    """This test ensures that the configuration flow correctly handles the discovery of two Powersensor plugs via Zeroconf, with subsequent discoveries being aborted if the integration is already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.0.33"),
-            ip_addresses=[ip_address("192.168.0.33")],
-            hostname=f"Powersensor-gateway-{MAC}-civet.local",
-            name=f"Powersensor-gateway-{MAC}-civet._powersensor._udp.local",
-            port=49476,
-            type="_powersensor._udp.local.",
-            properties={
-                "version": "1",
-                "id": f"{MAC}",
-            },
-        ),
-    )
-
-    second_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.0.37"),
-            ip_addresses=[ip_address("192.168.0.37")],
-            hostname=f"Powersensor-gateway-{SECOND_MAC}-civet.local",
-            name=f"Powersensor-gateway-{SECOND_MAC}-civet._powersensor._udp.local",
-            port=49476,
-            type="_powersensor._udp.local.",
-            properties={
-                "version": "1",
-                "id": f"{SECOND_MAC}",
-            },
-        ),
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": result["step_id"]},
-    )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    validate_config_data(result["data"])
-
-    # we expect the second plug config flow to get canceled if the integration has already been configured
-    assert second_result["type"] == FlowResultType.ABORT
-
-
-async def test_zeroconf_two_plugs_simultaneous_discovery(
-    hass: HomeAssistant,
-) -> None:
-    """Test that simultaneous zeroconf discoveries only produce one config flow.
-
-    When two plugs are discovered at the same time, each triggers a zeroconf
-    flow. The first flow should proceed to the confirmation step; the second
-    should abort immediately with 'already_in_progress' because
-    _async_prepare_setup() detects the first flow is already running.
-    """
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.0.33"),
-            ip_addresses=[ip_address("192.168.0.33")],
-            hostname=f"Powersensor-gateway-{MAC}-civet.local",
-            name=f"Powersensor-gateway-{MAC}-civet._powersensor._udp.local",
-            port=49476,
-            type="_powersensor._udp.local.",
-            properties={
-                "version": "1",
-                "id": f"{MAC}",
-            },
-        ),
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-
-    # Second plug discovered simultaneously — should abort, not start another flow.
-    second_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.0.37"),
-            ip_addresses=[ip_address("192.168.0.37")],
-            hostname=f"Powersensor-gateway-{SECOND_MAC}-civet.local",
-            name=f"Powersensor-gateway-{SECOND_MAC}-civet._powersensor._udp.local",
-            port=49476,
-            type="_powersensor._udp.local.",
-            properties={
-                "version": "1",
-                "id": f"{SECOND_MAC}",
-            },
-        ),
-    )
-    assert second_result["type"] == FlowResultType.ABORT
-    assert second_result["reason"] == "already_in_progress"
-
-    # Complete the first flow normally.
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": result["step_id"]},
-    )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    validate_config_data(result["data"])
-
-    assert second_result["type"] == FlowResultType.ABORT
-
-
-async def test_zeroconf_already_discovered(hass: HomeAssistant) -> None:
-    """Test behavior when trying to discover and configure a PowerSensor device that has already been discovered.
-
-    This test checks that:
-    - The first discovery attempt completes the config flow.
-    - A second discovery attempt from the same IP address is aborted with the 'already_in_progress' reason.
-    """
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.0.33"),
-            ip_addresses=[ip_address("192.168.0.33")],
-            hostname=f"Powersensor-gateway-{MAC}-civet.local",
-            name=f"Powersensor-gateway-{MAC}-civet._powersensor._udp.local",
-            port=49476,
-            type="_powersensor._udp.local.",
-            properties={
-                "version": "1",
-                "id": f"{MAC}",
-            },
-        ),
-    )
-
-    result2 = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.0.33"),
-            ip_addresses=[ip_address("192.168.0.33")],
-            hostname=f"Powersensor-gateway-{MAC}-civet.local",
-            name=f"Powersensor-gateway-{MAC}-civet._powersensor._udp.local",
-            port=49476,
-            type="_powersensor._udp.local.",
-            properties={
-                "version": "1",
-                "id": f"{MAC}",
-            },
-        ),
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "already_in_progress"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": result["step_id"]},
-    )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    validate_config_data(result["data"])
-
-
-async def test_zeroconf_missing_id(hass: HomeAssistant) -> None:
-    """No plug should advertise without an 'id' property, but just in case..."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.0.33"),
-            ip_addresses=[ip_address("192.168.0.33")],
-            hostname=f"Powersensor-gateway-{MAC}-civet.local",
-            name=f"Powersensor-gateway-{MAC}-civet._powersensor._udp.local",
-            port=49476,
-            type="_powersensor._udp.local.",
-            properties={
-                "version": "1",
-            },
-        ),
-    )
-    assert result["type"] == FlowResultType.ABORT
-
-
-@pytest.mark.parametrize("check_translations", [None])
-async def test_reconfigure(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, def_config_entry
-) -> None:
-    """Validates the device reconfiguration flow and role updates."""
-
-    # Make the config_flow use our precanned entry
-    def my_entry(_):
-        return def_config_entry
-
-    monkeypatch.setattr(hass.config_entries, "async_get_entry", my_entry)
-
-    # Patch async_update_entry so it doesn't require the entry to be registered
-    updated_data: dict[str, object] = {}
-
-    def capture_update(entry, *, data=None, **_kwargs):
-        if data is not None:
-            updated_data.update(data)
-        return True
-
-    monkeypatch.setattr(hass.config_entries, "async_update_entry", capture_update)
-    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
-    # Kick off the reconfigure
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": def_config_entry.entry_id,
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
-
-    # Hook into role updates to see role change come through
-    called = 0
-
-    async def verify_roles(mac, role):
-        nonlocal called
-        called += 1
-        assert mac == "cafebabe" and role == "water"
-
-    discon = async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, verify_roles)
-
-    # Prepare user_input, and submit it
-    mac2name = {
-        mac: f"Powersensor Sensor ({mac})"
-        for mac in def_config_entry.runtime_data.dispatcher.sensors
-    }
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={mac2name["cafebabe"]: "water"}
-    )
-    discon()
-    # Verify
-    assert result["type"] == FlowResultType.ABORT
-    assert called == 1
-
-
-@pytest.mark.parametrize("check_translations", [None])
-async def test_unknown_role(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, def_config_entry
-) -> None:
-    """Tests the system's response to unknown roles during configuration step."""
-
-    # Make the config_flow use our pre-canned entry
-    def my_entry(_):
-        return def_config_entry
-
-    monkeypatch.setattr(hass.config_entries, "async_get_entry", my_entry)
-
-    # Patch async_update_entry so it doesn't require the entry to be registered
-    def capture_update(entry, *, data=None, **_kwargs):
-        return True
-
-    monkeypatch.setattr(hass.config_entries, "async_update_entry", capture_update)
-    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
-
-    # Kick off the reconfigure
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": def_config_entry.entry_id,
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
-
-    # Hook into role updates to see role change come through
-    called = 0
-
-    async def verify_roles(mac, role):
-        nonlocal called
-        called += 1
-        assert mac == "d3adB33f" and role is None
-
-    discon = async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, verify_roles)
-
-    # Prepare user_input, and submit it
-    mac2name = {
-        mac: f"Powersensor Sensor ({mac})"
-        for mac in def_config_entry.runtime_data.dispatcher.sensors
-    }
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={mac2name["d3adB33f"]: ROLE_UNKNOWN}
-    )
-    discon()
-    # Verify
-    assert result["type"] == FlowResultType.ABORT
-    assert called == 1
-
-
-async def test_reconfigure_aborts_when_entry_not_loaded(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, def_config_entry
-) -> None:
-    """Test that reconfigure aborts when the entry is not in LOADED state (line 40).
-
-    config_flow.py checks entry.state before accessing runtime_data; if the
-    entry is not loaded the flow must abort with 'cannot_reconfigure'.
-    """
-
-    # Force the entry into a non-loaded state.
-    object.__setattr__(def_config_entry, "state", ConfigEntryState.NOT_LOADED)
-
-    def my_entry(_):
-        return def_config_entry
-
-    monkeypatch.setattr(hass.config_entries, "async_get_entry", my_entry)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": def_config_entry.entry_id,
-        },
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_reconfigure"
-
-
-async def test_abort_due_to_missing_runtime_data(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, def_config_entry
-) -> None:
-    """Tests the system's response to missing runtime data during the configuration step."""
-    del def_config_entry.runtime_data
-    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
-
-    # Make the config_flow use our pre-canned entry
-    def my_entry(_):
-        return def_config_entry
-
-    monkeypatch.setattr(hass.config_entries, "async_get_entry", my_entry)
-
-    # Kick off the reconfigure
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": def_config_entry.entry_id,
-        },
-    )
-    assert result["type"] == FlowResultType.ABORT
-
-
-async def test_abort_due_to_missing_dispatcher(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, def_config_entry
-) -> None:
-    """Tests the system's response to missing dispatcher in the runtime data during the configuration step."""
-    _old_rd = def_config_entry.runtime_data
-    def_config_entry.runtime_data = PowersensorRuntimeData(
-        vhh=_old_rd.vhh,
-        dispatcher=None,  # type: ignore[arg-type]
-        devices=_old_rd.devices,
-    )
-    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
-
-    # Make the config_flow use our pre-canned entry
-    def my_entry(_):
-        return def_config_entry
-
-    monkeypatch.setattr(hass.config_entries, "async_get_entry", my_entry)
-
-    # Kick off the reconfigure
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": def_config_entry.entry_id,
-        },
-    )
-    assert result["type"] == FlowResultType.ABORT
-
-
-async def test_user_already_configured(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test that a second user-initiated flow aborts when an entry already exists.
-
-    With single_config_entry=true in the manifest, the HA framework aborts any
-    new flow with 'single_instance_allowed' when an entry for the domain already
-    exists. The _abort_if_unique_id_configured() call in _async_prepare_setup
-    provides an additional guard for the unique-ID path.
-    """
-    # Complete a first flow so an entry exists.
+async def test_user_flow_aborts_when_already_configured(hass: HomeAssistant) -> None:
+    """A second user flow aborts with single_instance_allowed once an entry exists."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": result["step_id"]},
-    )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    await hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
 
-    # A second user flow should now abort because the unique ID is taken.
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -506,135 +87,345 @@ async def test_user_already_configured(
     assert result2["reason"] == "single_instance_allowed"
 
 
-@pytest.mark.parametrize("check_translations", [None])
-async def test_reconfigure_sensor_disappears_between_form_and_submit(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, def_config_entry
-) -> None:
-    """Test that a sensor that disappears between form render and submit is skipped.
-
-    Lines 103-105 of config_flow.py: mac2name is rebuilt on every call to
-    async_step_reconfigure. If dispatcher.sensors shrinks between the first
-    call (form render) and the second call (form submit), a name that was a
-    valid schema key on the first call will be absent from name2mac on the
-    second, so name2mac.get() returns None and the guard is hit.
-    """
-    monkeypatch.setattr(
-        hass.config_entries, "async_get_entry", lambda _: def_config_entry
-    )
-    monkeypatch.setattr(
-        hass.config_entries, "async_update_entry", lambda *a, **kw: True
-    )
-    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": def_config_entry.entry_id,
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
-
-    # cafebabe was present when the form was rendered — schema accepts its name.
-    # Now remove it so mac2name on the second call won't contain it,
-    # causing name2mac.get() to return None for it.
-    mac2name = {
-        mac: f"Powersensor Sensor ({mac})"
-        for mac in def_config_entry.runtime_data.dispatcher.sensors
-    }
-    def_config_entry.runtime_data.dispatcher.sensors = {
-        "c001eat5": "house-net",
-        "d3adB33f": None,
-    }
-
-    signal_fired = []
-
-    async def capture_role(mac, role):
-        signal_fired.append(mac)
-
-    discon = async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, capture_role)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={mac2name["cafebabe"]: ROLE_WATER},
-    )
-    discon()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "roles_applied"
-    # cafebabe disappeared — its name hit the None guard, no signal fired
-    assert signal_fired == []
-
-
-@pytest.mark.parametrize("check_translations", [None])
-async def test_reconfigure_none_role_shown_as_unknown_in_form(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, def_config_entry
-) -> None:
-    """Test that a None-persisted role is normalised to ROLE_UNKNOWN in the form.
-
-    When a sensor's role was previously set to 'unknown' it is stored as None
-    in CFG_ROLES.  The reconfigure form must display ROLE_UNKNOWN as the
-    suggested_value (not None), otherwise the select selector has no matching
-    option and the UI default is undefined.
-    """
-    # Persist None for a sensor MAC to simulate a previously-unknown role.
-    none_mac = "aabbccddeeff"
-    object.__setattr__(
-        def_config_entry,
-        "data",
-        {"roles": {none_mac: None}},
-    )
-    def_config_entry.runtime_data.dispatcher.sensors[none_mac] = None
-
-    def my_entry(_):
-        return def_config_entry
-
-    monkeypatch.setattr(hass.config_entries, "async_get_entry", my_entry)
-    monkeypatch.setattr(
-        hass.config_entries, "async_update_entry", lambda *a, **kw: True
-    )
-    object.__setattr__(def_config_entry, "state", ConfigEntryState.LOADED)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": def_config_entry.entry_id,
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
-
-    # The schema keys are vol.Optional instances; find the one for none_mac.
-    schema = result["data_schema"].schema if result["data_schema"] is not None else []
-
-    sensor_name = f"Powersensor Sensor ({none_mac})"
-    matching_keys = [k for k in schema if getattr(k, "schema", None) == sensor_name]
-    assert matching_keys, f"No schema key found for sensor name '{sensor_name}'"
-
-    key = matching_keys[0]
-    suggested = (key.description or {}).get("suggested_value")
-    assert suggested == ROLE_UNKNOWN, (
-        f"Expected suggested_value='{ROLE_UNKNOWN}' for a None-persisted role, got {suggested!r}"
-    )
-
-
 async def test_user_flow_aborts_when_already_in_progress(hass: HomeAssistant) -> None:
-    """Test that a user flow aborts if another flow is already in progress.
-
-    Line 171 of config_flow.py: _async_prepare_setup returns an abort result
-    when _async_in_progress() is True.  async_step_user returns that result
-    directly.  This is triggered by starting a second user flow while the
-    first is still sitting on the confirm form.
-    """
-    # Start a first user flow and leave it on the confirm form
+    """A second user flow aborts if the first is still on the confirm form."""
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result1["type"] == FlowResultType.FORM
 
-    # Start a second user flow — _async_in_progress() is now True
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
+
+
+# ---------------------------------------------------------------------------
+# Zeroconf flow
+# ---------------------------------------------------------------------------
+
+
+async def test_zeroconf_flow_creates_entry(hass: HomeAssistant) -> None:
+    """Zeroconf discovery reaches confirm form then creates an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_zc_info(PLUG_MAC),
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert isinstance(result["data"]["roles"], dict)
+
+
+async def test_zeroconf_second_plug_aborts_when_configured(hass: HomeAssistant) -> None:
+    """A second plug discovery aborts once the entry exists."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_zc_info(PLUG_MAC),
+    )
+    await hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_zc_info(SECOND_MAC, ip="192.168.0.37"),
+    )
+    assert result2["type"] == FlowResultType.ABORT
+
+
+async def test_zeroconf_simultaneous_discoveries_deduplicate(
+    hass: HomeAssistant,
+) -> None:
+    """Two simultaneous discoveries only produce one flow; the second aborts."""
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_zc_info(PLUG_MAC),
+    )
+    assert result1["type"] == FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_zc_info(SECOND_MAC, ip="192.168.0.37"),
+    )
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_in_progress"
+
+    result1 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"], user_input={}
+    )
+    assert result1["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_zeroconf_missing_id_aborts(hass: HomeAssistant) -> None:
+    """Discovery aborts when the plug advertises without an 'id' property."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("192.168.0.33"),
+            ip_addresses=[ip_address("192.168.0.33")],
+            hostname="Powersensor-gateway.local",
+            name="Powersensor-gateway._powersensor._udp.local",
+            port=49476,
+            type="_powersensor._udp.local.",
+            properties={"version": "1"},  # no 'id'
+        ),
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "firmware_not_compatible"
+
+
+# ---------------------------------------------------------------------------
+# Reconfigure flow
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def loaded_entry(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> MockConfigEntry:
+    """A LOADED config entry with a mock dispatcher containing known sensors."""
+    dispatcher = Mock()
+    dispatcher.sensors = {
+        "c001eat5": "house-net",
+        "cafebabe": "solar",
+        "d3adB33f": None,
+    }
+    dispatcher.plugs = set()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "roles": {"c001eat5": "house-net", "cafebabe": "solar", "d3adB33f": None}
+        },
+        entry_id="test_reconfig",
+        version=PowersensorConfigFlow.VERSION,
+        minor_version=PowersensorConfigFlow.MINOR_VERSION,
+    )
+    entry.runtime_data = PowersensorRuntimeData(
+        vhh=VirtualHousehold(False),
+        dispatcher=dispatcher,
+        devices=Mock(),
+    )
+    object.__setattr__(entry, "state", ConfigEntryState.LOADED)
+
+    monkeypatch.setattr(hass.config_entries, "async_get_entry", lambda _: entry)
+    monkeypatch.setattr(
+        hass.config_entries, "async_update_entry", lambda *a, **kw: True
+    )
+    return entry
+
+
+@pytest.mark.parametrize("check_translations", [None])
+async def test_reconfigure_applies_role(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Reconfigure form sends ROLE_UPDATE_SIGNAL for the submitted role."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": loaded_entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    received: list[tuple[str, str | None]] = []
+
+    async def capture(mac, role):
+        received.append((mac, role))
+
+    unsub = async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, capture)
+
+    mac2name = {
+        mac: f"Powersensor Sensor ({mac})"
+        for mac in loaded_entry.runtime_data.dispatcher.sensors
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={mac2name["cafebabe"]: ROLE_WATER},
+    )
+    unsub()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "roles_applied"
+    assert ("cafebabe", "water") in received
+
+
+@pytest.mark.parametrize("check_translations", [None])
+async def test_reconfigure_unknown_role_sends_none(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Selecting ROLE_UNKNOWN in the form sends None via ROLE_UPDATE_SIGNAL."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": loaded_entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    received: list[tuple[str, str | None]] = []
+
+    async def capture(mac, role):
+        received.append((mac, role))
+
+    unsub = async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, capture)
+    mac2name = {
+        mac: f"Powersensor Sensor ({mac})"
+        for mac in loaded_entry.runtime_data.dispatcher.sensors
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={mac2name["d3adB33f"]: ROLE_UNKNOWN},
+    )
+    unsub()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert ("d3adB33f", None) in received
+
+
+async def test_reconfigure_aborts_when_entry_not_loaded(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reconfigure aborts with cannot_reconfigure when the entry is not LOADED."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="x",
+        version=PowersensorConfigFlow.VERSION,
+        minor_version=PowersensorConfigFlow.MINOR_VERSION,
+    )
+    object.__setattr__(entry, "state", ConfigEntryState.NOT_LOADED)
+    monkeypatch.setattr(hass.config_entries, "async_get_entry", lambda _: entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": "x"},
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_reconfigure"
+
+
+@pytest.mark.parametrize("check_translations", [None])
+async def test_reconfigure_skips_sensor_that_disappeared(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """A sensor removed from dispatcher.sensors between form render and submit is silently skipped."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": loaded_entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    # Capture the name for cafebabe before removing it from the dispatcher.
+    mac2name = {
+        mac: f"Powersensor Sensor ({mac})"
+        for mac in loaded_entry.runtime_data.dispatcher.sensors
+    }
+    loaded_entry.runtime_data.dispatcher.sensors = {"c001eat5": "house-net"}
+
+    fired: list[str] = []
+
+    async def capture(mac, role):
+        fired.append(mac)
+
+    unsub = async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, capture)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={mac2name["cafebabe"]: ROLE_WATER},
+    )
+    unsub()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert "cafebabe" not in fired
+
+
+@pytest.mark.parametrize("check_translations", [None])
+async def test_reconfigure_none_role_shown_as_unknown(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """A None persisted role is shown as ROLE_UNKNOWN in the suggested_value."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": loaded_entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    assert result["data_schema"] is not None
+    schema = result["data_schema"].schema
+    sensor_name = "Powersensor Sensor (d3adB33f)"
+    matching = [k for k in schema if getattr(k, "schema", None) == sensor_name]
+    assert matching, f"No schema key for '{sensor_name}'"
+
+    suggested = (matching[0].description or {}).get("suggested_value")
+    assert suggested == ROLE_UNKNOWN
+
+
+async def test_reconfigure_aborts_when_runtime_data_missing(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reconfigure aborts when runtime_data has not been set (AttributeError path)."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"roles": {}},
+        entry_id="x",
+        version=PowersensorConfigFlow.VERSION,
+        minor_version=PowersensorConfigFlow.MINOR_VERSION,
+    )
+    # Entry appears LOADED but runtime_data was never set.
+    object.__setattr__(entry, "state", ConfigEntryState.LOADED)
+    monkeypatch.setattr(hass.config_entries, "async_get_entry", lambda _: entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": "x"},
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_reconfigure"
+
+
+async def test_reconfigure_aborts_when_dispatcher_is_none(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reconfigure aborts when runtime_data.dispatcher is None."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"roles": {}},
+        entry_id="x",
+        version=PowersensorConfigFlow.VERSION,
+        minor_version=PowersensorConfigFlow.MINOR_VERSION,
+    )
+    entry.runtime_data = PowersensorRuntimeData(
+        vhh=VirtualHousehold(False),
+        dispatcher=None,  # type: ignore[arg-type]
+        devices=Mock(),
+    )
+    object.__setattr__(entry, "state", ConfigEntryState.LOADED)
+    monkeypatch.setattr(hass.config_entries, "async_get_entry", lambda _: entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": "x"},
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_reconfigure"

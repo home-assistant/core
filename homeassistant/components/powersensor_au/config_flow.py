@@ -28,8 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Powersensor."""
 
-    VERSION = 2
-    MINOR_VERSION = 2
+    VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_reconfigure(
         self, user_input: dict[str, str | None] | None = None

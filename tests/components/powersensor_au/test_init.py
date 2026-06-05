@@ -1,422 +1,144 @@
-"""Tests for initial setup, migration, and teardown of the Powersensor component."""
+"""Tests for setup, unload, and migration of the Powersensor integration."""
 
-from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
+from powersensor_local import VirtualHousehold
 
-from homeassistant.components.powersensor_au import (
-    _STARTUP_RESCAN_DELAYS,
-    RESCAN_INTERVAL,
-)
 from homeassistant.components.powersensor_au.config_flow import PowersensorConfigFlow
 from homeassistant.components.powersensor_au.const import DOMAIN, ROLE_SOLAR
 from homeassistant.components.powersensor_au.models import PowersensorRuntimeData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-MAC = "a4cf1218f158"
+PLUG_MAC = "aabbccddeeff"
 
 
-async def test_async_setup(hass: HomeAssistant) -> None:
-    """Test that the component loads without error."""
-    assert await async_setup_component(hass, DOMAIN, {}) is True
-
-
-async def test_setup_unload_entry(
+async def test_setup_entry_populates_runtime_data(
     hass: HomeAssistant,
-    def_config_entry,
+    config_entry: MockConfigEntry,
 ) -> None:
-    """Test that setup populates runtime_data and unload cleans it up."""
-    def_config_entry.add_to_hass(hass)
-    mock_devices = def_config_entry.runtime_data.devices
+    """Setup stores a populated PowersensorRuntimeData on the entry."""
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert isinstance(config_entry.runtime_data, PowersensorRuntimeData)
+    assert config_entry.runtime_data.vhh is not None
+    assert config_entry.runtime_data.dispatcher is not None
+    assert config_entry.runtime_data.devices is not None
 
-    with patch(
-        "homeassistant.components.powersensor_au.PowersensorDevices",
-        return_value=mock_devices,
-    ):
-        assert await hass.config_entries.async_setup(def_config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert hasattr(def_config_entry, "runtime_data")
-        assert isinstance(def_config_entry.runtime_data, PowersensorRuntimeData)
 
-        assert await hass.config_entries.async_unload(def_config_entry.entry_id)
-        await hass.async_block_till_done()
+async def test_setup_starts_mdns_browser(
+    hass: HomeAssistant,
+    mock_devices: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """devices.start() is called once during setup with an async callback."""
+    mock_devices.start.assert_awaited_once()
+    cb = mock_devices.start.call_args[0][0]
+    assert callable(cb)
 
-    mock_devices.stop.assert_called_once()
+
+async def test_unload_calls_disconnect_and_stop(
+    hass: HomeAssistant,
+    mock_devices: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Unloading the entry calls disconnect() then stop() exactly once each."""
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_devices.stop.assert_awaited_once()
+    # dispatcher.disconnect() is also called once; it's a real object so we
+    # check indirectly that no exception was raised (state is NOT_LOADED).
 
 
 async def test_unload_skips_teardown_when_platform_unload_fails(
     hass: HomeAssistant,
-    def_config_entry,
+    mock_devices: MagicMock,
+    config_entry: MockConfigEntry,
 ) -> None:
-    """Test that dispatcher.disconnect() and devices.stop() are NOT called when async_unload_platforms returns False."""
-    def_config_entry.add_to_hass(hass)
-    mock_devices = def_config_entry.runtime_data.devices
-
-    with patch(
-        "homeassistant.components.powersensor_au.PowersensorDevices",
-        return_value=mock_devices,
-    ):
-        assert await hass.config_entries.async_setup(def_config_entry.entry_id)
-        await hass.async_block_till_done()
-
+    """stop() is NOT called when async_unload_platforms returns False."""
     mock_devices.stop.reset_mock()
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
         return_value=False,
     ):
-        result = await hass.config_entries.async_unload(def_config_entry.entry_id)
+        result = await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert result is False
     mock_devices.stop.assert_not_called()
+    # Entry transitions to FAILED_UNLOAD (not LOADED) when unload fails.
+    assert config_entry.state is ConfigEntryState.FAILED_UNLOAD
 
 
-async def test_setup_devices_start_failure_raises_config_entry_not_ready(
+async def test_devices_start_failure_raises_config_entry_not_ready(
     hass: HomeAssistant,
-    def_config_entry,
-    monkeypatch: pytest.MonkeyPatch,
+    mock_async_zeroconf: MagicMock,
 ) -> None:
-    """Test that a RuntimeError from devices.start() raises ConfigEntryNotReady."""
-    def_config_entry.add_to_hass(hass)
-
-    err_msg = "Forced start failure"
-    stop_called = []
-
-    mock_devices = MagicMock()
-    mock_devices.start = AsyncMock(side_effect=RuntimeError(err_msg))
-    mock_devices.stop = AsyncMock(side_effect=lambda: stop_called.append(True))
-
-    with patch(
-        "homeassistant.components.powersensor_au.PowersensorDevices",
-        return_value=mock_devices,
-    ):
-        await hass.config_entries.async_setup(def_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert def_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert stop_called, (
-        "devices.stop() must be called to clean up after a failed start()"
-    )
-
-
-async def test_migrate_entry(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test config-entry migration from v1 to the current version, reject new and accept current."""
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"0123456789ab": {}},
-        entry_id="test_migrate",
-        version=1,
-        minor_version=1,
-    )
-    old_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.powersensor_au.PowersensorDevices",
-    ) as mock_devices_cls:
-        mock_devices_cls.return_value.start = AsyncMock(return_value=0)
-        mock_devices_cls.return_value.stop = AsyncMock()
-        mock_devices_cls.return_value.subscribe = MagicMock()
-        mock_devices_cls.return_value.rescan = AsyncMock()
-        await hass.config_entries.async_setup(old_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert old_entry.version == PowersensorConfigFlow.VERSION
-    assert old_entry.minor_version == 2
-    assert "roles" in old_entry.data
-
-    too_new_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"0123456789ab": {}},
-        entry_id="test_migrate_too_new",
-        version=PowersensorConfigFlow.VERSION + 1,
-        minor_version=1,
-    )
-    too_new_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(too_new_entry.entry_id)
-    await hass.async_block_till_done()
-    assert too_new_entry.state is ConfigEntryState.MIGRATION_ERROR
-
-
-async def test_setup_registers_rescan_callbacks(
-    hass: HomeAssistant,
-    def_config_entry,
-) -> None:
-    """Test that the correct number of startup rescans and one periodic interval are registered."""
-    def_config_entry.add_to_hass(hass)
-
-    call_later_calls = []
-    track_interval_calls = []
-
-    mock_devices = def_config_entry.runtime_data.devices
-
-    def _fake_call_later(hass: HomeAssistant | None, delay, job):
-        call_later_calls.append(delay)
-        return lambda: None
-
-    def _fake_track_interval(hass: HomeAssistant | None, cb, interval):
-        track_interval_calls.append(interval)
-        return lambda: None
-
-    with (
-        patch(
-            "homeassistant.components.powersensor_au.PowersensorDevices",
-            return_value=mock_devices,
-        ),
-        patch(
-            "homeassistant.components.powersensor_au.async_call_later",
-            side_effect=_fake_call_later,
-        ),
-        patch(
-            "homeassistant.components.powersensor_au.async_track_time_interval",
-            side_effect=_fake_track_interval,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(def_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert len(call_later_calls) == len(_STARTUP_RESCAN_DELAYS)
-    assert sorted(call_later_calls) == sorted(_STARTUP_RESCAN_DELAYS)
-    assert len(track_interval_calls) == 1
-
-
-def test_rescan_interval_is_five_minutes() -> None:
-    """RESCAN_INTERVAL must be exactly 5 minutes."""
-    assert timedelta(minutes=5) == RESCAN_INTERVAL
-
-
-def test_startup_rescan_delays_are_graduated() -> None:
-    """_STARTUP_RESCAN_DELAYS must be a non-empty strictly increasing sequence."""
-    delays = _STARTUP_RESCAN_DELAYS
-    assert len(delays) > 0
-    assert delays[0] <= 15, "First rescan should fire within 15 seconds of startup"
-    assert list(delays) == sorted(delays), "Delays must be in ascending order"
-
-
-async def test_setup_constructs_vhh_with_solar_when_solar_role_persisted(
-    hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test that VirtualHousehold is constructed with with_solar=True when a solar role is present."""
+    """A RuntimeError from devices.start() leaves the entry in SETUP_RETRY."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"roles": {"aabbccddeeff": ROLE_SOLAR}},
-        entry_id="test_solar",
+        data={"roles": {}},
         version=PowersensorConfigFlow.VERSION,
         minor_version=PowersensorConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
-    constructed_with_solar = []
+    failing_devices = MagicMock()
+    failing_devices.start = AsyncMock(side_effect=RuntimeError("no socket"))
+    failing_devices.stop = AsyncMock()
 
-    class CapturingVHH:
+    with patch(
+        "homeassistant.components.powersensor_au.PowersensorZeroconfDevices",
+        return_value=failing_devices,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    failing_devices.stop.assert_awaited_once()
+
+
+async def test_setup_constructs_vhh_with_solar_when_role_persisted(
+    hass: HomeAssistant,
+    mock_async_zeroconf: MagicMock,
+) -> None:
+    """VirtualHousehold is constructed with with_solar=True when a solar role is persisted."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"roles": {"aabbccddeeff": ROLE_SOLAR}},
+        version=PowersensorConfigFlow.VERSION,
+        minor_version=PowersensorConfigFlow.MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+
+    constructed_args: list[bool] = []
+
+    class CapturingVHH(VirtualHousehold):
         def __init__(self, with_solar: bool) -> None:
-            constructed_with_solar.append(with_solar)
-            self._with_solar = with_solar
+            constructed_args.append(with_solar)
+            super().__init__(with_solar)
 
-        async def process_average_power_event(self, msg):
-            pass
-
-        async def process_summation_event(self, msg):
-            pass
-
-        def subscribe(self, *a):
-            pass
-
-        def unsubscribe(self, *a):
-            pass
-
-    mock_devices = MagicMock()
-    mock_devices.start = AsyncMock(return_value=0)
-    mock_devices.stop = AsyncMock()
-    mock_devices.subscribe = MagicMock()
-    mock_devices.rescan = AsyncMock()
+    devices = MagicMock()
+    devices.start = AsyncMock()
+    devices.stop = AsyncMock()
+    devices.subscribe = MagicMock()
+    devices.unsubscribe = MagicMock()
 
     with (
-        patch("homeassistant.components.powersensor_au.VirtualHousehold", CapturingVHH),
         patch(
-            "homeassistant.components.powersensor_au.PowersensorDevices",
-            return_value=mock_devices,
+            "homeassistant.components.powersensor_au.PowersensorZeroconfDevices",
+            return_value=devices,
+        ),
+        patch(
+            "homeassistant.components.powersensor_au.VirtualHousehold",
+            CapturingVHH,
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert constructed_with_solar == [True], (
-        "VirtualHousehold must be constructed with with_solar=True when a solar "
-        "role is present in entry.data"
-    )
-
-
-async def test_setup_raises_config_entry_not_ready_on_unexpected_setup_error(
-    hass: HomeAssistant,
-    def_config_entry,
-) -> None:
-    """Test that ValueError during VHH construction results in SETUP_RETRY state."""
-    def_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.powersensor_au.VirtualHousehold",
-        side_effect=ValueError("bad config"),
-    ):
-        await hass.config_entries.async_setup(def_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert def_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_rescan_fires_devices_rescan(
-    hass: HomeAssistant,
-    def_config_entry,
-) -> None:
-    """Test that the periodic _rescan callback calls devices.rescan()."""
-    def_config_entry.add_to_hass(hass)
-    mock_devices = def_config_entry.runtime_data.devices
-
-    captured_rescan_cb = []
-
-    def capture_interval(hass_arg, cb, interval):
-        captured_rescan_cb.append(cb)
-        return lambda: None
-
-    with (
-        patch(
-            "homeassistant.components.powersensor_au.PowersensorDevices",
-            return_value=mock_devices,
-        ),
-        patch(
-            "homeassistant.components.powersensor_au.async_track_time_interval",
-            side_effect=capture_interval,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(def_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert captured_rescan_cb, "async_track_time_interval was never called"
-
-    # Reset the mock before invoking the captured callback: setup already called
-    # rescan() directly via the is_running branch, so the count is non-zero here.
-    mock_devices.rescan.reset_mock()
-    await captured_rescan_cb[0](None)
-
-    mock_devices.rescan.assert_awaited_once()
-
-
-async def test_hass_already_running_triggers_rescan_directly(
-    hass: HomeAssistant,
-    def_config_entry,
-) -> None:
-    """Test that setup calls rescan directly when HA is already running.
-
-    When the integration is added or re-added after HA has fully started
-    (hass.is_running is True), EVENT_HOMEASSISTANT_STARTED will never fire
-    again.  The fix bypasses the listener and calls devices.rescan() directly
-    during setup, so the startup rescan still happens without registering a
-    one-shot listener whose unsubscribe token would error on unload.
-
-    The HA test harness runs hass in CoreState.running, so this test exercises
-    the is_running=True branch without any extra patching.
-    """
-    def_config_entry.add_to_hass(hass)
-    mock_devices = def_config_entry.runtime_data.devices
-
-    assert hass.is_running, "hass fixture must be in running state for this test"
-
-    with patch(
-        "homeassistant.components.powersensor_au.PowersensorDevices",
-        return_value=mock_devices,
-    ):
-        assert await hass.config_entries.async_setup(def_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # rescan() is called directly during setup (not via event listener).
-    mock_devices.rescan.assert_awaited()
-
-    # Confirm no listener was registered: firing the event now must NOT
-    # trigger another rescan call.
-    call_count_after_setup = mock_devices.rescan.await_count
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-    assert mock_devices.rescan.await_count == call_count_after_setup, (
-        "Firing EVENT_HOMEASSISTANT_STARTED must not trigger an extra rescan "
-        "when hass.is_running was True at setup time"
-    )
-
-
-async def test_hass_not_yet_running_registers_listener_for_rescan(
-    hass: HomeAssistant,
-    def_config_entry,
-) -> None:
-    """Test that setup registers an event listener when HA is still starting.
-
-    When the integration loads during HA startup (hass.is_running is False),
-    it must register a one-shot EVENT_HOMEASSISTANT_STARTED listener so the
-    startup rescan fires once HA is fully up.  The listener must then be
-    cleaned up via entry.async_on_unload so that unloading doesn't error.
-    """
-    def_config_entry.add_to_hass(hass)
-    mock_devices = def_config_entry.runtime_data.devices
-
-    with (
-        patch(
-            "homeassistant.components.powersensor_au.PowersensorDevices",
-            return_value=mock_devices,
-        ),
-        patch.object(
-            type(hass), "is_running", new_callable=PropertyMock, return_value=False
-        ),
-    ):
-        assert await hass.config_entries.async_setup(def_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        # rescan() must NOT have been called directly during setup.
-        mock_devices.rescan.assert_not_awaited()
-
-        # Firing the event should now trigger rescan via the registered listener.
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-    mock_devices.rescan.assert_awaited_once()
-
-
-async def test_rescan_does_not_fire_when_unloaded(
-    hass: HomeAssistant,
-    def_config_entry,
-) -> None:
-    """_rescan is a no-op after the entry has been unloaded."""
-    def_config_entry.add_to_hass(hass)
-    mock_devices = def_config_entry.runtime_data.devices
-
-    captured_rescan_cb = []
-
-    def capture_interval(hass_arg, cb, interval):
-        captured_rescan_cb.append(cb)
-        return lambda: None
-
-    with (
-        patch(
-            "homeassistant.components.powersensor_au.PowersensorDevices",
-            return_value=mock_devices,
-        ),
-        patch(
-            "homeassistant.components.powersensor_au.async_track_time_interval",
-            side_effect=capture_interval,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(def_config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert await hass.config_entries.async_unload(def_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    mock_devices.rescan.reset_mock()
-    await captured_rescan_cb[0](None)
-
-    mock_devices.rescan.assert_not_awaited()
+    assert constructed_args == [True]

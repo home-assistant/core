@@ -1,40 +1,55 @@
 """PowersensorMessageDispatcher routes PowersensorDevices events to HA entities.
 
-The dispatcher owns a single PowersensorDevices instance (from powersensor_local)
-which handles all plug connections, reconnections, and sensor discovery internally.
-The dispatcher's sole responsibility is to translate the unified event stream into
-HA dispatcher signals that drive entity creation and data updates.
+The dispatcher owns a single PowersensorZeroconfDevices instance (from
+powersensor_local) which handles all plug connections, reconnections, and sensor
+discovery internally.  The dispatcher's sole responsibility is to translate the
+unified event stream into HA dispatcher signals that drive entity creation and
+data updates.
 
 Event routing:
   device_found  (device_type=plug)    → CREATE_PLUG_SIGNAL
   device_found  (device_type=sensor)  → CREATE_SENSOR_SIGNAL
+  now_relaying_for                    → ROLE_UPDATE_SIGNAL (role hint, best-effort)
   device_lost                         → logged (library handles reconnection)
   average_power, summation_energy,    → DATA_UPDATE_SIGNAL_PREFIX + mac + event
     and all other measurement events    (also fed into VirtualHousehold)
 
 Discovery lifecycle
 -------------------
-devices.start() runs a UDP broadcast scan and fires device_found synchronously
-for every responding plug before returning.  The platform (sensor.py) is set up
-before start() is called, so its signal listeners are always ready when those
-events arrive.
+devices.start() registers an mDNS ServiceBrowser and returns immediately; it
+does not block waiting for plugs to respond.  Plugs already present on the
+network fire add_service callbacks shortly after start() returns.  The platform
+(sensor.py) is set up before start() is called, so its signal listeners are
+always ready when those events arrive.
 
-Subsequent rescans (periodic and on-startup graduated delays) call devices.rescan(),
-which re-runs the scan.  The library deduplicates: _add_device only fires
-device_found for MACs not already in its internal _devices dict, so rescans are
-safe and idempotent.  The dispatcher mirrors this with its own plugs/sensors sets
-so that a rescan finding a previously missed plug still creates its entities even
-after the first scan completed without it.
+Unlike the legacy UDP scan there is no scan_complete event.  The browser is
+continuous: new plugs are discovered as they appear and lost plugs are
+debounced before generating a device_lost event.
 
-Sleep/wake recovery
--------------------
-After a laptop sleep, the library's expiry timer fires and removes devices from its
-internal _devices dict (since no data arrived while asleep).  The next rescan then
-re-adds them and fires device_found again.  When that happens, the MAC is already
-in self.plugs / self.sensors (from before the sleep), so we skip the CREATE signal
-to avoid duplicate entities — but we MUST still call devices.subscribe(mac) because
-the re-added _Device object starts with subscribed=False.  Without this re-subscribe,
-_emit_if_subscribed silently drops all events and the sensors appear permanently dead.
+now_relaying_for role hint
+--------------------------
+When relay_now_relaying_for=True is passed to PowersensorZeroconfDevices, the
+library forwards the raw now_relaying_for event to the callback immediately
+after synthesising the device_found event for the sensor.  This event carries
+the role field directly from the wire message, which lets us seed the role in
+HA without waiting for the first measurement event to arrive.
+
+The role is treated as a hint: present on most devices, absent on some very old
+hardware, and occasionally None/unknown on newer devices.  When absent or None
+the existing persisted role fallback in _handle_device_found takes over, and
+any subsequent measurement event with a concrete role will correct it via the
+normal ROLE_UPDATE_SIGNAL path.
+
+Expiry recovery
+---------------
+The library's expiry timer removes devices that have been silent for too long
+(e.g. a plug that was temporarily offline).  When the plug re-announces via
+mDNS, the library re-adds the device and fires device_found again.  When that
+happens, the MAC is already in self.plugs / self.sensors (entities already
+exist), so we skip the CREATE signal to avoid duplicates — but we MUST still
+call devices.subscribe(mac) because the re-added _Device object starts with
+subscribed=False.  Without this re-subscribe, _emit_if_subscribed silently
+drops all events and the sensors appear permanently dead.
 """
 
 import logging
@@ -64,7 +79,7 @@ def _filter_unknown(role: str | None) -> str | None:
 
 
 class PowersensorMessageDispatcher:
-    """Routes PowersensorDevices events to HA entity lifecycle signals."""
+    """Routes PowersensorZeroconfDevices events to HA entity lifecycle signals."""
 
     def __init__(
         self,
@@ -72,7 +87,7 @@ class PowersensorMessageDispatcher:
         entry: ConfigEntry,
         vhh: VirtualHousehold,
     ) -> None:
-        """Initialise the dispatcher.
+        """Initialize the dispatcher.
 
         Args:
             hass: The Home Assistant instance.
@@ -90,25 +105,23 @@ class PowersensorMessageDispatcher:
         self.sensors: dict[str, str | None] = {}
 
     # ------------------------------------------------------------------
-    # PowersensorDevices unified event callback
+    # PowersensorZeroconfDevices unified event callback
     # ------------------------------------------------------------------
 
     async def on_device_event(self, event: dict[str, Any]) -> None:
-        """Handle all events from the PowersensorDevices unified stream.
+        """Handle all events from the PowersensorZeroconfDevices unified stream.
 
-        This is the single callback passed to PowersensorDevices.start().
+        This is the single callback passed to PowersensorZeroconfDevices.start().
         """
         event_type = event.get("event")
 
         match event_type:
             case "device_found":
                 await self._handle_device_found(event)
+            case "now_relaying_for":
+                self._handle_now_relaying_for(event)
             case "device_lost":
                 self._handle_device_lost(event)
-            case "scan_complete":
-                _LOGGER.debug(
-                    "Scan complete, %d gateway(s) found", event.get("gateway_count", 0)
-                )
             case _:
                 if event_type is not None:
                     await self._handle_measurement(event_type, event)
@@ -116,30 +129,29 @@ class PowersensorMessageDispatcher:
     async def _handle_device_found(self, event: dict[str, Any]) -> None:
         """Handle a newly discovered plug or sensor.
 
-        The library emits device_found for both plugs (found via UDP broadcast
-        scan) and sensors (found when a plug relays a now_relaying_for message,
-        which the library converts to a device_found internally).
+        The library emits device_found for both plugs (found via mDNS) and
+        sensors (found when a plug relays a now_relaying_for message, which
+        the library converts to a device_found internally).
 
-        Note: current library versions drop the role when converting
-        now_relaying_for → device_found (_add_device only receives the type
-        string), so event.get("role") is typically None for sensors — but
-        this may change in future API versions and the code handles both
-        cases.  When role is absent we fall back to the role persisted in
-        entry.data from the previous session so that role-gated entities
-        (power, energy, water flow, etc.) are created immediately on reload
-        rather than waiting for the first measurement to trigger
-        ROLE_UPDATE_SIGNAL.
+        Note: the library does not populate role in the device_found event for
+        sensors — it is lost in the now_relaying_for → _add_device conversion.
+        The role arrives separately via the forwarded now_relaying_for event
+        (handled by _handle_now_relaying_for), which fires immediately after
+        device_found for the same sensor in the same event sequence.  As a
+        belt-and-braces fallback we also check the persisted role so that
+        role-gated entities are created correctly on reload/reboot even if the
+        now_relaying_for event somehow arrives before the entity platform is
+        ready.
 
         Re-subscribe after expiry: if the MAC is already known (i.e. we have
         entities for it) but the library re-fired device_found because its
-        internal _Device was removed by the expiry timer and then re-added by a
-        rescan, we skip the CREATE signal (no duplicate entities) but still call
-        devices.subscribe(mac).  The library creates a fresh _Device with
-        subscribed=False, so without this call _emit_if_subscribed would silently
-        discard all subsequent events.
+        internal _Device was removed by the expiry timer and then re-added by
+        a new mDNS announcement, we skip the CREATE signal (no duplicate
+        entities) but still call devices.subscribe(mac).  The library creates
+        a fresh _Device with subscribed=False, so without this call
+        _emit_if_subscribed would silently discard all subsequent events.
         """
         mac = event.get("mac")
-        # note: library has trailing colon, that may change in the future.
         device_type = event.get("device_type")
         if mac is None:
             return
@@ -152,21 +164,20 @@ class PowersensorMessageDispatcher:
                 async_dispatcher_send(self._hass, CREATE_PLUG_SIGNAL, mac)
             else:
                 # MAC already known — device was removed by expiry timer and
-                # re-added by rescan.  Re-subscribe so events flow again.
+                # re-added by a fresh mDNS announcement.  Re-subscribe so
+                # events flow again.
                 _LOGGER.debug(
                     "Plug re-discovered after expiry, re-subscribing: %s", mac
                 )
                 self._entry.runtime_data.devices.subscribe(mac)
 
         elif device_type == "sensor":
-            role = _filter_unknown(event.get("role"))
             if mac not in self.sensors:
-                # The library never populates role in the device_found event for
-                # sensors (it is lost in the now_relaying_for → _add_device
-                # conversion).  Fall back to the persisted role so that
-                # role-gated entities are created correctly on reload/reboot.
-                if role is None:
-                    role = _filter_unknown(self._entry.data.get(CFG_ROLES, {}).get(mac))
+                # Role is not available in device_found for sensors; it arrives
+                # via now_relaying_for which fires immediately after.  Fall back
+                # to the persisted role so role-gated entities are created on
+                # reload without waiting for the wire.
+                role = _filter_unknown(self._entry.data.get(CFG_ROLES, {}).get(mac))
                 _LOGGER.debug("New sensor discovered: %s role=%s", mac, role)
                 self.sensors[mac] = role
                 self._entry.runtime_data.devices.subscribe(mac)
@@ -178,11 +189,56 @@ class PowersensorMessageDispatcher:
                 )
                 self._entry.runtime_data.devices.subscribe(mac)
 
+    def _handle_now_relaying_for(self, event: dict[str, Any]) -> None:
+        """Handle the forwarded now_relaying_for event as a role hint.
+
+        This fires immediately after device_found for the same sensor MAC, so
+        the sensor is already in self.sensors by the time we arrive here.  We
+        use the wire role to refine what device_found just seeded (which was
+        the persisted role or None).
+
+        The role is treated as best-effort:
+          - Present on most devices → send ROLE_UPDATE_SIGNAL to update
+            role-gated entities and persist the value.
+          - Absent (None) on old hardware or occasionally on newer devices →
+            leave whatever device_found already seeded; the first measurement
+            event will correct it via the normal ROLE_UPDATE_SIGNAL path.
+        """
+        mac = event.get("mac")
+        if mac is None:
+            return
+
+        wire_role = _filter_unknown(event.get("role"))
+        if wire_role is None:
+            # No usable role on this announcement — leave the persisted value
+            # in place and let the measurement path sort it out.
+            _LOGGER.debug(
+                "now_relaying_for for %s: no role on wire, deferring to measurement path",
+                mac,
+            )
+            return
+
+        current_role = self.sensors.get(mac)
+        if wire_role == current_role:
+            return  # already up to date
+
+        _LOGGER.debug(
+            "now_relaying_for role hint for %s: %s → %s",
+            mac,
+            current_role,
+            wire_role,
+        )
+        # ROLE_UPDATE_SIGNAL updates role-gated entities, persists the role,
+        # and keeps dispatcher.sensors in sync — all via sensor.py's
+        # handle_role_update callback.
+        async_dispatcher_send(self._hass, ROLE_UPDATE_SIGNAL, mac, wire_role)
+
     def _handle_device_lost(self, event: dict[str, Any]) -> None:
         """Handle a plug or sensor going offline.
 
-        The library manages reconnection internally, so we don't remove entities.
-        Entities naturally become unavailable when their data update timeout fires.
+        The library manages reconnection internally, so we don't remove
+        entities.  Entities naturally become unavailable when their data
+        update timeout fires.
         """
         mac = event.get("mac")
         if mac is None:
