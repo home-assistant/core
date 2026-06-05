@@ -39,13 +39,15 @@ from hass_client.entity_bridge import EntityBridge
 from hass_client.entry_runner import EntryRunner
 from hass_client.event_mirror import EventMirror
 from hass_client.flow_runner import FlowRunner
-from hass_client.protocol import MSG_READY, MSG_SHUTDOWN
+from hass_client.protocol import MSG_GET_TRANSLATIONS, MSG_READY, MSG_SHUTDOWN
 from hass_client.sandbox_bridge import ChannelSandboxBridge
 from hass_client.service_mirror import ServiceMirror
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import json as json_helper, restore_state
 from homeassistant.helpers.sandbox_context import current_sandbox
+from homeassistant.helpers.translation import _async_get_component_strings
+from homeassistant.loader import async_get_integrations
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -192,6 +194,9 @@ class SandboxRuntime:
             await _load_restore_state(hass)
             self._channel.register("sandbox/ping", _handle_ping)
             self._channel.register(MSG_SHUTDOWN, self._handle_shutdown)
+            self._channel.register(
+                MSG_GET_TRANSLATIONS, self._handle_get_translations
+            )
             self._flow_runner.register(self._channel)
             self._entry_runner.register(self._channel)
             self._entity_bridge.register(self._channel)
@@ -253,6 +258,29 @@ class SandboxRuntime:
         if self._shutdown is not None:
             asyncio.get_running_loop().call_soon(self._shutdown.set)
         return summary
+
+    async def _handle_get_translations(
+        self, msg: pb.GetTranslations
+    ) -> pb.GetTranslationsResult:
+        """Serve a main-side ``sandbox/get_translations`` pull.
+
+        Main holds no ``Integration`` for a custom sandboxed domain, so it
+        cannot load the integration's ``translations/<lang>.json`` or run the
+        ``title``→``integration.name`` fallback. This sandbox does — it
+        fetched and imported the code — so it loads the raw strings here and
+        replies with the un-flattened nesting main's translation cache merges
+        as-is.
+        """
+        result = pb.GetTranslationsResult(language=msg.language)
+        flow_runner = self._flow_runner
+        if flow_runner is None:
+            return result
+        strings = await _collect_component_strings(
+            flow_runner.hass, msg.language, list(msg.domains)
+        )
+        if strings:
+            result.strings.update(strings)
+        return result
 
     async def _run_graceful_shutdown(self) -> pb.ShutdownResult:
         """Unload every loaded entry and snapshot RestoreEntity state.
@@ -323,6 +351,36 @@ class SandboxRuntime:
             _LOGGER.exception("sandbox %s: restore-state collect failed", self.group)
 
         return result
+
+
+async def _collect_component_strings(
+    hass: HomeAssistant, language: str, domains: list[str]
+) -> dict[str, Any]:
+    """Load raw translation strings for ``domains`` from this sandbox's disk.
+
+    Resolves each domain's ``Integration`` against the sandbox-private
+    ``hass`` (built-in from the bundled package, custom from the fetched
+    ``<config>/custom_components/<domain>``) and reuses core's
+    :func:`_async_get_component_strings`, which reads
+    ``translations/<language>.json`` and pre-fills ``title`` from
+    ``integration.name``. The return is ``{domain: <raw strings.json dict>}``
+    for the requested language — the exact shape main's translation cache
+    overlays. Domains the sandbox cannot resolve come back as ``{}`` (no
+    Integration ⇒ no file, no title), which is harmless on main.
+    """
+    if not domains:
+        return {}
+    components = set(domains)
+    ints_or_excs = await async_get_integrations(hass, components)
+    integrations = {
+        domain: result
+        for domain, result in ints_or_excs.items()
+        if not isinstance(result, Exception)
+    }
+    by_language = await _async_get_component_strings(
+        hass, [language], components, integrations
+    )
+    return by_language.get(language, {})
 
 
 async def _load_restore_state(hass: Any) -> None:
