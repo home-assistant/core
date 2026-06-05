@@ -5,6 +5,7 @@ upload_art_frame_image:
       selector:
         device:
           integration: switchbot_cloud
+          model: AI Art Frame
     image_url:
       required: true
       selector:
