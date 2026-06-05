@@ -24,6 +24,12 @@
           "temperature_unit": "[%key:component::elkm1::config::step::manual_connection::data::temperature_unit%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "[%key:component::elkm1::config::step::manual_connection::data_description::password%]",
+          "protocol": "[%key:component::elkm1::config::step::manual_connection::data_description::protocol%]",
+          "temperature_unit": "[%key:component::elkm1::config::step::manual_connection::data_description::temperature_unit%]",
+          "username": "[%key:component::elkm1::config::step::manual_connection::data_description::username%]"
+        },
         "description": "Connect to the discovered system: {mac_address} ({host})",
         "title": "[%key:component::elkm1::config::step::user::title%]"
       },
@@ -36,6 +42,14 @@
           "temperature_unit": "The temperature unit Elk-M1 uses.",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "address": "IP address, domain name, or serial device path. For serial use format 'tty[:baud]'.",
+          "password": "The password to authenticate with the Elk-M1 panel.",
+          "prefix": "Optional unique prefix to distinguish multiple Elk-M1 panels.",
+          "protocol": "Protocol to use when connecting to the Elk-M1 (secure, non-secure, serial, etc.).",
+          "temperature_unit": "Unit used by the Elk-M1 for temperature values (C or F).",
+          "username": "The username to authenticate with the Elk-M1 panel."
+        },
         "description": "The address string must be in the form 'address[:port]' for 'secure' and 'non-secure'. Example: '192.168.1.1'. The port is optional and defaults to 2101 for 'non-secure' and 2601 for 'secure'. For the serial protocol, the address must be in the form 'tty[:baud]'. Example: '/dev/ttyS1'. The baud is optional and defaults to 115200.",
         "title": "[%key:component::elkm1::config::step::user::title%]"
       },
@@ -46,12 +60,21 @@
           "protocol": "[%key:component::elkm1::config::step::manual_connection::data::protocol%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "address": "[%key:component::elkm1::config::step::manual_connection::data_description::address%]",
+          "password": "[%key:component::elkm1::config::step::manual_connection::data_description::password%]",
+          "protocol": "[%key:component::elkm1::config::step::manual_connection::data_description::protocol%]",
+          "username": "[%key:component::elkm1::config::step::manual_connection::data_description::username%]"
+        },
         "description": "[%key:component::elkm1::config::step::manual_connection::description%]",
         "title": "Reconfigure Elk-M1 Control"
       },
       "user": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "Select a discovered Elk-M1 control system to configure or choose Manual Entry to enter connection details."
         },
         "description": "Choose a discovered system or 'Manual Entry' if no devices have been discovered.",
         "title": "Connect to Elk-M1 Control"
