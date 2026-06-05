@@ -56,7 +56,7 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   dynamic-devices: todo
-  discovery-update-info: todo
+  discovery-update-info: done
   repair-issues: todo
   docs-use-cases: done
   docs-supported-devices: done
