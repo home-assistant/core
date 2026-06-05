@@ -204,6 +204,16 @@ def test_enforce_utcnow_good(
         """,
             id="from_util_dt_import_utc",
         ),
+        pytest.param(
+            """
+        import datetime
+
+        import homeassistant.util.dt as dt_util
+
+        now = datetime.datetime.now(dt_util.UTC)
+        """,
+            id="import_util_dt_as_dt_util_utc",
+        ),
     ],
 )
 def test_enforce_utcnow_bad(
