@@ -27,8 +27,8 @@
 Run a Home Assistant integration's setup, config flow, entities,
 services, and events fully inside an **isolated subprocess** ("sandbox"),
 while the main HA instance keeps a **single, unified view** of devices,
-entities, services, and events that looks identical to running
-everything locally.
+entities, services, events, and translations that looks identical to
+running everything locally.
 
 A user adding a light integration through the frontend should end up
 with a device + entities in the main instance's registries, area

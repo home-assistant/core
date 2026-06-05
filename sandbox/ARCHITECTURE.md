@@ -19,8 +19,8 @@ running everything locally.
 A user who adds a light integration through the frontend ends up with a device
 plus entities in main's registries, working area targeting (`light.turn_on`
 against an area resolves the sandboxed lights like any other light), and the
-integration's services and events available on main — with the integration code
-only ever executing inside the sandbox.
+integration's services, events, and translations available on main — with the
+integration code only ever executing inside the sandbox.
 
 The sandbox is **stateless**: it holds no persistent state of its own. Its
 storage and restore-state route to main (§9), and even the integration's *code*
