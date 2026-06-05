@@ -11,7 +11,7 @@ from habluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ADDRESS, Platform
-from homeassistant.core import _LOGGER, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import (
@@ -42,7 +42,7 @@ async def async_get_product_type(hass: HomeAssistant, address: str) -> ProductTy
     data = ManufacturerData()
 
     def _data_callback(info: BluetoothServiceInfoBleak) -> bool:
-        _LOGGER.debug("Processing advertisement from %s: %s", info.address, info)
+        LOGGER.debug("Processing advertisement from %s: %s", info.address, info)
         if info.device.address != address:
             return False
 
@@ -65,7 +65,7 @@ async def async_get_products(hass: HomeAssistant) -> dict[str, ManufacturerData]
     products: dict[str, ManufacturerData] = {}
 
     def _data_callback(info: BluetoothServiceInfoBleak) -> bool:
-        _LOGGER.debug("Processing advertisement from %s: %s", info.address, info)
+        LOGGER.debug("Processing advertisement from %s: %s", info.address, info)
         if ScanService not in info.service_uuids:
             return False
 
