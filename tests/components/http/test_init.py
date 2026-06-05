@@ -16,6 +16,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 import pytest
 from watchdog.events import FileCreatedEvent, FileModifiedEvent
+from watchdog.observers import Observer
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http
@@ -23,6 +24,7 @@ from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.http import HomeAssistantHTTP, _SSLReloadHandler
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
@@ -1113,3 +1115,52 @@ async def test_ssl_watcher_started_and_stopped(
     hass.http._stop_ssl_watcher()
     assert hass.http._ssl_watcher_stopping is True
     assert hass.http._ssl_reload_debounce_handle is None
+
+
+async def test_reload_ssl_certificate_service_raises_without_ssl(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the reload service raises HomeAssistantError when SSL is not configured."""
+    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
+        assert await async_setup_component(hass, "http", {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match="SSL certificate reload failed"):
+        await hass.services.async_call(
+            "http", "reload_ssl_certificate", {}, blocking=True
+        )
+
+
+async def test_ssl_watcher_start_failure_cleanup(
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that watcher start failure cleans up state and logs a warning."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    context = server_context_modern()
+    await hass.async_add_executor_job(_create_self_signed_cert, cert_path, key_path)
+
+    with (
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            return_value=context,
+        ),
+        patch.object(Observer, "start", side_effect=RuntimeError("inotify limit")),
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # Watcher start failed, so it should be cleaned up
+    assert "Failed to start SSL certificate file watcher" in caplog.text
+    assert hass.http._ssl_watcher is None

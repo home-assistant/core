@@ -577,9 +577,10 @@ class HomeAssistantHTTP:
                     # Clean up any partially initialized watcher to keep state consistent
                     if self._ssl_watcher is not None:
                         self._stop_ssl_watcher()
-                        await self.hass.async_add_executor_job(
-                            self._ssl_watcher.join, SSL_WATCHER_JOIN_TIMEOUT
-                        )
+                        with contextlib.suppress(RuntimeError):
+                            await self.hass.async_add_executor_job(
+                                self._ssl_watcher.join, SSL_WATCHER_JOIN_TIMEOUT
+                            )
                         self._ssl_watcher = None
 
     def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
