@@ -46,17 +46,30 @@
   "config_subentries": {
     "stop": {
       "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "Transit stop",
+      "error": {
+        "invalid_stop_id": "Stop ID must be a number."
+      },
       "initiate_flow": {
         "user": "Add transit stop"
       },
       "step": {
+        "pick_line": {
+          "data": {
+            "line": "Line"
+          }
+        },
         "user": {
           "data": {
-            "line": "Line",
-            "stop_id": "Stop ID"
+            "stop_id": "Stop"
+          },
+          "data_description": {
+            "stop_id": "Search by stop name, address or city, or enter a stop ID directly."
           }
         }
       }
