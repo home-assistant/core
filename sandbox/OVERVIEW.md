@@ -50,6 +50,7 @@ inside the sandbox.
 | Store routing | None — sandbox writes to its own tempdir | The `current_sandbox` contextvar makes `Store` IO proxy to main; main writes to `<config>/.storage/sandbox/<group>/<key>` |
 | Shutdown | Best-effort | Graceful `sandbox/shutdown` round-trip; sandbox unloads entries + dumps `RestoreEntity` state; main persists it for next boot |
 | Custom integrations | Out of scope | First-class — they route to the `custom` group |
+| Translations | Not forwarded — a sandboxed integration's frontend strings never reached main | Pulled on demand over `sandbox/get_translations` and overlaid into main's translation cache; a display-only catalog hook covers the not-yet-running picker case |
 
 The design choices and the failure modes of v1 they fix are recorded in
 [`docs/entity-bridge-decision.md`](docs/entity-bridge-decision.md) and
@@ -108,12 +109,23 @@ Rule order (first match wins):
 
 1. `integration_type == "system"` → **main**. System integrations are
    part of the HA runtime; sandboxing them is meaningless.
-2. `domain in ALWAYS_MAIN` → **main**. Hand-picked deny-list:
-   `script`, `automation`, `scene`, `cloud`, `ai_task`, `image`. Each
-   entry has an inline "why" in [`const.py`](../homeassistant/components/sandbox/const.py).
-   `ai_task` and `image` were added by the Phase 1 spike because their
-   service handlers do non-idempotent pre-dispatch work that neither
-   bridge option intercepts cleanly — see the spike doc.
+2. `domain in ALWAYS_MAIN` → **main**. A 24-entry deny-list, each with an
+   inline "why" in [`const.py`](../homeassistant/components/sandbox/const.py),
+   in three groups:
+   - **Behavioural punts** — `script`, `automation`, `scene`, `cloud`, plus
+     `ai_task` and `image`. The latter two do non-idempotent pre-dispatch work
+     (attachment / byte resolution) that neither bridge option intercepts
+     cleanly — see the Phase 1 spike doc.
+   - **Broad readers** — `template`, `group`, `homekit` read *all* entities /
+     registries (Jinja `states()`, `hass.states.async_all()`), so they can't be
+     narrowly scoped and break under sandbox lockdown.
+   - **Source-entity helpers** — `min_max`, `statistics`, `trend`, `threshold`,
+     `derivative`, `integration`, `utility_meter`, `filter`, `mold_indicator`,
+     `bayesian`, `generic_thermostat`, `generic_hygrostat`, `switch_as_x`,
+     `history_stats`, `proximity` each read a declared set of *foreign*
+     entities (and sometimes the registries). They stay on main until the
+     share-states consumer lands a scoped declared-source-entity allow-list
+     ([`docs/design-share-states.md`](docs/design-share-states.md)).
 3. Any platform in `SANDBOX_INCOMPATIBLE_PLATFORMS` → **main**: `stt`,
    `tts`, `conversation`, `assist_satellite`, `wake_word`, `camera`.
    These exchange audio/byte streams the JSON channel can't ferry.
@@ -171,13 +183,17 @@ transports. The three-layer split is `Channel` (dispatch core) → `Codec`
 Restart-on-crash is bounded: 3 attempts within a 60s sliding window,
 with a small backoff sleep between attempts. Exceeding the budget
 transitions the sandbox to `failed` and `ensure_started` raises
-`SandboxFailedError` — the router surfaces this as
-`SETUP_RETRY` on the affected entries.
+`SandboxFailedError` — the router catches it in `async_setup_entry` and
+marks the affected entries `SETUP_ERROR`
+([`router.py`](../homeassistant/components/sandbox/router.py)).
+(`SETUP_RETRY` is reserved for a narrower case — a `ChannelClosedError`
+*during* an `entry_setup` round-trip, where a retry can succeed.)
 
-A `sandbox/ping` handler is registered and exercised by the
-subprocess test (`test_phase4_subprocess`); the periodic 30s ping loop
-is wired through but currently disabled (process-exit detection covers
-the hard-crash case).
+A `sandbox/ping` handler is registered on the sandbox side and exercised
+by the subprocess test (`test_phase4_subprocess`), but the manager runs
+**no periodic ping loop** — liveness relies on process-exit detection,
+which covers the hard-crash case. An active health-ping is a possible
+future addition.
 
 ### Graceful shutdown
 
@@ -407,6 +423,47 @@ domain by virtue of registering light entities). `ServiceMirror` and
   `parent_id` / `user_id` for an id it issued or minting a fresh
   `user_id=None` `Context` (with main's own id) otherwise.
 
+## Translation forwarding
+
+A sandboxed integration's frontend strings — entity names, entity-state
+translations, config / options-flow labels, selectors, services, exceptions,
+issues — live in its `translations/<lang>.json`, keyed by integration domain.
+Main serves them to the frontend, but the integration runs in the sandbox, so
+without help a custom integration's strings silently resolve to `{}`
+(`async_get_integrations` returns `IntegrationNotFound` *as a dict value*; the
+translation cache skips it). Two seams close the gap:
+
+- **Live pull (sandbox running).** `homeassistant/helpers/translation.py` grows
+  a declared hook, `async_register_sandbox_translation_provider`;
+  `_TranslationCache` overlays the provider's result onto the per-language
+  strings *before* flattening, so sandboxed strings flow through the same
+  English-fallback + cache machinery as disk strings. The sandbox component's
+  [`translation.py`](../homeassistant/components/sandbox/translation.py)
+  `SandboxTranslationProvider` resolves each domain's owning group (a loaded
+  entry's `ConfigEntry.sandbox`, or an in-progress flow's
+  `SandboxFlowProxy.sandbox_group`), **carves out built-ins** (main reads its
+  own byte-identical disk copy — the RPC is only for customs), batches the rest
+  into one `sandbox/get_translations` RPC per group/language, and **degrades to
+  empty** on a dead/slow channel (5s timeout) so the cache lock never wedges the
+  frontend. The sandbox handler (`hass_client/sandbox/__init__.py`,
+  `_handle_get_translations`) reuses core's string loader and **pre-fills
+  `title`** from `integration.name` — main can't, holding no `Integration` for a
+  custom. `async_invalidate_translations` (the first translation-cache eviction
+  API) drops a domain's cached strings on entry reload, so a HACS update at a
+  new `ref` re-pulls fresh strings.
+
+- **Picker (no sandbox running).** The add-integration dialog needs only the
+  `title` string and must work cold, but a sandbox-only custom integration isn't
+  on main's disk at all — it isn't even *discoverable*. A separate, display-only
+  catalog hook — `async_register_sandbox_catalog_provider` in
+  [`loader.py`](../homeassistant/loader.py), re-exported via the sandbox
+  component's [`catalog.py`](../homeassistant/components/sandbox/catalog.py) —
+  lets HACS contribute `{domain, name, …, title_translations?}` entries that
+  `async_get_integration_descriptions` merges into the picker. It is kept
+  deliberately separate from the security-critical, sha-pinned integration-source
+  resolver; `title` degrades to the catalog `name` when no translations are
+  indexed.
+
 ## Sandbox auth & opt-in data sharing
 
 The sandbox is **not an authenticated principal inside main.** It never
@@ -609,6 +666,7 @@ actually built, what it deferred, and what it flagged forward. For a quick map:
 | Service/event mirror | [`bridge.py`](../homeassistant/components/sandbox/bridge.py) | [`service_mirror.py`](hass_client/hass_client/service_mirror.py), [`event_mirror.py`](hass_client/hass_client/event_mirror.py), [`approved_domains.py`](hass_client/hass_client/approved_domains.py) |
 | Context restoration | [`bridge.py`](../homeassistant/components/sandbox/bridge.py) (`_remember_context` / `_resolve_context`, TTL cache) | — |
 | Store routing | [`bridge.py`](../homeassistant/components/sandbox/bridge.py) (`_SandboxStoreServer`), `homeassistant/helpers/sandbox_context.py`, `homeassistant/helpers/storage.py` | [`sandbox_bridge.py`](hass_client/hass_client/sandbox_bridge.py) |
+| Translations | [`translation.py`](../homeassistant/components/sandbox/translation.py), [`catalog.py`](../homeassistant/components/sandbox/catalog.py), `homeassistant/helpers/translation.py`, `homeassistant/loader.py` | [`sandbox.py`](hass_client/hass_client/sandbox/__init__.py) (`_handle_get_translations`) |
 | Shutdown | [`__init__.py`](../homeassistant/components/sandbox/__init__.py) (`_on_stop`), `manager.py` | [`sandbox.py`](hass_client/hass_client/sandbox/__init__.py) (`_run_graceful_shutdown`) |
 | Test infra | — | [`testing/`](hass_client/hass_client/testing/), [`run_compat.py`](run_compat.py) |
 
