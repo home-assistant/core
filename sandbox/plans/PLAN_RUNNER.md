@@ -36,9 +36,9 @@ Hard rules every brief repeats:
 
 ### 2. Spawn the session
 
-Pipe the brief straight in. `claude-screen` detects a multi-line prompt and
-auto-stashes it to a tempfile, pasting a single-line `Read … and follow it`
-pointer for you (a multi-line paste would otherwise submit mid-prompt):
+Pipe the brief straight in. `claude-screen` pastes it directly — multi-line
+included — using bracketed paste and a separate submit keystroke, so the whole
+brief lands as one message:
 
 ```bash
 ~/dev/claude-screen <name> /home/paulus/dev/hass/core < /tmp/<name>-brief.md
@@ -97,8 +97,8 @@ Then advance to the next plan.
 ## Gotchas (all bit at least once)
 
 - **Confirm the prompt submitted** — a first-run banner can swallow it; send
-  `$'\r'` to nudge. (`claude-screen` handles the multi-line→file stashing
-  itself, so you just pipe the brief.)
+  `$'\r'` to nudge. (`claude-screen` pastes multi-line briefs directly via
+  bracketed paste, so you just pipe the brief — no tempfile dance.)
 - **`screen -p` is prefix-match** — use full, distinct window names.
 - **STATUS is written last** — its presence means done; nothing earlier does.
 - **Avoid git ops in the repo while a sub-session is mid-write** — index
