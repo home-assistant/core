@@ -21,6 +21,10 @@ BINARY_SENSOR_TYPES = (
         key="moisture",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
+    BinarySensorEntityDescription(
+        key="open",
+        device_class=BinarySensorDeviceClass.WINDOW,
+    ),
 )
 
 

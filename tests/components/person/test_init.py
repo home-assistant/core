@@ -236,18 +236,19 @@ async def test_setup_two_trackers(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    # Router tracker at home with gps_accuracy — the person entity gets latitude,
-    # longitude and accuracy from the home zone (the coordinates source), not
-    # from the router tracker's own attributes.
+    # Router tracker at home — the person entity gets latitude, longitude and
+    # accuracy from the home zone (the coordinates source), not from the router
+    # tracker's own attributes. `in_zones`, however, is propagated from the
+    # source tracker.
     # Note: a router tracker would not really have gps_accuracy; it is set here
-    # (together with in_zones=["zone.fake"]) only to assert it is NOT propagated.
+    # only to assert it is NOT propagated.
     hass.states.async_set(
         DEVICE_TRACKER,
         "home",
         {
             ATTR_SOURCE_TYPE: SourceType.ROUTER,
             ATTR_GPS_ACCURACY: 99,
-            ATTR_IN_ZONES: ["zone.fake"],
+            ATTR_IN_ZONES: ["zone.home"],
         },
     )
     await hass.async_block_till_done()
@@ -255,6 +256,7 @@ async def test_setup_two_trackers(
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes == expected_attributes | {
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 32.87336,
         ATTR_LONGITUDE: -117.22743,
         ATTR_SOURCE: DEVICE_TRACKER,
@@ -419,6 +421,26 @@ _GPS_WORK: tuple[str, dict[str, Any]] = (
         ATTR_IN_ZONES: ["zone.work"],
     },
 )
+# Legacy trackers come from integrations that predate `in_zones`, so they report
+# only a state and a source type (no `in_zones`).
+_LEGACY_HOME: tuple[str, dict[str, Any]] = (
+    "home",
+    {ATTR_SOURCE_TYPE: SourceType.ROUTER},
+)
+_LEGACY_NOT_HOME: tuple[str, dict[str, Any]] = (
+    "not_home",
+    {ATTR_SOURCE_TYPE: SourceType.ROUTER},
+)
+# A legacy GPS tracker reports coordinates but no `in_zones`.
+_LEGACY_GPS: tuple[str, dict[str, Any]] = (
+    "not_home",
+    {
+        ATTR_SOURCE_TYPE: SourceType.GPS,
+        ATTR_LATITUDE: 5.0,
+        ATTR_LONGITUDE: 6.0,
+        ATTR_GPS_ACCURACY: 8,
+    },
+)
 
 
 async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) -> None:
@@ -447,11 +469,24 @@ async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) ->
             _GPS_NOT_HOME,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER,
             },
             id="home_beats_gps",
+        ),
+        # A legacy "home" tracker (no in_zones) likewise outranks GPS.
+        pytest.param(
+            _LEGACY_HOME,
+            _GPS_NOT_HOME,
+            "home",
+            {
+                ATTR_LATITUDE: 32.87336,
+                ATTR_LONGITUDE: -117.22743,
+                ATTR_SOURCE: DEVICE_TRACKER,
+            },
+            id="legacy_home_beats_gps",
         ),
         # A non-GPS "home" tracker outranks a scanner in another zone.
         pytest.param(
@@ -459,6 +494,7 @@ async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) ->
             _SCANNER_OFFICE,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER,
@@ -573,11 +609,25 @@ async def test_state_priority_overrides_recency(
             _ROUTER_HOME,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER_2,
             },
             id="home_newer",
+        ),
+        # A pair of legacy "home" trackers (no in_zones) likewise picks the
+        # most recent.
+        pytest.param(
+            _LEGACY_HOME,
+            _LEGACY_HOME,
+            "home",
+            {
+                ATTR_LATITUDE: 32.87336,
+                ATTR_LONGITUDE: -117.22743,
+                ATTR_SOURCE: DEVICE_TRACKER_2,
+            },
+            id="legacy_home_newer",
         ),
     ],
 )
@@ -655,6 +705,83 @@ async def test_scanner_associated_with_other_zone(
         ATTR_SOURCE: DEVICE_TRACKER,
         ATTR_USER_ID: user_id,
     }
+
+
+@pytest.mark.parametrize(
+    ("tracker", "expected_state", "expected_extra"),
+    [
+        # A legacy "home" tracker has no coordinates of its own, so they come
+        # from the home zone. It reports no `in_zones`.
+        pytest.param(
+            _LEGACY_HOME,
+            "home",
+            {
+                ATTR_LATITUDE: 32.87336,
+                ATTR_LONGITUDE: -117.22743,
+                ATTR_SOURCE: DEVICE_TRACKER,
+            },
+            id="home",
+        ),
+        # A legacy "not_home" tracker contributes no coordinates and no zones.
+        pytest.param(
+            _LEGACY_NOT_HOME,
+            "not_home",
+            {ATTR_SOURCE: DEVICE_TRACKER},
+            id="not_home",
+        ),
+        # A legacy GPS tracker contributes its own coordinates but no zones.
+        pytest.param(
+            _LEGACY_GPS,
+            "not_home",
+            {
+                ATTR_GPS_ACCURACY: 8,
+                ATTR_LATITUDE: 5.0,
+                ATTR_LONGITUDE: 6.0,
+                ATTR_SOURCE: DEVICE_TRACKER,
+            },
+            id="gps",
+        ),
+    ],
+)
+async def test_legacy_device_tracker(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    tracker: tuple[str, dict[str, Any]],
+    expected_state: str,
+    expected_extra: dict[str, Any],
+) -> None:
+    """Test a legacy tracker that reports a state but no in_zones."""
+    hass.set_state(CoreState.not_running)
+    user_id = hass_admin_user.id
+    config = {
+        DOMAIN: {
+            "id": "1234",
+            "name": "tracked person",
+            "user_id": user_id,
+            "device_trackers": DEVICE_TRACKER,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(DEVICE_TRACKER, tracker[0], tracker[1])
+    await hass.async_block_till_done()
+
+    state = hass.states.get("person.tracked_person")
+    assert state.state == expected_state
+    assert (
+        state.attributes
+        == {
+            ATTR_DEVICE_TRACKERS: [DEVICE_TRACKER],
+            ATTR_EDITABLE: False,
+            ATTR_FRIENDLY_NAME: "tracked person",
+            ATTR_ID: "1234",
+            ATTR_IN_ZONES: [],
+            ATTR_USER_ID: user_id,
+        }
+        | expected_extra
+    )
 
 
 async def test_ignore_unavailable_states(
@@ -769,7 +896,7 @@ async def test_duplicate_ids(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    assert len(hass.states.async_entity_ids("person")) == 1
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 1
     assert hass.states.get("person.test_user_1") is not None
     assert hass.states.get("person.test_user_2") is None
 
@@ -847,7 +974,7 @@ async def test_load_person_storage_two_nonlinked(
     }
     await async_setup_component(hass, DOMAIN, {})
 
-    assert len(hass.states.async_entity_ids("person")) == 2
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 2
     assert hass.states.get("person.tracked_person_1") is not None
     assert hass.states.get("person.tracked_person_2") is not None
 
@@ -1028,7 +1155,7 @@ async def test_ws_delete(
     assert len(persons) == 0
 
     assert resp["success"]
-    assert len(hass.states.async_entity_ids("person")) == 0
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 0
     assert not entity_registry.async_is_registered("person.tracked_person")
 
 
