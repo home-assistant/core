@@ -88,5 +88,9 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: done
+  inject-websession:
+    status: exempt
+    comment: >-
+      litellm manages its own HTTP client and does not accept an injected
+      Home Assistant web session
   strict-typing: done

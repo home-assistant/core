@@ -1,11 +1,18 @@
 """The LiteLLM integration."""
 
+import litellm
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import LiteLLMConfigEntry, LiteLLMDataUpdateCoordinator
 
 PLATFORMS = [Platform.CONVERSATION]
+
+# litellm collects anonymous telemetry and prints debug banners by default;
+# disable both for Home Assistant.
+litellm.telemetry = False
+litellm.suppress_debug_info = True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LiteLLMConfigEntry) -> bool:

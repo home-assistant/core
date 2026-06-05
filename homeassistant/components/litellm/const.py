@@ -8,7 +8,7 @@ from homeassistant.helpers import llm
 DOMAIN = "litellm"
 LOGGER = logging.getLogger(__package__)
 
-# LiteLLM proxies may run without authentication. The OpenAI client requires a
+# LiteLLM proxies may run without authentication. litellm.acompletion requires a
 # non-empty API key, so we send a placeholder when the user did not provide one.
 PLACEHOLDER_API_KEY = "sk-no-key-required"
 

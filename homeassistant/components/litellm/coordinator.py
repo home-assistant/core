@@ -1,17 +1,19 @@
 """Coordinator for the LiteLLM integration."""
 
 from datetime import timedelta
+from typing import Any, cast
 
-from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
+from litellm.proxy.client import Client
+from litellm.proxy.client.exceptions import UnauthorizedError
+import requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, PLACEHOLDER_API_KEY
+from .const import LOGGER
 
 # Ping the proxy hourly while it is reachable, and back off to once a minute
 # while it is down so entities recover quickly once it returns.
@@ -21,8 +23,19 @@ UPDATE_INTERVAL_DISCONNECTED = timedelta(minutes=1)
 type LiteLLMConfigEntry = ConfigEntry[LiteLLMDataUpdateCoordinator]
 
 
+def list_proxy_models(url: str, api_key: str | None) -> list[str]:
+    """Return the model names served by the proxy.
+
+    Uses the LiteLLM proxy client, which is synchronous, so callers must run
+    this in the executor.
+    """
+    client = Client(base_url=url, api_key=api_key)
+    models = cast(list[dict[str, Any]], client.models.list())
+    return [model["id"] for model in models]
+
+
 class LiteLLMDataUpdateCoordinator(DataUpdateCoordinator[None]):
-    """Own the OpenAI client and track LiteLLM proxy availability."""
+    """Track LiteLLM proxy availability via periodic model-list pings."""
 
     config_entry: LiteLLMConfigEntry
 
@@ -36,21 +49,19 @@ class LiteLLMDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=UPDATE_INTERVAL_CONNECTED,
             always_update=False,
         )
-        self.client = AsyncOpenAI(
-            base_url=config_entry.data[CONF_URL],
-            api_key=config_entry.data.get(CONF_API_KEY) or PLACEHOLDER_API_KEY,
-            http_client=get_async_client(hass),
-        )
+        self.url: str = config_entry.data[CONF_URL]
+        self.api_key: str | None = config_entry.data.get(CONF_API_KEY)
 
     async def _async_update_data(self) -> None:
         """Ping the proxy to confirm it is reachable and authenticated."""
         self.update_interval = UPDATE_INTERVAL_DISCONNECTED
         try:
-            async for _ in self.client.with_options(timeout=10.0).models.list():
-                break
-        except (AuthenticationError, PermissionDeniedError) as err:
+            await self.hass.async_add_executor_job(
+                list_proxy_models, self.url, self.api_key
+            )
+        except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err
-        except OpenAIError as err:
+        except requests.RequestException as err:
             raise UpdateFailed(err) from err
         self.update_interval = UPDATE_INTERVAL_CONNECTED
 

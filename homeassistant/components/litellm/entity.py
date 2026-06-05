@@ -2,32 +2,27 @@
 
 from collections.abc import AsyncGenerator, Callable
 import json
-from typing import Any, Literal
+from typing import Any, cast
 
-import openai
-from openai.types.chat import (
-    ChatCompletionAssistantMessageParam,
-    ChatCompletionFunctionToolParam,
-    ChatCompletionMessage,
-    ChatCompletionMessageFunctionToolCallParam,
-    ChatCompletionMessageParam,
-    ChatCompletionSystemMessageParam,
-    ChatCompletionToolMessageParam,
-    ChatCompletionUserMessageParam,
+import litellm
+from litellm.exceptions import (
+    APIConnectionError,
+    APIError,
+    AuthenticationError,
+    PermissionDeniedError,
 )
-from openai.types.chat.chat_completion_message_function_tool_call_param import Function
-from openai.types.shared_params import FunctionDefinition
+from litellm.types.utils import Message, ModelResponse
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_MODEL, CONF_URL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, PLACEHOLDER_API_KEY
 from .coordinator import LiteLLMConfigEntry, LiteLLMDataUpdateCoordinator
 
 MAX_TOOL_ITERATIONS = 10
@@ -36,55 +31,48 @@ MAX_TOOL_ITERATIONS = 10
 def _format_tool(
     tool: llm.Tool,
     custom_serializer: Callable[[Any], Any] | None,
-) -> ChatCompletionFunctionToolParam:
+) -> dict[str, Any]:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf"}
     schema = convert(tool.parameters, custom_serializer=custom_serializer)
     schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
-    tool_spec = FunctionDefinition(
-        name=tool.name,
-        parameters=schema,
-    )
+    function: dict[str, Any] = {"name": tool.name, "parameters": schema}
     if tool.description:
-        tool_spec["description"] = tool.description
-    return ChatCompletionFunctionToolParam(type="function", function=tool_spec)
+        function["description"] = tool.description
+    return {"type": "function", "function": function}
 
 
 def _convert_content_to_chat_message(
     content: conversation.Content,
-) -> ChatCompletionMessageParam | None:
+) -> dict[str, Any] | None:
     """Convert any native chat message for this agent to the native format."""
     LOGGER.debug("_convert_content_to_chat_message=%s", content)
     if isinstance(content, conversation.ToolResultContent):
-        return ChatCompletionToolMessageParam(
-            role="tool",
-            tool_call_id=content.tool_call_id,
-            content=json_dumps(content.tool_result),
-        )
+        return {
+            "role": "tool",
+            "tool_call_id": content.tool_call_id,
+            "content": json_dumps(content.tool_result),
+        }
 
-    role: Literal["user", "assistant", "system"] = content.role
-    if role == "system" and content.content:
-        return ChatCompletionSystemMessageParam(role="system", content=content.content)
+    if content.role == "system" and content.content:
+        return {"role": "system", "content": content.content}
 
-    if role == "user" and content.content:
-        return ChatCompletionUserMessageParam(role="user", content=content.content)
+    if content.role == "user" and content.content:
+        return {"role": "user", "content": content.content}
 
-    if role == "assistant":
-        param = ChatCompletionAssistantMessageParam(
-            role="assistant",
-            content=content.content,
-        )
+    if content.role == "assistant":
+        param: dict[str, Any] = {"role": "assistant", "content": content.content}
         if isinstance(content, conversation.AssistantContent) and content.tool_calls:
             param["tool_calls"] = [
-                ChatCompletionMessageFunctionToolCallParam(
-                    type="function",
-                    id=tool_call.id,
-                    function=Function(
-                        arguments=json_dumps(tool_call.tool_args),
-                        name=tool_call.tool_name,
-                    ),
-                )
+                {
+                    "type": "function",
+                    "id": tool_call.id,
+                    "function": {
+                        "name": tool_call.tool_name,
+                        "arguments": json_dumps(tool_call.tool_args),
+                    },
+                }
                 for tool_call in content.tool_calls
             ]
         return param
@@ -101,18 +89,18 @@ def _decode_tool_arguments(arguments: str) -> Any:
 
 
 async def _transform_response(
-    message: ChatCompletionMessage,
+    message: Message,
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform the LiteLLM message to a ChatLog format."""
     data: conversation.AssistantContentDeltaDict = {
-        "role": message.role,
+        "role": "assistant",
         "content": message.content,
     }
     if message.tool_calls:
         data["tool_calls"] = [
             llm.ToolInput(
                 id=tool_call.id,
-                tool_name=tool_call.function.name,
+                tool_name=cast(str, tool_call.function.name),
                 tool_args=_decode_tool_arguments(tool_call.function.arguments),
             )
             for tool_call in message.tool_calls
@@ -144,12 +132,18 @@ class LiteLLMEntity(CoordinatorEntity[LiteLLMDataUpdateCoordinator]):
         chat_log: conversation.ChatLog,
     ) -> None:
         """Generate an answer for the chat log."""
-        model_args = {
-            "model": self.model,
+        coordinator = self.entry.runtime_data
+
+        model_args: dict[str, Any] = {
+            # The proxy is OpenAI-compatible; the "openai/" prefix routes the
+            # request to the user-configured `api_base` using that protocol.
+            "model": f"openai/{self.model}",
+            "api_base": self.entry.data[CONF_URL],
+            "api_key": self.entry.data.get(CONF_API_KEY) or PLACEHOLDER_API_KEY,
             "user": chat_log.conversation_id,
         }
 
-        tools: list[ChatCompletionFunctionToolParam] | None = None
+        tools: list[dict[str, Any]] | None = None
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -165,27 +159,25 @@ class LiteLLMEntity(CoordinatorEntity[LiteLLMDataUpdateCoordinator]):
             if (m := _convert_content_to_chat_message(content))
         ]
 
-        coordinator = self.entry.runtime_data
-        client = coordinator.client
-
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
-                result = await client.chat.completions.create(**model_args)
-            except (openai.AuthenticationError, openai.PermissionDeniedError) as err:
+                result = await litellm.acompletion(**model_args)
+            except (AuthenticationError, PermissionDeniedError) as err:
                 # Re-check so the proxy is marked unavailable for the auth failure.
                 await coordinator.async_request_refresh()
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
-            except openai.APIConnectionError as err:
+            except APIConnectionError as err:
                 coordinator.mark_connection_error()
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
-            except openai.OpenAIError as err:
+            except APIError as err:
                 # Reachable but the request failed; keep the entity available.
                 coordinator.async_set_updated_data(None)
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
 
+            result = cast(ModelResponse, result)
             if not result.choices:
                 LOGGER.error("API returned empty choices")
                 raise HomeAssistantError("API returned empty response")

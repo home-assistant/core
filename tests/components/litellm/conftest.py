@@ -1,12 +1,15 @@
 """Fixtures for LiteLLM integration tests."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from openai.types import CompletionUsage, Model
-from openai.types.chat import ChatCompletion, ChatCompletionMessage
-from openai.types.chat.chat_completion import Choice
+from litellm.types.utils import (
+    ChatCompletionMessageToolCall,
+    Choices,
+    Message,
+    ModelResponse,
+)
 import pytest
 
 from homeassistant.components.litellm.const import CONF_PROMPT, DOMAIN
@@ -21,10 +24,23 @@ from tests.common import MockConfigEntry
 TEST_URL = "http://localhost:4000/v1"
 
 
-async def models_response(*model_ids: str) -> AsyncGenerator[Model]:
-    """Yield models as the OpenAI client's `models.list()` would."""
-    for model_id in model_ids:
-        yield Model(id=model_id, created=0, object="model", owned_by="litellm")
+def chat_response(
+    content: str | None = None,
+    tool_calls: list[ChatCompletionMessageToolCall] | None = None,
+) -> ModelResponse:
+    """Build a litellm completion response."""
+    return ModelResponse(
+        choices=[
+            Choices(
+                finish_reason="tool_calls" if tool_calls else "stop",
+                index=0,
+                message=Message(
+                    role="assistant", content=content, tool_calls=tool_calls
+                ),
+            )
+        ],
+        model="gpt-3.5-turbo",
+    )
 
 
 @pytest.fixture
@@ -80,51 +96,26 @@ def mock_config_entry(
     )
 
 
-@pytest.fixture
-async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
-    """Mock the OpenAI client used for chat completions."""
-    with patch(
-        "homeassistant.components.litellm.coordinator.AsyncOpenAI"
-    ) as mock_client:
-        client = mock_client.return_value
-        client.chat.completions.create = AsyncMock(
-            return_value=ChatCompletion(
-                id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-                choices=[
-                    Choice(
-                        finish_reason="stop",
-                        index=0,
-                        message=ChatCompletionMessage(
-                            content="Hello, how can I help you?",
-                            role="assistant",
-                            function_call=None,
-                            tool_calls=None,
-                        ),
-                    )
-                ],
-                created=1700000000,
-                model="gpt-3.5-turbo",
-                object="chat.completion",
-                system_fingerprint=None,
-                usage=CompletionUsage(
-                    completion_tokens=9, prompt_tokens=8, total_tokens=17
-                ),
-            )
-        )
-        yield client
+@pytest.fixture(autouse=True)
+def mock_proxy_client() -> Generator[MagicMock]:
+    """Mock the LiteLLM proxy client used for model discovery and availability."""
+    with patch("homeassistant.components.litellm.coordinator.Client") as mock_client:
+        mock_client.return_value.models.list.return_value = [
+            {"id": "gpt-3.5-turbo"},
+            {"id": "gpt-4"},
+        ]
+        yield mock_client
 
 
 @pytest.fixture
-def mock_models() -> Generator[AsyncMock]:
-    """Mock the OpenAI client the config flow uses to list proxy models."""
+def mock_acompletion() -> Generator[AsyncMock]:
+    """Mock litellm.acompletion used for chat completions."""
     with patch(
-        "homeassistant.components.litellm.config_flow.AsyncOpenAI"
-    ) as mock_client:
-        client = mock_client.return_value
-        client.with_options.return_value.models.list.side_effect = (
-            lambda *args, **kwargs: models_response("gpt-3.5-turbo", "gpt-4")
-        )
-        yield client
+        "litellm.acompletion",
+        new_callable=AsyncMock,
+        return_value=chat_response(content="Hello, how can I help you?"),
+    ) as mock_acompletion:
+        yield mock_acompletion
 
 
 @pytest.fixture(autouse=True)

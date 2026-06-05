@@ -1,10 +1,10 @@
 """Tests for the LiteLLM integration setup."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
-import httpx
-from openai import APIConnectionError, AuthenticationError
+from litellm.proxy.client.exceptions import UnauthorizedError
 import pytest
+import requests
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -16,7 +16,6 @@ from tests.common import MockConfigEntry
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
-    mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test loading and unloading the integration."""
@@ -33,28 +32,19 @@ async def test_load_unload_entry(
 @pytest.mark.parametrize(
     ("side_effect", "expected_state"),
     [
-        (
-            AuthenticationError(
-                response=httpx.Response(
-                    status_code=401, request=httpx.Request("GET", "http://localhost")
-                ),
-                body=None,
-                message="invalid api key",
-            ),
-            ConfigEntryState.SETUP_ERROR,
-        ),
-        (APIConnectionError(request=None), ConfigEntryState.SETUP_RETRY),
+        (UnauthorizedError("invalid key"), ConfigEntryState.SETUP_ERROR),
+        (requests.ConnectionError("no route to host"), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_setup_error(
     hass: HomeAssistant,
-    mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_proxy_client: MagicMock,
     side_effect: Exception,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test that setup handles errors validating the connection."""
-    mock_openai_client.with_options.return_value.models.list.side_effect = side_effect
+    mock_proxy_client.return_value.models.list.side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
 
