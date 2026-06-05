@@ -354,7 +354,7 @@ MOCK_SUBENTRY_FAN_COMPONENT = {
         "entity_category": None,
         "state_topic": "test-topic",
         "command_template": "{{ value }}",
-        "value_template": "{{ value_json.value }}",
+        "state_value_template": "{{ value_json.value }}",
         "percentage_command_topic": "test-topic/pct",
         "percentage_state_topic": "test-topic/pct",
         "percentage_command_template": "{{ value }}",
@@ -637,7 +637,7 @@ MOCK_SUBENTRY_SIREN_COMPONENT = {
         "state_topic": "test-topic",
         "command_template": "{{ value }}",
         "command_off_template": "{{ value }}",
-        "value_template": "{{ value_json.value }}",
+        "state_value_template": "{{ value_json.value }}",
         "payload_off": "OFF",
         "payload_on": "ON",
         "available_tones": ["Happy hour", "Cooling alarm"],
@@ -957,11 +957,13 @@ MOCK_SUBENTRY_DATA_SET_MIX = {
             },
         }
     },
-    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1
+    "components": MOCK_SUBENTRY_FAN_COMPONENT
+    | MOCK_SUBENTRY_NOTIFY_COMPONENT1
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
     | MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT
     | MOCK_SUBENTRY_SWITCH_COMPONENT
-    | MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL,
+    | MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL
+    | MOCK_SUBENTRY_SIREN_COMPONENT,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 _SENTINEL = object()
 

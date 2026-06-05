@@ -435,7 +435,7 @@
     'state': '90',
   })
 # ---
-# name: test_sensor_entities_state[sensor.living_mode_end_time-entry]
+# name: test_sensor_entities_state[sensor.living_state_end_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -449,7 +449,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.living_mode_end_time',
+    'entity_id': 'sensor.living_state_end_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -457,12 +457,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mode end time',
+    'object_id_base': 'State end time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Mode end time',
+    'original_name': 'State end time',
     'platform': 'duco',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -472,14 +472,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_state[sensor.living_mode_end_time-state]
+# name: test_sensor_entities_state[sensor.living_state_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Living Mode end time',
+      'friendly_name': 'Living State end time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_mode_end_time',
+    'entity_id': 'sensor.living_state_end_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
