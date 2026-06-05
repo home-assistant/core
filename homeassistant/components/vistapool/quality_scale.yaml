@@ -29,7 +29,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No options flow
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   entity-category: done
   entity-disabled-by-default: done
   integration-owner: done
@@ -40,20 +40,22 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery: done
-  discovery-update-info: todo
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-use-cases: todo
+  discovery-update-info:
+    status: exempt
+    comment: Integration is cloud-only; no local host info is stored on the config entry.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-use-cases: done
   dynamic-devices: todo
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No known repair scenarios
