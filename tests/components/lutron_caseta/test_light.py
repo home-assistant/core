@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 
-from pylutron_caseta.color_value import WarmCoolColorValue
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -17,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
-from . import MockBridge, async_setup_integration
+from . import MockBridge, MockBridgeWithColorLight, async_setup_integration
 
 
 async def test_light_unique_id(
@@ -171,46 +169,6 @@ async def test_previous_brightness_zero_not_remembered(
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 25
-
-
-class MockBridgeWithColorLight(MockBridge):
-    """Mock bridge that also exposes a color-temperature-capable light."""
-
-    def load_devices(self):
-        """Add a white-tune light to the standard mock devices."""
-        devices = super().load_devices()
-        devices["903"] = {
-            "device_id": "903",
-            "current_state": 50,
-            "fan_speed": None,
-            "zone": "903",
-            "name": "Kitchen_Color Light",
-            "button_groups": None,
-            "type": "WhiteTune",
-            "model": None,
-            "serial": 5442323,
-            "tilt": None,
-            "area": "1025",
-            "white_tuning_range": {"Min": 2700, "Max": 6500},
-            "color": WarmCoolColorValue(3000),
-        }
-        devices["904"] = {
-            "device_id": "904",
-            "current_state": 50,
-            "fan_speed": None,
-            "zone": "904",
-            "name": "Kitchen_Spectrum Light",
-            "button_groups": None,
-            "type": "SpectrumTune",
-            "model": None,
-            "serial": 5442324,
-            "tilt": None,
-            "area": "1025",
-            "white_tuning_range": {"Min": 2700, "Max": 6500},
-            "warm_dim": True,
-            "color": WarmCoolColorValue(3000),
-        }
-        return devices
 
 
 async def test_color_only_turn_on_preserves_brightness(

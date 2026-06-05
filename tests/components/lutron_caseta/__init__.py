@@ -7,7 +7,7 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from pylutron_caseta.color_value import ColorMode as LutronColorMode
+from pylutron_caseta.color_value import ColorMode as LutronColorMode, WarmCoolColorValue
 
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
@@ -408,6 +408,46 @@ class MockBridge:
     async def close(self):
         """Close the mock bridge connection."""
         self.is_currently_connected = False
+
+
+class MockBridgeWithColorLight(MockBridge):
+    """Mock bridge that also exposes color-capable lights."""
+
+    def load_devices(self):
+        """Add white-tune and spectrum-tune lights to the mock devices."""
+        devices = super().load_devices()
+        devices["903"] = {
+            "device_id": "903",
+            "current_state": 50,
+            "fan_speed": None,
+            "zone": "903",
+            "name": "Kitchen_Color Light",
+            "button_groups": None,
+            "type": "WhiteTune",
+            "model": None,
+            "serial": 5442323,
+            "tilt": None,
+            "area": "1025",
+            "white_tuning_range": {"Min": 2700, "Max": 6500},
+            "color": WarmCoolColorValue(3000),
+        }
+        devices["904"] = {
+            "device_id": "904",
+            "current_state": 50,
+            "fan_speed": None,
+            "zone": "904",
+            "name": "Kitchen_Spectrum Light",
+            "button_groups": None,
+            "type": "SpectrumTune",
+            "model": None,
+            "serial": 5442324,
+            "tilt": None,
+            "area": "1025",
+            "white_tuning_range": {"Min": 2700, "Max": 6500},
+            "warm_dim": True,
+            "color": WarmCoolColorValue(3000),
+        }
+        return devices
 
 
 def make_mock_entry() -> MockConfigEntry:
