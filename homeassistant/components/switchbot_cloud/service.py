@@ -1,9 +1,8 @@
 """SwitchBot Cloud Custom Service."""
 
 from logging import getLogger
-from typing import Any
 
-from switchbot_api import ArtFrameCommands, SwitchBotAPI
+from switchbot_api import ArtFrameCommands
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -25,25 +24,11 @@ UPLOAD_IMAGE_SCHEMA = vol.Schema(
 )
 
 
-def _get_api(
-    entries: list[Any], device_model: str, target_entry_id: str
-) -> SwitchBotAPI:
-    """Get device's api."""
-    for entry in entries:
-        if target_entry_id == entry.entry_id:
-            return entry.runtime_data.api
-    raise ServiceValidationError(f"Device {device_model} Is Not Support This Service")
-
-
 async def handle_upload_image(call: ServiceCall) -> None:
     """Handle Ai Art Frame Upload Image."""
     hass = call.hass
     image_url = call.data["image_url"]
     device_ids = call.data.get("device_id", [])
-    if isinstance(device_ids, str):
-        device_ids = [device_ids]
-    if not device_ids:
-        raise ServiceValidationError("Target Device ID is required")
     entries = hass.config_entries.async_entries(DOMAIN)
     if not entries:
         raise ServiceValidationError("switchbot_cloud is not configured")
@@ -55,16 +40,10 @@ async def handle_upload_image(call: ServiceCall) -> None:
             continue
         device_mac = next(iter(device.identifiers))[1]
         entry_id = next(iter(device.config_entries))
-        model = device.model
 
-        if model != "AI Art Frame":
-            _LOGGER.error(
-                "No loaded config entry found for device %s mac = %s", model, device_mac
-            )
-            continue
-
-        api = _get_api(entries, model, entry_id)
-        await api.send_command(
+        entry = hass.config_entries.async_get_entry(entry_id)
+        assert entry is not None
+        await entry.runtime_data.api.send_command(
             device_id=device_mac,
             command=ArtFrameCommands.UPLOAD.value,
             command_type="command",
