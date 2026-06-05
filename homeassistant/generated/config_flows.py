@@ -728,6 +728,7 @@ FLOWS = {
         "sunweg",
         "surepetcare",
         "swiss_public_transport",
+        "swisscom",
         "switchbee",
         "switchbot",
         "switchbot_cloud",

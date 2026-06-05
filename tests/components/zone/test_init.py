@@ -65,7 +65,7 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
 async def test_setup_no_zones_still_adds_home_zone(hass: HomeAssistant) -> None:
     """Test if no config is passed in we still get the home zone."""
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": None})
-    assert len(hass.states.async_entity_ids("zone")) == 1
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 1
     state = hass.states.get("zone.home")
     assert hass.config.location_name == state.name
     assert hass.config.latitude == state.attributes["latitude"]
@@ -84,7 +84,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     }
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
 
-    assert len(hass.states.async_entity_ids("zone")) == 2
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 2
     state = hass.states.get("zone.test_zone")
     assert info["name"] == state.name
     assert info["latitude"] == state.attributes["latitude"]
@@ -98,7 +98,7 @@ async def test_setup_zone_skips_home_zone(hass: HomeAssistant) -> None:
     info = {"name": "Home", "latitude": 1.1, "longitude": -2.2}
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
 
-    assert len(hass.states.async_entity_ids("zone")) == 1
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 1
     state = hass.states.get("zone.home")
     assert info["name"] == state.name
 
@@ -107,7 +107,7 @@ async def test_setup_name_can_be_same_on_multiple_zones(hass: HomeAssistant) -> 
     """Test that zone named Home should override hass home zone."""
     info = {"name": "Test Zone", "latitude": 1.1, "longitude": -2.2}
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": [info, info]})
-    assert len(hass.states.async_entity_ids("zone")) == 3
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 3
 
 
 async def test_active_zone_skips_passive_zones(hass: HomeAssistant) -> None:
@@ -811,7 +811,7 @@ async def test_state(hass: HomeAssistant) -> None:
     }
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
 
-    assert len(hass.states.async_entity_ids("zone")) == 2
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 2
     state = hass.states.get("zone.test_zone")
     assert state.state == "0"
     assert state.attributes[ATTR_PERSONS] == []
@@ -883,8 +883,11 @@ async def test_state(hass: HomeAssistant) -> None:
 
     state = hass.states.get("zone.test_zone")
     assert state
-    assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
+    assert state.state == "2"
+    assert sorted(state.attributes[ATTR_PERSONS]) == [
+        "person.person1",
+        "person.person2",
+    ]
 
     state = hass.states.get("zone.home")
     assert state
