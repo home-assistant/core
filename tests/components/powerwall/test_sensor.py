@@ -124,8 +124,14 @@ async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) 
     for key, value in expected_attributes.items():
         assert state.attributes[key] == value
 
+    state = hass.states.get("sensor.mysite_operation_mode")
+    assert state.state == "self_consumption"
+    assert state.attributes[ATTR_DEVICE_CLASS] == "enum"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "MySite Operation mode"
+
     mock_powerwall.get_meters.return_value = MetersAggregatesResponse.from_dict({})
     mock_powerwall.get_backup_reserve_percentage.return_value = None
+    mock_powerwall.get_operation_mode.return_value = None
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
     await hass.async_block_till_done()
@@ -133,6 +139,7 @@ async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) 
     assert hass.states.get("sensor.mysite_load_power").state == STATE_UNKNOWN
     assert hass.states.get("sensor.mysite_load_frequency").state == STATE_UNKNOWN
     assert hass.states.get("sensor.mysite_backup_reserve").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.mysite_operation_mode").state == STATE_UNKNOWN
 
     assert (
         float(hass.states.get("sensor.mysite_tg0123456789ab_battery_capacity").state)
@@ -217,6 +224,32 @@ async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.powerwall_backup_reserve")
+    assert state is None
+
+
+async def test_sensor_operation_mode_unavailable(hass: HomeAssistant) -> None:
+    """Confirm operation mode sensor is not added if unavailable."""
+
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass)
+    mock_powerwall.get_operation_mode.side_effect = MissingAttributeError(
+        Mock(), "real_mode", "operation"
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.mysite_operation_mode")
     assert state is None
 
 
