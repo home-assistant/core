@@ -422,6 +422,82 @@ class ComponentProtocol(Protocol):
         """Set up integration."""
 
 
+class SandboxIntegrationDescriptor(TypedDict, total=False):
+    """Display metadata for a sandbox-only custom integration.
+
+    A custom integration whose code lives only in a sandbox (fetched on
+    ``entry_setup``, never on main's disk) is invisible to the on-disk scan
+    that feeds the add-integration picker. A registered catalog provider
+    supplies this small descriptor so the picker can list and name it without
+    spawning a sandbox.
+
+    ``domain`` and ``name`` are the load-bearing fields — ``name`` feeds both
+    the picker row and the ``title`` fallback. ``title_translations``
+    (``{language: title}``) is optional: a distribution mechanism (HACS) may
+    not have the un-fetched tarball's ``translations/`` indexed, in which case
+    the picker degrades to ``name``. Unlike the sha-pinned integration-source
+    resolver, this is display-only and never security-critical.
+    """
+
+    domain: str
+    name: str
+    config_flow: bool
+    integration_type: str
+    iot_class: str | None
+    single_config_entry: bool
+    title_translations: dict[str, str]
+
+
+# A catalog provider enumerates the sandbox-only custom integrations a
+# distribution mechanism (HACS) knows about, for picker discoverability. It is
+# display-only and enumerable — deliberately separate from the lazy, per-domain,
+# security-critical sandbox source resolver (homeassistant.components.sandbox.
+# sources), so display strings never travel through the sha-validation path.
+SandboxCatalogProvider = Callable[[], list[SandboxIntegrationDescriptor]]
+
+DATA_SANDBOX_CATALOG_PROVIDERS: HassKey[list[SandboxCatalogProvider]] = HassKey(
+    "sandbox_catalog_providers"
+)
+
+
+@callback
+def async_register_sandbox_catalog_provider(
+    hass: HomeAssistant, provider: SandboxCatalogProvider
+) -> Callable[[], None]:
+    """Register a provider enumerating sandbox-only custom integrations.
+
+    HACS (or any custom-integration distribution mechanism) calls this so the
+    add-integration picker can list and name a custom integration whose code
+    lives only in a sandbox. Providers are consulted in registration order; the
+    first to claim a domain wins. Returns a callback that unregisters.
+    """
+    providers = hass.data.setdefault(DATA_SANDBOX_CATALOG_PROVIDERS, [])
+    providers.append(provider)
+
+    @callback
+    def _unregister() -> None:
+        providers.remove(provider)
+
+    return _unregister
+
+
+@callback
+def async_get_sandbox_catalog(
+    hass: HomeAssistant,
+) -> dict[str, SandboxIntegrationDescriptor]:
+    """Return registered sandbox catalog descriptors keyed by domain.
+
+    Earlier-registered providers win on a domain collision, matching the
+    source-resolver convention. Returns an empty dict when no provider is
+    registered (the common case — no sandbox).
+    """
+    catalog: dict[str, SandboxIntegrationDescriptor] = {}
+    for provider in hass.data.get(DATA_SANDBOX_CATALOG_PROVIDERS, []):
+        for descriptor in provider():
+            catalog.setdefault(descriptor["domain"], descriptor)
+    return catalog
+
+
 async def async_get_integration_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, Any]:
