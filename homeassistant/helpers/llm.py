@@ -22,6 +22,7 @@ from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.sensor import async_rounded_state
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
@@ -721,19 +722,8 @@ def _get_exposed_entities(
             info["state"] = state.state
 
             # Format numeric states with configured display precision
-            if (entity_entry is not None) and (
-                sensor_options := entity_entry.options.get("sensor")
-            ):
-                if (
-                    precision := sensor_options.get("display_precision")
-                ) is not None or (
-                    precision := sensor_options.get("suggested_display_precision")
-                ) is not None:
-                    try:
-                        numeric_state = float(state.state)
-                        info["state"] = f"{numeric_state:z.{precision}f}"
-                    except ValueError:
-                        pass  # no formatting
+            if state.domain == "sensor":
+                info["state"] = async_rounded_state(hass, state.entity_id, state)
 
             # Convert timestamp device_class states from UTC to local time
             if state.attributes.get("device_class") == "timestamp" and state.state:
