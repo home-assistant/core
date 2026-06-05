@@ -2657,6 +2657,8 @@ async def test_migrate_config_entry_fails_on_unsupported_version(
     with pytest.raises(AssertionError):
         await mqtt_mock_entry()
 
+    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+
 
 @pytest.mark.parametrize(
     (
