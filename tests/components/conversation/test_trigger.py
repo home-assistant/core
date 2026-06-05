@@ -696,3 +696,36 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
         result.response.speech["plain"]["speech"]
         == "my_device - assist_satellite.my_satellite"
     )
+
+
+async def test_inline_range_list(hass: HomeAssistant) -> None:
+    """Test sentence trigger and response with an inline number range list."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["set brightness to {0..100:brightness}%"],
+                },
+                "action": {
+                    "set_conversation_response": "Brightness set to {{trigger.slots.brightness|int}} percent",
+                },
+            }
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "set brightness to 42%",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert (
+        service_response["response"]["speech"]["plain"]["speech"]
+        == "Brightness set to 42 percent"
+    )

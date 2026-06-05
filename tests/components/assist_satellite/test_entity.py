@@ -883,6 +883,24 @@ async def test_start_conversation_default_preannounce(
             ),
             True,
         ),
+        (
+            {
+                "answers": [
+                    {
+                        "id": "jazz_with_volume",
+                        "sentences": ["jazz at {1..100:volume} percent volume"],
+                    },
+                ],
+                "preannounce": False,
+            },
+            "jazz at 42 percent volume",
+            AssistSatelliteAnswer(
+                id="jazz_with_volume",
+                sentence="jazz at 42 percent volume",
+                slots={"volume": 42},
+            ),
+            False,
+        ),
     ],
 )
 async def test_ask_question(

@@ -1,6 +1,7 @@
 """Offer sentence based automation rules."""
 
 from collections.abc import Awaitable, Callable
+import re
 from typing import Any
 
 from hassil.recognize import RecognizeResult
@@ -31,6 +32,8 @@ TRIGGER_CALLBACK_TYPE = Callable[
 def has_no_punctuation(value: list[str]) -> list[str]:
     """Validate result does not contain punctuation."""
     for sentence in value:
+        # Exclude {list_references} which may contain punctuation characters.
+        sentence = _remove_list_references(sentence)
         if (
             PUNCTUATION_START.search(sentence)
             or PUNCTUATION_END.search(sentence)
@@ -40,6 +43,11 @@ def has_no_punctuation(value: list[str]) -> list[str]:
             raise vol.Invalid("sentence should not contain punctuation")
 
     return value
+
+
+def _remove_list_references(sentence: str) -> str:
+    """Remove {list_references} from a sentence for linting."""
+    return re.sub(r"(?<!\\)\{[^{}]*\}", "", sentence)
 
 
 def has_one_non_empty_item(value: list[str]) -> list[str]:
