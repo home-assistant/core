@@ -1249,6 +1249,7 @@ async def test_get_pipeline(
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
         "prefer_local_intents": False,
+        "command_timeout_seconds": 15.0,
     }
 
 
@@ -1277,6 +1278,7 @@ async def test_list_pipelines(
                 "wake_word_entity": None,
                 "wake_word_id": None,
                 "prefer_local_intents": False,
+                "command_timeout_seconds": 15.0,
             }
         ],
         "preferred_pipeline": ANY,
@@ -1443,6 +1445,7 @@ async def test_update_pipeline(
         tts_voice=None,
         wake_word_entity=None,
         wake_word_id=None,
+        command_timeout_seconds=45.0,
     )
 
 
