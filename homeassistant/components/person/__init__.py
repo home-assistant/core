@@ -14,6 +14,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
 )
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_GPS_ACCURACY,
@@ -555,6 +556,21 @@ class Person(
         self._longitude = state.attributes.get(ATTR_LONGITUDE)
         self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
         self._in_zones = state.attributes.get(ATTR_IN_ZONES, [])
+
+        # A legacy scanner (one that doesn't report in_zones) reports "home"
+        # without coordinates. Use the home zone's coordinates for backwards
+        # compatibility with legacy zone conditions and triggers. Modern
+        # trackers report in_zones and keep their own (possibly absent)
+        # coordinates.
+        if (
+            ATTR_IN_ZONES not in state.attributes
+            and state.state == STATE_HOME
+            and self._latitude is None
+            and self._longitude is None
+            and (home_zone := self.hass.states.get(ENTITY_ID_HOME)) is not None
+        ):
+            self._latitude = home_zone.attributes.get(ATTR_LATITUDE)
+            self._longitude = home_zone.attributes.get(ATTR_LONGITUDE)
 
     @callback
     def _update_extra_state_attributes(self) -> None:
