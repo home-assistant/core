@@ -11,8 +11,10 @@ from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
     ATTR_IN_ZONES,
     ATTR_SOURCE_TYPE,
+    ATTR_TRACKING_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
+    TrackingType,
 )
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.const import (
@@ -510,26 +512,29 @@ class Person(
     @callback
     def _update_state(self) -> None:
         """Update the state."""
-        latest_non_gps_home = latest_not_home = latest_gps = latest = None
+        latest_connected = latest_legacy_home = latest_not_home = latest_gps = None
         for entity_id in self._config[CONF_DEVICE_TRACKERS]:
             state = self.hass.states.get(entity_id)
 
             if not state or state.state in IGNORE_STATES:
                 continue
 
-            if state.attributes.get(ATTR_SOURCE_TYPE) == SourceType.GPS:
+            if state.attributes.get(
+                ATTR_TRACKING_TYPE
+            ) == TrackingType.CONNECTION and state.attributes.get(ATTR_IN_ZONES):
+                latest_connected = _get_latest(latest_connected, state)
+            elif state.attributes.get(ATTR_SOURCE_TYPE) == SourceType.GPS:
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
-                latest_non_gps_home = _get_latest(latest_non_gps_home, state)
+                # Legacy scanner without tracking type
+                latest_legacy_home = _get_latest(latest_legacy_home, state)
             else:
                 latest_not_home = _get_latest(latest_not_home, state)
 
-        if latest_non_gps_home:
-            latest = latest_non_gps_home
-        elif latest_gps:
-            latest = latest_gps
-        else:
-            latest = latest_not_home
+        # A scanner (e.g. a router or beacon) that reports
+        # being in a zone is the most reliable presence signal, so it
+        # takes precedence over everything else.
+        latest = latest_connected or latest_legacy_home or latest_gps or latest_not_home
 
         if latest:
             self._parse_source_state(latest)
