@@ -24,12 +24,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
-    DEVICE_SUPPORT_MAP,
-    DOMAIN,
-    ENTRY_TITLE,
-)
+from .const import DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
 from .service import async_register_services
 
@@ -359,9 +354,7 @@ async def make_new_device_data(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Switchbot Cloud."""
-    if not hass.services.has_service(DOMAIN, AI_ART_FRAME_UPLOAD_IMAGE_SERVICE):
-        async_register_services(hass)
-
+    async_register_services(hass)
     return True
 
 
