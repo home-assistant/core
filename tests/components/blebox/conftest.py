@@ -55,6 +55,12 @@ def mock_feature(category, spec, set_spec: bool = True, **kwargs):
     type(feature_mock.product).model = PropertyMock(return_value="some model")
     type(feature_mock.product).brand = PropertyMock(return_value="BleBox")
     type(feature_mock.product).firmware_version = PropertyMock(return_value="1.23")
+    type(feature_mock.product).hardware_version = PropertyMock(return_value="0.1")
+    type(feature_mock.product).available_firmware_version = PropertyMock(
+        return_value="1.0.1"
+    )
+    type(feature_mock.product).api_version = PropertyMock(return_value=20200229)
+    type(feature_mock.product).last_data = PropertyMock(return_value={"state": 1})
     type(feature_mock.product).unique_id = PropertyMock(return_value="abcd0123ef5678")
     type(feature_mock).product = PropertyMock(return_value=product)
     return feature_mock
