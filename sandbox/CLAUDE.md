@@ -56,8 +56,9 @@ second condition), as a deliberate call relying on git history for rollback.
   **Docker test image** (`hass_client/Dockerfile` + `docker-compose.test.yml`)
   — see [`hass_client/docs/docker.md`](hass_client/docs/docker.md).
 - `docs/` — per-phase decision write-ups.
-- `run_compat.py` + `COMPAT.md` + `COMPAT.csv` — compat-lane runner
-  and report (Phase 10).
+- `run_compat.py` + curated `COMPAT.md` / `BACKLOG.md` — compat-lane
+  runner and reports. Per-run machine output (`COMPAT.csv` /
+  `COMPAT_LATEST.md`) is git-ignored.
 
 The HA Core side of the integration lives at
 `../homeassistant/components/sandbox/`.

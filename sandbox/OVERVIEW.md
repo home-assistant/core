@@ -515,18 +515,16 @@ only thing that differs is how the channel pair is materialised.
 
 The compat lane runner
 [`run_compat.py`](run_compat.py) drives either plugin against a list of
-integration test directories, parses pytest's summary line, and writes
-[`COMPAT.csv`](COMPAT.csv) + [`COMPAT_LATEST.md`](COMPAT_LATEST.md)
-(the curated baseline lives in [`COMPAT.md`](COMPAT.md)). Per-failure
-output lands in `${SANDBOX_ERRORS_DIR:-/tmp/sandbox_errors}`.
+integration test directories, parses pytest's summary line, and writes a
+machine CSV plus a `COMPAT_LATEST.md` per-run report (both git-ignored). The
+curated baseline lives in [`COMPAT.md`](COMPAT.md) and the curated residual
+backlog in [`BACKLOG.md`](BACKLOG.md). Per-failure output lands in
+`${SANDBOX_ERRORS_DIR:-/tmp/sandbox_errors}`.
 
-[`run_compat_full.py`](run_compat_full.py) is the wider cross-sweep
-runner Phase 16 landed: asyncio + JUnit XML + outer concurrency,
-exercises every classifier-routable integration in the tree and writes
-[`COMPAT_FULL.md`](COMPAT_FULL.md) + [`COMPAT_FULL.csv`](COMPAT_FULL.csv).
-[`categorize_failures.py`](categorize_failures.py) buckets the
-JUnit failures into [`BACKLOG.md`](BACKLOG.md) +
-[`BACKLOG_FAILURES.json`](BACKLOG_FAILURES.json).
+The one-shot full cross-sweep tooling that produced the original backlog
+(`run_compat_full.py` + `categorize_failures.py` + `generate_backlog.py`) was
+removed once the measurement was done; recover it from git history if a fresh
+tree-wide sweep is ever needed.
 
 **Baseline numbers (Phase 17):** 35/37 integrations pass on the
 v1-baseline 37-integration set (99.97 % test-level); 711/807
