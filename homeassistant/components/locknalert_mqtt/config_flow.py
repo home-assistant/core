@@ -404,7 +404,7 @@ def validate_field(
         return
     try:
         user_input[field] = validator(user_input[field])
-    except ValueError, vol.Error, vol.Invalid:
+    except (ValueError, vol.Error, vol.Invalid):
         errors[field] = error
 
 
@@ -765,7 +765,7 @@ def validate_user_input(
             merged_user_input[field] = (
                 validator(value) if validator is not None else value
             )
-        except ValueError, vol.Error, vol.Invalid:
+        except (ValueError, vol.Error, vol.Invalid):
             data_schema_field = data_schema_fields[field]
             errors[data_schema_field.section or field] = (
                 data_schema_field.error or "invalid_input"
@@ -897,7 +897,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             api_port = int(
                 discovery_info.properties.get(DISCOVERY_ATTR_API_PORT, DEFAULT_API_PORT)
             )
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             api_port = DEFAULT_API_PORT
 
         # Store discovery info — connectivity is validated on confirm submit.
@@ -1017,7 +1017,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 errors={"base": "invalid_auth"},
             )
-        except LocknAlertCannotConnect, LocknAlertInvalidResponse:
+        except (LocknAlertCannotConnect, LocknAlertInvalidResponse):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 errors={"base": "cannot_connect"},
@@ -2026,7 +2026,7 @@ def async_convert_to_pem(
             encryption_algorithm=NoEncryption(),
         )
         return pem_key_data.decode("utf-8")
-    except TypeError, ValueError, SSLError:
+    except (TypeError, ValueError, SSLError):
         _LOGGER.exception("Error converting %s file data to PEM format", pem_type.name)
         return None
 
@@ -2437,7 +2437,7 @@ def check_certicate_chain() -> str | None:
         try:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return "client_key_error"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS_CLIENT)
