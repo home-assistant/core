@@ -135,9 +135,7 @@ PIPELINE_FIELDS: VolDictType = {
     vol.Required("wake_word_id"): vol.Any(str, None),
     vol.Optional("prefer_local_intents"): bool,
     vol.Optional("acknowledge_media_id"): str,
-    vol.Optional(
-        "command_timeout_seconds", default=DEFAULT_COMMAND_TIMEOUT_SECONDS
-    ): vol.All(
+    vol.Optional("command_timeout_seconds"): vol.All(
         vol.Coerce(float),
         vol.Range(
             min=MIN_COMMAND_TIMEOUT_SECONDS,
