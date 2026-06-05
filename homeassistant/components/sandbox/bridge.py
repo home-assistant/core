@@ -742,26 +742,17 @@ def _build_service_forwarder(
     """
 
     async def _forward(call: ServiceCall) -> Any:
-        request = pb.CallService(
+        # Remember the real (main-issued) Context so the sandbox echoing this
+        # id back on a derived state/event restores it verbatim.
+        bridge._remember_context(call.context)  # noqa: SLF001
+        response = await bridge._raw_call_service(  # noqa: SLF001
             domain=domain,
             service=service,
-            service_data=dict_to_struct(dict(call.data)),
-            target=dict_to_struct(_target_from_call(call)),
+            target=_target_from_call(call),
+            service_data=dict(call.data),
+            context_id=call.context.id if call.context is not None else None,
             return_response=call.return_response,
         )
-        if call.context is not None:
-            # Remember the real (main-issued) Context so the sandbox echoing
-            # this id back on a derived state/event restores it verbatim.
-            bridge._remember_context(call.context)  # noqa: SLF001
-            request.context_id = call.context.id
-        try:
-            response = await bridge.channel.call(MSG_CALL_SERVICE, request)
-        except ChannelRemoteError as err:
-            raise _translate_remote_error(err) from err
-        except ChannelClosedError as err:
-            raise HomeAssistantError(
-                f"Sandbox {bridge.group!r} channel closed during {domain}.{service}"
-            ) from err
         if supports_response is SupportsResponse.NONE:
             return None
         if response.HasField("response"):
