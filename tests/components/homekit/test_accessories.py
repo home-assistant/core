@@ -48,6 +48,7 @@ from homeassistant.const import (
     __version__ as hass_version,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import async_mock_service
 
@@ -729,6 +730,42 @@ async def test_call_service(
     assert call_service[0].domain == test_domain
     assert call_service[0].service == test_service
     assert call_service[0].data == {ATTR_ENTITY_ID: entity_id}
+
+
+async def test_call_service_resyncs_on_failure(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """When the dispatched service raises HomeAssistantError, re-push current state.
+
+    pyhap optimistically updates the target characteristic from the controller's
+    request before the setter runs. If the underlying service refuses the action,
+    the optimistic target is left dangling and the HomeKit accessory becomes
+    permanently inconsistent with reality. The fix: catch the failure and call
+    ``async_update_state`` with the entity's current state so both target and
+    current characteristics are reconciled.
+    """
+    entity_id = "homekit.accessory"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(hass, hk_driver, "Home Accessory", entity_id, 2, {})
+    async_mock_service(
+        hass,
+        "cover",
+        "open_cover",
+        raise_exception=HomeAssistantError("nope"),
+    )
+
+    with patch.object(acc, "async_update_state") as mock_update_state:
+        acc.async_call_service(
+            "cover", "open_cover", {ATTR_ENTITY_ID: entity_id}, "value"
+        )
+        await hass.async_block_till_done()
+
+    mock_update_state.assert_called_once()
+    pushed_state = mock_update_state.call_args.args[0]
+    assert pushed_state.entity_id == entity_id
+    assert pushed_state.state == STATE_OFF
 
 
 def test_home_bridge(hk_driver) -> None:

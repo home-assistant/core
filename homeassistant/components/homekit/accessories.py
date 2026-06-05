@@ -51,6 +51,7 @@ from homeassistant.core import (
     callback as ha_callback,
     split_entity_id,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
@@ -645,12 +646,29 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         context = Context()
 
         self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
-        self.hass.async_create_task(
-            self.hass.services.async_call(
-                domain, service, service_data, context=context
-            ),
-            eager_start=True,
-        )
+
+        async def _call() -> None:
+            try:
+                await self.hass.services.async_call(
+                    domain, service, service_data, blocking=True, context=context
+                )
+            except HomeAssistantError as err:
+                # pyhap optimistically advanced the target characteristic from
+                # the controller's request; the entity state never changed, so
+                # async_update_state won't fire naturally. Re-push current
+                # state so the HomeKit tile reverts instead of being stuck on
+                # the requested action.
+                _LOGGER.warning(
+                    "%s: %s.%s failed (%s); re-syncing HomeKit state",
+                    self.entity_id,
+                    domain,
+                    service,
+                    err,
+                )
+                if (state := self.hass.states.get(self.entity_id)) is not None:
+                    self.async_update_state(state)
+
+        self.hass.async_create_task(_call(), eager_start=True)
 
     @ha_callback
     def async_reload(self) -> None:
