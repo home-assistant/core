@@ -175,6 +175,35 @@ def test_enforce_utcnow_good(
         """,
             id="kwarg_zoneinfo_utc",
         ),
+        pytest.param(
+            """
+        import datetime
+
+        from homeassistant.util import dt as dt_util
+
+        now = datetime.datetime.now(dt_util.UTC)
+        """,
+            id="dt_util_utc",
+        ),
+        pytest.param(
+            """
+        import datetime
+
+        from homeassistant.util import dt as dt_util
+
+        now = datetime.datetime.now(tz=dt_util.UTC)
+        """,
+            id="kwarg_dt_util_utc",
+        ),
+        pytest.param(
+            """
+        from datetime import datetime
+        from homeassistant.util.dt import UTC
+
+        now = datetime.now(UTC)
+        """,
+            id="from_util_dt_import_utc",
+        ),
     ],
 )
 def test_enforce_utcnow_bad(
