@@ -121,9 +121,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
 
         @callback
         def _async_fire_mqtt_message(topic, payload, qos, retain):
-            from tests.components.locknalert_mqtt.common import (  # noqa: PLC0415
-                async_fire_mqtt_message,
-            )
+            from .common import async_fire_mqtt_message  # noqa: PLC0415
 
             async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
             mid = get_mid()

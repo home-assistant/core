@@ -9,7 +9,8 @@ from homeassistant.components.locknalert_mqtt.subscription import (
 )
 from homeassistant.core import HomeAssistant, callback
 
-from tests.components.locknalert_mqtt.common import async_fire_mqtt_message
+from .common import async_fire_mqtt_message
+
 from tests.typing import MqttMockHAClientGenerator
 
 

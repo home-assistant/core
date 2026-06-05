@@ -34,6 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .common import (
+    async_fire_mqtt_message,
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -66,7 +67,6 @@ from .common import (
 )
 
 from tests.components.alarm_control_panel import common
-from tests.components.locknalert_mqtt.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 CODE_NUMBER = "1234"
