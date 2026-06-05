@@ -85,7 +85,9 @@ class CieloDeviceEntity(CieloBaseEntity):
         """Return the unit of temperature for the device.
 
         The unit can change over time based on the device settings,
-        so it is fetched dynamically from the client.
+        so it is fetched dynamically from the client. This dynamic
+        nature means that if a user changes the device's temperature
+        unit, historical statistics may be affected.
         """
         unit = self.client.temperature_unit()
 
