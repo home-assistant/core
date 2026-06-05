@@ -225,14 +225,14 @@ async def test_multiple_zones(hass: HomeAssistant) -> None:
     assert not test.async_check()
 
 
+@pytest.mark.parametrize("entity_id", ["device_tracker.cat", "person.bob"])
 async def test_zone_condition_prefers_in_zones_over_coordinates(
-    hass: HomeAssistant,
+    hass: HomeAssistant, entity_id: str
 ) -> None:
     """Test the legacy zone condition prefers in_zones over coordinates.
 
-    When the entity reports an ``in_zones`` attribute it is authoritative;
-    coordinates are only consulted as a fallback for entities that don't
-    report it.
+    For device_tracker and person entities the ``in_zones`` attribute is
+    authoritative; coordinates are only consulted as a fallback.
     """
     hass.states.async_set(
         "zone.home",
@@ -242,27 +242,58 @@ async def test_zone_condition_prefers_in_zones_over_coordinates(
 
     # in_zones lists the zone but the coordinates are far away -> in_zones wins.
     hass.states.async_set(
-        "device_tracker.person",
+        entity_id,
         "home",
         {"latitude": 50.0, "longitude": 50.0, "in_zones": ["zone.home"]},
     )
-    assert zone_condition.zone(hass, "zone.home", "device_tracker.person") is True
+    assert zone_condition.zone(hass, "zone.home", entity_id) is True
 
     # in_zones is empty but the coordinates are inside the zone -> in_zones wins.
     hass.states.async_set(
-        "device_tracker.person",
+        entity_id,
         "not_home",
         {"latitude": 2.1, "longitude": 1.1, "in_zones": []},
     )
-    assert zone_condition.zone(hass, "zone.home", "device_tracker.person") is False
+    assert zone_condition.zone(hass, "zone.home", entity_id) is False
 
     # in_zones lists a different zone -> not in the target zone.
     hass.states.async_set(
-        "device_tracker.person",
+        entity_id,
         "work",
         {"latitude": 2.1, "longitude": 1.1, "in_zones": ["zone.work"]},
     )
-    assert zone_condition.zone(hass, "zone.home", "device_tracker.person") is False
+    assert zone_condition.zone(hass, "zone.home", entity_id) is False
+
+
+async def test_zone_condition_ignores_in_zones_for_other_domains(
+    hass: HomeAssistant,
+) -> None:
+    """Test in_zones is only honored for device_tracker and person entities.
+
+    An entity in another domain that exposes an ``in_zones`` attribute is
+    matched by coordinates instead.
+    """
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+    )
+
+    # in_zones claims the zone but the coordinates are far away -> coordinates win.
+    hass.states.async_set(
+        "sensor.tracker",
+        "home",
+        {"latitude": 50.0, "longitude": 50.0, "in_zones": ["zone.home"]},
+    )
+    assert zone_condition.zone(hass, "zone.home", "sensor.tracker") is False
+
+    # in_zones is empty but the coordinates are inside the zone -> coordinates win.
+    hass.states.async_set(
+        "sensor.tracker",
+        "home",
+        {"latitude": 2.1, "longitude": 1.1, "in_zones": []},
+    )
+    assert zone_condition.zone(hass, "zone.home", "sensor.tracker") is True
 
 
 async def test_zone_condition_falls_back_to_coordinates(hass: HomeAssistant) -> None:

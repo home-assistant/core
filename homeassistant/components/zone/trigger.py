@@ -43,6 +43,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import condition
+from .condition import _IN_ZONES_DOMAINS
 from .const import DOMAIN
 
 EVENT_ENTER = "enter"
@@ -57,10 +58,13 @@ _EVENT_DESCRIPTION = {EVENT_ENTER: "entering", EVENT_LEAVE: "leaving"}
 def _state_has_zone_info(state: State) -> bool:
     """Return True if the state can be matched against a zone.
 
-    An ``in_zones`` attribute (e.g. from a scanner-based tracker) is sufficient
-    even when the state has no coordinates.
+    For device_tracker and person entities an ``in_zones`` attribute is
+    sufficient even when the state has no coordinates (e.g. a scanner-based
+    tracker); other entities are matched by their coordinates.
     """
-    return ATTR_IN_ZONES in state.attributes or location.has_location(state)
+    return location.has_location(state) or (
+        state.domain in _IN_ZONES_DOMAINS and ATTR_IN_ZONES in state.attributes
+    )
 
 
 _LEGACY_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
