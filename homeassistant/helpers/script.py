@@ -400,10 +400,16 @@ class _ConditionFail(_HaltScript):
 class _StopScript(_HaltScript):
     """Throw if script needs to stop."""
 
-    def __init__(self, message: str, response: Any) -> None:
+    def __init__(
+        self,
+        message: str,
+        response: Any,
+        conversation_response: str | None | UndefinedType = UNDEFINED,
+    ) -> None:
         """Initialize a halt exception."""
         super().__init__(message)
         self.response = response
+        self.conversation_response = conversation_response
 
 
 class _ScriptRun:
@@ -480,6 +486,10 @@ class _ScriptRun:
                 raise
 
             response = err.response
+
+            # Bubble up child conversation response
+            if err.conversation_response not in (None, UNDEFINED):
+                self._conversation_response = err.conversation_response
 
         except Exception:
             script_execution_set("error")
@@ -979,7 +989,7 @@ class _ScriptRun:
                 ) from ex
         else:
             response = None
-        raise _StopScript(stop, response)
+        raise _StopScript(stop, response, self._conversation_response)
 
     ## Variable actions ##
 

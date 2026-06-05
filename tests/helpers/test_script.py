@@ -6763,6 +6763,32 @@ async def test_conversation_response_not_set_subscript_if(
     assert_action_trace(expected_trace)
 
 
+async def test_conversation_response_nested_with_stop(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setting conversation response in a child block with a stop."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "choose": {
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": "{{ true }}",
+                    },
+                    "sequence": [
+                        {"set_conversation_response": "{{ 'conversation response' }}"},
+                        {"stop": "stop response"},
+                    ],
+                },
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+    assert result.conversation_response == "conversation response"
+
+
 async def test_stopping_run_before_starting(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
