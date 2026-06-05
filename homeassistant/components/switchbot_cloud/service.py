@@ -17,7 +17,9 @@ _LOGGER = getLogger(__name__)
 
 UPLOAD_IMAGE_SCHEMA = vol.Schema(
     {
-        vol.Required("device_id"): cv.string,
+        vol.Required("device_id"): vol.All(
+            cv.ensure_list, [cv.string], vol.Length(min=1)
+        ),
         vol.Required("image_url"): cv.url,
     }
 )

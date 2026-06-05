@@ -21,12 +21,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
 from .service import async_register_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema("switchbot_cloud")
 
 _LOGGER = getLogger(__name__)
 PLATFORMS: list[Platform] = [
