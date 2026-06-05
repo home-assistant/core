@@ -54,6 +54,7 @@ from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
+from ..config_entries import CONF_STATE_WRITE_DEBOUNCE_INTERVAL
 from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
@@ -1740,7 +1741,14 @@ class DebouncedWriteEntity(Entity):
         """Start adding an entity to a platform.
 
         Auto-wires ``state_write_debounce_interval`` from the config entry's
-        system option when the integration has not set it explicitly.
+        system option when the entity is added to a platform, so integrations
+        only need to declare ``state_write_debounce_system_option_default`` on
+        their ``ConfigFlow`` subclass.  An integration may still override the
+        interval by setting ``state_write_debounce_interval`` directly on the
+        entity instance (e.g. in ``__init__``).
+
+        Also registers an update listener so the interval is refreshed
+        automatically when the user changes it via system options.
         """
         super().add_to_platform_start(hass, platform, parallel_updates)
         # Only auto-wire if the integration hasn't set the interval explicitly.
@@ -1751,6 +1759,31 @@ class DebouncedWriteEntity(Entity):
             is not None
         ):
             self.state_write_debounce_interval = float(interval)
+
+        # Listen for config entry option changes to pick up new debounce
+        # intervals without requiring an integration reload.
+        if (
+            platform.config_entry is not None
+            and platform.config_entry.state_write_debounce_system_option_default
+            is not None
+        ):
+            config_entry = platform.config_entry
+
+            async def _async_update_debounce_interval(
+                _hass: HomeAssistant, _entry: Any
+            ) -> None:
+                new_interval = _entry.options.get(
+                    CONF_STATE_WRITE_DEBOUNCE_INTERVAL,
+                    _entry.state_write_debounce_system_option_default,
+                )
+                if new_interval is not None:
+                    self.state_write_debounce_interval = float(new_interval)
+
+            self.async_on_remove(
+                config_entry.add_update_listener(
+                    _async_update_debounce_interval
+                )
+            )
 
     def _should_debounce_state_write(self) -> bool:
         """Return if state writes should be debounced.
