@@ -31,8 +31,8 @@ Hard rules every brief repeats:
 - Do **not** modify the plan file.
 - Do **not** push. Commit each logical step; the orchestrator pushes.
 - No `--no-verify`; pre-commit must pass.
-- Write `sandbox/STATUS-<plan>.md` **last** (after the final commit) — its
-  appearance is the "done" signal.
+- Write `sandbox/status/STATUS-<plan>.md` **last** (after the final commit) —
+  its appearance is the "done" signal. (Landing notes live in `sandbox/status/`.)
 
 ### 2. Spawn the session
 
@@ -66,7 +66,7 @@ Arm a background watcher for the marker file, plus a long fallback in case the
 session hangs without writing it:
 
 - **Monitor** (persistent, until-loop):
-  `until test -f sandbox/STATUS-<plan>.md; do sleep 30; done; echo done`
+  `until test -f sandbox/status/STATUS-<plan>.md; do sleep 30; done; echo done`
 - **ScheduleWakeup** fallback (~40 min): on fire, peek at the window with
   `hardcopy` and `tail` to see if it's stuck.
 
