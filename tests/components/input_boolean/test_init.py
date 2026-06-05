@@ -186,7 +186,7 @@ async def test_input_boolean_context(
     assert state is not None
 
     await hass.services.async_call(
-        "input_boolean",
+        DOMAIN,
         "turn_off",
         {"entity_id": state.entity_id},
         True,
