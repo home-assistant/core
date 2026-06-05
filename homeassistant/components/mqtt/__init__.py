@@ -504,6 +504,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Can be removed with HA Core 2027.1
         new_entry_data = entry.data.copy()
         new_entry_data[CONF_PROTOCOL] = PROTOCOL_5
+        # Create temporary files certificate files from entry
+        await async_create_certificate_temp_files(hass, new_entry_data)
         # Try the connection with protocol version 5
         # And update the protocol if successful
         if await hass.async_add_executor_job(
