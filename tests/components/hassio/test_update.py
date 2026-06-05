@@ -2184,8 +2184,9 @@ async def test_rpi_firmware_entity_hidden_when_update_blocked(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
     os_info: AsyncMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """No firmware entity is created when the update is blocked."""
+    """No firmware entity or device is created when the update is blocked."""
     _set_rpi_firmware_mock(
         os_info,
         supervisor_client,
@@ -2202,6 +2203,10 @@ async def test_rpi_firmware_entity_hidden_when_update_blocked(
     await hass.async_block_till_done()
 
     assert hass.states.get(RPI_FIRMWARE_ENTITY_ID) is None
+    # The device must not be registered without an entity (no orphaned device).
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "rpi_firmware")}) is None
+    )
 
 
 async def test_rpi_firmware_release_notes_warning(
