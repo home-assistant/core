@@ -710,7 +710,9 @@ async def test_inline_range_list(hass: HomeAssistant) -> None:
                     "command": ["set brightness to {0..100:brightness} percent"],
                 },
                 "action": {
-                    "set_conversation_response": "Brightness set to {{trigger.slots.brightness|int}} percent",
+                    "set_conversation_response": "Brightness set to"
+                    " {{trigger.slots.brightness|int}}"
+                    " ({{trigger.details.brightness.text}}) percent",
                 },
             }
         },
@@ -727,5 +729,5 @@ async def test_inline_range_list(hass: HomeAssistant) -> None:
     )
     assert (
         service_response["response"]["speech"]["plain"]["speech"]
-        == "Brightness set to 42 percent"
+        == "Brightness set to 42 (forty two) percent"
     )
