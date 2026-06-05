@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -9,7 +10,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_NAME, DEFAULT_SSH_PORT, DOMAIN
-from .coordinator import validate_connection_data
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -19,6 +19,23 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
     }
 )
+
+
+def validate_connection_data(data: dict[str, Any]) -> None:
+    """Validate connection using a config-style dict.
+
+    Kept for config flow compatibility.
+    """
+    try:
+        ap = UniFiAP(
+            target=data[CONF_HOST],
+            username=data[CONF_USERNAME],
+            password=data[CONF_PASSWORD],
+            port=data[CONF_PORT],
+        )
+        ap.get_clients()
+    except (UniFiAPConnectionException, UniFiAPDataException) as err:
+        raise ConnectionError("Failed to connect to UniFi AP") from err
 
 
 class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):

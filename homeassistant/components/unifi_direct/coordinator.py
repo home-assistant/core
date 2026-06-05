@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 
@@ -16,31 +15,6 @@ from .const import DEFAULT_SSH_PORT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
-
-
-def validate_connection(host: str, username: str, password: str, port: int) -> None:
-    """Validate the connection to the UniFi AP.
-
-    Raises ConnectionError on failure.
-    """
-    try:
-        ap = UniFiAP(target=host, username=username, password=password, port=port)
-        ap.get_clients()
-    except (UniFiAPConnectionException, UniFiAPDataException) as err:
-        raise ConnectionError("Failed to connect to UniFi AP") from err
-
-
-def validate_connection_data(data: dict[str, Any]) -> None:
-    """Validate connection using a config-style dict.
-
-    Kept for config flow compatibility.
-    """
-    validate_connection(
-        data[CONF_HOST],
-        data[CONF_USERNAME],
-        data[CONF_PASSWORD],
-        data.get(CONF_PORT, DEFAULT_SSH_PORT),
-    )
 
 
 class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
