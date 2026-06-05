@@ -20,7 +20,6 @@ from aiohasupervisor.models import (
     NetworkInfo,
     NFSMountResponse,
     OSInfo,
-    RaspberryPiFirmwareInfo,
     ResponseData,
     RootInfo,
     StoreInfo,
@@ -44,7 +43,6 @@ from .const import (
     ATTR_STARTUP,
     ATTR_UPDATE_KEY,
     ATTR_WS_EVENT,
-    BOARDS_WITH_RASPBERRYPI_FIRMWARE,
     CONTAINER_STATS,
     CORE_CONTAINER,
     DATA_ADDONS_INFO,
@@ -91,7 +89,6 @@ class HassioMainData:
     host: HostInfo
     mounts: dict[str, CIFSMountResponse | NFSMountResponse]
     os: OSInfo | None
-    rpi_firmware: RaspberryPiFirmwareInfo | None
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the data."""
@@ -101,9 +98,6 @@ class HassioMainData:
             "host": self.host.to_dict(),
             "mounts": {name: mount.to_dict() for name, mount in self.mounts.items()},
             "os": self.os.to_dict() if self.os is not None else None,
-            "rpi_firmware": (
-                self.rpi_firmware.to_dict() if self.rpi_firmware is not None else None
-            ),
         }
 
 
@@ -883,21 +877,12 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         # Build clean coordinator data
         self.is_hass_os = info.hassos is not None
 
-        rpi_firmware: RaspberryPiFirmwareInfo | None = None
-        if self.is_hass_os and os_info.board in BOARDS_WITH_RASPBERRYPI_FIRMWARE:
-            try:
-                rpi_firmware = await client.os.raspberry_pi_firmware_info()
-            except SupervisorError as err:
-                # should be changed to warning after OS 18.0 release
-                _LOGGER.debug("Raspberry Pi firmware info unavailable: %s", err)
-
         new_data = HassioMainData(
             core=core_info,
             supervisor=supervisor_info,
             host=host_info,
             mounts={mount.name: mount for mount in mounts_info.mounts},
             os=os_info if self.is_hass_os else None,
-            rpi_firmware=rpi_firmware,
         )
 
         # Update hass.data for legacy accessor functions
@@ -921,8 +906,6 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             async_register_host_in_dev_reg(self.entry_id, self.dev_reg)
             if self.is_hass_os:
                 async_register_os_in_dev_reg(self.entry_id, self.dev_reg, os_info)
-                if new_data.rpi_firmware is not None:
-                    async_register_rpi_firmware_in_dev_reg(self.entry_id, self.dev_reg)
 
         # Remove mounts that no longer exists from device registry
         supervisor_mount_devices = {

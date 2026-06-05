@@ -1,5 +1,6 @@
 """Update platform for Supervisor."""
 
+import logging
 import re
 from typing import Any
 
@@ -15,30 +16,34 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ADDONS_COORDINATOR, ATTR_VERSION_LATEST, DOMAIN, MAIN_COORDINATOR
-from .coordinator import AddonData, HassioMainDataUpdateCoordinator
+from .const import (
+    ADDONS_COORDINATOR,
+    ATTR_VERSION_LATEST,
+    BOARDS_WITH_RASPBERRYPI_FIRMWARE,
+    DOMAIN,
+    MAIN_COORDINATOR,
+)
+from .coordinator import AddonData, async_register_rpi_firmware_in_dev_reg
 from .entity import (
     HassioAddonEntity,
     HassioCoreEntity,
     HassioOSEntity,
     HassioSupervisorEntity,
 )
+from .handler import get_supervisor_client
 from .jobs import JobSubscription
 from .update_helper import update_addon, update_core, update_os, update_rpi_firmware
+
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
     translation_key="update",
     key=ATTR_VERSION_LATEST,
-)
-
-RPI_FIRMWARE_ENTITY_DESCRIPTION = UpdateEntityDescription(
-    translation_key="rpi_firmware_update",
-    key="rpi_firmware",
 )
 
 RPI_FIRMWARE_RELEASE_URL = (
@@ -93,14 +98,24 @@ async def async_setup_entry(
             )
         )
 
-        rpi_firmware = coordinator.data.rpi_firmware
-        if rpi_firmware is not None and not rpi_firmware.update_blocked:
-            entities.append(
-                SupervisorRPiFirmwareUpdateEntity(
-                    coordinator=coordinator,
-                    entity_description=RPI_FIRMWARE_ENTITY_DESCRIPTION,
+        # Firmware state only changes after a reboot (which restarts Core) or
+        # as a result of the install action. Fetch the data here and create
+        # the device with the RPi firmware update entity (unless the update
+        # is blocked).
+        os_info = coordinator.data.os
+        if os_info is not None and os_info.board in BOARDS_WITH_RASPBERRYPI_FIRMWARE:
+            client = get_supervisor_client(hass)
+            try:
+                rpi_firmware = await client.os.raspberry_pi_firmware_info()
+            except SupervisorError as err:
+                # Older supervisors (pre OS 18) don't expose the endpoint.
+                rpi_firmware = None
+                _LOGGER.debug("Raspberry Pi firmware info unavailable: %s", err)
+            if rpi_firmware is not None and not rpi_firmware.update_blocked:
+                async_register_rpi_firmware_in_dev_reg(
+                    config_entry.entry_id, dr.async_get(hass)
                 )
-            )
+                entities.append(SupervisorRPiFirmwareUpdateEntity(rpi_firmware))
 
     addons_coordinator = hass.data[ADDONS_COORDINATOR]
     entities.extend(
@@ -301,9 +316,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
         await update_os(self.hass, version, backup)
 
 
-class SupervisorRPiFirmwareUpdateEntity(
-    CoordinatorEntity[HassioMainDataUpdateCoordinator], UpdateEntity
-):
+class SupervisorRPiFirmwareUpdateEntity(UpdateEntity):
     """Update entity for the Raspberry Pi firmware (bootloader EEPROM and VL805).
 
     Available on RPi4/RPi5/Yellow and uses `rpi-eeprom-update` via OS Agent.
@@ -312,35 +325,24 @@ class SupervisorRPiFirmwareUpdateEntity(
     """
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_title = "Raspberry Pi Firmware"
+    _attr_translation_key = "rpi_firmware_update"
 
-    def __init__(
-        self,
-        coordinator: HassioMainDataUpdateCoordinator,
-        entity_description: UpdateEntityDescription,
-    ) -> None:
-        """Initialize entity."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"home_assistant_os_{entity_description.key}"
+    def __init__(self, firmware: RaspberryPiFirmwareInfo) -> None:
+        """Initialize entity.
+
+        No coordinator is used. The firmware state only changes after a reboot
+        (which restarts Core and re-fetches at setup) or as a direct result of
+        the install action (re-fetched in `async_install`), so periodic polling
+        would never show anything new.
+        """
+        self._firmware = firmware
+        self._attr_unique_id = "home_assistant_os_rpi_firmware"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "rpi_firmware")})
-
-    @property
-    def _firmware(self) -> RaspberryPiFirmwareInfo | None:
-        """Return the firmware info from coordinator data (None if absent)."""
-        return self.coordinator.data.rpi_firmware
-
-    @property
-    def available(self) -> bool:
-        """Return True if firmware info is available and the update isn't blocked."""
-        return (
-            super().available
-            and self._firmware is not None
-            and not self._firmware.update_blocked
-        )
 
     @property
     def installed_version(self) -> str | None:
@@ -351,8 +353,6 @@ class SupervisorRPiFirmwareUpdateEntity(
         REBOOT_REQUIRED is indicated after the update and actual switch to the
         new version applies after the reboot.
         """
-        if not self._firmware:
-            return None
         if self._firmware.update_pending:
             return _humanize_rpi_firmware_version(self._firmware.latest_version)
         return _humanize_rpi_firmware_version(self._firmware.current_version)
@@ -360,8 +360,6 @@ class SupervisorRPiFirmwareUpdateEntity(
     @property
     def latest_version(self) -> str | None:
         """Composite available firmware version."""
-        if not self._firmware:
-            return None
         return _humanize_rpi_firmware_version(self._firmware.latest_version)
 
     @property
@@ -402,7 +400,16 @@ class SupervisorRPiFirmwareUpdateEntity(
             self.async_write_ha_state()
             raise
         self._attr_in_progress = False
-        await self.coordinator.async_refresh()
+        # The install staged/flashed the new firmware: re-fetch so the entity
+        # reflects `update_pending` (reads "up to date") without a coordinator.
+        client = get_supervisor_client(self.hass)
+        try:
+            self._firmware = await client.os.raspberry_pi_firmware_info()
+        except SupervisorError as err:
+            raise HomeAssistantError(
+                f"Error fetching Raspberry Pi firmware info: {err}"
+            ) from err
+        self.async_write_ha_state()
 
 
 class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
