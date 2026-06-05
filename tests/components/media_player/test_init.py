@@ -113,6 +113,28 @@ async def test_get_image_http(
     assert content == b"image"
 
 
+async def test_get_image_http_unauthenticated(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test get image via http command without a valid token is unauthorized."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    # Without a token the request is unauthorized
+    resp = await client.get("/api/media_player_proxy/media_player.bedroom")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # An invalid token is also unauthorized
+    resp = await client.get(
+        "/api/media_player_proxy/media_player.bedroom?token=invalid"
+    )
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
 async def test_get_image_http_remote(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
