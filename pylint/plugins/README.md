@@ -505,6 +505,7 @@ The rule fires when:
 Resolve by either computing the id per instance (config-entry id,
 serial, MAC, etc.) or declaring the integration as
 `single_config_entry: true` when there is genuinely only one instance.
+
 ## `home_assistant_entity_description_defaults` checker
 
 Detects fields in `EntityDescription` (and subclasses) that are explicitly
