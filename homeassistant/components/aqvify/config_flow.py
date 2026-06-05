@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from pyaqvify import AqvifyAccount, AqvifyAPI, AqvifyAuthException
+from pyaqvify import AqvifyAPI, AqvifyAuthException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -38,7 +38,7 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
                 websession=async_get_clientsession(self.hass),
             )
             try:
-                data_json = await hub.async_get_account_id()
+                account_data = await hub.async_get_account_id()
             except AqvifyAuthException:
                 errors["base"] = "invalid_auth"
             except ClientResponseError:
@@ -47,7 +47,7 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(AqvifyAccount(data_json).account_id)
+                await self.async_set_unique_id(account_data.account_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="Aqvify", data=user_input)
 
