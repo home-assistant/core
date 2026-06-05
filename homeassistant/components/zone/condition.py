@@ -10,7 +10,9 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_OPTIONS,
+    CONF_TARGET,
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -23,6 +25,8 @@ from homeassistant.helpers.automation import (
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.condition import (
+    ATTR_BEHAVIOR,
+    BEHAVIOR_ANY,
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
     Condition,
     ConditionCheckParams,
@@ -204,10 +208,75 @@ class NotInZoneCondition(_ZoneTargetConditionBase):
         return not self._in_target_zone(entity_state)
 
 
+_OCCUPANCY_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS, default={}): {
+            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
+            vol.Optional(CONF_FOR): cv.positive_time_period,
+        },
+    }
+)
+
+
+class _ZoneOccupancyConditionBase(EntityConditionBase):
+    """Base for zone occupancy conditions (single zone, no behavior)."""
+
+    _domain_specs = {DOMAIN: DomainSpec()}
+    _schema = _OCCUPANCY_CONDITION_SCHEMA
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config and synthesize a target from the zone option.
+
+        We synthesize a target because we allow users to pick a single zone
+        to monitor, not a target.
+        """
+        config = cast(ConfigType, cls._schema(config))
+        zone_entity_id: str = config[CONF_OPTIONS][CONF_ZONE]
+        config[CONF_TARGET] = {CONF_ENTITY_ID: [zone_entity_id]}
+        # `behavior` is needed by `EntityConditionBase.__init__`
+        config[CONF_OPTIONS][ATTR_BEHAVIOR] = BEHAVIOR_ANY
+        return config
+
+    @staticmethod
+    def _occupancy_count(entity_state: State) -> int | None:
+        """Return the zone's persons-in-zone count; None if unparsable."""
+        try:
+            return int(entity_state.state)
+        except TypeError, ValueError:
+            return None
+
+    @classmethod
+    def _is_occupied(cls, entity_state: State) -> bool:
+        """Return True if the zone has at least one occupant."""
+        count = cls._occupancy_count(entity_state)
+        return count is not None and count >= 1
+
+
+class OccupancyIsDetectedCondition(_ZoneOccupancyConditionBase):
+    """Condition: the selected zone is occupied."""
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check that the zone is occupied."""
+        return self._is_occupied(entity_state)
+
+
+class OccupancyIsNotDetectedCondition(_ZoneOccupancyConditionBase):
+    """Condition: the selected zone is empty."""
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check that the zone is empty (count == 0)."""
+        return self._occupancy_count(entity_state) == 0
+
+
 CONDITIONS: dict[str, type[Condition]] = {
     "_": ZoneCondition,
     "in_zone": InZoneCondition,
     "not_in_zone": NotInZoneCondition,
+    "occupancy_is_detected": OccupancyIsDetectedCondition,
+    "occupancy_is_not_detected": OccupancyIsNotDetectedCondition,
 }
 
 

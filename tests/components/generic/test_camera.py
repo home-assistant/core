@@ -59,7 +59,7 @@ async def help_setup_mock_config_entry(
         CONF_VERIFY_SSL: options.get(CONF_VERIFY_SSL),
     }
     entry = MockConfigEntry(
-        domain="generic",
+        domain=DOMAIN,
         title=options[CONF_NAME],
         options=entry_options,
         unique_id=unique_id,
