@@ -136,18 +136,12 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ConversationFlowHandler(ConfigSubentryFlow):
-    """Handle conversation subentry flow."""
+class LiteLLMSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for LiteLLM."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
         self.models: list[str] = []
-        self.options: dict[str, Any] = {}
-
-    @property
-    def _is_new(self) -> bool:
-        """Return if this is a new subentry."""
-        return self.source == SOURCE_USER
 
     async def _fetch_models(self) -> None:
         """Fetch models from the LiteLLM proxy."""
@@ -155,6 +149,20 @@ class ConversationFlowHandler(ConfigSubentryFlow):
         self.models = await _get_models(
             self.hass, entry.data[CONF_URL], entry.data.get(CONF_API_KEY)
         )
+
+
+class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
+    """Handle conversation subentry flow."""
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+        self.options: dict[str, Any] = {}
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == SOURCE_USER
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

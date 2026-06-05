@@ -3895,7 +3895,7 @@
       "name": "LiteLLM",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "cloud_polling"
     },
     "litterrobot": {
       "name": "Whisker",
