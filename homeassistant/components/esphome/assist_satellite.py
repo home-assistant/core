@@ -58,6 +58,25 @@ PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _get_intent_response_text(intent_output: dict[str, Any]) -> str:
+    """Return the plain response text from an intent output."""
+    response = intent_output.get("response")
+    if not isinstance(response, dict):
+        return ""
+
+    speech = response.get("speech")
+    if not isinstance(speech, dict):
+        return ""
+
+    plain_speech = speech.get("plain")
+    if not isinstance(plain_speech, dict):
+        return ""
+
+    text = plain_speech.get("speech")
+    return text if isinstance(text, str) else ""
+
+
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
     VoiceAssistantEventType, PipelineEventType
 ] = EsphomeEnumMapper(
@@ -343,6 +362,7 @@ class EsphomeAssistSatellite(
             return
 
         data_to_send: dict[str, Any] = {}
+        headless_response_text = ""
         if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_START:
             if (
                 self._has_multi_channel_audio
@@ -372,12 +392,22 @@ class EsphomeAssistSatellite(
             data_to_send = {"tts_start_streaming": "1"}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
             assert event.data is not None
+            intent_output = event.data["intent_output"]
             data_to_send = {
-                "conversation_id": event.data["intent_output"]["conversation_id"],
+                "conversation_id": intent_output["conversation_id"],
                 "continue_conversation": str(
-                    int(event.data["intent_output"]["continue_conversation"])
+                    int(intent_output["continue_conversation"])
                 ),
             }
+
+            assert self._entry_data.device_info is not None
+            feature_flags = (
+                self._entry_data.device_info.voice_assistant_feature_flags_compat(
+                    self._entry_data.api_version
+                )
+            )
+            if not self._has_tts_output(feature_flags):
+                headless_response_text = _get_intent_response_text(intent_output)
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None
             data_to_send = {"text": event.data["tts_input"]}
@@ -430,6 +460,11 @@ class EsphomeAssistSatellite(
                 self._entry_data.async_set_assist_pipeline_state(False)
 
         self.cli.send_voice_assistant_event(event_type, data_to_send)
+        if headless_response_text:
+            self.cli.send_voice_assistant_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START,
+                {"text": headless_response_text},
+            )
 
     @convert_api_error_ha_error
     async def async_announce(

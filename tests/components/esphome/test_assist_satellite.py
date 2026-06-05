@@ -815,6 +815,31 @@ async def test_pipeline_headless(
         )
         assert satellite.state == AssistSatelliteState.PROCESSING
 
+        response = intent_helper.IntentResponse("en")
+        response.async_set_speech("test-headless-response")
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.INTENT_END,
+                data={
+                    "intent_output": conversation.ConversationResult(
+                        response=response,
+                        conversation_id="test-conversation-id",
+                    ).as_dict()
+                },
+            )
+        )
+        assert mock_client.send_voice_assistant_event.call_args_list[-2].args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END,
+            {
+                "conversation_id": "test-conversation-id",
+                "continue_conversation": "0",
+            },
+        )
+        assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START,
+            {"text": "test-headless-response"},
+        )
+
         event_callback(PipelineEvent(type=PipelineEventType.RUN_END))
 
     pipeline_finished = asyncio.Event()
