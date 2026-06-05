@@ -38,6 +38,8 @@ wipe-and-restart safe and could run anywhere, including a fresh container.
 | `SandboxBridge` (per group) | Owns the proxy-entity registry, forwards entity service calls, re-fires sandbox events, and runs the per-group store server. |
 | `classifier.py` | Pure function `Integration → SandboxAssignment` deciding which group (or main) an integration belongs to. |
 | `sources.py` | The integration-source resolver registry (how custom code is located). |
+| `translation.py` | `SandboxTranslationProvider` — pulls a sandboxed integration's translation strings from the live sandbox into main's translation cache (see §11). |
+| `catalog.py` | Re-exports the loader catalog hook so HACS can make a sandbox-only custom integration discoverable + named in the add-integration picker (see §11). |
 
 ### Sandbox side — `sandbox/hass_client/`
 
@@ -198,7 +200,7 @@ primitive is injected so tests never hit the network.
 > **Known runtime gap:** custom integrations that ship Python dependencies need
 > `async_process_requirements` (pip) plus network egress (GitHub + PyPI) at
 > setup. The wire + fetch are shipped and tested; the pip/egress runtime is
-> provided by the Docker image (§11) but not yet exercised end-to-end.
+> provided by the Docker image (§13) but not yet exercised end-to-end.
 
 ## 8. Entity bridge, services & events
 
@@ -288,16 +290,50 @@ Opt-in data sharing (state stream, entity/area registry) into the sandbox is a
 future feature; the locked-down default (everything off) stands, with the
 design in [`docs/design-share-states.md`](docs/design-share-states.md).
 
-## 11. Core HA touch surface
+## 11. Translation forwarding
 
-The sandbox is deliberately small against core HA — three surfaces, each a
+A sandboxed integration's frontend strings (entity names, entity-state
+translations, config / options-flow labels, selectors, services, exceptions,
+issues) live in its `translations/<lang>.json`, keyed by domain. Main serves
+them to the frontend, but the integration runs in the sandbox — so a custom
+integration's strings would otherwise silently resolve to `{}`
+(`async_get_integrations` returns `IntegrationNotFound` as a dict value, which
+the translation cache skips). Two seams close the gap:
+
+- **Live pull (sandbox running).** A declared core hook
+  (`async_register_sandbox_translation_provider` in `helpers/translation.py`)
+  lets `_TranslationCache` overlay a provider's strings onto the per-language
+  set *before* flattening, so they share the same English-fallback + cache
+  machinery as disk strings. The component's `SandboxTranslationProvider`
+  resolves a domain's group (a loaded entry's `ConfigEntry.sandbox`, or an
+  in-progress flow's `SandboxFlowProxy.sandbox_group`), **carves out built-ins**
+  (main reads its own identical disk copy — the RPC is custom-only), batches the
+  rest into one `sandbox/get_translations` RPC per group/language, and
+  **degrades to empty** on a dead/slow channel so the cache lock never wedges
+  the frontend. The sandbox handler reuses core's string loader and pre-fills
+  `title` from `integration.name` (main can't — it has no `Integration` for a
+  custom). `async_invalidate_translations` evicts a domain's strings on entry
+  reload, so a HACS update at a new `ref` re-pulls.
+- **Picker (no sandbox running).** A separate, display-only catalog hook
+  (`async_register_sandbox_catalog_provider` in `loader.py`, re-exported via
+  `catalog.py`) lets HACS contribute `{domain, name, …, title_translations?}`
+  entries that `async_get_integration_descriptions` merges into the
+  add-integration dialog — so a sandbox-only custom is discoverable and named
+  without spawning its sandbox. Kept separate from the sha-pinned source
+  resolver; `title` degrades to `name`.
+
+## 12. Core HA touch surface
+
+The sandbox is deliberately small against core HA — five surfaces, each a
 declared public hook rather than a reach into private internals:
 
 - `config_entries.py` — the `router` attribute + `ConfigEntryRouter` Protocol (three call sites) and the first-class `ConfigEntry.sandbox` field.
 - `helpers/entity_component.py` — `EntityComponent.async_register_remote_platform`, so a sandbox-built `EntityPlatform` attaches without re-discovering the local integration.
 - `helpers/sandbox_context.py` (new) + `helpers/storage.py` — the `current_sandbox` ContextVar + `SandboxBridge` Protocol read by `Store`'s IO methods.
+- `helpers/translation.py` — `async_register_sandbox_translation_provider` + the `_TranslationCache` overlay and `async_invalidate_translations` (§11).
+- `loader.py` — `async_register_sandbox_catalog_provider` + the catalog merge in `async_get_integration_descriptions` (§11).
 
-## 12. Testing & containerisation
+## 13. Testing & containerisation
 
 Two pytest plugins under `hass_client/testing/` let HA Core's per-integration
 suites run with the sandbox wired in; both share the manager-side
@@ -312,7 +348,7 @@ transport (a same-host compose harness is templated; full remote operation
 waits on the websocket transport). See
 [`hass_client/docs/docker.md`](hass_client/docs/docker.md).
 
-## 13. Out of scope / future work
+## 14. Out of scope / future work
 
 - **WebSocket transport** — the seam is ready; lands with the share-states connection work.
 - **State-sharing opt-in consumer** + main-side filtering ([`docs/design-share-states.md`](docs/design-share-states.md)); would let the lockdown helpers (§3) return to sandboxes.
