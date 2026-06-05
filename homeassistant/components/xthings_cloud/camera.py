@@ -27,8 +27,6 @@ KVS_EXCEPTIONS = (
     XthingsCloudApiError,
     ClientError,
     TimeoutError,
-    ValueError,
-    TypeError,
 )
 
 
