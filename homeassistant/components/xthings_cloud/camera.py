@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, LOGGER
 from .coordinator import XthingsCloudConfigEntry, XthingsCloudCoordinator
 
-# Bound WebRTC caches to avoid unbounded memory growth from delayed candidates.
+# Cap WebRTC caches to avoid unbounded memory growth from delayed candidates.
 MAX_PENDING_ICE_CANDIDATES = 50
 MAX_PENDING_WEBRTC_SESSIONS = 100
 MAX_CLOSED_WEBRTC_SESSIONS = 100
