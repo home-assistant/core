@@ -3510,16 +3510,21 @@
       "iot_class": "local_polling"
     },
     "keba": {
-      "name": "Keba Charging Station",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
-    "keba_p40": {
-      "name": "KEBA P40",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "name": "KEBA",
+      "integrations": {
+        "keba": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Keba Charging Station"
+        },
+        "keba_p40": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "KEBA P40"
+        }
+      }
     },
     "keenetic_ndms2": {
       "name": "Keenetic NDMS2 Router",
