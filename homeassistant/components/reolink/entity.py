@@ -22,6 +22,9 @@ class ReolinkEntityDescription(EntityDescription):
     cmd_key: str | None = None
     cmd_id: int | list[int] | None = None
     always_available: bool = False
+    # Whether the entity measures a property of a single lens
+    # of a dual lens camera, instead of the camera as a whole
+    lens_entity: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -161,9 +164,6 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     """Parent class for Reolink camera entities connected to a NVR channel."""
 
-    # Whether the entity belongs to a single lens of a dual lens camera
-    _lens_entity = False
-
     def __init__(
         self,
         reolink_data: ReolinkData,
@@ -220,7 +220,10 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 configuration_url=conf_url,
             )
 
-        if self._lens_entity and self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
+        if (
+            self.entity_description.lens_entity
+            and self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS
+        ):
             # Dual lens cameras with separate sensors per lens
             # use a sub-device per lens
             parent_dev_id = self._dev_id

@@ -17,6 +17,7 @@ from .conftest import (
     TEST_CAM_NAME,
     TEST_DUO_MODEL,
     TEST_HOST_MODEL,
+    TEST_NVR_NAME,
     TEST_UID,
     TEST_UID_CAM,
 )
@@ -114,6 +115,13 @@ async def test_dual_lens_sub_devices(
         entity = entity_registry.async_get(entity_id)
         assert entity is not None
         assert entity.device_id == lens_device.id
+
+    # sensors that are not lens-specific should stay on the main device
+    entity = entity_registry.async_get(
+        f"{Platform.BINARY_SENSOR}.{TEST_NVR_NAME}_sleep_status"
+    )
+    assert entity is not None
+    assert entity.device_id == host_device.id
 
     # the pre-existing lens sub-device and entity should have been reused
     lens_0_device = device_registry.async_get_device(

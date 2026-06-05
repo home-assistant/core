@@ -28,6 +28,8 @@ class ReolinkCameraEntityDescription(
     """A class that describes camera entities for a camera channel."""
 
     stream: str
+    # a camera stream always comes from a single lens
+    lens_entity: bool = True
 
 
 CAMERA_ENTITIES = (
@@ -123,7 +125,6 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
     """An implementation of a Reolink IP camera."""
 
     entity_description: ReolinkCameraEntityDescription
-    _lens_entity = True
 
     def __init__(
         self,
