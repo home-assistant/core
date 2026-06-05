@@ -1,7 +1,5 @@
 """Coordinator for the Casper Glow integration."""
 
-from __future__ import annotations
-
 import logging
 
 from bleak import BleakError
@@ -19,7 +17,7 @@ from homeassistant.components.bluetooth.active_update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from .const import STATE_POLL_INTERVAL
+from .const import SORTED_BRIGHTNESS_LEVELS, STATE_POLL_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +48,15 @@ class CasperGlowCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
             device.state.configured_dimming_time_minutes
         )
         self.title = title
+
+        # The device API couples brightness and dimming time into a
+        # single command (set_brightness_and_dimming_time), so both
+        # values must be tracked here for cross-entity use.
+        self.last_brightness_pct: int = (
+            device.state.brightness_level
+            if device.state.brightness_level is not None
+            else SORTED_BRIGHTNESS_LEVELS[0]
+        )
 
     @callback
     def _needs_poll(

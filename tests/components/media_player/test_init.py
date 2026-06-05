@@ -143,6 +143,37 @@ async def test_get_image_http_remote(
         assert content == b"image"
 
 
+async def test_get_image_http_missing_image(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test advertised local image with missing bytes returns not found."""
+    with (
+        patch(
+            "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+            None,
+        ),
+        patch(
+            "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_hash",
+            "missing-image",
+        ),
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        client = await hass_client_no_auth()
+
+        with patch(
+            "homeassistant.components.media_player.MediaPlayerEntity.async_get_media_image",
+            return_value=(None, None),
+        ):
+            resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
 async def test_get_image_http_log_credentials_redacted(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -169,7 +200,7 @@ async def test_get_image_http_log_credentials_redacted(
 
         resp = await client.get(state.attributes["entity_picture"])
 
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
     assert f"Error retrieving proxied image from {url}" not in caplog.text
     assert (
         "Error retrieving proxied image from "
@@ -585,7 +616,7 @@ async def test_get_async_get_browse_image_quoting(
 
 
 async def test_play_media_via_selector(hass: HomeAssistant) -> None:
-    """Test that play_media data under 'media' is remapped to top level keys for backward compatibility."""
+    """Test play_media data under 'media' is remapped for backward compat."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )

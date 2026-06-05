@@ -1,7 +1,5 @@
 """Update coordinator for Bravia TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from datetime import datetime, timedelta
 from functools import wraps
@@ -173,6 +171,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             power_status = await self.client.get_power_status()
             self.is_on = power_status == "active"
             self.skipped_updates = 0
+            self.update_interval = (
+                timedelta(seconds=120) if power_status == "standby" else SCAN_INTERVAL
+            )
 
             if not self.system_info:
                 self.system_info = await self.client.get_system_info()

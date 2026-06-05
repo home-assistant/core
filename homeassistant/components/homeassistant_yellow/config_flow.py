@@ -1,12 +1,11 @@
 """Config flow for the Home Assistant Yellow integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, final
 
+from universal_silabs_flasher.flasher import YellowFlasher
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
@@ -25,7 +24,6 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
-    ResetTarget,
     probe_silabs_firmware_info,
 )
 from homeassistant.config_entries import (
@@ -83,17 +81,7 @@ class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Yellow firmware methods."""
 
     ZIGBEE_BAUDRATE = 115200
-    BOOTLOADER_RESET_METHODS = [ResetTarget.YELLOW]
-    APPLICATION_PROBE_METHODS = [
-        (ApplicationType.GECKO_BOOTLOADER, 115200),
-        (ApplicationType.EZSP, ZIGBEE_BAUDRATE),
-        (ApplicationType.SPINEL, 460800),
-        # CPC baudrates can be removed once multiprotocol is removed
-        (ApplicationType.CPC, 115200),
-        (ApplicationType.CPC, 230400),
-        (ApplicationType.CPC, 460800),
-        (ApplicationType.ROUTER, 115200),
-    ]
+    _flasher_cls = YellowFlasher
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -159,8 +147,7 @@ class HomeAssistantYellowConfigFlow(
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
         self._probed_firmware_info = await probe_silabs_firmware_info(
             self._device,
-            bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
-            application_probe_methods=self.APPLICATION_PROBE_METHODS,
+            flasher_cls=self._flasher_cls,
         )
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
@@ -331,6 +318,19 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
         return BOARD_NAME
+
+    def _firmware_update_url(self) -> str:
+        """Return the firmware update manifest URL."""
+        return NABU_CASA_FIRMWARE_RELEASES_URL
+
+    def _zigbee_firmware_type(self) -> str:
+        """Return the zigbee firmware type identifier."""
+        return "yellow_zigbee_ncp"
+
+    @property
+    def _flasher_cls(self) -> type:
+        """Return the hardware-specific flasher class."""
+        return YellowFlasher  # type: ignore[no-any-return]
 
     async def async_step_flashing_complete(
         self, user_input: dict[str, Any] | None = None

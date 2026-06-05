@@ -1,10 +1,11 @@
 {
   "domain": "touchline",
   "name": "Roth Touchline",
-  "codeowners": [],
+  "codeowners": ["@mnordseth"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/touchline",
+  "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["pytouchline"],
-  "quality_scale": "legacy",
+  "loggers": ["pytouchline_extended"],
   "requirements": ["pytouchline_extended==0.4.5"]
 }

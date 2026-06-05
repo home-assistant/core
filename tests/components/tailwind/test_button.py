@@ -54,7 +54,10 @@ async def test_number_entities(
     # Test error handling
     mock_tailwind.identify.side_effect = TailwindError("Some error")
 
-    with pytest.raises(HomeAssistantError, match="Some error") as excinfo:
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the Tailwind device",
+    ) as excinfo:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,

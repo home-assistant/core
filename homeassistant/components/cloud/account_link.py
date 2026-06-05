@@ -1,7 +1,5 @@
 """Account linking via the cloud."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import Any
@@ -130,8 +128,10 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
                     flow_id=flow_id, user_input=tokens
                 )
 
-        # It's a background task because it should be cancelled on shutdown and there's nothing else
-        # we can do in such case. There's also no need to wait for this during setup.
+        # It's a background task because it should be cancelled
+        # on shutdown and there's nothing else we can do in
+        # such case. There's also no need to wait for this
+        # during setup.
         self.hass.async_create_background_task(
             await_tokens(), name="Awaiting OAuth tokens"
         )

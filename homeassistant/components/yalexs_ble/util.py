@@ -1,7 +1,5 @@
 """The yalexs_ble integration models."""
 
-from __future__ import annotations
-
 import platform
 
 from yalexs_ble import local_name_is_unique

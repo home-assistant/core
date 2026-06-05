@@ -1,7 +1,5 @@
 """Track both clients and devices using UniFi Network."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
@@ -19,22 +17,20 @@ from aiounifi.models.event import Event, EventKey
 from propcache.api import cached_property
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
     ScannerEntityDescription,
 )
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
-from .const import DOMAIN
 from .entity import UnifiEntity, UnifiEntityDescription, async_device_available_fn
 from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 CLIENT_TRACKER = "client"
 DEVICE_TRACKER = "device"
@@ -186,39 +182,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
 )
 
 
-@callback
-def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) -> None:
-    """Normalize client unique ID to have a prefix rather than suffix.
-
-    Introduced with release 2023.12.
-    """
-    hub = config_entry.runtime_data
-    ent_reg = er.async_get(hass)
-
-    @callback
-    def update_unique_id(obj_id: str) -> None:
-        """Rework unique ID."""
-        new_unique_id = f"{hub.site}-{obj_id}"
-        if ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, new_unique_id):
-            return
-
-        unique_id = f"{obj_id}-{hub.site}"
-        if entity_id := ent_reg.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
-        ):
-            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-    for obj_id in list(hub.api.clients) + list(hub.api.clients_all):
-        update_unique_id(obj_id)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
-    async_update_unique_id(hass, config_entry)
     config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
     )

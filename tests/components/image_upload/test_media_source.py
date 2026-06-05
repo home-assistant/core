@@ -56,7 +56,7 @@ async def test_browsing(
     item = await media_source.async_browse_media(hass, "media-source://image_upload")
 
     assert item is not None
-    assert item.title == "Image Upload"
+    assert item.title == "Image upload"
     assert len(item.children) == 1
     assert item.children[0].media_content_type == "image/png"
     assert item.children[0].identifier == image_id

@@ -1,7 +1,5 @@
 """Helper to track the current http request."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from http import HTTPStatus
@@ -58,7 +56,27 @@ def request_handler_factory(
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
-            raise HTTPUnauthorized
+            # Import here to avoid circular dependency with network.py
+            from .network import NoURLAvailableError, get_url  # noqa: PLC0415
+
+            # Get the current request header to include as resource metadata
+            # endpoint for RFC9728. We currently prefer external since this
+            # is likely most used by remote OAuth clients
+            try:
+                url_prefix = get_url(
+                    hass, require_current_request=True, prefer_external=True
+                )
+            except NoURLAvailableError:
+                # Omit header to avoid leaking configured URLs
+                raise HTTPUnauthorized from None
+            raise HTTPUnauthorized(
+                headers={
+                    "WWW-Authenticate": (
+                        f'Bearer resource_metadata="{url_prefix}'
+                        '/.well-known/oauth-protected-resource"'
+                    )
+                }
+            )
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(

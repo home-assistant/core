@@ -1,7 +1,5 @@
 """Platform for climate integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from devolo_home_control_api.devices.zwave import Zwave
@@ -77,7 +75,9 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
             return next(
                 (
                     multi_level_sensor.value
-                    for multi_level_sensor in self._device_instance.multi_level_sensor_property.values()
+                    for multi_level_sensor in (
+                        self._device_instance.multi_level_sensor_property.values()
+                    )
                     if multi_level_sensor.sensor_type == "temperature"
                 ),
                 None,

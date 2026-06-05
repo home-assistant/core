@@ -1,7 +1,5 @@
 """Backup manager for the Backup integration."""
 
-from __future__ import annotations
-
 import abc
 import asyncio
 from collections import defaultdict
@@ -12,7 +10,7 @@ import hashlib
 import io
 from itertools import chain
 import json
-from pathlib import Path, PurePath
+from pathlib import Path, PurePath, PureWindowsPath
 import shutil
 import sys
 import tarfile
@@ -68,6 +66,7 @@ from .models import (
     BackupReaderWriterError,
     BaseBackup,
     Folder,
+    InvalidBackupFilename,
 )
 from .store import BackupStore
 from .util import (
@@ -1006,6 +1005,14 @@ class BackupManager:
     ) -> str:
         """Receive and store a backup file from upload."""
         contents.chunk_size = BUF_SIZE
+        suggested_filename = contents.filename or "backup.tar"
+        safe_filename = PureWindowsPath(suggested_filename).name
+        if (
+            not safe_filename
+            or safe_filename != suggested_filename
+            or safe_filename == ".."
+        ):
+            raise InvalidBackupFilename(f"Invalid filename: {suggested_filename}")
         self.async_on_backup_event(
             ReceiveBackupEvent(
                 reason=None,
@@ -1016,7 +1023,7 @@ class BackupManager:
         written_backup = await self._reader_writer.async_receive_backup(
             agent_ids=agent_ids,
             stream=contents,
-            suggested_filename=contents.filename or "backup.tar",
+            suggested_filename=suggested_filename,
         )
         self.async_on_backup_event(
             ReceiveBackupEvent(
@@ -1180,10 +1187,10 @@ class BackupManager:
                 "Cannot include all addons and specify specific addons"
             )
 
+        kind = "Automatic" if with_automatic_settings else "Custom"
         backup_name = (
-            (name if name is None else name.strip())
-            or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
-        )
+            name if name is None else name.strip()
+        ) or f"{kind} backup {HAVERSION}"
         extra_metadata = extra_metadata or {}
 
         try:
@@ -1280,7 +1287,8 @@ class BackupManager:
             )
             if not agent_errors:
                 if with_automatic_settings:
-                    # create backup was successful, update last_completed_automatic_backup
+                    # create backup was successful, update
+                    # last_completed_automatic_backup
                     self.config.data.last_completed_automatic_backup = dt_util.now()
                     self.store.save()
                 backup_success = True
@@ -1970,7 +1978,13 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
         try:
             backup = await async_add_executor_job(read_backup, temp_file)
-        except (OSError, tarfile.TarError, json.JSONDecodeError, KeyError) as err:
+        except (
+            OSError,
+            tarfile.TarError,
+            json.JSONDecodeError,
+            KeyError,
+            InvalidBackupFilename,
+        ) as err:
             LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
             raise
 
@@ -2150,7 +2164,8 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             return
 
         LOGGER.info(
-            "Adjusting backup settings to not include addons, folders or supervisor locations"
+            "Adjusting backup settings to not include addons,"
+            " folders or supervisor locations"
         )
         automatic_agents = [
             agent_id

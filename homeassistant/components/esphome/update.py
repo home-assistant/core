@@ -1,7 +1,5 @@
 """Update platform for ESPHome."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -75,7 +73,8 @@ async def async_setup_entry(
         if not entry_data.available or not dashboard.last_update_success:
             return
 
-        # Do not add Dashboard Entity if this device is not known to the ESPHome dashboard.
+        # Do not add Dashboard Entity if this device is not
+        # known to the ESPHome dashboard.
         if dashboard.data is None or dashboard.data.get(device_name) is None:
             return
 
@@ -283,6 +282,19 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
         static_info = self._static_info
         self._attr_device_class = try_parse_enum(
             UpdateDeviceClass, static_info.device_class
+        )
+
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        """Return True if latest_version is newer than installed_version.
+
+        ESPHome project versions can carry a build suffix (e.g.
+        2025.11.5_c51f7548) that AwesomeVersion cannot parse. Without stripping
+        it the base comparison raises and the entity is forced on for every
+        build mismatch. Drop the suffix so the versions compare cleanly and we
+        only report genuinely newer firmware.
+        """
+        return super().version_is_newer(
+            latest_version.partition("_")[0], installed_version.partition("_")[0]
         )
 
     @property

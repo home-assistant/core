@@ -1,13 +1,11 @@
 """Green Planet Energy integration for Home Assistant."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_MODE, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -32,7 +30,6 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 SERVICE_GET_CHEAPEST_DURATION = "get_cheapest_duration"
 ATTR_DURATION = "duration"
 ATTR_TIME_RANGE = "time_range"
-ATTR_MODE = "mode"
 
 # Time range options
 TIME_RANGE_DAY = "day"

@@ -1,7 +1,5 @@
 """Config flow for WiiM integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -16,6 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER, UPNP_PORT
+from .util import InvalidHomeAssistantURLError, get_homeassistant_local_host
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -48,6 +47,11 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step when user adds integration manually."""
+        try:
+            get_homeassistant_local_host(self.hass)
+        except InvalidHomeAssistantURLError:
+            return self.async_abort(reason="missing_homeassistant_url")
+
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]

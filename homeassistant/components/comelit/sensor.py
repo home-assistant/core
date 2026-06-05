@@ -1,7 +1,5 @@
 """Support for sensors."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Final, cast
 
 from aiocomelit.api import ComelitSerialBridgeObject, ComelitVedoZoneObject
@@ -153,7 +151,7 @@ class ComelitVedoSensorEntity(
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
-        self._attr_unique_id = f"{config_entry_entry_id}-{zone.index}"
+        self._attr_unique_id = f"{config_entry_entry_id}-{description.key}-{zone.index}"
         self._attr_device_info = coordinator.platform_device_info(zone, "zone")
 
         self.entity_description = description
@@ -168,12 +166,12 @@ class ComelitVedoSensorEntity(
     @property
     def available(self) -> bool:
         """Sensor availability."""
-        return self._zone_object.human_status != AlarmZoneState.UNAVAILABLE
+        return self._zone_object.human_status is not AlarmZoneState.UNAVAILABLE
 
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        if (status := self._zone_object.human_status) == AlarmZoneState.UNKNOWN:
+        if (status := self._zone_object.human_status) is AlarmZoneState.UNKNOWN:
             return None
 
         return cast(str, status.value)

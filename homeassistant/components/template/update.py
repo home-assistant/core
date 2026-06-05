@@ -1,7 +1,5 @@
 """Support for updates which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -65,6 +63,8 @@ CONF_SPECIFIC_VERSION = "specific_version"
 CONF_TITLE = "title"
 CONF_UPDATE_PERCENTAGE = "update_percentage"
 
+SCRIPT_FIELDS = (CONF_INSTALL,)
+
 UPDATE_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_BACKUP, default=False): cv.boolean,
@@ -105,6 +105,7 @@ async def async_setup_platform(
         TriggerUpdateEntity,
         async_add_entities,
         discovery_info,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -120,6 +121,7 @@ async def async_setup_entry(
         async_add_entities,
         StateUpdateEntity,
         UPDATE_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -142,8 +144,11 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
@@ -263,9 +268,12 @@ class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
         """Return the entity picture to use in the frontend."""
         # This is needed to override the base update entity functionality
         if self._attr_entity_picture is None:
-            # The default picture for update entities would use `self.platform.platform_name` in
-            # place of `template`.  This does not work when creating an entity preview because
-            # the platform does not exist for that entity, therefore this is hardcoded as `template`.
+            # The default picture for update entities would
+            # use `self.platform.platform_name` in place of
+            # `template`. This does not work when creating
+            # an entity preview because the platform does
+            # not exist for that entity, therefore this is
+            # hardcoded as `template`.
             return "/api/brands/integration/template/icon.png"
         return self._attr_entity_picture
 
