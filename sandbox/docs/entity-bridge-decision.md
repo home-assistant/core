@@ -223,14 +223,8 @@ the issue is what *their* entity methods return, not what calls them.
 
 ## Reproducing the numbers
 
-```bash
-uv run pytest tests/components/sandbox/test_spike.py::test_report_comparison \
-    --no-cov -s
-```
-
-The spike code lives at `sandbox/hass_client/hass_client/spike/`. To run
-the per-option tests in isolation:
-
-```bash
-uv run pytest tests/components/sandbox/test_spike.py -v --no-cov
-```
+The spike harness (`sandbox/hass_client/hass_client/spike/` and
+`tests/components/sandbox/test_spike.py`) was **removed once Option B was
+chosen and shipped** — it was a one-off bake-off, not part of the product.
+The numbers above are preserved here as the decision record; recover the
+harness from git history if you ever need to re-run it.
