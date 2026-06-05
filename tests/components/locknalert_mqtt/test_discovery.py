@@ -2337,8 +2337,9 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_CLIENT_KEY",
     "CONF_CLIENT_CERT",
     "CONF_TLS_INSECURE",
-    # LockNAlert-specific settings
+    # LockNAlert-specific settings (config-flow/bootstrap only, never in discovery payloads)
     "CONF_BRIDGE_SERIAL",
+    "CONF_PAIRING_TOKEN",
     "CONF_VERIFY_SSL",
 ]
 
