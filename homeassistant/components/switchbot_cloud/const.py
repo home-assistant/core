@@ -117,14 +117,6 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "WeatherStation": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR,)
     ),
-    "AI Art Frame": SwitchbotCloudDeviceConfig(
-        True,
-        entity_config=(
-            Platform.BUTTON,
-            Platform.SENSOR,
-            Platform.IMAGE,
-        ),
-    ),
     "Meter": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "MeterPlus": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "WoIOSensor": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),

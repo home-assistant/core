@@ -16,7 +16,6 @@ async def test_coordinator_data_is_none(
     hass: HomeAssistant,
     mock_list_devices,
     mock_get_status,
-    mock_setup_webhook,
 ) -> None:
     """Test coordinator data is none."""
 
@@ -38,7 +37,7 @@ async def test_coordinator_data_is_none(
 
 
 async def test_async_image(
-    hass: HomeAssistant, mock_list_devices, mock_get_status, mock_setup_webhook
+    hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
     """Test coordinator data is none."""
 
