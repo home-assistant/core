@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import device_tracker, mqtt
+from homeassistant.components import device_tracker
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -27,7 +27,7 @@ from tests.typing import (
 )
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         device_tracker.DOMAIN: {
             "name": "test",
             "state_topic": "test-topic",
@@ -693,7 +693,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 device_tracker.DOMAIN: {"name": "jan", "state_topic": "/location/jan"}
             }
         }

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.components import fan, mqtt
+from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
@@ -16,6 +16,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODES,
     NotValidPresetModeError,
 )
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.fan import (
     CONF_DIRECTION_COMMAND_TOPIC,
     CONF_DIRECTION_STATE_TOPIC,
@@ -72,7 +73,7 @@ from tests.components.fan import common
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         fan.DOMAIN: {
             "name": "test",
             "state_topic": "state-topic",
@@ -82,7 +83,7 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {fan.DOMAIN: {"name": "test"}}}])
+@pytest.mark.parametrize("hass_config", [{DOMAIN: {fan.DOMAIN: {"name": "test"}}}])
 @pytest.mark.usefixtures("hass")
 async def test_fail_setup_if_no_command_topic(
     caplog: pytest.LogCaptureFixture, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -96,7 +97,7 @@ async def test_fail_setup_if_no_command_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -232,7 +233,7 @@ async def test_controlling_state_via_topic(
         help_custom_config(
             fan.DOMAIN,
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "command_topic": "command-topic",
                         "percentage_command_topic": "percentage-command-topic",
@@ -295,7 +296,7 @@ async def test_controlling_state_via_topic_with_different_speed_range(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -354,7 +355,7 @@ async def test_controlling_state_via_topic_no_percentage_topics(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -472,7 +473,7 @@ async def test_controlling_state_via_topic_and_json_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "state_topic": "shared-state-topic",
@@ -587,7 +588,7 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -734,7 +735,7 @@ async def test_sending_mqtt_commands_and_optimistic(
         help_custom_config(
             fan.DOMAIN,
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test1",
                         "command_topic": "command-topic",
@@ -842,7 +843,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -989,7 +990,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -1197,7 +1198,7 @@ async def test_sending_mqtt_command_templates_(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -1260,7 +1261,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -1576,7 +1577,7 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][fan.DOMAIN])
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][fan.DOMAIN])
     config[ATTR_PRESET_MODES] = ["eco", "auto"]
     config[CONF_PRESET_MODE_COMMAND_TOPIC] = "fan/some_preset_mode_command_topic"
     config[CONF_PERCENTAGE_COMMAND_TOPIC] = "fan/some_percentage_command_topic"
@@ -1598,7 +1599,7 @@ async def test_encoding_subscribable_topics(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -1672,7 +1673,7 @@ async def test_attributes(
         (
             "test1",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test1",
                         "command_topic": "command-topic",
@@ -1686,7 +1687,7 @@ async def test_attributes(
         (
             "test2",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test2",
                         "command_topic": "command-topic",
@@ -1703,7 +1704,7 @@ async def test_attributes(
         (
             "test3",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test3",
                         "command_topic": "command-topic",
@@ -1720,7 +1721,7 @@ async def test_attributes(
         (
             "test4",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test4",
                         "command_topic": "command-topic",
@@ -1735,7 +1736,7 @@ async def test_attributes(
         (
             "test5",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test5",
                         "command_topic": "command-topic",
@@ -1753,7 +1754,7 @@ async def test_attributes(
         (
             "test6",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test6",
                         "command_topic": "command-topic",
@@ -1771,7 +1772,7 @@ async def test_attributes(
         (
             "test7",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test7",
                         "command_topic": "command-topic",
@@ -1788,7 +1789,7 @@ async def test_attributes(
         (
             "test8",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test8",
                         "command_topic": "command-topic",
@@ -1807,7 +1808,7 @@ async def test_attributes(
         (
             "test9",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test9",
                         "command_topic": "command-topic",
@@ -1825,7 +1826,7 @@ async def test_attributes(
         (
             "test10",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test10",
                         "command_topic": "command-topic",
@@ -1843,7 +1844,7 @@ async def test_attributes(
         (
             "test11",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test11",
                         "command_topic": "command-topic",
@@ -1863,7 +1864,7 @@ async def test_attributes(
         (
             "test12",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test12",
                         "command_topic": "command-topic",
@@ -1882,7 +1883,7 @@ async def test_attributes(
         (
             "test13",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test13",
                         "command_topic": "command-topic",
@@ -1899,7 +1900,7 @@ async def test_attributes(
         (
             "test14",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test14",
                         "command_topic": "command-topic",
@@ -1916,7 +1917,7 @@ async def test_attributes(
         (
             "test15",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test15",
                         "command_topic": "command-topic",
@@ -1932,7 +1933,7 @@ async def test_attributes(
         (
             "test16",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test16",
                         "command_topic": "command-topic",
@@ -1951,7 +1952,7 @@ async def test_attributes(
         (
             "test17",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test17",
                         "command_topic": "command-topic",
@@ -2096,7 +2097,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -2293,7 +2294,7 @@ async def test_publishing_with_custom_encoding(
     domain = fan.DOMAIN
     config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "preset_mode_command_topic":
-        config[mqtt.DOMAIN][domain]["preset_modes"] = ["auto", "eco"]
+        config[DOMAIN][domain]["preset_modes"] = ["auto", "eco"]
 
     await help_test_publishing_with_custom_encoding(
         hass,

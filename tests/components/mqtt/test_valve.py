@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, valve
+from homeassistant.components import valve
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.valve import (
     MQTT_VALVE_ATTRIBUTES_BLOCKED,
     ValveEntityFeature,
@@ -62,7 +63,7 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         valve.DOMAIN: {
             "command_topic": "command-topic",
             "state_topic": "test-topic",
@@ -72,7 +73,7 @@ DEFAULT_CONFIG = {
 }
 
 DEFAULT_CONFIG_REPORTS_POSITION = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         valve.DOMAIN: {
             "name": "test",
             "command_topic": "command-topic",
@@ -87,7 +88,7 @@ DEFAULT_CONFIG_REPORTS_POSITION = {
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -138,7 +139,7 @@ async def test_state_via_state_topic_no_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -181,7 +182,7 @@ async def test_state_via_state_topic_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -227,7 +228,7 @@ async def test_state_via_state_topic_with_position_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -292,7 +293,7 @@ async def test_state_via_state_topic_through_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -347,7 +348,7 @@ async def test_opening_closing_state_is_reset(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     valve.DOMAIN: {
                         "name": "test",
                         "state_topic": "state-topic",
@@ -361,7 +362,7 @@ async def test_opening_closing_state_is_reset(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     valve.DOMAIN: {
                         "name": "test",
                         "state_topic": "state-topic",
@@ -402,7 +403,7 @@ async def test_invalid_state_updates(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -464,7 +465,7 @@ async def test_state_via_state_trough_position_with_alt_range(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -611,7 +612,7 @@ async def test_open_close_payload_config_not_allowed(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -622,7 +623,7 @@ async def test_open_close_payload_config_not_allowed(
             }
         },
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -671,7 +672,7 @@ async def test_controlling_valve_by_state_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -722,7 +723,7 @@ async def test_controlling_valve_by_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -769,7 +770,7 @@ async def test_controlling_valve_by_set_valve_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -824,7 +825,7 @@ async def test_controlling_valve_optimistic_by_set_valve_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -873,7 +874,7 @@ async def test_controlling_valve_with_alt_range_by_set_valve_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -924,7 +925,7 @@ async def test_controlling_valve_with_alt_range_by_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -936,7 +937,7 @@ async def test_controlling_valve_with_alt_range_by_position(
             }
         },
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -989,7 +990,7 @@ async def test_controlling_valve_by_position_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -1085,7 +1086,7 @@ async def test_custom_availability_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "device_class": "water",
@@ -1109,7 +1110,7 @@ async def test_valid_device_class(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: {
                     "name": "test",
                     "device_class": "abc123",
@@ -1193,7 +1194,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 valve.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1396,7 +1397,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         valve.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][valve.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][valve.DOMAIN],
         topic,
         value,
         attribute,

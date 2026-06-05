@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, notify
+from homeassistant.components import notify
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.notify import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -41,7 +42,7 @@ from .common import (
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {notify.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {notify.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
@@ -50,7 +51,7 @@ DEFAULT_CONFIG = {
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 notify.DOMAIN: {
                     "command_topic": "command-topic",
                     "name": "test",
@@ -90,7 +91,7 @@ async def test_sending_mqtt_commands(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 notify.DOMAIN: {
                     "command_topic": "command-topic",
                     "command_template": '{ "{{ entity_id }}": "{{ value }}" }',
@@ -231,7 +232,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 notify.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -267,8 +268,8 @@ async def test_discovery_update_notify(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered notify."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][notify.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][notify.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][notify.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][notify.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
 
