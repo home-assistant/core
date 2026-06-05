@@ -93,9 +93,7 @@ async def test_always_main_domains_pin_to_main(
 
 
 @pytest.mark.parametrize("domain", ["ai_task", "image"])
-async def test_phase1_spike_late_additions_pin_to_main(
-    hass: HomeAssistant, domain: str
-) -> None:
+async def test_ai_task_and_image_pin_to_main(hass: HomeAssistant, domain: str) -> None:
     """ai_task and image are folded into ALWAYS_MAIN.
 
     Pinned as their own test so the regression message is unambiguous if
