@@ -31,7 +31,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -144,7 +144,11 @@ def _sensor_device_info_to_hass(
     adv: Aranet4Advertisement,
 ) -> DeviceInfo:
     """Convert a sensor device info to hass device info."""
-    hass_device_info = DeviceInfo({})
+    # Tie the device to its Bluetooth address so the address shows on the device
+    # page and other integrations referencing the same device attach to it.
+    hass_device_info = DeviceInfo(
+        connections={(CONNECTION_BLUETOOTH, adv.device.address)}
+    )
     if adv.readings and adv.readings.name:
         hass_device_info[ATTR_NAME] = adv.readings.name
         hass_device_info[ATTR_MANUFACTURER] = ARANET_MANUFACTURER_NAME
