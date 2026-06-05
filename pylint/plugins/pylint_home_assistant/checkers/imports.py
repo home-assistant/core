@@ -8,6 +8,8 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.const import Module
+from pylint_home_assistant.helpers.ast_utils import get_name_import_source_module
+from pylint_home_assistant.helpers.module_info import parse_module
 
 
 @dataclass
@@ -210,26 +212,31 @@ class HassImportsFormatChecker(BaseChecker):
             "home-assistant-import-constant-unnecessary-alias",
             "Used when a constant alias is unnecessary",
         ),
+        "C7416": (
+            "`%s.DOMAIN` should be imported from the component and "
+            "replaced by the `DOMAIN` constant",
+            "home-assistant-import-domain-constant",
+            "Used when DOMAIN is accessed via a module attribute instead of "
+            "being imported from the component and used as the DOMAIN constant",
+        ),
     }
     options = ()
 
-    def __init__(self, linter: PyLinter) -> None:
-        """Initialize the HassImportsFormatChecker."""
-        super().__init__(linter)
-        self.current_package: str | None = None
+    current_package: str
+    current_component: str | None
 
     def visit_module(self, node: nodes.Module) -> None:
         """Determine current package."""
-        if node.package:
-            self.current_package = node.name
-        else:
+        self.current_package = node.name
+        if not node.package:
             # Strip name of the current module
             self.current_package = node.name[: node.name.rfind(".")]
 
+        parsed_module = parse_module(node.name, include_test=True)
+        self.current_component = parsed_module.domain if parsed_module else None
+
     def visit_import(self, node: nodes.Import) -> None:
         """Check for improper `import _` invocations."""
-        if self.current_package is None:
-            return
         for module, _alias in node.names:
             if module.startswith(f"{self.current_package}."):
                 self.add_message("home-assistant-relative-import", node=node)
@@ -427,6 +434,26 @@ class HassImportsFormatChecker(BaseChecker):
                             name[0],
                         ),
                     )
+
+    def visit_attribute(self, node: nodes.Attribute) -> None:
+        """Check for `x.DOMAIN` referencing the current component."""
+        if (
+            node.attrname != "DOMAIN"
+            or not isinstance(node.expr, nodes.Name)
+            or not self.current_component
+        ):
+            return
+
+        if (
+            (module := get_name_import_source_module(node.expr))
+            and (parsed := parse_module(module, include_test=True))
+            and parsed.domain == self.current_component
+        ):
+            self.add_message(
+                "home-assistant-import-domain-constant",
+                node=node,
+                args=(node.expr.name,),
+            )
 
 
 def register(linter: PyLinter) -> None:

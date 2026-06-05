@@ -369,3 +369,90 @@ def test_domain_alias(
             imports_checker.visit_import(import_node)
         else:
             imports_checker.visit_importfrom(import_node)
+
+
+@pytest.mark.parametrize(
+    ("module_name", "code"),
+    [
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "from . import const\nconst.DOMAIN  #@",
+        ),
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "from homeassistant.components.pylint_test import const\nconst.DOMAIN  #@",
+        ),
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "from homeassistant.components import pylint_test\npylint_test.DOMAIN  #@",
+        ),
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "import homeassistant.components.pylint_test as comp\ncomp.DOMAIN  #@",
+        ),
+        (
+            "homeassistant.components.pylint_test.api.hub",
+            "from .. import const\nconst.DOMAIN  #@",
+        ),
+        (
+            "tests.components.pylint_test.test_sensor",
+            "from homeassistant.components.pylint_test import const\nconst.DOMAIN  #@",
+        ),
+    ],
+)
+def test_bad_domain_attribute(
+    linter: UnittestLinter,
+    imports_checker: BaseChecker,
+    module_name: str,
+    code: str,
+) -> None:
+    """Ensure DOMAIN accessed via a component module attribute is rejected."""
+
+    node = astroid.extract_node(code, module_name)
+    imports_checker.visit_module(node.root())
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="home-assistant-import-domain-constant",
+            node=node,
+            args=(node.expr.name,),
+            line=2,
+            col_offset=0,
+            end_line=2,
+            end_col_offset=len(node.expr.name) + 7,
+        ),
+    ):
+        imports_checker.visit_attribute(node)
+
+
+@pytest.mark.parametrize(
+    ("module_name", "code"),
+    [
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "from homeassistant.components.other import const\nconst.DOMAIN  #@",
+        ),
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "from . import const\nconst.OTHER  #@",
+        ),
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "value.DOMAIN  #@",
+        ),
+    ],
+)
+def test_good_domain_attribute(
+    linter: UnittestLinter,
+    imports_checker: BaseChecker,
+    module_name: str,
+    code: str,
+) -> None:
+    """Ensure unrelated DOMAIN attribute accesses pass through ok."""
+
+    node = astroid.extract_node(code, module_name)
+    imports_checker.visit_module(node.root())
+
+    with assert_no_messages(linter):
+        imports_checker.visit_attribute(node)
