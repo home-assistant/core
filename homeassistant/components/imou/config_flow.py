@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from pyimouapi.const import PARAM_HD
 from pyimouapi.exceptions import (
     ConnectFailedException,
     ImouException,
@@ -12,14 +13,36 @@ from pyimouapi.exceptions import (
 from pyimouapi.openapi import ImouOpenApiClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, DOMAIN
+from .const import (
+    API_URLS,
+    CONF_API_URL,
+    CONF_APP_ID,
+    CONF_APP_SECRET,
+    CONF_OPTION_LIVE_RESOLUTION,
+    CONF_OPTION_UPDATE_INTERVAL,
+    DEFAULT_LIVE_RESOLUTION,
+    DEFAULT_UPDATE_INTERVAL_SECONDS,
+    DOMAIN,
+    LIVE_RESOLUTION_SD,
+    MAX_UPDATE_INTERVAL_SECONDS,
+    MIN_UPDATE_INTERVAL_SECONDS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +52,12 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> ImouOptionsFlow:
+        """Return the options flow handler."""
+        return ImouOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -77,4 +106,47 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+
+class ImouOptionsFlow(OptionsFlow):
+    """Handle Imou options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage Imou options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_OPTION_LIVE_RESOLUTION,
+                            default=DEFAULT_LIVE_RESOLUTION,
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=[PARAM_HD, LIVE_RESOLUTION_SD],
+                                translation_key=CONF_OPTION_LIVE_RESOLUTION,
+                                mode=SelectSelectorMode.DROPDOWN,
+                            )
+                        ),
+                        vol.Required(
+                            CONF_OPTION_UPDATE_INTERVAL,
+                            default=DEFAULT_UPDATE_INTERVAL_SECONDS,
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_UPDATE_INTERVAL_SECONDS,
+                                max=MAX_UPDATE_INTERVAL_SECONDS,
+                                mode=NumberSelectorMode.BOX,
+                                unit_of_measurement="s",
+                            )
+                        ),
+                    }
+                ),
+                self.config_entry.options,
+            ),
         )

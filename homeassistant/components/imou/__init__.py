@@ -7,7 +7,7 @@ from pyimouapi.openapi import ImouOpenApiClient
 from homeassistant.core import HomeAssistant, callback
 
 from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, PLATFORMS
-from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
+from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator, get_update_interval
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool:
@@ -33,8 +33,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool
         """Keep periodic polling when no entities are registered yet."""
 
     entry.async_on_unload(imou_coordinator.async_add_listener(_async_keep_polling))
+    entry.async_on_unload(entry.add_update_listener(_async_update_options))
 
     return True
+
+
+async def _async_update_options(hass: HomeAssistant, entry: ImouConfigEntry) -> None:
+    """Handle config entry options updates."""
+    entry.runtime_data.update_interval = get_update_interval(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool:

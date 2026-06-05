@@ -28,7 +28,15 @@ CONF_APP_SECRET = "app_secret"
 
 PARAM_STATUS = "status"
 PARAM_STATE = "state"
+PARAM_HEADER_DETECT = "header_detect"
 
+CONF_OPTION_LIVE_RESOLUTION = "live_resolution"
+CONF_OPTION_UPDATE_INTERVAL = "update_interval"
+LIVE_RESOLUTION_SD = "SD"
+DEFAULT_LIVE_RESOLUTION = LIVE_RESOLUTION_SD
+MIN_UPDATE_INTERVAL_SECONDS = 30
+MAX_UPDATE_INTERVAL_SECONDS = 900
+DEFAULT_UPDATE_INTERVAL_SECONDS = 120
 
 # How long each PTZ button press moves the camera, in milliseconds (Imou cloud API).
 PTZ_MOVE_DURATION_MS = 500
@@ -36,4 +44,4 @@ PTZ_MOVE_DURATION_MS = 500
 # Upper bound for a full coordinator refresh (device list + status for all devices).
 UPDATE_TIMEOUT = 300
 
-PLATFORMS = [Platform.BUTTON]
+PLATFORMS = [Platform.BUTTON, Platform.CAMERA]

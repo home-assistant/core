@@ -1,5 +1,6 @@
 """Tests for the Imou init."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -7,17 +8,74 @@ from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 
+from homeassistant.components.imou import _async_update_options
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
-from homeassistant.components.imou.const import DOMAIN, PARAM_STATE, PARAM_STATUS
+from homeassistant.components.imou.const import (
+    CONF_OPTION_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL_SECONDS,
+    DOMAIN,
+    PARAM_STATE,
+    PARAM_STATUS,
+)
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DEFAULT_MOCK_DEVICES, create_offline_device, create_online_device
+from .const import (
+    CONFIG_ENTRY_DATA,
+    DEFAULT_MOCK_DEVICES,
+    create_offline_device,
+    create_online_device,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.mark.parametrize(
+    "mock_config_entry",
+    [
+        MockConfigEntry(
+            title="Imou",
+            domain=DOMAIN,
+            data=CONFIG_ENTRY_DATA,
+            options={CONF_OPTION_UPDATE_INTERVAL: 60},
+            unique_id=CONFIG_ENTRY_DATA["app_id"],
+            entry_id="test_entry_id",
+        )
+    ],
+)
+@pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
+async def test_coordinator_uses_update_interval_from_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Coordinator polling interval comes from config entry options."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.runtime_data.update_interval == timedelta(seconds=60)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_options_update_changes_coordinator_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Updating options adjusts the coordinator polling interval without reload."""
+    assert mock_config_entry.runtime_data.update_interval == timedelta(
+        seconds=DEFAULT_UPDATE_INTERVAL_SECONDS
+    )
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_OPTION_UPDATE_INTERVAL: 90},
+    )
+    await _async_update_options(hass, mock_config_entry)
+
+    assert mock_config_entry.runtime_data.update_interval == timedelta(seconds=90)
 
 
 @pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
@@ -104,18 +162,21 @@ async def test_multiple_channels_create_separate_devices(
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entries) == 2
+    assert len(entries) == 4
     assert {entry.unique_id for entry in entries} == {
         "dev-1_ch9$mute",
         "dev-1_ch10$mute",
+        "dev-1_ch9$camera",
+        "dev-1_ch10$camera",
     }
     for entry in entries:
-        assert entry.translation_key == PARAM_MUTE
         device_key = entry.unique_id.split("$", 1)[0]
         assert entry.device_id == device_ids_by_key[device_key]
         state = hass.states.get(entry.entity_id)
         assert state is not None
         assert state.state != STATE_UNAVAILABLE
+        if entry.domain == "button":
+            assert entry.translation_key == PARAM_MUTE
 
 
 @pytest.mark.parametrize("imou_mock_devices", [[]], indirect=True)

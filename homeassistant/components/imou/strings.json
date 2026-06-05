@@ -24,6 +24,21 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "live_resolution": "Live stream resolution",
+          "update_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "live_resolution": "Resolution of the live stream URL returned by Imou",
+          "update_interval": "How often to poll Imou cloud for device list and status updates"
+        },
+        "title": "Configure Imou"
+      }
+    }
+  },
   "entity": {
     "button": {
       "mute": {
@@ -41,6 +56,11 @@
       "ptz_up": {
         "name": "PTZ up"
       }
+    },
+    "camera": {
+      "camera": {
+        "name": "Live view"
+      }
     }
   },
   "selector": {
@@ -50,6 +70,12 @@
         "eu": "Europe",
         "na": "North America",
         "sg": "Singapore (Asia-Pacific)"
+      }
+    },
+    "live_resolution": {
+      "options": {
+        "HD": "HD",
+        "SD": "SD"
       }
     }
   }
