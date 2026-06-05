@@ -25,6 +25,7 @@ from aioesphomeapi import (
 import pytest
 from zeroconf import Zeroconf
 
+from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
 from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
@@ -202,6 +203,11 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
     mock_client.disconnect = AsyncMock()
     mock_client.subscribe_logs = Mock()
     mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.get_voice_assistant_configuration = AsyncMock(
+        return_value=AssistSatelliteConfiguration(
+            available_wake_words=[], active_wake_words=[], max_active_wake_words=0
+        )
+    )
     mock_client.address = "127.0.0.1"
     mock_client.api_version = APIVersion(99, 99)
 

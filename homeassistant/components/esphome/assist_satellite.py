@@ -303,10 +303,10 @@ class EsphomeAssistSatellite(
                 assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
             )
 
-            # Block until config is retrieved.
-            # If the device supports announcements, it will return a config.
-            _LOGGER.debug("Waiting for satellite configuration")
-            await self._update_satellite_config()
+        # Block until config is retrieved.
+        # Headless satellites can still provide wake word configuration.
+        _LOGGER.debug("Waiting for satellite configuration")
+        await self._update_satellite_config()
 
         if not (feature_flags & VoiceAssistantFeature.SPEAKER):
             # Will use media player for TTS/announcements
@@ -545,7 +545,8 @@ class EsphomeAssistSatellite(
         else:
             start_stage = PipelineStage.STT
 
-        end_stage = PipelineStage.TTS
+        has_tts_output = self._has_tts_output(feature_flags)
+        end_stage = PipelineStage.TTS if has_tts_output else PipelineStage.INTENT
 
         if feature_flags & VoiceAssistantFeature.SPEAKER:
             # Stream WAV audio
@@ -555,7 +556,7 @@ class EsphomeAssistSatellite(
                 tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
                 tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
             }
-        else:
+        elif has_tts_output:
             # ANNOUNCEMENT format from media player
             self._update_tts_format()
 
@@ -599,6 +600,20 @@ class EsphomeAssistSatellite(
         )
 
         return port
+
+    def _has_tts_output(self, feature_flags: VoiceAssistantFeature) -> bool:
+        """Return true if the satellite has a way to play TTS responses."""
+        if feature_flags & (
+            VoiceAssistantFeature.SPEAKER | VoiceAssistantFeature.ANNOUNCE
+        ):
+            return True
+
+        return any(
+            supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT
+            for supported_format in chain(
+                *self._entry_data.media_player_formats.values()
+            )
+        )
 
     async def handle_audio(self, data: bytes, data2: bytes | None = None) -> None:
         """Handle incoming audio chunk from API."""
