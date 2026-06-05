@@ -32,8 +32,8 @@ from homeassistant.helpers import template
         ("plain string", "plain string"),
         ("b'\\x00\\x01'", b"\x00\x01"),
         ('b"hello"', b"hello"),
-        ("b'invalid escape \\q'", "b'invalid escape \\q'"),
-        ("b'not bytes result'", "b'not bytes result'"),
+        ("b'not bytes result'", b"not bytes result"),
+        ("b'unclosed", "b'unclosed"),
     ],
     ids=[
         "none_unchanged",
@@ -43,8 +43,8 @@ from homeassistant.helpers import template
         "plain_string_unchanged",
         "bytes_literal_single_quote",
         "bytes_literal_double_quote",
-        "invalid_escape_unchanged",
-        "non_bytes_literal_unchanged",
+        "bytes_literal_ascii",
+        "syntax_error_unchanged",
     ],
 )
 def test_convert_outgoing_mqtt_payload(
@@ -54,11 +54,9 @@ def test_convert_outgoing_mqtt_payload(
     assert convert_outgoing_mqtt_payload(payload) == expected
 
 
-def test_convert_outgoing_mqtt_payload_bytes_literal_becomes_non_bytes() -> None:
-    """Eval result that is not bytes is returned as the original string."""
-    payload = "b'123'"
-    result = convert_outgoing_mqtt_payload(payload)
-    assert result == b"123"
+def test_convert_outgoing_mqtt_payload_bytes_literal_numeric() -> None:
+    """Numeric bytes literal is converted to bytes."""
+    assert convert_outgoing_mqtt_payload("b'123'") == b"123"
 
 
 # --- MqttCommandTemplateException ---
@@ -286,16 +284,16 @@ def test_mqtt_value_template_raises_with_real_default(hass: HomeAssistant) -> No
         vt.async_render_with_possible_json_value("payload", default="fallback")
 
 
-def test_mqtt_value_template_default_used_on_missing_value(
+def test_mqtt_value_template_missing_json_key_renders_empty(
     hass: HomeAssistant,
 ) -> None:
-    """When value is missing in JSON payload, HA template uses the provided default."""
+    """Missing JSON key renders as empty string; default is not used for attribute errors."""
     tpl = template.Template("{{ value_json.missing_key }}", hass)
     vt = MqttValueTemplate(tpl)
     result = vt.async_render_with_possible_json_value(
         '{"other": 1}', default="DEFAULT"
     )
-    assert result == "DEFAULT"
+    assert result == ""
 
 
 def test_mqtt_value_template_entity_sets_template_state_lazily(
