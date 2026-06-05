@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from openai.types import CompletionUsage
+from openai.types import CompletionUsage, Model
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 import pytest
@@ -17,11 +17,14 @@ from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_URL = "http://localhost:4000/v1"
-MODEL_INFO_URL = f"{TEST_URL}/model/info"
-MODELS_URL = f"{TEST_URL}/models"
+
+
+async def models_response(*model_ids: str) -> AsyncGenerator[Model]:
+    """Yield models as the OpenAI client's `models.list()` would."""
+    for model_id in model_ids:
+        yield Model(id=model_id, created=0, object="model", owned_by="litellm")
 
 
 @pytest.fixture
@@ -80,7 +83,9 @@ def mock_config_entry(
 @pytest.fixture
 async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
     """Mock the OpenAI client used for chat completions."""
-    with patch("homeassistant.components.litellm.AsyncOpenAI") as mock_client:
+    with patch(
+        "homeassistant.components.litellm.coordinator.AsyncOpenAI"
+    ) as mock_client:
         client = mock_client.return_value
         client.chat.completions.create = AsyncMock(
             return_value=ChatCompletion(
@@ -110,17 +115,16 @@ async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_models(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the `/model/info` proxy endpoint."""
-    aioclient_mock.get(
-        MODEL_INFO_URL,
-        json={
-            "data": [
-                {"model_name": "gpt-3.5-turbo", "model_info": {"mode": "chat"}},
-                {"model_name": "gpt-4", "model_info": {"mode": "chat"}},
-            ]
-        },
-    )
+def mock_models() -> Generator[AsyncMock]:
+    """Mock the OpenAI client the config flow uses to list proxy models."""
+    with patch(
+        "homeassistant.components.litellm.config_flow.AsyncOpenAI"
+    ) as mock_client:
+        client = mock_client.return_value
+        client.with_options.return_value.models.list.side_effect = (
+            lambda *args, **kwargs: models_response("gpt-3.5-turbo", "gpt-4")
+        )
+        yield client
 
 
 @pytest.fixture(autouse=True)

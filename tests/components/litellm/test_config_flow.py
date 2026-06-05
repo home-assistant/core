@@ -2,7 +2,13 @@
 
 from unittest.mock import AsyncMock, patch
 
-import aiohttp
+import httpx
+from openai import (
+    APIConnectionError,
+    APITimeoutError,
+    AuthenticationError,
+    PermissionDeniedError,
+)
 import pytest
 
 from homeassistant.components.litellm.config_flow import CannotConnect, InvalidAuth
@@ -13,10 +19,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import get_subentry_id, setup_integration
-from .conftest import MODEL_INFO_URL, MODELS_URL, TEST_URL
+from .conftest import TEST_URL, models_response
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CONVERSATION_MODEL_OPTIONS = [
     {"value": "gpt-3.5-turbo", "label": "gpt-3.5-turbo"},
@@ -104,34 +109,48 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+def _status_error(
+    error: type[AuthenticationError | PermissionDeniedError], status_code: int
+) -> AuthenticationError | PermissionDeniedError:
+    """Build an OpenAI status error backed by a real httpx response."""
+    return error(
+        response=httpx.Response(
+            status_code=status_code, request=httpx.Request("GET", TEST_URL)
+        ),
+        body=None,
+        message="error",
+    )
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
-    ("model_info_kwargs", "models_kwargs", "error"),
+    ("side_effect", "error"),
     [
-        ({"status": 401}, None, "invalid_auth"),
-        ({"status": 404}, {"status": 403}, "invalid_auth"),
-        ({"exc": aiohttp.ClientError()}, None, "cannot_connect"),
-        ({"status": 404}, {"exc": aiohttp.ClientError()}, "cannot_connect"),
+        (_status_error(AuthenticationError, 401), "invalid_auth"),
+        (_status_error(PermissionDeniedError, 403), "invalid_auth"),
+        (APIConnectionError(request=httpx.Request("GET", TEST_URL)), "cannot_connect"),
+        (APITimeoutError(request=httpx.Request("GET", TEST_URL)), "cannot_connect"),
     ],
 )
-async def test_user_step_http_errors(
+async def test_user_step_proxy_errors(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    model_info_kwargs: dict,
-    models_kwargs: dict | None,
+    side_effect: Exception,
     error: str,
 ) -> None:
-    """Test the user step surfaces errors from the proxy HTTP responses."""
-    aioclient_mock.get(MODEL_INFO_URL, **model_info_kwargs)
-    if models_kwargs is not None:
-        aioclient_mock.get(MODELS_URL, **models_kwargs)
+    """Test the user step surfaces errors raised by the OpenAI client."""
+    with patch(
+        "homeassistant.components.litellm.config_flow.AsyncOpenAI"
+    ) as mock_client:
+        mock_client.return_value.with_options.return_value.models.list.side_effect = (
+            side_effect
+        )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_URL: "http://localhost:4000", CONF_API_KEY: "bla"}
-    )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_URL: "http://localhost:4000", CONF_API_KEY: "bla"}
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
@@ -225,25 +244,25 @@ async def test_create_conversation_agent_no_control(
     }
 
 
-async def test_conversation_agent_models_fallback(
+async def test_conversation_agent_model_options(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the model list falls back to /models when /model/info is unavailable."""
-    aioclient_mock.get(MODEL_INFO_URL, status=404)
-    aioclient_mock.get(
-        MODELS_URL,
-        json={"data": [{"id": "gpt-4o"}, {"id": "gpt-5"}]},
-    )
-
+    """Test the model dropdown is populated from the proxy's model list."""
     await setup_integration(hass, mock_config_entry)
 
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "conversation"),
-        context={"source": SOURCE_USER},
-    )
+    with patch(
+        "homeassistant.components.litellm.config_flow.AsyncOpenAI"
+    ) as mock_client:
+        mock_client.return_value.with_options.return_value.models.list.side_effect = (
+            lambda *args, **kwargs: models_response("gpt-4o", "gpt-5")
+        )
+
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": SOURCE_USER},
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["data_schema"].schema["model"].config["options"] == [

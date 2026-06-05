@@ -4,7 +4,7 @@ import logging
 from typing import Any
 from urllib.parse import urlparse
 
-import aiohttp
+from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -20,7 +20,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -29,7 +29,12 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
-from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
+from .const import (
+    CONF_PROMPT,
+    DOMAIN,
+    PLACEHOLDER_API_KEY,
+    RECOMMENDED_CONVERSATION_OPTIONS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,35 +58,21 @@ def _normalize_url(url: str) -> str:
 async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> list[str]:
     """Fetch the available model names from the LiteLLM proxy.
 
-    Prefers `/model/info` and falls back to the plain OpenAI `/models` list when
-    the proxy does not implement it.
+    Uses the OpenAI-compatible `/v1/models` endpoint, which a LiteLLM proxy
+    serves with the configured model names.
     """
-    session = async_get_clientsession(hass)
-    headers: dict[str, str] = {}
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
-
+    client = AsyncOpenAI(
+        base_url=url,
+        api_key=api_key or PLACEHOLDER_API_KEY,
+        http_client=get_async_client(hass),
+    )
     try:
-        response = await session.get(
-            f"{url}/model/info",
-            headers=headers,
-            timeout=aiohttp.ClientTimeout(total=10),
-        )
-        if response.status in (401, 403):
-            raise InvalidAuth
-        if response.status == 200:
-            payload = await response.json()
-            return [model["model_name"] for model in payload.get("data", [])]
-
-        response = await session.get(
-            f"{url}/models", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
-        )
-        if response.status in (401, 403):
-            raise InvalidAuth
-        response.raise_for_status()
-        payload = await response.json()
-        return [model["id"] for model in payload.get("data", [])]
-    except (TimeoutError, aiohttp.ClientError) as err:
+        return [
+            model.id async for model in client.with_options(timeout=10.0).models.list()
+        ]
+    except (AuthenticationError, PermissionDeniedError) as err:
+        raise InvalidAuth from err
+    except OpenAIError as err:
         raise CannotConnect from err
 
 

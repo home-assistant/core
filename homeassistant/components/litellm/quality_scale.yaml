@@ -4,14 +4,12 @@ rules:
     status: exempt
     comment: No actions are implemented
   appropriate-polling:
-    status: exempt
+    status: done
     comment: >-
-      the conversation entity is stateless and only contacts the proxy in
-      response to user requests
+      the coordinator polls the proxy hourly for an availability check, backing
+      off to once a minute while it is unreachable
   brands: done
-  common-modules:
-    status: exempt
-    comment: the integration has no coordinator
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -39,12 +37,12 @@ rules:
     comment: the integration has no options
   docs-installation-parameters: done
   entity-unavailable:
-    status: exempt
-    comment: the integration only implements stateless entities.
+    status: done
+    comment: >-
+      the conversation entity follows the coordinator and is marked unavailable
+      when the proxy cannot be reached
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: the integration only integrates state-less entities
+  log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: todo
   test-coverage: done

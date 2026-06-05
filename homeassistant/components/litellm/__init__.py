@@ -1,42 +1,18 @@
 """The LiteLLM integration."""
 
-from openai import AsyncOpenAI, AuthenticationError, OpenAIError
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import LOGGER
+from .coordinator import LiteLLMConfigEntry, LiteLLMDataUpdateCoordinator
 
 PLATFORMS = [Platform.CONVERSATION]
-
-type LiteLLMConfigEntry = ConfigEntry[AsyncOpenAI]
-
-# LiteLLM proxies may run without authentication. The OpenAI client requires a
-# non-empty API key, so we send a placeholder when the user did not provide one.
-PLACEHOLDER_API_KEY = "sk-no-key-required"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LiteLLMConfigEntry) -> bool:
     """Set up LiteLLM from a config entry."""
-    client = AsyncOpenAI(
-        base_url=entry.data[CONF_URL],
-        api_key=entry.data.get(CONF_API_KEY) or PLACEHOLDER_API_KEY,
-        http_client=get_async_client(hass),
-    )
-
-    try:
-        async for _ in client.with_options(timeout=10.0).models.list():
-            break
-    except AuthenticationError as err:
-        LOGGER.error("Invalid API key: %s", err)
-        raise ConfigEntryError("Invalid API key") from err
-    except OpenAIError as err:
-        raise ConfigEntryNotReady(err) from err
-
-    entry.runtime_data = client
+    coordinator = LiteLLMDataUpdateCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

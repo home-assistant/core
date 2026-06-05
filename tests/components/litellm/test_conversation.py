@@ -4,6 +4,7 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
+import httpx
 import openai
 from openai.types import CompletionUsage
 from openai.types.chat import (
@@ -17,7 +18,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er, intent
 from homeassistant.helpers.llm import ToolInput
@@ -133,6 +134,39 @@ async def test_api_error(
     )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
+
+
+async def test_connection_error_availability(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+) -> None:
+    """Test a connection error marks the entity unavailable until it recovers."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(AGENT_ID).state != STATE_UNAVAILABLE
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        side_effect=openai.APIConnectionError(
+            request=httpx.Request("POST", "http://localhost")
+        )
+    )
+    result = await conversation.async_converse(
+        hass,
+        "hello",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id=AGENT_ID,
+    )
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+
+    await hass.async_block_till_done()
+    assert hass.states.get(AGENT_ID).state == STATE_UNAVAILABLE
+
+    # A successful availability ping restores the entity.
+    await mock_config_entry.runtime_data.async_request_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get(AGENT_ID).state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("enable_assist", [True])

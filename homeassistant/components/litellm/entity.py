@@ -24,11 +24,11 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_MODEL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LiteLLMConfigEntry
 from .const import DOMAIN, LOGGER
+from .coordinator import LiteLLMConfigEntry, LiteLLMDataUpdateCoordinator
 
 MAX_TOOL_ITERATIONS = 10
 
@@ -121,13 +121,14 @@ async def _transform_response(
     yield data
 
 
-class LiteLLMEntity(Entity):
+class LiteLLMEntity(CoordinatorEntity[LiteLLMDataUpdateCoordinator]):
     """Base entity for LiteLLM."""
 
     _attr_has_entity_name = True
 
     def __init__(self, entry: LiteLLMConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
+        super().__init__(entry.runtime_data)
         self.entry = entry
         self.subentry = subentry
         self.model = subentry.data[CONF_MODEL]
@@ -164,12 +165,24 @@ class LiteLLMEntity(Entity):
             if (m := _convert_content_to_chat_message(content))
         ]
 
-        client = self.entry.runtime_data
+        coordinator = self.entry.runtime_data
+        client = coordinator.client
 
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
                 result = await client.chat.completions.create(**model_args)
+            except (openai.AuthenticationError, openai.PermissionDeniedError) as err:
+                # Re-check so the proxy is marked unavailable for the auth failure.
+                await coordinator.async_request_refresh()
+                LOGGER.error("Error talking to API: %s", err)
+                raise HomeAssistantError("Error talking to API") from err
+            except openai.APIConnectionError as err:
+                coordinator.mark_connection_error()
+                LOGGER.error("Error talking to API: %s", err)
+                raise HomeAssistantError("Error talking to API") from err
             except openai.OpenAIError as err:
+                # Reachable but the request failed; keep the entity available.
+                coordinator.async_set_updated_data(None)
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
 
@@ -189,6 +202,7 @@ class LiteLLMEntity(Entity):
                 ]
             )
             if not chat_log.unresponded_tool_results:
+                coordinator.async_set_updated_data(None)
                 break
         else:
             LOGGER.warning(
