@@ -124,3 +124,5 @@ rules:
       This integration does not use web sessions.
   strict-typing:
     status: done
+    comment: |
+      The integration uses strict typing throughout.
