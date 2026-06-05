@@ -297,6 +297,8 @@ async def test_migrate_pipeline_store(
     store = pipeline_data.pipeline_store
     assert len(store.data) == 3
     assert store.async_get_preferred_item() == "01GX8ZWBAQYWNB1XV3EXEZ75DY"
+    for pipeline in store.data.values():
+        assert pipeline.command_timeout_seconds == 15.0
 
 
 @pytest.mark.usefixtures("init_supporting_components")
@@ -594,6 +596,7 @@ async def test_update_pipeline(
         tts_voice="test_voice",
         wake_word_entity="wake_work.test_1",
         wake_word_id="wake_word_id_1",
+        command_timeout_seconds=30.0,
     )
 
     pipelines = async_get_pipelines(hass)
@@ -613,6 +616,7 @@ async def test_update_pipeline(
             tts_voice="test_voice",
             wake_word_entity="wake_work.test_1",
             wake_word_id="wake_word_id_1",
+            command_timeout_seconds=30.0,
         )
     ]
     assert len(hass_storage[STORAGE_KEY]["data"]["items"]) == 1
@@ -630,6 +634,7 @@ async def test_update_pipeline(
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
         "prefer_local_intents": False,
+        "command_timeout_seconds": 30.0,
     }
 
     await async_update_pipeline(
@@ -657,6 +662,7 @@ async def test_update_pipeline(
             tts_voice="test_voice",
             wake_word_entity="wake_work.test_1",
             wake_word_id="wake_word_id_1",
+            command_timeout_seconds=30.0,
         )
     ]
     assert len(hass_storage[STORAGE_KEY]["data"]["items"]) == 1
@@ -674,6 +680,7 @@ async def test_update_pipeline(
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
         "prefer_local_intents": False,
+        "command_timeout_seconds": 30.0,
     }
 
 
@@ -2174,6 +2181,10 @@ async def test_stt_vad_enabled_based_on_audio_processing(
     pipeline_store = pipeline_data.pipeline_store
     pipeline_id = pipeline_store.async_get_preferred_item()
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+    await assist_pipeline.pipeline.async_update_pipeline(
+        hass, pipeline, command_timeout_seconds=30.0
+    )
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
 
     # Test with requires_external_vad=True (default)
     # VAD should be used
@@ -2223,7 +2234,7 @@ async def test_stt_vad_enabled_based_on_audio_processing(
         await pipeline_input.execute()
 
         # VAD should be created when requires_external_vad is True
-        mock_vad.assert_called_once()
+        mock_vad.assert_called_once_with(silence_seconds=0.7, timeout_seconds=30.0)
         assert mock_vad_instance.process.called
 
     # Test with requires_external_vad=False

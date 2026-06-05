@@ -81,7 +81,15 @@ from .error import (
     WakeWordDetectionError,
     WakeWordTimeoutError,
 )
-from .vad import AudioBuffer, VoiceActivityTimeout, VoiceCommandSegmenter, chunk_samples
+from .vad import (
+    DEFAULT_COMMAND_TIMEOUT_SECONDS,
+    MAX_COMMAND_TIMEOUT_SECONDS,
+    MIN_COMMAND_TIMEOUT_SECONDS,
+    AudioBuffer,
+    VoiceActivityTimeout,
+    VoiceCommandSegmenter,
+    chunk_samples,
+)
 
 if TYPE_CHECKING:
     from hassil.recognize import RecognizeResult
@@ -90,7 +98,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 ENGINE_LANGUAGE_PAIRS = (
     ("stt_engine", "stt_language"),
@@ -127,6 +135,15 @@ PIPELINE_FIELDS: VolDictType = {
     vol.Required("wake_word_id"): vol.Any(str, None),
     vol.Optional("prefer_local_intents"): bool,
     vol.Optional("acknowledge_media_id"): str,
+    vol.Optional(
+        "command_timeout_seconds", default=DEFAULT_COMMAND_TIMEOUT_SECONDS
+    ): vol.All(
+        vol.Coerce(float),
+        vol.Range(
+            min=MIN_COMMAND_TIMEOUT_SECONDS,
+            max=MAX_COMMAND_TIMEOUT_SECONDS,
+        ),
+    ),
 }
 
 STORED_PIPELINE_RUNS = 10
@@ -243,6 +260,7 @@ def _async_resolve_default_pipeline_settings(
         "tts_voice": tts_voice,
         "wake_word_entity": wake_word_entity,
         "wake_word_id": wake_word_id,
+        "command_timeout_seconds": DEFAULT_COMMAND_TIMEOUT_SECONDS,
     }
 
 
@@ -350,6 +368,7 @@ async def async_update_pipeline(
     wake_word_entity: str | None | UndefinedType = UNDEFINED,
     wake_word_id: str | None | UndefinedType = UNDEFINED,
     prefer_local_intents: bool | UndefinedType = UNDEFINED,
+    command_timeout_seconds: float | UndefinedType = UNDEFINED,
 ) -> None:
     """Update a pipeline."""
     pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
@@ -374,6 +393,7 @@ async def async_update_pipeline(
                 ("wake_word_entity", wake_word_entity),
                 ("wake_word_id", wake_word_id),
                 ("prefer_local_intents", prefer_local_intents),
+                ("command_timeout_seconds", command_timeout_seconds),
             )
             if val is not UNDEFINED
         }
@@ -429,6 +449,7 @@ class Pipeline:
     wake_word_entity: str | None
     wake_word_id: str | None
     prefer_local_intents: bool = False
+    command_timeout_seconds: float = DEFAULT_COMMAND_TIMEOUT_SECONDS
 
     id: str = field(default_factory=ulid_util.ulid_now)
 
@@ -453,6 +474,9 @@ class Pipeline:
             wake_word_entity=data["wake_word_entity"],
             wake_word_id=data["wake_word_id"],
             prefer_local_intents=data.get("prefer_local_intents", False),
+            command_timeout_seconds=data.get(
+                "command_timeout_seconds", DEFAULT_COMMAND_TIMEOUT_SECONDS
+            ),
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -471,6 +495,7 @@ class Pipeline:
             "wake_word_entity": self.wake_word_entity,
             "wake_word_id": self.wake_word_id,
             "prefer_local_intents": self.prefer_local_intents,
+            "command_timeout_seconds": self.command_timeout_seconds,
         }
 
 
@@ -952,7 +977,8 @@ class PipelineRun:
                 and self.stt_provider.audio_processing.requires_external_vad
             ):
                 stt_vad = VoiceCommandSegmenter(
-                    silence_seconds=self.audio_settings.silence_seconds
+                    silence_seconds=self.audio_settings.silence_seconds,
+                    timeout_seconds=self.pipeline.command_timeout_seconds,
                 )
 
             result = await self.stt_provider.async_process_audio_stream(
@@ -2179,6 +2205,13 @@ class PipelineStore(Store[SerializedPipelineStorageCollection]):
                 # Populate keys which were introduced before version 1.2
                 pipeline.setdefault("wake_word_entity", None)
                 pipeline.setdefault("wake_word_id", None)
+
+        if old_major_version == 1 and old_minor_version < 3:
+            # Version 1.3 adds command timeout configuration
+            for pipeline in old_data["items"]:
+                pipeline.setdefault(
+                    "command_timeout_seconds", DEFAULT_COMMAND_TIMEOUT_SECONDS
+                )
 
         if old_major_version > 1:
             raise NotImplementedError
