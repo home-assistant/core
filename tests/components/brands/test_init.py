@@ -809,30 +809,30 @@ async def test_token_query_param_authentication(
     assert await resp.read() == FAKE_PNG
 
 
-async def test_unauthenticated_request_forbidden(
+async def test_unauthenticated_request_unauthorized(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that unauthenticated requests are forbidden."""
+    """Test that unauthenticated requests are unauthorized."""
     client = await hass_client_no_auth()
 
     resp = await client.get("/api/brands/integration/hue/icon.png")
-    assert resp.status == HTTPStatus.FORBIDDEN
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
     resp = await client.get("/api/brands/hardware/boards/green.png")
-    assert resp.status == HTTPStatus.FORBIDDEN
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_invalid_token_forbidden(
+async def test_invalid_token_unauthorized(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test that an invalid access token in query param is forbidden."""
+    """Test that an invalid access token in query param is unauthorized."""
     client = await hass_client_no_auth()
     resp = await client.get("/api/brands/integration/hue/icon.png?token=invalid_token")
 
-    assert resp.status == HTTPStatus.FORBIDDEN
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_invalid_bearer_token_unauthorized(
