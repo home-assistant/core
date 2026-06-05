@@ -1,9 +1,9 @@
 """Test the Aqvify config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
-from pyaqvify import AqvifyAuthException
+from pyaqvify import AqvifyAccount, AqvifyAuthException
 import pytest
 
 from homeassistant import config_entries
@@ -13,7 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_aqvify_client: MagicMock
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -21,17 +23,13 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.aqvify.config_flow.AqvifyAPI.async_get_account_id",
-        return_value={"accountId": "ABC123"},
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "test-api-key",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test-api-key",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Aqvify"
@@ -82,7 +80,7 @@ async def test_form_invalid(
     # we can show the config flow is able to recover from an error.
     with patch(
         "homeassistant.components.aqvify.config_flow.AqvifyAPI.async_get_account_id",
-        return_value={"accountId": "ABC123"},
+        return_value=AqvifyAccount({"accountId": "ABC123"}),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -101,7 +99,7 @@ async def test_form_invalid(
 
 
 async def test_same_account_setup(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_aqvify_client: MagicMock
 ) -> None:
     """Test setup same account twice."""
 
@@ -111,17 +109,13 @@ async def test_same_account_setup(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.aqvify.config_flow.AqvifyAPI.async_get_account_id",
-        return_value={"accountId": "FirstAccount"},
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "test-api-key",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test-api-key",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Aqvify"
@@ -138,17 +132,13 @@ async def test_same_account_setup(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.aqvify.config_flow.AqvifyAPI.async_get_account_id",
-        return_value={"accountId": "FirstAccount"},
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "test-api-key2",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test-api-key2",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -167,7 +157,7 @@ async def test_second_account_setup(
 
     with patch(
         "homeassistant.components.aqvify.config_flow.AqvifyAPI.async_get_account_id",
-        return_value={"accountId": "FirstAccount"},
+        return_value=AqvifyAccount({"accountId": "FirstAccount"}),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -194,7 +184,7 @@ async def test_second_account_setup(
 
     with patch(
         "homeassistant.components.aqvify.config_flow.AqvifyAPI.async_get_account_id",
-        return_value={"accountId": "SecondAccount"},
+        return_value=AqvifyAccount({"accountId": "SecondAccount"}),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
