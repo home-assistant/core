@@ -601,7 +601,7 @@ class EsphomeAssistSatellite(
 
         return port
 
-    def _has_tts_output(self, feature_flags: VoiceAssistantFeature) -> bool:
+    def _has_tts_output(self, feature_flags: int) -> bool:
         """Return true if the satellite has a way to play TTS responses."""
         if feature_flags & (
             VoiceAssistantFeature.SPEAKER | VoiceAssistantFeature.ANNOUNCE
