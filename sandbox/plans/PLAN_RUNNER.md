@@ -11,6 +11,8 @@ the window. One plan per session, sequentially.
 - **The orchestrator stays the integrator.** Sub-sessions build and commit;
   the orchestrator independently verifies (tests, greps, `git status`) and is
   the only one that pushes.
+- **Plans are executed with the `phx:work` skill**, which walks the plan's
+  tasks and verifies (compile/test) after each step — not freehand editing.
 
 ## Steps
 
@@ -25,6 +27,9 @@ critically — to **write a STATUS marker file LAST**.
 ```
 
 Hard rules every brief repeats:
+- **Execute the plan with the `phx:work` skill** — step through the plan's
+  tasks with its progress tracking and per-step verify (compile/test) loop.
+  This is mandatory, not ad-hoc edits; the brief must say so explicitly.
 - Do **not** modify the plan file.
 - Do **not** push. Commit each logical step; the orchestrator pushes.
 - No `--no-verify`; pre-commit must pass.
