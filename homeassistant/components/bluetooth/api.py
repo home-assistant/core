@@ -183,7 +183,7 @@ async def async_process_advertisements(
 
     with ExitStack() as stack:
         unload = manager.async_register_callback(
-            _async_discovered_device, match_dict, mode, scan_duration=timeout
+            _async_discovered_device, match_dict, mode
         )
         stack.callback(unload)
 
