@@ -807,3 +807,171 @@ async def test_get_translations_still_has_title_without_translations_files(
     assert translations == {
         "component.component1.title": "Component 1",
     }
+
+
+async def test_sandbox_translation_provider_overlay(hass: HomeAssistant) -> None:
+    """A registered provider supplies strings for a domain main has no code for.
+
+    A custom sandboxed integration resolves to ``IntegrationNotFound`` on main,
+    so the disk path yields nothing; the provider's strings are spliced in and
+    flow through the same flatten machinery as on-disk strings.
+    """
+
+    async def _provider(
+        languages: list[str], components: set[str]
+    ) -> dict[str, dict[str, Any]]:
+        if "sandboxed_custom" not in components:
+            return {}
+        return {
+            language: {
+                "sandboxed_custom": {
+                    "title": "Sandboxed Custom",
+                    "config": {"step": {"user": {"title": "Set up"}}},
+                }
+            }
+            for language in languages
+        }
+
+    unregister = translation.async_register_sandbox_translation_provider(
+        hass, _provider
+    )
+    try:
+        with patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={
+                "sandboxed_custom": loader.IntegrationNotFound("sandboxed_custom")
+            },
+        ):
+            config = await translation.async_get_translations(
+                hass, "en", "config", {"sandboxed_custom"}
+            )
+            # Title was pre-filled sandbox-side and cached by the same load.
+            title = await translation.async_get_translations(
+                hass, "en", "title", {"sandboxed_custom"}
+            )
+    finally:
+        unregister()
+
+    assert config == {"component.sandboxed_custom.config.step.user.title": "Set up"}
+    assert title == {"component.sandboxed_custom.title": "Sandboxed Custom"}
+
+
+async def test_sandbox_translation_provider_degrades_to_empty(
+    hass: HomeAssistant,
+) -> None:
+    """A provider returning {} (dead channel) loads the domain with no strings.
+
+    The frontend translation path must never raise or block on a dead sandbox;
+    the domain is still marked loaded so it is not re-fetched in a hot loop.
+    """
+
+    async def _provider(
+        languages: list[str], components: set[str]
+    ) -> dict[str, dict[str, Any]]:
+        return {}  # dead channel degrades to empty
+
+    unregister = translation.async_register_sandbox_translation_provider(
+        hass, _provider
+    )
+    try:
+        with patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={
+                "sandboxed_custom": loader.IntegrationNotFound("sandboxed_custom")
+            },
+        ):
+            config = await translation.async_get_translations(
+                hass, "en", "config", {"sandboxed_custom"}
+            )
+    finally:
+        unregister()
+
+    assert config == {}
+    assert translation.async_translations_loaded(hass, {"sandboxed_custom"})
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_sandbox_translation_provider_leaves_non_sandboxed_untouched(
+    hass: HomeAssistant,
+) -> None:
+    """A provider that owns no real integration never alters its disk strings."""
+    consulted: list[set[str]] = []
+
+    async def _provider(
+        languages: list[str], components: set[str]
+    ) -> dict[str, dict[str, Any]]:
+        consulted.append(set(components))
+        return {}  # owns nothing in this load
+
+    unregister = translation.async_register_sandbox_translation_provider(
+        hass, _provider
+    )
+    try:
+        assert await async_setup_component(
+            hass, "switch", {"switch": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+        translations = await translation.async_get_translations(
+            hass, "en", "entity", {"test"}
+        )
+    finally:
+        unregister()
+
+    assert (
+        translations["component.test.entity.switch.outlet.name"]
+        == "Outlet {placeholder}"
+    )
+    assert any("test" in components for components in consulted)
+
+
+async def test_async_invalidate_translations_drops_stale_strings(
+    hass: HomeAssistant,
+) -> None:
+    """``async_invalidate`` evicts a domain so the next load re-fetches strings.
+
+    Simulates a custom integration re-fetched at a new commit ref whose
+    ``strings.json`` changed: without invalidation the cache keeps serving the
+    old value; after it, the next load picks up the new strings.
+    """
+    state = {"title": "Old Title"}
+
+    async def _provider(
+        languages: list[str], components: set[str]
+    ) -> dict[str, dict[str, Any]]:
+        if "sandboxed_custom" not in components:
+            return {}
+        return {
+            language: {"sandboxed_custom": {"title": state["title"]}}
+            for language in languages
+        }
+
+    unregister = translation.async_register_sandbox_translation_provider(
+        hass, _provider
+    )
+    try:
+        with patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={
+                "sandboxed_custom": loader.IntegrationNotFound("sandboxed_custom")
+            },
+        ):
+            first = await translation.async_get_translations(
+                hass, "en", "title", {"sandboxed_custom"}
+            )
+            assert first == {"component.sandboxed_custom.title": "Old Title"}
+
+            # New ref: provider now returns a different title, but the cache
+            # still serves the old one until it is invalidated.
+            state["title"] = "New Title"
+            cached = await translation.async_get_translations(
+                hass, "en", "title", {"sandboxed_custom"}
+            )
+            assert cached == {"component.sandboxed_custom.title": "Old Title"}
+
+            translation.async_invalidate_translations(hass, {"sandboxed_custom"})
+            refreshed = await translation.async_get_translations(
+                hass, "en", "title", {"sandboxed_custom"}
+            )
+            assert refreshed == {"component.sandboxed_custom.title": "New Title"}
+    finally:
+        unregister()
