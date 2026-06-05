@@ -1,21 +1,23 @@
 # serializer version: 1
-# name: test_all_entities[device_tracker.2021_honda_accord-entry]
+# name: test_all_entities[light.my_pool_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'device_tracker',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.2021_honda_accord',
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.my_pool_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,38 +25,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'lojack',
+    'original_name': 'Light',
+    'platform': 'vistapool',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12345',
+    'translation_key': 'pool_light',
+    'unique_id': 'ABCDEF1234567890-pool_light',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[device_tracker.2021_honda_accord-state]
+# name: test_all_entities[light.my_pool_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '2021 Honda Accord',
-      'gps_accuracy': 10,
-      'in_zones': list([
+      'color_mode': None,
+      'friendly_name': 'My Pool Light',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'latitude': 37.7749,
-      'longitude': -122.4194,
-      'source_type': <SourceType.GPS: 'gps'>,
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.2021_honda_accord',
+    'entity_id': 'light.my_pool_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_home',
+    'state': 'off',
   })
 # ---
