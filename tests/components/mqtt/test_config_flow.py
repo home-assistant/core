@@ -2644,7 +2644,7 @@ async def test_migrate_config_entry_fails_on_unsupported_version(
 ) -> None:
     """Test migrating a config entry fails on unsupported version."""
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    # Mock to a migratable or compatible config entry version
+    # Mock to an unsupported config entry version
     hass.config_entries.async_update_entry(
         config_entry,
         data=data,
