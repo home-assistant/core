@@ -48,7 +48,7 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Handle websocket data update."""
         self.async_set_updated_data(None)
 
-    async def start_websocket(self) -> None:
+    async def async_start_websocket(self) -> None:
         """Start the websocket listener."""
         await self.charger.ws_start()
 

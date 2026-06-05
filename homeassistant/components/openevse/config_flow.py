@@ -43,6 +43,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         self, host: str, user: str | None = None, password: str | None = None
     ) -> tuple[dict[str, str], str | None]:
         """Check if we can connect to the OpenEVSE charger."""
+
         charger = OpenEVSE(
             host, user, password, session=async_get_clientsession(self.hass)
         )
