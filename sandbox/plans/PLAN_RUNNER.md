@@ -20,10 +20,9 @@ the window. One plan per session, sequentially.
 
 The brief is the sub-session's whole instruction set: which plan to read, the
 locked decisions, hard rules, build steps, the exact tests/greps to run, and —
-critically — to **write a STATUS marker file LAST**. You pipe it on stdin in
-the next step (claude-screen pastes whatever you pipe, multi-line and all), so
-source it from wherever is convenient — a heredoc, or a scratch file you
-already have it in.
+critically — to **write a STATUS marker LAST**. You pipe it straight into the
+session in the next step; `claude-screen` pastes whatever you pipe as one
+message, multi-line and all.
 
 Hard rules every brief repeats:
 - **Execute the plan with the `phx:work` skill** — step through the plan's
@@ -42,12 +41,9 @@ included — using bracketed paste and a separate submit keystroke, so the whole
 brief lands as one message:
 
 ```bash
-# from a heredoc:
 ~/dev/claude-screen <name> /home/paulus/dev/hass/core <<'BRIEF'
 …brief…
 BRIEF
-# …or from a scratch file you already have it in:
-~/dev/claude-screen <name> /home/paulus/dev/hass/core < /tmp/<name>-brief.md
 ```
 
 Use an **unambiguous full `<name>`** — `screen -p` matches by prefix, so a
@@ -103,8 +99,7 @@ Then advance to the next plan.
 ## Gotchas (all bit at least once)
 
 - **Confirm the prompt submitted** — a first-run banner can swallow it; send
-  `$'\r'` to nudge. (`claude-screen` pastes multi-line briefs directly via
-  bracketed paste, so you just pipe the brief — no tempfile dance.)
+  `$'\r'` to nudge.
 - **`screen -p` is prefix-match** — use full, distinct window names.
 - **STATUS is written last** — its presence means done; nothing earlier does.
 - **Avoid git ops in the repo while a sub-session is mid-write** — index
