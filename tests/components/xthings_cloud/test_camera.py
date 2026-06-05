@@ -105,13 +105,13 @@ async def test_camera_image_fetch_error_returns_no_image(
     )
 
 
-async def test_updating_state(
+async def test_updating_state_updates_snapshot_url(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
     mock_websocket: AsyncMock,
 ) -> None:
-    """Test updating state and fetching new snapshot."""
+    """Test updating state uses the new snapshot URL on the next image request."""
     mock_api_client.async_get_snapshot.return_value = b"new_image_data"
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
         await setup_integration(hass, mock_config_entry)
@@ -127,6 +127,10 @@ async def test_updating_state(
 
     await hass.async_block_till_done()
 
+    mock_api_client.async_get_snapshot.assert_not_called()
+
+    image = await async_get_image(hass, "camera.front_door_camera")
+    assert image.content == b"new_image_data"
     mock_api_client.async_get_snapshot.assert_called_once_with(
         "https://example.com/new_snapshot.jpg"
     )

@@ -1,6 +1,5 @@
 """Camera platform for Xthings Cloud."""
 
-import asyncio
 from typing import Any
 
 from aiohttp import ClientError
@@ -75,7 +74,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         )
         self._cached_image: bytes | None = None
         self._cached_snapshot_url: str | None = None
-        self._snapshot_task: asyncio.Task[None] | None = None
         self._kvs_sessions: dict[str, KvsSignalingClient] = {}
         self._pending_candidates: dict[str, list[RTCIceCandidateInit]] = {}
         self._open_sessions: set[str] = set()
@@ -116,25 +114,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             self._cached_snapshot_url = snapshot_url
         return image
 
-    def _handle_coordinator_update(self) -> None:
-        """Check for new snapshot on coordinator update."""
-        snapshot_url = self.device_data.get("status", {}).get("snapshot_url")
-        if snapshot_url and snapshot_url != self._cached_snapshot_url:
-            if self._snapshot_task and not self._snapshot_task.done():
-                self._snapshot_task.cancel()
-            self._snapshot_task = self.hass.async_create_task(
-                self._async_update_snapshot(snapshot_url)
-            )
-        super()._handle_coordinator_update()
-
-    async def _async_update_snapshot(self, snapshot_url: str) -> None:
-        """Fetch a new snapshot and update the cache."""
-        image = await self._async_fetch_image(snapshot_url)
-        if image:
-            self._cached_image = image
-            self._cached_snapshot_url = snapshot_url
-            self.async_write_ha_state()
-
     async def _async_fetch_image(self, url: str) -> bytes | None:
         """Fetch a snapshot image from the given URL, returning None on failure."""
         try:
@@ -145,9 +124,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up tasks and sessions when entity is removed."""
-        if self._snapshot_task and not self._snapshot_task.done():
-            self._snapshot_task.cancel()
-
         for session_id in list(self._kvs_sessions):
             await self.async_close_webrtc_session(session_id)
 
