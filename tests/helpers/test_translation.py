@@ -809,6 +809,62 @@ async def test_get_translations_still_has_title_without_translations_files(
     }
 
 
+@pytest.mark.parametrize(
+    ("descriptor", "expected_title"),
+    [
+        pytest.param(
+            {
+                "domain": "sandboxed_custom",
+                "name": "Sandboxed Custom",
+                "title_translations": {"en": "Sandboxed Custom (localized)"},
+            },
+            "Sandboxed Custom (localized)",
+            id="title-translations",
+        ),
+        pytest.param(
+            {"domain": "sandboxed_custom", "name": "Sandboxed Custom"},
+            "Sandboxed Custom",
+            id="degrade-to-name",
+        ),
+    ],
+)
+async def test_get_translations_title_from_sandbox_catalog(
+    hass: HomeAssistant,
+    descriptor: loader.SandboxIntegrationDescriptor,
+    expected_title: str,
+) -> None:
+    """The picker title for a sandbox-only custom comes from the catalog.
+
+    A custom integration whose code lives only in a sandbox resolves to
+    ``IntegrationNotFound`` on main, so the on-disk ``integration.name`` title
+    fallback has nothing. The catalog supplies a localized ``title`` when it has
+    one and otherwise degrades to the descriptor ``name``.
+    """
+    unregister = loader.async_register_sandbox_catalog_provider(
+        hass, lambda: [descriptor]
+    )
+    try:
+        with (
+            patch(
+                "homeassistant.helpers.translation._load_translations_files_by_language",
+                return_value={},
+            ),
+            patch(
+                "homeassistant.helpers.translation.async_get_integrations",
+                return_value={
+                    "sandboxed_custom": loader.IntegrationNotFound("sandboxed_custom")
+                },
+            ),
+        ):
+            title = await translation.async_get_translations(
+                hass, "en", "title", {"sandboxed_custom"}
+            )
+    finally:
+        unregister()
+
+    assert title == {"component.sandboxed_custom.title": expected_title}
+
+
 async def test_sandbox_translation_provider_overlay(hass: HomeAssistant) -> None:
     """A registered provider supplies strings for a domain main has no code for.
 
