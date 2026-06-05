@@ -564,9 +564,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle adjusting a light without turning it on."""
-        if not light.is_on:
-            return
-
         if not call.data["params"]:
             return
 
@@ -1124,4 +1121,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_adjust(self, **kwargs: Any) -> None:
         """Adjust the entity without turning it on."""
+        if not self.is_on:
+            return
         await self.async_turn_on(**kwargs)
