@@ -42,7 +42,7 @@ async def test_upload_image_success(
     mock_setup_webhook,
 ) -> None:
     """Test successful image upload to AI Art Frame."""
-    entry = await _setup(hass, mock_list_devices, mock_get_status, mock_setup_webhook)
+    entry = await _setup(hass, mock_list_devices, mock_get_status)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "AABBCCDDEEFF")},
@@ -73,7 +73,7 @@ async def test_upload_image_no_device_id_raises(
     mock_setup_webhook,
 ) -> None:
     """Test service raises when no device_id is provided."""
-    await _setup(hass, mock_list_devices, mock_get_status, mock_setup_webhook)
+    await _setup(hass, mock_list_devices, mock_get_status)
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
@@ -105,7 +105,7 @@ async def test_device_not_in_registry_skips(
     mock_setup_webhook,
 ) -> None:
     """Test service skips when device_id is not found in device registry."""
-    entry = await _setup(hass, mock_list_devices, mock_get_status, mock_setup_webhook)
+    entry = await _setup(hass, mock_list_devices, mock_get_status)
     with patch.object(
         entry.runtime_data.api, "send_command", new_callable=AsyncMock
     ) as mock_send:
