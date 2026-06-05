@@ -104,6 +104,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     WolflinkSensorEntityDescription(
         key="hours",
+        device_class=SensorDeviceClass.DURATION,
         icon="mdi:clock",
         native_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.TOTAL_INCREASING,

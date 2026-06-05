@@ -239,8 +239,11 @@
     'name': None,
     'object_id_base': 'Hours Parameter',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': 'mdi:clock',
     'original_name': 'Hours Parameter',
     'platform': 'wolflink',
@@ -255,6 +258,7 @@
 # name: test_sensors[sensor.wolf_smartset_hours_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Wolf SmartSet Hours Parameter',
       'icon': 'mdi:clock',
       'parameter_id': 7005200000,
