@@ -56,13 +56,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DoorBird image platform."""
     door_bird_data = config_entry.runtime_data
-    configured_event_types = {
-        event.event_type for event in door_bird_data.door_station.event_descriptions
-    }
     async_add_entities(
         DoorBirdLastEventImage(hass, door_bird_data, description)
         for description in IMAGE_DESCRIPTIONS
-        if description.doorbird_event_type in configured_event_types
     )
 
 
@@ -88,11 +84,11 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             else "motionsensor"
         )
         self._image_url = self._door_station.device.history_image_url(1, history_type)
-        self._matching_events = {
+        self._matching_event_names = [
             event.event
             for event in self._door_station.event_descriptions
             if event.event_type == description.doorbird_event_type
-        }
+        ]
 
     async def async_image(self) -> bytes | None:
         """Return bytes of the last event image."""
@@ -114,11 +110,11 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to the underlying DoorBird events."""
         await super().async_added_to_hass()
-        for event in self._matching_events:
+        for event_name in self._matching_event_names:
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
-                    f"{DOMAIN}_{event}",
+                    f"{DOMAIN}_{event_name}",
                     self._async_handle_event,
                 )
             )
