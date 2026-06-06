@@ -53,13 +53,13 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         # Use a dedicated session with a real CookieJar.
         # The shared HA aiohttp session may drop OAuth cookies between steps,
         # causing silent 2FA failures on some Blink account configurations.
-        session = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True))
+        self._blink_session = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True))
         self.auth = Auth(
             {**user_input, "hardware_id": HARDWARE_ID},
             no_prompt=True,
-            session=session,
+            session=self._blink_session,
         )
-        self.blink = Blink(session=session)
+        self.blink = Blink(session=self._blink_session)
         self.blink.auth = self.auth
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
@@ -196,6 +196,9 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     def _async_finish_flow(self) -> ConfigFlowResult:
         """Finish with setup."""
         assert self.auth
+        # Close the dedicated OAuth session; blinkpy will use its own session going forward.
+        if hasattr(self, "_blink_session") and not self._blink_session.closed:
+            self.hass.async_create_task(self._blink_session.close())
 
         if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
             return self.async_update_reload_and_abort(
