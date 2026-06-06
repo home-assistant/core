@@ -6,6 +6,7 @@ from datetime import time
 from typing import Any
 
 from reolink_aio.api import Host
+from reolink_aio.enums import SpotlightModeEnum
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
@@ -71,7 +72,9 @@ TIME_ENTITIES = (
         translation_key="floodlight_schedule_start",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        supported=lambda api, ch: api.supported(ch, "floodLight"),
+        supported=lambda api, ch: (
+            SpotlightModeEnum.schedule.name in api.whiteled_mode_list(ch)
+        ),
         value=lambda api, ch: _schedule_time(api, ch, True),
         method=_set_start,
     ),
@@ -82,7 +85,9 @@ TIME_ENTITIES = (
         translation_key="floodlight_schedule_end",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        supported=lambda api, ch: api.supported(ch, "floodLight"),
+        supported=lambda api, ch: (
+            SpotlightModeEnum.schedule.name in api.whiteled_mode_list(ch)
+        ),
         value=lambda api, ch: _schedule_time(api, ch, False),
         method=_set_end,
     ),

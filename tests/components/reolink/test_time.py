@@ -4,6 +4,7 @@ from datetime import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from reolink_aio.enums import SpotlightModeEnum
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
@@ -30,6 +31,7 @@ async def test_floodlight_schedule(
         "EndHour": 6,
         "EndMin": 30,
     }
+    reolink_host.whiteled_mode_list.return_value = [SpotlightModeEnum.schedule.name]
     reolink_host.set_spotlight_lighting_schedule = AsyncMock()
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.TIME]):
@@ -91,6 +93,7 @@ async def test_floodlight_schedule_unknown(
     reolink_host: MagicMock,
 ) -> None:
     """Test the floodlight schedule entities when no schedule is available."""
+    reolink_host.whiteled_mode_list.return_value = [SpotlightModeEnum.schedule.name]
     reolink_host.whiteled_schedule.return_value = None
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.TIME]):
