@@ -46,8 +46,21 @@ class VolvoContext:
 class VolvoRuntimeData:
     """Volvo runtime data."""
 
-    interval_coordinators: tuple[VolvoBaseCoordinator, ...]
+    fast_coordinator: VolvoFastIntervalCoordinator
+    medium_coordinator: VolvoMediumIntervalCoordinator
+    slow_coordinator: VolvoSlowIntervalCoordinator
+    very_slow_coordinator: VolvoVerySlowIntervalCoordinator
     context: VolvoContext
+
+    @property
+    def interval_coordinators(self) -> tuple[VolvoBaseCoordinator, ...]:
+        """Return all coordinators."""
+        return (
+            self.fast_coordinator,
+            self.medium_coordinator,
+            self.slow_coordinator,
+            self.very_slow_coordinator,
+        )
 
 
 type VolvoConfigEntry = ConfigEntry[VolvoRuntimeData]
@@ -56,10 +69,7 @@ type CoordinatorData = dict[str, VolvoCarsApiBaseModel | None]
 
 def schedule_location_update(coordinator: VolvoBaseCoordinator) -> None:
     """Schedule a location-only update."""
-    for c in coordinator.config_entry.runtime_data.interval_coordinators:
-        if isinstance(c, VolvoSlowIntervalCoordinator):
-            c.async_schedule_location_update()
-            break
+    coordinator.config_entry.runtime_data.slow_coordinator.async_schedule_location_update()
 
 
 def _is_invalid_api_field(field: VolvoCarsApiBaseModel | None) -> bool:

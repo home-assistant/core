@@ -270,6 +270,7 @@ async def test_physical_unlock_does_not_trigger_location_update(
 @pytest.mark.freeze_time("2025-05-31T10:00:00+00:00")
 async def test_location_update_not_supported(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_integration: Callable[[], Awaitable[bool]],
     mock_api: VolvoCarsApi,
 ) -> None:
@@ -277,19 +278,20 @@ async def test_location_update_not_supported(
     configure_mock(
         mock_api.async_get_location, side_effect=VolvoAuthException(403, "Forbidden")
     )
+    configure_mock(
+        mock_api.async_get_engine_status,
+        return_value={"engineStatus": VolvoCarsValueField(value="RUNNING")},
+    )
     assert await setup_integration()
     mock_api.async_get_location.reset_mock()
 
     configure_mock(
         mock_api.async_get_engine_status,
-        return_value={"engineStatus": VolvoCarsValueField(value="RUNNING")},
+        return_value={"engineStatus": VolvoCarsValueField(value="STOPPED")},
     )
-
-    entry: VolvoConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    for c in entry.runtime_data.interval_coordinators:
-        if isinstance(c, VolvoSlowIntervalCoordinator):
-            await c._async_update_location()
-            break
+    freezer.tick(timedelta(minutes=MEDIUM_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_api.async_get_location.assert_not_called()
 
