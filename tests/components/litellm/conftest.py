@@ -98,13 +98,13 @@ def mock_config_entry(
 
 @pytest.fixture(autouse=True)
 def mock_litellm_warmup() -> Generator[MagicMock]:
-    """Stub the litellm warm-up completion run during setup.
+    """Skip the litellm warm-up during setup.
 
-    The real call spawns a litellm background thread that the strict test
-    cleanup flags as lingering; the warm-up only matters at runtime.
+    It runs a real (network-free) mock completion to preload litellm's lazy
+    imports, which only matters at runtime.
     """
-    with patch("litellm.completion") as mock_completion:
-        yield mock_completion
+    with patch("homeassistant.components.litellm._warm_up_litellm") as mock_warmup:
+        yield mock_warmup
 
 
 @pytest.fixture(autouse=True)

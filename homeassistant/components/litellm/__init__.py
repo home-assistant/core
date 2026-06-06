@@ -1,5 +1,7 @@
 """The LiteLLM integration."""
 
+import asyncio
+
 import litellm
 
 from homeassistant.const import Platform
@@ -17,15 +19,9 @@ litellm.telemetry = False
 litellm.suppress_debug_info = True
 
 
-def _warm_up_litellm() -> None:
-    """Trigger litellm's lazy provider imports off the event loop.
-
-    litellm imports provider and config modules lazily on first use, which
-    would otherwise run blocking imports inside the event loop. A mock
-    completion exercises the full request, response, and cost-tracking path
-    without any network call, caching those imports up front.
-    """
-    litellm.completion(
+async def _async_warm_up_litellm() -> None:
+    """Run a network-free mock completion to load litellm's lazy imports."""
+    await litellm.acompletion(
         model="openai/gpt-4o",
         messages=[{"role": "user", "content": "warmup"}],
         mock_response="warmup",
@@ -34,6 +30,21 @@ def _warm_up_litellm() -> None:
         api_base="http://localhost",
         api_key=PLACEHOLDER_API_KEY,
     )
+    # Let litellm's fire-and-forget logging task finish before the loop closes,
+    # otherwise asyncio warns about a coroutine that was never awaited.
+    await asyncio.sleep(0.25)
+
+
+def _warm_up_litellm() -> None:
+    """Trigger litellm's lazy provider imports off the event loop.
+
+    litellm imports provider and config modules lazily on first use, which
+    would otherwise run blocking imports inside the event loop on the first
+    conversation. Running a mock completion in a private event loop here caches
+    those imports up front. The async path is used rather than the synchronous
+    completion so litellm does not start a background logging thread.
+    """
+    asyncio.run(_async_warm_up_litellm())
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LiteLLMConfigEntry) -> bool:
