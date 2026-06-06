@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime
 from typing import Any
 
-from yoto_api import Card, Chapter, PlaybackStatus, Track, YotoError, YotoPlayer
+from yoto_api import Card, Chapter, Group, PlaybackStatus, Track, YotoError, YotoPlayer
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -25,9 +25,8 @@ from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
 from .entity import YotoEntity
 
 URI_SCHEME = "yoto"
-# The URI authority ("card") names the content type. Only cards exist today;
-# reserving it leaves room for groups without breaking URIs.
 URI_CARD = "card"
+URI_GROUP = "group"
 
 PARALLEL_UPDATES = 0
 
@@ -186,7 +185,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
     ) -> None:
         """Play a Yoto card, chapter, or track from the browse tree."""
         try:
-            card_id, chapter_key, track_key = _parse_uri(media_id)
+            card_id, chapter_key, track_key = _parse_card_uri(media_id)
         except ValueError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -264,8 +263,27 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         if not media_content_id:
             return self._browse_root()
 
+        client = self.coordinator.client
+        if media_content_id.startswith(f"{URI_SCHEME}://{URI_GROUP}/"):
+            try:
+                group_id = _parse_group_uri(media_content_id)
+            except ValueError as err:
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_media_id",
+                    translation_placeholders={"media_id": media_content_id},
+                ) from err
+            group = client.groups.get(group_id)
+            if group is None:
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_group",
+                    translation_placeholders={"group_id": group_id},
+                )
+            return self._browse_group(group)
+
         try:
-            card_id, chapter_key, _ = _parse_uri(media_content_id)
+            card_id, chapter_key, _ = _parse_card_uri(media_content_id)
         except ValueError as err:
             raise BrowseError(
                 translation_domain=DOMAIN,
@@ -273,7 +291,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
                 translation_placeholders={"media_id": media_content_id},
             ) from err
 
-        card = self.coordinator.client.library.get(card_id)
+        card = client.library.get(card_id)
         if card is None:
             raise BrowseError(
                 translation_domain=DOMAIN,
@@ -283,7 +301,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
 
         if not card.chapters:
             try:
-                await self.coordinator.client.update_card_detail(card_id)
+                await client.update_card_detail(card_id)
             except YotoError as err:
                 raise BrowseError(
                     translation_domain=DOMAIN,
@@ -307,7 +325,12 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         return self._browse_card(card)
 
     def _browse_root(self) -> BrowseMedia:
-        """List every card in the user's library."""
+        """List every card and group in the user's library."""
+        client = self.coordinator.client
+        children: list[BrowseMedia] = [
+            self._card_node(card) for card in client.library.values()
+        ]
+        children.extend(self._group_node(group) for group in client.groups.values())
         return BrowseMedia(
             media_class=MediaClass.DIRECTORY,
             media_content_id="",
@@ -315,12 +338,18 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             title="Yoto library",
             can_play=False,
             can_expand=True,
-            children=[
-                self._card_node(card)
-                for card in self.coordinator.client.library.values()
-            ],
+            children=children,
             children_media_class=MediaClass.ALBUM,
         )
+
+    def _browse_group(self, group: Group) -> BrowseMedia:
+        """List the cards in a group."""
+        library = self.coordinator.client.library
+        cards = [library[card_id] for card_id in group.card_ids if card_id in library]
+        node = self._group_node(group)
+        node.children = [self._card_node(card) for card in cards]
+        node.children_media_class = MediaClass.ALBUM
+        return node
 
     def _browse_card(self, card: Card) -> BrowseMedia:
         """List a card's chapters, collapsing single-chapter cards to tracks."""
@@ -364,6 +393,18 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             can_play=True,
             can_expand=True,
             thumbnail=card.cover_image_large,
+        )
+
+    def _group_node(self, group: Group) -> BrowseMedia:
+        """Build a browse node for a group."""
+        return BrowseMedia(
+            media_class=MediaClass.PLAYLIST,
+            media_content_id=_build_group_uri(group.id),
+            media_content_type=MediaType.PLAYLIST,
+            title=group.name or group.id,
+            can_play=False,
+            can_expand=True,
+            thumbnail=group.image_url,
         )
 
     def _chapter_node(
@@ -423,19 +464,33 @@ def _build_uri(
     return f"{URI_SCHEME}://{'/'.join(segments)}"
 
 
-def _parse_uri(media_id: str) -> tuple[str, str | None, str | None]:
-    """Parse a yoto://card/... URI into card/chapter/track parts.
+def _build_group_uri(group_id: str) -> str:
+    """Build a yoto://group/... URI."""
+    return f"{URI_SCHEME}://{URI_GROUP}/{group_id}"
 
-    Parsed manually because URL parsers lower-case the authority and Yoto
-    IDs are case-sensitive.
-    """
+
+# URIs parsed manually because URL parsers lower-case the authority and Yoto
+# IDs are case-sensitive.
+def _parse_card_uri(media_id: str) -> tuple[str, str | None, str | None]:
+    """Parse a yoto://card/... URI into card/chapter/track parts."""
     prefix = f"{URI_SCHEME}://{URI_CARD}/"
     if not media_id.startswith(prefix):
-        raise ValueError(f"Not a Yoto media identifier: {media_id}")
+        raise ValueError(f"Not a Yoto card identifier: {media_id}")
     parts = media_id[len(prefix) :].split("/")
     if not parts or len(parts) > 3 or any(not segment for segment in parts):
-        raise ValueError(f"Not a Yoto media identifier: {media_id}")
+        raise ValueError(f"Not a Yoto card identifier: {media_id}")
     card_id = parts[0]
     chapter_key = parts[1] if len(parts) > 1 else None
     track_key = parts[2] if len(parts) > 2 else None
     return card_id, chapter_key, track_key
+
+
+def _parse_group_uri(media_id: str) -> str:
+    """Parse a yoto://group/<group_id> URI."""
+    prefix = f"{URI_SCHEME}://{URI_GROUP}/"
+    if not media_id.startswith(prefix):
+        raise ValueError(f"Not a Yoto group identifier: {media_id}")
+    parts = media_id[len(prefix) :].split("/")
+    if len(parts) != 1 or not parts[0]:
+        raise ValueError(f"Not a Yoto group identifier: {media_id}")
+    return parts[0]

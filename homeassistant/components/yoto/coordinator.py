@@ -114,11 +114,15 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         return self.client.players
 
     async def _async_load_library(self) -> None:
-        """Load the card library; failures only affect titles and artwork."""
+        """Load the card library and groups; failures only affect browsing."""
         try:
             await self.client.update_library()
         except YotoError as err:
             _LOGGER.warning("Could not load Yoto card library: %s", err)
+        try:
+            await self.client.update_groups()
+        except YotoError as err:
+            _LOGGER.warning("Could not load Yoto card groups: %s", err)
 
     async def _async_status_push_tick(self, _now: datetime) -> None:
         """Ask each player to push a fresh status snapshot over MQTT."""
