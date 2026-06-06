@@ -5,6 +5,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from hassil.parse_expression import parse_sentence
+from hassil.parser import ParseError
 from hassil.util import (
     PUNCTUATION_END,
     PUNCTUATION_END_WORD,
@@ -164,6 +166,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             [cv.string],
                             has_one_non_empty_item,
                             has_no_punctuation,
+                            is_valid_sentence,
                         ),
                     }
                 ],
@@ -208,6 +211,17 @@ def has_no_punctuation(value: list[str]) -> list[str]:
             or PUNCTUATION_END_WORD.search(sentence)
         ):
             raise vol.Invalid("sentence should not contain punctuation")
+
+    return value
+
+
+def is_valid_sentence(value: list[str]) -> list[str]:
+    """Validate result can be parsed by hassil."""
+    for sentence in value:
+        try:
+            parse_sentence(sentence)
+        except ParseError as err:
+            raise vol.Invalid(f"invalid sentence: {err}") from err
 
     return value
 
