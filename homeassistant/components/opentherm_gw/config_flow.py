@@ -22,6 +22,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
 from . import DOMAIN
 from .const import (
@@ -97,7 +98,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEVICE): str,
-                    vol.Required(CONF_ID): str,
+                    vol.Required(CONF_ID): vol.All(str, cv.slug),
                 }
             ),
             errors=errors or {},
