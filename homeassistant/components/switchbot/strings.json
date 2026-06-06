@@ -275,7 +275,7 @@
         "name": "Night Light",
         "state_attributes": {
           "effect": {
-            "name": "[%key:component::light::common::field_brightness_step_name%]",
+            "name": "Brightness",
             "state": {
               "level_1": "[%key:common::state::high%]",
               "level_2": "[%key:common::state::low%]"

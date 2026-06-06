@@ -19,7 +19,7 @@ from homeassistant.components.light import (
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
@@ -46,12 +46,6 @@ async def async_setup_entry(
         async_add_entities([SwitchbotStandingFanLightEntity(coordinator)])
     else:
         async_add_entities([SwitchbotLightEntity(coordinator)])
-
-
-class LightExtraStoredData(ExtraStoredData):
-    """Object to hold extra stored data."""
-
-    effect: str | None
 
 
 class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntity):
@@ -121,8 +115,8 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     """Representation of a Switchbot standing fan light."""
 
     _device: switchbot.SwitchbotStandingFan
+    _attr_has_entity_name = False
     _attr_translation_key = "standing_fan_light"
-    _attr_name = None
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_color_mode = ColorMode.ONOFF
     _attr_effect_list = [
@@ -140,7 +134,7 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        _LOGGER.warning("Turning on light %s, address %s", kwargs, self._address)
+        _LOGGER.debug("Turning on light %s, address %s", kwargs, self._address)
         next_effect = self._attr_effect_preference
         if ATTR_EFFECT in kwargs:
             next_effect = kwargs[ATTR_EFFECT]
