@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import patch
 
-from evohomeasync2.const import SZ_DURATION, SZ_PERIOD, SZ_SETPOINT
+from evohomeasync2.const import SZ_DURATION, SZ_MODE, SZ_PERIOD, SZ_SETPOINT, SZ_STATE
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -19,7 +19,7 @@ from homeassistant.components.evohome.const import (
 )
 from homeassistant.components.evohome.water_heater import EvoDHW
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, ATTR_STATE
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
@@ -125,18 +125,18 @@ async def test_set_system_mode_deprecated(
     should cause a Repair issue.
     """
 
-    # EvoService.SET_SYSTEM_MODE: Auto
+    # EvoService.SET_SYSTEM_MODE: auto
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "Auto",
+                SZ_MODE: "auto",
             },
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with("Auto", until=None)
+        mock_fcn.assert_awaited_once_with("auto", until=None)
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_set_system_mode_service")
     assert issue
@@ -148,36 +148,36 @@ async def test_set_system_mode_deprecated(
 
     freezer.move_to("2024-07-10T12:00:00+00:00")
 
-    # EvoService.SET_SYSTEM_MODE: AutoWithEco, hours=12
+    # EvoService.SET_SYSTEM_MODE: auto_with_eco, hours=12
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "AutoWithEco",
+                SZ_MODE: "auto_with_eco",
                 SZ_DURATION: {"hours": 12},
             },
             blocking=True,
         )
 
         mock_fcn.assert_awaited_once_with(
-            "AutoWithEco", until=datetime(2024, 7, 11, 0, 0, tzinfo=UTC)
+            "auto_with_eco", until=datetime(2024, 7, 11, 0, 0, tzinfo=UTC)
         )
 
-    # EvoService.SET_SYSTEM_MODE: Away, days=7
+    # EvoService.SET_SYSTEM_MODE: away, days=7
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "Away",
+                SZ_MODE: "away",
                 SZ_PERIOD: {"days": 7},
             },
             blocking=True,
         )
 
         mock_fcn.assert_awaited_once_with(
-            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
 
@@ -197,7 +197,7 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "Away",
+                SZ_MODE: "away",
                 SZ_PERIOD: {"days": 7},
             },
             target={ATTR_ENTITY_ID: ctl_id},
@@ -205,7 +205,7 @@ async def test_set_system_mode(
         )
 
         mock_fcn.assert_awaited_once_with(
-            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
     # can remove, once the domain-level service is removed
@@ -215,14 +215,14 @@ async def test_set_system_mode(
             EvoService.SET_SYSTEM_MODE,
             {
                 ATTR_ENTITY_ID: ctl_id,
-                ATTR_MODE: "Away",
+                SZ_MODE: "away",
                 SZ_PERIOD: {"days": 7},
             },
             blocking=True,
         )
 
         mock_fcn.assert_awaited_once_with(
-            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_set_system_mode_service")
@@ -456,7 +456,7 @@ async def test_controller_services_with_zone_id(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "Auto",
+                SZ_MODE: "auto",
                 ATTR_ENTITY_ID: zone_id,
             },
             blocking=True,
@@ -480,7 +480,7 @@ async def test_set_system_mode_entity_not_found(hass: HomeAssistant) -> None:
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "Auto",
+                SZ_MODE: "auto",
                 ATTR_ENTITY_ID: non_existent_entity_id,
             },
             blocking=True,
@@ -494,19 +494,19 @@ async def test_set_system_mode_entity_not_found(hass: HomeAssistant) -> None:
 
 _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
     (
-        {ATTR_MODE: "NotARealMode"},
+        {SZ_MODE: "not_a_real_mode"},
         "mode_not_supported",
     ),
     (
-        {ATTR_MODE: "Auto", SZ_DURATION: {"hours": 1}},
+        {SZ_MODE: "auto", SZ_DURATION: {"hours": 1}},
         "mode_cant_be_temporary",
     ),
     (
-        {ATTR_MODE: "AutoWithEco", SZ_PERIOD: {"days": 1}},
+        {SZ_MODE: "auto_with_eco", SZ_PERIOD: {"days": 1}},
         "mode_cant_have_period",
     ),
     (
-        {ATTR_MODE: "DayOff", SZ_DURATION: {"hours": 1}},
+        {SZ_MODE: "day_off", SZ_DURATION: {"hours": 1}},
         "mode_cant_have_duration",
     ),
 ]
@@ -535,9 +535,7 @@ async def test_set_system_mode_validator(
         )
 
     assert exc_info.value.translation_key == expected_translation_key
-    assert exc_info.value.translation_placeholders == {
-        ATTR_MODE: service_data[ATTR_MODE]
-    }
+    assert exc_info.value.translation_placeholders == {SZ_MODE: service_data[SZ_MODE]}
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -556,7 +554,7 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                ATTR_STATE: False,
+                SZ_STATE: False,
             },
             target={ATTR_ENTITY_ID: dhw_id},
             blocking=True,
@@ -570,7 +568,7 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                ATTR_STATE: True,
+                SZ_STATE: True,
                 SZ_DURATION: {"minutes": 135},
             },
             target={ATTR_ENTITY_ID: dhw_id},
@@ -611,7 +609,7 @@ async def test_set_dhw_override_advance(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                ATTR_STATE: True,
+                SZ_STATE: True,
                 SZ_DURATION: {"minutes": 0},
             },
             target={ATTR_ENTITY_ID: dhw_id},

@@ -2,168 +2,168 @@
 # name: test_ctl_set_hvac_mode[default]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h032585]
   list([
     tuple(
-      <TccSystemMode.OFF: 'Off'>,
+      <SystemMode.OFF: 'off'>,
     ),
     tuple(
-      <TccSystemMode.HEAT: 'Heat'>,
+      <SystemMode.HEAT: 'heat'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h099625]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h139906]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h157546]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[minimal]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[sys_004]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[default]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h032585]
   list([
     tuple(
-      <TccSystemMode.OFF: 'Off'>,
+      <SystemMode.OFF: 'off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h099625]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h139906]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h157546]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[minimal]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[sys_004]
   list([
     tuple(
-      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[default]
   list([
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h032585]
   list([
     tuple(
-      <TccSystemMode.HEAT: 'Heat'>,
+      <SystemMode.HEAT: 'heat'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h099625]
   list([
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h139906]
   list([
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h157546]
   list([
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[minimal]
   list([
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[sys_004]
   list([
     tuple(
-      <TccSystemMode.AUTO: 'Auto'>,
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
@@ -188,7 +188,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
@@ -235,7 +235,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
@@ -282,7 +282,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -328,7 +328,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -374,7 +374,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'TemporaryOverride',
+          'setpoint_mode': <ZoneMode.TEMPORARY_OVERRIDE: 'temporary_override'>,
           'target_heat_temperature': 21.0,
           'until': '2022-03-07T19:00:00+00:00',
         }),
@@ -422,7 +422,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'TemporaryOverride',
+          'setpoint_mode': <ZoneMode.TEMPORARY_OVERRIDE: 'temporary_override'>,
           'target_heat_temperature': 21.0,
           'until': '2022-03-07T19:00:00+00:00',
         }),
@@ -470,7 +470,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -517,7 +517,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -564,7 +564,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -611,7 +611,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -658,7 +658,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
@@ -705,7 +705,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
@@ -752,7 +752,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'PermanentOverride',
+          'setpoint_mode': <ZoneMode.PERMANENT_OVERRIDE: 'permanent_override'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -799,7 +799,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'PermanentOverride',
+          'setpoint_mode': <ZoneMode.PERMANENT_OVERRIDE: 'permanent_override'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -851,7 +851,7 @@
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
-          'mode': 'AutoWithEco',
+          'mode': <SystemMode.AUTO_WITH_ECO: 'auto_with_eco'>,
         }),
       }),
       'supported_features': <ClimateEntityFeature: 400>,
@@ -890,7 +890,7 @@
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
-          'mode': 'AutoWithEco',
+          'mode': <SystemMode.AUTO_WITH_ECO: 'auto_with_eco'>,
         }),
       }),
       'supported_features': <ClimateEntityFeature: 400>,
@@ -924,7 +924,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'PermanentOverride',
+          'setpoint_mode': <ZoneMode.PERMANENT_OVERRIDE: 'permanent_override'>,
           'target_heat_temperature': 14.0,
         }),
         'setpoints': dict({
@@ -971,7 +971,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'PermanentOverride',
+          'setpoint_mode': <ZoneMode.PERMANENT_OVERRIDE: 'permanent_override'>,
           'target_heat_temperature': 14.0,
         }),
         'setpoints': dict({
@@ -1018,7 +1018,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
@@ -1065,7 +1065,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -1110,12 +1110,12 @@
       'status': dict({
         'activeFaults': tuple(
           dict({
-            'fault_type': 'TempZoneActuatorLowBattery',
+            'fault_type': <FaultType.ZON_A_LB: 'temp_zone_actuator_low_battery'>,
             'since': '2022-03-02T04:50:20-03:00',
           }),
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'TemporaryOverride',
+          'setpoint_mode': <ZoneMode.TEMPORARY_OVERRIDE: 'temporary_override'>,
           'target_heat_temperature': 21.0,
           'until': '2022-03-07T16:00:00-03:00',
         }),
@@ -1163,7 +1163,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -1210,7 +1210,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -1257,7 +1257,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
@@ -1303,12 +1303,12 @@
       'status': dict({
         'activeFaults': tuple(
           dict({
-            'fault_type': 'TempZoneActuatorCommunicationLost',
+            'fault_type': <FaultType.ZON_A_CL: 'temp_zone_actuator_communication_lost'>,
             'since': '2022-03-02T15:56:01-03:00',
           }),
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'PermanentOverride',
+          'setpoint_mode': <ZoneMode.PERMANENT_OVERRIDE: 'permanent_override'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -1337,7 +1337,7 @@
 # name: test_setup_platform[botched][climate.my_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 19.7,
+      'current_temperature': 19.8,
       'friendly_name': 'My Home',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -1360,7 +1360,7 @@
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
-          'mode': 'AutoWithEco',
+          'mode': <SystemMode.AUTO_WITH_ECO: 'auto_with_eco'>,
         }),
       }),
       'supported_features': <ClimateEntityFeature: 400>,
@@ -1394,7 +1394,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
@@ -1441,7 +1441,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -1487,7 +1487,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'TemporaryOverride',
+          'setpoint_mode': <ZoneMode.TEMPORARY_OVERRIDE: 'temporary_override'>,
           'target_heat_temperature': 21.0,
           'until': '2022-03-07T19:00:00+00:00',
         }),
@@ -1535,7 +1535,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -1582,7 +1582,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -1629,7 +1629,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
@@ -1676,7 +1676,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'PermanentOverride',
+          'setpoint_mode': <ZoneMode.PERMANENT_OVERRIDE: 'permanent_override'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -1728,7 +1728,7 @@
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
-          'mode': 'AutoWithEco',
+          'mode': <SystemMode.AUTO_WITH_ECO: 'auto_with_eco'>,
         }),
       }),
       'supported_features': <ClimateEntityFeature: 400>,
@@ -1762,7 +1762,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'PermanentOverride',
+          'setpoint_mode': <ZoneMode.PERMANENT_OVERRIDE: 'permanent_override'>,
           'target_heat_temperature': 14.0,
         }),
         'setpoints': dict({
@@ -1806,7 +1806,7 @@
         'system_id': '416856',
         'system_mode_status': dict({
           'is_permanent': True,
-          'mode': 'Heat',
+          'mode': <SystemMode.HEAT: 'heat'>,
         }),
       }),
       'supported_features': <ClimateEntityFeature: 384>,
@@ -1840,7 +1840,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 21.5,
         }),
         'setpoints': dict({
@@ -1889,7 +1889,7 @@
         'system_id': '8557535',
         'system_mode_status': dict({
           'is_permanent': True,
-          'mode': 'Auto',
+          'mode': <SystemMode.AUTO: 'auto'>,
         }),
       }),
       'supported_features': <ClimateEntityFeature: 400>,
@@ -1923,7 +1923,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 21.5,
         }),
         'setpoints': dict({
@@ -1970,7 +1970,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 21.5,
         }),
         'setpoints': dict({
@@ -2016,12 +2016,12 @@
       'status': dict({
         'activeFaults': tuple(
           dict({
-            'fault_type': 'TempZoneSensorCommunicationLost',
+            'fault_type': <FaultType.ZON_S_CL: 'temp_zone_sensor_communication_lost'>,
             'since': '2025-02-06T11:20:29+01:00',
           }),
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 5.0,
         }),
         'setpoints': dict({
@@ -2064,7 +2064,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 20.0,
         }),
         'setpoints': dict({
@@ -2113,7 +2113,7 @@
         'system_id': '3454856',
         'system_mode_status': dict({
           'is_permanent': True,
-          'mode': 'Auto',
+          'mode': <SystemMode.AUTO: 'auto'>,
         }),
       }),
       'supported_features': <ClimateEntityFeature: 400>,
@@ -2147,7 +2147,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 5.0,
         }),
         'setpoints': dict({
@@ -2194,7 +2194,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 15.0,
         }),
         'setpoints': dict({
@@ -2241,7 +2241,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 15.0,
         }),
         'setpoints': dict({
@@ -2293,7 +2293,7 @@
         'system_id': '10090510',
         'system_mode_status': dict({
           'is_permanent': True,
-          'mode': 'Auto',
+          'mode': <SystemMode.AUTO: 'auto'>,
         }),
       }),
       'supported_features': <ClimateEntityFeature: 400>,
@@ -2327,7 +2327,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 18.0,
         }),
         'setpoints': dict({
@@ -2374,7 +2374,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 19.0,
         }),
         'setpoints': dict({
@@ -2421,7 +2421,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'FollowSchedule',
+          'setpoint_mode': <ZoneMode.FOLLOW_SCHEDULE: 'follow_schedule'>,
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
@@ -2473,7 +2473,7 @@
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
-          'mode': 'AutoWithEco',
+          'mode': <SystemMode.AUTO_WITH_ECO: 'auto_with_eco'>,
         }),
       }),
       'supported_features': <ClimateEntityFeature: 400>,
@@ -2506,14 +2506,14 @@
       'status': dict({
         'activeSystemFaults': tuple(
           dict({
-            'fault_type': 'GatewayCommunicationLost',
+            'fault_type': <FaultType.GWY_X_CL: 'gateway_communication_lost'>,
             'since': '2023-05-04T18:47:36.772704+02:00',
           }),
         ),
         'system_id': '4187769',
         'system_mode_status': dict({
           'is_permanent': True,
-          'mode': 'Auto',
+          'mode': <SystemMode.AUTO: 'auto'>,
         }),
       }),
       'supported_features': <ClimateEntityFeature: 400>,
@@ -2547,7 +2547,7 @@
         'activeFaults': tuple(
         ),
         'setpoint_status': dict({
-          'setpoint_mode': 'PermanentOverride',
+          'setpoint_mode': <ZoneMode.PERMANENT_OVERRIDE: 'permanent_override'>,
           'target_heat_temperature': 15.0,
         }),
         'setpoints': dict({
