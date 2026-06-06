@@ -161,12 +161,8 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
             await self._device.set_night_light(NightLightState.OFF)
         )
         self._attr_is_on = False
+        self._attr_effect = ""
         self.async_write_ha_state()
-
-    # @property
-    # def is_on(self) -> bool | None:
-    #     """Return true if the light is on."""
-    #     return self._device.get_night_light_state() != NightLightState.OFF.value
 
     @property
     def supported_features(self) -> LightEntityFeature:
