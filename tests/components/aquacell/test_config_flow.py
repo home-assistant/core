@@ -1,13 +1,16 @@
 """Test the Aquacell config flow."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock
 
 from aioaquacell import ApiException, AuthenticationFailed
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.aquacell.const import (
     CONF_BRAND,
     CONF_REFRESH_TOKEN,
+    CONF_REFRESH_TOKEN_CREATION_TIME,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -123,11 +126,13 @@ async def test_form_exceptions(
 
 async def test_reauth_flow(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_setup_entry: AsyncMock,
     mock_aquacell_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauthentication flow."""
+    freezer.move_to("2024-01-01 00:00:00+00:00")
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -146,6 +151,10 @@ async def test_reauth_flow(
 
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
     assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "refresh-token"
+    assert (
+        mock_config_entry.data[CONF_REFRESH_TOKEN_CREATION_TIME]
+        == datetime.now().timestamp()
+    )
 
 
 @pytest.mark.parametrize(
