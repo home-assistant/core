@@ -6,6 +6,8 @@ from pathlib import Path
 import re
 from typing import Any
 
+from hassil.parse_expression import parse_sentence
+from hassil.parser import ParseError
 from hassil.util import (
     PUNCTUATION_END,
     PUNCTUATION_END_WORD,
@@ -165,6 +167,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             [cv.string],
                             has_one_non_empty_item,
                             has_no_punctuation,
+                            is_valid_sentence,
                         ),
                     }
                 ],
@@ -218,6 +221,17 @@ def has_no_punctuation(value: list[str]) -> list[str]:
 def _remove_list_references(sentence: str) -> str:
     """Remove {list_references} from a sentence for linting."""
     return re.sub(r"(?<!\\)\{[^{}]*\}", "", sentence)
+
+
+def is_valid_sentence(value: list[str]) -> list[str]:
+    """Validate result can be parsed by hassil."""
+    for sentence in value:
+        try:
+            parse_sentence(sentence)
+        except ParseError as err:
+            raise vol.Invalid(f"invalid sentence: {err}") from err
+    return value
+    return value
 
 
 def has_one_non_empty_item(value: list[str]) -> list[str]:

@@ -420,7 +420,7 @@ aiosolaredge==1.0.2
 aiosteamist==1.0.1
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.13.1
+aiostreammagic==2.13.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==6.1.1
@@ -791,7 +791,7 @@ crownstone-sse==2.0.5
 crownstone-uart==2.1.0
 
 # homeassistant.components.data_grand_lyon
-data-grand-lyon-ha==0.7.0
+data-grand-lyon-ha==0.8.0
 
 # homeassistant.components.datadog
 datadog==0.52.0
@@ -1037,7 +1037,7 @@ fnv-hash-fast==2.0.3
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==5.0.0
+forecast-solar==5.0.1
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -1727,7 +1727,7 @@ oemthermostat==1.1.1
 ohme==1.9.1
 
 # homeassistant.components.ollama
-ollama==0.5.1
+ollama==0.6.2
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -1779,7 +1779,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.18.2
+opower==0.18.3
 
 # homeassistant.components.oralb
 oralb-ble==1.1.0
@@ -1846,7 +1846,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.11.3
+plugwise==1.11.4
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -3317,7 +3317,7 @@ visionpluspython==1.1.0
 vobject==0.9.9
 
 # homeassistant.components.voip
-voip-utils==0.3.5
+voip-utils==0.4.0
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
@@ -3430,7 +3430,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.6.5
 
 # homeassistant.components.yoto
-yoto-api==3.1.6
+yoto-api==3.2.0
 
 # homeassistant.components.youless
 youless-api==2.2.0

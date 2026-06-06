@@ -6,6 +6,7 @@ from dataclasses import asdict
 from unittest.mock import Mock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
@@ -1001,6 +1002,28 @@ async def test_ask_question_requires_entity_permission(
             blocking=True,
             return_response=True,
             context=Context(user_id=hass_read_only_user.id),
+        )
+
+
+@pytest.mark.parametrize("sentence", ["no punctuation!", "[malformed template)"])
+async def test_ask_question_invalid_sentences(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    sentence: str,
+) -> None:
+    """Test that invalid sentences raise an exception."""
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "ask_question",
+            {
+                "entity_id": "assist_satellite.test_entity",
+                "question": "Test",
+                "answers": [{"id": "answer", "sentences": [sentence]}],
+            },
+            blocking=True,
+            return_response=True,
         )
 
 

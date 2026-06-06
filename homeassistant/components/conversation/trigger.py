@@ -4,6 +4,8 @@ from collections.abc import Awaitable, Callable
 import re
 from typing import Any
 
+from hassil.parse_expression import parse_sentence
+from hassil.parser import ParseError
 from hassil.recognize import RecognizeResult
 from hassil.util import (
     PUNCTUATION_END,
@@ -50,6 +52,17 @@ def _remove_list_references(sentence: str) -> str:
     return re.sub(r"(?<!\\)\{[^{}]*\}", "", sentence)
 
 
+def is_valid_sentence(value: list[str]) -> list[str]:
+    """Validate result can be parsed by hassil."""
+    for sentence in value:
+        try:
+            parse_sentence(sentence)
+        except ParseError as err:
+            raise vol.Invalid(f"invalid sentence: {err}") from err
+    return value
+    return value
+
+
 def has_one_non_empty_item(value: list[str]) -> list[str]:
     """Validate result has at least one item."""
     if len(value) < 1:
@@ -66,7 +79,11 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_COMMAND): vol.All(
-            cv.ensure_list, [cv.string], has_one_non_empty_item, has_no_punctuation
+            cv.ensure_list,
+            [cv.string],
+            has_one_non_empty_item,
+            has_no_punctuation,
+            is_valid_sentence,
         ),
     }
 )
