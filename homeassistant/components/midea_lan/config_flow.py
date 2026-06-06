@@ -240,6 +240,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_list(
         self,
+        user_input: dict[str, Any] | None = None,
         error: str | None = None,
     ) -> ConfigFlowResult:
         """List all devices and show device info in web UI.

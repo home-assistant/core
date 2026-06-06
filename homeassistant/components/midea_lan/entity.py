@@ -5,7 +5,6 @@ from typing import Any
 
 from midealocal.device import MideaDevice
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -67,7 +66,6 @@ class MideaEntity(Entity):
         """Return entity availability."""
         return bool(self._device.available)
 
-    @callback
     def update_state(self, status: Any) -> None:
         """Update entity state."""
         if not self.hass:

@@ -3,31 +3,15 @@
 from enum import IntEnum
 import logging
 
-from homeassistant.const import Platform
-
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "midea_lan"
 
-COMPONENT = "component"
-DEVICES = "devices"
 
 CONF_KEY = "key"
 CONF_SUBTYPE = "subtype"
 CONF_ACCOUNT = "account"
 CONF_SERVER = "server"
-
-EXTRA_SENSOR = [Platform.SENSOR, Platform.BINARY_SENSOR]
-EXTRA_SWITCH = [Platform.SWITCH, Platform.LOCK, Platform.SELECT, Platform.NUMBER]
-EXTRA_CONTROL = [
-    Platform.CLIMATE,
-    Platform.WATER_HEATER,
-    Platform.FAN,
-    Platform.HUMIDIFIER,
-    Platform.LIGHT,
-    *EXTRA_SWITCH,
-]
-ALL_PLATFORM = EXTRA_SENSOR + EXTRA_CONTROL
 
 
 class FanSpeed(IntEnum):

@@ -153,7 +153,6 @@ class MideaClimate(MideaEntity, ClimateEntity):
 
     _device: MideaClimateDevice
 
-    _attr_has_entity_name = True
     _attr_icon = "mdi:air-conditioner"
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
