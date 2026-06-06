@@ -663,7 +663,7 @@ def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> boo
 def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
     """Return the unit of a virtual component.
 
-    If the unit is not set, the device sends an empty string
+    If the unit is not set, the device sends an empty string or the key may be absent.
     """
     unit = config["meta"]["ui"].get("unit")
     return DEVICE_UNIT_MAP.get(unit, unit) if unit else None
