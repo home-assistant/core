@@ -43,7 +43,6 @@ def ws_list_transmitters(
                 "entity_id": entity.entity_id,
                 "device_id": entry.device_id if entry else None,
                 "config_entry_id": entry.config_entry_id if entry else None,
-                "name": entity.name,
                 "supported_frequency_ranges": [
                     [low, high] for low, high in entity.supported_frequency_ranges
                 ],

@@ -27,7 +27,6 @@ async def test_list_transmitters(
                 "entity_id": ENTITY_ID,
                 "device_id": None,
                 "config_entry_id": None,
-                "name": "Test RF transmitter",
                 "supported_frequency_ranges": [[433_000_000, 434_000_000]],
                 "supported_modulations": ["OOK"],
             }
