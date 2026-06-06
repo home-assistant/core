@@ -68,6 +68,8 @@ class KebaP40CurrentLimit(KebaP40Entity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the chargepoint max current."""
         try:
+            # The current limit is a chargepoint-wide OCPP profile, so unlike
+            # the per-wallbox commands this call takes no serial number.
             await self.coordinator.client.set_max_current(int(value * 1000))
         except KebaP40Error as err:
             raise HomeAssistantError(

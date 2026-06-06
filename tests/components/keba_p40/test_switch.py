@@ -128,3 +128,23 @@ async def test_availability_switch_calls_client(
         blocking=True,
     )
     mock_client.set_availability.assert_called_once_with("21900042", True)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_availability_switch_error(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a set_availability error raises HomeAssistantError."""
+    mock_client.set_availability.side_effect = KebaP40Error
+    with patch("homeassistant.components.keba_p40.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.garage_available"},
+            blocking=True,
+        )
