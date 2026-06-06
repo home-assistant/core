@@ -995,18 +995,7 @@ async def test_ask_question_invalid_sentences(
     sentence: str,
 ) -> None:
     """Test that invalid sentences raise an exception."""
-
-    async def async_internal_ask_question(*args, **kwargs):
-        return AssistSatelliteAnswer(id=None, sentence="")
-
-    with (
-        pytest.raises(vol.Invalid),
-        patch.object(
-            entity,
-            "async_internal_ask_question",
-            new=async_internal_ask_question,
-        ),
-    ):
+    with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "ask_question",
