@@ -1,7 +1,5 @@
 """Config flow for the WattWächter Plus integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -14,11 +12,17 @@ from aio_wattwaechter.models import SystemInfo
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_TOKEN,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_DEVICE_ID, CONF_FW_VERSION, CONF_MAC, CONF_MODEL, DOMAIN
+from .const import CONF_FW_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +63,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _create_entry(self, token: str | None = None) -> ConfigFlowResult:
         """Create a config entry with the collected device info."""
-        title = self._device_name or f"WattWächter {self._device_id}"
+        title = self._device_name or f"WattWächter {self._device_id[-4:]}"
         return self.async_create_entry(
             title=title,
             data={
@@ -148,7 +152,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._model = "WW-Plus"
                 self._device_name = device_name
 
-                await self.async_set_unique_id(self._device_id)
+                await self.async_set_unique_id(self._device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
                 return self._create_entry()
@@ -188,7 +192,9 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._device_name = device_name
 
                 if self.unique_id is None:
-                    await self.async_set_unique_id(self._device_id)
+                    await self.async_set_unique_id(
+                        self._device_id, raise_on_progress=False
+                    )
                     self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
                 return self._create_entry(token)

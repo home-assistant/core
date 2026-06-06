@@ -1,30 +1,22 @@
 """Common fixtures for WattWächter Plus tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aio_wattwaechter.models import (
-    AliveResponse,
-    InfoEntry,
-    MeterData,
-    ObisValue,
-    SystemInfo,
-)
+from aio_wattwaechter.models import AliveResponse, _parse_meter_data, _parse_system_info
 import pytest
 
-from homeassistant.components.wattwaechter.const import (
+from homeassistant.components.wattwaechter.const import CONF_FW_VERSION, DOMAIN
+from homeassistant.const import (
     CONF_DEVICE_ID,
-    CONF_FW_VERSION,
+    CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
-    DOMAIN,
+    CONF_TOKEN,
 )
-from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCK_HOST = "192.168.1.100"
 MOCK_TOKEN = "test-token-123"
@@ -47,45 +39,24 @@ MOCK_SETTINGS = MagicMock(device_name=MOCK_DEVICE_NAME)
 
 MOCK_ALIVE_RESPONSE = AliveResponse(alive=True, version=MOCK_FW_VERSION)
 
-MOCK_SYSTEM_INFO = SystemInfo(
-    uptime=[InfoEntry(name="uptime", value="2d 5h 30m", unit="")],
-    wifi=[
-        InfoEntry(name="ssid", value="MyNetwork", unit=""),
-        InfoEntry(name="signal_strength", value="-45", unit="dBm"),
-        InfoEntry(name="ip_address", value=MOCK_HOST, unit=""),
-        InfoEntry(name="mac_address", value=MOCK_MAC, unit=""),
-        InfoEntry(name="mdns_name", value="wattwaechter-aabbccddeeff.local", unit=""),
-    ],
-    ap=[],
-    esp=[
-        InfoEntry(name="esp_id", value=MOCK_DEVICE_ID, unit=""),
-        InfoEntry(name="os_version", value=MOCK_FW_VERSION, unit=""),
-    ],
-    heap=[InfoEntry(name="free_heap", value="120000", unit="bytes")],
+MOCK_SYSTEM_INFO = _parse_system_info(
+    load_json_object_fixture("system_info.json", DOMAIN)
 )
 
-MOCK_METER_DATA = MeterData(
-    timestamp=1704067200,
-    datetime_str="2024-01-01T00:00:00",
-    values={
-        "1.8.0": ObisValue(value=12345.678, unit="kWh", name="Total Import"),
-        "2.8.0": ObisValue(value=1234.567, unit="kWh", name="Total Export"),
-        "16.7.0": ObisValue(value=1500.5, unit="W", name="Active Power"),
-        "32.7.0": ObisValue(value=230.1, unit="V", name="Voltage L1"),
-        "31.7.0": ObisValue(value=6.52, unit="A", name="Current L1"),
-        "14.7.0": ObisValue(value=50.01, unit="Hz", name="Frequency"),
-        "13.7.0": ObisValue(value=0.985, unit="", name="Power Factor"),
-    },
+MOCK_METER_DATA = _parse_meter_data(load_json_object_fixture("meter_data.json", DOMAIN))
+
+MOCK_METER_DATA_MINIMAL = _parse_meter_data(
+    load_json_object_fixture("meter_data_minimal.json", DOMAIN)
 )
 
-MOCK_METER_DATA_MINIMAL = MeterData(
-    timestamp=1704067200,
-    datetime_str="2024-01-01T00:00:00",
-    values={
-        "1.8.0": ObisValue(value=100.0, unit="kWh", name="Total Import"),
-        "16.7.0": ObisValue(value=500, unit="W", name="Active Power"),
-    },
-)
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.wattwaechter.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture
@@ -117,9 +88,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         title=MOCK_DEVICE_NAME,
         data=MOCK_CONFIG_DATA,
-        source="user",
         unique_id=MOCK_DEVICE_ID,
-        version=1,
     )
     entry.add_to_hass(hass)
     return entry

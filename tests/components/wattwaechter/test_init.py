@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 from aio_wattwaechter import (
@@ -9,25 +10,29 @@ from aio_wattwaechter import (
     WattwaechterConnectionError,
     WattwaechterNoDataError,
 )
+import pytest
 
-from homeassistant.components.wattwaechter.coordinator import WattwaechterCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(
+async def test_setup_and_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: AsyncMock,
 ) -> None:
-    """Test successful integration setup."""
+    """Test successful integration setup and unload."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert isinstance(mock_config_entry.runtime_data, WattwaechterCoordinator)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_entry_connection_error(
@@ -44,60 +49,24 @@ async def test_setup_entry_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(
+@pytest.mark.parametrize(
+    ("attribute", "value"),
+    [
+        ("side_effect", WattwaechterNoDataError("No data")),
+        ("side_effect", WattwaechterAuthenticationError("Invalid token")),
+        ("return_value", None),
+    ],
+    ids=["no_data", "auth_error", "returns_none"],
+)
+async def test_setup_entry_retries_on_meter_data_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: AsyncMock,
+    attribute: str,
+    value: Any,
 ) -> None:
-    """Test successful integration unload."""
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_setup_entry_no_meter_data(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client: AsyncMock,
-) -> None:
-    """Test setup retries when device returns no meter data."""
-    mock_client.meter_data.side_effect = WattwaechterNoDataError("No data")
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_auth_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client: AsyncMock,
-) -> None:
-    """Test setup retries when authentication fails."""
-    mock_client.meter_data.side_effect = WattwaechterAuthenticationError(
-        "Invalid token"
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_meter_data_returns_none(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client: AsyncMock,
-) -> None:
-    """Test setup retries when meter_data() returns None."""
-    mock_client.meter_data.return_value = None
+    """Test setup retries when meter_data fails or returns no data."""
+    setattr(mock_client.meter_data, attribute, value)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

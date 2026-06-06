@@ -1,7 +1,5 @@
 """Sensor platform for the WattWächter Plus integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

@@ -1,7 +1,5 @@
 """The WattWächter Plus integration."""
 
-from __future__ import annotations
-
 from aio_wattwaechter import Wattwaechter, WattwaechterConnectionError
 
 from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform

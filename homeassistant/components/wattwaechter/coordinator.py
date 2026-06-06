@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the WattWächter Plus integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -14,18 +12,11 @@ from aio_wattwaechter import (
 from aio_wattwaechter.models import MeterData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_DEVICE_ID,
-    CONF_FW_VERSION,
-    CONF_MAC,
-    CONF_MODEL,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import CONF_FW_VERSION, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
