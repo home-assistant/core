@@ -419,17 +419,17 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         translation_key="sprinkler_progress",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
         should_update_entity=lambda value: value is not None,
         # Firmware bug: the "running" dict persists after the session ends
         # with stale progress values. Gate on state.running to only report
         # progress while the device is actively watering.
+        # Note: progress is reported in liters, while target (total.value) is
+        # in deciliters. Firmware shuts off when progress*meterStepFactor >= target.
+        # Do NOT divide progress by meterStepFactor — it's already in liters.
         value=lambda device, data: (
-            round(
-                running.get("progress", 0)
-                / data.get("attributes", {}).get("meterStepFactor", 10),
-                2,
-            )
+            round(running.get("progress", 0) * 1.0, 2)
             if (running := data.get("running")) is not None
             and data.get("state", {}).get("running") is True
             else None

@@ -32,7 +32,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import ATTR_LORA_INFO, DOMAIN, SUPPORTED_REMOTERS, YOLINK_EVENT
-from .coordinator import YoLinkConfigEntry, YoLinkCoordinator, YoLinkHomeStore
+from .coordinator import (
+    YoLinkConfigEntry,
+    YoLinkCoordinator,
+    YoLinkHomeStore,
+    YoLinkThrottle,
+)
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
 from .services import async_setup_services
 
@@ -156,6 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bo
         raise ConfigEntryNotReady from err
 
     device_coordinators = {}
+    throttle = YoLinkThrottle()
 
     # revese mapping
     device_pairing_mapping = {}
@@ -174,14 +180,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bo
             paried_device_id := device_pairing_mapping.get(device.device_id)
         ) is not None:
             paried_device = yolink_home.get_device(paried_device_id)
-        device_coordinator = YoLinkCoordinator(hass, entry, device, paried_device)
+        device_coordinator = YoLinkCoordinator(
+            hass, entry, device, paried_device, throttle
+        )
         try:
             await device_coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:
             # Not failure by fetching device state
             device_coordinator.data = {}
         device_coordinators[device.device_id] = device_coordinator
-    entry.runtime_data = YoLinkHomeStore(yolink_home, device_coordinators)
+    entry.runtime_data = YoLinkHomeStore(yolink_home, device_coordinators, throttle)
 
     # Clean up yolink devices which are not associated to the account anymore.
     device_registry = dr.async_get(hass)

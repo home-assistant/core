@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 import logging
+import time
 from typing import Any
 
 from yolink.client_request import ClientRequest
@@ -25,6 +26,27 @@ _LOGGER = logging.getLogger(__name__)
 SPRINKLER_ACTIVE_INTERVAL = timedelta(seconds=30)
 SPRINKLER_IDLE_INTERVAL = timedelta(minutes=30)
 
+MIN_API_INTERVAL = 0.25  # 250ms guard (YoLink enforces 200ms)
+
+
+class YoLinkThrottle:
+    """Global per-account throttle ensuring >=250ms between API calls."""
+
+    def __init__(self, min_interval: float = MIN_API_INTERVAL) -> None:
+        """Init throttle with minimum interval between API calls."""
+        self._min_interval = min_interval
+        self._lock = asyncio.Lock()
+        self._last_call: float = 0.0
+
+    async def acquire(self) -> None:
+        """Wait until min_interval has elapsed since last call, then mark now."""
+        async with self._lock:
+            now = time.monotonic()
+            wait = self._min_interval - (now - self._last_call)
+            if wait > 0:
+                await asyncio.sleep(wait)
+            self._last_call = time.monotonic()
+
 
 @dataclass
 class YoLinkHomeStore:
@@ -32,6 +54,7 @@ class YoLinkHomeStore:
 
     home_instance: YoLinkHome
     device_coordinators: dict[str, YoLinkCoordinator]
+    throttle: YoLinkThrottle
 
 
 type YoLinkConfigEntry = ConfigEntry[YoLinkHomeStore]
@@ -48,6 +71,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         config_entry: YoLinkConfigEntry,
         device: YoLinkDevice,
         paired_device: YoLinkDevice | None = None,
+        throttle: YoLinkThrottle | None = None,
     ) -> None:
         """Init YoLink DataUpdateCoordinator.
 
@@ -66,6 +90,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         self.paired_device = paired_device
         self.dev_online = True
         self.dev_net_type = None
+        self._throttle = throttle or YoLinkThrottle()
 
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
@@ -146,6 +171,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         self.call_device wrapper (returns dict).
         """
         try:
+            await self._throttle.acquire()
             return await self.device.call_device(ClientRequest("getState", {}))
         except YoLinkClientError as err:
             _LOGGER.debug(
@@ -153,6 +179,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
                 self.device.device_id,
                 err,
             )
+            await self._throttle.acquire()
             return await self.device.fetch_state()
 
     def adjust_sprinkler_interval(self, device_state: dict) -> None:
@@ -179,7 +206,6 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
     async def call_device(self, request: ClientRequest) -> dict[str, Any]:
         """Call device api."""
         try:
-            # call_device will check result, fail by raise YoLinkClientError
             resp: BRDP = await self.device.call_device(request)
         except YoLinkAuthFailError as yl_auth_err:
             self.config_entry.async_start_reauth(self.hass)
