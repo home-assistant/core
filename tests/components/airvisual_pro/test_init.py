@@ -2,29 +2,26 @@
 
 from unittest.mock import Mock, patch
 
-from homeassistant.config_entries import ConfigEntryState
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.airvisual_pro.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
 
-async def test_device_registry_connection(
+async def test_device_registry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     pro: Mock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the device is registered with its MAC address as a network connection."""
+    """Test the device registry entry, including the network MAC connection."""
     with patch("homeassistant.components.airvisual_pro.NodeSamba", return_value=pro):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    device_registry = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
-    assert len(devices) == 1
-    assert (
-        dr.CONNECTION_NETWORK_MAC,
-        "12:34:56:78:90:ab",
-    ) in devices[0].connections
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "XXXXXXX")})
+    assert device_entry == snapshot
