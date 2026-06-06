@@ -39,8 +39,8 @@ async def test_monitor_fetched_only_for_enabled_plants(
 ) -> None:
     """Monitor data is only fetched for plants with an enabled monitor entity."""
     mock_config_entry.add_to_hass(hass)
-    # Disable both monitor sensors of the non-storage "Rooftop" plant.
-    for key in ("load_power", "grid_power"):
+    # Disable every monitor-backed sensor of the non-storage "Rooftop" plant.
+    for key in ("pv_power", "load_power", "grid_power"):
         entity_registry.async_get_or_create(
             "sensor",
             DOMAIN,

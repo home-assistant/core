@@ -70,8 +70,21 @@ OVERVIEW_SENSORS: tuple[HypontechSensorDescription, ...] = (
 )
 
 PLANT_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
+    # Historically keyed "pv_power" when total power was the only reading (no
+    # battery support). Now it carries the PV-only power from the monitor
+    # endpoint; the plant endpoint's total power is exposed as "total_power".
     HypontechPlantSensorDescription(
         key="pv_power",
+        translation_key="pv_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda c: c.monitor.power_pv,
+        requires_monitor=True,
+    ),
+    HypontechPlantSensorDescription(
+        key="total_power",
+        translation_key="total_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.info.power,
@@ -116,11 +129,12 @@ PLANT_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
 # Sensors only added for plants that have a battery (storage) system.
 BATTERY_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
     HypontechPlantSensorDescription(
-        key="battery_discharge_power",
-        translation_key="battery_discharge_power",
+        key="battery_power",
+        translation_key="battery_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        # Positive while the battery is discharging, negative while charging.
         value_fn=lambda c: c.monitor.w_cha,
         requires_monitor=True,
     ),
