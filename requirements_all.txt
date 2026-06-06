@@ -3249,7 +3249,7 @@ uhooapi==1.2.8
 uiprotect==10.5.0
 
 # homeassistant.components.landisgyr_heat_meter
-ultraheat-api==0.6.0
+ultraheat-api==0.6.1
 
 # homeassistant.components.unifi_discovery
 unifi-discovery==1.4.0
