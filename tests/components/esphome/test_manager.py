@@ -9,7 +9,9 @@ from unittest.mock import AsyncMock, Mock, call, patch
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
+    APIVersion,
     AreaInfo,
+    BluetoothProxyFeature,
     DeviceInfo,
     EncryptionPlaintextAPIError,
     ExecuteServiceResponse,
@@ -3274,3 +3276,124 @@ async def test_service_registration_response_types(
         hass.services.supports_response(DOMAIN, "test_status_service")
         == SupportsResponse.NONE
     )
+
+
+def _create_cached_bluetooth_proxy_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    bluetooth_proxy_feature_flags: BluetoothProxyFeature,
+) -> tuple[MockConfigEntry, DeviceInfo]:
+    """Create an entry with cached device info so setup knows the proxy state."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:aa",
+        data={
+            CONF_HOST: "test.local",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_BLUETOOTH_MAC_ADDRESS: "AA:BB:CC:DD:EE:FC",
+        },
+    )
+    entry.add_to_hass(hass)
+    device_info = DeviceInfo(
+        name="test",
+        mac_address="11:22:33:44:55:AA",
+        bluetooth_mac_address="AA:BB:CC:DD:EE:FC",
+        bluetooth_proxy_feature_flags=bluetooth_proxy_feature_flags,
+    )
+    storage_key = f"{DOMAIN}.{entry.entry_id}"
+    hass_storage[storage_key] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": storage_key,
+        "data": {
+            "device_info": device_info.to_dict(),
+            "api_version": APIVersion(1, 9).to_dict(),
+        },
+    }
+    return entry, device_info
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_proxy_waits_for_scanner_at_startup(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup waits for a cached bluetooth proxy to register its scanner."""
+    entry, device_info = _create_cached_bluetooth_proxy_entry(
+        hass, hass_storage, BluetoothProxyFeature.PASSIVE_SCAN
+    )
+    connect_event = asyncio.Event()
+    reached_connect = asyncio.Event()
+
+    async def _block_until_released() -> tuple[DeviceInfo, list[Any], list[Any]]:
+        reached_connect.set()
+        await connect_event.wait()
+        return (device_info, [], [])
+
+    mock_client.device_info_and_list_entities = _block_until_released
+
+    setup_task = hass.async_create_task(hass.config_entries.async_setup(entry.entry_id))
+    async with asyncio.timeout(2):
+        await reached_connect.wait()
+
+    # Setup must still be waiting for the scanner to be registered.
+    assert not setup_task.done()
+
+    connect_event.set()
+    async with asyncio.timeout(2):
+        assert await setup_task is True
+    assert entry.runtime_data.first_connect_done.is_set()
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_proxy_startup_wait_times_out(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup finishes if a cached bluetooth proxy never connects."""
+    entry, device_info = _create_cached_bluetooth_proxy_entry(
+        hass, hass_storage, BluetoothProxyFeature.PASSIVE_SCAN
+    )
+    connect_event = asyncio.Event()
+
+    async def _never_returns() -> tuple[DeviceInfo, list[Any], list[Any]]:
+        await connect_event.wait()
+        return (device_info, [], [])
+
+    mock_client.device_info_and_list_entities = _never_returns
+
+    with patch("homeassistant.components.esphome.manager.STARTUP_SCANNER_WAIT", 0.05):
+        async with asyncio.timeout(2):
+            assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    connect_event.set()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_non_bluetooth_device_does_not_wait_at_startup(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup does not wait for a device that is not a bluetooth proxy."""
+    entry, device_info = _create_cached_bluetooth_proxy_entry(
+        hass, hass_storage, BluetoothProxyFeature(0)
+    )
+    connect_event = asyncio.Event()
+
+    async def _never_returns() -> tuple[DeviceInfo, list[Any], list[Any]]:
+        await connect_event.wait()
+        return (device_info, [], [])
+
+    mock_client.device_info_and_list_entities = _never_returns
+
+    # The connection is blocked, but without proxy flags setup must not wait.
+    async with asyncio.timeout(2):
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    connect_event.set()
+    await hass.async_block_till_done()
