@@ -168,7 +168,7 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
                 return self.async_create_entry(
                     title=user_input[CONF_MODEL], data=user_input
                 )
-            return self.async_update_and_abort(
+            return self.async_update_reload_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data=user_input,
