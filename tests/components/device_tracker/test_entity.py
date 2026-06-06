@@ -11,6 +11,7 @@ from homeassistant.components.device_tracker import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    ATTR_TRACKING_TYPE,
     CONF_ASSOCIATED_ZONE,
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
@@ -19,6 +20,7 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
     SourceType,
     TrackerEntity,
+    TrackingType,
 )
 from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -479,6 +481,19 @@ async def test_load_unload_entry_tracker(
     assert not state
 
 
+def test_tracking_type_capability_attribute() -> None:
+    """Test the tracking_type capability attribute set by each base class."""
+    assert MockTrackerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.POSITION
+    }
+    assert MockBaseScannerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+    }
+    assert MockScannerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+    }
+
+
 @pytest.mark.parametrize(
     (
         "battery_level",
@@ -772,7 +787,9 @@ async def test_tracker_entity_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == expected_state
-    assert state.attributes == expected_attributes
+    assert state.attributes == expected_attributes | {
+        ATTR_TRACKING_TYPE: TrackingType.POSITION
+    }
 
 
 async def test_base_scanner_entity_state(
@@ -789,6 +806,7 @@ async def test_base_scanner_entity_state(
     assert entity_state
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
     }
     assert entity_state.state == STATE_NOT_HOME
@@ -803,6 +821,7 @@ async def test_base_scanner_entity_state(
     # entity_id is reported.
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: ["zone.home"],
     }
 
@@ -815,6 +834,7 @@ async def test_base_scanner_entity_state(
     # is_connected is None -> empty in_zones (always reported).
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
     }
 
@@ -908,6 +928,7 @@ async def test_base_scanner_entity_in_zones_when_connected(
     assert entity_state.state == STATE_HOME
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: expected_in_zones,
     }
 
@@ -1265,6 +1286,7 @@ async def test_scanner_entity_state(
     assert entity_state
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.ROUTER,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
         ATTR_IP: ip_address,
         ATTR_MAC: mac_address,
@@ -1722,4 +1744,5 @@ async def test_tracker_entity_unavailable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unavailable"
-    assert state.attributes == {}
+    # Capability attributes are reported even when the entity is unavailable.
+    assert state.attributes == {ATTR_TRACKING_TYPE: TrackingType.POSITION}
