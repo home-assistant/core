@@ -1,7 +1,5 @@
 """Data update coordinator for Homevolt integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homevolt import (

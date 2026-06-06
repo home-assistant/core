@@ -168,5 +168,31 @@
     ],
     "State": "running",
     "Status": "Up 6 hours"
+  },
+  {
+    "Id": "ff31facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+    "Names": ["/dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05"],
+    "Image": "docker.io/lissy93/dashy:latest",
+    "ImageID": "sha256:7f8a4339a5c5d5d37d1262630108ab308d3e9ec7ed1c3286a32fe09856619a782",
+    "Command": "node server",
+    "Created": "1739816096",
+    "Ports": [
+      {
+        "PrivatePort": 8080,
+        "PublicPort": 4000,
+        "Type": "tcp"
+      }
+    ],
+    "Labels": {
+      "com.docker.stack.namespace": "dashy",
+      "com.docker.swarm.node.id": "nggd3w8ntk2ivzkka6ecprjkh",
+      "com.docker.swarm.service.id": "nk8zud67mpr6nyln0vhko65zb",
+      "com.docker.swarm.service.name": "dashy_dashy",
+      "com.docker.swarm.task": "",
+      "com.docker.swarm.task.id": "qgza68hnz4n1qvyz3iohynx05",
+      "com.docker.swarm.task.name": "dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05"
+    },
+    "State": "running",
+    "Status": "Up 3 hours"
   }
 ]

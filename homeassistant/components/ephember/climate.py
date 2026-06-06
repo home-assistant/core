@@ -1,7 +1,5 @@
 """Support for the EPH Controls Ember themostats."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import IntEnum
 import logging
@@ -198,4 +196,6 @@ class EphEmberThermostat(ClimateEntity):
     @staticmethod
     def map_mode_eph_hass(operation_mode):
         """Map from eph mode to Home Assistant mode."""
+        if operation_mode is None:
+            return HVACMode.HEAT_COOL
         return EPH_TO_HA_STATE.get(operation_mode.name, HVACMode.HEAT_COOL)

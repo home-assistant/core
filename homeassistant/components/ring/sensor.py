@@ -1,7 +1,5 @@
 """Component providing HA sensor support for Ring Door Bell/Chimes."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic, cast
@@ -137,7 +135,9 @@ def _get_last_event_attrs(
 
 @dataclass(frozen=True, kw_only=True)
 class RingSensorEntityDescription(
-    SensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    SensorEntityDescription,
+    RingEntityDescription,
+    Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes Ring sensor entity."""
 

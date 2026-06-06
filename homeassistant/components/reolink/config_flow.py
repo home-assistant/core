@@ -1,7 +1,5 @@
 """Config flow for the Reolink camera component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -39,6 +37,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
@@ -159,6 +158,15 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle discovery via dhcp."""
         mac_address = format_mac(discovery_info.macaddress)
         existing_entry = await self.async_set_unique_id(mac_address)
+        if existing_entry and CONF_HOST not in existing_entry.data:
+            _LOGGER.debug(
+                "Reolink DHCP discovered device with MAC '%s' and IP '%s', "
+                "but existing config entry does not have host, ignoring",
+                mac_address,
+                discovery_info.ip,
+            )
+            raise AbortFlow("already_configured")
+
         if (
             existing_entry
             and CONF_PASSWORD in existing_entry.data
@@ -303,6 +311,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USE_HTTPS] = host.api.use_https
                 user_input[CONF_BC_PORT] = host.api.baichuan.port
                 user_input[CONF_BC_ONLY] = host.api.baichuan_only
+                user_input[CONF_BC_CONNECT] = host.api.baichuan.connection_type.value
                 user_input[CONF_SUPPORTS_PRIVACY_MODE] = host.api.supported(
                     None, "privacy_mode"
                 )

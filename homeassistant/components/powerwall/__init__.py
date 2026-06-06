@@ -1,9 +1,6 @@
 """The Tesla Powerwall integration."""
 
-from __future__ import annotations
-
 from contextlib import AsyncExitStack
-from datetime import timedelta
 import logging
 
 from aiohttp import CookieJar
@@ -11,6 +8,7 @@ from tesla_powerwall import (
     AccessDeniedError,
     ApiError,
     MissingAttributeError,
+    OperationMode,
     Powerwall,
     PowerwallUnreachableError,
 )
@@ -23,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.network import is_ip_address
 
 from .const import (
@@ -32,13 +30,13 @@ from .const import (
     DOMAIN,
     POWERWALL_API_CHANGED,
     POWERWALL_COORDINATOR,
-    UPDATE_INTERVAL,
 )
-from .models import (
+from .coordinator import (
     PowerwallBaseInfo,
     PowerwallConfigEntry,
     PowerwallData,
     PowerwallRuntimeData,
+    PowerwallUpdateCoordinator,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
@@ -181,7 +179,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
             except (TimeoutError, PowerwallUnreachableError) as err:
                 raise ConfigEntryNotReady from err
             except MissingAttributeError as err:
-                # The error might include some important information about what exactly changed.
+                # The error might include some important
+                # information about what exactly changed.
                 _LOGGER.error("The powerwall api has changed: %s", str(err))
                 persistent_notification.async_create(
                     hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
@@ -221,15 +220,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
     )
     manager.save_auth_cookie()
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name="Powerwall site",
-        update_method=manager.async_update_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
-        always_update=False,
-    )
+    coordinator = PowerwallUpdateCoordinator(hass, entry, manager)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -311,6 +302,14 @@ async def get_backup_reserve_percentage(power_wall: Powerwall) -> float | None:
         return None
 
 
+async def get_operation_mode(power_wall: Powerwall) -> OperationMode | None:
+    """Return the operation mode."""
+    try:
+        return await power_wall.get_operation_mode()
+    except MissingAttributeError:
+        return None
+
+
 async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     """Process and update powerwall data."""
     # We await each call individually since the powerwall
@@ -318,6 +317,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     # as its faster than establishing a new connection when
     # run concurrently.
     backup_reserve = await get_backup_reserve_percentage(power_wall)
+    operation_mode = await get_operation_mode(power_wall)
     charge = await power_wall.get_charge()
     site_master = await power_wall.get_sitemaster()
     meters = await power_wall.get_meters()
@@ -331,6 +331,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         grid_services_active=grid_services_active,
         grid_status=grid_status,
         backup_reserve=backup_reserve,
+        operation_mode=operation_mode,
         batteries={battery.serial_number: battery for battery in batteries},
     )
 

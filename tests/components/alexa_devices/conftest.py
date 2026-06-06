@@ -1,10 +1,10 @@
 """Alexa Devices tests configuration."""
 
+import asyncio
 from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from aioamazondevices.const.devices import DEVICE_TYPE_TO_MODEL
 import pytest
 
 from homeassistant.components.alexa_devices.const import (
@@ -14,7 +14,14 @@ from homeassistant.components.alexa_devices.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USERNAME
+from .const import (
+    TEST_DEVICE_1,
+    TEST_DEVICE_1_SN,
+    TEST_PASSWORD,
+    TEST_USER_ID,
+    TEST_USERNAME,
+    TEST_VOCAL_RECORD_INITIAL,
+)
 
 from tests.common import MockConfigEntry
 
@@ -45,15 +52,28 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.login = AsyncMock()
         client.login.login_mode_interactive.return_value = {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         }
         client.get_devices_data.return_value = {
             TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
-        client.get_model_details = lambda device: DEVICE_TYPE_TO_MODEL.get(
-            device.device_type
+        client.routines = ["Test Routine"]
+        client.sync_history_state = AsyncMock(
+            return_value={TEST_DEVICE_1_SN: TEST_VOCAL_RECORD_INITIAL}
         )
+        client.on_history_event = MagicMock()
+        client.on_volume_state_event = MagicMock()
+        client.on_media_state_event = MagicMock()
+
+        async def _start_http2_processing(*_args, **_kwargs) -> asyncio.Task[None]:
+            async def _completed_task() -> None:
+                return
+
+            return asyncio.create_task(_completed_task())
+
+        client.start_http2_processing = AsyncMock(side_effect=_start_http2_processing)
+        client.stop_http2_processing = AsyncMock()
         client.send_sound_notification = AsyncMock()
         yield client
 
@@ -63,7 +83,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Amazon Test Account",
+        title=TEST_USERNAME,
         data={
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
@@ -72,7 +92,7 @@ def mock_config_entry() -> MockConfigEntry:
                 CONF_SITE: "https://www.amazon.com",
             },
         },
-        unique_id=TEST_USERNAME,
+        unique_id=TEST_USER_ID,
         version=1,
         minor_version=3,
     )

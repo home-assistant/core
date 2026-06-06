@@ -3,6 +3,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
+        'auth_method': 'pam',
         'host': '**REDACTED**',
         'nodes': list([
           dict({
@@ -20,6 +21,7 @@
         'password': '**REDACTED**',
         'port': 8006,
         'realm': 'pam',
+        'token': False,
         'username': '**REDACTED**',
         'verify_ssl': True,
       }),
@@ -38,10 +40,24 @@
       ]),
       'title': 'ProxmoxVE test',
       'unique_id': None,
-      'version': 2,
+      'version': 3,
     }),
     'devices': dict({
       'pve1': dict({
+        'backups': list([
+          dict({
+            'endtime': 1774350433,
+            'id': '',
+            'node': 'pve1',
+            'pid': 2146406,
+            'pstart': 70119940,
+            'starttime': 1774350000,
+            'status': 'OK',
+            'type': 'vzdump',
+            'upid': 'UPID:pve1:0020C066:042DF204:69C26EB0:vzdump::root@pam:',
+            'user': 'root@pam',
+          }),
+        ]),
         'containers': dict({
           '200': dict({
             'cpu': 0.05,
@@ -51,6 +67,8 @@
             'maxmem': 1073741824,
             'mem': 536870912,
             'name': 'ct-nginx',
+            'netin': 1048576,
+            'netout': 524288,
             'status': 'running',
             'uptime': 43200,
             'vmid': 200,
@@ -63,6 +81,8 @@
             'maxmem': 1073741824,
             'mem': 536870912,
             'name': 'ct-backup',
+            'netin': 1048576,
+            'netout': 524288,
             'status': 'stopped',
             'uptime': 43200,
             'vmid': 201,
@@ -83,6 +103,32 @@
           'type': 'node',
           'uptime': 86400,
         }),
+        'storages': dict({
+          'local': dict({
+            'active': 1,
+            'avail': 9956425728,
+            'content': 'iso,backup,vztmpl',
+            'enabled': 1,
+            'shared': 0,
+            'storage': 'local',
+            'total': 100861726720,
+            'type': 'dir',
+            'used': 85734563840,
+            'used_fraction': 0.85,
+          }),
+          'synology': dict({
+            'active': 1,
+            'avail': 523769479168,
+            'content': 'backup,images',
+            'enabled': 1,
+            'shared': 1,
+            'storage': 'synology',
+            'total': 1915211874304,
+            'type': 'nfs',
+            'used': 1391442395136,
+            'used_fraction': 0.73,
+          }),
+        }),
         'vms': dict({
           '100': dict({
             'cpu': 0.15,
@@ -92,6 +138,8 @@
             'maxmem': 2147483648,
             'mem': 1073741824,
             'name': 'vm-web',
+            'netin': 1048576,
+            'netout': 524288,
             'status': 'running',
             'uptime': 86400,
             'vmid': 100,
@@ -104,6 +152,8 @@
             'maxmem': 2147483648,
             'mem': 1073741824,
             'name': 'vm-db',
+            'netin': 1048576,
+            'netout': 524288,
             'status': 'stopped',
             'uptime': 86400,
             'vmid': 101,

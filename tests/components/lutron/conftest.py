@@ -42,7 +42,7 @@ def mock_lutron() -> Generator[MagicMock]:
         # Mock a light
         light = MagicMock()
         light.name = "Test Light"
-        light.id = "light_id"
+        light.id = 1
         light.uuid = "light_uuid"
         light.legacy_uuid = "light_legacy_uuid"
         light.is_dimmable = True
@@ -53,7 +53,7 @@ def mock_lutron() -> Generator[MagicMock]:
         # Mock a switch
         switch = MagicMock()
         switch.name = "Test Switch"
-        switch.id = "switch_id"
+        switch.id = 2
         switch.uuid = "switch_uuid"
         switch.legacy_uuid = "switch_legacy_uuid"
         switch.is_dimmable = False
@@ -64,7 +64,7 @@ def mock_lutron() -> Generator[MagicMock]:
         # Mock a cover
         cover = MagicMock()
         cover.name = "Test Cover"
-        cover.id = "cover_id"
+        cover.id = 3
         cover.uuid = "cover_uuid"
         cover.legacy_uuid = "cover_legacy_uuid"
         cover.type = "SYSTEM_SHADE"
@@ -74,6 +74,7 @@ def mock_lutron() -> Generator[MagicMock]:
         # Mock a fan
         fan = MagicMock()
         fan.name = "Test Fan"
+        fan.id = 4
         fan.uuid = "fan_uuid"
         fan.legacy_uuid = "fan_legacy_uuid"
         fan.type = "CEILING_FAN_TYPE"
@@ -83,8 +84,10 @@ def mock_lutron() -> Generator[MagicMock]:
         # Mock a keypad with a button and LED
         keypad = MagicMock()
         keypad.name = "Test Keypad"
-        keypad.id = "keypad_id"
+        keypad.id = 1
         keypad.type = "KEYPAD"
+        keypad.uuid = "keypad_uuid"
+        keypad.legacy_uuid = "1-0"
         area.keypads.append(keypad)
 
         button = MagicMock()
@@ -106,7 +109,7 @@ def mock_lutron() -> Generator[MagicMock]:
         # Mock an occupancy group
         occ_group = MagicMock()
         occ_group.name = "Test Occupancy"
-        occ_group.id = "occ_id"
+        occ_group.id = 5
         occ_group.uuid = "occ_uuid"
         occ_group.legacy_uuid = "occ_legacy_uuid"
         occ_group.state = OccupancyGroup.State.VACANT

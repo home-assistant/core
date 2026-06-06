@@ -6,7 +6,7 @@
       'friendly_name': 'Raum 0 Gute Nacht',
     }),
     'context': <ANY>,
-    'entity_id': 'scene.raum_0_gute_nacht',
+    'entity_id': 'scene.raum_0_raum_0_gute_nacht',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -1,7 +1,5 @@
 """Platform for Sunricher DALI binary sensor entities."""
 
-from __future__ import annotations
-
 from PySrDaliGateway import CallbackEventType, Device
 from PySrDaliGateway.helper import is_motion_sensor
 from PySrDaliGateway.types import MotionState, MotionStatus
@@ -81,10 +79,10 @@ class SunricherDaliMotionSensor(DaliDeviceEntity, BinarySensorEntity):
     def _handle_motion_status(self, status: MotionStatus) -> None:
         """Handle motion status updates."""
         motion_state = status["motion_state"]
-        if motion_state == MotionState.MOTION:
+        if motion_state is MotionState.MOTION:
             self._attr_is_on = True
             self.schedule_update_ha_state()
-        elif motion_state == MotionState.NO_MOTION:
+        elif motion_state is MotionState.NO_MOTION:
             self._attr_is_on = False
             self.schedule_update_ha_state()
 
@@ -126,6 +124,6 @@ class SunricherDaliOccupancySensor(DaliDeviceEntity, BinarySensorEntity):
         if motion_state in _OCCUPANCY_ON_STATES:
             self._attr_is_on = True
             self.schedule_update_ha_state()
-        elif motion_state == MotionState.VACANT:
+        elif motion_state is MotionState.VACANT:
             self._attr_is_on = False
             self.schedule_update_ha_state()

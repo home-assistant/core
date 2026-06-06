@@ -1,7 +1,5 @@
 """Denon HEOS Media Player."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from contextlib import suppress
 import dataclasses
@@ -39,7 +37,6 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.components.media_source import BrowseMediaSource
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -476,6 +473,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 await self.coordinator.heos.set_group(new_members)
                 return
 
+    @catch_action_error("remove from queue")
     async def async_remove_from_queue(self, queue_ids: list[int]) -> None:
         """Remove items from the queue."""
         await self._player.remove_from_queue(queue_ids)
@@ -626,7 +624,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     async def _async_browse_media_source(
         self, media_content_id: str | None = None
-    ) -> BrowseMediaSource:
+    ) -> media_source.BrowseMediaSource | media_source.RootBrowseMediaSource:
         """Browse a media source item."""
         return await media_source.async_browse_media(
             self.hass,

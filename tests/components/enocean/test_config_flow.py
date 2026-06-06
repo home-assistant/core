@@ -17,8 +17,8 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
 
-DONGLE_VALIDATE_PATH_METHOD = "homeassistant.components.enocean.dongle.validate_path"
-DONGLE_DETECT_METHOD = "homeassistant.components.enocean.dongle.detect"
+GATEWAY_CLASS = "homeassistant.components.enocean.config_flow.Gateway"
+GLOB_METHOD = "homeassistant.components.enocean.config_flow.glob.glob"
 SETUP_ENTRY_METHOD = "homeassistant.components.enocean.async_setup_entry"
 
 
@@ -29,10 +29,9 @@ async def test_user_flow_cannot_create_multiple_instances(hass: HomeAssistant) -
     )
     entry.add_to_hass(hass)
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
@@ -42,7 +41,7 @@ async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
     """Test the user flow with a detected EnOcean dongle."""
     FAKE_DONGLE_PATH = "/fake/dongle"
 
-    with patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])):
+    with patch(GLOB_METHOD, side_effect=[[FAKE_DONGLE_PATH], [], []]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -55,8 +54,8 @@ async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_with_no_detected_dongle(hass: HomeAssistant) -> None:
-    """Test the user flow with a detected EnOcean dongle."""
-    with patch(DONGLE_DETECT_METHOD, Mock(return_value=[])):
+    """Test the user flow with no detected EnOcean dongle."""
+    with patch(GLOB_METHOD, return_value=[]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -69,7 +68,10 @@ async def test_detection_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the detection flow with a valid path selected."""
     USER_PROVIDED_PATH = "/user/provided/path"
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+    with patch(
+        GATEWAY_CLASS,
+        return_value=Mock(start=AsyncMock(), stop=Mock()),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "detect"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
@@ -81,17 +83,12 @@ async def test_detection_flow_with_valid_path(hass: HomeAssistant) -> None:
 async def test_detection_flow_with_custom_path(hass: HomeAssistant) -> None:
     """Test the detection flow with custom path selected."""
     USER_PROVIDED_PATH = EnOceanFlowHandler.MANUAL_PATH_VALUE
-    FAKE_DONGLE_PATH = "/fake/dongle"
 
-    with (
-        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
-        patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "detect"},
-            data={CONF_DEVICE: USER_PROVIDED_PATH},
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "detect"},
+        data={CONF_DEVICE: USER_PROVIDED_PATH},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
@@ -100,11 +97,12 @@ async def test_detection_flow_with_custom_path(hass: HomeAssistant) -> None:
 async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
     """Test the detection flow with an invalid path selected."""
     USER_PROVIDED_PATH = "/invalid/path"
-    FAKE_DONGLE_PATH = "/fake/dongle"
 
-    with (
-        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False)),
-        patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])),
+    with patch(
+        GATEWAY_CLASS,
+        return_value=Mock(
+            start=AsyncMock(side_effect=ConnectionError("invalid path")), stop=Mock()
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -121,7 +119,10 @@ async def test_manual_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the manual flow with a valid path."""
     USER_PROVIDED_PATH = "/user/provided/path"
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+    with patch(
+        GATEWAY_CLASS,
+        return_value=Mock(start=AsyncMock(), stop=Mock()),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
@@ -135,8 +136,10 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
     USER_PROVIDED_PATH = "/user/provided/path"
 
     with patch(
-        DONGLE_VALIDATE_PATH_METHOD,
-        Mock(return_value=False),
+        GATEWAY_CLASS,
+        return_value=Mock(
+            start=AsyncMock(side_effect=ConnectionError("invalid path")), stop=Mock()
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
@@ -151,7 +154,10 @@ async def test_import_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the import flow with a valid path."""
     DATA_TO_IMPORT = {CONF_DEVICE: "/valid/path/to/import"}
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+    with patch(
+        GATEWAY_CLASS,
+        return_value=Mock(start=AsyncMock(), stop=Mock()),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -167,8 +173,10 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
     DATA_TO_IMPORT = {CONF_DEVICE: "/invalid/path/to/import"}
 
     with patch(
-        DONGLE_VALIDATE_PATH_METHOD,
-        Mock(return_value=False),
+        GATEWAY_CLASS,
+        return_value=Mock(
+            start=AsyncMock(side_effect=ConnectionError("invalid path")), stop=Mock()
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -206,7 +214,10 @@ async def test_usb_discovery(
 
     # test device path
     with (
-        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
+        patch(
+            GATEWAY_CLASS,
+            return_value=Mock(start=AsyncMock(), stop=Mock()),
+        ),
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
         patch(
             "homeassistant.components.usb.get_serial_by_id",

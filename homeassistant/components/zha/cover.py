@@ -1,7 +1,5 @@
 """Support for ZHA covers."""
 
-from __future__ import annotations
-
 import functools
 import logging
 from typing import Any
@@ -67,8 +65,12 @@ class ZhaCover(ZHAEntity, CoverEntity):
                 self.entity_data.entity.info_object.device_class
             )
 
+    @staticmethod
+    def _convert_supported_features(
+        zha_features: ZHACoverEntityFeature,
+    ) -> CoverEntityFeature:
+        """Convert ZHA cover features to HA cover features."""
         features = CoverEntityFeature(0)
-        zha_features: ZHACoverEntityFeature = self.entity_data.entity.supported_features
 
         if ZHACoverEntityFeature.OPEN in zha_features:
             features |= CoverEntityFeature.OPEN
@@ -87,7 +89,13 @@ class ZhaCover(ZHAEntity, CoverEntity):
         if ZHACoverEntityFeature.SET_TILT_POSITION in zha_features:
             features |= CoverEntityFeature.SET_TILT_POSITION
 
-        self._attr_supported_features = features
+        return features
+
+    @property
+    def supported_features(self) -> CoverEntityFeature:
+        """Return the supported features."""
+        zha_features: ZHACoverEntityFeature = self.entity_data.entity.supported_features
+        return self._convert_supported_features(zha_features)
 
     @property
     def is_closed(self) -> bool | None:
@@ -114,31 +122,31 @@ class ZhaCover(ZHAEntity, CoverEntity):
         """Return the current tilt position of the cover."""
         return self.entity_data.entity.current_cover_tilt_position
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.entity_data.entity.async_open_cover()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         await self.entity_data.entity.async_open_cover_tilt()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.entity_data.entity.async_close_cover()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         await self.entity_data.entity.async_close_cover_tilt()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.entity_data.entity.async_set_cover_position(
@@ -146,7 +154,7 @@ class ZhaCover(ZHAEntity, CoverEntity):
         )
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         await self.entity_data.entity.async_set_cover_tilt_position(
@@ -154,13 +162,13 @@ class ZhaCover(ZHAEntity, CoverEntity):
         )
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.entity_data.entity.async_stop_cover()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         await self.entity_data.entity.async_stop_cover_tilt()

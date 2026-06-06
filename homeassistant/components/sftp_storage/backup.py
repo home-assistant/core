@@ -1,7 +1,5 @@
 """Backup platform for the SFTP Storage integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from typing import Any
 
@@ -12,6 +10,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
 )
 from homeassistant.core import HomeAssistant, callback
 
@@ -68,7 +67,8 @@ class SFTPBackupAgent(BackupAgent):
     ) -> AsyncIterator[bytes]:
         """Download a backup file from SFTP."""
         LOGGER.debug(
-            "Establishing SFTP connection to remote host in order to download backup id: %s",
+            "Establishing SFTP connection to remote host"
+            " in order to download backup id: %s",
             backup_id,
         )
         try:
@@ -85,6 +85,7 @@ class SFTPBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""

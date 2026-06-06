@@ -1,7 +1,5 @@
 """Coordinator for Powerfox Local integration."""
 
-from __future__ import annotations
-
 from powerfox import (
     LocalResponse,
     PowerfoxAuthenticationError,
@@ -49,12 +47,12 @@ class PowerfoxLocalDataUpdateCoordinator(DataUpdateCoordinator[LocalResponse]):
         except PowerfoxAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"error": str(err)},
+                translation_key="auth_failed",
+                translation_placeholders={"host": self.config_entry.data[CONF_HOST]},
             ) from err
         except PowerfoxConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="update_failed",
-                translation_placeholders={"error": str(err)},
+                translation_key="connection_error",
+                translation_placeholders={"host": self.config_entry.data[CONF_HOST]},
             ) from err

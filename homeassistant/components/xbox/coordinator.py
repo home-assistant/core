@@ -1,7 +1,5 @@
 """Coordinator for the xbox integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -213,10 +211,10 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     async def update_data(self) -> XboxData:
         """Fetch presence data."""
 
-        batch = await self.client.people.get_friends_by_xuid(self.client.xuid)
+        me = await self.client.people.get_friend_by_xuid(self.client.xuid)
         friends = await self.client.people.get_friends_own()
 
-        presence_data = {self.client.xuid: batch.people[0]}
+        presence_data = {self.client.xuid: me.people[0]}
         presence_data.update(
             {
                 friend.xuid: friend
@@ -258,8 +256,10 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     def last_seen_timestamp(self, person: Person) -> datetime | None:
         """Returns the most recent of two timestamps."""
 
-        # The Xbox API constantly fluctuates the "last seen" timestamp between two close values,
-        # causing unnecessary updates. We only accept the most recent one as valild to prevent this.
+        # The Xbox API constantly fluctuates the "last seen"
+        # timestamp between two close values, causing
+        # unnecessary updates. We only accept the most
+        # recent one as valid to prevent this.
 
         prev_dt = (
             prev_data.last_seen_date_time_utc

@@ -1,7 +1,5 @@
 """Light platform Niko Home Control."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from nhc.light import NHCLight

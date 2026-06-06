@@ -1,7 +1,5 @@
 """Typing Helpers for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import lru_cache
 from math import floor, log10
@@ -23,6 +21,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfEnergyDistance,
+    UnitOfFrequency,
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
@@ -155,7 +154,10 @@ class BaseUnitConverter:
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert one unit of measurement to another which allows None."""
+        """Return a function to convert a unit to another.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
@@ -353,8 +355,23 @@ class ElectricCurrentConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfElectricCurrent.AMPERE: 1,
         UnitOfElectricCurrent.MILLIAMPERE: 1e3,
+        UnitOfElectricCurrent.MICROAMPERE: 1e6,
     }
     VALID_UNITS = set(UnitOfElectricCurrent)
+
+
+class FrequencyConverter(BaseUnitConverter):
+    """Utility to convert frequency values."""
+
+    UNIT_CLASS = "frequency"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfFrequency.MILLIHERTZ: 1e3,
+        UnitOfFrequency.HERTZ: 1,
+        UnitOfFrequency.KILOHERTZ: 1 / 1e3,
+        UnitOfFrequency.MEGAHERTZ: 1 / 1e6,
+        UnitOfFrequency.GIGAHERTZ: 1 / 1e9,
+    }
+    VALID_UNITS = set(UnitOfFrequency)
 
 
 class ElectricPotentialConverter(BaseUnitConverter):
@@ -477,7 +494,7 @@ class MassVolumeConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1000000.0,  # 1000 µg/m³ = 1 mg/m³
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
         CONCENTRATION_GRAMS_PER_CUBIC_METER: 1.0,
     }
@@ -679,7 +696,10 @@ class SpeedConverter(BaseUnitConverter):
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert a speed from one unit to another which allows None."""
+        """Return a function to convert speed units.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             # Return a function that does nothing. This is not
             # in _converter_factory because we do not want to wrap
@@ -775,7 +795,10 @@ class TemperatureConverter(BaseUnitConverter):
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert a temperature from one unit to another which allows None."""
+        """Return a function to convert temperature units.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             # Return a function that does nothing. This is not
             # in _converter_factory because we do not want to wrap

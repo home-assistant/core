@@ -1,7 +1,5 @@
 """Support for WebDAV backup."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
@@ -17,11 +15,13 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_dumps
-from homeassistant.util.json import json_loads_object
+from homeassistant.util.async_ import gather_with_limited_concurrency
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import WebDavConfigEntry
 from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 BACKUP_TIMEOUT = ClientTimeout(connect=10, total=43200)
 CACHE_TTL = 300
+METADATA_DOWNLOAD_CONCURRENCY = 4
 
 
 async def async_get_backup_agents(
@@ -140,6 +141,7 @@ class WebDavBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -154,6 +156,7 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{filename_tar}",
             timeout=BACKUP_TIMEOUT,
             content_length=backup.size,
+            progress=lambda current, total: on_progress(bytes_uploaded=current),
         )
 
         _LOGGER.debug(
@@ -219,20 +222,35 @@ class WebDavBackupAgent(BackupAgent):
         if time() <= self._cache_expiration:
             return self._cache_metadata_files
 
-        async def _download_metadata(path: str) -> AgentBackup:
+        async def _download_metadata(path: str) -> AgentBackup | None:
             """Download metadata file."""
             iterator = await self._client.download_iter(path)
-            metadata = await anext(iterator)
-            return AgentBackup.from_dict(json_loads_object(metadata))
+            metadata_bytes = bytearray()
+            async for chunk in iterator:
+                metadata_bytes.extend(chunk)
+            try:
+                return AgentBackup.from_dict(json_loads_object(metadata_bytes))
+            except (*JSON_DECODE_EXCEPTIONS, KeyError, TypeError, ValueError) as err:
+                _LOGGER.warning(
+                    "Skipping invalid backup metadata file %s: %s", path, err
+                )
+                return None
 
         async def _list_metadata_files() -> dict[str, AgentBackup]:
             """List metadata files."""
             files = await self._client.list_files(self._backup_path)
+            metadata_contents = await gather_with_limited_concurrency(
+                METADATA_DOWNLOAD_CONCURRENCY,
+                *(
+                    _download_metadata(file_name)
+                    for file_name in files
+                    if file_name.endswith(".metadata.json")
+                ),
+            )
             return {
                 metadata_content.backup_id: metadata_content
-                for file_name in files
-                if file_name.endswith(".metadata.json")
-                if (metadata_content := await _download_metadata(file_name))
+                for metadata_content in metadata_contents
+                if metadata_content
             }
 
         self._cache_metadata_files = await _list_metadata_files()

@@ -1,7 +1,5 @@
 """Support for Bluesound devices."""
 
-from __future__ import annotations
-
 from asyncio import Task
 from datetime import datetime, timedelta
 import logging
@@ -85,6 +83,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
     _attr_media_content_type = MediaType.MUSIC
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_volume_step = 0.01
 
     def __init__(
         self,
@@ -331,7 +330,8 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         if self._status.input_id is not None:
             for input_ in self._inputs:
-                # the input might not have an id => also try to match on the stream_url/url
+                # the input might not have an id
+                # => also try to match on the stream_url/url
                 # we have to use both because neither matches all the time
                 if (
                     input_.id == self._status.input_id
@@ -688,27 +688,9 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         await self._player.play_url(url)
 
-    async def async_volume_up(self) -> None:
-        """Volume up the media player."""
-        if self.volume_level is None:
-            return
-
-        new_volume = self.volume_level + 0.01
-        new_volume = min(1, new_volume)
-        await self.async_set_volume_level(new_volume)
-
-    async def async_volume_down(self) -> None:
-        """Volume down the media player."""
-        if self.volume_level is None:
-            return
-
-        new_volume = self.volume_level - 0.01
-        new_volume = max(0, new_volume)
-        await self.async_set_volume_level(new_volume)
-
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
-        volume = int(round(volume * 100))
+        volume = round(volume * 100)
         volume = min(100, volume)
         volume = max(0, volume)
 

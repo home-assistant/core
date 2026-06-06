@@ -38,7 +38,6 @@ def mock_charger() -> Generator[MagicMock]:
         charger.callback = None
         # Status sensors
         charger.status = "Charging"
-        charger.vehicle = True
         charger.mode = "STA"
         charger.charge_mode = "fast"
         charger.divertmode = "normal"
@@ -49,9 +48,9 @@ def mock_charger() -> Generator[MagicMock]:
         charger.charge_time_elapsed = 3600  # 60 minutes in seconds
         charger.vehicle_eta = None
         # Electrical sensors
-        charger.charging_current = 32.0
+        charger.charging_current = 32000.0
         charger.charging_voltage = 240
-        charger.charging_power = 7680.0
+        charger.charging_power = 7680000.0
         charger.current_power = 7680
         charger.current_capacity = 32
         charger.max_current = 48
@@ -90,6 +89,13 @@ def mock_charger() -> Generator[MagicMock]:
         # System diagnostic sensors
         charger.uptime = 86400  # 1 day in seconds
         charger.freeram = 50000
+        # Binary sensors
+        charger.vehicle = True
+        charger.divert_active = False
+        charger.using_ethernet = False
+        charger.shaper_active = False
+        charger.has_limit = False
+        charger.mqtt_connected = False
         yield charger
 
 

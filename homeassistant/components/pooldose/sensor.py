@@ -1,7 +1,5 @@
 """Sensors for the Seko PoolDose integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
@@ -121,7 +119,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=["off", "proportional", "on_off", "timed"],
+        options=["off", "proportional", "on_off", "timed", "cycle"],
     ),
     PooldoseSensorEntityDescription(
         key="ofa_orp_time",
@@ -182,6 +180,22 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+    ),
+    PooldoseSensorEntityDescription(
+        key="device_config",
+        translation_key="device_config",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["ph_orp", "ph_orp_chlorine"],
+    ),
+    PooldoseSensorEntityDescription(
+        key="temperature_unit",
+        translation_key="temperature_unit",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["celsius", "fahrenheit"],
     ),
 )
 

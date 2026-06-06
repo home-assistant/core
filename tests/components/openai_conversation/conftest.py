@@ -27,6 +27,7 @@ from homeassistant.components.openai_conversation.const import (
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
+    DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
@@ -53,12 +54,12 @@ def mock_config_entry(
     """Mock a config entry."""
     entry = MockConfigEntry(
         title="OpenAI",
-        domain="openai_conversation",
+        domain=DOMAIN,
         data={
             "api_key": "bla",
         },
         version=2,
-        minor_version=6,
+        minor_version=7,
         subentries_data=[
             ConfigSubentryData(
                 data=mock_conversation_subentry_data,
@@ -139,6 +140,8 @@ def mock_create_stream() -> Generator[AsyncMock]:
     """Mock stream response."""
 
     async def mock_generator(events, **kwargs):
+        if isinstance(events, Exception):
+            raise events
         response = Response(
             id="resp_A",
             created_at=1700000000,

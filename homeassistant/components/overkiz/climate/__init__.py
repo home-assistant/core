@@ -1,7 +1,5 @@
 """Climate entities for the Overkiz (by Somfy) integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum, unique
 
 from pyoverkiz.enums import Protocol
@@ -48,7 +46,9 @@ class Controllable(StrEnum):
 
 WIDGET_TO_CLIMATE_ENTITY = {
     UIWidget.ATLANTIC_ELECTRICAL_HEATER: AtlanticElectricalHeater,
-    UIWidget.ATLANTIC_ELECTRICAL_HEATER_WITH_ADJUSTABLE_TEMPERATURE_SETPOINT: AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint,
+    UIWidget.ATLANTIC_ELECTRICAL_HEATER_WITH_ADJUSTABLE_TEMPERATURE_SETPOINT: (
+        AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint
+    ),
     UIWidget.ATLANTIC_ELECTRICAL_TOWEL_DRYER: AtlanticElectricalTowelDryer,
     UIWidget.ATLANTIC_HEAT_RECOVERY_VENTILATION: AtlanticHeatRecoveryVentilation,
     UIWidget.ATLANTIC_PASS_APC_HEATING_ZONE: AtlanticPassAPCHeatingZone,
@@ -61,16 +61,22 @@ WIDGET_TO_CLIMATE_ENTITY = {
     UIWidget.ATLANTIC_PASS_APC_HEAT_PUMP: AtlanticPassAPCHeatPumpMainComponent,
 }
 
-# For Atlantic APC, some devices are standalone and control themselves, some others needs to be
-# managed by a ZoneControl device. Widget name is the same in the two cases.
+# For Atlantic APC, some devices are standalone and control
+# themselves, some others needs to be managed by a ZoneControl
+# device. Widget name is the same in the two cases.
 WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY = {
     UIWidget.ATLANTIC_PASS_APC_HEATING_AND_COOLING_ZONE: {
-        Controllable.IO_ATLANTIC_PASS_APC_HEATING_AND_COOLING_ZONE: AtlanticPassAPCHeatingZone,
-        Controllable.IO_ATLANTIC_PASS_APC_ZONE_CONTROL_ZONE: AtlanticPassAPCZoneControlZone,
+        Controllable.IO_ATLANTIC_PASS_APC_HEATING_AND_COOLING_ZONE: (
+            AtlanticPassAPCHeatingZone
+        ),
+        Controllable.IO_ATLANTIC_PASS_APC_ZONE_CONTROL_ZONE: (
+            AtlanticPassAPCZoneControlZone
+        ),
     }
 }
 
-# Hitachi air-to-air heatpumps come in 2 flavors (HLRRWIFI and OVP) that are separated in 2 classes
+# Hitachi air-to-air heatpumps come in 2 flavors (HLRRWIFI
+# and OVP) that are separated in 2 classes
 WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY = {
     UIWidget.HITACHI_AIR_TO_AIR_HEAT_PUMP: {
         Protocol.HLRR_WIFI: HitachiAirToAirHeatPumpHLRRWIFI,

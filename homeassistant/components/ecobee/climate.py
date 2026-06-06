@@ -1,7 +1,5 @@
 """Support for Ecobee Thermostats."""
 
-from __future__ import annotations
-
 import collections
 from typing import Any
 
@@ -286,6 +284,7 @@ async def async_setup_entry(
 
             thermostat.schedule_update_ha_state(True)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_CREATE_VACATION,
@@ -293,6 +292,7 @@ async def async_setup_entry(
         schema=CREATE_VACATION_SCHEMA,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_DELETE_VACATION,
@@ -300,6 +300,7 @@ async def async_setup_entry(
         schema=DELETE_VACATION_SCHEMA,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_FAN_MIN_ON_TIME,
@@ -307,6 +308,7 @@ async def async_setup_entry(
         schema=SET_FAN_MIN_ON_TIME_SCHEMA,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_RESUME_PROGRAM,
@@ -465,7 +467,7 @@ class Thermostat(ClimateEntity):
 
     @property
     def has_humidifier_control(self) -> bool:
-        """Return true if humidifier connected to thermostat and set to manual/on mode."""
+        """Return true if humidifier connected to thermostat and manual/on."""
         return (
             bool(self.settings.get("hasHumidifier"))
             and self.settings.get("humidifierMode") == HUMIDIFIER_MANUAL_MODE
@@ -490,14 +492,14 @@ class Thermostat(ClimateEntity):
         return None
 
     @property
-    def fan(self):
+    def fan(self) -> str:
         """Return the current fan status."""
         if "fan" in self.thermostat["equipmentStatus"]:
             return STATE_ON
         return STATE_OFF
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return the fan setting."""
         return self.thermostat["runtime"]["desiredFanMode"]
 
@@ -535,7 +537,7 @@ class Thermostat(ClimateEntity):
         return None
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation."""
         return ECOBEE_HVAC_TO_HASS[self.settings["hvacMode"]]
 
@@ -548,7 +550,7 @@ class Thermostat(ClimateEntity):
             return None
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return current HVAC action.
 
         Ecobee returns a CSV string with different equipment that is active.
@@ -890,7 +892,8 @@ class Thermostat(ClimateEntity):
         current_sensors_in_climate = self._sensors_in_preset_mode(preset_mode)
         if set(sensor_names) == set(current_sensors_in_climate):
             _LOGGER.debug(
-                "This action would not be an update, current sensors on climate (%s) are: %s",
+                "This action would not be an update, current sensors"
+                " on climate (%s) are: %s",
                 preset_mode,
                 ", ".join(current_sensors_in_climate),
             )
