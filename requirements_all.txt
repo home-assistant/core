@@ -1727,7 +1727,7 @@ oemthermostat==1.1.1
 ohme==1.9.1
 
 # homeassistant.components.ollama
-ollama==0.5.1
+ollama==0.6.2
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
