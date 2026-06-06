@@ -1,6 +1,7 @@
 """Fixtures for National Weather Service tests."""
 
 import asyncio
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -52,6 +53,16 @@ def mock_simple_nws_times_out():
         instance.forecast = None
         instance.forecast_hourly = None
         yield mock_nws
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.nws.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
 
 
 @pytest.fixture

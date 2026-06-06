@@ -22,12 +22,16 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import debounce, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_entity_registry_updated_event,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.location import has_location
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import location as location_util
 
 from .const import (
     CONF_LOCATION_ENTITY,
@@ -35,6 +39,7 @@ from .const import (
     DEBOUNCE_TIME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    LOCATION_CHANGE_THRESHOLD,
     RETRY_INTERVAL,
     RETRY_STOP,
 )
@@ -84,6 +89,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="entity_not_found",
+            )
+        if entity_entry.disabled_by is not None:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="entity_disabled",
             )
         location_entity_id = entity_entry.entity_id
         state = hass.states.get(location_entity_id)
@@ -215,11 +225,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
                 and new_lon == entry.runtime_data.longitude
             ):
                 return
+            dist = location_util.distance(
+                entry.runtime_data.latitude,
+                entry.runtime_data.longitude,
+                new_lat,
+                new_lon,
+            )
+            if dist is not None and dist <= LOCATION_CHANGE_THRESHOLD:
+                return
             entry.async_create_task(hass, coordinator_observation.async_refresh())
 
         entry.async_on_unload(
             async_track_state_change_event(
                 hass, location_entity_id, _async_on_location_state_change
+            )
+        )
+
+        @callback
+        def _async_on_entity_registry_update(
+            event: Event[er.EventEntityRegistryUpdatedData],
+        ) -> None:
+            """Reload when the tracked entity is renamed, removed, or disabled."""
+            if event.data["action"] == "remove" or (
+                event.data["action"] == "update"
+                and (
+                    "entity_id" in event.data["changes"]
+                    or "disabled_by" in event.data["changes"]
+                )
+            ):
+                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+
+        entry.async_on_unload(
+            async_track_entity_registry_updated_event(
+                hass, [location_entity_id], _async_on_entity_registry_update
             )
         )
 

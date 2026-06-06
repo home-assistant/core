@@ -112,6 +112,8 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
             entity_entry = registry.async_get(location_entity)
             if entity_entry is None:
                 errors["base"] = "entity_not_found"
+            elif entity_entry.disabled_by is not None:
+                errors["base"] = "entity_disabled"
             else:
                 state = self.hass.states.get(location_entity)
                 if state is None or not has_location(state):
@@ -124,7 +126,7 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(get_base_unique_id(data))
                     self._abort_if_unique_id_configured()
                     try:
-                        info = await validate_input(
+                        await validate_input(
                             self.hass,
                             {
                                 CONF_API_KEY: user_input[CONF_API_KEY],
@@ -132,7 +134,7 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_LONGITUDE: state.attributes[ATTR_LONGITUDE],
                             },
                         )
-                        return self.async_create_entry(title=info["title"], data=data)
+                        return self.async_create_entry(title=location_entity, data=data)
                     except CannotConnect:
                         errors["base"] = "cannot_connect"
                     except Exception:

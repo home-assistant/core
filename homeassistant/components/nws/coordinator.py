@@ -4,8 +4,9 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
 
+import aiohttp
 from aiohttp import ClientResponseError
-from pynws import NwsNoDataError, SimpleNWS, call_with_retry
+from pynws import NwsError, NwsNoDataError, SimpleNWS, call_with_retry
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -56,6 +57,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         self.initialized: bool = False
         self._location_entity_id = location_entity_id
         self._previous_position = initial_position
+        self._location_state_warned = False
 
         super().__init__(
             hass,
@@ -72,8 +74,17 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         """Check if the tracked location entity has moved and update the API."""
         assert self._location_entity_id is not None
         state = self.hass.states.get(self._location_entity_id)
-        if state is None or not has_location(state):
+        if state is None:
+            if not self._location_state_warned:
+                _LOGGER.warning(
+                    "Location entity %s is unavailable",
+                    self._location_entity_id,
+                )
+                self._location_state_warned = True
             return
+        if not has_location(state):
+            return
+        self._location_state_warned = False
         new_lat = state.attributes[ATTR_LATITUDE]
         new_lon = state.attributes[ATTR_LONGITUDE]
         if self._previous_position is not None:
@@ -83,17 +94,6 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
             dist = location_util.distance(prev_lat, prev_lon, new_lat, new_lon)
             if dist is not None and dist <= LOCATION_CHANGE_THRESHOLD:
                 return
-            if dist is not None:
-                _LOGGER.info(
-                    "Location entity %s moved %.0f m, updating NWS coordinates",
-                    self._location_entity_id,
-                    dist,
-                )
-            else:
-                _LOGGER.info(
-                    "Location entity %s moved, updating NWS coordinates",
-                    self._location_entity_id,
-                )
         client_session = async_get_clientsession(self.hass)
         api_key = self.config_entry.data[CONF_API_KEY]
         station = self.config_entry.data.get(CONF_STATION)
@@ -106,12 +106,14 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
             new_lon,
         )
         self.nws = new_nws
+        self.name = f"NWS observation station {new_nws.station}"
         runtime_data = self.config_entry.runtime_data
         runtime_data.api = new_nws
         runtime_data.latitude = new_lat
         runtime_data.longitude = new_lon
         self._previous_position = (new_lat, new_lon)
         self.initialized = False
+        self.last_api_success_time = None
         await runtime_data.coordinator_forecast.async_refresh()
         await runtime_data.coordinator_forecast_hourly.async_refresh()
 
@@ -120,7 +122,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         if self._location_entity_id:
             try:
                 await self._async_check_location_change()
-            except Exception:
+            except aiohttp.ClientError, NwsError:
                 _LOGGER.exception(
                     "Failed to update location for %s, continuing with previous station",
                     self._location_entity_id,

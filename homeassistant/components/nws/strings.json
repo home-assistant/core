@@ -5,6 +5,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "entity_disabled": "The selected entity is disabled. Please enable it first.",
       "entity_no_coordinates": "The selected entity does not have location coordinates.",
       "entity_not_found": "The selected entity was not found in the entity registry.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -32,6 +33,7 @@
         "title": "Set up a specific location"
       },
       "user": {
+        "description": "Choose how to configure the weather location.",
         "menu_options": {
           "entity": "Follow a person or device",
           "location": "Specific location"
@@ -40,6 +42,9 @@
     }
   },
   "exceptions": {
+    "entity_disabled": {
+      "message": "The location entity is disabled. Please enable it or reconfigure the integration."
+    },
     "entity_not_found": {
       "message": "The location entity was not found in the entity registry. Please reconfigure the integration."
     },
