@@ -2,7 +2,6 @@
 
 import asyncio
 import base64
-import contextlib
 from functools import partial
 import logging
 import secrets
@@ -1001,9 +1000,14 @@ class ESPHomeManager:
         ) is not None and device_info.bluetooth_proxy_feature_flags_compat(
             entry_data.api_version
         ):
-            with contextlib.suppress(TimeoutError):
+            try:
                 async with asyncio.timeout(STARTUP_SCANNER_WAIT):
                     await entry_data.first_connect_done.wait()
+            except TimeoutError:
+                _LOGGER.debug(
+                    "%s: Timed out waiting for Bluetooth scanner to register",
+                    self.host,
+                )
 
 
 @callback

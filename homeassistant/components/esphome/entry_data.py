@@ -166,7 +166,7 @@ class RuntimeEntryData:
     )
     loaded_platforms: set[Platform] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-    # Set once the first connection has finished setting up the BLE scanner.
+    # Set once the first connection has finished scanner setup or teardown.
     first_connect_done: asyncio.Event = field(default_factory=asyncio.Event)
     _storage_contents: StoreData | None = None
     _pending_storage: Callable[[], StoreData] | None = None
