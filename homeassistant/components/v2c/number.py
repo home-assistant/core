@@ -79,6 +79,7 @@ TRYDAN_NUMBER_SETTINGS = (
         native_max_value=MAX_VOLTAGE,
         value_fn=lambda evse_data: evse_data.voltage_installation,
         update_fn=lambda evse, value: evse.voltage_installation(value),
+        entity_registry_enabled_default=False,
     ),
 )
 
