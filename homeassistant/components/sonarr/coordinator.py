@@ -187,7 +187,8 @@ class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalen
                 ),
             )
             if (e := _get_calendar_event(ep)) is not None
-            and e.summary not in (ev.summary for ev in self._events)
+            and (e.summary, e.start)
+            not in {(ev.summary, ev.start) for ev in self._events}
         )
         self._fetched_dates.add(_date)
 
