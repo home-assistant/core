@@ -155,7 +155,7 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
             await self._device.set_night_light(NightLightState.OFF)
         )
         self._attr_is_on = False
-        self._attr_effect = ""
+        self._attr_effect = NightLightState.OFF.name.lower()
         self.async_write_ha_state()
 
     @property
@@ -170,13 +170,8 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
         _LOGGER.debug(
             "Updating light attribute %s, address %s", night_light_state, self._address
         )
-        if night_light_state == NightLightState.OFF:
-            _LOGGER.debug("Light is off, address %s", self._address)
-            self._attr_is_on = False
-        else:
-            _LOGGER.debug("Light is on, address %s", self._address)
-            self._attr_is_on = True
-            self._attr_effect = night_light_state.name.lower()
+        self._attr_is_on = night_light_state != NightLightState.OFF
+        self._attr_effect = night_light_state.name.lower()
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
