@@ -130,12 +130,12 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
         NightLightState.LEVEL_2.name.lower(),
     ]
     _attr_effect = _attr_effect_list[0]
-    _attr_effect_preference = _attr_effect_list[0]
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.base_unique_id}_light"
+        self._attr_effect_preference = self._attr_effect_list[0]
 
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
