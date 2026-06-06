@@ -176,7 +176,7 @@ class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalen
                 if d not in self._fetched_dates
             )
         )
-        return self._events
+        return [e for e in self._events if e.start < end_date and e.end > start_date]
 
     async def _async_get_events(self, _date: date) -> None:
         """Fetch events for a specific date and extend the cache."""

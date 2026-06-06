@@ -78,6 +78,13 @@ async def test_calendar_async_get_events(
     assert len(events) == 1
     assert mock_sonarr.async_get_calendar.call_count == call_count
 
+    # A non-overlapping range must return no events even though the cache is warm.
+    out_of_range = await coordinator.async_get_events(
+        datetime(2014, 1, 28, tzinfo=UTC),
+        datetime(2014, 1, 29, tzinfo=UTC),
+    )
+    assert len(out_of_range) == 0
+
 
 async def test_calendar_async_get_events_empty_date(
     hass: HomeAssistant,
