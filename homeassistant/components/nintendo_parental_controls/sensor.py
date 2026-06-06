@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
 from pynintendoparental.player import Player
 
@@ -39,6 +40,7 @@ class NintendoParentalControlsDeviceSensorEntityDescription(SensorEntityDescript
 
     value_fn: Callable[[Device], datetime | int | float | None]
     available_fn: Callable[[Device], bool] = lambda device: True
+    attributes_fn: Callable[[Device], dict | None] = lambda device: None
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -46,6 +48,109 @@ class NintendoParentalControlsPlayerSensorEntityDescription(SensorEntityDescript
     """Description for Nintendo parental controls player sensor entities."""
 
     value_fn: Callable[[Player], int | float | None]
+
+
+def _build_daily_attributes(device: Device) -> dict | None:
+    """Build daily summaries and applications attributes.
+
+    Exposes the last 5 days of play history and a full list of applications
+    with today's playtime per app.
+
+    Supports both the legacy daily-summary API schema (Switch, Switch Lite)
+    and the updated schema introduced with Switch 2, where player data uses
+    ``players``/``playedGames`` instead of ``devicePlayers``/``playedApps``.
+
+    When multiple players are active simultaneously, Nintendo reports the same
+    console playtime for each player. To avoid multiplying the actual playtime,
+    ``max()`` is used instead of summing across players.
+    """
+    try:
+        if not device.daily_summaries or not isinstance(device.daily_summaries, list):
+            return None
+
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        today_summary = device.daily_summaries[0] if device.daily_summaries else None
+        is_today = today_summary and today_summary.get("date") == today_str
+
+        daily = [
+            {
+                "date": s.get("date"),
+                "playingTime": s.get("playingTime"),
+                "playedApps": [
+                    {
+                        "title": a.get("title"),
+                        "applicationId": a.get("applicationId"),
+                        "imageUri": a.get("imageUri", {}),
+                        "playingTime": a.get("playingTime"),
+                        "firstPlayDate": a.get("firstPlayDate"),
+                        "playingDays": a.get("playingDays"),
+                        "shopUri": a.get("shopUri"),
+                        "hasUgc": a.get("hasUgc"),
+                    }
+                    for a in s.get("playedApps", [])
+                ],
+            }
+            for s in device.daily_summaries[:5]
+        ]
+
+        # Build per-app playtime from today's player data.
+        # Use max() across players because Nintendo reports the same console
+        # playtime identically for every player who was active simultaneously.
+        app_times: dict[str, int] = {}
+        if is_today and today_summary:
+            players = (
+                today_summary.get("devicePlayers")  # legacy schema (Switch / Switch Lite)
+                or today_summary.get("players")     # updated schema (Switch 2)
+                or []
+            )
+            for player in players:
+                apps_in_player = (
+                    player.get("playedApps")     # legacy schema
+                    or player.get("playedGames") # updated schema (Switch 2)
+                    or []
+                )
+                for app_entry in apps_in_player:
+                    app_id = (
+                        app_entry.get("applicationId")
+                        or (app_entry.get("meta") or {}).get("applicationId")
+                    )
+                    if app_id:
+                        key = app_id.upper()
+                        app_times[key] = max(
+                            app_times.get(key, 0),
+                            app_entry.get("playingTime", 0),
+                        )
+
+        # ``device.applications`` is a dict in newer pynintendoparental versions.
+        applications = []
+        apps = device.applications
+        if isinstance(apps, dict):
+            apps = apps.values()
+        for app in apps:
+            try:
+                today_time = app_times.get(app.application_id.upper(), 0) if is_today else 0
+                applications.append(
+                    {
+                        "name": app.name,
+                        "application_id": app.application_id,
+                        "image_url": app.image_url,
+                        "today_time_played": today_time,
+                        "playing_days": app.playing_days,
+                        "first_played_date": (
+                            app.first_played_date.strftime("%Y-%m-%d")
+                            if app.first_played_date
+                            else None
+                        ),
+                        "shop_url": app.shop_url,
+                        "has_ugc": app.has_ugc,
+                    }
+                )
+            except Exception:  # noqa: BLE001
+                pass
+
+        return {"daily": daily, "applications": applications}
+    except Exception:  # noqa: BLE001
+        return None
 
 
 DEVICE_SENSOR_DESCRIPTIONS: tuple[
@@ -58,6 +163,7 @@ DEVICE_SENSOR_DESCRIPTIONS: tuple[
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.today_playing_time,
+        attributes_fn=_build_daily_attributes,
     ),
     NintendoParentalControlsDeviceSensorEntityDescription(
         key=NintendoParentalControlsSensor.TIME_REMAINING,
@@ -139,6 +245,11 @@ class NintendoParentalControlsDeviceSensorEntity(NintendoDevice, SensorEntity):
     def available(self) -> bool:
         """Return if the sensor is available."""
         return super().available and self.entity_description.available_fn(self._device)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra state attributes."""
+        return self.entity_description.attributes_fn(self._device)
 
 
 class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
