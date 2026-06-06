@@ -134,6 +134,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                data_updates: dict[str, Any] | None = None
                 if not eagle_type:
                     errors["base"] = "unknown_device_type"
                 elif eagle_type == TYPE_EAGLE_100:
@@ -154,7 +155,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "unsupported_device_type"
 
-                if not errors:
+                if data_updates is not None:
                     return self.async_update_reload_and_abort(
                         entry,
                         unique_id=user_input[CONF_CLOUD_ID],
