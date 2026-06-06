@@ -152,6 +152,7 @@ AIR_PURIFIER_LIGHT_PARAMETERS = (
         SET_RGB_PARAMETERS,
     ],
 )
+
 STANDING_FAN_LIGHT_PARAMETERS = (
     COMMON_PARAMETERS,
     [
@@ -556,7 +557,7 @@ async def test_standing_fan_light_services(
 
     entry = mock_entry_factory(sensor_type="standing_fan")
     entry.add_to_hass(hass)
-    entity_id = "light.test_name"
+    entity_id = "light.test_name_night_light"
 
     mocked_instance = AsyncMock(return_value=True)
     mocked_none_instance = AsyncMock(return_value=None)

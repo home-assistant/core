@@ -117,8 +117,10 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     _device: switchbot.SwitchbotStandingFan
     _attr_translation_key = "standing_fan_light"
     _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_supported_features = LightEntityFeature.EFFECT
     _attr_color_mode = ColorMode.ONOFF
     _attr_effect_list = [
+        # Effectively just odd names for low/high dimmer levels.
         NightLightState.LEVEL_2.name.lower(),
         NightLightState.LEVEL_1.name.lower(),
     ]
@@ -156,11 +158,6 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
         self._attr_is_on = False
         self._attr_effect = None
         self.async_write_ha_state()
-
-    @property
-    def supported_features(self) -> LightEntityFeature:
-        """Return supported features."""
-        return LightEntityFeature.EFFECT
 
     @callback
     def _async_update_attrs(self) -> None:
