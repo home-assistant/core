@@ -54,7 +54,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle config flow initiation."""
         if info:
             device = info[CONF_DEVICE]
-            gw_id = info[CONF_ID]
+            gw_id = cv.slugify(info[CONF_ID])
 
             entries = [e.data for e in self._async_current_entries()]
 
@@ -98,7 +98,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEVICE): str,
-                    vol.Required(CONF_ID): vol.All(str, cv.slug),
+                    vol.Required(CONF_ID): str,
                 }
             ),
             errors=errors or {},
