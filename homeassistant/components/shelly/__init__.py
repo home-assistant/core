@@ -1,7 +1,6 @@
 """The Shelly integration."""
 
 import asyncio
-import contextlib
 from functools import partial
 from typing import Final
 
@@ -378,9 +377,13 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             != BLEScannerMode.DISABLED
         ):
             # Wait for the proxy to register its scanner before finishing setup.
-            with contextlib.suppress(TimeoutError):
+            try:
                 async with asyncio.timeout(STARTUP_SCANNER_WAIT):
                     await runtime_data.rpc.ble_scanner_setup_done.wait()
+            except TimeoutError:
+                LOGGER.debug(
+                    "%s: Timed out waiting for BLE scanner to register", entry.title
+                )
 
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
         await hass.config_entries.async_forward_entry_setups(

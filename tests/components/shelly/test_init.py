@@ -844,3 +844,34 @@ async def test_rpc_ble_scanner_startup_wait_times_out(
     assert entry.state is ConfigEntryState.LOADED
     connect_event.set()
     await hass.async_block_till_done()
+
+
+async def test_rpc_disabled_ble_scanner_does_not_wait_at_startup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test setup does not wait when the BLE scanner is disabled."""
+    block_event = asyncio.Event()
+
+    async def _block_forever(self: Any) -> None:
+        await block_event.wait()
+
+    entry = await init_integration(
+        hass,
+        2,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED},
+        skip_setup=True,
+    )
+
+    with patch(
+        "homeassistant.components.shelly.coordinator.ShellyRpcCoordinator"
+        "._async_connect_ble_scanner",
+        _block_forever,
+    ):
+        # Scanner setup is blocked, but a disabled proxy must not wait for it.
+        async with asyncio.timeout(2):
+            assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    assert entry.state is ConfigEntryState.LOADED
+    block_event.set()
+    await hass.async_block_till_done()
