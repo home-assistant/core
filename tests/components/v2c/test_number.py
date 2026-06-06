@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -18,6 +19,7 @@ from . import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -32,6 +34,7 @@ async def test_number(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_set_value(
     hass: HomeAssistant,
     mock_v2c_client: AsyncMock,
