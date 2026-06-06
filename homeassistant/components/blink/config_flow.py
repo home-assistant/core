@@ -47,6 +47,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the blink flow."""
         self.auth: Auth | None = None
         self.blink: Blink | None = None
+        self._blink_session: aiohttp.ClientSession | None = None
 
     async def _handle_user_input(self, user_input: dict[str, Any]):
         """Handle user input."""
