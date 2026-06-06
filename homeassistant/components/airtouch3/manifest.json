@@ -14,5 +14,5 @@
   "iot_class": "local_polling",
   "loggers": ["pyairtouch3"],
   "quality_scale": "silver",
-  "requirements": ["pyairtouch3==0.1.2"]
+  "requirements": ["pyairtouch3==0.1.3"]
 }
