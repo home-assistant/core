@@ -59,7 +59,7 @@ async def test_alexa_api_call_exceptions(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    side_effect: Exception,
+    side_effect: type[Exception],
     key: str,
     error: str,
 ) -> None:
