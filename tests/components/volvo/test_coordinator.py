@@ -21,7 +21,6 @@ from homeassistant.components.volvo.coordinator import (
     MEDIUM_INTERVAL,
     VERY_SLOW_INTERVAL,
     VolvoConfigEntry,
-    VolvoSlowIntervalCoordinator,
     schedule_location_update,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -345,18 +344,12 @@ async def test_update_location_exception_logs_debug(
     assert await setup_integration()
 
     entry: VolvoConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    slow_coordinator = next(
-        c
-        for c in entry.runtime_data.interval_coordinators
-        if isinstance(c, VolvoSlowIntervalCoordinator)
-    )
-
     configure_mock(mock_api.async_get_location, side_effect=exception)
 
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.volvo.coordinator"
     ):
-        await slow_coordinator._async_update_location()
+        await entry.runtime_data.slow_coordinator._async_update_location()
 
     assert "Location update failed" in caplog.text
 
