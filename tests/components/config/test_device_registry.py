@@ -7,7 +7,7 @@ import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.config import DOMAIN, device_registry
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -298,6 +298,7 @@ async def test_remove_config_entry_from_device(
     )
     entry_1.supports_remove_device = True
     entry_1.add_to_hass(hass)
+    entry_1.mock_state(hass, ConfigEntryState.LOADED)
 
     entry_2 = MockConfigEntry(
         domain="comp1",
@@ -306,6 +307,7 @@ async def test_remove_config_entry_from_device(
     )
     entry_2.supports_remove_device = True
     entry_2.add_to_hass(hass)
+    entry_2.mock_state(hass, ConfigEntryState.LOADED)
 
     device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
@@ -387,6 +389,7 @@ async def test_remove_config_entry_from_device_fails(
     )
     entry_2.supports_remove_device = True
     entry_2.add_to_hass(hass)
+    entry_2.mock_state(hass, ConfigEntryState.LOADED)
 
     entry_3 = MockConfigEntry(
         domain="comp3",
@@ -395,6 +398,7 @@ async def test_remove_config_entry_from_device_fails(
     )
     entry_3.supports_remove_device = True
     entry_3.add_to_hass(hass)
+    entry_3.mock_state(hass, ConfigEntryState.LOADED)
 
     device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
@@ -508,6 +512,7 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     )
     entry_1.supports_remove_device = True
     entry_1.add_to_hass(hass)
+    entry_1.mock_state(hass, ConfigEntryState.LOADED)
 
     entry_2 = MockConfigEntry(
         domain="comp1",
@@ -516,6 +521,7 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     )
     entry_2.supports_remove_device = True
     entry_2.add_to_hass(hass)
+    entry_2.mock_state(hass, ConfigEntryState.LOADED)
 
     device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
@@ -556,3 +562,45 @@ async def test_remove_config_entry_from_device_if_integration_remove(
 
     # This was the last config entry, the device is removed
     assert not device_registry.async_get(device_entry.id)
+
+
+async def test_remove_config_entry_from_device_entry_not_loaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that removing a device is rejected when the config entry is not loaded."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    async def async_remove_config_entry_device(
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    ) -> bool:
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp1", async_remove_config_entry_device=async_remove_config_entry_device
+        ),
+    )
+
+    entry = MockConfigEntry(
+        domain="comp1",
+        title="Test 1",
+        source="bla",
+    )
+    entry.supports_remove_device = True
+    entry.add_to_hass(hass)
+    # State defaults to NOT_LOADED — do not call mock_state(LOADED)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    response = await ws_client.remove_device(device_entry.id, entry.entry_id)
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert response["error"]["message"] == "Config entry is not loaded"

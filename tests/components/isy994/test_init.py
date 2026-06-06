@@ -4,12 +4,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.isy994 import async_remove_config_entry_device
 from homeassistant.components.isy994.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -42,23 +40,6 @@ async def test_migrate_minor_version_drops_tls(
     assert entry.minor_version == 2
     assert "tls" not in entry.data
     assert entry.data[CONF_VERIFY_SSL] is False
-
-
-async def test_remove_config_entry_device_entry_not_loaded(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test removing a device when the config entry has no runtime_data returns True."""
-    mock_config_entry.add_to_hass(hass)
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "test-device")},
-    )
-    result = await async_remove_config_entry_device(
-        hass, mock_config_entry, device_entry
-    )
-    assert result is True
 
 
 @pytest.mark.parametrize("verify_ssl", [True, False])
