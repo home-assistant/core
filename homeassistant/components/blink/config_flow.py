@@ -18,6 +18,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import aiohttp
 
 from .const import DOMAIN, HARDWARE_ID
 
@@ -50,12 +51,16 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _handle_user_input(self, user_input: dict[str, Any]):
         """Handle user input."""
+        # Use a dedicated session with a real CookieJar.
+        # The shared HA aiohttp session may drop OAuth cookies between steps,
+        # causing silent 2FA failures on some Blink account configurations.
+        session = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True))
         self.auth = Auth(
             {**user_input, "hardware_id": HARDWARE_ID},
             no_prompt=True,
-            session=async_get_clientsession(self.hass),
+            session=session,
         )
-        self.blink = Blink(session=async_get_clientsession(self.hass))
+        self.blink = Blink(session=session)
         self.blink.auth = self.auth
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
