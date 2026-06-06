@@ -465,6 +465,7 @@ async def test_remove_stale_todo_list_entities(
     for i, amazon_list in enumerate(mock_amazon_devices_client.todo_lists):
         if amazon_list.name == "Concerts":
             mock_amazon_devices_client.todo_lists.pop(i)
+            break
 
     # Call the utility function
     await async_remove_stale_todo_list_entities(hass, mock_config_entry.runtime_data)

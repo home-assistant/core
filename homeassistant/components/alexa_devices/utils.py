@@ -97,7 +97,7 @@ async def async_remove_dnd_from_virtual_group(
 async def async_remove_stale_todo_list_entities(
     hass: HomeAssistant, coordinator: AmazonDevicesCoordinator
 ) -> None:
-    """Remove todo list entities."""
+    """Remove stale todo list entities."""
     entity_registry = er.async_get(hass)
 
     existing_entities = er.async_entries_for_config_entry(
