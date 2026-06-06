@@ -1040,7 +1040,7 @@ fnv-hash-fast==2.0.3
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==5.0.0
+forecast-solar==5.0.1
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -1730,7 +1730,7 @@ oemthermostat==1.1.1
 ohme==1.9.1
 
 # homeassistant.components.ollama
-ollama==0.5.1
+ollama==0.6.2
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
