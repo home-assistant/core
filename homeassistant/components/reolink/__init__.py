@@ -7,7 +7,7 @@ from random import uniform
 from time import time
 from typing import Any
 
-from reolink_aio.api import RETRY_ATTEMPTS
+from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, RETRY_ATTEMPTS
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
@@ -210,6 +210,19 @@ async def async_setup_entry(
         identifiers={(DOMAIN, host.unique_id)},
         connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
     )
+
+    if host.api.is_nvr and host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
+        # ensure the camera device is setup before
+        # the lens sub-devices that use via_device
+        if host.api.supported(0, "UID"):
+            camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(0)}"
+        else:
+            camera_dev_id = f"{host.unique_id}_ch0"
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, camera_dev_id)},
+            via_device=(DOMAIN, host.unique_id),
+        )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -424,8 +437,8 @@ def migrate_entity_ids(
             device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
             break
 
-        if ch is None or is_chime:
-            continue  # Do not consider the NVR itself or chimes
+        if ch is None or is_chime or device_uid[1].startswith("lens"):
+            continue  # Do not consider the NVR itself, chimes or lens sub-devices
 
         # Check for wrongfully added MAC of the NVR/Hub to the camera
         # Can be removed in HA 2025.12
