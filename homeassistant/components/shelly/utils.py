@@ -665,7 +665,7 @@ def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
 
     If the unit is not set, the device sends an empty string
     """
-    unit = config["meta"]["ui"]["unit"]
+    unit = config["meta"]["ui"].get("unit")
     return DEVICE_UNIT_MAP.get(unit, unit) if unit else None
 
 
