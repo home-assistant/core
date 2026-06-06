@@ -128,7 +128,7 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.base_unique_id}_light"
-        self._attr_effect_preference = self._attr_effect_list[-1]
+        self._attr_effect_preference: str = self._attr_effect_list[-1]
 
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -186,14 +186,13 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
         """Register callbacks."""
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if last_state is not None:
-            self._attr_effect = last_state.attributes.get(
-                "effect", self._attr_effect_list[0]
-            )
-            self._attr_effect_preference = last_state.attributes.get(
-                "effect_preference", self._attr_effect_list[0]
-            )
         _LOGGER.debug("async_adding_to_hass %s", last_state)
+
+        if last_state is not None:
+            self._attr_effect = last_state.attributes.get("effect")
+            self._attr_effect_preference = last_state.attributes.get(
+                "effect_preference", self._attr_effect_list[-1]
+            )
 
 
 class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
