@@ -3,8 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 from enum import StrEnum
+import logging
 from typing import Any
 
 from pynintendoparental.player import Player
@@ -103,7 +103,9 @@ def _build_daily_attributes(device: Device) -> dict | None:
         app_times: dict[str, int] = {}
         if is_today:
             players = (
-                today_summary.get("devicePlayers")  # legacy schema (Switch / Switch Lite)
+                today_summary.get(
+                    "devicePlayers"
+                )  # legacy schema (Switch / Switch Lite)
                 or today_summary.get("players")  # updated schema (Switch 2)
                 or []
             )
