@@ -206,6 +206,7 @@ async def test_update_todo_item(
     mock_amazon_devices_client.set_todo_list_item_checked_status.assert_called_once_with(
         "todo_list_id", "item_2", True, 1
     )
+    mock_amazon_devices_client.rename_todo_list_item.assert_not_called()
 
     # Rename item_2
     mock_amazon_devices_client.set_todo_list_item_checked_status.reset_mock()
@@ -223,6 +224,7 @@ async def test_update_todo_item(
     mock_amazon_devices_client.rename_todo_list_item.assert_called_once_with(
         "todo_list_id", "item_2", "Renamed Task", 1
     )
+    mock_amazon_devices_client.set_todo_list_item_checked_status.assert_not_called()
 
     # Both status and rename changed
     mock_amazon_devices_client.set_todo_list_item_checked_status.reset_mock()
