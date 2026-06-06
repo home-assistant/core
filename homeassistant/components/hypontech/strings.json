@@ -36,8 +36,20 @@
   },
   "entity": {
     "sensor": {
+      "battery_discharge_power": {
+        "name": "Battery discharge power"
+      },
+      "battery_state_of_charge": {
+        "name": "Battery state of charge"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
       "lifetime_energy": {
         "name": "Lifetime energy"
+      },
+      "load_power": {
+        "name": "Load power"
       },
       "today_energy": {
         "name": "Today energy"
