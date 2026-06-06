@@ -44,6 +44,11 @@
         "name": "LED next color"
       }
     },
+    "light": {
+      "pool_light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "number": {
       "electrolysis_setpoint": {
         "name": "Electrolysis setpoint"

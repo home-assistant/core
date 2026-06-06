@@ -17,12 +17,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import AddonError
-from homeassistant.components.mqtt import DOMAIN
 from homeassistant.components.mqtt.config_flow import (
     PWD_NOT_CHANGED,
     TRANSLATION_DESCRIPTION_PLACEHOLDERS,
 )
-from homeassistant.components.mqtt.const import CONF_DISCOVERY_QOS
+from homeassistant.components.mqtt.const import CONF_DISCOVERY_QOS, DOMAIN
 from homeassistant.components.mqtt.util import learn_more_url
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
@@ -542,7 +541,7 @@ async def test_manual_config_set(
     )
     # Check config entry got setup
     assert len(mock_finish_setup.mock_calls) == 1
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.title == "127.0.0.1"
 
 
@@ -564,7 +563,7 @@ async def test_user_single_instance(hass: HomeAssistant) -> None:
 async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     ).add_to_hass(hass)
@@ -579,14 +578,14 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
 async def test_hassio_ignored(hass: HomeAssistant) -> None:
     """Test we supervisor discovered instance can be ignored."""
     MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         source=config_entries.SOURCE_IGNORE,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
+        DOMAIN,
         data=HassioServiceInfo(
             config={
                 "addon": "Mosquitto",
@@ -1102,7 +1101,7 @@ async def test_option_flow(
         "homeassistant.config.async_hass_config_yaml", AsyncMock(return_value={})
     ) as yaml_mock:
         await mqtt_mock_entry()
-        config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+        config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         assert result["type"] is FlowResultType.FORM
@@ -1259,7 +1258,7 @@ async def test_bad_certificate(
         test_input.pop(mqtt.CONF_CLIENT_KEY)
 
     mqtt_mock = await mqtt_mock_entry()
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     # Add at least one advanced option to get the full form
     hass.config_entries.async_update_entry(
         config_entry,
@@ -1336,7 +1335,7 @@ async def test_keepalive_validation(
 
     mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     # Add at least one advanced option to get the full form
     hass.config_entries.async_update_entry(
         config_entry,
@@ -1377,7 +1376,7 @@ async def test_disable_birth_will(
     """Test disabling birth and will."""
     await mqtt_mock_entry()
     mock_try_connection.return_value = True
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     hass.config_entries.async_update_entry(
         config_entry,
         data={
@@ -1442,7 +1441,7 @@ async def test_invalid_discovery_prefix(
     """Test setting an invalid discovery prefix."""
     mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     hass.config_entries.async_update_entry(
         config_entry,
         data={
@@ -1507,7 +1506,7 @@ async def test_option_flow_default_suggested_values(
 ) -> None:
     """Test config flow options has default/suggested values."""
     await mqtt_mock_entry()
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     hass.config_entries.async_update_entry(
         config_entry,
         data={
@@ -1654,7 +1653,7 @@ async def test_step_reauth(
 
     # Prepare the config entry
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data=test_input,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
@@ -1735,7 +1734,7 @@ async def test_step_hassio_reauth(
 
     # Prepare the config entry
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data=entry_data,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
@@ -1823,7 +1822,7 @@ async def test_step_hassio_reauth_no_discovery_info(
 
     # Prepare the config entry
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data=entry_data,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
@@ -1854,7 +1853,7 @@ async def test_reconfigure_user_connection_fails(
 ) -> None:
     """Test if connection cannot be made."""
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
@@ -1892,7 +1891,7 @@ async def test_options_bad_birth_message_fails(
 ) -> None:
     """Test bad birth message."""
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
@@ -1930,7 +1929,7 @@ async def test_options_bad_will_message_fails(
 ) -> None:
     """Test bad will message."""
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
@@ -1975,7 +1974,7 @@ async def test_try_connection_with_advanced_parameters(
 ) -> None:
     """Test config flow with advanced parameters from config."""
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
@@ -2113,7 +2112,7 @@ async def test_setup_with_advanced_settings(
     file_id = mock_process_uploaded_file.file_id
 
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
@@ -2299,7 +2298,7 @@ async def test_setup_with_certificates(
     file_id = mock_process_uploaded_file.file_id
 
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
@@ -2420,7 +2419,7 @@ async def test_change_websockets_transport_to_tcp(
 ) -> None:
     """Test reconfiguration flow changing websockets transport settings."""
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
@@ -2489,7 +2488,7 @@ async def test_reconfigure_flow_form(
 ) -> None:
     """Test reconfigure flow."""
     await mqtt_mock_entry()
-    entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
@@ -2543,7 +2542,7 @@ async def test_reconfigure_no_changed_password(
 ) -> None:
     """Test reconfigure flow."""
     await mqtt_mock_entry()
-    entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
@@ -2604,7 +2603,7 @@ async def test_migrate_config_entry(
     expected_minor_version: int,
 ) -> None:
     """Test migrating a config entry."""
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     # Mock to a migratable or compatbible config entry version
     hass.config_entries.async_update_entry(
         config_entry,
@@ -2646,7 +2645,7 @@ async def test_migrate_of_incompatible_config_entry(
     options: dict[str, Any],
 ) -> None:
     """Test migrating a config entry."""
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     # Mock an incompatible config entry version
     hass.config_entries.async_update_entry(
         config_entry,
@@ -4110,7 +4109,7 @@ async def test_subentry_configflow(
     component = next(iter(config_subentries_data["components"].values()))
 
     await mqtt_mock_entry()
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, "device"),
@@ -4267,7 +4266,7 @@ async def test_subentry_reconfigure_remove_entity(
 ) -> None:
     """Test the subentry ConfigFlow reconfigure removing an entity."""
     await mqtt_mock_entry()
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
@@ -4276,7 +4275,7 @@ async def test_subentry_reconfigure_remove_entity(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device is not None
 
     # assert we have an entity for all subentry components
@@ -4295,7 +4294,7 @@ async def test_subentry_reconfigure_remove_entity(
         unique_entity_id = f"{subentry_id}_{key}"
         entity_id = entity_registry.async_get_entity_id(
             domain=component["platform"],
-            platform=mqtt.DOMAIN,
+            platform=DOMAIN,
             unique_id=unique_entity_id,
         )
         assert entity_id is not None
@@ -4356,7 +4355,7 @@ async def test_subentry_reconfigure_remove_entity(
     unique_entity_id = f"{subentry_id}_{object_list[1]}"
     entity_id = entity_registry.async_get_entity_id(
         domain=components[object_list[1]]["platform"],
-        platform=mqtt.DOMAIN,
+        platform=DOMAIN,
         unique_id=unique_entity_id,
     )
     assert entity_id is None
@@ -4391,7 +4390,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
 ) -> None:
     """Test the subentry ConfigFlow reconfigure with multi entities."""
     await mqtt_mock_entry()
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
@@ -4401,7 +4400,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device is not None
 
     # assert we have an entity for all subentry components
@@ -4419,7 +4418,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     for key in components:
         unique_entity_id = f"{subentry_id}_{key}"
         entity_id = entity_registry.async_get_entity_id(
-            domain="notify", platform=mqtt.DOMAIN, unique_id=unique_entity_id
+            domain="notify", platform=DOMAIN, unique_id=unique_entity_id
         )
         assert entity_id is not None
         entity_entry = entity_registry.async_get(entity_id)
@@ -4833,7 +4832,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
 ) -> None:
     """Test the subentry ConfigFlow reconfigure with single entity."""
     await mqtt_mock_entry()
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
@@ -4842,7 +4841,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device is not None
 
     # assert we have an entity for the subentry component
@@ -4854,7 +4853,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
 
     unique_entity_id = f"{subentry_id}_{component_id}"
     entity_id = entity_registry.async_get_entity_id(
-        domain=component["platform"], platform=mqtt.DOMAIN, unique_id=unique_entity_id
+        domain=component["platform"], platform=DOMAIN, unique_id=unique_entity_id
     )
     assert entity_id is not None
     entity_entry = entity_registry.async_get(entity_id)
@@ -4972,7 +4971,7 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
 ) -> None:
     """Test the subentry ConfigFlow reconfigure resets filtered out fields."""
     await mqtt_mock_entry()
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
@@ -4981,7 +4980,7 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device is not None
 
     # assert we have an entity for the subentry component
@@ -4994,7 +4993,7 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
 
     unique_entity_id = f"{subentry_id}_{component_id}"
     entity_id = entity_registry.async_get_entity_id(
-        domain=component["platform"], platform=mqtt.DOMAIN, unique_id=unique_entity_id
+        domain=component["platform"], platform=DOMAIN, unique_id=unique_entity_id
     )
     assert entity_id is not None
     entity_entry = entity_registry.async_get(entity_id)
@@ -5107,7 +5106,7 @@ async def test_subentry_reconfigure_add_entity(
 ) -> None:
     """Test the subentry ConfigFlow reconfigure and add an entity."""
     await mqtt_mock_entry()
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
@@ -5116,7 +5115,7 @@ async def test_subentry_reconfigure_add_entity(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device is not None
 
     # assert we have an entity for the subentry component
@@ -5125,7 +5124,7 @@ async def test_subentry_reconfigure_add_entity(
     component_id_1, component1 = next(iter(components.items()))
     unique_entity_id = f"{subentry_id}_{component_id_1}"
     entity_id = entity_registry.async_get_entity_id(
-        domain=component1["platform"], platform=mqtt.DOMAIN, unique_id=unique_entity_id
+        domain=component1["platform"], platform=DOMAIN, unique_id=unique_entity_id
     )
     assert entity_id is not None
     entity_entry = entity_registry.async_get(entity_id)
@@ -5213,7 +5212,7 @@ async def test_subentry_reconfigure_update_device_properties(
 ) -> None:
     """Test the subentry ConfigFlow reconfigure and update device properties."""
     await mqtt_mock_entry()
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
@@ -5222,7 +5221,7 @@ async def test_subentry_reconfigure_update_device_properties(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device is not None
 
     # assert we have an entity for all subentry components
@@ -5368,7 +5367,7 @@ async def test_subentry_reconfigure_availablity(
 ) -> None:
     """Test the subentry ConfigFlow reconfigure and update device properties."""
     await mqtt_mock_entry()
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
@@ -5496,7 +5495,7 @@ async def test_subentry_reconfigure_export_settings(
 ) -> None:
     """Test the subentry ConfigFlow reconfigure export feature."""
     await mqtt_mock_entry()
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
@@ -5505,7 +5504,7 @@ async def test_subentry_reconfigure_export_settings(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device is not None
 
     # assert we entity for all subentry components
@@ -5562,7 +5561,7 @@ async def test_subentry_configflow_section_feature(
 ) -> None:
     """Test subentry sections are hidden with no configurable options."""
     await mqtt_mock_entry()
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, "device"),
