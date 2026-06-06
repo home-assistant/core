@@ -488,7 +488,6 @@ class _ScriptRun:
             response = err.response
 
             # Bubble up child conversation response
-            # Bubble up child conversation response
             if err.conversation_response is not UNDEFINED:
                 self._conversation_response = err.conversation_response
 
