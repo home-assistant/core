@@ -10,6 +10,7 @@ from tesla_powerwall import (
     DeviceType,
     GridStatus,
     MetersAggregatesResponse,
+    OperationMode,
     Powerwall,
     PowerwallStatusResponse,
     SiteInfoResponse,
@@ -48,6 +49,7 @@ async def _mock_powerwall_with_fixtures(
         device_type=DeviceType(device_type.result()["device_type"]),
         serial_numbers=["TG0123456789AB", "TG9876543210BA"],
         backup_reserve_percentage=15.0,
+        operation_mode=OperationMode.SELF_CONSUMPTION,
         batteries=[
             BatteryResponse.from_dict(battery) for battery in batteries.result()
         ],
@@ -65,6 +67,7 @@ async def _mock_powerwall_return_value(
     device_type=None,
     serial_numbers=None,
     backup_reserve_percentage=None,
+    operation_mode=None,
     batteries=None,
 ):
     powerwall_mock = MagicMock(Powerwall)
@@ -81,6 +84,7 @@ async def _mock_powerwall_return_value(
     powerwall_mock.get_backup_reserve_percentage.return_value = (
         backup_reserve_percentage
     )
+    powerwall_mock.get_operation_mode.return_value = operation_mode
     powerwall_mock.is_grid_services_active.return_value = grid_services_active
     powerwall_mock.get_gateway_din.return_value = MOCK_GATEWAY_DIN
     powerwall_mock.get_batteries.return_value = batteries
