@@ -21,6 +21,7 @@ from homeassistant.util import dt as dt_util, slugify
 from .common import setup_home_connect_entry
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
+    BSH_OPERATION_STATE_DELAYED_START,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
@@ -599,7 +600,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):
-    """Sensor class for Home Connect sensors that reports information related to the running program."""
+    """Sensor class for Home Connect running program information."""
 
     async def async_added_to_hass(self) -> None:
         """Register listener."""
@@ -624,6 +625,7 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         """Return whether a program is running, paused or finished."""
         status = self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
         return status is not None and status.value in [
+            BSH_OPERATION_STATE_DELAYED_START,
             BSH_OPERATION_STATE_RUN,
             BSH_OPERATION_STATE_PAUSE,
             BSH_OPERATION_STATE_FINISHED,
@@ -632,8 +634,9 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     @property
     def available(self) -> bool:
         """Return true if the sensor is available."""
-        # These sensors are only available if the program is running, paused or finished.
-        # Otherwise, some sensors report erroneous values.
+        # These sensors are only available if the program is
+        # running, paused or finished. Otherwise, some sensors
+        # report erroneous values.
         return super().available and self.program_running
 
     def update_native_value(self) -> None:

@@ -58,6 +58,11 @@
       'indexable': False,
       'hide_collections': True,
       'memorial': None,
+      'avatar_description': None,
+      'header_description': None,
+      'show_media': None,
+      'show_media_replies': None,
+      'show_featured': None,
       'moved_to_account': None,
     }),
   })

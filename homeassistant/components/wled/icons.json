@@ -51,11 +51,23 @@
       }
     },
     "switch": {
+      "freeze": {
+        "default": "mdi:timer",
+        "state": {
+          "on": "mdi:eye"
+        }
+      },
       "nightlight": {
         "default": "mdi:weather-night"
       },
       "reverse": {
         "default": "mdi:swap-horizontal-bold"
+      },
+      "segment_freeze": {
+        "default": "mdi:timer",
+        "state": {
+          "on": "mdi:eye"
+        }
       },
       "segment_reverse": {
         "default": "mdi:swap-horizontal-bold"

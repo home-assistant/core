@@ -1,7 +1,5 @@
 """Class for helpers and communication with the OverKiz API."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -22,6 +20,8 @@ COMMANDS_WITHOUT_DELAY = [
     OverkizCommand.ON,
     OverkizCommand.ON_WITH_TIMER,
     OverkizCommand.TEST,
+    OverkizCommand.TILT_POSITIVE,
+    OverkizCommand.TILT_NEGATIVE,
 ]
 
 
@@ -86,8 +86,9 @@ class OverkizExecutor:
     ) -> None:
         """Execute device command in async context.
 
-        :param refresh_afterwards: Whether to refresh the device state after the command is executed.
-        If several commands are executed, it will be refreshed only once.
+        :param refresh_afterwards: Whether to refresh the device
+            state after the command is executed. If several
+            commands are executed, it will be refreshed only once.
         """
         parameters = [arg for arg in args if arg is not None]
         # Set the execution duration to 0 seconds for RTS devices on supported commands
@@ -108,7 +109,8 @@ class OverkizExecutor:
         except BaseOverkizException as exception:
             raise HomeAssistantError(exception) from exception
 
-        # ExecutionRegisteredEvent doesn't contain the device_url, thus we need to register it here
+        # ExecutionRegisteredEvent doesn't contain the
+        # device_url, thus we need to register it here
         self.coordinator.executions[exec_id] = {
             "device_url": self.device.device_url,
             "command_name": command_name,
@@ -121,8 +123,9 @@ class OverkizExecutor:
     ) -> bool:
         """Cancel running execution by command."""
 
-        # Cancel a running execution
-        # Retrieve executions initiated via Home Assistant from Data Update Coordinator queue
+        # Cancel a running execution. Retrieve executions
+        # initiated via Home Assistant from Data Update
+        # Coordinator queue
         exec_id = next(
             (
                 exec_id

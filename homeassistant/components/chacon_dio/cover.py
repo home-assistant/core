@@ -50,7 +50,7 @@ class ChaconDioCover(ChaconDioEntity, CoverEntity):
     )
 
     def _update_attr(self, data: dict[str, Any]) -> None:
-        """Recomputes the attributes values either at init or when the device state changes."""
+        """Recompute the attribute values on init or state change."""
         self._attr_available = data["connected"]
         self._attr_current_cover_position = data["openlevel"]
         self._attr_is_closing = data["movement"] == ShutterMoveEnum.DOWN.value
@@ -60,7 +60,8 @@ class ChaconDioCover(ChaconDioEntity, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover.
 
-        Closed status is effective after the server callback that triggers callback_device_state.
+        Closed status is effective after the server callback
+        that triggers callback_device_state.
         """
 
         _LOGGER.debug(
@@ -82,7 +83,8 @@ class ChaconDioCover(ChaconDioEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover.
 
-        Opened status is effective after the server callback that triggers callback_device_state.
+        Opened status is effective after the server callback
+        that triggers callback_device_state.
         """
 
         _LOGGER.debug(
@@ -113,7 +115,8 @@ class ChaconDioCover(ChaconDioEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover open position in percentage.
 
-        Closing or opening status is effective after the server callback that triggers callback_device_state.
+        Closing or opening status is effective after the server
+        callback that triggers callback_device_state.
         """
         position: int = kwargs[ATTR_POSITION]
 

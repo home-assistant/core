@@ -1,7 +1,5 @@
 """Support for SleepIQ foundation preset selection."""
 
-from __future__ import annotations
-
 from asyncsleepiq import (
     CoreTemps,
     FootWarmingTemps,
@@ -13,22 +11,21 @@ from asyncsleepiq import (
 )
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CORE_CLIMATE, DOMAIN, FOOT_WARMER
-from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
+from .const import CORE_CLIMATE, FOOT_WARMER
+from .coordinator import SleepIQConfigEntry, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity, SleepIQSleeperEntity, sleeper_for_side
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SleepIQConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ foundation preset select entities."""
-    data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[SleepIQBedEntity] = []
     for bed in data.client.beds.values():
         entities.extend(
@@ -60,7 +57,7 @@ class SleepIQSelectEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Select
 
         self._attr_name = f"SleepNumber {bed.name} Foundation Preset"
         self._attr_unique_id = f"{bed.id}_preset"
-        if preset.side != Side.NONE:
+        if preset.side is not Side.NONE:
             self._attr_name += f" {preset.side_full}"
             self._attr_unique_id += f"_{preset.side.value}"
         self._attr_options = preset.options
@@ -167,7 +164,7 @@ class SleepIQCoreTempSelectEntity(
         temperature = self.HA_TO_SLEEPIQ_CORE_TEMP_MAP[option]
         timer = self.core_climate.timer or 240
 
-        if temperature == CoreTemps.OFF:
+        if temperature is CoreTemps.OFF:
             await self.core_climate.turn_off()
         else:
             await self.core_climate.turn_on(temperature, timer)

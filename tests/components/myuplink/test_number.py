@@ -6,7 +6,7 @@ from aiohttp import ClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.number import SERVICE_SET_VALUE
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -14,8 +14,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEST_PLATFORM = Platform.NUMBER
-pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
+pytestmark = pytest.mark.parametrize("platforms", [(Platform.NUMBER,)])
 
 ENTITY_ID = "number.gotham_city_heating_offset_climate_system_1"
 ENTITY_FRIENDLY_NAME = "Gotham City Heating offset climate system 1"
@@ -42,7 +41,7 @@ async def test_set_value(
     """Test the value of the number entity can be set."""
 
     await hass.services.async_call(
-        TEST_PLATFORM,
+        NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: ENTITY_ID, "value": 1},
         blocking=True,
@@ -61,7 +60,7 @@ async def test_api_failure(
     mock_myuplink_client.async_set_device_points.side_effect = ClientError
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            TEST_PLATFORM,
+            NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: ENTITY_ID, "value": 1},
             blocking=True,

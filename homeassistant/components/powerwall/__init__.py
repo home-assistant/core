@@ -1,7 +1,5 @@
 """The Tesla Powerwall integration."""
 
-from __future__ import annotations
-
 from contextlib import AsyncExitStack
 import logging
 
@@ -10,6 +8,7 @@ from tesla_powerwall import (
     AccessDeniedError,
     ApiError,
     MissingAttributeError,
+    OperationMode,
     Powerwall,
     PowerwallUnreachableError,
 )
@@ -180,7 +179,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
             except (TimeoutError, PowerwallUnreachableError) as err:
                 raise ConfigEntryNotReady from err
             except MissingAttributeError as err:
-                # The error might include some important information about what exactly changed.
+                # The error might include some important
+                # information about what exactly changed.
                 _LOGGER.error("The powerwall api has changed: %s", str(err))
                 persistent_notification.async_create(
                     hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
@@ -302,6 +302,14 @@ async def get_backup_reserve_percentage(power_wall: Powerwall) -> float | None:
         return None
 
 
+async def get_operation_mode(power_wall: Powerwall) -> OperationMode | None:
+    """Return the operation mode."""
+    try:
+        return await power_wall.get_operation_mode()
+    except MissingAttributeError:
+        return None
+
+
 async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     """Process and update powerwall data."""
     # We await each call individually since the powerwall
@@ -309,6 +317,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     # as its faster than establishing a new connection when
     # run concurrently.
     backup_reserve = await get_backup_reserve_percentage(power_wall)
+    operation_mode = await get_operation_mode(power_wall)
     charge = await power_wall.get_charge()
     site_master = await power_wall.get_sitemaster()
     meters = await power_wall.get_meters()
@@ -322,6 +331,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         grid_services_active=grid_services_active,
         grid_status=grid_status,
         backup_reserve=backup_reserve,
+        operation_mode=operation_mode,
         batteries={battery.serial_number: battery for battery in batteries},
     )
 

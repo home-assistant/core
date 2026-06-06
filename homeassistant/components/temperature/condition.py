@@ -1,7 +1,5 @@
 """Provides conditions for temperature."""
 
-from __future__ import annotations
-
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE as CLIMATE_ATTR_CURRENT_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -47,6 +45,21 @@ class TemperatureCondition(EntityNumericalConditionWithUnitBase):
     _base_unit = UnitOfTemperature.CELSIUS
     _domain_specs = TEMPERATURE_DOMAIN_SPECS
     _unit_converter = TemperatureConverter
+
+    def _should_include(self, state: State) -> bool:
+        """Skip attribute-source entities that lack the temperature attribute.
+
+        Mirrors the temperature trigger: for climate / water_heater /
+        weather (attribute-based), the entity is filtered when the source
+        attribute is absent; sensor entities (state-value-based) fall
+        through to the base impl.
+        """
+        if not super()._should_include(state):
+            return False
+        domain_spec = self._domain_specs[state.domain]
+        if domain_spec.value_source is None:
+            return True
+        return state.attributes.get(domain_spec.value_source) is not None
 
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the temperature unit of an entity from its state."""

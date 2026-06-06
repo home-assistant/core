@@ -1,7 +1,5 @@
 """Component to allow setting text as platforms."""
 
-from __future__ import annotations
-
 from dataclasses import asdict, dataclass
 from datetime import timedelta
 from enum import StrEnum
@@ -13,7 +11,7 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MAX_LENGTH_STATE_STATE
+from homeassistant.const import ATTR_MODE, MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -25,7 +23,6 @@ from homeassistant.util.hass_dict import HassKey
 from .const import (
     ATTR_MAX,
     ATTR_MIN,
-    ATTR_MODE,
     ATTR_PATTERN,
     ATTR_VALUE,
     DOMAIN,
@@ -72,11 +69,13 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
         )
     if len(value) > entity.max:
         raise ValueError(
-            f"Value {value} for {entity.entity_id} is too long (maximum length {entity.max})"
+            f"Value {value} for {entity.entity_id}"
+            f" is too long (maximum length {entity.max})"
         )
     if entity.pattern_cmp and not entity.pattern_cmp.match(value):
         raise ValueError(
-            f"Value {value} for {entity.entity_id} doesn't match pattern {entity.pattern}"
+            f"Value {value} for {entity.entity_id}"
+            f" doesn't match pattern {entity.pattern}"
         )
     await entity.async_set_value(value)
 

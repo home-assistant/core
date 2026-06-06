@@ -1,7 +1,5 @@
 """Support for ADS binary sensors."""
 
-from __future__ import annotations
-
 import pyads
 import voluptuous as vol
 

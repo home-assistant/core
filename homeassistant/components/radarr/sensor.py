@@ -1,7 +1,5 @@
 """Support for Radarr."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 from datetime import UTC, datetime
@@ -47,7 +45,7 @@ def get_modified_description(
 
 
 @dataclasses.dataclass(frozen=True)
-class RadarrSensorEntityDescriptionMixIn(Generic[T]):
+class RadarrSensorEntityDescriptionMixIn(Generic[T]):  # noqa: UP046
     """Mixin for required keys."""
 
     value_fn: Callable[[T, str], str | int | datetime]
@@ -55,7 +53,9 @@ class RadarrSensorEntityDescriptionMixIn(Generic[T]):
 
 @dataclasses.dataclass(frozen=True)
 class RadarrSensorEntityDescription(
-    SensorEntityDescription, RadarrSensorEntityDescriptionMixIn[T], Generic[T]
+    SensorEntityDescription,
+    RadarrSensorEntityDescriptionMixIn[T],
+    Generic[T],  # noqa: UP046
 ):
     """Class to describe a Radarr sensor."""
 

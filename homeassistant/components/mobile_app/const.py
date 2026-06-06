@@ -27,8 +27,6 @@ ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
 ATTR_APP_VERSION = "app_version"
 ATTR_DEVICE_NAME = "device_name"
-ATTR_MANUFACTURER = "manufacturer"
-ATTR_MODEL = "model"
 ATTR_NO_LEGACY_ENCRYPTION = "no_legacy_encryption"
 ATTR_OS_NAME = "os_name"
 ATTR_OS_VERSION = "os_version"
@@ -82,6 +80,7 @@ ATTR_SENSOR_UOM = "unit_of_measurement"
 
 SIGNAL_SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
+SIGNAL_RECORD_NOTIFICATION = f"{DOMAIN}_record_notification"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
 
@@ -89,8 +88,9 @@ SCHEMA_APP_DATA = vol.Schema(
     {
         vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
         vol.Inclusive(ATTR_PUSH_URL, "push_cloud"): cv.url,
-        # Set to True to indicate that this registration will connect via websocket channel
-        # to receive push notifications.
+        # Set to True to indicate that this registration
+        # will connect via websocket channel to receive
+        # push notifications.
         vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,

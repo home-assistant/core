@@ -1,9 +1,9 @@
 """Button platform for Indevolt integration."""
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Final
+
+from indevolt_api import IndevoltRealtimeAction
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ PARALLEL_UPDATES = 0
 class IndevoltButtonEntityDescription(ButtonEntityDescription):
     """Custom entity description class for Indevolt button entities."""
 
-    generation: list[int] = field(default_factory=lambda: [1, 2])
+    generation: tuple[int, ...] = (1, 2)
 
 
 BUTTONS: Final = (
@@ -66,5 +66,4 @@ class IndevoltButtonEntity(IndevoltEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-
-        await self.coordinator.async_execute_realtime_action([0, 0, 0])
+        await self.coordinator.async_realtime_action(IndevoltRealtimeAction.STOP)

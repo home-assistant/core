@@ -112,9 +112,8 @@
       }),
     }),
     'rate_limit': dict({
-      'per-day': '20000',
-      'remaining': '15211',
-      'window-seconds': '86400',
+      'per-day': 1000,
+      'remaining': 100,
     }),
   })
 # ---

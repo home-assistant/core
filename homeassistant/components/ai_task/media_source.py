@@ -1,7 +1,5 @@
 """Expose images as media sources."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from homeassistant.components.media_source import MediaSource, local_source
@@ -25,7 +23,7 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     hass.data[DATA_MEDIA_SOURCE] = source = local_source.LocalSource(
         hass,
         DOMAIN,
-        "AI Generated Images",
+        "AI generated images",
         {IMAGE_DIR: str(media_dir)},
         f"/{DOMAIN}",
     )

@@ -1,7 +1,5 @@
 """Initialization of ATAG One climate platform."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -77,7 +75,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
 
     @property
     def preset_mode(self) -> str | None:
-        """Return the current preset mode, e.g., auto, manual, fireplace, extend, etc."""
+        """Return the current preset mode, e.g., auto, manual."""
         preset = self.coordinator.atag.climate.preset_mode
         return PRESET_INVERTED.get(preset)
 
