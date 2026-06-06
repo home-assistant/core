@@ -115,7 +115,6 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     """Representation of a Switchbot standing fan light."""
 
     _device: switchbot.SwitchbotStandingFan
-    _attr_has_entity_name = False
     _attr_translation_key = "standing_fan_light"
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_color_mode = ColorMode.ONOFF
@@ -177,7 +176,7 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         retval = {
-            **super().extra_state_attributes,
+            **(super().extra_state_attributes or {}),
             "effect_preference": self._attr_effect_preference,
         }
         _LOGGER.debug("Extra state attributes %s, address %s", retval, self._address)
