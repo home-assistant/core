@@ -11,5 +11,10 @@
         "default": "mdi:molecule"
       }
     }
+  },
+  "services": {
+    "get_forecast": {
+      "service": "mdi:clock-end"
+    }
   }
 }

@@ -351,18 +351,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "indevolt",
-        "macaddress": "1C784B*",
-    },
-    {
-        "domain": "indevolt",
-        "macaddress": "34EAE7*",
-    },
-    {
-        "domain": "indevolt",
-        "macaddress": "7C3E82*",
-    },
-    {
-        "domain": "indevolt",
         "registered_devices": True,
     },
     {
@@ -454,6 +442,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "lyric",
         "hostname": "lyric-*",
         "macaddress": "00D02D*",
+    },
+    {
+        "domain": "mitsubishi_comfort",
+        "registered_devices": True,
     },
     {
         "domain": "motion_blinds",
@@ -1428,6 +1420,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "B87424*",
     },
     {
+        "domain": "vistapool",
+        "hostname": "sugarwifi",
+    },
+    {
         "domain": "withings",
         "macaddress": "0024E4*",
     },
@@ -1475,5 +1471,9 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "yeelight",
         "hostname": "yeelink-*",
+    },
+    {
+        "domain": "yoto",
+        "hostname": "yoto-*",
     },
 ]

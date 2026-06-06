@@ -7,8 +7,6 @@ CONF_AUTH_METHOD = "auth_method"
 CONF_REALM = "realm"
 CONF_NODE = "node"
 CONF_NODES = "nodes"
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_TOKEN = "token"
 CONF_TOKEN_ID = "token_id"
 CONF_TOKEN_SECRET = "token_value"
 CONF_VMS = "vms"
@@ -31,6 +29,7 @@ AUTH_METHODS = [AUTH_PAM, AUTH_PVE, AUTH_OTHER]
 
 DEFAULT_PORT = 8006
 DEFAULT_REALM = AUTH_PAM
+DEFAULT_TIMEOUT = 30
 DEFAULT_VERIFY_SSL = True
 TYPE_VM = 0
 TYPE_CONTAINER = 1

@@ -38,6 +38,9 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity_platform import (
+    async_create_platform_config_not_supported_issue,
+)
 from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
@@ -379,8 +382,8 @@ async def async_extract_config(
         if platform.type == PLATFORM_TYPE_LEGACY:
             legacy.append(platform)
         else:
-            raise ValueError(
-                f"Unable to determine type for {platform.name}: {platform.type}"
+            async_create_platform_config_not_supported_issue(
+                hass, platform.name, DOMAIN
             )
 
     return legacy
