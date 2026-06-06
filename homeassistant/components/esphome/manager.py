@@ -1,11 +1,13 @@
 """Manager for esphome devices."""
 
+import asyncio
 import base64
+import contextlib
 from functools import partial
 import logging
 import secrets
 import struct
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, Final, NamedTuple
 
 from aioesphomeapi import (
     APIClient,
@@ -105,6 +107,11 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
+
+# How long to wait at startup for a Bluetooth proxy to connect and register its
+# scanner before letting setup finish, so it is not a late joiner that misses the
+# first active scan window.
+STARTUP_SCANNER_WAIT: Final = 3.0
 
 LOG_LEVEL_TO_LOGGER = {
     LogLevel.LOG_LEVEL_NONE: logging.DEBUG,
@@ -677,6 +684,9 @@ class ESPHomeManager:
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
+        # Release any startup wait now that the scanner (if any) is registered.
+        entry_data.first_connect_done.set()
+
         if device_info.voice_assistant_feature_flags_compat(api_version) and (
             Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
         ):
@@ -987,6 +997,18 @@ class ESPHomeManager:
                 )
 
         await reconnect_logic.start()
+
+        # If the cached device info says this is a Bluetooth proxy, wait briefly for
+        # the connection so the scanner is registered before setup finishes. Otherwise
+        # it would be a late joiner that misses the first active scan window at startup.
+        if (
+            device_info := entry_data.device_info
+        ) is not None and device_info.bluetooth_proxy_feature_flags_compat(
+            entry_data.api_version
+        ):
+            with contextlib.suppress(TimeoutError):
+                async with asyncio.timeout(STARTUP_SCANNER_WAIT):
+                    await entry_data.first_connect_done.wait()
 
 
 @callback
