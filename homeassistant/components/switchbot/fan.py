@@ -43,7 +43,7 @@ class SwitchBotFanEntity(SwitchbotEntity, FanEntity, RestoreEntity):
         | FanEntityFeature.TURN_ON
     )
     _attr_preset_modes = FanMode.get_modes()
-    _attr_translation_key = "standing_fan"
+    _attr_translation_key = "fan"
     _attr_name = None
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
