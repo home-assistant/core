@@ -7,6 +7,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
+from aioamazondevices.structures import AmazonListInfo, AmazonListType
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -120,6 +121,46 @@ async def test_sync_history_state_error(
 ) -> None:
     """Test sync_history_state error handling."""
     mock_amazon_devices_client.sync_history_state.side_effect = side_effect
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is expected_state
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            CannotAuthenticate,
+            ConfigEntryState.SETUP_ERROR,
+            id="cannot_authenticate",
+        ),
+        pytest.param(
+            CannotConnect,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_connect",
+        ),
+        pytest.param(
+            CannotRetrieveData,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_retrieve_data",
+        ),
+    ],
+)
+async def test_sync_todo_list_items_error(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test setup fails when syncing todo list items raises an error."""
+    mock_amazon_devices_client.get_todo_list_items.side_effect = side_effect
+    mock_amazon_devices_client.todo_lists = [
+        AmazonListInfo(id="shopping_list_id", name=None, list_type=AmazonListType.SHOP)
+    ]
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

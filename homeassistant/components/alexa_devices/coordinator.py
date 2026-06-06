@@ -176,10 +176,29 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     async def sync_todo_list_items(self) -> None:
         """Sync todo items. Only used for initial sync."""
-        for todo_list in self.api.todo_lists:
-            self._todo_list_items[todo_list.id] = await self.api.get_todo_list_items(
-                todo_list.id
-            )
+        try:
+            for todo_list in self.api.todo_lists:
+                self._todo_list_items[
+                    todo_list.id
+                ] = await self.api.get_todo_list_items(todo_list.id)
+        except CannotAuthenticate as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except CannotConnect as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect_with_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except CannotRetrieveData as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_data_with_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
     async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
         """Handle changes on To-Do lists."""
