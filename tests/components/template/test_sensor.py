@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor, template
+from homeassistant.components.template import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -1226,7 +1227,7 @@ async def test_numeric_trigger_entity_set_unknown(
     """Test trigger entity state parsing with numeric sensors."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {
@@ -1264,7 +1265,7 @@ async def test_trigger_attribute_order(
     """Test trigger entity attributes order."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {
@@ -1347,7 +1348,7 @@ async def test_entity_last_reset_total_increasing(
     with patch("homeassistant.util.dt.now", return_value=now):
         assert await async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": [
                     {

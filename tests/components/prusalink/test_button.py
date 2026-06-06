@@ -6,6 +6,7 @@ from unittest.mock import patch
 from pyprusalink.types import Conflict
 import pytest
 
+from homeassistant.components.prusalink import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -76,7 +77,7 @@ async def test_button_pause_cancel(
     method: str,
 ) -> None:
     """Test cancel and pause buttons in PRINTING state."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await press_button_and_verify(f"button.{object_id}", method)
 
 
@@ -97,7 +98,7 @@ async def test_button_resume_cancel(
     method: str,
 ) -> None:
     """Test cancel and resume buttons in PAUSED state."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await press_button_and_verify(f"button.{object_id}", method)
 
 
@@ -109,7 +110,7 @@ async def test_button_continue(
     press_button_and_verify,
 ) -> None:
     """Test continue button is enabled in ATTENTION state and calls continue_job."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await press_button_and_verify(
         "button.workshop_mock_title_continue_job", "continue_job"
     )
@@ -123,7 +124,7 @@ async def test_button_continue_unavailable_when_printing(
     mock_get_status_printing,
 ) -> None:
     """Continue button is unavailable when printer is not in ATTENTION state."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     state = hass.states.get("button.workshop_mock_title_continue_job")
     assert state is not None
     assert state.state == "unavailable"

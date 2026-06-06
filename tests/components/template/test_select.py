@@ -123,7 +123,7 @@ async def test_multiple_configs(hass: HomeAssistant) -> None:
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "select": [

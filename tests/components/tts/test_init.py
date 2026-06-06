@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
+from homeassistant.components.tts import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -1701,7 +1702,7 @@ async def test_ws_list_engines_deprecated(
     mock_integration(hass, MockModule(domain="test_2"))
     mock_platform(hass, "test_2.tts", MockTTS(mock_provider_2))
     await async_setup_component(
-        hass, "tts", {"tts": [{"platform": "test"}, {"platform": "test_2"}]}
+        hass, DOMAIN, {"tts": [{"platform": "test"}, {"platform": "test_2"}]}
     )
     await mock_config_entry_setup(hass, mock_tts_entity)
 

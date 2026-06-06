@@ -113,7 +113,7 @@ async def mock_setup(
         TEST_DOMAIN,
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
-    assert await async_setup_component(hass, "stt", {"stt": {"platform": TEST_DOMAIN}})
+    assert await async_setup_component(hass, DOMAIN, {"stt": {"platform": TEST_DOMAIN}})
     await hass.async_block_till_done()
 
 
@@ -460,7 +460,7 @@ async def test_ws_list_engines(
 
 async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test async_default_engine."""
-    assert await async_setup_component(hass, "stt", {"stt": {}})
+    assert await async_setup_component(hass, DOMAIN, {"stt": {}})
     await hass.async_block_till_done()
 
     assert async_default_engine(hass) is None
@@ -478,7 +478,7 @@ async def test_default_engine(
         TEST_DOMAIN,
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
-    assert await async_setup_component(hass, "stt", {"stt": {"platform": TEST_DOMAIN}})
+    assert await async_setup_component(hass, DOMAIN, {"stt": {"platform": TEST_DOMAIN}})
     await hass.async_block_till_done()
 
     assert async_default_engine(hass) == TEST_DOMAIN
@@ -583,7 +583,7 @@ async def test_get_engine_legacy(
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
     assert await async_setup_component(
-        hass, "stt", {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
+        hass, DOMAIN, {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
     )
     await hass.async_block_till_done()
 

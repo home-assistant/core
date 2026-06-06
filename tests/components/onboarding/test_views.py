@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant.components import onboarding
-from homeassistant.components.onboarding import const, views
+from homeassistant.components.onboarding import DOMAIN, const, views
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
@@ -110,7 +110,7 @@ async def test_onboarding_progress(
     """Test fetching progress."""
     mock_storage(hass_storage, {"done": ["hello"]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -134,7 +134,7 @@ async def test_onboarding_user_already_done(
     mock_storage(hass_storage, {"done": [views.STEP_USER]})
 
     with patch.object(onboarding, "STEPS", ["hello", "world"]):
-        assert await async_setup_component(hass, "onboarding", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -165,7 +165,7 @@ async def test_onboarding_user(
     area_registry.async_create("Living Room")
 
     assert await async_setup_component(hass, "person", {})
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     cur_users = len(await hass.auth.async_get_users())
@@ -228,7 +228,7 @@ async def test_onboarding_user_invalid_name(
     """Test not providing name."""
     mock_storage(hass_storage, {"done": []})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -254,7 +254,7 @@ async def test_onboarding_user_race(
     """Test race condition on creating new user."""
     mock_storage(hass_storage, {"done": ["hello"]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -294,7 +294,7 @@ async def test_onboarding_integration(
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -338,7 +338,7 @@ async def test_onboarding_integration_missing_credential(
     """Test that we fail integration step if user is missing credentials."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
@@ -362,7 +362,7 @@ async def test_onboarding_integration_invalid_redirect_uri(
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -396,7 +396,7 @@ async def test_onboarding_integration_requires_auth(
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -417,7 +417,7 @@ async def test_onboarding_core_sets_up_met(
     """Test finishing the core step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -438,7 +438,7 @@ async def test_onboarding_core_sets_up_shopping_list(
     """Test finishing the core step set up the shopping list."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -459,7 +459,7 @@ async def test_onboarding_core_sets_up_google_translate(
     """Test finishing the core step sets up google translate."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -480,7 +480,7 @@ async def test_onboarding_core_sets_up_radio_browser(
     """Test finishing the core step set up the radio browser."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -502,7 +502,7 @@ async def test_onboarding_core_no_rpi_power(
     """Test that the core step do not set up rpi_power on non RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -527,7 +527,7 @@ async def test_onboarding_core_ensures_analytics_loaded(
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
     assert "analytics" not in hass.config.components
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -548,7 +548,7 @@ async def test_onboarding_analytics(
     """Test finishing analytics step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -571,7 +571,7 @@ async def test_onboarding_installation_type(
     """Test returning installation type during onboarding."""
     mock_storage(hass_storage, {"done": []})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -605,7 +605,7 @@ async def test_onboarding_view_after_done(
     """Test raising after onboarding."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -623,7 +623,7 @@ async def test_complete_onboarding(
     onboarding.async_add_listener(hass, listener_1)
     listener_1.assert_not_called()
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     listener_2 = Mock()
@@ -693,7 +693,7 @@ async def test_wait_integration(
     """Test we can get wait for an integration to load."""
     mock_storage(hass_storage, {"done": []})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -712,7 +712,7 @@ async def test_wait_integration_startup(
     """Test we can get wait for an integration to load during startup."""
     mock_storage(hass_storage, {"done": []})
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     client = await hass_client()
 
@@ -767,7 +767,7 @@ async def test_not_setup_platform_if_onboarded(
     assert await async_setup_component(hass, "test", {})
     await hass.async_block_till_done()
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert len(platform_mock.async_setup_views.mock_calls) == 0
@@ -782,7 +782,7 @@ async def test_setup_platform_if_not_onboarded(
     assert await async_setup_component(hass, "test", {})
     await hass.async_block_till_done()
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     platform_mock.async_setup_views.assert_awaited_once_with(hass, {"done": []})
@@ -805,7 +805,7 @@ async def test_bad_platform(
     assert await async_setup_component(hass, "test", {})
     await hass.async_block_till_done()
 
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert platform_mock.mock_calls == []

@@ -141,7 +141,7 @@ async def test_temperature_conversion(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -162,7 +162,7 @@ async def test_temperature_conversion_wrong_device_class(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Check compatible unit is applied
@@ -189,7 +189,7 @@ async def test_ambiguous_unit_of_measurement_compat(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Check temperature is not converted
@@ -218,7 +218,7 @@ async def test_deprecated_last_reset(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
@@ -263,7 +263,7 @@ async def test_datetime_conversion(
     ]
     setup_test_component_platform(hass, sensor.DOMAIN, entities)
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entities[0].entity_id)
@@ -296,7 +296,7 @@ async def test_uptime_device_class_auto_normalizes_drift(
     entity._attr_uptime_drift_tolerance = drift_tolerance
     setup_test_component_platform(hass, sensor.DOMAIN, [entity])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(entity.entity_id))
@@ -350,7 +350,7 @@ async def test_a_sensor_with_a_non_numeric_device_class(
     ]
     setup_test_component_platform(hass, sensor.DOMAIN, entities)
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entities[0].entity_id)
@@ -380,7 +380,7 @@ async def test_deprecated_datetime_str(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
@@ -402,7 +402,7 @@ async def test_reject_timezoneless_datetime_str(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
@@ -500,7 +500,7 @@ async def test_restore_sensor_save_state(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Trigger saving state
@@ -528,7 +528,7 @@ async def test_restore_sensor_save_state_frozen_time_datetime(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Trigger saving state
@@ -556,7 +556,7 @@ async def test_restore_sensor_save_state_frozen_time_date(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Trigger saving state
@@ -622,7 +622,7 @@ async def test_restore_sensor_restore_state(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert hass.states.get(entity0.entity_id)
@@ -656,7 +656,7 @@ async def test_translated_unit(
         setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
         assert await async_setup_component(
-            hass, "sensor", {"sensor": {"platform": "test"}}
+            hass, DOMAIN, {"sensor": {"platform": "test"}}
         )
         await hass.async_block_till_done()
 
@@ -690,7 +690,7 @@ async def test_translated_unit_with_native_unit_raises(
         setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
         assert await async_setup_component(
-            hass, "sensor", {"sensor": {"platform": "test"}}
+            hass, DOMAIN, {"sensor": {"platform": "test"}}
         )
         await hass.async_block_till_done()
         # Setup fails so entity_id is None
@@ -728,7 +728,7 @@ async def test_unit_translation_key_without_platform_raises(
         setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
         assert await async_setup_component(
-            hass, "sensor", {"sensor": {"platform": "test"}}
+            hass, DOMAIN, {"sensor": {"platform": "test"}}
         )
         await hass.async_block_till_done()
 
@@ -961,7 +961,7 @@ async def test_custom_unit(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     entity_id = entity0.entity_id
@@ -1256,7 +1256,7 @@ async def test_custom_unit_change(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -1392,7 +1392,7 @@ async def test_unit_conversion_priority(
         ],
     )
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Registered entity -> Follow automatic unit conversion
@@ -1554,7 +1554,7 @@ async def test_unit_conversion_priority_precision(
         ],
     )
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Registered entity -> Follow automatic unit conversion
@@ -1716,7 +1716,7 @@ async def test_unit_conversion_priority_suggested_unit_change(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0, entity1])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Registered entity -> Follow automatic unit conversion the first
@@ -1814,7 +1814,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0, entity1])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Registered entity -> Follow unit in entity registry
@@ -1915,7 +1915,7 @@ async def test_default_precision(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     entry = entity_registry.async_get(entity0.entity_id)
@@ -1980,7 +1980,7 @@ async def test_suggested_precision_option(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Assert the suggested precision is stored in the registry
@@ -2073,7 +2073,7 @@ async def test_suggested_precision_option_update(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Assert the suggested precision is stored in the registry
@@ -2145,7 +2145,7 @@ async def test_unit_conversion_priority_legacy_conversion_removed(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -2184,7 +2184,7 @@ async def test_value_unknown_in_enumeration(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
@@ -2206,7 +2206,7 @@ async def test_invalid_enumeration_entity_with_device_class(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
@@ -2227,7 +2227,7 @@ async def test_invalid_enumeration_entity_without_device_class(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
@@ -2260,7 +2260,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
@@ -2340,7 +2340,7 @@ async def test_device_classes_with_invalid_unit_of_measurement(
         str(unit) if unit else "no unit of measurement"
         for unit in DEVICE_CLASS_UNITS.get(device_class, set())
     ]
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
@@ -2371,7 +2371,7 @@ async def test_state_classes_with_invalid_unit_of_measurement(
         str(unit) if unit else "no unit of measurement"
         for unit in STATE_CLASS_UNITS.get(state_class, set())
     }
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
@@ -2424,7 +2424,7 @@ async def test_non_numeric_validation_error(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -2469,7 +2469,7 @@ async def test_non_numeric_validation_raise(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -2516,7 +2516,7 @@ async def test_numeric_validation(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -2541,7 +2541,7 @@ async def test_numeric_validation_ignores_custom_device_class(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -2571,7 +2571,7 @@ async def test_device_classes_with_invalid_state_class(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     classes = DEVICE_CLASS_STATE_CLASSES.get(device_class, set())
@@ -2625,7 +2625,7 @@ async def test_numeric_state_expected_helper(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -3015,7 +3015,7 @@ async def test_entity_category_config_raises_error(
     entity0 = MockSensor(name="Test", entity_category=EntityCategory.CONFIG)
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
@@ -3057,7 +3057,7 @@ async def test_suggested_unit_guard_invalid_unit(
         unique_id="invalid",
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity])
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert not hass.states.get("sensor.invalid")
@@ -3119,7 +3119,7 @@ async def test_suggested_unit_guard_valid_unit(
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity])
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Unit of measurement should set to the suggested unit of measurement

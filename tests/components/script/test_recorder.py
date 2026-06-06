@@ -11,6 +11,7 @@ from homeassistant.components.script import (
     ATTR_LAST_TRIGGERED,
     ATTR_MAX,
     ATTR_MODE,
+    DOMAIN,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
@@ -45,7 +46,7 @@ async def test_exclude_attributes(
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
