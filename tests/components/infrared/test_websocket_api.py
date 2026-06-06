@@ -42,14 +42,12 @@ async def test_list_proxies(
             "entity_id": mock_infrared_emitter_entity.entity_id,
             "device_id": None,
             "config_entry_id": None,
-            "name": "Test IR emitter",
             "type": "emitter",
         },
         mock_infrared_receiver_entity.entity_id: {
             "entity_id": mock_infrared_receiver_entity.entity_id,
             "device_id": None,
             "config_entry_id": None,
-            "name": "Test IR receiver",
             "type": "receiver",
         },
     }

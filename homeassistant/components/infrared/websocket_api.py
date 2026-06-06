@@ -39,7 +39,6 @@ def ws_list_proxies(
             "emitter" if isinstance(entity, InfraredEmitterEntity) else "receiver"
         )
         registry_entry = ent_reg.async_get(entity.entity_id)
-        state = hass.states.get(entity.entity_id)
         proxies.append(
             {
                 "entity_id": entity.entity_id,
@@ -47,7 +46,6 @@ def ws_list_proxies(
                 "config_entry_id": (
                     registry_entry.config_entry_id if registry_entry else None
                 ),
-                "name": state.name if state is not None else entity.name,
                 "type": port_type,
             }
         )
