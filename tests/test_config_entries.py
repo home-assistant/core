@@ -303,7 +303,20 @@ async def test_call_async_migrate_entry(
     )
     mock_platform(hass, "comp.config_flow", None)
 
-    with patch("homeassistant.config_entries.support_entry_unload", return_value=True):
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 3
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with (
+        mock_config_flow("comp", TestFlow),
+        patch("homeassistant.config_entries.support_entry_unload", return_value=True),
+    ):
         result = await async_setup_component(hass, "comp", {})
         await hass.async_block_till_done()
     assert result
@@ -337,7 +350,18 @@ async def test_call_async_migrate_entry_failure_false(
     )
     mock_platform(hass, "comp.config_flow", None)
 
-    result = await async_setup_component(hass, "comp", {})
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 3
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await async_setup_component(hass, "comp", {})
     assert result
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
@@ -369,7 +393,18 @@ async def test_call_async_migrate_entry_failure_exception(
     )
     mock_platform(hass, "comp.config_flow", None)
 
-    result = await async_setup_component(hass, "comp", {})
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 3
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await async_setup_component(hass, "comp", {})
     assert result
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
@@ -401,7 +436,18 @@ async def test_call_async_migrate_entry_failure_not_bool(
     )
     mock_platform(hass, "comp.config_flow", None)
 
-    result = await async_setup_component(hass, "comp", {})
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 3
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await async_setup_component(hass, "comp", {})
     assert result
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
@@ -434,6 +480,7 @@ async def test_migrate_from_higher_version_not_supported(
         """Test flow."""
 
         VERSION = 1
+        MINOR_VERSION = 1
 
         async def async_step_user(self, user_input=None):
             """Test user step."""
