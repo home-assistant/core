@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "timeout_connect": "Timeout while communicating with MELCloud Home API",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Email address for your MELCloud Home account.",
+          "password": "Password for your MELCloud Home account."
+        },
+        "description": "Login to MELCloud Home with the email address and password associated with your account."
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error communicating with MELCloud Home API: {error}"
+    },
+    "invalid_auth": {
+      "message": "An error occurred while trying to authenticate: {error}"
+    },
+    "timeout_connect": {
+      "message": "Timeout while communicating with MELCloud Home API: {error}"
+    }
+  }
+}

@@ -1082,6 +1082,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/mediaroom/ @dgomes
 /homeassistant/components/melcloud/ @erwindouna
 /tests/components/melcloud/ @erwindouna
+/homeassistant/components/melcloudhome/ @erwindouna
+/tests/components/melcloudhome/ @erwindouna
 /homeassistant/components/melissa/ @kennedyshead
 /tests/components/melissa/ @kennedyshead
 /homeassistant/components/melnor/ @vanstinator

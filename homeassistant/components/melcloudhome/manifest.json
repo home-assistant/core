@@ -1,0 +1,12 @@
+{
+  "domain": "melcloudhome",
+  "name": "MELCloud Home",
+  "codeowners": ["@erwindouna"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/melcloudhome",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["melcloudhome"],
+  "quality_scale": "bronze",
+  "requirements": ["aiomelcloudhome==0.1.1"]
+}
