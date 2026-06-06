@@ -59,7 +59,6 @@ ATTR_EXTERNAL_URL = "external_url"
 ATTR_INTERNAL_URL = "internal_url"
 ATTR_LOCATION_NAME = "location_name"
 ATTR_INSTALLATION_TYPE = "installation_type"
-ATTR_REQUIRES_API_PASSWORD = "requires_api_password"
 ATTR_UUID = "uuid"
 ATTR_VERSION = "version"
 
