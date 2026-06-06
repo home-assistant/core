@@ -119,6 +119,9 @@
       },
       "ssid": {
         "name": "SSID"
+      },
+      "voltage_installation": {
+        "name": "Installation voltage"
       }
     },
     "switch": {
