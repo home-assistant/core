@@ -1,0 +1,103 @@
+# serializer version: 1
+# name: test_binary_sensors[binary_sensor.garage_charging_session_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.garage_charging_session_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging session active',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Charging session active',
+    'platform': 'keba_p40',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_active',
+    'unique_id': '21900042_session_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.garage_charging_session_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Garage Charging session active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.garage_charging_session_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.garage_vehicle_plugged_in-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.garage_vehicle_plugged_in',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle plugged in',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_icon': None,
+    'original_name': 'Vehicle plugged in',
+    'platform': 'keba_p40',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_plugged',
+    'unique_id': '21900042_vehicle_plugged',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.garage_vehicle_plugged_in-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'plug',
+      'friendly_name': 'Garage Vehicle plugged in',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.garage_vehicle_plugged_in',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
