@@ -791,7 +791,7 @@ crownstone-sse==2.0.5
 crownstone-uart==2.1.0
 
 # homeassistant.components.data_grand_lyon
-data-grand-lyon-ha==0.7.0
+data-grand-lyon-ha==0.8.0
 
 # homeassistant.components.datadog
 datadog==0.52.0
