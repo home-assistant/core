@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 from enum import StrEnum
 from typing import Any
 
@@ -25,7 +26,6 @@ from .entity import Device, NintendoDevice
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
-import logging
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -104,20 +104,19 @@ def _build_daily_attributes(device: Device) -> dict | None:
         if is_today:
             players = (
                 today_summary.get("devicePlayers")  # legacy schema (Switch / Switch Lite)
-                or today_summary.get("players")     # updated schema (Switch 2)
+                or today_summary.get("players")  # updated schema (Switch 2)
                 or []
             )
             for player in players:
                 apps_in_player = (
-                    player.get("playedApps")     # legacy schema
-                    or player.get("playedGames") # updated schema (Switch 2)
+                    player.get("playedApps")  # legacy schema
+                    or player.get("playedGames")  # updated schema (Switch 2)
                     or []
                 )
                 for app_entry in apps_in_player:
-                    app_id = (
-                        app_entry.get("applicationId")
-                        or (app_entry.get("meta") or {}).get("applicationId")
-                    )
+                    app_id = app_entry.get("applicationId") or (
+                        app_entry.get("meta") or {}
+                    ).get("applicationId")
                     if app_id:
                         key = app_id.upper()
                         app_times[key] = max(
@@ -132,7 +131,9 @@ def _build_daily_attributes(device: Device) -> dict | None:
             apps = apps.values()
         for app in apps:
             try:
-                today_time = app_times.get(app.application_id.upper(), 0) if is_today else 0
+                today_time = (
+                    app_times.get(app.application_id.upper(), 0) if is_today else 0
+                )
                 applications.append(
                     {
                         "name": app.name,
@@ -155,8 +156,6 @@ def _build_daily_attributes(device: Device) -> dict | None:
                     device.device_id,
                     exc_info=True,
                 )
-
-        return {"daily": daily, "applications": applications}
     except Exception:  # noqa: BLE001
         _LOGGER.debug(
             "Failed to build daily attributes for device %s",
@@ -164,6 +163,8 @@ def _build_daily_attributes(device: Device) -> dict | None:
             exc_info=True,
         )
         return None
+    else:
+        return {"daily": daily, "applications": applications}
 
 
 DEVICE_SENSOR_DESCRIPTIONS: tuple[
