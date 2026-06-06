@@ -5,9 +5,9 @@ import logging
 from typing import Any
 
 import evohomeasync2 as evo
-from evohomeasync2.schemas import (
-    TccZoneModelType as EvoZoneModelType,
-    TccZoneType as EvoZoneType,
+from evohomeasync2.const import (
+    ZoneModelType as EvoZoneModelType,
+    ZoneType as EvoZoneType,
 )
 from evohomeasync2.typedefs import EvoDayOfWeekDhwT
 

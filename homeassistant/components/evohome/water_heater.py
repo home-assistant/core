@@ -5,8 +5,12 @@ import logging
 from typing import Any
 
 import evohomeasync2 as evo
-from evohomeasync2.const import SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS
-from evohomeasync2.schemas import TccDhwState as EvoDhwState, TccZoneMode as EvoZoneMode
+from evohomeasync2.const import (
+    SZ_STATE_STATUS,
+    SZ_TEMPERATURE_STATUS,
+    DhwState as EvoDhwState,
+    ZoneMode as EvoZoneMode,
+)
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
