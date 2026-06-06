@@ -200,7 +200,7 @@ def get_product_type_event() -> Generator[asyncio.Event]:
 
 
 @pytest.fixture
-def constant_advertisements(request: pytest.FixtureRequest) -> Generator[None]:
+def constant_advertisements() -> Generator[None]:
     """Ensure async_process_advertisements only return a constant list."""
 
     async def _advertisements(
