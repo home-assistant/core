@@ -1037,7 +1037,7 @@ fnv-hash-fast==2.0.3
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==5.0.0
+forecast-solar==5.0.1
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
