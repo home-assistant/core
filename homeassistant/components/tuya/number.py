@@ -434,6 +434,13 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.XFJ: (
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET,
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
+        ),
+    ),
     DeviceCategory.XNYJCN: (
         NumberEntityDescription(
             key=DPCode.BACKUP_RESERVE,

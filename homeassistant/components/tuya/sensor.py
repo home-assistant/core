@@ -1377,6 +1377,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         *BATTERY_SENSORS,
     ),
     DeviceCategory.WXKG: BATTERY_SENSORS,
+    DeviceCategory.XFJ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_INDOOR,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
     DeviceCategory.XNYJCN: (
         TuyaSensorEntityDescription(
             key=DPCode.CURRENT_SOC,
