@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -61,6 +61,20 @@ async def test_setup_entry_unsupported_model(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+async def test_receiver_disconnects_on_hass_stop(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test the receiver is disconnected when Home Assistant stops."""
+    assert init_integration.state is ConfigEntryState.LOADED
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_receiver.async_disconnect.assert_awaited_once()
+
+
 async def test_unload_entry(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
@@ -74,18 +88,19 @@ async def test_unload_entry(
 
 
 @pytest.mark.parametrize(
-    ("serial", "expected_mac_connections"),
+    ("serial_data", "expected_mac_connections"),
     [
-        ("0050c27c76b2", {"00:50:c2:7c:76:b2"}),
-        ("NOT-A-MAC", set()),
+        ({CONF_SERIAL_NUMBER: "0050c27c76b2"}, {"00:50:c2:7c:76:b2"}),
+        ({CONF_SERIAL_NUMBER: "NOT-A-MAC"}, set()),
+        ({}, set()),
     ],
-    ids=["valid_mac", "non_mac_serial"],
+    ids=["valid_mac", "non_mac_serial", "missing_serial"],
 )
+@pytest.mark.usefixtures("mock_receiver")
 async def test_mac_connection_registered_when_serial_is_mac(
     hass: HomeAssistant,
-    mock_receiver: MagicMock,
     device_registry: dr.DeviceRegistry,
-    serial: str,
+    serial_data: dict[str, str],
     expected_mac_connections: set[str],
 ) -> None:
     """Test that the device gets a MAC connection only when serial parses as one."""
@@ -95,9 +110,9 @@ async def test_mac_connection_registered_when_serial_is_mac(
         data={
             CONF_HOST: "127.0.0.1",
             CONF_MODEL: "MP-60",
-            CONF_SERIAL_NUMBER: serial,
+            **serial_data,
         },
-        unique_id=serial,
+        unique_id="0050c27c76b2",
     )
     entry.add_to_hass(hass)
 
@@ -108,7 +123,7 @@ async def test_mac_connection_registered_when_serial_is_mac(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, serial)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "0050c27c76b2")})
     assert device is not None
     mac_connections = {
         value for kind, value in device.connections if kind == dr.CONNECTION_NETWORK_MAC

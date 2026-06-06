@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from lyngdorf.const import LyngdorfModel
 import pytest
@@ -173,8 +173,17 @@ async def test_user_flow_connection_errors_recover(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("friendly_name", "expected_title"),
+    [
+        pytest.param("Living Room", "Living Room", id="custom_name"),
+        pytest.param("mp-60", "mp-60", id="name_matches_model"),
+    ],
+)
 @pytest.mark.usefixtures("mock_find_receiver_model")
-async def test_ssdp_discovery(hass: HomeAssistant) -> None:
+async def test_ssdp_discovery(
+    hass: HomeAssistant, friendly_name: str, expected_title: str
+) -> None:
     """Test successful SSDP discovery flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -184,7 +193,7 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
             ssdp_st="mock_st",
             ssdp_location="http://192.168.1.100/desc.xml",
             upnp={
-                ATTR_UPNP_FRIENDLY_NAME: "Living Room",
+                ATTR_UPNP_FRIENDLY_NAME: friendly_name,
                 ATTR_UPNP_MODEL_NAME: "MP-60",
                 ATTR_UPNP_SERIAL: MOCK_SERIAL,
             },
@@ -199,7 +208,7 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = result["result"]
     assert config_entry.unique_id == MOCK_SERIAL
-    assert config_entry.title == "Living Room"
+    assert config_entry.title == expected_title
     assert config_entry.data[CONF_HOST] == "192.168.1.100"
     assert config_entry.data[CONF_SERIAL_NUMBER] == MOCK_SERIAL
 
@@ -290,7 +299,16 @@ async def test_ssdp_discovery_missing_model(hass: HomeAssistant) -> None:
     assert result["reason"] == "unsupported_model"
 
 
-async def test_ssdp_discovery_no_location(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "ssdp_location",
+    [
+        pytest.param(None, id="no_location"),
+        pytest.param("http:///desc.xml", id="no_hostname"),
+    ],
+)
+async def test_ssdp_discovery_no_host(
+    hass: HomeAssistant, ssdp_location: str | None
+) -> None:
     """Test SSDP discovery aborts when no hostname can be determined."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -298,7 +316,7 @@ async def test_ssdp_discovery_no_location(hass: HomeAssistant) -> None:
         data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
-            ssdp_location=None,
+            ssdp_location=ssdp_location,
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "Living Room",
                 ATTR_UPNP_MODEL_NAME: "MP-60",
@@ -310,26 +328,40 @@ async def test_ssdp_discovery_no_location(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-async def test_ssdp_discovery_connection_failure(hass: HomeAssistant) -> None:
-    """Test SSDP discovery aborts when the device cannot be reached."""
-    with patch(
-        "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model",
-        side_effect=OSError("Connection refused"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_SSDP},
-            data=SsdpServiceInfo(
-                ssdp_usn="mock_usn",
-                ssdp_st="mock_st",
-                ssdp_location="http://192.168.1.100/desc.xml",
-                upnp={
-                    ATTR_UPNP_FRIENDLY_NAME: "Living Room",
-                    ATTR_UPNP_MODEL_NAME: "MP-60",
-                    ATTR_UPNP_SERIAL: MOCK_SERIAL,
-                },
-            ),
-        )
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reason"),
+    [
+        pytest.param(OSError("Connection refused"), "cannot_connect", id="os_error"),
+        pytest.param(
+            TimeoutError("Connection timeout"), "cannot_connect", id="timeout"
+        ),
+        pytest.param(None, "unsupported_model", id="model_not_found"),
+    ],
+)
+async def test_ssdp_discovery_connectivity_check_aborts(
+    hass: HomeAssistant,
+    mock_find_receiver_model: AsyncMock,
+    side_effect: Exception | None,
+    expected_reason: str,
+) -> None:
+    """Test SSDP discovery aborts when the connectivity check fails."""
+    mock_find_receiver_model.side_effect = side_effect
+    mock_find_receiver_model.return_value = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.100/desc.xml",
+            upnp={
+                ATTR_UPNP_FRIENDLY_NAME: "Living Room",
+                ATTR_UPNP_MODEL_NAME: "MP-60",
+                ATTR_UPNP_SERIAL: MOCK_SERIAL,
+            },
+        ),
+    )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == expected_reason

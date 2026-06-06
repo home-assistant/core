@@ -35,6 +35,13 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._host: str | None = None
 
+    @property
+    def _display_name(self) -> str:
+        """Return the name shown to the user during discovery confirmation."""
+        if self._device_model and self._device_model != self._name:
+            return f"{self._device_model} ({self._name})"
+        return self._name or DEFAULT_DEVICE_NAME
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -93,12 +100,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         if not model:
             return self.async_abort(reason="unsupported_model")
 
-        display_name = (
-            f"{self._device_model} ({self._name})"
-            if self._device_model and self._device_model != self._name
-            else self._name or DEFAULT_DEVICE_NAME
-        )
-        self.context["title_placeholders"] = {"name": display_name}
+        self.context["title_placeholders"] = {"name": self._display_name}
 
         return await self.async_step_confirm()
 
@@ -109,15 +111,10 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._create_entry()
 
-        display_name = (
-            f"{self._device_model} ({self._name})"
-            if self._device_model and self._device_model != self._name
-            else self._name or DEFAULT_DEVICE_NAME
-        )
         self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={"name": display_name},
+            description_placeholders={"name": self._display_name},
         )
 
     async def _create_entry(self) -> ConfigFlowResult:
