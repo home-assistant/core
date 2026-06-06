@@ -123,7 +123,7 @@ def main():
     )
     args = parser.parse_args()
 
-    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", args.package):
+    if not re.match(_NAME_MATCH, args.package):
         print(f"[ERROR] Invalid package name format: '{args.package}'", file=sys.stderr)
         sys.exit(1)
 
@@ -159,6 +159,10 @@ def main():
         sys.exit(1)
 
     target_version = args.new_version or latest
+    if not target_version:
+        print("[ERROR] Could not resolve a target version from PyPI.", file=sys.stderr)
+        sys.exit(1)
+
     github_repo = find_github_repo(info)
 
     print("--- RESOLVED DEPENDENCY DETAILS ---")
