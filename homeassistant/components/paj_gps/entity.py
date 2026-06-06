@@ -19,8 +19,8 @@ class PajGpsEntity(CoordinatorEntity[PajGpsCoordinator]):
 
         model = None
         device_models = self.device.device_models
-        if device_models and isinstance(device_models[0], dict):
-            model = device_models[0].get("model")
+        if device_models:
+            model = device_models[0].model
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.user_id}_{device_id}")},
             name=self.device.name or f"PAJ GPS {device_id}",

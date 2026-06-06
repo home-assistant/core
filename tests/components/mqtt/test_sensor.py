@@ -13,7 +13,8 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import mqtt, sensor
+from homeassistant.components import sensor
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -84,7 +85,7 @@ from tests.common import (
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {sensor.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
+    DOMAIN: {sensor.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
 }
 
 
@@ -92,7 +93,7 @@ DEFAULT_CONFIG = {
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -122,7 +123,7 @@ async def test_setting_sensor_value_via_mqtt_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -164,7 +165,7 @@ async def test_setting_enum_sensor_value_via_mqtt_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -200,7 +201,7 @@ async def test_handling_undecoded_sensor_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -363,7 +364,7 @@ async def test_setting_sensor_native_value_handling_via_mqtt_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -420,7 +421,7 @@ async def test_setting_numeric_sensor_native_value_handling_via_mqtt_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -454,7 +455,7 @@ async def test_setting_sensor_value_expires_availability_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -550,7 +551,7 @@ async def expires_helper(hass: HomeAssistant) -> None:
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -582,7 +583,7 @@ async def test_setting_sensor_value_via_mqtt_json_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -617,7 +618,7 @@ async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_st
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_class": "total",
@@ -667,7 +668,7 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_class": "total",
@@ -705,7 +706,7 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -742,7 +743,7 @@ async def test_force_update_disabled(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -865,7 +866,7 @@ async def test_discovery_update_availability(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -887,7 +888,7 @@ async def test_invalid_device_class(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -912,7 +913,7 @@ async def test_invalid_unit_of_measurement(
     )
     # A repair issue was logged for the failing YAML config
     assert len(events) == 1
-    assert events[0].data["domain"] == mqtt.DOMAIN
+    assert events[0].data["domain"] == DOMAIN
     # Assert the sensor is not created
     state = hass.states.get("sensor.test")
     assert state is None
@@ -923,7 +924,7 @@ async def test_invalid_unit_of_measurement(
     [
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -939,7 +940,7 @@ async def test_invalid_unit_of_measurement(
         ),
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -955,7 +956,7 @@ async def test_invalid_unit_of_measurement(
         ),
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -971,7 +972,7 @@ async def test_invalid_unit_of_measurement(
         ),
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -987,7 +988,7 @@ async def test_invalid_unit_of_measurement(
         ),
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -1003,7 +1004,7 @@ async def test_invalid_unit_of_measurement(
         ),
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -1061,7 +1062,7 @@ async def test_device_class_with_equivalent_unit_of_measurement_received(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -1115,7 +1116,7 @@ async def test_equivalent_unit_of_measurement_received_without_device_class(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1191,7 +1192,7 @@ async def test_valid_device_class_and_uom(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -1213,7 +1214,7 @@ async def test_invalid_state_class(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -1240,7 +1241,7 @@ async def test_invalid_state_class_with_unit_of_measurement(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -1254,7 +1255,7 @@ async def test_invalid_state_class_with_unit_of_measurement(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -1268,7 +1269,7 @@ async def test_invalid_state_class_with_unit_of_measurement(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -1294,7 +1295,7 @@ async def test_invalid_options_config(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1402,7 +1403,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1678,7 +1679,7 @@ async def test_entity_category(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -1838,7 +1839,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         sensor.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][sensor.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][sensor.DOMAIN],
         topic,
         value,
         attribute,
@@ -2023,7 +2024,7 @@ async def test_value_incorrect_state_class_config(
     )
     caplog.clear()
 
-    config_payload = hass_config[mqtt.DOMAIN][sensor.DOMAIN][0]
+    config_payload = hass_config[DOMAIN][sensor.DOMAIN][0]
     async_fire_mqtt_message(
         hass, "homeassistant/sensor/bla/config", json.dumps(config_payload)
     )
