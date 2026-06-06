@@ -68,6 +68,7 @@ async def test_user_flow_cannot_connect_oserror(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"device": "/dev/ttyUSB0"}
@@ -91,6 +92,7 @@ async def test_user_flow_cannot_connect_serial_exception(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"device": "/dev/ttyUSB0"}
