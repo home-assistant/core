@@ -17,12 +17,16 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
 from .entity import Device, NintendoDevice
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
+
+import logging
+_LOGGER = logging.getLogger(__name__)
 
 
 class NintendoParentalControlsSensor(StrEnum):
@@ -68,9 +72,9 @@ def _build_daily_attributes(device: Device) -> dict | None:
         if not device.daily_summaries or not isinstance(device.daily_summaries, list):
             return None
 
-        today_str = datetime.now().strftime("%Y-%m-%d")
-        today_summary = device.daily_summaries[0] if device.daily_summaries else None
-        is_today = today_summary and today_summary.get("date") == today_str
+        today_str = dt_util.now().strftime("%Y-%m-%d")
+        today_summary = device.daily_summaries[0]
+        is_today = today_summary.get("date") == today_str
 
         daily = [
             {
@@ -97,7 +101,7 @@ def _build_daily_attributes(device: Device) -> dict | None:
         # Use max() across players because Nintendo reports the same console
         # playtime identically for every player who was active simultaneously.
         app_times: dict[str, int] = {}
-        if is_today and today_summary:
+        if is_today:
             players = (
                 today_summary.get("devicePlayers")  # legacy schema (Switch / Switch Lite)
                 or today_summary.get("players")     # updated schema (Switch 2)
@@ -146,10 +150,19 @@ def _build_daily_attributes(device: Device) -> dict | None:
                     }
                 )
             except Exception:  # noqa: BLE001
-                pass
+                _LOGGER.debug(
+                    "Failed to process application data for device %s",
+                    device.device_id,
+                    exc_info=True,
+                )
 
         return {"daily": daily, "applications": applications}
     except Exception:  # noqa: BLE001
+        _LOGGER.debug(
+            "Failed to build daily attributes for device %s",
+            device.device_id,
+            exc_info=True,
+        )
         return None
 
 
