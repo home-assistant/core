@@ -277,8 +277,8 @@
           "effect": {
             "name": "[%key:component::light::common::field_brightness_step_name%]",
             "state": {
-              "high": "[%key:common::state::high%]",
-              "low": "[%key:common::state::low%]"
+              "level_1": "[%key:common::state::high%]",
+              "level_2": "[%key:common::state::low%]"
             }
           }
         }

@@ -123,11 +123,14 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     _device: switchbot.SwitchbotStandingFan
     _attr_translation_key = "standing_fan_light"
     _attr_name = None
-    _attr_is_on: bool | None = None
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_color_mode = ColorMode.ONOFF
-    _attr_effect_list = [NightLightState.LEVEL_1.name, NightLightState.LEVEL_2.name]
-    _attr_effect = NightLightState.OFF.name
+    _attr_effect_list = [
+        NightLightState.LEVEL_1.name.lower(),
+        NightLightState.LEVEL_2.name.lower(),
+    ]
+    _attr_effect = _attr_effect_list[0]
+    _attr_effect_preference = _attr_effect_list[0]
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the entity."""
@@ -138,19 +141,32 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.warning("Turning on light %s, address %s", kwargs, self._address)
+        next_effect = self._attr_effect_preference
         if ATTR_EFFECT in kwargs:
-            self._attr_effect = kwargs[ATTR_EFFECT]
-        await self._device.set_night_light(NightLightState[self._attr_effect])
+            next_effect = kwargs[ATTR_EFFECT]
+            self._attr_effect_preference = next_effect
+
+        new_state = NightLightState[next_effect.upper()]
+        self._last_run_success = bool(await self._device.set_night_light(new_state))
+
         self._attr_is_on = True
+        self._attr_effect = next_effect
         self.async_write_ha_state()
 
     @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         _LOGGER.debug("Turning off light %s, address %s", kwargs, self._address)
-        await self._device.set_night_light(NightLightState.OFF)
+        self._last_run_success = bool(
+            await self._device.set_night_light(NightLightState.OFF)
+        )
         self._attr_is_on = False
         self.async_write_ha_state()
+
+    # @property
+    # def is_on(self) -> bool | None:
+    #     """Return true if the light is on."""
+    #     return self._device.get_night_light_state() != NightLightState.OFF.value
 
     @property
     def supported_features(self) -> LightEntityFeature:
@@ -165,28 +181,36 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
             "Updating light attribute %s, address %s", night_light_state, self._address
         )
         if night_light_state == NightLightState.OFF:
+            _LOGGER.debug("Light is off, address %s", self._address)
             self._attr_is_on = False
-            self._attr_effect = NightLightState.OFF.name
         else:
+            _LOGGER.debug("Light is on, address %s", self._address)
             self._attr_is_on = True
-            self._attr_effect = night_light_state.name
+            self._attr_effect = night_light_state.name.lower()
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
-        _LOGGER.debug("Getting extra state attributes for %s", self._address)
-        return {**super().extra_state_attributes, "effect": self._attr_effect}
-
-    # @property
-    # def extra_restore_state_data(self) -> ExtraStoredData | None:
-    #     """Return extra data to store when restoring state."""
-    #     _LOGGER.debug("Fancy thingyy")
-    #     return LightExtraStoredData(effect=self._attr_effect)
+        retval = {
+            **super().extra_state_attributes,
+            "effect": self._attr_effect,
+            "effect_preference": self._attr_effect_preference,
+            "silly": "pants",
+        }
+        _LOGGER.debug("Extra state attributes %s, address %s", retval, self._address)
+        return retval
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
+        if last_state is not None:
+            self._attr_effect = last_state.attributes.get(
+                "effect", self._attr_effect_list[0]
+            )
+            self._attr_effect_preference = last_state.attributes.get(
+                "effect_preference", self._attr_effect_list[0]
+            )
         _LOGGER.debug("async_adding_to_hass %s", last_state)
 
 
