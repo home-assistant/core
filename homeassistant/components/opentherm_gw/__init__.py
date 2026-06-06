@@ -161,8 +161,8 @@ class OpenThermGatewayHub:
 
             dev_reg.async_update_device(
                 boiler_device.id,
-                manufacturer=status[OpenThermDataSource.BOILER].get(
-                    gw_vars.DATA_SLAVE_MEMBERID
+                manufacturer=str(
+                    status[OpenThermDataSource.BOILER].get(gw_vars.DATA_SLAVE_MEMBERID)
                 ),
                 model_id=status[OpenThermDataSource.BOILER].get(
                     gw_vars.DATA_SLAVE_PRODUCT_TYPE
@@ -177,8 +177,10 @@ class OpenThermGatewayHub:
 
             dev_reg.async_update_device(
                 thermostat_device.id,
-                manufacturer=status[OpenThermDataSource.THERMOSTAT].get(
-                    gw_vars.DATA_MASTER_MEMBERID
+                manufacturer=str(
+                    status[OpenThermDataSource.THERMOSTAT].get(
+                        gw_vars.DATA_MASTER_MEMBERID
+                    )
                 ),
                 model_id=status[OpenThermDataSource.THERMOSTAT].get(
                     gw_vars.DATA_MASTER_PRODUCT_TYPE
