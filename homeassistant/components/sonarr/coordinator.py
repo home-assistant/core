@@ -133,6 +133,7 @@ class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalen
         super().__init__(hass, config_entry, host_configuration, api_client)
         self.event: CalendarEvent | None = None
         self._events: list[CalendarEvent] = []
+        self._fetched_dates: set[date] = set()
 
     async def _fetch_data(self) -> list[SonarrCalendar]:
         """Fetch the calendar data."""
@@ -161,16 +162,13 @@ class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalen
             for e in self._events
             if (e.start.date() if isinstance(e.start, datetime) else e.start) >= cutoff
         ]
+        self._fetched_dates = {d for d in self._fetched_dates if d >= cutoff}
         _days = (end_date - start_date).days
-        cached_dates = {
-            e.start.date() if isinstance(e.start, datetime) else e.start
-            for e in self._events
-        }
         await asyncio.gather(
             *(
                 self._async_get_events(d)
                 for d in ((start_date + timedelta(days=x)).date() for x in range(_days))
-                if d not in cached_dates
+                if d not in self._fetched_dates
             )
         )
         return self._events
@@ -191,6 +189,7 @@ class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalen
             if (e := _get_calendar_event(ep)) is not None
             and e.summary not in (ev.summary for ev in self._events)
         )
+        self._fetched_dates.add(_date)
 
 
 class CommandsDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[Command]]):

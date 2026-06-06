@@ -79,6 +79,29 @@ async def test_calendar_async_get_events(
     assert mock_sonarr.async_get_calendar.call_count == call_count
 
 
+async def test_calendar_async_get_events_empty_date(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    mock_sonarr: MagicMock,
+) -> None:
+    """Test that empty-result dates are cached and not re-fetched."""
+    freezer.move_to("2014-01-27T00:00:00+00:00")
+    coordinator = init_integration.runtime_data.upcoming
+    start = datetime(2014, 1, 27, tzinfo=UTC)
+    end = start + timedelta(days=1)
+
+    mock_sonarr.async_get_calendar.return_value = []
+    events = await coordinator.async_get_events(start, end)
+    assert len(events) == 0
+    call_count = mock_sonarr.async_get_calendar.call_count
+
+    # Second call for the same range must not re-fetch the empty date.
+    events = await coordinator.async_get_events(start, end)
+    assert len(events) == 0
+    assert mock_sonarr.async_get_calendar.call_count == call_count
+
+
 async def test_calendar_no_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
