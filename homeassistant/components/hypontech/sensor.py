@@ -38,9 +38,6 @@ class HypontechPlantSensorDescription(SensorEntityDescription):
 
     value_fn: Callable[[HypontechPlant], float | None]
     unit_fn: Callable[[HypontechPlant], str] | None = None
-    # Sensors reading real-time monitor data drive a per-plant API call, so
-    # they advertise their plant as a coordinator context (see coordinator).
-    requires_monitor: bool = False
 
 
 OVERVIEW_SENSORS: tuple[HypontechSensorDescription, ...] = (
@@ -80,7 +77,6 @@ PLANT_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.monitor.power_pv,
-        requires_monitor=True,
     ),
     HypontechPlantSensorDescription(
         key="total_power",
@@ -113,7 +109,6 @@ PLANT_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.monitor.power_load,
-        requires_monitor=True,
     ),
     HypontechPlantSensorDescription(
         key="grid_power",
@@ -122,7 +117,6 @@ PLANT_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.monitor.meter_power,
-        requires_monitor=True,
     ),
 )
 
@@ -136,7 +130,6 @@ BATTERY_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         # Positive while the battery is discharging, negative while charging.
         value_fn=lambda c: c.monitor.w_cha,
-        requires_monitor=True,
     ),
     HypontechPlantSensorDescription(
         key="battery_state_of_charge",
@@ -145,7 +138,6 @@ BATTERY_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.monitor.soc,
-        requires_monitor=True,
     ),
 )
 
@@ -186,7 +178,7 @@ class HypontechOverviewSensor(HypontechEntity, SensorEntity):
         description: HypontechSensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, context=coordinator.account_id)
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.account_id}_{description.key}"
 
@@ -215,11 +207,7 @@ class HypontechPlantSensor(HypontechPlantEntity, SensorEntity):
         description: HypontechPlantSensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(
-            coordinator,
-            plant_id,
-            context=plant_id if description.requires_monitor else None,
-        )
+        super().__init__(coordinator, plant_id)
         self.entity_description = description
         self._attr_unique_id = f"{plant_id}_{description.key}"
 
