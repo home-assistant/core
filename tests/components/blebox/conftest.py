@@ -55,14 +55,22 @@ def mock_feature(category, spec, set_spec: bool = True, **kwargs):
     type(feature_mock.product).model = PropertyMock(return_value="some model")
     type(feature_mock.product).brand = PropertyMock(return_value="BleBox")
     type(feature_mock.product).firmware_version = PropertyMock(return_value="1.23")
+    type(feature_mock.product).hardware_version = PropertyMock(return_value="0.1")
+    type(feature_mock.product).available_firmware_version = PropertyMock(
+        return_value="1.0.1"
+    )
+    type(feature_mock.product).api_version = PropertyMock(return_value=20200229)
+    type(feature_mock.product).last_data = PropertyMock(return_value={"state": 1})
     type(feature_mock.product).unique_id = PropertyMock(return_value="abcd0123ef5678")
     type(feature_mock).product = PropertyMock(return_value=product)
     return feature_mock
 
 
-def mock_config(ip_address="172.100.123.4"):
+def mock_config(ip_address="172.100.123.4", unique_id="abcd0123ef5678"):
     """Return a Mock of the HA entity config."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80})
+    return MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80}, unique_id=unique_id
+    )
 
 
 @pytest.fixture(name="config_entry")

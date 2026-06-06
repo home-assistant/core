@@ -19,6 +19,7 @@ from homeassistant.components.owntracks.const import (
     ATTR_TID,
     ATTR_UPDATE_TIMESTAMP,
     ATTR_VELOCITY,
+    DOMAIN,
 )
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
@@ -327,11 +328,11 @@ async def setup_owntracks(
 ) -> None:
     """Set up OwnTracks."""
     MockConfigEntry(
-        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+        domain=DOMAIN, data={"webhook_id": "owntracks_test", "secret": "abcd"}
     ).add_to_hass(hass)
 
     with patch.object(owntracks, "OwnTracksContext", ctx_cls):
-        assert await async_setup_component(hass, "owntracks", {"owntracks": config})
+        assert await async_setup_component(hass, DOMAIN, {"owntracks": config})
         await hass.async_block_till_done()
 
 
@@ -1609,7 +1610,7 @@ async def test_restore_state(
 ) -> None:
     """Test that we can restore state."""
     entry = MockConfigEntry(
-        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+        domain=DOMAIN, data={"webhook_id": "owntracks_test", "secret": "abcd"}
     )
     entry.add_to_hass(hass)
 
@@ -1661,7 +1662,7 @@ async def test_returns_empty_friends(
 ) -> None:
     """Test that an empty list of persons' locations is returned."""
     entry = MockConfigEntry(
-        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+        domain=DOMAIN, data={"webhook_id": "owntracks_test", "secret": "abcd"}
     )
     entry.add_to_hass(hass)
 
@@ -1684,7 +1685,7 @@ async def test_returns_array_friends(
 ) -> None:
     """Test that a list of persons' current locations is returned."""
     otracks = MockConfigEntry(
-        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+        domain=DOMAIN, data={"webhook_id": "owntracks_test", "secret": "abcd"}
     )
     otracks.add_to_hass(hass)
 

@@ -85,7 +85,7 @@ async def test_no_select_found(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert not hass.states.async_entity_ids(SELECT_ENTITY_ID)
+    assert not hass.states.get(SELECT_ENTITY_ID)
 
 
 async def test_error_flipr_api(

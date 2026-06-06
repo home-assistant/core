@@ -26,9 +26,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: This integration does not provide additional actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -66,14 +64,8 @@ rules:
     comment: A config entry represents a single fixed device.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: The only entity is the primary fan, which is enabled by default.
-  entity-translations:
-    status: exempt
-    comment: |
-      The only entity is the primary fan, which uses the device name and has
-      no name of its own to translate.
+  entity-disabled-by-default: done
+  entity-translations: done
   exception-translations: todo
   icon-translations:
     status: exempt

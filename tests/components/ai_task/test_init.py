@@ -10,7 +10,11 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.ai_task import AITaskPreferences
-from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE, DATA_PREFERENCES
+from homeassistant.components.ai_task.const import (
+    DATA_MEDIA_SOURCE,
+    DATA_PREFERENCES,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
@@ -95,7 +99,7 @@ async def test_generate_data_service(
         ),
     ):
         result = await hass.services.async_call(
-            "ai_task",
+            DOMAIN,
             "generate_data",
             {
                 "task_name": "Test Name",
@@ -130,7 +134,7 @@ async def test_generate_data_service_structure_fields(
 ) -> None:
     """Test the entity can generate structured data with a top level object schema."""
     result = await hass.services.async_call(
-        "ai_task",
+        DOMAIN,
         "generate_data",
         {
             "task_name": "Profile Generation",
@@ -280,7 +284,7 @@ async def test_generate_data_service_invalid_structure(
     """Test the entity can generate structured data."""
     with pytest.raises(expected_exception, match=expected_error):
         await hass.services.async_call(
-            "ai_task",
+            DOMAIN,
             "generate_data",
             {
                 "task_name": "Profile Generation",
@@ -322,7 +326,7 @@ async def test_generate_image_service(
         return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
     ) as mock_upload_media:
         result = await hass.services.async_call(
-            "ai_task",
+            DOMAIN,
             "generate_image",
             {
                 "task_name": "Test Image",
@@ -361,7 +365,7 @@ async def test_generate_image_service_no_entity(
         match="No entity_id provided and no preferred entity set",
     ):
         await hass.services.async_call(
-            "ai_task",
+            DOMAIN,
             "generate_image",
             {
                 "task_name": "Test Image",
