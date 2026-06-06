@@ -159,6 +159,8 @@ async def async_setup_entry(
         # The firmware removes deregistered RF/wired nodes automatically.
         # BSRH box sensors that are physically unplugged from the PCB are
         # not deregistered by the firmware and will never appear here as stale.
+        # The BOX node can transiently disappear from the API response, so keep
+        # node 1 to avoid removing the main controller device.
         stale_node_ids = {
             node_id
             for node_id in known_nodes - coordinator.data.nodes.keys()
