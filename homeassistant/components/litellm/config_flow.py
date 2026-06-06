@@ -4,8 +4,7 @@ import logging
 from typing import Any
 from urllib.parse import urlparse
 
-from litellm.proxy.client.exceptions import UnauthorizedError
-import requests
+from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -21,6 +20,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -29,8 +29,12 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
-from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
-from .coordinator import list_proxy_models
+from .const import (
+    CONF_PROMPT,
+    DOMAIN,
+    PLACEHOLDER_API_KEY,
+    RECOMMENDED_CONVERSATION_OPTIONS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,12 +56,23 @@ def _normalize_url(url: str) -> str:
 
 
 async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> list[str]:
-    """Fetch the available model names from the LiteLLM proxy."""
+    """Fetch the available model names from the LiteLLM proxy.
+
+    Uses the OpenAI-compatible `/v1/models` endpoint, which a LiteLLM proxy
+    serves with the configured model names.
+    """
+    client = AsyncOpenAI(
+        base_url=url,
+        api_key=api_key or PLACEHOLDER_API_KEY,
+        http_client=get_async_client(hass),
+    )
     try:
-        return await hass.async_add_executor_job(list_proxy_models, url, api_key)
-    except UnauthorizedError as err:
+        return [
+            model.id async for model in client.with_options(timeout=10.0).models.list()
+        ]
+    except (AuthenticationError, PermissionDeniedError) as err:
         raise InvalidAuth from err
-    except requests.RequestException as err:
+    except OpenAIError as err:
         raise CannotConnect from err
 
 
@@ -168,7 +183,7 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
                 return self.async_create_entry(
                     title=user_input[CONF_MODEL], data=user_input
                 )
-            return self.async_update_reload_and_abort(
+            return self.async_update_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data=user_input,

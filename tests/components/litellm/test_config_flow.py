@@ -1,10 +1,15 @@
 """Test the LiteLLM config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-from litellm.proxy.client.exceptions import UnauthorizedError
+import httpx
+from openai import (
+    APIConnectionError,
+    APITimeoutError,
+    AuthenticationError,
+    PermissionDeniedError,
+)
 import pytest
-import requests
 
 from homeassistant.components.litellm.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.litellm.const import CONF_PROMPT, DOMAIN
@@ -14,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import get_subentry_id, setup_integration
-from .conftest import TEST_URL
+from .conftest import TEST_URL, models_response
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +29,7 @@ CONVERSATION_MODEL_OPTIONS = [
 ]
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_models")
 @pytest.mark.parametrize(
     "url_input",
     ["http://localhost:4000", "http://localhost:4000/", TEST_URL, f"{TEST_URL}/"],
@@ -47,7 +52,7 @@ async def test_full_flow(hass: HomeAssistant, url_input: str) -> None:
     assert result["data"] == {CONF_URL: TEST_URL, CONF_API_KEY: "bla"}
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_models")
 async def test_full_flow_without_api_key(hass: HomeAssistant) -> None:
     """Test the config flow works without an API key."""
     result = await hass.config_entries.flow.async_init(
@@ -95,7 +100,7 @@ async def test_form_errors(
         assert result["errors"] == {"base": error}
 
         mock_get_models.side_effect = None
-        mock_get_models.return_value = ["gpt-3.5-turbo"]
+        mock_get_models.return_value = {"gpt-3.5-turbo": {}}
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_URL: "http://localhost:4000", CONF_API_KEY: "bla"}
@@ -104,30 +109,48 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+def _status_error(
+    error: type[AuthenticationError | PermissionDeniedError], status_code: int
+) -> AuthenticationError | PermissionDeniedError:
+    """Build an OpenAI status error backed by a real httpx response."""
+    return error(
+        response=httpx.Response(
+            status_code=status_code, request=httpx.Request("GET", TEST_URL)
+        ),
+        body=None,
+        message="error",
+    )
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (UnauthorizedError("unauthorized"), "invalid_auth"),
-        (requests.ConnectionError("no route"), "cannot_connect"),
-        (requests.Timeout("timed out"), "cannot_connect"),
+        (_status_error(AuthenticationError, 401), "invalid_auth"),
+        (_status_error(PermissionDeniedError, 403), "invalid_auth"),
+        (APIConnectionError(request=httpx.Request("GET", TEST_URL)), "cannot_connect"),
+        (APITimeoutError(request=httpx.Request("GET", TEST_URL)), "cannot_connect"),
     ],
 )
 async def test_user_step_proxy_errors(
     hass: HomeAssistant,
-    mock_proxy_client: MagicMock,
     side_effect: Exception,
     error: str,
 ) -> None:
-    """Test the user step surfaces errors raised by the proxy client."""
-    mock_proxy_client.return_value.models.list.side_effect = side_effect
+    """Test the user step surfaces errors raised by the OpenAI client."""
+    with patch(
+        "homeassistant.components.litellm.config_flow.AsyncOpenAI"
+    ) as mock_client:
+        mock_client.return_value.with_options.return_value.models.list.side_effect = (
+            side_effect
+        )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_URL: "http://localhost:4000", CONF_API_KEY: "bla"}
-    )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_URL: "http://localhost:4000", CONF_API_KEY: "bla"}
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
@@ -153,8 +176,10 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_models")
 async def test_create_conversation_agent(
     hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creating a conversation agent."""
@@ -189,8 +214,10 @@ async def test_create_conversation_agent(
     }
 
 
+@pytest.mark.usefixtures("mock_models")
 async def test_create_conversation_agent_no_control(
     hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creating a conversation agent without control over the LLM API."""
@@ -219,21 +246,23 @@ async def test_create_conversation_agent_no_control(
 
 async def test_conversation_agent_model_options(
     hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_proxy_client: MagicMock,
 ) -> None:
     """Test the model dropdown is populated from the proxy's model list."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_proxy_client.return_value.models.list.return_value = [
-        {"id": "gpt-4o"},
-        {"id": "gpt-5"},
-    ]
+    with patch(
+        "homeassistant.components.litellm.config_flow.AsyncOpenAI"
+    ) as mock_client:
+        mock_client.return_value.with_options.return_value.models.list.side_effect = (
+            lambda *args, **kwargs: models_response("gpt-4o", "gpt-5")
+        )
 
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "conversation"),
-        context={"source": SOURCE_USER},
-    )
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": SOURCE_USER},
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["data_schema"].schema["model"].config["options"] == [
@@ -252,6 +281,7 @@ async def test_conversation_agent_model_options(
 )
 async def test_subentry_exceptions(
     hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     reason: str,
@@ -273,8 +303,10 @@ async def test_subentry_exceptions(
     assert result["reason"] == reason
 
 
+@pytest.mark.usefixtures("mock_models")
 async def test_reconfigure_conversation_agent(
     hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfiguring a conversation agent."""
@@ -328,8 +360,10 @@ async def test_reconfigure_entry_not_loaded(
         (["assist", "non-existent"], ["assist"], ["assist"]),
     ],
 )
+@pytest.mark.usefixtures("mock_models")
 async def test_reconfigure_conversation_subentry_llm_api_schema(
     hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     current_llm_apis: list[str],
     suggested_llm_apis: list[str],

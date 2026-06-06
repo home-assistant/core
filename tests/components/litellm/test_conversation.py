@@ -4,8 +4,16 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-from litellm.exceptions import APIConnectionError, APIError
-from litellm.types.utils import ChatCompletionMessageToolCall, Function, ModelResponse
+import httpx
+import openai
+from openai.types import CompletionUsage
+from openai.types.chat import (
+    ChatCompletion,
+    ChatCompletionMessage,
+    ChatCompletionMessageFunctionToolCall,
+)
+from openai.types.chat.chat_completion import Choice
+from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,7 +24,6 @@ from homeassistant.helpers import entity_registry as er, intent
 from homeassistant.helpers.llm import ToolInput
 
 from . import setup_integration
-from .conftest import chat_response
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.conversation import MockChatLog, mock_chat_log  # noqa: F401
@@ -35,6 +42,7 @@ def freeze_the_time():
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -52,7 +60,7 @@ async def test_default_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    mock_acompletion: AsyncMock,
+    mock_openai_client: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test that the default prompt works."""
@@ -67,21 +75,31 @@ async def test_default_prompt(
 
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert mock_chat_log.content[1:] == snapshot
-    call = mock_acompletion.call_args_list[0].kwargs
-    assert call["model"] == "openai/gpt-3.5-turbo"
-    assert call["api_base"] == "http://localhost:4000/v1"
+    call = mock_openai_client.chat.completions.create.call_args_list[0][1]
+    assert call["model"] == "gpt-3.5-turbo"
+    assert "extra_headers" not in call
 
 
 async def test_empty_api_response(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_acompletion: AsyncMock,
+    mock_openai_client: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test that an empty choices response raises an error."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_acompletion.return_value = ModelResponse(choices=[], model="gpt-3.5-turbo")
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[],
+            created=1700000000,
+            model="gpt-3.5-turbo",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(completion_tokens=0, prompt_tokens=8, total_tokens=8),
+        )
+    )
 
     result = await conversation.async_converse(
         hass,
@@ -97,14 +115,14 @@ async def test_empty_api_response(
 async def test_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_acompletion: AsyncMock,
+    mock_openai_client: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test that an error talking to the API is handled gracefully."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_acompletion.side_effect = APIError(
-        status_code=500, message="boom", llm_provider="openai", model="gpt-3.5-turbo"
+    mock_openai_client.chat.completions.create = AsyncMock(
+        side_effect=openai.OpenAIError("boom")
     )
 
     result = await conversation.async_converse(
@@ -121,15 +139,17 @@ async def test_api_error(
 async def test_connection_error_availability(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_acompletion: AsyncMock,
+    mock_openai_client: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test a connection error marks the entity unavailable until it recovers."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(AGENT_ID).state != STATE_UNAVAILABLE
 
-    mock_acompletion.side_effect = APIConnectionError(
-        message="boom", llm_provider="openai", model="gpt-3.5-turbo"
+    mock_openai_client.chat.completions.create = AsyncMock(
+        side_effect=openai.APIConnectionError(
+            request=httpx.Request("POST", "http://localhost")
+        )
     )
     result = await conversation.async_converse(
         hass,
@@ -155,7 +175,7 @@ async def test_function_call(
     mock_chat_log: MockChatLog,  # noqa: F811
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    mock_acompletion: AsyncMock,
+    mock_openai_client: AsyncMock,
 ) -> None:
     """Test function call from the assistant."""
     await setup_integration(hass, mock_config_entry)
@@ -203,20 +223,60 @@ async def test_function_call(
         }
     )
 
-    mock_acompletion.side_effect = (
-        chat_response(
-            tool_calls=[
-                ChatCompletionMessageToolCall(
-                    id="call_call_1",
-                    type="function",
-                    function=Function(
-                        arguments='{"param1":"call1"}',
-                        name="test_tool",
+    mock_openai_client.chat.completions.create.side_effect = (
+        ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="tool_calls",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content=None,
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=[
+                            ChatCompletionMessageFunctionToolCall(
+                                id="call_call_1",
+                                function=Function(
+                                    arguments='{"param1":"call1"}',
+                                    name="test_tool",
+                                ),
+                                type="function",
+                            )
+                        ],
                     ),
                 )
             ],
+            created=1700000000,
+            model="gpt-4",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
         ),
-        chat_response(content="I have successfully called the function"),
+        ChatCompletion(
+            id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+            choices=[
+                Choice(
+                    finish_reason="stop",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content="I have successfully called the function",
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=None,
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="gpt-4",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        ),
     )
 
     result = await conversation.async_converse(
@@ -230,5 +290,8 @@ async def test_function_call(
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
-    assert mock_acompletion.call_count == 2
-    assert mock_acompletion.call_args.kwargs["messages"] == snapshot
+    assert mock_openai_client.chat.completions.create.call_count == 2
+    assert (
+        mock_openai_client.chat.completions.create.call_args.kwargs["messages"]
+        == snapshot
+    )
