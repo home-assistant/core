@@ -52,6 +52,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         await self.async_set_unique_id(user_input[CONF_CLOUD_ID])
+        self._abort_if_unique_id_configured()
         errors = {}
 
         try:
@@ -114,6 +115,10 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            existing_entry = await self.async_set_unique_id(user_input[CONF_CLOUD_ID])
+            if existing_entry is not None and existing_entry.entry_id != entry.entry_id:
+                self._abort_if_unique_id_configured()
+
             try:
                 eagle_type, hardware_address = await async_get_type(
                     self.hass,
@@ -132,14 +137,20 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not eagle_type:
                     errors["base"] = "unknown_device_type"
                 elif eagle_type == TYPE_EAGLE_100:
-                    user_input[CONF_TYPE] = eagle_type
-                    user_input[CONF_HARDWARE_ADDRESS] = None
+                    data_updates = {
+                        **user_input,
+                        CONF_TYPE: eagle_type,
+                        CONF_HARDWARE_ADDRESS: None,
+                    }
                 elif eagle_type == TYPE_EAGLE_200:
-                    user_input[CONF_TYPE] = eagle_type
                     if not hardware_address:
                         errors["base"] = "no_meters_connected"
                     else:
-                        user_input[CONF_HARDWARE_ADDRESS] = hardware_address
+                        data_updates = {
+                            **user_input,
+                            CONF_TYPE: eagle_type,
+                            CONF_HARDWARE_ADDRESS: hardware_address,
+                        }
                 else:
                     errors["base"] = "unsupported_device_type"
 
@@ -148,7 +159,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
                         entry,
                         unique_id=user_input[CONF_CLOUD_ID],
                         title=user_input[CONF_CLOUD_ID],
-                        data={**entry.data, **user_input},
+                        data_updates=data_updates,
                     )
 
         return self.async_show_form(

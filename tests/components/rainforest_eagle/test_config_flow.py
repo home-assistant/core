@@ -218,6 +218,42 @@ async def test_form_eagle_100(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test setup aborts when Cloud ID is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="abcdef",
+        unique_id="abcdef",
+        data={
+            CONF_TYPE: TYPE_EAGLE_200,
+            CONF_HOST: "rainforest-eagle.local",
+            CONF_CLOUD_ID: "abcdef",
+            CONF_INSTALL_CODE: "123456",
+            CONF_HARDWARE_ADDRESS: "meter-1",
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+    ) as mock_get_type:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_get_type.assert_not_called()
+
+
 async def test_form_unknown_device_type(hass: HomeAssistant) -> None:
     """Test flow when device type cannot be determined."""
 
@@ -477,6 +513,49 @@ async def test_reconfigure_updates_unique_id(hass: HomeAssistant) -> None:
         CONF_CLOUD_ID: "different",
         CONF_INSTALL_CODE: "654321",
         CONF_HARDWARE_ADDRESS: "meter-2",
+        "extra_data": "preserved",
+    }
+
+
+async def test_reconfigure_duplicate_unique_id(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when Cloud ID belongs to another entry."""
+    entry = _mock_reconfigure_entry(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="different",
+        unique_id="different",
+        data={
+            CONF_TYPE: TYPE_EAGLE_200,
+            CONF_HOST: "192.168.1.57",
+            CONF_CLOUD_ID: "different",
+            CONF_INSTALL_CODE: "111111",
+            CONF_HARDWARE_ADDRESS: "meter-3",
+        },
+    ).add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+    ) as mock_get_type:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "different",
+                CONF_INSTALL_CODE: "654321",
+                CONF_HOST: "192.168.1.56",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_get_type.assert_not_called()
+    assert entry.unique_id == "abcdef"
+    assert entry.data == {
+        CONF_TYPE: TYPE_EAGLE_200,
+        CONF_HOST: "192.168.1.55",
+        CONF_CLOUD_ID: "abcdef",
+        CONF_INSTALL_CODE: "123456",
+        CONF_HARDWARE_ADDRESS: "meter-1",
         "extra_data": "preserved",
     }
 
