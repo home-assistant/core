@@ -488,7 +488,8 @@ class _ScriptRun:
             response = err.response
 
             # Bubble up child conversation response
-            if err.conversation_response not in (None, UNDEFINED):
+            # Bubble up child conversation response
+            if err.conversation_response is not UNDEFINED:
                 self._conversation_response = err.conversation_response
 
         except Exception:
