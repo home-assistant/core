@@ -1,5 +1,8 @@
 """Tests for init platform of Remote Calendar."""
 
+from datetime import timedelta
+
+from freezegun.api import FrozenDateTimeFactory
 from httpx import HTTPError, InvalidURL, Response, TimeoutException
 import pytest
 import respx
@@ -18,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from . import setup_integration
 from .conftest import CALENDAR_NAME, CALENDER_URL, TEST_ENTITY
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @respx.mock
@@ -43,6 +46,39 @@ async def test_load_unload(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@respx.mock
+async def test_setup_fetches_calendar_once(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ics_content: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the calendar is downloaded and parsed only once during setup.
+
+    Regression test for https://github.com/home-assistant/core/issues/148315:
+    adding the entity must not trigger a second coordinator refresh, which would
+    re-download and re-parse the calendar and roughly double the setup time for
+    large calendars.
+    """
+    route = respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    await setup_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert route.call_count == 1
+
+    # Flush any debounced refresh a regression could have scheduled while the
+    # entity was being added; the calendar must still only have been fetched
+    # once.
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert route.call_count == 1
 
 
 @respx.mock
