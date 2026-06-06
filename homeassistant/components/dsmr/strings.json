@@ -26,12 +26,6 @@
         },
         "title": "[%key:common::config_flow::data::device%]"
       },
-      "setup_serial_manual_path": {
-        "data": {
-          "port": "[%key:common::config_flow::data::usb_path%]"
-        },
-        "title": "[%key:common::config_flow::data::path%]"
-      },
       "user": {
         "data": {
           "type": "Connection type"
