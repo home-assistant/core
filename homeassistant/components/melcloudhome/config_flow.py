@@ -60,8 +60,6 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Unexpected error while validating MELCloud Home credentials"
             )
             errors["base"] = "unknown"
-        finally:
-            await auth.close()
 
         return errors
 

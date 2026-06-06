@@ -1,15 +1,15 @@
 """Common fixtures for the MELCloud Home tests."""
 
 from collections.abc import Generator
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+from aiomelcloudhome import UserContext
 import pytest
 
 from homeassistant.components.melcloudhome.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_value_fixture
 
 MOCK_USER_INPUT = {
     CONF_EMAIL: "user@example.com",
@@ -18,18 +18,13 @@ MOCK_USER_INPUT = {
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.melcloudhome.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
-
-
-@pytest.fixture
 def mock_melcloud_client() -> Generator[AsyncMock]:
-    """Mock MELCloud Home client context retrieval for config flow and coordinator."""
-    mocked_get_context = AsyncMock(return_value=SimpleNamespace(buildings=[]))
+    """Mock MELCloud Home client context retrieval."""
+    mocked_get_context = AsyncMock(
+        return_value=UserContext.model_validate(
+            load_json_value_fixture("context.json", DOMAIN)
+        )
+    )
     with (
         patch(
             "homeassistant.components.melcloudhome.config_flow.MELCloudHome.get_context",
@@ -49,6 +44,6 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_USER_INPUT[CONF_EMAIL],
-        data=MOCK_USER_INPUT,
         title=MOCK_USER_INPUT[CONF_EMAIL],
+        data=MOCK_USER_INPUT,
     )
