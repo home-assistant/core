@@ -178,9 +178,7 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
         """Return the state attributes."""
         retval = {
             **super().extra_state_attributes,
-            "effect": self._attr_effect,
             "effect_preference": self._attr_effect_preference,
-            "silly": "pants",
         }
         _LOGGER.debug("Extra state attributes %s, address %s", retval, self._address)
         return retval
