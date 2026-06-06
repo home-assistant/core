@@ -46,7 +46,7 @@ async def test_activate_scene(
     await hass.services.async_call(
         SCENE_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "scene.scene"},
+        {ATTR_ENTITY_ID: "scene.room_scene"},
         blocking=True,
     )
     mock_niko_home_control_connection.scenes[scene_id].activate.assert_called_once()
@@ -69,7 +69,8 @@ async def test_updating(
     assert scene_entities, "No scene entities registered"
     entity_id = scene_entities[0].entity_id
 
-    # Capture current state (could be unknown or a timestamp depending on implementation)
+    # Capture current state (could be unknown or a timestamp
+    # depending on implementation)
     before = hass.states.get(entity_id)
     assert before is not None
 

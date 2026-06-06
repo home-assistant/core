@@ -1,7 +1,5 @@
 """Comet Blue Bluetooth integration."""
 
-from __future__ import annotations
-
 from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
 
@@ -18,6 +16,7 @@ from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SENSOR,
 ]
 

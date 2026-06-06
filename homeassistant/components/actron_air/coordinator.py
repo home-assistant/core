@@ -1,7 +1,5 @@
 """Coordinator for Actron Air integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -78,7 +76,14 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
-        self.status = self.api.state_manager.get_status(self.serial_number)
+        status = self.api.state_manager.get_status(self.serial_number)
+        if status is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": "Status not available"},
+            )
+        self.status = status
         self.last_seen = dt_util.utcnow()
         return self.status
 

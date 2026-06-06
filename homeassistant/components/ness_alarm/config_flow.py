@@ -1,7 +1,5 @@
 """Config flow for Ness Alarm integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from types import MappingProxyType

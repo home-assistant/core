@@ -11,11 +11,10 @@ from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound
 from gardena_bluetooth.parse import Characteristic, Service
-from gardena_bluetooth.scan import (
-    async_get_manufacturer_data as _async_get_manufacturer_data,
-)
 import pytest
 
+from homeassistant.components import bluetooth
+from homeassistant.components.gardena_bluetooth import async_get_product_type
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -102,9 +101,9 @@ async def scan_step(
 def correct_scanners_and_clients_in_library(enable_bluetooth: None) -> Generator[None]:
     """Make sure the correct scanners and clients are used in the library.
 
-    This is needed since home assistant overrides the bleak scanner and client with wrappers,
-    but does so after enable_bluetooth fixture is applied, which causes the library to
-    use the wrong classes.
+    This is needed since home assistant overrides the bleak scanner and
+    client with wrappers, but does so after enable_bluetooth fixture is
+    applied, which causes the library to use the wrong classes.
     """
     with (
         patch("gardena_bluetooth.scan.BleakScanner", new=bleak.BleakScanner),
@@ -178,23 +177,49 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
 
 
 @pytest.fixture
-def manufacturer_request_event() -> Generator[asyncio.Event]:
-    """Track manufacturer data requests with an event."""
+def get_product_type_event() -> Generator[asyncio.Event]:
+    """Track product type data requests with an event."""
 
     event = asyncio.Event()
 
     async def _get(*args, **kwargs):
         event.set()
-        return await _async_get_manufacturer_data(*args, **kwargs)
+        return await async_get_product_type(*args, **kwargs)
 
     with (
         patch(
-            "homeassistant.components.gardena_bluetooth.async_get_manufacturer_data",
+            "homeassistant.components.gardena_bluetooth.async_get_product_type",
             wraps=_get,
         ),
         patch(
-            "homeassistant.components.gardena_bluetooth.config_flow.async_get_manufacturer_data",
+            "homeassistant.components.gardena_bluetooth.config_flow.async_get_product_type",
             wraps=_get,
         ),
     ):
         yield event
+
+
+@pytest.fixture
+def constant_advertisements() -> Generator[None]:
+    """Ensure async_process_advertisements only return a constant list."""
+
+    async def _advertisements(
+        hass: HomeAssistant,
+        callback: bluetooth.models.ProcessAdvertisementCallback,
+        match_dict: bluetooth.match.BluetoothCallbackMatcher,
+        mode: bluetooth.BluetoothScanningMode,
+        timeout: int,
+    ) -> bluetooth.BluetoothServiceInfoBleak:
+
+        last = None
+        for advertisement in bluetooth.async_discovered_service_info(hass):
+            callback(advertisement)
+            last = advertisement
+        if not last:
+            raise TimeoutError
+        return last
+
+    with (
+        patch.object(bluetooth, "async_process_advertisements", new=_advertisements),
+    ):
+        yield

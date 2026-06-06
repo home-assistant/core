@@ -133,8 +133,17 @@
     }
   },
   "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed for UniFi Access at {host}."
+    },
+    "cannot_connect": {
+      "message": "Unable to connect to UniFi Access at {host}."
+    },
     "emergency_failed": {
       "message": "Failed to set emergency status."
+    },
+    "fetch_thumbnail_failed": {
+      "message": "Failed to fetch door thumbnail."
     },
     "invalid_lock_rule_type": {
       "message": "The provided lock rule type is invalid."
@@ -147,6 +156,18 @@
     },
     "unlock_failed": {
       "message": "Failed to unlock the door."
+    },
+    "update_failed_api": {
+      "message": "Error communicating with the UniFi Access API."
+    },
+    "update_failed_auth": {
+      "message": "Authentication failed while updating data."
+    },
+    "update_failed_connection": {
+      "message": "Error connecting to the UniFi Access API."
+    },
+    "update_failed_timeout": {
+      "message": "Timeout communicating with the UniFi Access API."
     }
   },
   "selector": {

@@ -1,7 +1,5 @@
 """Support for Skybeacon temperature/humidity Bluetooth LE sensors."""
 
-from __future__ import annotations
-
 import logging
 import threading
 from uuid import UUID
@@ -17,6 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
+    ATTR_MODEL,
     CONF_MAC,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
@@ -32,7 +31,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = "device"
-ATTR_MODEL = "model"
 
 BLE_TEMP_HANDLE = 0x24
 BLE_TEMP_UUID = "0000ff92-0000-1000-8000-00805f9b34fb"

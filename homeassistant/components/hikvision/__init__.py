@@ -1,7 +1,5 @@
 """The Hikvision integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import logging
 from xml.etree.ElementTree import ParseError

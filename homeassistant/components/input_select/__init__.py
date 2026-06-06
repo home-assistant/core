@@ -1,7 +1,5 @@
 """Support to select an option from a list."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Self, cast
 
@@ -39,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "input_select"
 
 CONF_INITIAL = "initial"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_OPTIONS = "options"
 
 SERVICE_SET_OPTIONS = "set_options"
@@ -243,7 +242,7 @@ class InputSelectStorageCollection(collection.DictStorageCollection):
         return {CONF_ID: item[CONF_ID]} | update_data
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
@@ -299,7 +298,8 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         """Select new option."""
         if option not in self.options:
             raise HomeAssistantError(
-                f"Invalid option: {option} (possible options: {', '.join(self.options)})"
+                f"Invalid option: {option} (possible options:"
+                f" {', '.join(self.options)})"
             )
         self._attr_current_option = option
         self.async_write_ha_state()

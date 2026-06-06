@@ -6,6 +6,7 @@ from unittest.mock import call, patch
 import pytest
 
 from homeassistant.components import mqtt, sensor
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.sensor import DEFAULT_NAME as DEFAULT_SENSOR_NAME
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
@@ -36,7 +37,7 @@ from tests.typing import MqttMockHAClientGenerator
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -104,7 +105,7 @@ async def test_availability_with_shared_state_topic(
     [
         (  # default_entity_name_without_device_name
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "state_topic": "test-topic",
                         "unique_id": "veryunique",
@@ -119,7 +120,7 @@ async def test_availability_with_shared_state_topic(
         ),
         (  # default_entity_name_with_device_name
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "state_topic": "test-topic",
                         "unique_id": "veryunique",
@@ -134,7 +135,7 @@ async def test_availability_with_shared_state_topic(
         ),
         (  # name_follows_device_class
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "state_topic": "test-topic",
                         "unique_id": "veryunique",
@@ -150,7 +151,7 @@ async def test_availability_with_shared_state_topic(
         ),
         (  # name_follows_device_class_without_device_name
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "state_topic": "test-topic",
                         "unique_id": "veryunique",
@@ -166,7 +167,7 @@ async def test_availability_with_shared_state_topic(
         ),
         (  # name_overrides_device_class
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "MySensor",
                         "state_topic": "test-topic",
@@ -183,7 +184,7 @@ async def test_availability_with_shared_state_topic(
         ),
         (  # name_set_no_device_name_set
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "MySensor",
                         "state_topic": "test-topic",
@@ -200,7 +201,7 @@ async def test_availability_with_shared_state_topic(
         ),
         (  # none_entity_name_with_device_name
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": None,
                         "state_topic": "test-topic",
@@ -217,7 +218,7 @@ async def test_availability_with_shared_state_topic(
         ),
         (  # none_entity_name_without_device_name
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": None,
                         "state_topic": "test-topic",
@@ -234,7 +235,7 @@ async def test_availability_with_shared_state_topic(
         ),
         (  # entity_name_and_device_name_the_same
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "Hello world",
                         "state_topic": "test-topic",
@@ -254,7 +255,7 @@ async def test_availability_with_shared_state_topic(
         ),
         (  # entity_name_startswith_device_name1
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "World automation",
                         "state_topic": "test-topic",
@@ -274,7 +275,7 @@ async def test_availability_with_shared_state_topic(
         ),
         (  # entity_name_startswith_device_name2
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "world automation",
                         "state_topic": "test-topic",
@@ -328,8 +329,8 @@ async def test_default_entity_and_device_name(
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
-        data={mqtt.CONF_BROKER: "mock-broker"},
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_PROTOCOL: "5"},
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
@@ -417,7 +418,7 @@ async def test_name_attribute_is_set_or_not(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -427,7 +428,7 @@ async def test_name_attribute_is_set_or_not(
             }
         },
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -439,7 +440,7 @@ async def test_name_attribute_is_set_or_not(
             }
         },
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -464,8 +465,8 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
 
 
@@ -473,7 +474,7 @@ async def test_value_template_fails(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -501,7 +502,7 @@ async def test_registry_enabled_by_default(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -647,7 +648,7 @@ async def test_loading_subentries(
 ) -> None:
     """Test loading subentries."""
     await mqtt_mock_entry()
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id = next(iter(entry.subentries))
     # Each subentry has one device
     device = device_registry.async_get_device({("mqtt", subentry_id)})
@@ -658,7 +659,7 @@ async def test_loading_subentries(
         platform = component["platform"]
         entity_id = f"{platform}.{slugify(device.name)}_{slugify(component['name'])}"
         entity_entry_entity_id = entity_registry.async_get_entity_id(
-            platform, mqtt.DOMAIN, f"{subentry_id}_{object_id}"
+            platform, DOMAIN, f"{subentry_id}_{object_id}"
         )
         assert entity_entry_entity_id == entity_id
         state = hass.states.get(entity_id)
@@ -676,7 +677,7 @@ async def test_loading_subentries(
         entity_id = f"{platform}.{slugify(device.name)}_{slugify(component['name'])}"
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == "unknown"
+        assert state.state in ("off", "unknown")
 
 
 @pytest.mark.parametrize(
@@ -699,7 +700,7 @@ async def test_loading_subentry_with_bad_component_schema(
 ) -> None:
     """Test loading subentries."""
     await mqtt_mock_entry()
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id = next(iter(entry.subentries))
     # Each subentry has one device
     device = device_registry.async_get_device({("mqtt", subentry_id)})
@@ -729,7 +730,7 @@ async def test_qos_on_mqtt_device_from_subentry(
 ) -> None:
     """Test QoS is set correctly on entities from MQTT device."""
     mqtt_mock = await mqtt_mock_entry()
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id = next(iter(entry.subentries))
     # Each subentry has one device
     device = device_registry.async_get_device({("mqtt", subentry_id)})

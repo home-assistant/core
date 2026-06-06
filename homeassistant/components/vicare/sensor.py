@@ -1,7 +1,5 @@
 """Viessmann ViCare sensor device."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
@@ -985,6 +983,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getTemperature(),
+    ),
+    ViCareSensorEntityDescription(
+        key="target_temperature",
+        translation_key="target_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getTargetTemperature(),
     ),
     ViCareSensorEntityDescription(
         key="room_humidity",

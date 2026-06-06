@@ -1,7 +1,5 @@
 """Assist satellite entity for Wyoming integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator
 import io
@@ -34,16 +32,15 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntityDescription,
     AssistSatelliteEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_WIDTH
+from .const import SAMPLE_CHANNELS, SAMPLE_WIDTH
 from .data import WyomingService
 from .devices import SatelliteDevice
 from .entity import WyomingSatelliteEntity
-from .models import DomainDataItem
+from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,11 +65,11 @@ _STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WyomingConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wyoming Assist satellite entity."""
-    domain_data: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    domain_data = config_entry.runtime_data
     assert domain_data.device is not None
 
     async_add_entities(
@@ -97,7 +94,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         hass: HomeAssistant,
         service: WyomingService,
         device: SatelliteDevice,
-        config_entry: ConfigEntry,
+        config_entry: WyomingConfigEntry,
     ) -> None:
         """Initialize an Assist satellite."""
         WyomingSatelliteEntity.__init__(self, device)
@@ -143,7 +140,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
     @property
     def vad_sensitivity_entity_id(self) -> str | None:
-        """Return the entity ID of the VAD sensitivity to use for the next conversation."""
+        """Return the VAD sensitivity entity ID for next conversation."""
         return self.device.get_vad_sensitivity_entity_id(self.hass)
 
     @property
@@ -196,7 +193,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             return
 
         if event.type == assist_pipeline.PipelineEventType.RUN_START:
-            if event.data and (tts_output := event.data["tts_output"]):
+            if event.data and (tts_output := event.data.get("tts_output")):
                 # Get stream token early.
                 # If "tts_start_streaming" is True in INTENT_PROGRESS event, we
                 # can start streaming TTS before the TTS_END event.
@@ -302,7 +299,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 and not self._is_tts_streaming
                 and (stream := tts.async_get_stream(self.hass, tts_output["token"]))
             ):
-                # Send TTS only if we haven't already started streaming it in INTENT_PROGRESS.
+                # Send TTS only if we haven't already started
+                # streaming it in INTENT_PROGRESS.
                 self.config_entry.async_create_background_task(
                     self.hass,
                     self._stream_tts(stream),
@@ -470,7 +468,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
     async def on_restart(self) -> None:
         """Block until pipeline loop will be restarted."""
-        _LOGGER.warning(
+        _LOGGER.debug(
             "Satellite has been disconnected. Reconnecting in %s second(s)",
             _RECONNECT_SECONDS,
         )

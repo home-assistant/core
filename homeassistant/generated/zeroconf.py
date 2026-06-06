@@ -608,6 +608,10 @@ ZEROCONF = {
             "name": "homevolt*",
         },
         {
+            "domain": "indevolt",
+            "name": "igen_fw*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },

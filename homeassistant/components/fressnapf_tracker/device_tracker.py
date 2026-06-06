@@ -1,7 +1,6 @@
 """Device tracker platform for fressnapf_tracker."""
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -60,11 +59,6 @@ class FressnapfTrackerDeviceTracker(FressnapfTrackerBaseEntity, TrackerEntity):
         if self.coordinator.data.position is not None:
             return self.coordinator.data.position.lng
         return None
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.GPS
 
     @property
     def location_accuracy(self) -> float:

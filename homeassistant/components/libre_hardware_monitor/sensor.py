@@ -1,7 +1,5 @@
 """Support for LibreHardwareMonitor Sensor Platform."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

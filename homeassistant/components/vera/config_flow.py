@@ -1,7 +1,5 @@
 """Config flow for Vera."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import re
@@ -13,7 +11,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -22,6 +19,7 @@ from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers.typing import VolDictType
 
+from .common import VeraConfigEntry
 from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
 
 LIST_REGEX = re.compile("[^0-9]+")
@@ -100,7 +98,7 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: VeraConfigEntry) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler()
 

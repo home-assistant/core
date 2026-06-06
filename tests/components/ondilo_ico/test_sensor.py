@@ -37,7 +37,7 @@ async def test_no_ico_for_one_pool(
     ico_details2: dict[str, Any],
     last_measures: list[dict[str, Any]],
 ) -> None:
-    """Test if an ICO is not attached to a pool, then no sensor for that pool is created."""
+    """Test no sensor created when ICO is not attached to a pool."""
     mock_ondilo_client.get_pools.return_value = two_pools
     mock_ondilo_client.get_ICO_details.side_effect = [None, ico_details2]
 
@@ -75,7 +75,7 @@ async def test_error_retrieving_measures(
     pool1: dict[str, Any],
     ico_details1: dict[str, Any],
 ) -> None:
-    """Test if there's an error retrieving measures of ICO, then no sensor is created."""
+    """Test no sensor created on error retrieving ICO measures."""
     mock_ondilo_client.get_pools.return_value = pool1
     mock_ondilo_client.get_ICO_details.return_value = ico_details1
     mock_ondilo_client.get_last_pool_measures.side_effect = OndiloError(400, "error")

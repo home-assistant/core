@@ -1,7 +1,5 @@
 """Config flow for VoIP integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from voip_utils import SIP_PORT
