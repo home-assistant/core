@@ -120,16 +120,16 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_color_mode = ColorMode.ONOFF
     _attr_effect_list = [
-        NightLightState.LEVEL_1.name.lower(),
         NightLightState.LEVEL_2.name.lower(),
+        NightLightState.LEVEL_1.name.lower(),
     ]
-    _attr_effect = _attr_effect_list[0]
+    _attr_effect = None
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.base_unique_id}_light"
-        self._attr_effect_preference = self._attr_effect_list[0]
+        self._attr_effect_preference = self._attr_effect_list[-1]
 
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -155,7 +155,7 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
             await self._device.set_night_light(NightLightState.OFF)
         )
         self._attr_is_on = False
-        self._attr_effect = NightLightState.OFF.name.lower()
+        self._attr_effect = None
         self.async_write_ha_state()
 
     @property
@@ -167,11 +167,11 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         night_light_state = NightLightState(self._device.get_night_light_state())
-        _LOGGER.debug(
-            "Updating light attribute %s, address %s", night_light_state, self._address
-        )
         self._attr_is_on = night_light_state != NightLightState.OFF
-        self._attr_effect = night_light_state.name.lower()
+        if night_light_state == NightLightState.OFF:
+            self._attr_effect = None
+        else:
+            self._attr_effect = night_light_state.name.lower()
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
