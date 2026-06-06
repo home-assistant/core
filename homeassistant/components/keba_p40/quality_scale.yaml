@@ -2,8 +2,7 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: |
-      This integration does not define any additional actions.
+    comment: Integration provides no custom service actions.
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -12,36 +11,38 @@ rules:
   dependency-transparency: done
   docs-actions:
     status: exempt
-    comment: |
-      This integration does not define any additional actions.
+    comment: Integration provides no custom service actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: |
-      Entities of this integration do not explicitly subscribe to events.
+    comment: >-
+      Entities use a DataUpdateCoordinator and do not subscribe to external
+      events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
-
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
-  entity-unavailable: todo
-  integration-owner: todo
-  log-when-unavailable: todo
-  parallel-updates: todo
+  action-exceptions:
+    status: exempt
+    comment: Integration provides no custom service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage: todo
-
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery: todo
   discovery-update-info: todo
@@ -52,18 +53,21 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
+  dynamic-devices:
+    status: exempt
+    comment: One config entry maps to a single wallbox.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
-
+  stale-devices:
+    status: exempt
+    comment: One config entry maps to a single wallbox.
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency: done
+  inject-websession: done
   strict-typing: todo
