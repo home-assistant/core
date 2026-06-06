@@ -14,7 +14,6 @@ from homeassistant.components.lock import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -22,7 +21,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -55,12 +54,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Lock Group platform."""
+    entities = {"entity_id": config[CONF_ENTITIES]}
     async_add_entities(
         [
             LockGroup(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
-                config[CONF_ENTITIES],
+                entities,
             )
         ]
     )
@@ -72,16 +72,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Lock Group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
+    target_config = config_entry.options[CONF_ENTITIES]
     async_add_entities(
         [
             LockGroup(
                 config_entry.entry_id,
                 config_entry.title,
-                entities,
+                target_config,
             )
         ]
     )
@@ -106,19 +103,20 @@ class LockGroup(GroupEntity, LockEntity):
     _attr_should_poll = False
 
     def __init__(
-        self,
-        unique_id: str | None,
-        name: str,
-        entity_ids: list[str],
+        self, unique_id: str | None, name: str, target_config: dict[str, Any]
     ) -> None:
         """Initialize a lock group."""
-        self._entity_ids = entity_ids
-        self.group = GenericGroup(self, entity_ids)
+        super().__init__()
+        self._target_config = target_config
+        self._domain = LOCK_DOMAIN
+        self.group = GenericGroup(self, target_config.get("entity_id", []))
         self._attr_supported_features = LockEntityFeature.OPEN
-
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
+
+    def update_group_member(self, entities: set[str]) -> None:
+        """Update the group member."""
+        self.group._member_entity_ids = list(entities)  # type: ignore[union-attr] #noqa: SLF001
 
     @callback
     def async_update_group_state(self) -> None:

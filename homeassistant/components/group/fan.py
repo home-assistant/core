@@ -34,7 +34,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -75,8 +75,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Fan Group platform."""
+    entities = {"entity_id": config[CONF_ENTITIES]}
     async_add_entities(
-        [FanGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES])]
+        [FanGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], entities)]
     )
 
 
@@ -86,12 +87,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Fan Group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
+    target_config = config_entry.options[CONF_ENTITIES]
+    async_add_entities(
+        [FanGroup(config_entry.entry_id, config_entry.title, target_config)]
     )
-
-    async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entities)])
 
 
 @callback
@@ -111,9 +110,13 @@ class FanGroup(GroupEntity, FanEntity):
 
     _attr_available: bool = False
 
-    def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
+    def __init__(
+        self, unique_id: str | None, name: str, target_config: dict[str, Any]
+    ) -> None:
         """Initialize a FanGroup entity."""
-        self._entity_ids = entities
+        super().__init__()
+        self._target_config = target_config
+        self._domain = FAN_DOMAIN
         self._fans: dict[int, set[str]] = {flag: set() for flag in SUPPORTED_FLAGS}
         self._percentage = None
         self._oscillating = None
@@ -121,7 +124,6 @@ class FanGroup(GroupEntity, FanEntity):
         self._speed_count = 100
         self._is_on: bool | None = False
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
 
     @property

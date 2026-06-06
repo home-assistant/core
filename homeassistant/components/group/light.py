@@ -25,6 +25,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_WHITE,
     ATTR_XY_COLOR,
+    DOMAIN as LIGHT_DOMAIN,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
@@ -45,7 +46,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -84,12 +85,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Initialize light.group platform."""
+    entities = {"entity_id": config[CONF_ENTITIES]}
     async_add_entities(
         [
             LightGroup(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
-                config[CONF_ENTITIES],
+                entities,
                 config.get(CONF_ALL),
             )
         ]
@@ -102,14 +104,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Light Group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
+    target_config = config_entry.options[CONF_ENTITIES]
     mode = config_entry.options.get(CONF_ALL, False)
 
     async_add_entities(
-        [LightGroup(config_entry.entry_id, config_entry.title, entities, mode)]
+        [LightGroup(config_entry.entry_id, config_entry.title, target_config, mode)]
     )
 
 
@@ -153,13 +152,17 @@ class LightGroup(GroupEntity, LightEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, unique_id: str | None, name: str, entity_ids: list[str], mode: bool | None
+        self,
+        unique_id: str | None,
+        name: str,
+        target_config: dict[str, Any],
+        mode: bool | None,
     ) -> None:
         """Initialize a light group."""
-        self._entity_ids = entity_ids
-
+        super().__init__()
+        self._target_config = target_config
+        self._domain = LIGHT_DOMAIN
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self.mode = any
         if mode:

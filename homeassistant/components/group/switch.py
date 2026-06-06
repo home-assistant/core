@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -57,12 +57,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Switch Group platform."""
+    entities = {"entity_id": config[CONF_ENTITIES]}
     async_add_entities(
         [
             SwitchGroup(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
-                config[CONF_ENTITIES],
+                entities,
                 config.get(CONF_ALL, False),
             )
         ]
@@ -75,16 +76,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Switch Group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
+    target_config = config_entry.options[CONF_ENTITIES]
     async_add_entities(
         [
             SwitchGroup(
                 config_entry.entry_id,
                 config_entry.title,
-                entities,
+                target_config,
                 config_entry.options.get(CONF_ALL),
             )
         ]
@@ -114,14 +112,14 @@ class SwitchGroup(GroupEntity, SwitchEntity):
         self,
         unique_id: str | None,
         name: str,
-        entity_ids: list[str],
+        target_config: dict[str, Any],
         mode: bool | None,
     ) -> None:
         """Initialize a switch group."""
-        self._entity_ids = entity_ids
-
+        super().__init__()
+        self._target_config = target_config
+        self._domain = SWITCH_DOMAIN
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self.mode = any
         if mode:

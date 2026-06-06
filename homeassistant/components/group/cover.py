@@ -34,7 +34,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -69,12 +69,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Cover Group platform."""
+    entities = {"entity_id": config[CONF_ENTITIES]}
     async_add_entities(
-        [
-            CoverGroup(
-                config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES]
-            )
-        ]
+        [CoverGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], entities)]
     )
 
 
@@ -84,13 +81,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Cover Group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
-
+    target_config = config_entry.options[CONF_ENTITIES]
     async_add_entities(
-        [CoverGroup(config_entry.entry_id, config_entry.title, entities)]
+        [CoverGroup(config_entry.entry_id, config_entry.title, target_config)]
     )
 
 
@@ -115,9 +108,13 @@ class CoverGroup(GroupEntity, CoverEntity):
     _attr_is_closing: bool | None = False
     _attr_current_cover_position: int | None = 100
 
-    def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
+    def __init__(
+        self, unique_id: str | None, name: str, target_config: dict[str, Any]
+    ) -> None:
         """Initialize a CoverGroup entity."""
-        self._entity_ids = entities
+        super().__init__()
+        self._target_config = target_config
+        self._domain = COVER_DOMAIN
         self._covers: dict[str, set[str]] = {
             KEY_OPEN_CLOSE: set(),
             KEY_STOP: set(),
@@ -130,7 +127,6 @@ class CoverGroup(GroupEntity, CoverEntity):
         }
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
 
     @callback

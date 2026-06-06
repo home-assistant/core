@@ -376,6 +376,8 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         """Handle the tracked entities."""
         previous_entities = self._tracked_entities
         self._tracked_entities = tracked_entities
+        if previous_entities == tracked_entities:
+            return
 
         if self._on_entities_update is not None:
             added = tracked_entities - previous_entities

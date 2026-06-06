@@ -10,8 +10,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, label_registry as lr
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 async def test_default_state(
@@ -41,8 +43,8 @@ async def test_default_state(
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ENTITY_ID) == [
-        "binary_sensor.kitchen",
         "binary_sensor.bedroom",
+        "binary_sensor.kitchen",
     ]
 
     entry = entity_registry.async_get("binary_sensor.bedroom_group")
@@ -50,6 +52,97 @@ async def test_default_state(
     assert entry.unique_id == "unique_identifier"
     assert entry.original_name == "Bedroom Group"
     assert entry.original_device_class == "presence"
+
+
+async def test_config_entry(
+    hass: HomeAssistant,
+    label_registry: lr.LabelRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test binary sensor from config entry."""
+    hass.states.async_set("binary_sensor.kitchen", "on")
+    hass.states.async_set("binary_sensor.bedroom", "on")
+
+    group_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": {
+                "area_id": ["bedroom"],
+                "entity_id": [
+                    "binary_sensor.kitchen",
+                    "binary_sensor.bedroom",
+                    "binary_sensor.not_exist",
+                ],
+                "label_id": ["test"],
+            },
+            "group_type": "binary_sensor",
+            "name": "Bedroom Group",
+            "all": False,
+        },
+        title="Bedroom Group",
+        version=2,
+    )
+    group_config_entry.add_to_hass(hass)
+
+    label_registry.async_create("Test")
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "in_a_label",
+        suggested_object_id="in_a_label",
+        config_entry=group_config_entry,
+    )
+    entity_registry.async_update_entity("binary_sensor.in_a_label", labels={"test"})
+    hass.states.async_set("binary_sensor.in_a_label", "on")
+
+    assert await hass.config_entries.async_setup(group_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.bedroom_group")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ENTITY_ID) == [
+        "binary_sensor.bedroom",
+        "binary_sensor.in_a_label",
+        "binary_sensor.kitchen",
+        "binary_sensor.not_exist",
+    ]
+
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "added_to_a_label",
+        suggested_object_id="added_to_a_label",
+        config_entry=group_config_entry,
+    )
+    entity_registry.async_update_entity(
+        "binary_sensor.added_to_a_label", labels={"test"}
+    )
+    hass.states.async_set("binary_sensor.added_to_a_label", "on")
+
+    entity_registry.async_get_or_create(
+        "test",
+        "test",
+        "not_to_be_included",
+        suggested_object_id="not_to_be_included",
+        config_entry=group_config_entry,
+    )
+    entity_registry.async_update_entity("test.not_to_be_included", labels={"test"})
+    hass.states.async_set("test.not_to_be_included", "on")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.bedroom_group")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ENTITY_ID) == [
+        "binary_sensor.added_to_a_label",
+        "binary_sensor.bedroom",
+        "binary_sensor.in_a_label",
+        "binary_sensor.kitchen",
+        "binary_sensor.not_exist",
+    ]
 
 
 async def test_state_reporting_all(hass: HomeAssistant) -> None:

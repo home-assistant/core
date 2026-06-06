@@ -28,7 +28,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -132,13 +132,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Notify Group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
-
+    target_config = config_entry.options[CONF_ENTITIES]
     async_add_entities(
-        [NotifyGroup(config_entry.entry_id, config_entry.title, entities)]
+        [NotifyGroup(config_entry.entry_id, config_entry.title, target_config)]
     )
 
 
@@ -160,15 +156,13 @@ class NotifyGroup(GroupEntity, NotifyEntity):
     _attr_available: bool = False
 
     def __init__(
-        self,
-        unique_id: str | None,
-        name: str,
-        entity_ids: list[str],
+        self, unique_id: str | None, name: str, target_config: dict[str, Any]
     ) -> None:
         """Initialize a NotifyGroup."""
-        self._entity_ids = entity_ids
+        super().__init__()
+        self._target_config = target_config
+        self._domain = NOTIFY_DOMAIN
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:

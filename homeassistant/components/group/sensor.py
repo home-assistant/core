@@ -27,7 +27,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_ENTITIES,
     CONF_NAME,
@@ -39,7 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import (
     get_capability,
     get_device_class,
@@ -117,13 +116,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Switch Group platform."""
+    entities = {"entity_id": config[CONF_ENTITIES]}
     async_add_entities(
         [
             SensorGroup(
                 hass,
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
-                config[CONF_ENTITIES],
+                entities,
                 config[CONF_IGNORE_NON_NUMERIC],
                 config[CONF_TYPE],
                 config.get(CONF_UNIT_OF_MEASUREMENT),
@@ -140,17 +140,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Switch Group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
+    target_config = config_entry.options[CONF_ENTITIES]
     async_add_entities(
         [
             SensorGroup(
                 hass,
                 config_entry.entry_id,
                 config_entry.title,
-                entities,
+                target_config,
                 config_entry.options.get(CONF_IGNORE_NON_NUMERIC, True),
                 config_entry.options[CONF_TYPE],
                 None,
@@ -345,7 +342,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         hass: HomeAssistant,
         unique_id: str | None,
         name: str,
-        entity_ids: list[str],
+        target_config: dict[str, Any],
         ignore_non_numeric: bool,
         sensor_type: str,
         unit_of_measurement: str | None,
@@ -353,8 +350,10 @@ class SensorGroup(GroupEntity, SensorEntity):
         device_class: SensorDeviceClass | None,
     ) -> None:
         """Initialize a sensor group."""
+        super().__init__()
+        self._target_config = target_config
+        self._domain = SENSOR_DOMAIN
         self.hass = hass
-        self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._configured_state_class = state_class
         self._configured_device_class = device_class
@@ -482,7 +481,10 @@ class SensorGroup(GroupEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
-        return {ATTR_ENTITY_ID: self._entity_ids, **self._extra_state_attribute}
+        return {
+            **self._extra_state_attribute,
+            **self._attr_extra_state_attributes,
+        }
 
     @property
     def icon(self) -> str | None:

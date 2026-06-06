@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_NAME,
     CONF_ENTITIES,
+    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_NAME,
     SERVICE_RELOAD,
@@ -137,6 +138,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["group_type"],)
     )
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate a config entry."""
+
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1:
+        # Migrate Entity selector to Target selector
+        new_options = dict(entry.options)
+        current_entities = new_options[CONF_ENTITIES]
+        new_options[CONF_ENTITIES][CONF_ENTITY_ID] = current_entities
+
+        _LOGGER.debug(
+            "Migrating from version 1 to version 2: %s -> %s",
+            entry.options,
+            new_options,
+        )
+
+        hass.config_entries.async_update_entry(entry, version=2, options=new_options)
+
     return True
 
 

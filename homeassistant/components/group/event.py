@@ -15,7 +15,6 @@ from homeassistant.components.event import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     CONF_ENTITIES,
     CONF_NAME,
@@ -23,13 +22,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.target import TargetStateChangedData
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
@@ -55,12 +54,13 @@ async def async_setup_platform(
     __: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the event group platform."""
+    entities = {"entity_id": config[CONF_ENTITIES]}
     async_add_entities(
         [
             EventGroup(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
-                config[CONF_ENTITIES],
+                entities,
             )
         ]
     )
@@ -72,16 +72,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize event group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
+    target_config = config_entry.options[CONF_ENTITIES]
     async_add_entities(
         [
             EventGroup(
                 config_entry.entry_id,
                 config_entry.title,
-                entities,
+                target_config,
             )
         ]
     )
@@ -109,12 +106,13 @@ class EventGroup(GroupEntity, EventEntity):
         self,
         unique_id: str | None,
         name: str,
-        entity_ids: list[str],
+        target_config: dict[str, Any],
     ) -> None:
         """Initialize an event group."""
-        self._entity_ids = entity_ids
+        super().__init__()
+        self._target_config = target_config
+        self._domain = EVENT_DOMAIN
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self._attr_event_types = []
 
@@ -123,13 +121,13 @@ class EventGroup(GroupEntity, EventEntity):
 
         @callback
         def async_state_changed_listener(
-            event: Event[EventStateChangedData],
+            target_state_change_data: TargetStateChangedData,
         ) -> None:
             """Handle child updates."""
             if not self.hass.is_running:
                 return
 
-            self.async_set_context(event.context)
+            self.async_set_context(target_state_change_data.state_change_event.context)
 
             # Update all properties of the group
             self.async_update_group_state()
@@ -137,9 +135,17 @@ class EventGroup(GroupEntity, EventEntity):
             # Re-fire if one of the members fires an event, but only
             # if the original state was not unavailable or unknown.
             if (
-                (old_state := event.data["old_state"])
+                (
+                    old_state := target_state_change_data.state_change_event.data[
+                        "old_state"
+                    ]
+                )
                 and old_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-                and (new_state := event.data["new_state"])
+                and (
+                    new_state := target_state_change_data.state_change_event.data[
+                        "new_state"
+                    ]
+                )
                 and new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
                 and (event_type := new_state.attributes.get(ATTR_EVENT_TYPE))
             ):
@@ -156,12 +162,6 @@ class EventGroup(GroupEntity, EventEntity):
                 self._trigger_event(event_type, event_attributes)
 
             self.async_write_ha_state()
-
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entity_ids, async_state_changed_listener
-            )
-        )
 
         await super().async_added_to_hass()
 

@@ -512,22 +512,3 @@ def wrapped_entity_config_entry_title(
     if state:
         return state.name or object_id
     return object_id
-
-
-@callback
-def entity_selector_without_own_entities(
-    handler: SchemaOptionsFlowHandler,
-    entity_selector_config: selector.EntitySelectorConfig,
-) -> selector.EntitySelector:
-    """Return an entity selector which excludes own entities."""
-    entity_registry = er.async_get(handler.hass)
-    entities = er.async_entries_for_config_entry(
-        entity_registry,
-        handler.config_entry.entry_id,
-    )
-    entity_ids = [ent.entity_id for ent in entities]
-
-    final_selector_config = entity_selector_config.copy()
-    final_selector_config["exclude_entities"] = entity_ids
-
-    return selector.EntitySelector(final_selector_config)

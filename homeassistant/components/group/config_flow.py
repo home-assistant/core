@@ -16,8 +16,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
-    SchemaOptionsFlowHandler,
-    entity_selector_without_own_entities,
 )
 
 from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
@@ -53,20 +51,14 @@ async def basic_group_options_schema(
     domain: str | list[str], handler: SchemaCommonFlowHandler | None
 ) -> vol.Schema:
     """Generate options schema."""
-    entity_selector: selector.Selector[Any] | vol.Schema
-    if handler is None:
-        entity_selector = selector.selector(
-            {"entity": {"domain": domain, "multiple": True, "reorder": True}}
-        )
-    else:
-        entity_selector = entity_selector_without_own_entities(
-            cast(SchemaOptionsFlowHandler, handler.parent_handler),
-            selector.EntitySelectorConfig(domain=domain, multiple=True, reorder=True),
-        )
 
     return vol.Schema(
         {
-            vol.Required(CONF_ENTITIES): entity_selector,
+            vol.Required(CONF_ENTITIES): selector.TargetSelector(
+                selector.TargetSelectorConfig(
+                    entity=selector.EntityFilterSelectorConfig(domain=domain)
+                )
+            ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
         }
     )
@@ -77,10 +69,10 @@ def basic_group_config_schema(domain: str | list[str]) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required("name"): selector.TextSelector(),
-            vol.Required(CONF_ENTITIES): selector.EntitySelector(
-                selector.EntitySelectorConfig(
-                    domain=domain, multiple=True, reorder=True
-                ),
+            vol.Required(CONF_ENTITIES): selector.TargetSelector(
+                selector.TargetSelectorConfig(
+                    entity=selector.EntityFilterSelectorConfig(domain=domain)
+                )
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
         }
@@ -337,6 +329,8 @@ CREATE_PREVIEW_ENTITY: dict[
 
 class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for groups."""
+
+    VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
