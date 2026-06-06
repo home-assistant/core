@@ -791,7 +791,7 @@ crownstone-sse==2.0.5
 crownstone-uart==2.1.0
 
 # homeassistant.components.data_grand_lyon
-data-grand-lyon-ha==0.7.0
+data-grand-lyon-ha==0.8.0
 
 # homeassistant.components.datadog
 datadog==0.52.0
@@ -1037,7 +1037,7 @@ fnv-hash-fast==2.0.3
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==5.0.0
+forecast-solar==5.0.1
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -1727,7 +1727,7 @@ oemthermostat==1.1.1
 ohme==1.9.1
 
 # homeassistant.components.ollama
-ollama==0.5.1
+ollama==0.6.2
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -1779,7 +1779,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.18.2
+opower==0.18.3
 
 # homeassistant.components.oralb
 oralb-ble==1.1.0
@@ -1846,7 +1846,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.11.3
+plugwise==1.11.4
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -3249,7 +3249,7 @@ uhooapi==1.2.8
 uiprotect==10.5.0
 
 # homeassistant.components.landisgyr_heat_meter
-ultraheat-api==0.6.0
+ultraheat-api==0.6.1
 
 # homeassistant.components.unifi_discovery
 unifi-discovery==1.4.0
@@ -3302,7 +3302,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.7.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.6.1
+victron-mqtt==2026.6.1.1
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
