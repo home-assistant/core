@@ -33,6 +33,7 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@patch("homeassistant.components.yardian.switch.REFRESH_DELAY", 0)
 async def test_turn_on_switch(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -53,6 +54,7 @@ async def test_turn_on_switch(
     mock_yardian_client.start_irrigation.assert_called_once_with(0, 6)
 
 
+@patch("homeassistant.components.yardian.switch.REFRESH_DELAY", 0)
 async def test_turn_off_switch(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -70,4 +72,4 @@ async def test_turn_off_switch(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_yardian_client.stop_irrigation.assert_called_once()
+    mock_yardian_client.stop_zone.assert_called_once_with(0)

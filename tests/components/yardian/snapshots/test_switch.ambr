@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:toggle-switch',
     'original_name': None,
     'platform': 'yardian',
     'previous_unique_id': None,
@@ -40,6 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Zone 1',
+      'icon': 'mdi:toggle-switch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.zone_1',
@@ -75,7 +76,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:toggle-switch',
     'original_name': None,
     'platform': 'yardian',
     'previous_unique_id': None,
@@ -90,6 +91,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Zone 2',
+      'icon': 'mdi:toggle-switch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.zone_2',

@@ -20,6 +20,11 @@
         }
       }
     },
+    "button": {
+      "stop_irrigation": {
+        "default": "mdi:stop-circle-outline"
+      }
+    },
     "sensor": {
       "active_zone_count": {
         "default": "mdi:counter"
