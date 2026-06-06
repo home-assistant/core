@@ -6764,7 +6764,7 @@ async def test_conversation_response_not_set_subscript_if(
 
 
 async def test_conversation_response_nested_with_stop(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
 ) -> None:
     """Test setting conversation response in a child block with a stop."""
     sequence = cv.SCRIPT_SCHEMA(
