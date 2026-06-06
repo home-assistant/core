@@ -709,3 +709,35 @@ async def test_all_devices_disabled(
         )
         assert device_entry is not None
         assert device_entry.disabled
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_v1_streaming_updates(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that V1 push updates update entity states immediately."""
+    assert setup_entry.state is ConfigEntryState.LOADED
+
+    sensor_entity_id = "sensor.roborock_s7_maxv_battery"
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == "100"
+
+    # Verify that add_update_listener was called on the mock status trait
+    status_trait = fake_vacuum.v1_properties.status
+    assert status_trait.add_update_listener.called
+
+    # Get the registered callback
+    callback_func = status_trait.add_update_listener.call_args[0][0]  # type: ignore[union-attr]
+
+    # Update a status attribute and trigger the callback
+    status_trait.battery = 85
+    callback_func()
+    await hass.async_block_till_done()
+
+    # Check if the state was updated in Home Assistant immediately
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == "85"
