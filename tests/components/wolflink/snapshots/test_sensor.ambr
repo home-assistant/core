@@ -259,7 +259,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Wolf SmartSet Hours Parameter',
+      'friendly_name': 'test-device Hours Parameter',
       'icon': 'mdi:clock',
       'parameter_id': 7005200000,
       'parent': 'Heating',
