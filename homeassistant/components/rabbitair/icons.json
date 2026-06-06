@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "fan": {
+      "rabbitair": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "manual": "mdi:fan",
+              "pollen": "mdi:flower-pollen"
+            }
+          }
+        }
+      }
+    }
+  }
+}

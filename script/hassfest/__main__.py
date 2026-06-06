@@ -23,6 +23,7 @@ from . import (
     json,
     labs,
     manifest,
+    mdi_icons,
     metadata,
     mqtt,
     mypy_config,
@@ -65,6 +66,7 @@ INTEGRATION_PLUGINS = [
 HASS_PLUGINS = [
     core_files,
     docker,
+    mdi_icons,
     mypy_config,
     metadata,
 ]

@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 from roborock.data import UserData
 from roborock.exceptions import (
@@ -23,7 +24,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_REGION, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,6 +32,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -38,7 +42,7 @@ from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
-    CONF_REGION,
+    CONF_ROBOROCK_SERVER_URL,
     CONF_SHOW_BACKGROUND,
     CONF_SHOW_ROOMS,
     CONF_SHOW_WALLS,
@@ -46,6 +50,8 @@ from .const import (
     DEFAULT_DRAWABLES,
     DOMAIN,
     DRAWABLES,
+    REGION_AUTO,
+    REGION_CUSTOM,
     REGION_OPTIONS,
 )
 
@@ -74,8 +80,10 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             region = user_input[CONF_REGION]
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
+            if region == REGION_CUSTOM:
+                return await self.async_step_custom_url()
             base_url = None
-            if region != "auto":
+            if region != REGION_AUTO:
                 base_url = f"https://{region}iot.roborock.com"
             self._client = RoborockApiClient(
                 username,
@@ -91,13 +99,51 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_REGION, default="auto"): SelectSelector(
+                    vol.Required(CONF_REGION, default=REGION_AUTO): SelectSelector(
                         SelectSelectorConfig(
                             options=REGION_OPTIONS,
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key="region",
                         )
                     ),
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_custom_url(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle custom server URL entry."""
+        errors: dict[str, str] = {}
+        assert self._username
+        if user_input is not None:
+            url = user_input[CONF_ROBOROCK_SERVER_URL].strip()
+            parsed = urlparse(url)
+            if parsed.scheme not in ("http", "https") or not parsed.netloc:
+                errors[CONF_ROBOROCK_SERVER_URL] = "invalid_url_format"
+            else:
+                self._client = RoborockApiClient(
+                    self._username,
+                    base_url=url,
+                    session=async_get_clientsession(self.hass),
+                )
+                errors = await self._request_code()
+                if not errors:
+                    return await self.async_step_code()
+
+        return self.async_show_form(
+            step_id="custom_url",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ROBOROCK_SERVER_URL,
+                        default=(
+                            user_input[CONF_ROBOROCK_SERVER_URL]
+                            if user_input is not None
+                            else "https://usiot.roborock.com"
+                        ),
+                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
                 }
             ),
             errors=errors,

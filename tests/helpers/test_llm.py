@@ -419,6 +419,7 @@ async def test_assist_api_prompt(
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
+
     assert api.api_prompt == (
         "Only if the user wants to control a device, tell them to expose"
         " entities to their "
@@ -481,6 +482,46 @@ async def test_assist_api_prompt(
         {"friendly_name": "Kitchen", "temperature": Decimal("0.9"), "humidity": 65},
     )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
+
+    # Create two sensors with different display precisions
+    power1 = entity_registry.async_get_or_create(
+        "sensor",
+        "power1",
+        "mock-id-power-1",
+        original_name="Power 1",
+        suggested_object_id="power1",
+        device_id=device.id,
+    )
+    entity_registry.async_update_entity_options(
+        power1.entity_id,
+        "sensor",
+        {"display_precision": 0},
+    )
+    hass.states.async_set(
+        power1.entity_id,
+        "1234.1234",
+        {"friendly_name": "Power 1"},
+    )
+    async_expose_entity(hass, "conversation", power1.entity_id, True)
+    power2 = entity_registry.async_get_or_create(
+        "sensor",
+        "power2",
+        "mock-id-power-2",
+        original_name="Power 2",
+        suggested_object_id="power2",
+        device_id=device.id,
+    )
+    entity_registry.async_update_entity_options(
+        power2.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2},
+    )
+    hass.states.async_set(
+        power2.entity_id,
+        "1234.1234",
+        {"friendly_name": "Power 2"},
+    )
+    async_expose_entity(hass, "conversation", power2.entity_id, True)
 
     def create_entity(
         device: dr.DeviceEntry,
@@ -599,6 +640,14 @@ Live Context: An overview of the areas and the devices in this smart home:
   domain: light
   state: 'on'
   areas: Test Area, Alternative name
+- names: Power 1
+  domain: sensor
+  state: '1234'
+  areas: Test Area, Alternative name
+- names: Power 2
+  domain: sensor
+  state: '1234.12'
+  areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
   state: unavailable
@@ -642,6 +691,12 @@ Static Context: An overview of the areas and the devices in this smart home:
 - names: Living Room
   domain: light
   areas: Test Area, Alternative name
+- names: Power 1
+  domain: sensor
+  areas: Test Area, Alternative name
+- names: Power 2
+  domain: sensor
+  areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
   areas: Test Area, Alternative name
@@ -677,7 +732,7 @@ Static Context: An overview of the areas and the devices in this smart home:
 
     area_prompt = (
         "When a user asks to turn on all devices of a specific type, "
-        "ask user to specify an area, unless there is only one device of that type."
+        "ask the user to specify an area, unless there is only one device of that type."
     )
     dynamic_context_prompt = (
         "You ARE equipped to answer questions about the"
@@ -708,10 +763,10 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Verify that the GetLiveContext tool returns the same results
@@ -733,10 +788,10 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Add floor
@@ -750,10 +805,10 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Register device for timers
@@ -763,9 +818,9 @@ Static Context: An overview of the areas and the devices in this smart home:
     # The no_timer_prompt is gone
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}"""
     )
 
 

@@ -6,6 +6,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from PyTado.interface import Tado
+from PyTado.zone import TadoZone
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
@@ -169,7 +170,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._time_until_reset = (next_reset - reset_time).total_seconds()
 
         # When any zone is actively heating, we use a shorter minimum
-        # To prevent overshooting in temperature, check if there's heating/cooling activity
+        # To prevent overshooting in temperature,
+        # check if there's heating/cooling activity
         # Accept five minutes to "overshoot", else reset back to 30 minutes
         min_interval = 300 if self._is_any_zone_active else 1800
 
@@ -180,7 +182,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.update_interval = SCAN_INTERVAL
             self._next_update = reset_time + timedelta(seconds=self._current_interval)
             _LOGGER.debug(
-                "Rate limit info unavailable; using default update interval: %s seconds",
+                "Rate limit info unavailable;"
+                " using default update interval: %s seconds",
                 self._current_interval,
             )
             return
@@ -246,7 +249,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return mapped_devices
 
-    async def _async_update_zones(self) -> dict[int, dict]:
+    async def _async_update_zones(self) -> dict[int, TadoZone]:
         """Update the zone data from Tado."""
 
         try:
@@ -258,16 +261,31 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.error("Error updating Tado zones: %s", err)
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
-        mapped_zones: dict[int, dict] = {}
-        for zone in zone_states:
-            mapped_zones[int(zone)] = await self._update_zone(int(zone))
+        mapped_zones: dict[int, TadoZone] = {}
+        for zone_id_str, raw_state in zone_states.items():
+            zone_id = int(zone_id_str)
+            mapped_zones[zone_id] = await self._build_zone(zone_id, raw_state)
 
         return mapped_zones
 
-    async def _update_zone(self, zone_id: int) -> dict[str, str]:
-        """Update the internal data of a zone."""
-
+    async def _build_zone(self, zone_id: int, raw_state: dict[str, Any]) -> TadoZone:
+        """Fetch defaultOverlay for a zone and construct a TadoZone."""
         _LOGGER.debug("Updating zone %s", zone_id)
+        try:
+            overlay_default = await self.hass.async_add_executor_job(
+                self._tado.get_zone_overlay_default, zone_id
+            )
+        except RequestException as err:
+            _LOGGER.error("Error updating Tado zone %s: %s", zone_id, err)
+            raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
+
+        data = TadoZone.from_data(zone_id, {**raw_state, **overlay_default})
+        _LOGGER.debug("Zone %s updated, with data: %s", zone_id, data)
+        return data
+
+    async def _update_zone(self, zone_id: int) -> TadoZone:
+        """Fetch the latest state for a single zone (used after overlay changes)."""
+        _LOGGER.debug("Refreshing zone %s after overlay change", zone_id)
         try:
             data = await self.hass.async_add_executor_job(
                 self._tado.get_zone_state, zone_id
@@ -361,7 +379,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Set a zone overlay."""
 
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s, fan_speed=%s, swing=%s, fan_level=%s, vertical_swing=%s, horizontal_swing=%s",
+            "Set overlay for zone %s: overlay_mode=%s,"
+            " temp=%s, duration=%s, type=%s, mode=%s,"
+            " fan_speed=%s, swing=%s, fan_level=%s,"
+            " vertical_swing=%s, horizontal_swing=%s",
             zone_id,
             overlay_mode,
             temperature,

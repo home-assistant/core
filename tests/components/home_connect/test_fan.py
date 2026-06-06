@@ -49,9 +49,13 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
+_FAN_SPEED_PERCENTAGE_KEY = (
+    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+)
+
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.FAN]
 
@@ -279,7 +283,7 @@ async def test_speed_percentage_functionality(
 ) -> None:
     """Test speed percentage functionality."""
     entity_id = "fan.air_conditioner"
-    option_key = OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+    option_key = _FAN_SPEED_PERCENTAGE_KEY
     if set_active_program_options_side_effect:
         client.set_active_program_option.side_effect = (
             set_active_program_options_side_effect

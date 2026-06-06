@@ -7,7 +7,7 @@ from random import uniform
 from time import time
 from typing import Any
 
-from reolink_aio.api import RETRY_ATTEMPTS
+from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, RETRY_ATTEMPTS
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
@@ -24,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_FIRMWARE_CHECK_TIME,
@@ -74,6 +75,7 @@ async def async_setup_entry(
         await host.async_init()
     except (UserNotAdmin, CredentialsInvalidError, PasswordIncompatible) as err:
         await host.stop()
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed(err) from err
     except (
         ReolinkException,
@@ -101,6 +103,8 @@ async def async_setup_entry(
         != config_entry.data.get(CONF_SUPPORTS_PRIVACY_MODE)
         or host.api.baichuan.port != config_entry.data.get(CONF_BC_PORT)
         or host.api.baichuan_only != config_entry.data.get(CONF_BC_ONLY)
+        or host.api.baichuan.connection_type.value
+        != config_entry.data.get(CONF_BC_CONNECT)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
@@ -125,6 +129,7 @@ async def async_setup_entry(
             CONF_USE_HTTPS: host.api.use_https,
             CONF_BC_PORT: host.api.baichuan.port,
             CONF_BC_ONLY: host.api.baichuan_only,
+            CONF_BC_CONNECT: host.api.baichuan.connection_type.value,
             CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
@@ -163,7 +168,7 @@ async def async_setup_entry(
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
-    now = datetime.now(UTC)
+    now = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     check_time = timedelta(seconds=check_time_sec)
     delta_midnight = now - now.replace(hour=0, minute=0, second=0, microsecond=0)
     firmware_check_delay = check_time - delta_midnight
@@ -204,6 +209,19 @@ async def async_setup_entry(
         identifiers={(DOMAIN, host.unique_id)},
         connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
     )
+
+    if host.api.is_nvr and host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
+        # ensure the camera device is setup before
+        # the lens sub-devices that use via_device
+        if host.api.supported(0, "UID"):
+            camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(0)}"
+        else:
+            camera_dev_id = f"{host.unique_id}_ch0"
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, camera_dev_id)},
+            via_device=(DOMAIN, host.unique_id),
+        )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -418,8 +436,8 @@ def migrate_entity_ids(
             device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
             break
 
-        if ch is None or is_chime:
-            continue  # Do not consider the NVR itself or chimes
+        if ch is None or is_chime or device_uid[1].startswith("lens"):
+            continue  # Do not consider the NVR itself, chimes or lens sub-devices
 
         # Check for wrongfully added MAC of the NVR/Hub to the camera
         # Can be removed in HA 2025.12

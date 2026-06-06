@@ -728,6 +728,33 @@ async def test_rpc_restored_sleeping_sensor(
     assert state.state == "22.9"
 
 
+async def test_rpc_restored_sensor_when_not_initialized(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test restored mains-powered RPC sensor when device is not initialized."""
+    entry = await init_integration(hass, 2, skip_setup=True)
+    device = register_device(device_registry, entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_tc",
+        entry,
+        device_id=device.id,
+    )
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_rpc_restored_sleeping_sensor_no_last_state(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -2218,3 +2245,37 @@ async def test_rpc_rgbcct_sensors(
     assert entry.unique_id == "123456789ABC-rgbcct:0-energy_rgbcct"
     assert entry.name is None
     assert entry.translation_key is None  # entity with device class and no channel name
+
+
+async def test_rpc_sensor_driver_missing_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """RPC sensor with missing driver error should be removed."""
+    status = {
+        "temperature:0": {
+            "id": 0,
+            "tC": -275.1499938964844,
+            "errors": ["Sensor driver missing from firmware"],
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    config_entry = await init_integration(hass, 2, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_tc",
+        config_entry,
+        device_id=device_entry.id,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is None

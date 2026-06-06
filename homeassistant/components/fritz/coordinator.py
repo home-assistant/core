@@ -187,6 +187,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._options = options
         await self.hass.async_add_executor_job(self.setup)
 
+        self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id] = set()
+        self.hass.data[FRITZ_DATA_KEY].profile_switches[self.unique_id] = set()
+        self.hass.data[FRITZ_DATA_KEY].wol_buttons[self.unique_id] = set()
+
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
@@ -715,6 +719,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             ) and entry_mac not in device_hosts:
                 _LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
+                self._devices.pop(entry_mac, None)
 
         device_reg = dr.async_get(self.hass)
         valid_connections = {
@@ -728,6 +733,29 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=config_entry.entry_id
                 )
+
+        fritz_data = self.hass.data[FRITZ_DATA_KEY]
+
+        tracked = fritz_data.tracked.get(self.unique_id, set())
+        for mac in tracked.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from device trackers", mac)
+            tracked.remove(mac)
+
+        profile_switches = fritz_data.profile_switches.get(self.unique_id, set())
+        for mac in profile_switches.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from profile switches", mac)
+            profile_switches.remove(mac)
+
+        wol_buttons = fritz_data.wol_buttons.get(self.unique_id, set())
+        for mac in wol_buttons.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from WOL buttons", mac)
+            wol_buttons.remove(mac)
 
 
 class AvmWrapper(FritzBoxTools):
@@ -910,3 +938,15 @@ class AvmWrapper(FritzBoxTools):
             "X_AVM-DE_WakeOnLANByMACAddress",
             NewMACAddress=mac_address,
         )
+
+    async def async_get_firmware_extra_infos(self) -> dict[str, Any]:
+        """Return extra infos for firmware."""
+        return await self._async_service_call("UserInterface", "1", "X_AVM-DE_GetInfo")
+
+    async def async_get_device_uptime_hours(self) -> int:
+        """Get device uptime in hours."""
+
+        def _get_uptime_hours() -> int:
+            return int(self.fritz_status.device_uptime // 3600)
+
+        return await self.hass.async_add_executor_job(_get_uptime_hours)
