@@ -1,5 +1,7 @@
 """The Shelly integration."""
 
+import asyncio
+import contextlib
 from functools import partial
 from typing import Final
 
@@ -73,6 +75,7 @@ from .utils import (
     get_http_port,
     get_rpc_scripts_event_types,
     get_ws_context,
+    is_rpc_ble_scanner_supported,
     remove_empty_sub_devices,
     remove_stale_blu_trv_devices,
 )
@@ -113,6 +116,11 @@ COAP_SCHEMA: Final = vol.Schema(
     }
 )
 CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+
+# How long to wait at startup for a bluetooth proxy to connect and register its
+# scanner before letting setup finish, so it is not a late joiner that misses the
+# first active scan window.
+STARTUP_SCANNER_WAIT: Final = 3.0
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -365,6 +373,18 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
 
         runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         runtime_data.rpc.async_setup()
+
+        if (
+            is_rpc_ble_scanner_supported(entry)
+            and entry.options.get(CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED)
+            != BLEScannerMode.DISABLED
+        ):
+            # Wait briefly for the bluetooth proxy to register its scanner so it is
+            # not a late joiner that misses the first active scan window at startup.
+            with contextlib.suppress(TimeoutError):
+                async with asyncio.timeout(STARTUP_SCANNER_WAIT):
+                    await runtime_data.rpc.ble_scanner_setup_done.wait()
+
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms

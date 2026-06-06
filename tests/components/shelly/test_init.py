@@ -1,5 +1,6 @@
 """Test cases for the Shelly component."""
 
+import asyncio
 from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
@@ -769,3 +770,77 @@ async def test_empty_device_removal(
 
     # verify that the empty sub-device is removed
     assert device_registry.async_get(sub_device_entry.id) is None
+
+
+async def test_rpc_waits_for_ble_scanner_at_startup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test setup waits for the bluetooth scanner to be registered."""
+    connect_event = asyncio.Event()
+    reached_connect = asyncio.Event()
+
+    async def _block_until_released(*args: Any, **kwargs: Any) -> Mock:
+        reached_connect.set()
+        await connect_event.wait()
+        return Mock()
+
+    entry = await init_integration(
+        hass,
+        2,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
+        skip_setup=True,
+    )
+
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_connect_scanner",
+        _block_until_released,
+    ):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(entry.entry_id)
+        )
+        async with asyncio.timeout(2):
+            await reached_connect.wait()
+
+        # Setup must still be waiting for the scanner to be registered.
+        assert not setup_task.done()
+
+        connect_event.set()
+        async with asyncio.timeout(2):
+            assert await setup_task is True
+
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_rpc_ble_scanner_startup_wait_times_out(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test setup finishes if the bluetooth scanner never registers."""
+    connect_event = asyncio.Event()
+
+    async def _never_returns(*args: Any, **kwargs: Any) -> Mock:
+        await connect_event.wait()
+        return Mock()
+
+    entry = await init_integration(
+        hass,
+        2,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
+        skip_setup=True,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.shelly.coordinator.async_connect_scanner",
+            _never_returns,
+        ),
+        patch("homeassistant.components.shelly.STARTUP_SCANNER_WAIT", 0.05),
+    ):
+        async with asyncio.timeout(5):
+            assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    assert entry.state is ConfigEntryState.LOADED
+    connect_event.set()
+    await hass.async_block_till_done()

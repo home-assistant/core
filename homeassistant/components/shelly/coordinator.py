@@ -521,6 +521,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         super().__init__(hass, entry, device, update_interval)
 
         self.connected = False
+        # Set once the BLE scanner setup has been attempted after the first
+        # connection. Used at startup to wait for the scanner to be registered
+        # before setup completes so it does not miss the first active scan window.
+        self.ble_scanner_setup_done = asyncio.Event()
         self._disconnected_callbacks: list[CALLBACK_TYPE] = []
         self._connection_lock = asyncio.Lock()
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
@@ -759,27 +763,31 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
     async def _async_connect_ble_scanner(self) -> None:
         """Connect BLE scanner."""
-        ble_scanner_mode = self.config_entry.options.get(
-            CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
-        )
-        if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
-            await async_stop_scanner(self.device)
-            async_remove_scanner(self.hass, self.bluetooth_source)
-            return
-        if await async_ensure_ble_enabled(self.device):
-            # BLE enable required a reboot, don't bother connecting
-            # the scanner since it will be disconnected anyway
-            LOGGER.debug(
-                "Device %s BLE enable required a reboot, skipping scanner connect",
-                self.name,
+        try:
+            ble_scanner_mode = self.config_entry.options.get(
+                CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
             )
-            return
-        assert self.device_id is not None
-        self._disconnected_callbacks.append(
-            await async_connect_scanner(
-                self.hass, self, ble_scanner_mode, self.device_id
+            if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
+                await async_stop_scanner(self.device)
+                async_remove_scanner(self.hass, self.bluetooth_source)
+                return
+            if await async_ensure_ble_enabled(self.device):
+                # BLE enable required a reboot, don't bother connecting
+                # the scanner since it will be disconnected anyway
+                LOGGER.debug(
+                    "Device %s BLE enable required a reboot, skipping scanner connect",
+                    self.name,
+                )
+                return
+            assert self.device_id is not None
+            self._disconnected_callbacks.append(
+                await async_connect_scanner(
+                    self.hass, self, ble_scanner_mode, self.device_id
+                )
             )
-        )
+        finally:
+            # Release any startup wait now that the scanner setup has been attempted.
+            self.ble_scanner_setup_done.set()
 
     @callback
     def _async_handle_rpc_device_online(self) -> None:
