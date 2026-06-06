@@ -203,13 +203,6 @@ def get_product_type_event() -> Generator[asyncio.Event]:
 def constant_advertisements(request: pytest.FixtureRequest) -> Generator[None]:
     """Ensure async_process_advertisements only return a constant list."""
 
-    constant_advertisements = (
-        request.node.get_closest_marker("constant_advertisements") is not None
-    )
-    if constant_advertisements:
-        yield
-        return
-
     async def _advertisements(
         hass: HomeAssistant,
         callback: bluetooth.models.ProcessAdvertisementCallback,
