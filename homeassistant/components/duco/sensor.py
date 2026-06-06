@@ -31,6 +31,7 @@ from .entity import DucoEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+BOX_NODE_ID = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -158,7 +159,11 @@ async def async_setup_entry(
         # The firmware removes deregistered RF/wired nodes automatically.
         # BSRH box sensors that are physically unplugged from the PCB are
         # not deregistered by the firmware and will never appear here as stale.
-        stale_node_ids = known_nodes - coordinator.data.nodes.keys()
+        stale_node_ids = {
+            node_id
+            for node_id in known_nodes - coordinator.data.nodes.keys()
+            if node_id != BOX_NODE_ID
+        }
         if stale_node_ids:
             device_reg = dr.async_get(hass)
             mac = entry.unique_id

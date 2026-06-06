@@ -212,6 +212,74 @@ async def test_deregistered_node_removes_device(
     assert device is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_box_node_not_removed_on_transient_incomplete_node_list(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test BOX-linked entities survive a transient node list without node 1."""
+    diagnostic_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{mock_config_entry.unique_id}_1_ventilation_diagnostic",
+    )
+
+    await setup_platform_integration(
+        hass, mock_config_entry, [Platform.FAN, Platform.SENSOR]
+    )
+
+    if diagnostic_entity_id is None:
+        diagnostic_entity_id = entity_registry.async_get_entity_id(
+            Platform.SENSOR,
+            DOMAIN,
+            f"{mock_config_entry.unique_id}_1_ventilation_diagnostic",
+        )
+
+    box_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_1")}
+    )
+    assert box_device is not None
+    assert hass.states.get("fan.living") is not None
+    assert diagnostic_entity_id is not None
+
+    mock_duco_client.async_get_nodes.return_value = [
+        node for node in mock_sensor_nodes if node.node_id != 1
+    ]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_1")}
+        )
+        is not None
+    )
+    state = hass.states.get("fan.living")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    assert entity_registry.async_get(diagnostic_entity_id) is not None
+
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("fan.living")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    assert entity_registry.async_get(diagnostic_entity_id) is not None
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_unknown_node_type_logs_warning_and_creates_no_entities(
     hass: HomeAssistant,
