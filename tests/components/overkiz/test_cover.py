@@ -27,6 +27,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
+from homeassistant.components.overkiz import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
@@ -168,6 +169,11 @@ DYNAMIC_PERGOLA = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "ogp://1234-1234-6233/14356699",
     "cover.living_room_somfy_pergola",
+)
+DYNAMIC_PERGOLA_TILT_ONLY = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "ogp://1234-1234-6233/10943109",
+    "cover.living_room_bioclimatic_pergola",
 )
 PERGOLA_HORIZONTAL_AWNING = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
@@ -514,13 +520,7 @@ async def test_cover_service_actions(
 
 
 @pytest.mark.parametrize(
-    (
-        "device",
-        "entity_id",
-        "command_name",
-        "parameters",
-        "position",
-    ),
+    ("device", "entity_id", "command_name", "parameters", "position"),
     [
         (SHUTTER, SHUTTER.entity_id, "setClosure", [75], 25),
         (AWNING, AWNING.entity_id, "setDeployment", [80], 80),
@@ -573,6 +573,44 @@ async def test_cover_set_position(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: position},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=device.device_url,
+        command_name=command_name,
+        parameters=parameters,
+    )
+
+
+@pytest.mark.parametrize(
+    ("device", "command_name", "parameters", "tilt_position"),
+    [
+        (PERGOLA, "setOrientation", [60], 40),
+        (DYNAMIC_PERGOLA_TILT_ONLY, "setOrientation", [60], 40),
+    ],
+    ids=[
+        "bioclimatic-pergola",
+        "dynamic-pergola-tilt-only",
+    ],
+)
+async def test_cover_set_tilt_position(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    device: FixtureDevice,
+    command_name: str,
+    parameters: list[Any],
+    tilt_position: int,
+) -> None:
+    """Test cover tilt position services and mapping."""
+    await setup_overkiz_integration(fixture=device.fixture)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: device.entity_id, ATTR_TILT_POSITION: tilt_position},
         blocking=True,
     )
 
@@ -1216,7 +1254,7 @@ async def test_set_cover_position_and_tilt_executes_single_command(
     await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
 
     await hass.services.async_call(
-        "overkiz",
+        DOMAIN,
         "set_cover_position_and_tilt",
         {
             ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
@@ -1257,7 +1295,7 @@ async def test_set_cover_position_and_tilt_inverts_boundaries(
     await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
 
     await hass.services.async_call(
-        "overkiz",
+        DOMAIN,
         "set_cover_position_and_tilt",
         {
             ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
@@ -1297,7 +1335,7 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
         pytest.raises(ServiceValidationError),
     ):
         await hass.services.async_call(
-            "overkiz",
+            DOMAIN,
             "set_cover_position_and_tilt",
             {
                 ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,

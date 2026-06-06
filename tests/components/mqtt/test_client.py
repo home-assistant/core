@@ -230,6 +230,7 @@ async def test_publish(
     assert publish_mock.call_args[0][4].json() == {"MessageExpiryInterval": 60}
 
 
+@pytest.mark.parametrize("mock_v5_protocol_check", [False])
 @pytest.mark.parametrize(
     ("mqtt_config_entry_options", "mqtt_config_entry_data", "protocol"),
     [
@@ -1257,7 +1258,12 @@ async def test_restore_subscriptions_on_reconnect(
 
 @pytest.mark.parametrize(
     ("mqtt_config_entry_data", "mqtt_config_entry_options"),
-    [({mqtt.CONF_BROKER: "mock-broker"}, {mqtt.CONF_DISCOVERY: False})],
+    [
+        (
+            {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_PROTOCOL: "5"},
+            {mqtt.CONF_DISCOVERY: False},
+        )
+    ],
 )
 async def test_restore_all_active_subscriptions_on_reconnect(
     hass: HomeAssistant,
@@ -1277,7 +1283,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
 
     # the subscription with the highest QoS should survive
     expected = [
-        call([("test/state", 2)], properties=None),
+        call([("test/state", 2)], properties=ANY),
     ]
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
@@ -1291,7 +1297,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     # wait for cooldown
     await mock_debouncer.wait()
 
-    expected.append(call([("test/state", 1)], properties=None))
+    expected.append(call([("test/state", 1)], properties=ANY))
     for expected_call in expected:
         assert mqtt_client_mock.subscribe.hass_call(expected_call)
 
@@ -1502,12 +1508,13 @@ async def test_publish_error(
 
 async def test_subscribe_error(
     hass: HomeAssistant,
-    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test publish error."""
-    mqtt_client_mock = setup_with_birth_msg_client_mock
+    await mqtt_mock_entry()
     mqtt_client_mock.reset_mock()
     # simulate client is not connected error before subscribing
     mqtt_client_mock.subscribe.side_effect = lambda *args, **kwargs: (4, None)
@@ -1548,6 +1555,7 @@ async def test_handle_message_callback(
     assert callbacks[0].payload == "test-payload"
 
 
+@pytest.mark.parametrize("mock_v5_protocol_check", [False])
 @pytest.mark.parametrize(
     ("mqtt_config_entry_data", "protocol", "clean_session"),
     [
@@ -1581,7 +1589,6 @@ async def test_handle_message_callback(
 async def test_setup_mqtt_client_clean_session_and_protocol(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    mqtt_client_mock: MqttMockPahoClient,
     protocol: int,
     clean_session: bool | None,
 ) -> None:
@@ -1596,6 +1603,7 @@ async def test_setup_mqtt_client_clean_session_and_protocol(
     assert mock_client.call_args[1]["protocol"] == protocol
 
 
+@pytest.mark.parametrize("mock_v5_protocol_check", [False])
 @pytest.mark.parametrize(
     ("mqtt_config_entry_data", "connect_args"),
     [

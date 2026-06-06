@@ -172,7 +172,7 @@ async def test_filter_expired_warnings(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_dwdwfsapi: MagicMock
 ) -> None:
     """Test expired-warning filtering."""
-    now = datetime.now(UTC)
+    now = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     mock_dwdwfsapi.data_valid = True
     mock_dwdwfsapi.warncell_id = "803000000"
     mock_dwdwfsapi.warncell_name = "Test region"
