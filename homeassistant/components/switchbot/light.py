@@ -189,6 +189,7 @@ class SwitchbotStandingFanLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
         _LOGGER.debug("async_adding_to_hass %s", last_state)
 
         if last_state is not None:
+            self._attr_is_on = last_state.state == STATE_ON
             self._attr_effect = last_state.attributes.get("effect")
             self._attr_effect_preference = last_state.attributes.get(
                 "effect_preference", self._attr_effect_list[-1]
