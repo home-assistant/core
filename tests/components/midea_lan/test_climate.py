@@ -2,12 +2,13 @@
 
 from unittest.mock import MagicMock, patch
 
-from midealocal.const import DeviceType
+from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.c3.const import DeviceAttributes as C3Attributes
 from midealocal.devices.cc import DeviceAttributes as CCAttributes
 from midealocal.devices.cf import DeviceAttributes as CFAttributes
 from midealocal.devices.fb import DeviceAttributes as FBAttributes
+import pytest
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -28,10 +29,21 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.midea_lan import climate
-from homeassistant.const import ATTR_TEMPERATURE, CONF_DEVICE_ID
+from homeassistant.components.midea_lan.const import DOMAIN
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_DEVICE_ID,
+    CONF_IP_ADDRESS,
+    CONF_MODEL,
+    CONF_PORT,
+    CONF_PROTOCOL,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import DummyDevice
+
+from tests.common import MockConfigEntry
 
 
 def _climate_entities() -> list[climate.MideaClimateEntityDescription]:
@@ -286,7 +298,7 @@ def test_midea_c3_specific() -> None:
     assert ent.target_temperature_low == 16
     assert ent.target_temperature_high == 30
     assert ent.hvac_mode == HVACMode.AUTO
-    ent.device.attributes[C3Attributes.mode] = "bad"
+    ent.device.attributes[C3Attributes.mode] = None
     assert ent.hvac_mode == HVACMode.OFF
     assert ent.target_temperature == 22
     assert ent.current_temperature is None
@@ -327,47 +339,156 @@ def test_midea_fb_specific() -> None:
     ent.set_preset_mode("eco")
 
 
-async def test_climate_async_setup_entry(hass: HomeAssistant) -> None:
-    """Test async_setup_entry creates entities for each supported device type."""
-    add_entities = MagicMock()
-    config_entry = MagicMock(data={CONF_DEVICE_ID: 123}, options={})
-    config_entry.runtime_data = DummyDevice(DeviceType.AC)
-
+def test_midea_climate_fallback_paths() -> None:
+    """Test fallback behavior for missing attributes."""
     with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
-        # Ensure optional entities (default=False) are still created (enabled_default
-        # only affects the UI toggle, not creation).
-        with patch.object(
-            climate, "MideaACClimate", side_effect=lambda *_: "ac"
-        ) as ac_ctor:
-            await climate.async_setup_entry(hass, config_entry, add_entities)
-        assert ac_ctor.call_count == 2
+        ac = climate.MideaACClimate(
+            DummyDevice(
+                DeviceType.AC,
+                attributes={
+                    "power": True,
+                    "mode": 1,
+                    "target_temperature": None,
+                    "indoor_temperature": None,
+                    ACAttributes.fan_speed: None,
+                    ACAttributes.outdoor_temperature: None,
+                },
+            ),
+            _get_description(DeviceType.AC, "named"),
+            MagicMock(options={"sensors": []}),
+        )
+        assert ac.target_temperature is None
+        assert ac.current_temperature is None
+        assert ac.fan_mode == climate.FAN_SILENT
+        assert ac.outdoor_temperature is None
 
-        for dev_type in (
-            DeviceType.CC,
-            DeviceType.CF,
-            DeviceType.C3,
-            DeviceType.FB,
-        ):
-            add_entities.reset_mock()
-            config_entry.runtime_data = DummyDevice(dev_type)
-            with (
-                patch.object(climate, "MideaACClimate", side_effect=lambda *_: "ac"),
-                patch.object(climate, "MideaCCClimate", side_effect=lambda *_: "cc"),
-                patch.object(climate, "MideaCFClimate", side_effect=lambda *_: "cf"),
-                patch.object(climate, "MideaC3Climate", side_effect=lambda *_: "c3"),
-                patch.object(climate, "MideaFBClimate", side_effect=lambda *_: "fb"),
-            ):
-                await climate.async_setup_entry(hass, config_entry, add_entities)
-            assert add_entities.called
+        cc = climate.MideaCCClimate(
+            DummyDevice(
+                DeviceType.CC,
+                attributes={
+                    CCAttributes.fan_speed: None,
+                    CCAttributes.temperature_precision: None,
+                },
+            ),
+            _get_description(DeviceType.CC, "named"),
+        )
+        assert cc.fan_mode is None
+        assert cc.target_temperature_step is None
+
+        cf = climate.MideaCFClimate(
+            DummyDevice(
+                DeviceType.CF,
+                attributes={
+                    CFAttributes.min_temperature: None,
+                    CFAttributes.max_temperature: None,
+                    CFAttributes.current_temperature: None,
+                },
+            ),
+            _get_description(DeviceType.CF, "named"),
+        )
+        assert cf.min_temp == climate.TEMPERATURE_MIN
+        assert cf.max_temp == climate.TEMPERATURE_MAX
+        assert cf.current_temperature == climate.TEMPERATURE_MIN
+
+        c3 = climate.MideaC3Climate(
+            DummyDevice(
+                DeviceType.C3,
+                attributes={
+                    C3Attributes.zone_temp_type: None,
+                    C3Attributes.temperature_min: None,
+                    C3Attributes.temperature_max: [16],
+                    C3Attributes.target_temperature: None,
+                    C3Attributes.mode: 1,
+                    C3Attributes.zone1_power: True,
+                },
+            ),
+            _get_description(DeviceType.C3, "named"),
+            0,
+        )
+        assert c3.target_temperature_step == 0.5
+        assert c3.min_temp == climate.TEMPERATURE_MIN
+        assert c3.max_temp == climate.TEMPERATURE_MIN
+        assert c3.target_temperature == climate.TEMPERATURE_MIN
+
+        fb = climate.MideaFBClimate(
+            DummyDevice(
+                DeviceType.FB,
+                attributes={
+                    FBAttributes.mode: None,
+                    FBAttributes.current_temperature: None,
+                    FBAttributes.power: False,
+                },
+            ),
+            _get_description(DeviceType.FB, "named"),
+        )
+        assert fb.preset_mode == PRESET_NONE
+        assert fb.current_temperature == 5.0
+
+
+@pytest.mark.parametrize(
+    ("dev_type", "expected_count"),
+    [
+        pytest.param(DeviceType.AC, 1, id="ac"),
+        pytest.param(DeviceType.CC, 1, id="cc"),
+        pytest.param(DeviceType.CF, 1, id="cf"),
+        pytest.param(DeviceType.C3, 2, id="c3"),
+        pytest.param(DeviceType.FB, 1, id="fb"),
+    ],
+)
+async def test_climate_async_setup_entry(
+    hass: HomeAssistant,
+    dev_type: int,
+    expected_count: int,
+) -> None:
+    """Test async_setup_entry creates entities for each supported device type."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE_ID: 123,
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_PORT: 6444,
+            CONF_MODEL: "m",
+            CONF_PROTOCOL: ProtocolVersion.V2,
+        },
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.midea_lan.device_selector",
+        return_value=DummyDevice(dev_type),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    entity_registry = er.async_get(hass)
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == expected_count
+    )
 
 
 async def test_climate_async_setup_entry_no_device(hass: HomeAssistant) -> None:
-    """Test async_setup_entry logs a warning and returns when runtime_data is None."""
-    add_entities = MagicMock()
-    config_entry = MagicMock(data={CONF_DEVICE_ID: 123}, options={})
-    config_entry.runtime_data = None
+    """Test climate setup logs a warning and creates no entities when runtime_data is None."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE_ID: 123,
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_PORT: 6444,
+            CONF_MODEL: "m",
+            CONF_PROTOCOL: ProtocolVersion.V2,
+        },
+    )
+    entry.add_to_hass(hass)
 
-    with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
-        await climate.async_setup_entry(hass, config_entry, add_entities)
+    async def _init_with_none_runtime(
+        hass_: HomeAssistant, entry_: MockConfigEntry
+    ) -> bool:
+        entry_.runtime_data = None
+        await hass_.config_entries.async_forward_entry_setups(entry_, ["climate"])
+        return True
 
-    add_entities.assert_not_called()
+    with patch(
+        "homeassistant.components.midea_lan.async_setup_entry",
+        side_effect=_init_with_none_runtime,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    entity_registry = er.async_get(hass)
+    assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)

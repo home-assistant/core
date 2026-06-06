@@ -98,10 +98,6 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.midea_lan.config_flow.MideaDevice",
         ) as mock_midea_device,
-        patch(
-            "homeassistant.components.midea_lan.config_flow.MideaLanConfigFlow._save_device_config",
-            new_callable=AsyncMock,
-        ),
     ):
         mock_device = MagicMock()
         mock_device.connect.return_value = True
@@ -186,10 +182,6 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.midea_lan.config_flow.MideaDevice",
         ) as mock_midea_device,
-        patch(
-            "homeassistant.components.midea_lan.config_flow.MideaLanConfigFlow._save_device_config",
-            new_callable=AsyncMock,
-        ),
     ):
         mock_device = MagicMock()
         mock_device.connect.return_value = True
@@ -213,43 +205,6 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_storage_helpers(
-    mock_config_flow: MideaLanConfigFlow,
-    mock_device_config_storage: dict[str, dict],
-) -> None:
-    """Test saving and loading device config from storage."""
-    data = {
-        CONF_DEVICE_ID: TEST_DEVICE_ID,
-        CONF_NAME: TEST_NAME,
-        CONF_TYPE: TEST_TYPE,
-    }
-
-    await mock_config_flow._save_device_config(data)
-
-    loaded = await mock_config_flow._load_device_config(str(TEST_DEVICE_ID))
-    assert loaded[CONF_DEVICE_ID] == TEST_DEVICE_ID
-    assert loaded[CONF_NAME] == TEST_NAME
-    assert len(mock_device_config_storage) == 1
-
-    assert await mock_config_flow._load_device_config("does_not_exist") == {}
-
-
-def test_check_storage_device() -> None:
-    """Test storage-device validation helper."""
-    assert not MideaLanConfigFlow._check_storage_device(
-        {CONF_PROTOCOL: ProtocolVersion.V3},
-        {},
-    )
-    assert not MideaLanConfigFlow._check_storage_device(
-        {CONF_PROTOCOL: ProtocolVersion.V3},
-        {CONF_SUBTYPE: 1, CONF_TOKEN: None, CONF_KEY: None},
-    )
-    assert MideaLanConfigFlow._check_storage_device(
-        {CONF_PROTOCOL: ProtocolVersion.V3},
-        {CONF_SUBTYPE: 1, CONF_TOKEN: TEST_TOKEN, CONF_KEY: TEST_KEY},
-    )
-
-
 async def test_step_user_routes(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test step_user exposes menu options."""
     result = await mock_config_flow.async_step_user()
@@ -260,16 +215,19 @@ async def test_step_user_routes(mock_config_flow: MideaLanConfigFlow) -> None:
 
 async def test_step_cache(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test cache step clears login cache and displays form."""
-    mock_config_flow.hass.data[DOMAIN] = {
-        "login_data": {CONF_ACCOUNT: "a", CONF_SERVER: "s", CONF_PASSWORD: "p"},
-        "login_mode": "input",
+    mock_config_flow._login_data = {
+        CONF_ACCOUNT: "a",
+        CONF_SERVER: "s",
+        CONF_PASSWORD: "p",
     }
+    mock_config_flow._login_mode = "input"
     with patch.object(
         mock_config_flow, "async_step_user", AsyncMock(return_value={"done": True})
     ):
         result = await mock_config_flow.async_step_cache({"action": "remove"})
     assert result == {"done": True}
-    assert mock_config_flow.hass.data[DOMAIN] == {}
+    assert mock_config_flow._login_data is None
+    assert mock_config_flow._login_mode is None
 
     result = await mock_config_flow.async_step_cache()
     assert result["type"] is FlowResultType.FORM
@@ -507,7 +465,7 @@ async def test_step_login_branches(mock_config_flow: MideaLanConfigFlow) -> None
             }
         )
     assert result == {"auto": True}
-    assert mock_config_flow.hass.data[DOMAIN]["login_mode"] == "preset"
+    assert mock_config_flow._login_mode == "preset"
 
     with (
         patch(
@@ -531,14 +489,15 @@ async def test_step_auto_cached_login_failure(
     """Test auto step clears invalid cached login and routes to login step."""
     mock_config_flow.devices = _discovery_result()
     mock_config_flow.available_device = {TEST_DEVICE_ID: "Device"}
-    mock_config_flow.hass.data[DOMAIN] = {
-        "login_mode": "input",
-        "login_data": {CONF_SERVER: "CN", CONF_ACCOUNT: "u", CONF_PASSWORD: "p"},
+    mock_config_flow._login_mode = "input"
+    mock_config_flow._login_data = {
+        CONF_SERVER: "CN",
+        CONF_ACCOUNT: "u",
+        CONF_PASSWORD: "p",
     }
     mock_config_flow.cloud = None
 
     with (
-        patch.object(mock_config_flow, "_load_device_config", return_value={}),
         patch.object(
             mock_config_flow, "_check_cloud_login", AsyncMock(return_value=False)
         ),
@@ -550,7 +509,8 @@ async def test_step_auto_cached_login_failure(
     ):
         result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result == {"login": True}
-    assert mock_config_flow.hass.data[DOMAIN] == {}
+    assert mock_config_flow._login_data is None
+    assert mock_config_flow._login_mode is None
 
 
 async def test_step_auto_v3_key_retrieval_paths(
@@ -559,9 +519,11 @@ async def test_step_auto_v3_key_retrieval_paths(
     """Test auto step V3 key retrieval fallback and success branches."""
     mock_config_flow.devices = _discovery_result()
     mock_config_flow.available_device = {TEST_DEVICE_ID: "Device"}
-    mock_config_flow.hass.data[DOMAIN] = {
-        "login_mode": "preset",
-        "login_data": {CONF_SERVER: "CN", CONF_ACCOUNT: "u", CONF_PASSWORD: "p"},
+    mock_config_flow._login_mode = "preset"
+    mock_config_flow._login_data = {
+        CONF_SERVER: "CN",
+        CONF_ACCOUNT: "u",
+        CONF_PASSWORD: "p",
     }
     mock_config_flow.cloud = MagicMock()
     mock_config_flow.cloud.get_device_info = AsyncMock(
@@ -569,7 +531,6 @@ async def test_step_auto_v3_key_retrieval_paths(
     )
 
     with (
-        patch.object(mock_config_flow, "_load_device_config", return_value={}),
         patch.object(
             mock_config_flow, "_check_key_from_cloud", AsyncMock(return_value={})
         ),
@@ -578,9 +539,8 @@ async def test_step_auto_v3_key_retrieval_paths(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auto"
 
-    mock_config_flow.hass.data[DOMAIN]["login_mode"] = "input"
+    mock_config_flow._login_mode = "input"
     with (
-        patch.object(mock_config_flow, "_load_device_config", return_value={}),
         patch.object(
             mock_config_flow, "_check_key_from_cloud", AsyncMock(side_effect=[{}, {}])
         ),
@@ -591,8 +551,13 @@ async def test_step_auto_v3_key_retrieval_paths(
         result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result["type"] is FlowResultType.FORM
 
+    mock_config_flow._login_data = {
+        CONF_SERVER: "CN",
+        CONF_ACCOUNT: "u",
+        CONF_PASSWORD: "p",
+    }
+    mock_config_flow._login_mode = "input"
     with (
-        patch.object(mock_config_flow, "_load_device_config", return_value={}),
         patch.object(
             mock_config_flow, "_check_key_from_cloud", AsyncMock(side_effect=[{}, {}])
         ),
@@ -603,8 +568,13 @@ async def test_step_auto_v3_key_retrieval_paths(
         result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result["type"] is FlowResultType.FORM
 
+    mock_config_flow._login_data = {
+        CONF_SERVER: "CN",
+        CONF_ACCOUNT: "u",
+        CONF_PASSWORD: "p",
+    }
+    mock_config_flow._login_mode = "input"
     with (
-        patch.object(mock_config_flow, "_load_device_config", return_value={}),
         patch.object(
             mock_config_flow,
             "_check_key_from_cloud",
@@ -618,6 +588,8 @@ async def test_step_auto_v3_key_retrieval_paths(
     ):
         result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result == {"manual": True}
+    assert mock_config_flow._login_data is None
+    assert mock_config_flow._login_mode is None
 
 
 async def test_step_auto_non_v3_goes_manual(
@@ -631,12 +603,13 @@ async def test_step_auto_non_v3_goes_manual(
         }
     }
     mock_config_flow.available_device = {TEST_DEVICE_ID: "Device"}
-    mock_config_flow.hass.data[DOMAIN] = {
-        "login_mode": "input",
-        "login_data": {CONF_SERVER: "CN", CONF_ACCOUNT: "u", CONF_PASSWORD: "p"},
+    mock_config_flow._login_mode = "input"
+    mock_config_flow._login_data = {
+        CONF_SERVER: "CN",
+        CONF_ACCOUNT: "u",
+        CONF_PASSWORD: "p",
     }
     with (
-        patch.object(mock_config_flow, "_load_device_config", return_value={}),
         patch.object(
             mock_config_flow, "_check_cloud_login", AsyncMock(return_value=True)
         ),
@@ -648,35 +621,16 @@ async def test_step_auto_non_v3_goes_manual(
     ):
         result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result == {"manual": True}
+    assert mock_config_flow._login_data is None
+    assert mock_config_flow._login_mode is None
 
 
 async def test_step_auto_routes(mock_config_flow: MideaLanConfigFlow) -> None:
-    """Test auto step routes to manually or login depending on state."""
+    """Test auto step routes to login when auth data is missing."""
     mock_config_flow.devices = _discovery_result()
     mock_config_flow.available_device = {TEST_DEVICE_ID: "Device"}
 
     with (
-        patch.object(
-            mock_config_flow,
-            "_load_device_config",
-            return_value={
-                CONF_NAME: TEST_NAME,
-                CONF_SUBTYPE: TEST_SUBTYPE,
-                CONF_TOKEN: TEST_TOKEN,
-                CONF_KEY: TEST_KEY,
-            },
-        ),
-        patch.object(
-            mock_config_flow,
-            "async_step_manually",
-            AsyncMock(return_value={"manual": True}),
-        ),
-    ):
-        result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
-    assert result == {"manual": True}
-
-    with (
-        patch.object(mock_config_flow, "_load_device_config", return_value={}),
         patch.object(
             mock_config_flow,
             "async_step_login",

@@ -29,7 +29,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Midea LAN component."""
-    hass.data.setdefault(DOMAIN, {})
     return True
 
 
@@ -37,45 +36,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Midea LAN from a config entry."""
 
     data = entry.data
-
-    device_type: int = data.get(CONF_TYPE, DeviceType.AC)
     device_id: int = data[CONF_DEVICE_ID]
-    name: str = data.get(CONF_NAME, f"{device_id}")
-    token: str = data.get(CONF_TOKEN, "")
-    key: str = data.get(CONF_KEY, "")
-    ip_address: str = data[CONF_IP_ADDRESS]
-    port: int = data[CONF_PORT]
-    model: str = data[CONF_MODEL]
-    subtype: int = data.get(CONF_SUBTYPE, 0)
-    protocol: ProtocolVersion = ProtocolVersion(data[CONF_PROTOCOL])
-    if protocol == ProtocolVersion.V3 and (key == "" or token == ""):
+    token = data.get(CONF_TOKEN, "")
+    key = data.get(CONF_KEY, "")
+    protocol = ProtocolVersion(data[CONF_PROTOCOL])
+
+    if protocol == ProtocolVersion.V3 and (not key or not token):
         raise ConfigEntryError("For V3 devices, the key and token are required")
+
     device = await hass.async_add_executor_job(
         device_selector,
-        name,
+        data.get(CONF_NAME, f"{device_id}"),
         device_id,
-        device_type,
-        ip_address,
-        port,
+        data.get(CONF_TYPE, DeviceType.AC),
+        data[CONF_IP_ADDRESS],
+        data[CONF_PORT],
         token,
         key,
         protocol,
-        model,
-        subtype,
+        data[CONF_MODEL],
+        data.get(CONF_SUBTYPE, 0),
         "",
     )
-    if device:
-        await hass.async_add_executor_job(device.open)
-        entry.runtime_data = device
+    if device is None:
+        raise ConfigEntryNotReady("Unable to initialize device")
 
-        async def _close_device() -> None:
-            await hass.async_add_executor_job(device.close)
+    await hass.async_add_executor_job(device.open)
+    entry.runtime_data = device
 
-        entry.async_on_unload(_close_device)
-        await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-        return True
+    async def _close_device() -> None:
+        await hass.async_add_executor_job(device.close)
 
-    raise ConfigEntryNotReady("Unable to initialize device")
+    entry.async_on_unload(_close_device)
+    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

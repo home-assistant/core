@@ -30,7 +30,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
-from homeassistant.helpers.storage import Store
 
 from .const import _LOGGER, CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN
 from .device_catalog import MIDEA_DEVICE_NAMES
@@ -67,6 +66,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         self.account: dict = {}
         self.cloud: MideaCloud | None = None
         self.session: ClientSession | None = None
+        self._login_mode: str | None = None
+        self._login_data: dict[str, str] | None = None
         for device_type, name in MIDEA_DEVICE_NAMES.items():
             self.unsorted[device_type] = name
 
@@ -85,39 +86,11 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         ).decode("utf-8", errors="ignore")
         self.preset_cloud_name: str = DEFAULT_CLOUD
 
-    def _get_device_store(self, device_id: str) -> Store[dict[str, Any]]:
-        """Return storage helper for a specific device."""
-        return Store(self.hass, 1, f"{DOMAIN}.device.{device_id}")
-
-    async def _save_device_config(self, data: dict[str, Any]) -> None:
-        """Save device config to HA storage."""
-        await self._get_device_store(str(data[CONF_DEVICE_ID])).async_save(data)
-
-    async def _load_device_config(self, device_id: str) -> dict[str, Any]:
-        """Load device config from json file with device id.
-
-        Returns:
-        -------
-        Device configuration (json)
-
-        """
-        return await self._get_device_store(device_id).async_load() or {}
-
-    @staticmethod
-    def _check_storage_device(device: dict, storage_device: dict) -> bool:
-        """Check input device with storage_device.
-
-        Returns:
-        -------
-        True if storage device exist
-
-        """
-        if storage_device.get(CONF_SUBTYPE) is None:
-            return False
-        return not (
-            device.get(CONF_PROTOCOL) == ProtocolVersion.V3
-            and (not storage_device.get(CONF_TOKEN) or not storage_device.get(CONF_KEY))
-        )
+    def _clear_login_state(self) -> None:
+        """Clear flow-scoped credentials and mode."""
+        self._login_data = None
+        self._login_mode = None
+        self.cloud = None
 
     def _already_configured(self, device_id: str, ip_address: str) -> bool:
         """Check device from json with device_id or ip address.
@@ -169,10 +142,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         # user input data exist
         if user_input is not None:
-            # key is not None
-            if self.hass.data.get(DOMAIN):
-                self.hass.data[DOMAIN].pop("login_data", None)
-                self.hass.data[DOMAIN].pop("login_mode", None)
+            self._clear_login_state()
             return await self.async_step_user()
         # show cache info form in UI
         return self.async_show_form(
@@ -209,24 +179,22 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         cloud_server_options.append(SKIP_LOGIN_OPTION)
         # user input data exist
         if user_input is not None:
-            if not self.hass.data.get(DOMAIN):
-                self.hass.data[DOMAIN] = {}
             # check skip login option
             if user_input[CONF_SERVER] == SKIP_LOGIN_OPTION:
                 # use preset account and DEFAULT_CLOUD cloud
                 cloud_server = DEFAULT_CLOUD
                 account = self.preset_account
                 password = self.preset_password
-                # set a login_mode flag
-                self.hass.data[DOMAIN]["login_mode"] = "preset"
+                login_mode = "preset"
             # use input data
             else:
                 _LOGGER.debug("User input login matched")
                 cloud_server = user_input[CONF_SERVER]
                 account = user_input[CONF_ACCOUNT]
                 password = user_input[CONF_PASSWORD]
-                # set a login_mode flag
-                self.hass.data[DOMAIN]["login_mode"] = "input"
+                login_mode = "input"
+
+            self._login_mode = login_mode
 
             # cloud login MUST pass with user input or preset account
             if await self._check_cloud_login(
@@ -235,8 +203,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 password=password,
                 force_login=True,
             ):
-                # save passed account to cache, available before HA reboot
-                self.hass.data[DOMAIN]["login_data"] = {
+                self._login_data = {
                     CONF_ACCOUNT: account,
                     CONF_PASSWORD: password,
                     CONF_SERVER: cloud_server,
@@ -246,7 +213,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             # return error with login failed
             _LOGGER.error(
                 "Failed to login with %s account in %s server",
-                self.hass.data[DOMAIN]["login_mode"],
+                login_mode,
                 cloud_server,
             )
             return await self.async_step_login(error="login_failed")
@@ -487,47 +454,23 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: device.get(CONF_PORT),
                 CONF_MODEL: device.get(CONF_MODEL),
             }
-            storage_device = await self._load_device_config(str(device_id))
-            # device config already exist, load from local json without cloud
-            if self._check_storage_device(device, storage_device):
-                self.found_device = {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_TYPE: device.get(CONF_TYPE),
-                    CONF_PROTOCOL: device.get(CONF_PROTOCOL),
-                    CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS),
-                    CONF_PORT: device.get(CONF_PORT),
-                    CONF_MODEL: device.get(CONF_MODEL),
-                    CONF_NAME: storage_device.get(CONF_NAME),
-                    CONF_SUBTYPE: storage_device.get(CONF_SUBTYPE),
-                    CONF_TOKEN: storage_device.get(CONF_TOKEN),
-                    CONF_KEY: storage_device.get(CONF_KEY),
-                }
-                _LOGGER.debug(
-                    "Loaded configuration for device %s from storage",
-                    device_id,
-                )
-                return await self.async_step_manually()
-            # device config not exist in local
             # check login cache, show login web if no cache
-            if not self.hass.data.get(DOMAIN) or not self.hass.data[DOMAIN].get(
-                "login_data",
-            ):
+            if self._login_data is None:
                 return await self.async_step_login()
             # login cached exist, cloud is None, reinit and login
             if self.cloud is None and not await self._check_cloud_login(
-                cloud_name=self.hass.data[DOMAIN]["login_data"][CONF_SERVER],
-                account=self.hass.data[DOMAIN]["login_data"][CONF_ACCOUNT],
-                password=self.hass.data[DOMAIN]["login_data"][CONF_PASSWORD],
+                cloud_name=self._login_data[CONF_SERVER],
+                account=self._login_data[CONF_ACCOUNT],
+                password=self._login_data[CONF_PASSWORD],
             ):
                 # print error in debug log and show login web
                 _LOGGER.debug(
                     "Login with cached %s account failed in %s server",
-                    self.hass.data[DOMAIN].get("login_mode"),
-                    self.hass.data[DOMAIN]["login_data"][CONF_SERVER],
+                    self._login_mode,
+                    self._login_data[CONF_SERVER],
                 )
                 # remove error cache and relogin
-                self.hass.data[DOMAIN].pop("login_data", None)
-                self.hass.data[DOMAIN].pop("login_mode", None)
+                self._clear_login_state()
                 return await self.async_step_login()
 
             # get subtype from cloud
@@ -547,12 +490,12 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not keys.get("token") or not keys.get("key"):
                     _LOGGER.debug(
                         "Can't get valid token with %s account in %s server",
-                        self.hass.data[DOMAIN]["login_mode"],
-                        self.hass.data[DOMAIN]["login_data"][CONF_SERVER],
+                        self._login_mode,
+                        self._login_data[CONF_SERVER],
                     )
 
                     # exclude: user selected not login and phase 1 is preset account
-                    if self.hass.data[DOMAIN]["login_mode"] == "preset":
+                    if self._login_mode == "preset":
                         return await self.async_step_auto(
                             error="token_unavailable",
                         )
@@ -580,8 +523,10 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 # get key pass
                 self.found_device[CONF_TOKEN] = keys["token"]
                 self.found_device[CONF_KEY] = keys["key"]
+                self._clear_login_state()
                 return await self.async_step_manually()
             # v1/v2 device add without token/key
+            self._clear_login_state()
             return await self.async_step_manually()
         # show available device list in UI
         return self.async_show_form(
@@ -731,7 +676,6 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     await self.async_set_unique_id(str(device_id))
                     self._abort_if_unique_id_configured()
-                    await self._save_device_config(data)
 
                     return self.async_create_entry(
                         title=name,
