@@ -943,12 +943,10 @@ class KNXOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage KNX communication settings."""
         if user_input is not None:
-            self.new_entry_data.update(
-                KNXConfigEntryData(
-                    state_updater=user_input[CONF_KNX_STATE_UPDATER],
-                    rate_limit=user_input[CONF_KNX_RATE_LIMIT],
-                    telegram_db_load_hours=user_input[CONF_KNX_TELEGRAM_DB_LOAD_HOURS],
-                )
+            self.new_entry_data |= KNXConfigEntryData(
+                state_updater=user_input[CONF_KNX_STATE_UPDATER],
+                rate_limit=user_input[CONF_KNX_RATE_LIMIT],
+                telegram_db_load_hours=user_input[CONF_KNX_TELEGRAM_DB_LOAD_HOURS],
             )
             return await self.async_step_telegram_store_sqlite()
 

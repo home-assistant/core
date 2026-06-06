@@ -308,7 +308,7 @@ class Telegrams:
             payload = tuple(payload)
 
         return StoredTelegram(
-            timestamp=dt_util.parse_datetime(t["timestamp"]) or dt_util.now(),
+            timestamp=dt_util.parse_datetime(t["timestamp"], raise_on_error=True),
             source=t["source"],
             destination=t["destination"],
             direction=t["direction"],
