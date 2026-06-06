@@ -168,8 +168,10 @@ def get_url(
                 raise NoURLAvailableError
 
     # For current request, we accept loopback interfaces (e.g., 127.0.0.1),
-    # the Supervisor hostname and localhost transparently
-    request_host, request_port = _get_request_host_port()
+    # the Supervisor hostname and localhost transparently. We ignore the port
+    # in the request since we didn't match above and only use the configured
+    # scheme/port.
+    request_host, _ = _get_request_host_port()
     if (
         require_current_request
         and request_host is not None
@@ -177,7 +179,7 @@ def get_url(
     ):
         scheme = "https" if hass.config.api.use_ssl else "http"
         current_url = yarl.URL.build(
-            scheme=scheme, host=request_host, port=request_port
+            scheme=scheme, host=request_host, port=hass.config.api.port
         )
 
         known_hostnames = ["localhost"]
