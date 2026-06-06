@@ -521,9 +521,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         super().__init__(hass, entry, device, update_interval)
 
         self.connected = False
-        # Set once the BLE scanner setup has been attempted after the first
-        # connection. Used at startup to wait for the scanner to be registered
-        # before setup completes so it does not miss the first active scan window.
+        # Set once BLE scanner setup has been attempted after connecting.
         self.ble_scanner_setup_done = asyncio.Event()
         self._disconnected_callbacks: list[CALLBACK_TYPE] = []
         self._connection_lock = asyncio.Lock()
@@ -786,7 +784,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 )
             )
         finally:
-            # Release any startup wait now that the scanner setup has been attempted.
             self.ble_scanner_setup_done.set()
 
     @callback

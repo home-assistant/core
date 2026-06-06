@@ -117,9 +117,7 @@ COAP_SCHEMA: Final = vol.Schema(
 )
 CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
-# How long to wait at startup for a bluetooth proxy to connect and register its
-# scanner before letting setup finish, so it is not a late joiner that misses the
-# first active scan window.
+# Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
 
 
@@ -379,8 +377,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             and entry.options.get(CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED)
             != BLEScannerMode.DISABLED
         ):
-            # Wait briefly for the bluetooth proxy to register its scanner so it is
-            # not a late joiner that misses the first active scan window at startup.
+            # Wait for the proxy to register its scanner before finishing setup.
             with contextlib.suppress(TimeoutError):
                 async with asyncio.timeout(STARTUP_SCANNER_WAIT):
                     await runtime_data.rpc.ble_scanner_setup_done.wait()
