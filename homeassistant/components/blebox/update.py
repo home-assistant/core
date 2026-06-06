@@ -18,8 +18,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import BleBoxConfigEntry
+from .const import DOMAIN
+from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
 
+PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(hours=1)
 
 
@@ -33,11 +36,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox update entry."""
+    coordinator = config_entry.runtime_data
     entities = [
-        BleBoxUpdateEntity(feature)
-        for feature in config_entry.runtime_data.features.get("updates", [])
+        BleBoxUpdateEntity(coordinator, feature)
+        for feature in coordinator.box.features.get("updates", [])
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity):
@@ -48,9 +52,16 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
 
-    def __init__(self, feature: blebox_uniapi.update.Update) -> None:
+    @property
+    def should_poll(self) -> bool:
+        """Return True because firmware versions cannot be fetched via coordinator."""
+        return True
+
+    def __init__(
+        self, coordinator: BleBoxCoordinator, feature: blebox_uniapi.update.Update
+    ) -> None:
         """Initialize the update entity."""
-        super().__init__(feature)
+        super().__init__(coordinator, feature)
         self._in_progress_old_version: str | None = None
         self._poll_cancel: CALLBACK_TYPE | None = None
         self._poll_attempts: int = 0
@@ -76,7 +87,11 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         try:
             await self._feature.async_update()
         except Error as ex:
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
         self._sync_sw_version()
 
     @property
@@ -111,7 +126,11 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
             await self._feature.async_install()
         except Error as ex:
             self._reset_progress()
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="install_failed",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
         self._poll_cancel = async_call_later(
             self.hass, _POLL_INTERVAL_SECONDS, self._poll_until_updated
         )
