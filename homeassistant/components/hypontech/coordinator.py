@@ -62,20 +62,39 @@ class HypontechDataCoordinator(DataUpdateCoordinator[HypontechCoordinatorData]):
         self.account_id = account_id
 
     async def _async_update_data(self) -> HypontechCoordinatorData:
+        # Enabled entities register a context so we only call the matching API:
+        # the account ID for overview sensors, the plant ID for plant monitor
+        # sensors. On the first refresh no entity is registered yet, so fetch
+        # everything to populate the sensors without delay.
+        first_refresh = self.data is None
+        wanted = set(self.async_contexts())
         try:
-            overview = await self.api.get_overview()
+            if first_refresh or self.account_id in wanted:
+                overview = await self.api.get_overview()
+            else:
+                overview = OverviewData()
             plants = await self.api.get_list()
+            monitored = [
+                plant for plant in plants if first_refresh or plant.plant_id in wanted
+            ]
             monitors = await asyncio.gather(
-                *(self.api.get_monitor(plant.plant_id) for plant in plants)
+                *(self.api.get_monitor(plant.plant_id) for plant in monitored)
             )
         except RequestError as ex:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="connection_error"
             ) from ex
+        monitor_by_id = {
+            plant.plant_id: monitor
+            for plant, monitor in zip(monitored, monitors, strict=True)
+        }
         return HypontechCoordinatorData(
             overview=overview,
             plants={
-                plant.plant_id: HypontechPlant(info=plant, monitor=monitor)
-                for plant, monitor in zip(plants, monitors, strict=True)
+                plant.plant_id: HypontechPlant(
+                    info=plant,
+                    monitor=monitor_by_id.get(plant.plant_id, PlantMonitorData()),
+                )
+                for plant in plants
             },
         )
