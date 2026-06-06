@@ -48,7 +48,8 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
-    CONF_KNX_TELEGRAM_LOG_SIZE,
+    CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
@@ -56,8 +57,8 @@ from .const import (
     DEFAULT_ROUTING_IA,
     DOMAIN,
     KNX_MODULE_KEY,
-    TELEGRAM_LOG_DEFAULT,
-    TELEGRAM_LOG_MAX,
+    KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
+    KNX_TELEGRAM_RETENTION_DEFAULT,
     KNXConfigEntryData,
 )
 from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
@@ -74,7 +75,8 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
     rate_limit=CONF_KNX_DEFAULT_RATE_LIMIT,
     route_back=False,
     state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
-    telegram_log_size=TELEGRAM_LOG_DEFAULT,
+    telegram_db_retention_days=KNX_TELEGRAM_RETENTION_DEFAULT,
+    telegram_db_load_hours=KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
@@ -917,11 +919,13 @@ class KNXOptionsFlow(OptionsFlowWithReload):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize KNX options flow."""
         self.initial_data = dict(config_entry.data)
+        self.new_entry_data: KNXConfigEntryData = {}
 
     @callback
-    def finish_flow(self, new_entry_data: KNXConfigEntryData) -> ConfigFlowResult:
+    def finish_flow(self) -> ConfigFlowResult:
         """Update the ConfigEntry and finish the flow."""
-        new_data = self.initial_data | new_entry_data
+        new_data = self.initial_data | self.new_entry_data
+
         self.hass.config_entries.async_update_entry(
             self.config_entry,
             data=new_data,
@@ -939,13 +943,14 @@ class KNXOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage KNX communication settings."""
         if user_input is not None:
-            return self.finish_flow(
+            self.new_entry_data.update(
                 KNXConfigEntryData(
                     state_updater=user_input[CONF_KNX_STATE_UPDATER],
                     rate_limit=user_input[CONF_KNX_RATE_LIMIT],
-                    telegram_log_size=user_input[CONF_KNX_TELEGRAM_LOG_SIZE],
+                    telegram_db_load_hours=user_input[CONF_KNX_TELEGRAM_DB_LOAD_HOURS],
                 )
             )
+            return await self.async_step_telegram_store_sqlite()
 
         data_schema = {
             vol.Required(
@@ -970,16 +975,16 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 vol.Coerce(int),
             ),
             vol.Required(
-                CONF_KNX_TELEGRAM_LOG_SIZE,
+                CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
                 default=self.initial_data.get(
-                    CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT
+                    CONF_KNX_TELEGRAM_DB_LOAD_HOURS, KNX_TELEGRAM_LOAD_HOURS_DEFAULT
                 ),
             ): vol.All(
                 selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=0,
-                        max=TELEGRAM_LOG_MAX,
                         mode=selector.NumberSelectorMode.BOX,
+                        unit_of_measurement="h",
                     ),
                 ),
                 vol.Coerce(int),
@@ -988,8 +993,40 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="communication_settings",
             data_schema=vol.Schema(data_schema),
+            last_step=False,
+        )
+
+    async def async_step_telegram_store_sqlite(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage SQLite telegram store settings."""
+        if user_input is not None:
+            self.new_entry_data |= KNXConfigEntryData(
+                telegram_db_retention_days=user_input[
+                    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS
+                ],
+            )
+            return self.finish_flow()
+
+        data_schema = {
+            vol.Required(
+                CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+                default=self.initial_data.get(
+                    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS, KNX_TELEGRAM_RETENTION_DEFAULT
+                ),
+            ): vol.All(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        mode=selector.NumberSelectorMode.BOX,
+                        unit_of_measurement="days",
+                    ),
+                ),
+                vol.Coerce(int),
+            ),
+        }
+        return self.async_show_form(
+            step_id="telegram_store_sqlite",
+            data_schema=vol.Schema(data_schema),
             last_step=True,
-            description_placeholders={
-                "telegram_log_size_max": f"{TELEGRAM_LOG_MAX}",
-            },
         )

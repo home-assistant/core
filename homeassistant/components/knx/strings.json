@@ -1129,6 +1129,10 @@
         }
       },
       "title": "KNX Data Secure telegrams can't be decrypted"
+    },
+    "telegram_storage_error": {
+      "description": "The configured KNX telegram storage backend failed to initialize. As a result, KNX telegrams are currently not being stored. Check the logs for details on the error and ensure your database is accessible.",
+      "title": "KNX telegram storage error"
     }
   },
   "options": {
@@ -1137,14 +1141,23 @@
         "data": {
           "rate_limit": "Rate limit",
           "state_updater": "State updater",
-          "telegram_log_size": "Telegram history limit"
+          "telegram_db_load_hours": "Group monitor history"
         },
         "data_description": {
           "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
           "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option.",
-          "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
+          "telegram_db_load_hours": "Number of hours of telegram history to load when the group monitor is opened."
         },
         "title": "Communication settings"
+      },
+      "telegram_store_sqlite": {
+        "data": {
+          "telegram_db_retention_days": "Retention period (days)"
+        },
+        "data_description": {
+          "telegram_db_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly."
+        },
+        "title": "Telegram store settings"
       }
     }
   },

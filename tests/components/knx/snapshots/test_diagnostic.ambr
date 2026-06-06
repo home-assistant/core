@@ -8,6 +8,7 @@
       'multicast_port': 3671,
       'rate_limit': 0,
       'state_updater': True,
+      'telegram_db_path': ':memory:',
     }),
     'config_store': dict({
       'entities': dict({
@@ -41,6 +42,7 @@
       'multicast_port': 3671,
       'rate_limit': 0,
       'state_updater': True,
+      'telegram_db_path': ':memory:',
       'user_password': '**REDACTED**',
     }),
     'config_store': dict({
@@ -69,6 +71,7 @@
       'multicast_port': 3671,
       'rate_limit': 0,
       'state_updater': True,
+      'telegram_db_path': ':memory:',
     }),
     'config_store': dict({
       'entities': dict({
@@ -96,6 +99,7 @@
       'multicast_port': 3671,
       'rate_limit': 0,
       'state_updater': True,
+      'telegram_db_path': ':memory:',
     }),
     'config_store': dict({
       'entities': dict({

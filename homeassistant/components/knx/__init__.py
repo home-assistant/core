@@ -22,6 +22,7 @@ from .const import (
     DATA_HASS_CONFIG,
     DOMAIN,
     KNX_MODULE_KEY,
+    KNX_TELEGRAM_DB_PATH_DEFAULT,
     SUPPORTED_PLATFORMS_UI,
     SUPPORTED_PLATFORMS_YAML,
 )
@@ -51,7 +52,6 @@ from .schema import (
 )
 from .services import async_setup_services
 from .storage.config_store import STORAGE_KEY as CONFIG_STORAGE_KEY
-from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY
 from .websocket import register_panel
 
 _KNX_YAML_CONFIG: Final = "knx_yaml_config"
@@ -147,7 +147,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await register_panel(hass)
-
     return True
 
 
@@ -203,7 +202,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         with contextlib.suppress(FileNotFoundError):
             (storage_dir / PROJECT_STORAGE_KEY).unlink()
         with contextlib.suppress(FileNotFoundError):
-            (storage_dir / TELEGRAMS_STORAGE_KEY).unlink()
+            (storage_dir / KNX_TELEGRAM_DB_PATH_DEFAULT).unlink()
+        with contextlib.suppress(FileNotFoundError):
+            (storage_dir / f"{KNX_TELEGRAM_DB_PATH_DEFAULT}-wal").unlink()
+        with contextlib.suppress(FileNotFoundError):
+            (storage_dir / f"{KNX_TELEGRAM_DB_PATH_DEFAULT}-shm").unlink()
+
         with contextlib.suppress(FileNotFoundError, OSError):
             (storage_dir / DOMAIN).rmdir()
 

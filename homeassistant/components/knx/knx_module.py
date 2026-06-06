@@ -1,6 +1,7 @@
 """Base module for the KNX integration."""
 
 import logging
+from typing import cast
 
 from xknx import XKNX
 from xknx.core import XknxConnectionState
@@ -43,13 +44,12 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
-    CONF_KNX_TELEGRAM_LOG_SIZE,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     KNX_ADDRESS,
-    TELEGRAM_LOG_DEFAULT,
+    KNXConfigEntryData,
 )
 from .device import KNXInterfaceDevice
 from .entity import KnxEntityIdentifier
@@ -103,7 +103,7 @@ class KNXModule:
             hass=hass,
             xknx=self.xknx,
             project=self.project,
-            log_size=entry.data.get(CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT),
+            config=cast(KNXConfigEntryData, entry.data),
         )
         self.interface_device = KNXInterfaceDevice(
             hass=hass, entry=entry, xknx=self.xknx
@@ -131,7 +131,7 @@ class KNXModule:
     async def stop(self, event: Event | None = None) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
         await self.xknx.stop()
-        await self.telegrams.save_history()
+        await self.telegrams.stop()
 
     def connection_config(self) -> ConnectionConfig:
         """Return the connection_config."""

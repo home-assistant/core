@@ -1,5 +1,7 @@
 """Conftest for the KNX integration."""
 
+from __future__ import annotations
+
 import asyncio
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
@@ -29,6 +31,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_MCAST_PORT,
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_PATH,
     DEFAULT_ROUTING_IA,
     DOMAIN,
 )
@@ -83,6 +86,20 @@ class KNXTestKit:
         state_updater: bool = True,
     ) -> None:
         """Create the KNX integration."""
+        # Force an in-memory telegram store for entries that don't specify a
+        # db path (e.g. tests building a MockConfigEntry from raw connection
+        # data) so the integration never writes a real sqlite file to disk.
+        if CONF_KNX_TELEGRAM_DB_PATH not in self.mock_config_entry.data:
+            if self.mock_config_entry.entry_id not in self.hass.config_entries._entries:
+                self.mock_config_entry.add_to_hass(self.hass)
+            self.hass.config_entries.async_update_entry(
+                self.mock_config_entry,
+                data={
+                    **self.mock_config_entry.data,
+                    CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
+                },
+            )
+            add_entry_to_hass = False
 
         async def patch_xknx_start():
             """Patch `xknx.start` for unittests."""
@@ -140,6 +157,7 @@ class KNXTestKit:
             if not state_updater:
                 state_updater_patcher.start()
 
+            await async_setup_component(self.hass, "persistent_notification", {})
             await async_setup_component(self.hass, DOMAIN, knx_config)
             await self.hass.async_block_till_done()
             # remove patch after setup so state_updater can be tested
@@ -355,6 +373,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
             CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
             CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
+            CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
         },
     )
 
