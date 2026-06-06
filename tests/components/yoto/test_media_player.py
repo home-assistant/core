@@ -377,6 +377,33 @@ async def test_browse_group_lists_cards(
     assert children[0]["media_content_id"] == "yoto://card/card-test"
 
 
+async def test_browse_group_skips_cards_missing_from_library(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_yoto_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A group may reference cards absent from the library; those are skipped."""
+    mock_yoto_client.groups["group-test"].card_ids = ["card-test", "missing-card"]
+    await setup_integration(hass, mock_config_entry)
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": "music",
+            "media_content_id": "yoto://group/group-test",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    children = response["result"]["children"]
+    assert [c["title"] for c in children] == ["Outer Space"]
+
+
 @pytest.mark.usefixtures("mock_yoto_client")
 async def test_browse_unknown_group_raises(
     hass: HomeAssistant,

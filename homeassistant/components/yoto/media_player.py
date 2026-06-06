@@ -327,7 +327,6 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
     def _browse_root(self) -> BrowseMedia:
         """List every card and group in the user's library."""
         client = self.coordinator.client
-        # Cards are the primary content; groups are a curation overlay on top.
         children: list[BrowseMedia] = [
             self._card_node(card) for card in client.library.values()
         ]
@@ -346,7 +345,6 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
     def _browse_group(self, group: Group) -> BrowseMedia:
         """List the cards in a group."""
         library = self.coordinator.client.library
-        # A group only carries card IDs; skip IDs not in the cached library.
         cards = [library[card_id] for card_id in group.card_ids if card_id in library]
         node = self._group_node(group)
         node.children = [self._card_node(card) for card in cards]
