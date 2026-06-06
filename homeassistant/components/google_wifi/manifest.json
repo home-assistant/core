@@ -1,8 +1,10 @@
 {
   "domain": "google_wifi",
   "name": "Google Wifi",
-  "codeowners": [],
+  "codeowners": ["@EpicBurrito"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/google_wifi",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "legacy"
 }
