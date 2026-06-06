@@ -26,7 +26,7 @@ async def test_entry_diagnostics(
     """Test config entry diagnostics."""
 
     config_entry = MockConfigEntry(
-        version=2,
+        minor_version=2,
         domain=DOMAIN,
         data={
             CONF_HOST: TEST_HOST,

@@ -12,7 +12,7 @@
       }),
       'domain': 'goodwe',
       'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -22,7 +22,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': None,
-      'version': 2,
+      'version': 1,
     }),
     'inverter': dict({
       'arm_firmware': 'dummy.arm.version',
