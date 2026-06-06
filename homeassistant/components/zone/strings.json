@@ -41,6 +41,32 @@
         }
       },
       "name": "Is not in zone"
+    },
+    "occupancy_is_detected": {
+      "description": "Tests if a zone is occupied.",
+      "fields": {
+        "for": {
+          "name": "[%key:component::zone::common::condition_for_name%]"
+        },
+        "zone": {
+          "description": "The zone to monitor.",
+          "name": "[%key:component::zone::common::condition_zone_name%]"
+        }
+      },
+      "name": "Zone occupancy is detected"
+    },
+    "occupancy_is_not_detected": {
+      "description": "Tests if a zone is empty.",
+      "fields": {
+        "for": {
+          "name": "[%key:component::zone::common::condition_for_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::zone::conditions::occupancy_is_detected::fields::zone::description%]",
+          "name": "[%key:component::zone::common::condition_zone_name%]"
+        }
+      },
+      "name": "Zone occupancy is not detected"
     }
   },
   "services": {

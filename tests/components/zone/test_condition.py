@@ -8,6 +8,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.zone import condition as zone_condition
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition, config_validation as cv
@@ -224,6 +225,105 @@ async def test_multiple_zones(hass: HomeAssistant) -> None:
     assert not test.async_check()
 
 
+@pytest.mark.parametrize("entity_id", ["device_tracker.cat", "person.bob"])
+async def test_zone_condition_prefers_in_zones_over_coordinates(
+    hass: HomeAssistant, entity_id: str
+) -> None:
+    """Test the legacy zone condition prefers in_zones over coordinates.
+
+    For device_tracker and person entities the ``in_zones`` attribute is
+    authoritative; coordinates are only consulted as a fallback.
+    """
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+    )
+
+    # in_zones lists the zone but the coordinates are far away -> in_zones wins.
+    hass.states.async_set(
+        entity_id,
+        "home",
+        {"latitude": 50.0, "longitude": 50.0, "in_zones": ["zone.home"]},
+    )
+    assert zone_condition.zone(hass, "zone.home", entity_id) is True
+
+    # in_zones is empty but the coordinates are inside the zone -> in_zones wins.
+    hass.states.async_set(
+        entity_id,
+        "not_home",
+        {"latitude": 2.1, "longitude": 1.1, "in_zones": []},
+    )
+    assert zone_condition.zone(hass, "zone.home", entity_id) is False
+
+    # in_zones lists a different zone -> not in the target zone.
+    hass.states.async_set(
+        entity_id,
+        "work",
+        {"latitude": 2.1, "longitude": 1.1, "in_zones": ["zone.work"]},
+    )
+    assert zone_condition.zone(hass, "zone.home", entity_id) is False
+
+
+async def test_zone_condition_ignores_in_zones_for_other_domains(
+    hass: HomeAssistant,
+) -> None:
+    """Test in_zones is only honored for device_tracker and person entities.
+
+    An entity in another domain that exposes an ``in_zones`` attribute is
+    matched by coordinates instead.
+    """
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+    )
+
+    # in_zones claims the zone but the coordinates are far away -> coordinates win.
+    hass.states.async_set(
+        "sensor.tracker",
+        "home",
+        {"latitude": 50.0, "longitude": 50.0, "in_zones": ["zone.home"]},
+    )
+    assert zone_condition.zone(hass, "zone.home", "sensor.tracker") is False
+
+    # in_zones is empty but the coordinates are inside the zone -> coordinates win.
+    hass.states.async_set(
+        "sensor.tracker",
+        "home",
+        {"latitude": 2.1, "longitude": 1.1, "in_zones": []},
+    )
+    assert zone_condition.zone(hass, "zone.home", "sensor.tracker") is True
+
+
+async def test_zone_condition_falls_back_to_coordinates(hass: HomeAssistant) -> None:
+    """Test the legacy zone condition uses coordinates without an in_zones attr.
+
+    Coordinate-only entities (e.g. geo_location) report no ``in_zones``.
+    """
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+    )
+
+    # Inside the zone by coordinates, no in_zones attribute.
+    hass.states.async_set(
+        "geo_location.quake",
+        "1.0",
+        {"latitude": 2.1, "longitude": 1.1},
+    )
+    assert zone_condition.zone(hass, "zone.home", "geo_location.quake") is True
+
+    # Outside the zone by coordinates.
+    hass.states.async_set(
+        "geo_location.quake",
+        "1.0",
+        {"latitude": 50.0, "longitude": 50.0},
+    )
+    assert zone_condition.zone(hass, "zone.home", "geo_location.quake") is False
+
+
 # --- New-style zone condition tests ---
 
 ZONE_HOME = "zone.home"
@@ -235,10 +335,18 @@ TARGET_ZONE = ZONE_HOME
 
 
 @pytest.mark.parametrize(
-    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    (
+        "condition_key",
+        "base_options",
+        "supports_behavior",
+        "supports_duration",
+        "supports_target",
+    ),
     [
-        ("zone.in_zone", {"zone": TARGET_ZONE}, True, True),
-        ("zone.not_in_zone", {"zone": TARGET_ZONE}, True, True),
+        ("zone.in_zone", {"zone": TARGET_ZONE}, True, True, True),
+        ("zone.not_in_zone", {"zone": TARGET_ZONE}, True, True, True),
+        ("zone.occupancy_is_detected", {"zone": ZONE_HOME}, False, True, False),
+        ("zone.occupancy_is_not_detected", {"zone": ZONE_HOME}, False, True, False),
     ],
 )
 async def test_zone_condition_options_validation(
@@ -247,6 +355,7 @@ async def test_zone_condition_options_validation(
     base_options: dict[str, Any] | None,
     supports_behavior: bool,
     supports_duration: bool,
+    supports_target: bool,
 ) -> None:
     """Test that zone conditions support the expected options."""
     await assert_condition_options_supported(
@@ -255,22 +364,39 @@ async def test_zone_condition_options_validation(
         base_options,
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
+        supports_target=supports_target,
     )
 
 
-@pytest.mark.parametrize("condition_key", ["zone.in_zone", "zone.not_in_zone"])
+@pytest.mark.parametrize(
+    ("condition_key", "config"),
+    [
+        (
+            "zone.in_zone",
+            {"target": {"entity_id": "person.alice"}, "options": {"zone": "light.x"}},
+        ),
+        (
+            "zone.not_in_zone",
+            {"target": {"entity_id": "person.alice"}, "options": {"zone": "light.x"}},
+        ),
+        (
+            "zone.occupancy_is_detected",
+            {"options": {"zone": "light.x"}},
+        ),
+        (
+            "zone.occupancy_is_not_detected",
+            {"options": {"zone": "light.x"}},
+        ),
+    ],
+)
 async def test_zone_condition_rejects_non_zone_entity_id(
-    hass: HomeAssistant, condition_key: str
+    hass: HomeAssistant, condition_key: str, config: dict[str, Any]
 ) -> None:
     """Test that the zone option must reference entities in the zone domain."""
     with pytest.raises(vol.Invalid):
         await condition.async_validate_condition_config(
             hass,
-            {
-                "condition": condition_key,
-                "target": {"entity_id": "person.alice"},
-                "options": {"zone": "person.alice"},
-            },
+            {"condition": condition_key, **config},
         )
 
 
@@ -461,3 +587,58 @@ async def test_in_zone_condition_for_attribute_only_change(
     # After the duration elapses, the condition is satisfied.
     freezer.tick(timedelta(minutes=6))
     assert test.async_check() is True
+
+
+# --- Zone occupancy condition tests ---
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "zone_state", "expected"),
+    [
+        # occupancy_is_detected — true when count >= 1
+        pytest.param("zone.occupancy_is_detected", "1", True, id="detected_1"),
+        pytest.param("zone.occupancy_is_detected", "3", True, id="detected_3"),
+        pytest.param("zone.occupancy_is_detected", "0", False, id="detected_0"),
+        pytest.param(
+            "zone.occupancy_is_detected",
+            STATE_UNAVAILABLE,
+            False,
+            id="detected_unavailable",
+        ),
+        pytest.param(
+            "zone.occupancy_is_detected", STATE_UNKNOWN, False, id="detected_unknown"
+        ),
+        # occupancy_is_not_detected — true only when count == 0
+        pytest.param("zone.occupancy_is_not_detected", "0", True, id="empty_0"),
+        pytest.param("zone.occupancy_is_not_detected", "1", False, id="empty_1"),
+        pytest.param("zone.occupancy_is_not_detected", "3", False, id="empty_3"),
+        # Unavailable / unknown are not "empty" — they're indeterminate.
+        pytest.param(
+            "zone.occupancy_is_not_detected",
+            STATE_UNAVAILABLE,
+            False,
+            id="empty_unavailable",
+        ),
+        pytest.param(
+            "zone.occupancy_is_not_detected",
+            STATE_UNKNOWN,
+            False,
+            id="empty_unknown",
+        ),
+    ],
+)
+async def test_zone_occupancy_condition_evaluates(
+    hass: HomeAssistant,
+    condition_key: str,
+    zone_state: str,
+    expected: bool,
+) -> None:
+    """Test occupancy conditions evaluate against the zone's integer state."""
+    hass.states.async_set(ZONE_HOME, zone_state)
+    await hass.async_block_till_done()
+
+    config = await condition.async_validate_condition_config(
+        hass, {"condition": condition_key, "options": {"zone": ZONE_HOME}}
+    )
+    test = await condition.async_from_config(hass, config)
+    assert test.async_check() is expected
