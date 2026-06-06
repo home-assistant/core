@@ -108,9 +108,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-# How long to wait at startup for a Bluetooth proxy to connect and register its
-# scanner before letting setup finish, so it is not a late joiner that misses the
-# first active scan window.
+# Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
 
 LOG_LEVEL_TO_LOGGER = {
@@ -684,7 +682,6 @@ class ESPHomeManager:
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
-        # Release any startup wait now that the scanner (if any) is registered.
         entry_data.first_connect_done.set()
 
         if device_info.voice_assistant_feature_flags_compat(api_version) and (
@@ -998,9 +995,7 @@ class ESPHomeManager:
 
         await reconnect_logic.start()
 
-        # If the cached device info says this is a Bluetooth proxy, wait briefly for
-        # the connection so the scanner is registered before setup finishes. Otherwise
-        # it would be a late joiner that misses the first active scan window at startup.
+        # Wait for a cached BLE proxy to register its scanner before finishing setup.
         if (
             device_info := entry_data.device_info
         ) is not None and device_info.bluetooth_proxy_feature_flags_compat(
