@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from keba_kecontact_p40 import KebaP40Error
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,6 +13,7 @@ from homeassistant.components.lock import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -58,3 +60,43 @@ async def test_lock_unlock_calls(
         blocking=True,
     )
     mock_client.unlock.assert_called_once_with("21900042")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_lock_error(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a lock error raises HomeAssistantError."""
+    mock_client.lock.side_effect = KebaP40Error
+    with patch("homeassistant.components.keba_p40.PLATFORMS", [Platform.LOCK]):
+        await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_LOCK,
+            {ATTR_ENTITY_ID: "lock.garage_socket_lock"},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unlock_error(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an unlock error raises HomeAssistantError."""
+    mock_client.unlock.side_effect = KebaP40Error
+    with patch("homeassistant.components.keba_p40.PLATFORMS", [Platform.LOCK]):
+        await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: "lock.garage_socket_lock"},
+            blocking=True,
+        )

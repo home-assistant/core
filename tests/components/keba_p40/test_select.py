@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from keba_kecontact_p40 import KebaP40Error
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,6 +13,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -50,3 +52,23 @@ async def test_select_sets_phases(
         blocking=True,
     )
     mock_client.set_phases.assert_called_once_with("21900042", 1)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_select_error(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a set_phases error raises HomeAssistantError."""
+    mock_client.set_phases.side_effect = KebaP40Error
+    with patch("homeassistant.components.keba_p40.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: "select.garage_phase_mode", ATTR_OPTION: "single"},
+            blocking=True,
+        )
