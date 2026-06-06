@@ -10,6 +10,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from packaging.version import Version
+
 _VERSION_MATCH = r"^[a-zA-Z0-9_\-\.\+\!\*]+$"
 _REPO_MATCH = r"https?://(?:www\.)?github\.com/([^/]+)/([^/]+)"
 # Project owner or repo name
@@ -20,8 +22,15 @@ def get_pypi_data(package_name):
     # Sanitize and URL-quote the package name to prevent URL path injection
     safe_package_name = urllib.parse.quote(package_name)
     url = f"https://pypi.org/pypi/{safe_package_name}/json"
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "HomeAssistant-Skill-Resolver/1.0",
+            "Accept": "application/json",
+        },
+    )
     try:
-        with urllib.request.urlopen(url, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             return json.loads(response.read().decode())
     except urllib.error.HTTPError as e:
         print(f"Error fetching PyPI data (HTTP {e.code}): {e.reason}", file=sys.stderr)
@@ -59,14 +68,18 @@ def find_github_repo(info):
 
 
 def check_github_tag(repo_url, version):
-    # Try with 'v' prefix and without
-    tag_options = [f"v{version}", version]
+    # Try with 'v' prefix, without prefix, and with 'release-' prefix
+    tag_options = [f"v{version}", version, f"release-{version}"]
     for tag in tag_options:
         # Check both tree and releases paths on GitHub
         for path_template in [f"tree/{tag}", f"releases/tag/{tag}"]:
             url = f"{repo_url}/{path_template}"
             try:
-                req = urllib.request.Request(url, method="HEAD")
+                req = urllib.request.Request(
+                    url,
+                    method="HEAD",
+                    headers={"User-Agent": "HomeAssistant-Skill-Resolver/1.0"},
+                )
                 with urllib.request.urlopen(req, timeout=10) as resp:
                     if resp.status == 200:
                         return tag
@@ -129,7 +142,17 @@ def main():
 
     data = get_pypi_data(args.package)
     info = data.get("info", {})
-    latest = info.get("version")
+
+    # Filter out pre-releases from the releases list to identify the latest stable version
+    stable_versions = []
+    for v in data.get("releases", {}):
+        try:
+            ver = Version(v)
+            if not ver.is_prerelease:
+                stable_versions.append(ver)
+        except Exception:
+            continue
+    latest = str(max(stable_versions)) if stable_versions else info.get("version")
 
     if latest and not re.match(_VERSION_MATCH, latest):
         print("[ERROR] Invalid latest version resolved from PyPI.", file=sys.stderr)
