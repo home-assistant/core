@@ -1,6 +1,7 @@
 """BleBox sensor entities."""
 
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -28,8 +29,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import BleBoxConfigEntry
+from .const import OPEN_STATUS
 from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
 
@@ -40,8 +43,10 @@ PARALLEL_UPDATES = 0
 class BleBoxSensorEntityDescription(SensorEntityDescription):
     """Describes a BleBox sensor entity."""
 
+    value_fn: Callable[[StateType], StateType] = lambda v: v
 
-SENSOR_TYPES = (
+
+SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     BleBoxSensorEntityDescription(
         key="pm1",
         device_class=SensorDeviceClass.PM1,
@@ -68,7 +73,6 @@ SENSOR_TYPES = (
         translation_key="power_consumption",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        icon="mdi:lightning-bolt",
     ),
     BleBoxSensorEntityDescription(
         key="humidity",
@@ -133,6 +137,14 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
+    BleBoxSensorEntityDescription(
+        key="openStatus",
+        translation_key="open_status",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:window-open",
+        options=list(OPEN_STATUS.values()),
+        value_fn=lambda v: OPEN_STATUS.get(int(v)) if v is not None else None,
+    ),
 )
 
 
@@ -165,6 +177,8 @@ async def async_setup_entry(
 class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEntity):
     """Representation of a BleBox sensor feature."""
 
+    entity_description: BleBoxSensorEntityDescription
+
     def __init__(
         self,
         coordinator: BleBoxCoordinator,
@@ -182,9 +196,9 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
             self._attr_translation_placeholders = {"index": str(index)}
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state."""
-        return self._feature.native_value
+        return self.entity_description.value_fn(self._feature.native_value)
 
     @property
     def last_reset(self) -> datetime | None:
