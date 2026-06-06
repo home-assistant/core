@@ -146,8 +146,13 @@ class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalen
                 start_date=start, end_date=end, include_series=True
             ),
         )
+        now = dt_util.utcnow()
         self.event = next(
-            (e for ep in episodes if (e := _get_calendar_event(ep)) is not None),
+            (
+                e
+                for ep in episodes
+                if (e := _get_calendar_event(ep)) is not None and e.end > now
+            ),
             None,
         )
         return episodes
