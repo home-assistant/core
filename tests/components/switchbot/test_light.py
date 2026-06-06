@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from switchbot import SwitchbotOperationError
+from switchbot import NightLightState, SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.light import (
@@ -32,6 +32,7 @@ from . import (
     PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
     RGBICWW_FLOOR_LAMP_SERVICE_INFO,
     RGBICWW_STRIP_LIGHT_SERVICE_INFO,
+    STANDING_FAN_SERVICE_INFO,
     STRIP_LIGHT_3_SERVICE_INFO,
     WOSTRIP_SERVICE_INFO,
 )
@@ -149,6 +150,29 @@ AIR_PURIFIER_LIGHT_PARAMETERS = (
         ),
         SET_BRIGHTNESS_PARAMETERS,
         SET_RGB_PARAMETERS,
+    ],
+)
+STANDING_FAN_LIGHT_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        (
+            SERVICE_TURN_ON,
+            {},
+            "set_night_light",
+            (NightLightState.LEVEL_1,),
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "level_2"},
+            "set_night_light",
+            (NightLightState.LEVEL_2,),
+        ),
+        (
+            SERVICE_TURN_OFF,
+            {},
+            "set_night_light",
+            (NightLightState.OFF,),
+        ),
     ],
 )
 
@@ -504,6 +528,43 @@ async def test_air_purifier_light_services(
         **{mock_method: mocked_instance},
         get_basic_info=mocked_none_instance,
         update=mocked_none_instance,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(*STANDING_FAN_LIGHT_PARAMETERS)
+async def test_standing_fan_light_services(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot standing fan light services."""
+    inject_bluetooth_service_info(hass, STANDING_FAN_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="standing_fan")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+    mocked_none_instance = AsyncMock(return_value=None)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotStandingFan",
+        **{mock_method: mocked_instance},
+        get_basic_info=mocked_none_instance,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
