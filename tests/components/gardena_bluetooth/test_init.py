@@ -72,6 +72,7 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         ),
     ],
 )
+@pytest.mark.usefixtures("constant_advertisements")
 async def test_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -99,7 +100,7 @@ async def test_setup_delayed_product(
     device_registry: dr.DeviceRegistry,
     mock_entry: MockConfigEntry,
     mock_read_char_raw: dict[str, bytes],
-    manufacturer_request_event: asyncio.Event,
+    get_product_type_event: asyncio.Event,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup creates expected devices."""
@@ -107,15 +108,16 @@ async def test_setup_delayed_product(
     mock_read_char_raw[Battery.battery_level.uuid] = Battery.battery_level.encode(100)
 
     mock_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
 
-    manufacturer_request_event.clear()
+    get_product_type_event.clear()
 
     async with asyncio.TaskGroup() as tg:
         setup_task = tg.create_task(
             hass.config_entries.async_setup(mock_entry.entry_id)
         )
 
-        await manufacturer_request_event.wait()
+        await get_product_type_event.wait()
         assert mock_entry.state is ConfigEntryState.SETUP_IN_PROGRESS
         inject_bluetooth_service_info(hass, MISSING_MANUFACTURER_DATA_SERVICE_INFO)
         inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
@@ -123,6 +125,7 @@ async def test_setup_delayed_product(
         assert await setup_task is True
 
 
+@pytest.mark.usefixtures("constant_advertisements")
 async def test_setup_retry(
     hass: HomeAssistant, mock_entry: MockConfigEntry, mock_client: Mock
 ) -> None:
