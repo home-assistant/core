@@ -47,7 +47,7 @@ async def async_setup_entry(
         is not None
     )
     entities.extend(
-        SmartThingsAudioVolumeEntity(entry_data.client, device)
+        SmartThingsAudioVolumeLevelEntity(entry_data.client, device)
         for device in entry_data.devices.values()
         if (
             Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL in device.status[MAIN]
@@ -244,10 +244,10 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
             int(value),
         )
 
-class SmartThingsAudioVolumeEntity(SmartThingsEntity, NumberEntity):
+class SmartThingsAudioVolumeLevelEntity(SmartThingsEntity, NumberEntity):
     """Define a SmartThings number."""
 
-    _attr_translation_key = "audio_volume"
+    _attr_translation_key = "audio_volume_level"
     _attr_native_step = 1.0
     _attr_mode = NumberMode.SLIDER
     _attr_entity_category = EntityCategory.CONFIG
