@@ -11,10 +11,15 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 
-from . import SandboxProxyEntity, raise_not_proxied
+from . import SandboxProxyEntity
 
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
+
+
+def _segment_from_dict(data: dict[str, Any]) -> Segment:
+    """Rebuild a :class:`Segment` dataclass from its serialised dict."""
+    return Segment(id=data["id"], name=data["name"], group=data.get("group"))
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
@@ -94,5 +99,6 @@ class SandboxVacuumEntity(SandboxProxyEntity, StateVacuumEntity):
         await self._call_service("send_command", **payload)
 
     async def async_get_segments(self) -> list[Segment]:
-        """Raise — ``vacuum/get_segments`` is a WS query, not yet proxied."""
-        raise_not_proxied("Listing vacuum segments")
+        """Return the cleanable segments via ``EntityQuery``."""
+        response = await self._entity_query("async_get_segments")
+        return [_segment_from_dict(segment) for segment in response or []]

@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 
-from . import SandboxProxyEntity, raise_not_proxied
+from . import SandboxProxyEntity
 
 
 def _parse_calendar_date(value: Any) -> datetime.date | datetime.datetime | Any:
@@ -52,11 +52,11 @@ class SandboxCalendarEntity(SandboxProxyEntity, CalendarEntity):
 
     ``create_event`` forwards through the standard ``calendar.create_event``
     service. The listing query (``async_get_events``) rides the
-    ``calendar.get_events`` ``SupportsResponse`` service. The WS-only event
-    edits (``calendar/event/update`` / ``delete``) need the request/response
-    ``EntityQuery`` RPC; until that lands they raise. The recurrence-timer
-    subscription (``calendar/event/subscribe``) is deferred — the
-    next/current event is not pushed, so ``event`` returns ``None``. See
+    ``calendar.get_events`` ``SupportsResponse`` service; the WS-only event
+    edits (``calendar/event/update`` / ``delete``) cross via the generic
+    ``EntityQuery`` RPC. The recurrence-timer subscription
+    (``calendar/event/subscribe``) is deferred — the next/current event is not
+    pushed, so ``event`` returns ``None``. See
     ``sandbox/docs/query-shaped-rpcs.md``.
     """
 
@@ -92,8 +92,14 @@ class SandboxCalendarEntity(SandboxProxyEntity, CalendarEntity):
         recurrence_id: str | None = None,
         recurrence_range: str | None = None,
     ) -> None:
-        """Raise — ``calendar/event/update`` needs the EntityQuery RPC."""
-        raise_not_proxied("Updating a calendar event")
+        """Forward the WS-only event update through ``EntityQuery``."""
+        await self._entity_query(
+            "async_update_event",
+            uid=uid,
+            event=event,
+            recurrence_id=recurrence_id,
+            recurrence_range=recurrence_range,
+        )
 
     async def async_delete_event(
         self,
@@ -101,5 +107,10 @@ class SandboxCalendarEntity(SandboxProxyEntity, CalendarEntity):
         recurrence_id: str | None = None,
         recurrence_range: str | None = None,
     ) -> None:
-        """Raise — ``calendar/event/delete`` needs the EntityQuery RPC."""
-        raise_not_proxied("Deleting a calendar event")
+        """Forward the WS-only event delete through ``EntityQuery``."""
+        await self._entity_query(
+            "async_delete_event",
+            uid=uid,
+            recurrence_id=recurrence_id,
+            recurrence_range=recurrence_range,
+        )
