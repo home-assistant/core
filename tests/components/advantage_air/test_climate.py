@@ -1,12 +1,20 @@
 """Test the Advantage Air Climate Platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock
 
 from advantage_air import ApiError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.advantage_air.climate import ADVANTAGE_AIR_MYAUTO
+from homeassistant.components.advantage_air.climate import (
+    ADVANTAGE_AIR_MYAUTO,
+    ADVANTAGE_AIR_MYZONE,
+)
+from homeassistant.components.advantage_air.coordinator import (
+    ADVANTAGE_AIR_SYNC_INTERVAL,
+)
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -32,7 +40,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import add_mock_config
+from . import TEST_SYSTEM_DATA, add_mock_config
+
+from tests.common import async_fire_time_changed
 
 
 async def test_climate_myzone_main(
@@ -265,3 +275,31 @@ async def test_climate_async_failed_update(
         )
 
     mock_update.assert_called_once()
+
+
+async def test_climate_preset_follows_coordinator(
+    hass: HomeAssistant,
+    mock_get: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the preset updates when changed externally between coordinator refreshes."""
+
+    await add_mock_config(hass)
+
+    entity_id = "climate.myzone"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_PRESET_MODE] == ADVANTAGE_AIR_MYZONE
+
+    # Simulate the preset being switched to MyAuto on the device itself
+    updated_data = deepcopy(TEST_SYSTEM_DATA)
+    updated_data["aircons"]["ac1"]["info"]["myAutoModeEnabled"] = True
+    mock_get.return_value = updated_data
+
+    freezer.tick(ADVANTAGE_AIR_SYNC_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_PRESET_MODE] == ADVANTAGE_AIR_MYAUTO

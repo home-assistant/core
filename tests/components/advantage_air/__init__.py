@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.advantage_air.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -44,7 +44,9 @@ def patch_update(return_value=True, side_effect=None):
     )
 
 
-async def add_mock_config(hass: HomeAssistant) -> MockConfigEntry:
+async def add_mock_config(
+    hass: HomeAssistant, platforms: list[Platform] | None = None
+) -> MockConfigEntry:
     """Create a fake Advantage Air Config Entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -54,6 +56,10 @@ async def add_mock_config(hass: HomeAssistant) -> MockConfigEntry:
     )
 
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    if platforms is None:
+        await hass.config_entries.async_setup(entry.entry_id)
+    else:
+        with patch("homeassistant.components.advantage_air.PLATFORMS", platforms):
+            await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return entry
