@@ -1,7 +1,6 @@
 """KNX Telegrams history and storage."""
 
 import asyncio
-from collections.abc import Callable
 import contextlib
 import logging
 import os
@@ -31,7 +30,6 @@ from .const import (
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DOMAIN,
     KNX_TELEGRAM_DB_PATH_DEFAULT,
-    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
     KNXConfigEntryData,
 )
@@ -89,11 +87,8 @@ class Telegrams:
         self.db_path: str = config.get(
             CONF_KNX_TELEGRAM_DB_PATH, KNX_TELEGRAM_DB_PATH_DEFAULT
         )
-        self.retention_days: int = int(
-            config.get(
-                CONF_KNX_TELEGRAM_DB_RETENTION_DAYS, KNX_TELEGRAM_DB_RETENTION_DEFAULT
-            )
-        )
+        self.retention_days: int = config[CONF_KNX_TELEGRAM_DB_RETENTION_DAYS]
+
         self.store: BufferedSqliteStore | None = None
         self._uninitialized_store: BufferedSqliteStore | None = None
 
@@ -122,7 +117,6 @@ class Telegrams:
             )
         )
         self.last_ga_telegrams: dict[str, TelegramDict] = {}
-        self._async_remove_listener: Callable[[], None] | None = None
 
     async def load_history(self) -> None:
         """Load history from store."""
@@ -148,6 +142,7 @@ class Telegrams:
                 info,
             )
             await self._abort_store_init(info, "Timeout")
+            return
         except KnxTelegramStoreException as err:
             _LOGGER.error(
                 "Database error initializing KNX telegram storage (%s): %s",
@@ -155,38 +150,26 @@ class Telegrams:
                 err,
             )
             await self._abort_store_init(info, str(err))
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.error(
-                "Error initializing KNX telegram storage (%s): %s",
-                info,
-                err,
-            )
-            await self._abort_store_init(info, str(err))
-        else:
-            ir.async_delete_issue(
-                self.hass, DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR
-            )
-            self.store = self._uninitialized_store
-            self.store.start()
-            self._uninitialized_store = None
+            return
+        ir.async_delete_issue(self.hass, DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+        self.store = self._uninitialized_store
+        self.store.start()
+        self._uninitialized_store = None
 
         # Migrate legacy JSON storage if it exists
         await self.migrate_telegrams()
 
         # Hydrate last_ga_telegrams from store
-        if self.store is not None:
-            try:
-                result = await self.store.get_last_unique_telegrams()
-            except KnxTelegramStoreException as err:
-                _LOGGER.warning("Database error hydrating last_ga_telegrams: %s", err)
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.warning("Error hydrating last_ga_telegrams: %s", err)
-            else:
-                for m in result:
-                    if m.payload is not None:
-                        t_dict = self.model_to_dict(m)
-                        self.last_ga_telegrams[t_dict["destination"]] = t_dict
-                _LOGGER.debug("Hydrated %d unique telegrams from store", len(result))
+        try:
+            result = await self.store.get_last_unique_telegrams()
+        except KnxTelegramStoreException as err:
+            _LOGGER.warning("Database error hydrating last_ga_telegrams: %s", err)
+            return
+        for m in result:
+            if m.payload is not None:
+                t_dict = self.model_to_dict(m)
+                self.last_ga_telegrams[t_dict["destination"]] = t_dict
+        _LOGGER.debug("Hydrated %d unique telegrams from store", len(result))
 
     async def _abort_store_init(self, info: str, error: str) -> None:
         """Create a repair issue and tear down a store that failed to init."""
@@ -213,17 +196,14 @@ class Telegrams:
 
     async def stop(self) -> None:
         """Stop history store."""
-        if self._async_remove_listener:
-            self._async_remove_listener()
-        if self.store is not None:
-            try:
-                await self.store.stop()
-            except KnxTelegramStoreException as err:
-                _LOGGER.warning(
-                    "Database error stopping KNX telegram storage backend: %s", err
-                )
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.warning("Error stopping KNX telegram storage backend: %s", err)
+        if self.store is None:
+            return
+        try:
+            await self.store.stop()
+        except KnxTelegramStoreException as err:
+            _LOGGER.warning(
+                "Database error stopping KNX telegram storage backend: %s", err
+            )
 
     def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
@@ -325,8 +305,6 @@ class Telegrams:
 
     async def migrate_telegrams(self) -> None:
         """Migrate telegrams from JSON storage to the current store."""
-        if self.store is None:
-            return
         if (
             not isinstance(self.store, BufferedSqliteStore)
             or self.db_path == ":memory:"
@@ -336,24 +314,21 @@ class Telegrams:
         history_store = Store[Any](
             self.hass, version=1, key="knx/telegrams_history.json"
         )
-        try:
-            json_data = await history_store.async_load()
-            if json_data is None:
-                return
 
-            _LOGGER.info(
-                "Migrating KNX telegram history from JSON to %s",
-                self.store.__class__.__name__,
+        json_data = await history_store.async_load()
+        if json_data is None:
+            return
+
+        _LOGGER.info("Migrating KNX telegram history from JSON to KNX Telegram Store")
+
+        if not isinstance(json_data, list):
+            _LOGGER.warning(
+                "Unexpected format in KNX telegram history JSON, skipping migration"
             )
+            return
 
-            if not isinstance(json_data, list):
-                _LOGGER.warning(
-                    "Unexpected format in KNX telegram history JSON, skipping migration"
-                )
-                return
-
-            stored_telegrams = [self.dict_to_model(t) for t in json_data]
-
+        stored_telegrams = [self.dict_to_model(t) for t in json_data]
+        try:
             if stored_telegrams:
                 await self.store.store_many(stored_telegrams)
                 _LOGGER.info(
@@ -361,8 +336,8 @@ class Telegrams:
                 )
 
             await history_store.async_remove()
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Error migrating KNX telegram history: %s", err)
+        except KnxTelegramStoreException as err:
+            _LOGGER.error("Database error migrating KNX telegram history: %s", err)
 
     def model_to_dict(self, m: StoredTelegram) -> TelegramDict:
         """Convert a StoredTelegram model to a TelegramDict."""

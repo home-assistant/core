@@ -1152,7 +1152,7 @@
       },
       "telegram_store_sqlite": {
         "data": {
-          "telegram_db_retention_days": "Retention period (days)"
+          "telegram_db_retention_days": "Retention period"
         },
         "data_description": {
           "telegram_db_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly."
