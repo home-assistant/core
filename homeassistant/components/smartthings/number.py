@@ -244,6 +244,7 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
             int(value),
         )
 
+
 class SmartThingsAudioVolumeLevelEntity(SmartThingsEntity, NumberEntity):
     """Define a SmartThings number."""
 
