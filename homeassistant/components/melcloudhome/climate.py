@@ -38,11 +38,11 @@ ATA_OPERATION_TO_HVAC_MODE: dict[ATAOperationMode, HVACMode] = {
 
 ATA_FAN_SPEED_TO_HA: dict[ATAFanSpeed, str] = {
     ATAFanSpeed.AUTO: "auto",
-    ATAFanSpeed.ONE: "1",
-    ATAFanSpeed.TWO: "2",
-    ATAFanSpeed.THREE: "3",
-    ATAFanSpeed.FOUR: "4",
-    ATAFanSpeed.FIVE: "5",
+    ATAFanSpeed.ONE: "speed_1",
+    ATAFanSpeed.TWO: "speed_2",
+    ATAFanSpeed.THREE: "speed_3",
+    ATAFanSpeed.FOUR: "speed_4",
+    ATAFanSpeed.FIVE: "speed_5",
 }
 
 HA_FAN_SPEED_TO_ATA: dict[str, ATAFanSpeed] = {
@@ -52,11 +52,11 @@ HA_FAN_SPEED_TO_ATA: dict[str, ATAFanSpeed] = {
 ATA_VANE_VERTICAL_TO_HA: dict[ATAVaneVertical, str] = {
     ATAVaneVertical.AUTO: "auto",
     ATAVaneVertical.SWING: "swing",
-    ATAVaneVertical.ONE: "1",
-    ATAVaneVertical.TWO: "2",
-    ATAVaneVertical.THREE: "3",
-    ATAVaneVertical.FOUR: "4",
-    ATAVaneVertical.FIVE: "5",
+    ATAVaneVertical.ONE: "position_1",
+    ATAVaneVertical.TWO: "position_2",
+    ATAVaneVertical.THREE: "position_3",
+    ATAVaneVertical.FOUR: "position_4",
+    ATAVaneVertical.FIVE: "position_5",
 }
 
 HA_VANE_VERTICAL_TO_ATA: dict[str, ATAVaneVertical] = {
@@ -137,6 +137,7 @@ async def async_setup_entry(
 class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     """Climate entity for a MELCloud Home Air-to-Air unit."""
 
+    _attr_translation_key = "ata_unit"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE

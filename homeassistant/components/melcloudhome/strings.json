@@ -23,6 +23,46 @@
       }
     }
   },
+  "entity": {
+    "climate": {
+      "ata_unit": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "speed_1": "Speed 1",
+              "speed_2": "Speed 2",
+              "speed_3": "Speed 3",
+              "speed_4": "Speed 4",
+              "speed_5": "Speed 5"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "centre": "Centre",
+              "left": "Left",
+              "left_centre": "Left centre",
+              "right": "Right",
+              "right_centre": "Right centre",
+              "swing": "Swing"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "position_1": "Position 1",
+              "position_2": "Position 2",
+              "position_3": "Position 3",
+              "position_4": "Position 4",
+              "position_5": "Position 5",
+              "swing": "Swing"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Error communicating with MELCloud Home API: {error}"
