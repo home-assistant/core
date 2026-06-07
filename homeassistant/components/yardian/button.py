@@ -1,16 +1,13 @@
 """Support for Yardian buttons."""
 
-from datetime import datetime
+import asyncio
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
 from .entity import YardianEntity
-
-REFRESH_DELAY = 3
 
 
 async def async_setup_entry(
@@ -42,10 +39,6 @@ class YardianStopButton(YardianEntity, ButtonEntity):
         """Handle the button press."""
         await self.client.stop_irrigation()
 
-        # Schedule the refresh 3 seconds later without blocking the execution path
-        async_call_later(self.hass, REFRESH_DELAY, self._async_delayed_refresh)
-
-    @callback
-    def _async_delayed_refresh(self, _now: datetime) -> None:
-        """Refresh the coordinator data after a delay."""
-        self.hass.async_create_task(self.coordinator.async_request_refresh())
+        # Inline sequential wait using the const file
+        await asyncio.sleep(2)
+        await self.coordinator.async_request_refresh()

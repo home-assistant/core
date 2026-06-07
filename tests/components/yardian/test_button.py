@@ -12,7 +12,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-@patch("homeassistant.components.yardian.button.REFRESH_DELAY", 0)
+@patch("homeassistant.components.yardian.button.asyncio.sleep", AsyncMock())
 async def test_stop_all_button(
     hass: HomeAssistant,
     mock_yardian_client: AsyncMock,
