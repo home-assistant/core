@@ -307,7 +307,7 @@ async def test_immediate_fast_polling_ONVIF_not_supported(
     config_entry: MockConfigEntry,
     reolink_host: MagicMock,
 ) -> None:
-    """Test emediate fast polling if ONVIF not supported."""
+    """Test immediate fast polling if ONVIF not supported."""
 
     def test_supported(ch, key):
         """Test supported function."""
