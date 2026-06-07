@@ -156,6 +156,25 @@ async def test_migrate_config_entry_product_type_delayed(
 
 
 @pytest.mark.usefixtures("constant_advertisements")
+async def test_migrate_config_entry_product_type_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration fails when no advertisement with a known product type is found."""
+
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ADDRESS: WATER_TIMER_SERVICE_INFO.address},
+        unique_id=WATER_TIMER_SERVICE_INFO.address,
+    )
+    legacy_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(legacy_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert legacy_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("constant_advertisements")
 async def test_setup_retry(
     hass: HomeAssistant, mock_entry: MockConfigEntry, mock_client: Mock
 ) -> None:
