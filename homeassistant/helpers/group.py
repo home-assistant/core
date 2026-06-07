@@ -61,6 +61,12 @@ class GenericGroup(Group):
         """Return the list of member entity IDs."""
         return self._member_entity_ids
 
+    @member_entity_ids.setter
+    def member_entity_ids(self, value: list[str]) -> None:
+        """Set the list of member unique IDs."""
+        self._member_entity_ids = value
+        del self.member_entity_ids
+
 
 class IntegrationSpecificGroup(Group):
     """Integration-specific entity group.
