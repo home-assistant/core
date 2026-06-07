@@ -28,7 +28,10 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.target import TargetStateChangedData
+from homeassistant.helpers.target import (
+    TargetStateChangedData,
+    async_track_target_selector_state_change_event,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
@@ -132,11 +135,6 @@ class EventGroup(GroupEntity, EventEntity):
             if not self.hass.is_running:
                 return
 
-            self.async_set_context(target_state_change_data.state_change_event.context)
-
-            # Update all properties of the group
-            self.async_update_group_state()
-
             # Re-fire if one of the members fires an event, but only
             # if the original state was not unavailable or unknown.
             if (
@@ -166,7 +164,15 @@ class EventGroup(GroupEntity, EventEntity):
                 # Fire the group event
                 self._trigger_event(event_type, event_attributes)
 
-            self.async_write_ha_state()
+        self.async_on_remove(
+            async_track_target_selector_state_change_event(
+                self.hass,
+                self._target_config,
+                async_state_changed_listener,
+                self.filter_entities_by_domain,
+                primary_entities_only=False,
+            )
+        )
 
         await super().async_added_to_hass()
 
