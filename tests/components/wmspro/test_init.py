@@ -1,5 +1,6 @@
 """Test the wmspro initialization."""
 
+from pathlib import Path
 from unittest.mock import AsyncMock
 
 import aiohttp
@@ -10,8 +11,9 @@ from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.storage import STORAGE_DIR
 
-from . import setup_config_entry
+from . import remove_config_entry, setup_config_entry, unload_config_entry
 
 from tests.common import MockConfigEntry
 
@@ -40,6 +42,27 @@ async def test_config_entry_device_config_refresh_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_refresh.mock_calls) == 1
+
+
+async def test_config_entry_persistent_storage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub_ping: AsyncMock,
+    mock_hub_refresh: AsyncMock,
+) -> None:
+    """Test that a config entry will use and cleanup persistent storage."""
+    config_dir = Path(
+        hass.config.path(STORAGE_DIR, f"{DOMAIN}-{mock_config_entry.entry_id}")
+    )
+
+    assert await setup_config_entry(hass, mock_config_entry)
+    assert config_dir.is_dir()  # created during setup
+
+    assert await unload_config_entry(hass, mock_config_entry)
+    assert config_dir.is_dir()  # NOT removed, but kept during unload
+
+    assert await remove_config_entry(hass, mock_config_entry)
+    assert not config_dir.is_dir()  # removed during removal
 
 
 @pytest.mark.parametrize(
