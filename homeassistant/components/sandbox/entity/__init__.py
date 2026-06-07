@@ -21,6 +21,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
+from ..messages import struct_to_dict
+
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
 
@@ -161,7 +163,9 @@ class SandboxProxyEntity(Entity):
         if self.hass is not None:
             self.async_write_ha_state()
 
-    async def _call_service(self, service: str, **service_data: Any) -> Any:
+    async def _call_service(
+        self, service: str, *, return_response: bool = False, **service_data: Any
+    ) -> Any:
         """Forward a service call to the sandbox.
 
         Domain proxies translate each entity method into one of these
@@ -171,14 +175,27 @@ class SandboxProxyEntity(Entity):
         for this call. Passing it lets the bridge remember it, so a state
         change the sandbox derives from this call resolves back to the
         original attribution instead of a fresh context.
+
+        When ``return_response`` is set, the call forwards a
+        ``SupportsResponse`` service (``calendar.get_events``,
+        ``weather.get_forecasts``, ``media_player.browse_media``) and the
+        decoded service-response dict is returned (``{}`` when the sandbox
+        sent no response). Otherwise the raw ``CallServiceResult`` is returned
+        and ignored by command-style proxies.
         """
-        return await self._bridge.async_call_service(
+        result = await self._bridge.async_call_service(
             domain=self.description.domain,
             service=service,
             sandbox_entity_id=self.description.sandbox_entity_id,
             service_data=service_data,
             context=self._context,
+            return_response=return_response,
         )
+        if not return_response:
+            return result
+        if result.HasField("response"):
+            return struct_to_dict(result.response.data)
+        return {}
 
 
 # Lazy import to avoid a circular dependency at module import time
