@@ -242,32 +242,29 @@ async def test_boolean_state_configuration_alarm_enabled_switches(
     matter_node: MatterNode,
 ) -> None:
     """Test Boolean State Configuration alarm enabled switches."""
-    switch_entries: list[er.RegistryEntry] = []
-    for state in hass.states.async_all(Platform.SWITCH):
-        entry = entity_registry.async_get(state.entity_id)
-        assert entry
-        switch_entries.append(entry)
-    visual_entry = next(
-        entry
-        for entry in switch_entries
-        if entry.translation_key == "visual_alarm_enabled"
-    )
-    audible_entry = next(
-        entry
-        for entry in switch_entries
-        if entry.translation_key == "audible_alarm_enabled"
-    )
-    visual_state = hass.states.get(visual_entry.entity_id)
-    audible_state = hass.states.get(audible_entry.entity_id)
+
+    def get_entity_id(translation_key: str) -> str:
+        """Return the entity ID for an alarm switch."""
+        for state in hass.states.async_all(Platform.SWITCH):
+            entry = entity_registry.async_get(state.entity_id)
+            if entry and entry.translation_key == translation_key:
+                return entry.entity_id
+        pytest.fail(f"Missing switch for {translation_key}")
+
+    visual_entity_id = get_entity_id("visual_alarm_enabled")
+    audible_entity_id = get_entity_id("audible_alarm_enabled")
+
+    visual_state = hass.states.get(visual_entity_id)
+    audible_state = hass.states.get(audible_entity_id)
     assert visual_state
-    assert visual_state.state == "on"
     assert audible_state
+    assert visual_state.state == "on"
     assert audible_state.state == "on"
 
     await hass.services.async_call(
         "switch",
         "turn_off",
-        {"entity_id": visual_entry.entity_id},
+        {"entity_id": visual_entity_id},
         blocking=True,
     )
 
@@ -283,12 +280,28 @@ async def test_boolean_state_configuration_alarm_enabled_switches(
     set_node_attribute(matter_node, 1, 128, 5, 2)
     await trigger_subscription_callback(hass, matter_client)
 
-    visual_state = hass.states.get(visual_entry.entity_id)
-    audible_state = hass.states.get(audible_entry.entity_id)
+    visual_state = hass.states.get(visual_entity_id)
+    audible_state = hass.states.get(audible_entity_id)
     assert visual_state
-    assert visual_state.state == "off"
     assert audible_state
+    assert visual_state.state == "off"
     assert audible_state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": visual_entity_id},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+            alarmsToEnableDisable=3,
+        ),
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_speaker"])
