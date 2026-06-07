@@ -1,18 +1,17 @@
 """Roborock Coordinator."""
 
-from __future__ import annotations
-
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from propcache.api import cached_property
 from roborock import B01Props
 from roborock.data import HomeDataScene
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
-from roborock.devices.traits.b01 import Q7PropertiesApi
+from roborock.devices.traits.b01 import Q7PropertiesApi, Q10PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.exceptions import RoborockDeviceBusy, RoborockException
 from roborock.roborock_message import (
@@ -23,7 +22,7 @@ from roborock.roborock_message import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -40,6 +39,7 @@ from .const import (
     A01_UPDATE_INTERVAL,
     DOMAIN,
     IMAGE_CACHE_INTERVAL,
+    Q10_UPDATE_INTERVAL,
     V1_CLOUD_IN_CLEANING_INTERVAL,
     V1_CLOUD_NOT_CLEANING_INTERVAL,
     V1_LOCAL_IN_CLEANING_INTERVAL,
@@ -65,6 +65,7 @@ class RoborockCoordinators:
     v1: list[RoborockDataUpdateCoordinator]
     a01: list[RoborockDataUpdateCoordinatorA01]
     b01_q7: list[RoborockB01Q7UpdateCoordinator]
+    b01_q10: list[RoborockB01Q10UpdateCoordinator]
 
     def values(
         self,
@@ -72,15 +73,16 @@ class RoborockCoordinators:
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
         | RoborockB01Q7UpdateCoordinator
+        | RoborockB01Q10UpdateCoordinator
     ]:
         """Return all coordinators."""
-        return self.v1 + self.a01 + self.b01_q7
+        return self.v1 + self.a01 + self.b01_q7 + self.b01_q10
 
 
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
 
 
-class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
+class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
     """Class to manage fetching data from the API."""
 
     config_entry: RoborockConfigEntry
@@ -116,6 +118,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         # to the base class. This is reset on successful data update.
         self._last_update_success_time: datetime | None = None
         self._has_connected_locally: bool = False
+        self._unsubs: list[Callable[[], None]] = []
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -163,11 +166,19 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
-                translation_placeholders={"error": str(err)},
             ) from err
         else:
             # Force a map refresh on first setup
             self.last_home_update = dt_util.utcnow() - IMAGE_CACHE_INTERVAL
+
+        self._unsubs.append(
+            self.properties_api.status.add_update_listener(self._handle_trait_update)
+        )
+        self._unsubs.append(
+            self.properties_api.consumables.add_update_listener(
+                self._handle_trait_update
+            )
+        )
 
     async def update_map(self) -> None:
         """Update the currently selected map."""
@@ -218,7 +229,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
                     self.properties_api.smart_wash_params,
                     self.properties_api.sound_volume,
                     self.properties_api.child_lock,
-                    self.properties_api.dust_collection_mode,
                     self.properties_api.flow_led_status,
                     self.properties_api.valley_electricity_timer,
                 )
@@ -227,7 +237,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         )
         _LOGGER.debug("Updated device properties")
 
-    async def _async_update_data(self) -> DeviceState:
+    async def _async_update_data(self) -> DeviceState | None:
         """Update data via library."""
         await self._verify_api()
         try:
@@ -267,12 +277,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         self.last_update_state = self.properties_api.status.state_name
         self._last_update_success_time = dt_util.utcnow()
         _LOGGER.debug("Data update successful %s", self._last_update_success_time)
-        return DeviceState(
-            status=self.properties_api.status,
-            dnd_timer=self.properties_api.dnd,
-            consumable=self.properties_api.consumables,
-            clean_summary=self.properties_api.clean_summary,
-        )
+        return self._device_state
 
     def _should_suppress_update_failure(self) -> bool:
         """Determine if we should suppress update failure reporting.
@@ -290,6 +295,31 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         failure_duration = dt_util.utcnow() - self._last_update_success_time
         _LOGGER.debug("Update failure duration: %s", failure_duration)
         return failure_duration < MIN_UNAVAILABLE_DURATION
+
+    @property
+    def _device_state(self) -> DeviceState:
+        """Return the current device state."""
+        return DeviceState(
+            status=self.properties_api.status,
+            dnd_timer=self.properties_api.dnd,
+            consumable=self.properties_api.consumables,
+            clean_summary=self.properties_api.clean_summary,
+        )
+
+    @callback
+    def _handle_trait_update(self) -> None:
+        """Handle trait updates from push notifications."""
+        _LOGGER.debug("Trait updated, updating coordinator data")
+        self.async_set_updated_data(self._device_state)
+        # We optimize streaming updates to catch state transitions immediately, but
+        # secondary updates (like refreshing the map) can happen on their own interval.
+
+    async def async_shutdown(self) -> None:
+        """Shutdown coordinator and unsubscribe update listeners."""
+        await super().async_shutdown()
+        for unsub in self._unsubs:
+            unsub()
+        self._unsubs.clear()
 
     async def get_routines(self) -> list[HomeDataScene]:
         """Get routines."""
@@ -355,10 +385,9 @@ async def _refresh_traits(traits: list[Any]) -> None:
             ) from ex
 
 
-_V = TypeVar("_V", bound=RoborockDyadDataProtocol | RoborockZeoProtocol)
-
-
-class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict[_V, StateType]]):
+class RoborockDataUpdateCoordinatorA01[
+    _V: RoborockDyadDataProtocol | RoborockZeoProtocol
+](DataUpdateCoordinator[dict[_V, StateType]]):
     """Class to manage fetching data from the API for A01 devices."""
 
     config_entry: RoborockConfigEntry
@@ -548,6 +577,8 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.WIND,
             RoborockB01Props.WATER,
             RoborockB01Props.MODE,
+            RoborockB01Props.CLEAN_PATH_PREFERENCE,
+            RoborockB01Props.QUANTITY,
         ]
 
     async def _async_update_data(
@@ -567,3 +598,68 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 translation_key="update_data_fail",
             )
         return data
+
+
+class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
+    """Coordinator for B01 Q10 devices.
+
+    The Q10 uses push-based MQTT status updates. The `refresh()` call sends a
+    REQUEST_DPS command (fire-and-forget) to solicit a status push from the
+    device; the response arrives asynchronously through the MQTT subscribe loop.
+
+    Entities manage their own state updates through listening to individual
+    traits on the Q10PropertiesApi. Each trait has its own update listener
+    that will notify the entity of changes.
+    """
+
+    config_entry: RoborockConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: RoborockConfigEntry,
+        device: RoborockDevice,
+        api: Q10PropertiesApi,
+    ) -> None:
+        """Initialize RoborockB01Q10UpdateCoordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=Q10_UPDATE_INTERVAL,
+        )
+        self._device = device
+        self.api = api
+        self.device_info = get_device_info(device)
+
+    async def _async_update_data(self) -> None:
+        """Request a status push from the device.
+
+        This coordinator does not wait for any specific MQTT payload because
+        push messages are asynchronous and not guaranteed to contain every
+        field. Entities subscribe to trait updates and update as values arrive.
+        """
+        try:
+            await self.api.refresh()
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to request Q10 data: %s", ex)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="request_fail",
+            ) from ex
+
+    @cached_property
+    def duid(self) -> str:
+        """Get the unique id of the device as specified by Roborock."""
+        return self._device.duid
+
+    @cached_property
+    def duid_slug(self) -> str:
+        """Get the slug of the duid."""
+        return slugify(self.duid)
+
+    @property
+    def device(self) -> RoborockDevice:
+        """Get the RoborockDevice."""
+        return self._device

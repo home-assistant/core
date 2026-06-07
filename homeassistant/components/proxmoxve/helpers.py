@@ -1,13 +1,18 @@
 """Helpers for Proxmox VE."""
 
-from .const import PERM_POWER
+from .const import ProxmoxPermission
 
 
 def is_granted(
     permissions: dict[str, dict[str, int]],
     p_type: str = "vms",
-    permission: str = PERM_POWER,
+    p_id: str | int | None = None,  # can be str for nodes
+    permission: ProxmoxPermission = ProxmoxPermission.POWER,
 ) -> bool:
     """Validate user permissions for the given type and permission."""
-    path = f"/{p_type}"
-    return permissions.get(path, {}).get(permission) == 1
+    paths = [f"/{p_type}/{p_id}", f"/{p_type}", "/"]
+    for path in paths:
+        value = permissions.get(path, {}).get(permission)
+        if value is not None:
+            return value == 1
+    return False

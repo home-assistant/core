@@ -1,7 +1,5 @@
 """AI tasks to be handled by agents."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import io
@@ -89,7 +87,7 @@ async def _resolve_attachments(
             resolved_attachments.append(
                 conversation.Attachment(
                     media_content_id=media_content_id,
-                    mime_type=media.mime_type,
+                    mime_type=attachment.get("media_content_type") or media.mime_type,
                     path=media.path,
                 )
             )

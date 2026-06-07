@@ -1,7 +1,5 @@
 """Support for selects which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -15,7 +13,7 @@ from homeassistant.components.select import (
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_STATE
+from homeassistant.const import CONF_NAME, CONF_OPTIONS, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -42,10 +40,11 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_OPTIONS = "options"
 CONF_SELECT_OPTION = "select_option"
 
 DEFAULT_NAME = "Template Select"
+
+SCRIPT_FIELDS = (CONF_SELECT_OPTION,)
 
 SELECT_COMMON_SCHEMA = vol.Schema(
     {
@@ -79,6 +78,7 @@ async def async_setup_platform(
         TriggerSelectEntity,
         async_add_entities,
         discovery_info,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -94,6 +94,7 @@ async def async_setup_entry(
         async_add_entities,
         TemplateSelect,
         SELECT_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -112,15 +113,18 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._attr_options = []
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_current_option",
             cv.string,
         )

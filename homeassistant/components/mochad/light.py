@@ -1,7 +1,5 @@
 """Support for X10 dimmer over Mochad."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -120,6 +118,7 @@ class MochadLight(LightEntity):
                     self._adjust_brightness(brightness)
                 self._attr_brightness = brightness
                 self._attr_is_on = True
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (MochadException, OSError) as exc:
                 _LOGGER.error("Error with mochad communication: %s", exc)
 
@@ -137,5 +136,6 @@ class MochadLight(LightEntity):
                 if self._brightness_levels == 31:
                     self._attr_brightness = 0
                 self._attr_is_on = False
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (MochadException, OSError) as exc:
                 _LOGGER.error("Error with mochad communication: %s", exc)

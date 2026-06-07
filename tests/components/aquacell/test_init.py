@@ -1,7 +1,5 @@
 """Test the Aquacell init module."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 

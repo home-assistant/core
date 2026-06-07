@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor_entities_snapshot[binary_sensor.nano_color_2_airing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensor_entities_snapshot[binary_sensor.nano_color_2_co2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

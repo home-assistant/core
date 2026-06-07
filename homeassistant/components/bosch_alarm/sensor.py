@@ -1,7 +1,5 @@
 """Support for Bosch Alarm Panel History as a sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 

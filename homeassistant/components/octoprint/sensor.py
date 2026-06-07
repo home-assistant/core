@@ -1,7 +1,5 @@
 """Support for monitoring OctoPrint sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 
@@ -12,14 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfInformation, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OctoprintDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +31,11 @@ def _is_printer_printing(printer: OctoprintPrinterInfo) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OctoprintConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the available OctoPrint sensors."""
-    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]["coordinator"]
+    coordinator = config_entry.runtime_data
     device_id = config_entry.unique_id
 
     assert device_id is not None
@@ -108,7 +102,8 @@ class OctoPrintSensorBase(
         self._attr_device_info = coordinator.device_info
 
 
-# Map the strings returned by the OctoPrint API back into values based on the underlying OctoPrint constants.
+# Map the strings returned by the OctoPrint API back into values
+# based on the underlying OctoPrint constants.
 # See octoprint.util.comm.MahcineCom.getStateString():
 # https://github.com/OctoPrint/OctoPrint/blob/7e7d418dac467e308b24c669a03e8b4256f04b45/src/octoprint/util/comm.py#L965
 _API_STATE_VALUE = {
@@ -156,7 +151,8 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
         if not printer:
             return None
 
-        # Translate the string from the API into an internal state value, or return None (Unknown) if no match
+        # Translate the string from the API into an internal
+        # state value, or return None (Unknown) if no match
         return _API_STATE_VALUE.get(printer.state.text)
 
     @property

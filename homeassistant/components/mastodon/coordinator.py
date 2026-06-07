@@ -1,7 +1,5 @@
 """Define an object to manage fetching Mastodon data."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -64,6 +62,9 @@ class MastodonCoordinator(DataUpdateCoordinator[Account]):
                 translation_key="auth_failed",
             ) from error
         except MastodonError as ex:
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from ex
 
         return account

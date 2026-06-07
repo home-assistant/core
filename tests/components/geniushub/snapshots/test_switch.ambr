@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cloud_all_sensors[switch.bedroom_socket-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -59,8 +60,9 @@
 # ---
 # name: test_cloud_all_sensors[switch.kitchen_socket-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -117,8 +119,9 @@
 # ---
 # name: test_cloud_all_sensors[switch.study_socket-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -1,7 +1,5 @@
 """Coordinator for LibreHardwareMonitor integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -62,7 +60,9 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             registry=dr.async_get(self.hass), config_entry_id=self._entry_id
         )
         self._previous_devices: dict[DeviceId, DeviceName] = {
-            DeviceId(next(iter(device.identifiers))[1]): DeviceName(device.name)
+            DeviceId(
+                next(iter(device.identifiers))[1].removeprefix(f"{self._entry_id}_")
+            ): DeviceName(device.name)
             for device in device_entries
             if device.identifiers and device.name
         }
@@ -81,7 +81,8 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         except LibreHardwareMonitorNoDevicesError as err:
             raise UpdateFailed("No sensor data available, will retry") from err
 
-        # Check whether user has upgraded LHM from a deprecated version while the integration is running
+        # Check whether user has upgraded LHM from a deprecated
+        # version while the integration is running
         if self._is_deprecated_version and not lhm_data.is_deprecated_version:
             # Clear deprecation issue
             ir.async_delete_issue(self.hass, DOMAIN, f"deprecated_api_{self._entry_id}")
@@ -100,7 +101,8 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         scheduled: bool = False,
         raise_on_entry_error: bool = False,
     ) -> None:
-        # we don't expect the computer to be online 24/7 so we don't want to log a connection loss as an error
+        # we don't expect the computer to be online 24/7 so
+        # we don't want to log a connection loss as an error
         await super()._async_refresh(
             False, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
@@ -108,12 +110,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
     async def _async_handle_changes_in_devices(
         self, detected_devices: dict[DeviceId, DeviceName]
     ) -> None:
-        """Handle device changes by deleting devices from / adding devices to Home Assistant."""
-        detected_devices = {
-            DeviceId(f"{self.config_entry.entry_id}_{detected_id}"): device_name
-            for detected_id, device_name in detected_devices.items()
-        }
-
+        """Handle device changes in the device registry."""
         previous_device_ids = set(self._previous_devices.keys())
         detected_device_ids = set(detected_devices.keys())
 
@@ -131,25 +128,14 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             device_registry = dr.async_get(self.hass)
             for device_id in orphaned_devices:
                 if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
+                    identifiers={(DOMAIN, f"{self._entry_id}_{device_id}")}
                 ):
                     _LOGGER.debug(
                         "Removing device: %s", self._previous_devices[device_id]
                     )
                     device_registry.async_update_device(
                         device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
+                        remove_config_entry_id=self._entry_id,
                     )
-
-        if self.data is None:
-            # initial update during integration startup
-            self._previous_devices = detected_devices  # type: ignore[unreachable]
-            return
-
-        if new_devices := detected_device_ids - previous_device_ids:
-            _LOGGER.warning(
-                "New Device(s) detected, reload integration to add them to Home Assistant: %s",
-                [detected_devices[DeviceId(device_id)] for device_id in new_devices],
-            )
 
         self._previous_devices = detected_devices

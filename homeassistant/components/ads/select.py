@@ -1,7 +1,5 @@
 """Support for ADS select entities."""
 
-from __future__ import annotations
-
 import pyads
 import voluptuous as vol
 
@@ -9,7 +7,7 @@ from homeassistant.components.select import (
     PLATFORM_SCHEMA as SELECT_PLATFORM_SCHEMA,
     SelectEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_OPTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,8 +18,6 @@ from .entity import AdsEntity
 from .hub import AdsHub
 
 DEFAULT_NAME = "ADS select"
-
-CONF_OPTIONS = "options"
 
 PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(
     {

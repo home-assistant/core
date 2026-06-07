@@ -48,3 +48,162 @@ read_time_segments:
       selector:
         device:
           integration: growatt_server
+
+write_ac_charge_times:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: growatt_server
+    charge_power:
+      required: false
+      example: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: slider
+    charge_stop_soc:
+      required: false
+      example: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: slider
+    mains_enabled:
+      required: false
+      example: true
+      selector:
+        boolean:
+    period_1_start:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_1_end:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_1_enabled:
+      required: false
+      example: false
+      selector:
+        boolean:
+    period_2_start:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_2_end:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_2_enabled:
+      required: false
+      example: false
+      selector:
+        boolean:
+    period_3_start:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_3_end:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_3_enabled:
+      required: false
+      example: false
+      selector:
+        boolean:
+
+write_ac_discharge_times:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: growatt_server
+    discharge_power:
+      required: false
+      example: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: slider
+    discharge_stop_soc:
+      required: false
+      example: 20
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: slider
+    period_1_start:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_1_end:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_1_enabled:
+      required: false
+      example: false
+      selector:
+        boolean:
+    period_2_start:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_2_end:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_2_enabled:
+      required: false
+      example: false
+      selector:
+        boolean:
+    period_3_start:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_3_end:
+      required: false
+      example: "00:00"
+      selector:
+        time:
+    period_3_enabled:
+      required: false
+      example: false
+      selector:
+        boolean:
+
+read_ac_charge_times:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: growatt_server
+
+read_ac_discharge_times:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: growatt_server

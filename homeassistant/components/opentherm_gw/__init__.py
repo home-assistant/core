@@ -159,11 +159,14 @@ class OpenThermGatewayHub:
             _LOGGER.debug("Received report: %s", status)
             async_dispatcher_send(self.hass, self.update_signal, status)
 
+            boiler_manufacturer = status[OpenThermDataSource.BOILER].get(
+                gw_vars.DATA_SLAVE_MEMBERID
+            )
             dev_reg.async_update_device(
                 boiler_device.id,
-                manufacturer=status[OpenThermDataSource.BOILER].get(
-                    gw_vars.DATA_SLAVE_MEMBERID
-                ),
+                manufacturer=str(boiler_manufacturer)
+                if boiler_manufacturer is not None
+                else None,
                 model_id=status[OpenThermDataSource.BOILER].get(
                     gw_vars.DATA_SLAVE_PRODUCT_TYPE
                 ),
@@ -175,11 +178,14 @@ class OpenThermGatewayHub:
                 ),
             )
 
+            thermostat_manufacturer = status[OpenThermDataSource.THERMOSTAT].get(
+                gw_vars.DATA_MASTER_MEMBERID
+            )
             dev_reg.async_update_device(
                 thermostat_device.id,
-                manufacturer=status[OpenThermDataSource.THERMOSTAT].get(
-                    gw_vars.DATA_MASTER_MEMBERID
-                ),
+                manufacturer=str(thermostat_manufacturer)
+                if thermostat_manufacturer is not None
+                else None,
                 model_id=status[OpenThermDataSource.THERMOSTAT].get(
                     gw_vars.DATA_MASTER_PRODUCT_TYPE
                 ),
@@ -199,7 +205,10 @@ class OpenThermGatewayHub:
         return self.gateway.connection.connected
 
     async def set_room_setpoint(self, temp) -> float:
-        """Set the room temperature setpoint on the gateway. Return the new temperature."""
+        """Set the room temperature setpoint on the gateway.
+
+        Return the new temperature.
+        """
         return await self.gateway.set_target_temp(
             temp, self.options.get(CONF_TEMPORARY_OVRD_MODE, True)
         )

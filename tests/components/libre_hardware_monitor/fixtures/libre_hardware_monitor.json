@@ -1,5 +1,6 @@
 {
   "id": 0,
+  "Version": "0.9.7",
   "Text": "Sensor",
   "Min": "Min",
   "Value": "Value",

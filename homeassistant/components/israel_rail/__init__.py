@@ -29,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsraelRailConfigEntry) -
     try:
         await hass.async_add_executor_job(train_schedule.query, start, destination)
     except Exception as e:
+        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="request_timeout",

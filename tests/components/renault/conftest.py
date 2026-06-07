@@ -56,12 +56,9 @@ async def patch_renault_account(hass: HomeAssistant) -> AsyncGenerator[RenaultAc
         MOCK_ACCOUNT_ID,
         websession=aiohttp_client.async_get_clientsession(hass),
     )
-    with (
-        patch("renault_api.renault_session.RenaultSession.login"),
-        patch(
-            "renault_api.renault_client.RenaultClient.get_api_account",
-            return_value=renault_account,
-        ),
+    with patch(
+        "renault_api.renault_client.RenaultClient.get_api_account",
+        return_value=renault_account,
     ):
         yield renault_account
 
@@ -85,6 +82,22 @@ def patch_get_vehicles(vehicle_type: str) -> Generator[None]:
             ).vehicleLinks
         )
 
+    # Mock supports_endpoint to return True for soc-levels (battery SoC),
+    # but only when vehicleDetails is available.
+    vehicle_details = return_value.vehicleLinks[0].vehicleDetails
+    if vehicle_details is not None:
+        original_supports_endpoint = vehicle_details.supports_endpoint
+
+        def mock_supports_endpoint(endpoint: str) -> bool:
+            if endpoint == "soc-levels":
+                vehicle_fixtures = MOCK_VEHICLES.get(fixture_code)
+                return bool(
+                    vehicle_fixtures and "battery_soc" in vehicle_fixtures["endpoints"]
+                )
+            return original_supports_endpoint(endpoint)
+
+        vehicle_details.supports_endpoint = mock_supports_endpoint
+
     with patch(
         "renault_api.renault_account.RenaultAccount.get_vehicles",
         return_value=return_value,
@@ -101,6 +114,11 @@ def _get_fixtures(vehicle_type: str) -> MappingProxyType:
             if "battery_status" in mock_vehicle["endpoints"]
             else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleBatteryStatusDataSchema),
+        "battery_soc": schemas.KamereonVehicleDataResponseSchema.loads(
+            load_fixture(f"renault/{mock_vehicle['endpoints']['battery_soc']}")
+            if "battery_soc" in mock_vehicle["endpoints"]
+            else load_fixture("renault/no_data.json")
+        ).get_attributes(schemas.KamereonVehicleBatterySocDataSchema),
         "charge_mode": schemas.KamereonVehicleDataResponseSchema.loads(
             load_fixture(f"renault/{mock_vehicle['endpoints']['charge_mode']}")
             if "charge_mode" in mock_vehicle["endpoints"]
@@ -152,6 +170,9 @@ def patch_get_vehicle_data() -> Generator[dict[str, AsyncMock]]:
             "renault_api.renault_vehicle.RenaultVehicle.get_battery_status"
         ) as get_battery_status,
         patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_battery_soc"
+        ) as get_battery_soc,
+        patch(
             "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode"
         ) as get_charge_mode,
         patch(
@@ -176,6 +197,7 @@ def patch_get_vehicle_data() -> Generator[dict[str, AsyncMock]]:
     ):
         yield {
             "battery_status": get_battery_status,
+            "battery_soc": get_battery_soc,
             "charge_mode": get_charge_mode,
             "charging_settings": get_charging_settings,
             "cockpit": get_cockpit,
@@ -228,7 +250,9 @@ def patch_fixtures_with_invalid_upstream_exception() -> Generator[dict[str, Asyn
     """Mock fixtures."""
     invalid_upstream_exception = exceptions.InvalidUpstreamException(
         "err.tech.500",
-        "Invalid response from the upstream server (The request sent to the GDC is erroneous) ; 502 Bad Gateway",
+        "Invalid response from the upstream server"
+        " (The request sent to the GDC is erroneous)"
+        " ; 502 Bad Gateway",
     )
 
     with patch_get_vehicle_data() as patches:

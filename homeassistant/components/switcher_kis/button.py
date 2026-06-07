@@ -1,7 +1,5 @@
 """Switcher integration Button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast
@@ -72,7 +70,7 @@ async def async_setup_entry(
     async def async_add_buttons(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Get remote and add button from Switcher device."""
         data = cast(SwitcherBreezeRemote, coordinator.data)
-        if coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
+        if coordinator.data.device_type.category is DeviceCategory.THERMOSTAT:
             remote: SwitcherBreezeRemote = await hass.async_add_executor_job(
                 get_breeze_remote_manager(hass).get_remote, data.remote_id
             )

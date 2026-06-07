@@ -134,7 +134,8 @@ async def test_add_product_using_name_no_results(
 ) -> None:
     """Test adding a product by name that can't be found."""
 
-    # Set the search return value and check that the right exception is raised during the service call
+    # Set the search return value and check that the right exception
+    # is raised during the service call
     picnic_api_client.search.return_value = []
     with pytest.raises(PicnicServiceException):
         await hass.services.async_call(
@@ -155,7 +156,8 @@ async def test_add_product_using_name_no_named_results(
 ) -> None:
     """Test adding a product by name for which no named results are returned."""
 
-    # Set the search return value and check that the right exception is raised during the service call
+    # Set the search return value and check that the right exception
+    # is raised during the service call
     picnic_api_client.search.return_value = [{"items": [{"attr": "test"}]}]
     with pytest.raises(PicnicServiceException):
         await hass.services.async_call(
@@ -174,7 +176,7 @@ async def test_add_product_multiple_config_entries(
     picnic_api_client: MagicMock,
     picnic_config_entry: MockConfigEntry,
 ) -> None:
-    """Test adding a product for a specific Picnic service while multiple are configured."""
+    """Test adding a product while multiple services are configured."""
     with patch(
         "homeassistant.components.picnic.create_picnic_client"
     ) as create_picnic_client_mock:

@@ -4,40 +4,38 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from tests.components import (
+from tests.components.common import (
     ConditionStateDescription,
+    assert_condition_behavior_all,
+    assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
-    create_target_condition,
+    assert_condition_options_supported,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
+    parametrize_numerical_attribute_condition_above_below_all,
+    parametrize_numerical_attribute_condition_above_below_any,
     parametrize_target_entities,
-    set_or_remove_state,
     target_entities,
 )
 
+# Brightness is stored as a uint8 (0-255) but the threshold is in percent.
+_BRIGHTNESS_VALUE_SCALE = 255 / 100
+
 
 @pytest.fixture
-async def target_lights(hass: HomeAssistant) -> list[str]:
+async def target_lights(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple light entities associated with different targets."""
-    return (await target_entities(hass, "light"))["included"]
-
-
-@pytest.fixture
-async def target_switches(hass: HomeAssistant) -> list[str]:
-    """Create multiple switch entities associated with different targets.
-
-    Note: The switches are used to ensure that only light entities are considered
-    in the condition evaluation and not other toggle entities.
-    """
-    return (await target_entities(hass, "switch"))["included"]
+    return await target_entities(hass, "light", domain_excluded="switch")
 
 
 @pytest.mark.parametrize(
     "condition",
     [
+        "light.is_brightness",
         "light.is_off",
         "light.is_on",
     ],
@@ -49,6 +47,35 @@ async def test_light_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
+_BRIGHTNESS_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("light.is_off", {}, True, True),
+        ("light.is_on", {}, True, True),
+        ("light.is_brightness", _BRIGHTNESS_THRESHOLD, True, True),
+    ],
+)
+async def test_light_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that light conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
@@ -61,18 +88,19 @@ async def test_light_conditions_gated_by_labs_flag(
             condition="light.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_any(
             condition="light.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
 async def test_light_state_condition_behavior_any(
     hass: HomeAssistant,
-    target_lights: list[str],
-    target_switches: list[str],
+    target_lights: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -81,38 +109,16 @@ async def test_light_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the light state condition with the 'any' behavior."""
-    other_entity_ids = set(target_lights) - {entity_id}
-
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_any(
         hass,
+        target_entities=target_lights,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="any",
+        condition_options=condition_options,
+        states=states,
     )
-
-    # Set state for switches to ensure that they don't impact the condition
-    for state in states:
-        for eid in target_switches:
-            set_or_remove_state(hass, eid, state["included"])
-            await hass.async_block_till_done()
-            assert condition(hass) is False
-
-    for state in states:
-        included_state = state["included"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
-
-        # Check if changing other lights also passes the condition
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -127,17 +133,19 @@ async def test_light_state_condition_behavior_any(
             condition="light.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_all(
             condition="light.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
 async def test_light_state_condition_behavior_all(
     hass: HomeAssistant,
-    target_lights: list[str],
+    target_lights: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -146,33 +154,91 @@ async def test_light_state_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the light state condition with the 'all' behavior."""
-    # Set state for two switches to ensure that they don't impact the condition
-    hass.states.async_set("switch.label_switch_1", STATE_OFF)
-    hass.states.async_set("switch.label_switch_2", STATE_ON)
-
-    other_entity_ids = set(target_lights) - {entity_id}
-
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_all(
         hass,
+        target_entities=target_lights,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="all",
+        condition_options=condition_options,
+        states=states,
     )
 
-    for state in states:
-        included_state = state["included"]
 
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true_first_entity"]
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("light"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    [
+        *parametrize_numerical_attribute_condition_above_below_any(
+            "light.is_brightness",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
+        ),
+    ],
+)
+async def test_light_brightness_condition_behavior_any(
+    hass: HomeAssistant,
+    target_lights: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test the light brightness condition with the 'any' behavior."""
+    await assert_condition_behavior_any(
+        hass,
+        target_entities=target_lights,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
 
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
 
-        assert condition(hass) == state["condition_true"]
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("light"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    [
+        *parametrize_numerical_attribute_condition_above_below_all(
+            "light.is_brightness",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
+        ),
+    ],
+)
+async def test_light_brightness_condition_behavior_all(
+    hass: HomeAssistant,
+    target_lights: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test the light brightness condition with the 'all' behavior."""
+    await assert_condition_behavior_all(
+        hass,
+        target_entities=target_lights,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )

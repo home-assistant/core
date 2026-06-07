@@ -1,7 +1,5 @@
 """The Roborock component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
@@ -30,6 +28,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_BASE_URL,
     CONF_SHOW_BACKGROUND,
+    CONF_SHOW_ROOMS,
+    CONF_SHOW_WALLS,
     CONF_USER_DATA,
     DEFAULT_DRAWABLES,
     DOMAIN,
@@ -39,6 +39,7 @@ from .const import (
 )
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockCoordinators,
     RoborockDataUpdateCoordinator,
@@ -86,6 +87,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
                     if entry.options.get(DRAWABLES, {}).get(drawable, default_value)
                 ],
                 show_background=entry.options.get(CONF_SHOW_BACKGROUND, False),
+                show_rooms=entry.options.get(CONF_SHOW_ROOMS, True),
+                show_walls=entry.options.get(CONF_SHOW_WALLS, True),
                 map_scale=MAP_SCALE,
             ),
             mqtt_session_unauthorized_hook=lambda: entry.async_start_reauth(hass),
@@ -93,7 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         )
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
-            "Invalid credentials",
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
@@ -115,7 +117,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     except RoborockException as err:
         _LOGGER.debug("Failed to get Roborock home data: %s", err)
         raise ConfigEntryNotReady(
-            "Failed to get Roborock home data",
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
@@ -140,10 +141,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             **get_device_info(device),
         )
 
-    enabled_devices = [
-        device for device in devices if not _is_device_disabled(device_registry, device)
-    ]
+    enabled_devices = []
+    disabled_devices = []
+    for device in devices:
+        if _is_device_disabled(device_registry, device):
+            disabled_devices.append(device)
+        else:
+            enabled_devices.append(device)
     _LOGGER.debug("%d of %d devices are enabled", len(enabled_devices), len(devices))
+
+    # Close connections for disabled devices to prevent their background
+    # reconnect loops from triggering MQTT session restarts that would
+    # disrupt coordinator setup for the enabled devices.
+    if disabled_devices:
+        close_results = await asyncio.gather(
+            *[device.close() for device in disabled_devices],
+            return_exceptions=True,
+        )
+        for device, close_result in zip(disabled_devices, close_results, strict=True):
+            if isinstance(close_result, Exception):
+                _LOGGER.debug(
+                    "Failed to close disabled Roborock device %s: %s",
+                    device.duid,
+                    close_result,
+                )
 
     coordinators = await asyncio.gather(
         *build_setup_functions(hass, entry, enabled_devices, user_data),
@@ -164,13 +185,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         for coord in coordinators
         if isinstance(coord, RoborockB01Q7UpdateCoordinator)
     ]
-    if len(v1_coords) + len(a01_coords) + len(b01_q7_coords) == 0 and enabled_devices:
+    b01_q10_coords = [
+        coord
+        for coord in coordinators
+        if isinstance(coord, RoborockB01Q10UpdateCoordinator)
+    ]
+    if (
+        len(v1_coords) + len(a01_coords) + len(b01_q7_coords) + len(b01_q10_coords) == 0
+        and enabled_devices
+    ):
         raise ConfigEntryNotReady(
-            "No devices were able to successfully setup",
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
-    entry.runtime_data = RoborockCoordinators(v1_coords, a01_coords, b01_q7_coords)
+    entry.runtime_data = RoborockCoordinators(
+        v1_coords, a01_coords, b01_q7_coords, b01_q10_coords
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -253,6 +283,7 @@ def build_setup_functions(
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
         | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q10UpdateCoordinator
         | None,
     ]
 ]:
@@ -261,6 +292,7 @@ def build_setup_functions(
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
         | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q10UpdateCoordinator
     ] = []
     for device in devices:
         _LOGGER.debug("Creating device %s: %s", device.name, device)
@@ -282,9 +314,16 @@ def build_setup_functions(
                     hass, entry, device, device.b01_q7_properties
                 )
             )
+        elif device.b01_q10_properties is not None:
+            coordinators.append(
+                RoborockB01Q10UpdateCoordinator(
+                    hass, entry, device, device.b01_q10_properties
+                )
+            )
         else:
             _LOGGER.warning(
-                "Not adding device %s because its protocol version %s or category %s is not supported",
+                "Not adding device %s because its protocol version"
+                " %s or category %s is not supported",
                 device.duid,
                 device.device_info.pv,
                 device.product.category.name,
@@ -296,11 +335,13 @@ def build_setup_functions(
 async def setup_coordinator(
     coordinator: RoborockDataUpdateCoordinator
     | RoborockDataUpdateCoordinatorA01
-    | RoborockDataUpdateCoordinatorB01,
+    | RoborockDataUpdateCoordinatorB01
+    | RoborockB01Q10UpdateCoordinator,
 ) -> (
     RoborockDataUpdateCoordinator
     | RoborockDataUpdateCoordinatorA01
     | RoborockDataUpdateCoordinatorB01
+    | RoborockB01Q10UpdateCoordinator
     | None
 ):
     """Set up a single coordinator."""

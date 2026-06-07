@@ -32,8 +32,9 @@
 # ---
 # name: test_sensor[sensor.testuser_domain_com_total_available_storage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -89,8 +90,9 @@
 # ---
 # name: test_sensor[sensor.testuser_domain_com_total_size_of_backups-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -146,8 +148,9 @@
 # ---
 # name: test_sensor[sensor.testuser_domain_com_used_storage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -203,8 +206,9 @@
 # ---
 # name: test_sensor[sensor.testuser_domain_com_used_storage_in_drive-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,8 +264,9 @@
 # ---
 # name: test_sensor[sensor.testuser_domain_com_used_storage_in_drive_trash-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

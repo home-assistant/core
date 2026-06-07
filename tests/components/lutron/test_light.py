@@ -25,6 +25,13 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.fixture(autouse=True)
+def setup_platforms():
+    """Patch PLATFORMS for all tests in this file."""
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.LIGHT]):
+        yield
+
+
 async def test_light_setup(
     hass: HomeAssistant,
     mock_lutron: MagicMock,
@@ -39,9 +46,8 @@ async def test_light_setup(
     light.level = 0
     light.last_level.return_value = 0
 
-    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.LIGHT]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -59,7 +65,7 @@ async def test_light_turn_on_off(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Turn on
     await hass.services.async_call(
@@ -93,7 +99,7 @@ async def test_light_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # Simulate update from library
@@ -120,7 +126,7 @@ async def test_light_transition(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Turn on with transition
     await hass.services.async_call(
@@ -155,7 +161,7 @@ async def test_light_flash(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Short flash
     await hass.services.async_call(
@@ -189,7 +195,7 @@ async def test_light_brightness_restore(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Turn on first time - uses default (50%)
     await hass.services.async_call(

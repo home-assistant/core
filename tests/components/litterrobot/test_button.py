@@ -3,10 +3,12 @@
 from unittest.mock import MagicMock
 
 from freezegun import freeze_time
+import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
@@ -42,3 +44,18 @@ async def test_button(
     state = hass.states.get(BUTTON_ENTITY)
     assert state
     assert state.state == "2021-11-15T10:37:00+00:00"
+
+
+async def test_button_command_exception(
+    hass: HomeAssistant, mock_account_with_side_effects: MagicMock
+) -> None:
+    """Test that LitterRobotException is wrapped in HomeAssistantError."""
+    await setup_integration(hass, mock_account_with_side_effects, BUTTON_DOMAIN)
+
+    with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: BUTTON_ENTITY},
+            blocking=True,
+        )

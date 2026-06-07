@@ -1,7 +1,5 @@
 """Support for valves through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from pysmartthings import Attribute, Capability, Category, Command, SmartThings
 
 from homeassistant.components.valve import (

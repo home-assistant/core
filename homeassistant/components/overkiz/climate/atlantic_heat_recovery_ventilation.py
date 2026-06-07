@@ -1,7 +1,5 @@
 """Support for AtlanticHeatRecoveryVentilation."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState

@@ -45,7 +45,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
     Unauthorized,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -262,12 +262,12 @@ async def test_trigger_service_ignoring_condition(
     assert caplog.record_tuples[0][1] == logging.WARNING
 
     await hass.services.async_call(
-        "automation", "trigger", {"entity_id": "automation.test"}, blocking=True
+        DOMAIN, "trigger", {"entity_id": "automation.test"}, blocking=True
     )
     assert len(calls) == 1
 
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "trigger",
         {"entity_id": "automation.test", "skip_condition": True},
         blocking=True,
@@ -275,7 +275,7 @@ async def test_trigger_service_ignoring_condition(
     assert len(calls) == 2
 
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "trigger",
         {"entity_id": "automation.test", "skip_condition": False},
         blocking=True,
@@ -1777,7 +1777,7 @@ async def test_automation_bad_config_validation(
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both automations are setup
-    assert set(hass.states.async_entity_ids("automation")) == {
+    assert set(hass.states.async_entity_ids(DOMAIN)) == {
         "automation.bad_automation",
         "automation.good_automation",
     }
@@ -2892,7 +2892,7 @@ async def test_automation_bad_trigger_variables(
 async def test_automation_this_var_always(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test automation always has reference to this, even with no variable or trigger variables configured."""
+    """Test automation always has reference to this, even without variables."""
     calls = async_mock_service(hass, "test", "automation")
 
     assert await async_setup_component(
@@ -3187,7 +3187,7 @@ async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) ->
     )
     context = Context()
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "trigger",
         {"entity_id": "automation.hello"},
         blocking=True,
@@ -3591,6 +3591,34 @@ async def test_websocket_config(
     assert msg["error"]["code"] == "not_found"
 
 
+async def test_websocket_config_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test config command requires admin."""
+    config = {
+        "alias": "hello",
+        "triggers": {"trigger": "event", "event_type": "test_event"},
+        "actions": {"action": "test.automation", "data": 100},
+    }
+    assert await async_setup_component(
+        hass, automation.DOMAIN, {automation.DOMAIN: config}
+    )
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "automation/config",
+            "entity_id": "automation.hello",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+
+
 async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> None:
     """Test an automation that turns off another automation."""
     hass.set_state(CoreState.not_running)
@@ -3656,7 +3684,7 @@ async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> Non
     assert len(calls) == 0
 
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "turn_on",
         {"entity_id": "automation.automation_1"},
         blocking=True,
@@ -3871,7 +3899,10 @@ async def test_action_backward_compatibility(
                 "condition": {"condition": "template", "value_template": "{{ True }}"},
                 "conditions": {"condition": "template", "value_template": "{{ True }}"},
             },
-            "Cannot specify both 'condition' and 'conditions'. Please use 'conditions' only.",
+            (
+                "Cannot specify both 'condition' and 'conditions'."
+                " Please use 'conditions' only."
+            ),
         ),
         (
             {
@@ -4022,3 +4053,104 @@ async def test_reload_when_labs_flag_changes(
         await hass.async_block_till_done()
         assert len(calls) == 1
         assert calls[-1].data.get("event") == "test_event2"
+
+
+async def test_remove_automation_unloads_condition_and_script(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test that removing an automation unloads its condition and action script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "sun",
+                "alias": "test_unload",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "binary_sensor.test",
+                    "state": "on",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    entity = hass.data[automation.DATA_COMPONENT].get_entity("automation.test_unload")
+    assert entity is not None
+    assert isinstance(entity, AutomationEntity)
+
+    # Reload with empty config to remove the automation
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={automation.DOMAIN: []},
+        ),
+        patch.object(
+            entity._condition, "async_unload", wraps=entity._condition.async_unload
+        ) as condition_unload,
+        patch.object(
+            entity.action_script,
+            "async_unload",
+            wraps=entity.action_script.async_unload,
+        ) as script_unload,
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    condition_unload.assert_called_once()
+    script_unload.assert_called_once()
+
+
+async def test_automation_changed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
+) -> None:
+    """Test that an automation still works after its entity_id is changed."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation"
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.custom_id"
+    )
+    assert entry.entity_id == "automation.custom_id"
+
+    hass.states.async_set("binary_sensor.test", "on")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "binary_sensor.test",
+                    "state": "on",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    # Automation should work with the custom entity_id
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Change entity_id while loaded
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.custom_id_2"
+    )
+    assert entry.entity_id == "automation.custom_id_2"
+    await hass.async_block_till_done()
+
+    # Automation should still work after entity_id change
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2

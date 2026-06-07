@@ -1,7 +1,5 @@
 """Home Assistant auth provider."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 from collections.abc import Mapping
@@ -122,9 +120,10 @@ class Data:
             if self.normalize_username(username, force_normalize=True) != username:
                 logging.getLogger(__name__).warning(
                     (
-                        "Home Assistant auth provider is running in legacy mode "
-                        "because we detected usernames that are normalized (lowercase and without spaces)."
-                        " Please change the username: '%s'."
+                        "Home Assistant auth provider is running in"
+                        " legacy mode because we detected usernames"
+                        " that are normalized (lowercase and without"
+                        " spaces). Please change the username: '%s'."
                     ),
                     username,
                 )
@@ -141,7 +140,9 @@ class Data:
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="homeassistant_provider_not_normalized_usernames",
                 translation_placeholders={
-                    "usernames": f'- "{'"\n- "'.join(sorted(not_normalized_usernames))}"'
+                    "usernames": (
+                        f'- "{'"\n- "'.join(sorted(not_normalized_usernames))}"'
+                    )
                 },
                 learn_more_url="homeassistant://config/users",
             )

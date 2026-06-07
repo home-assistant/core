@@ -1,7 +1,5 @@
 """Representation of a sensorMultilevel."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -13,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
@@ -28,8 +25,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeController
-from .const import DOMAIN, ZWaveMePlatform
+from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry, ZWaveMeController
 from .entity import ZWaveMeEntity
 
 
@@ -117,20 +114,20 @@ DEVICE_NAME = ZWaveMePlatform.SENSOR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
 
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
-        controller: ZWaveMeController = hass.data[DOMAIN][config_entry.entry_id]
-        description = SENSORS_MAP.get(new_device.probeType, SENSORS_MAP["generic"])
-        sensor = ZWaveMeSensor(controller, new_device, description)
-
         async_add_entities(
             [
-                sensor,
+                ZWaveMeSensor(
+                    config_entry.runtime_data,
+                    new_device,
+                    SENSORS_MAP.get(new_device.probeType, SENSORS_MAP["generic"]),
+                )
             ]
         )
 

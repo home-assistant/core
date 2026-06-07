@@ -1,7 +1,5 @@
 """Offer Z-Wave JS value updated listening automation trigger."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import functools
 from typing import Any
@@ -51,8 +49,8 @@ ATTR_TO = "to"
 _OPTIONS_SCHEMA_DICT = {
     vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_COMMAND_CLASS): vol.In(
-        {cc.value: cc.name for cc in CommandClass}
+    vol.Required(ATTR_COMMAND_CLASS): vol.All(
+        vol.Coerce(int), vol.In({cc.value: cc.name for cc in CommandClass})
     ),
     vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
     vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
