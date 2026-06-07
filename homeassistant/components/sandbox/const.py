@@ -40,6 +40,13 @@ SANDBOX_INCOMPATIBLE_PLATFORMS: frozenset[str] = frozenset(
         "wake_word",
         # camera: entity surface returns image/stream bytes; needs a byte channel.
         "camera",
+        # To-do lists: the panel reads the sync `todo_items` property (which
+        # also feeds `TodoListEntity.state`), so it can't be satisfied by a
+        # request/response query — it needs the sandbox to push the item list
+        # into a proxy cache. Until that subscription/push primitive lands a
+        # sandboxed list would render empty in the UI while looking supported,
+        # so route it to main. See sandbox/docs/query-shaped-rpcs.md.
+        "todo",
     }
 )
 

@@ -5,12 +5,13 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
+    Segment,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
 
-from . import SandboxProxyEntity
+from . import SandboxProxyEntity, raise_not_proxied
 
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
@@ -91,3 +92,7 @@ class SandboxVacuumEntity(SandboxProxyEntity, StateVacuumEntity):
         if params is not None:
             payload["params"] = params
         await self._call_service("send_command", **payload)
+
+    async def async_get_segments(self) -> list[Segment]:
+        """Raise — ``vacuum/get_segments`` is a WS query, not yet proxied."""
+        raise_not_proxied("Listing vacuum segments")

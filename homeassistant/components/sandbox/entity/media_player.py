@@ -20,13 +20,17 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
 )
 
-from . import SandboxProxyEntity
+from . import SandboxProxyEntity, raise_not_proxied
 
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
@@ -214,6 +218,18 @@ class SandboxMediaPlayerEntity(SandboxProxyEntity, MediaPlayerEntity):
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Forward select_sound_mode."""
         await self._call_service("select_sound_mode", sound_mode=sound_mode)
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Raise — media browsing is a server-side query, not yet proxied."""
+        raise_not_proxied("Browsing media")
+
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Raise — media search is a server-side query, not yet proxied."""
+        raise_not_proxied("Searching media")
 
     async def async_clear_playlist(self) -> None:
         """Forward clear_playlist."""
