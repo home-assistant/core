@@ -7,11 +7,15 @@ from homeassistant.components.unifi_direct import device_tracker
 from homeassistant.components.unifi_direct.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 
 async def test_device_tracker_entities_created(
-    hass: HomeAssistant, mock_config_entry, mock_unifiap
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_unifiap,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test that device tracker entities are created from coordinator data."""
     mock_config_entry.add_to_hass(hass)
@@ -20,11 +24,9 @@ async def test_device_tracker_entities_created(
     await hass.async_block_till_done()
 
     # Entity registry should contain the device_tracker entities created by the integration
-
-    registry = er.async_get(hass)
     entries = [
         entry
-        for entry in registry.entities.values()
+        for entry in entity_registry.entities.values()
         if entry.domain == "device_tracker" and entry.platform == "unifi_direct"
     ]
     assert len(entries) >= 2
