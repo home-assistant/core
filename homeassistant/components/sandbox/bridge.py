@@ -65,6 +65,7 @@ from .const import UNIQUE_ID_SEPARATOR
 from .messages import dict_to_struct, listvalue_to_list, struct_to_dict
 from .protocol import (
     MSG_CALL_SERVICE,
+    MSG_ENTITY_QUERY,
     MSG_FIRE_EVENT,
     MSG_REGISTER_ENTITY,
     MSG_REGISTER_SERVICE,
@@ -242,6 +243,43 @@ class SandboxBridge:
             context_id=context.id if context is not None else None,
             return_response=return_response,
         )
+
+    async def async_entity_query(
+        self,
+        *,
+        sandbox_entity_id: str,
+        method: str,
+        args: dict[str, Any],
+        context: Context | None = None,
+    ) -> Any:
+        """Forward one server-side entity query to the sandbox as a single RPC.
+
+        The companion to :meth:`async_call_service` for the query-shaped entity
+        APIs that have no ``SupportsResponse`` service to ride (media search,
+        update release notes, vacuum segments, the WS-only calendar event
+        edits). ``method`` names the real entity method; ``args`` are its
+        kwargs. Like a service call the ``context`` is remembered before its id
+        is reduced to a bare wire value, errors translate through the same
+        :func:`_translate_remote_error` / ``ChannelClosedError`` paths, and the
+        wrapped ``{"value": …}`` return is unwrapped.
+        """
+        self._remember_context(context)
+        request = pb.EntityQuery(
+            sandbox_entity_id=sandbox_entity_id,
+            method=method,
+            args=dict_to_struct(args),
+        )
+        if context is not None:
+            request.context_id = context.id
+        try:
+            result = await self.channel.call(MSG_ENTITY_QUERY, request)
+        except ChannelRemoteError as err:
+            raise _translate_remote_error(err) from err
+        except ChannelClosedError as err:
+            raise HomeAssistantError(
+                f"Sandbox {self.group!r} channel closed mid-query"
+            ) from err
+        return struct_to_dict(result.result).get("value")
 
     async def _raw_call_service(
         self,

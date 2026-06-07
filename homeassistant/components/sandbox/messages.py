@@ -38,6 +38,7 @@ REGISTRY: dict[str, tuple[type[Message], type[Message] | None]] = {
     "sandbox/entry_setup": (pb.EntrySetup, pb.EntrySetupResult),
     "sandbox/entry_unload": (pb.EntryUnload, pb.EntryUnloadResult),
     "sandbox/call_service": (pb.CallService, pb.CallServiceResult),
+    "sandbox/entity_query": (pb.EntityQuery, pb.EntityQueryResult),
     "sandbox/get_translations": (pb.GetTranslations, pb.GetTranslationsResult),
     "sandbox/shutdown": (pb.Shutdown, pb.ShutdownResult),
     "sandbox/ping": (pb.Ping, pb.PingResult),
