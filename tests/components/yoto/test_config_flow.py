@@ -149,6 +149,66 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures(
+    "current_request_with_host", "setup_credentials", "mock_setup_entry"
+)
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Reauthorizing the same account updates the existing entry's token."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await _complete_callback(
+        hass,
+        result,
+        hass_client_no_auth,
+        aioclient_mock,
+        refresh_token="new-refresh-token",
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data["token"]["refresh_token"] == "new-refresh-token"
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "setup_credentials", "mock_setup_entry"
+)
+async def test_reauth_wrong_account(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Reauthorizing with a different account aborts."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    other_token = jwt.encode(
+        {"sub": "auth0|other-user"}, "test-secret-long-enough-for-hmac-sha256"
+    )
+    await _complete_callback(
+        hass, result, hass_client_no_auth, aioclient_mock, access_token=other_token
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+
+
 @pytest.mark.parametrize(
     "access_token",
     [
