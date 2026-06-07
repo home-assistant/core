@@ -6,7 +6,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 import logging
 import threading
-import urllib
+import urllib.parse
 
 from aiohttp import ClientTimeout, hdrs, web
 from pyicloud.services.photos import (
@@ -218,11 +218,22 @@ class IcloudMediaSourceIdentifier:
             if idx == 0:
                 config_entry_id = part
             elif idx == 1:
+                if part.lower() not in ("shared", "album"):
+                    raise Unresolvable(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_view_type",
+                    )
                 shared_album = part.lower() == "shared"
             elif idx == 2:
                 album_id = part
             elif idx == 3:
                 photo_id = part
+
+        if not config_entry_id:
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="incomplete_media_source_identifier",
+            )
 
         return IcloudMediaSourceIdentifier(
             config_entry_id=config_entry_id,
@@ -255,6 +266,12 @@ class IcloudMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve a media item to a playable object."""
+        if not self._hass.config_entries.async_loaded_entries(DOMAIN):
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_loaded",
+            )
+
         if item.domain != DOMAIN:
             raise Unresolvable(
                 translation_domain=DOMAIN, translation_key="invalid_media_source"
@@ -593,9 +610,6 @@ class IcloudMediaSourceView(HomeAssistantView):
         )
         response_headers[hdrs.CONTENT_TYPE] = icloud_response.headers.get(
             hdrs.CONTENT_TYPE, "application/octet-stream"
-        )
-        response_headers[hdrs.CONTENT_LENGTH] = icloud_response.headers.get(
-            hdrs.CONTENT_LENGTH, "0"
         )
         response_headers[hdrs.LAST_MODIFIED] = icloud_response.headers.get(
             hdrs.LAST_MODIFIED, "0"

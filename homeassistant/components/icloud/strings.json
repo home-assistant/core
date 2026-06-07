@@ -66,6 +66,9 @@
     "invalid_media_source": {
       "message": "Invalid media source"
     },
+    "invalid_view_type": {
+      "message": "Invalid album view type"
+    },
     "photo_not_found": {
       "message": "Photo not found"
     },
