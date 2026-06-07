@@ -258,7 +258,7 @@ class SmartThingsAudioVolumeLevelEntity(SmartThingsEntity, NumberEntity):
             client, device, {Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL}, component=MAIN
         )
         self._attr_unique_id = (
-            f"{device.device.device_id}_audio_volume"
+            f"{device.device.device_id}_{MAIN}"
             f"_{Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL}"
             f"_{Attribute.VOLUME_LEVEL}"
             f"_{Attribute.VOLUME_LEVEL}"
