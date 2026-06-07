@@ -65,7 +65,7 @@ make the call. First match wins:
 
 1. `integration_type == "system"` → **main** (part of the HA runtime; sandboxing is meaningless).
 2. `domain ∈ ALWAYS_MAIN` → **main** (hand-picked deny-list, each with an inline "why").
-3. Any platform in `SANDBOX_INCOMPATIBLE_PLATFORMS` → **main** (`stt`, `tts`, `conversation`, `assist_satellite`, `wake_word`, `camera` — audio/byte streams the channel can't ferry).
+3. Any platform in `SANDBOX_INCOMPATIBLE_PLATFORMS` → **main** (`stt`, `tts`, `conversation`, `assist_satellite`, `wake_word`, `camera` — audio/byte streams the channel can't ferry; plus `todo`, whose To-do panel reads the sync `todo_items` property that also feeds `state`, so it needs a pushed item-list cache the bridge doesn't have yet — see [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md)).
 4. Custom (non-built-in) integration → group **`custom`**.
 5. Otherwise → group **`built-in`**.
 
@@ -215,7 +215,7 @@ re-send it and main refreshes the existing proxy in place (no duplicate).
 Proxy `unique_id`s are prefixed with the source domain (`<domain>:<unique_id>`)
 so two integrations in one group can't collide.
 
-On main, `SandboxBridge` instantiates a domain-typed proxy (all **32** domains
+On main, `SandboxBridge` instantiates a domain-typed proxy (all **31** domains
 have one under `entity/`) and attaches it via the
 `EntityComponent.async_register_remote_platform` core hook. Each outbound proxy
 call sends one RPC; coalescing same-tick calls into a single multi-entity RPC
@@ -354,7 +354,7 @@ waits on the websocket transport). See
 - **State-sharing opt-in consumer** + main-side filtering ([`docs/design-share-states.md`](docs/design-share-states.md)); would let the lockdown helpers (§3) return to sandboxes.
 - **Cross-sandbox in-process dependencies** — ESPHome serial / BLE proxy, and IR/RF command flows, where one integration depends on another's in-process surface across a sandbox boundary.
 - **`Context` group attribute** (§10) — a core `Context` field naming which sandbox group originated an action, a richer audit answer than today's `user_id=None`. Context restoration from seen ids, dropping the unused token, and removing the per-group system user all **shipped** (`plans/plan-auth-context.md`); the wire still carries `context_id` only, so the sandbox can never fabricate attribution.
-- **Query-shaped RPCs** for `calendar` / `todo` / `weather` server-side queries.
+- **Query-shaped RPCs** for the server-side query / subscribe / WS-only-mutation entity APIs the fire-and-forget bridge can't express — `calendar` (listings, event subscribe/update/delete), `todo` (item list/subscribe/move), `weather` (forecasts), `media_player` (browse/search), `update` (release notes), `vacuum` (segments). They currently raise `HomeAssistantError` instead of silently returning empty. Full catalogue + the two missing primitives (request/response + subscription) in [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md).
 - **pip/egress validation** for custom-integration dependencies in the container (§7).
 
 ---
