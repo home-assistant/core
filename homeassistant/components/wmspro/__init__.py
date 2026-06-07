@@ -1,6 +1,7 @@
 """The WMS WebControl pro API integration."""
 
 from pathlib import Path
+import shutil
 
 import aiohttp
 from wmspro.webcontrol import WebControlPro
@@ -12,6 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC as MAC
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN, MANUFACTURER
@@ -34,7 +36,7 @@ async def async_setup_entry(
     """Set up wmspro from a config entry."""
     host = entry.data[CONF_HOST]
     session = async_get_clientsession(hass)
-    config_dir = Path(hass.config.config_dir) / DOMAIN / entry.entry_id
+    config_dir = Path(hass.config.path(STORAGE_DIR, f"{DOMAIN}-{entry.entry_id}"))
     config_dir.mkdir(parents=True, exist_ok=True)
     hub = WebControlPro(host, session, str(config_dir))
 
@@ -72,3 +74,12 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: WebControlProConfigEntry
+) -> None:
+    """Remove a config entry."""
+    config_dir = Path(hass.config.path(STORAGE_DIR, f"{DOMAIN}-{entry.entry_id}"))
+    if config_dir.is_dir() and config_dir.name.startswith(DOMAIN):
+        await hass.async_add_executor_job(shutil.rmtree, config_dir)
