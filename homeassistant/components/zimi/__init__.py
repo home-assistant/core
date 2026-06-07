@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import DOMAIN
@@ -58,6 +58,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    if api.missing_states:
+        _LOGGER.error(
+            "Zimi setup with missing states for %d devices", len(api.missing_states)
+        )
+        for key in api.missing_states:
+            device = api.devices[key]
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"{device.identifier}_device_missing_states",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="device_missing_states",
+                translation_placeholders={
+                    "device_name": device.name,
+                    "device_room": device.room,
+                },
+            )
+
+    if api.obsolete_firmware:
+        _LOGGER.warning(
+            "Zimi setup with obsolete firmware for %d devices",
+            len(api.obsolete_firmware),
+        )
+        for key in api.obsolete_firmware:
+            device = api.devices[key]
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"{device.identifier}_device_obsolete_firmware",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="device_obsolete_firmware",
+                translation_placeholders={
+                    "device_name": device.name,
+                    "device_room": device.room,
+                },
+            )
 
     _LOGGER.debug("Zimi setup complete")
 

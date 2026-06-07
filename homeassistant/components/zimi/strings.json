@@ -51,9 +51,13 @@
     }
   },
   "issues": {
-    "device_not_available": {
-      "description": "The device {device_name} in {device_room} is not available to the ZCC API.\nThis can be caused by old firmware or a device that is not responding.\nPlease check the device and upgrade to the latest firmware using the Zimi app.",
-      "title": "{device_name} in {device_room} is not available"
+    "device_missing_states": {
+      "description": "The device {device_name} in {device_room} is missing states.\nPlease check the device and upgrade to the latest firmware using the Zimi app.",
+      "title": "{device_name} in {device_room} is missing states"
+    },
+    "device_obsolete_firmware": {
+      "description": "The device {device_name} in {device_room} has obsolete firmware.\nPlease check the device and upgrade to the latest firmware using the Zimi app.",
+      "title": "{device_name} in {device_room} has obsolete firmware"
     }
   }
 }
