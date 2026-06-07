@@ -52,18 +52,26 @@ async def test_user_flow_cannot_connect(
     )
     assert result["type"] is FlowResultType.FORM
 
+    user_input = {
+        "host": "192.168.1.2",
+        "username": "admin",
+        "password": "password",
+        "port": 22,
+    }
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            "host": "192.168.1.2",
-            "username": "admin",
-            "password": "password",
-            "port": 22,
-        },
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    # Remove the UniFiAP.get_clients side effect and see if the flow recovers
+    mock_unifiap_config_flow.return_value.get_clients.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_import_flow(
