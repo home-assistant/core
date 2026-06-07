@@ -14,7 +14,7 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 
-from . import SandboxProxyEntity, raise_not_proxied
+from . import SandboxProxyEntity
 
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
@@ -24,11 +24,11 @@ if TYPE_CHECKING:
 class SandboxWeatherEntity(SandboxProxyEntity, WeatherEntity):
     """Proxy for a ``weather`` entity in a sandbox.
 
-    The proxy mirrors the condition + instantaneous attributes. Forecasts are a
-    server-side query (the ``weather.get_forecasts`` service and the
-    ``weather/subscribe_forecast`` WS command call ``async_forecast_*`` on the
-    entity) that the entity-method bridge can't express yet, so they raise
-    rather than silently returning an empty forecast. See
+    The proxy mirrors the condition + instantaneous attributes. Forecasts ride
+    the ``weather.get_forecasts`` ``SupportsResponse`` service: each
+    ``async_forecast_*`` method forwards a one-shot query and returns the real
+    entity's forecast list. The streaming ``weather/subscribe_forecast`` WS
+    command still has no push primitive, so it sees only that first fetch. See
     ``sandbox/docs/query-shaped-rpcs.md``.
     """
 
@@ -84,14 +84,27 @@ class SandboxWeatherEntity(SandboxProxyEntity, WeatherEntity):
         """Return the cached wind bearing."""
         return self._state_cache.get(ATTR_WEATHER_WIND_BEARING)
 
+    async def _async_forecast(self, forecast_type: str) -> list[Forecast]:
+        """Forward a forecast query as the ``weather.get_forecasts`` service.
+
+        The service response is keyed by the (sandbox-side) entity_id and wraps
+        the list under ``forecast``. ``Forecast`` is a plain TypedDict, so the
+        unwrapped list crosses verbatim with no rebuild.
+        """
+        response = await self._call_service(
+            "get_forecasts", return_response=True, type=forecast_type
+        )
+        entity_response = response.get(self.description.sandbox_entity_id, {})
+        return entity_response.get("forecast", [])
+
     async def async_forecast_daily(self) -> list[Forecast] | None:
-        """Raise — forecasts are a server-side query, not yet proxied."""
-        raise_not_proxied("Fetching the daily weather forecast")
+        """Return the daily forecast via ``weather.get_forecasts``."""
+        return await self._async_forecast("daily")
 
     async def async_forecast_hourly(self) -> list[Forecast] | None:
-        """Raise — forecasts are a server-side query, not yet proxied."""
-        raise_not_proxied("Fetching the hourly weather forecast")
+        """Return the hourly forecast via ``weather.get_forecasts``."""
+        return await self._async_forecast("hourly")
 
     async def async_forecast_twice_daily(self) -> list[Forecast] | None:
-        """Raise — forecasts are a server-side query, not yet proxied."""
-        raise_not_proxied("Fetching the twice-daily weather forecast")
+        """Return the twice-daily forecast via ``weather.get_forecasts``."""
+        return await self._async_forecast("twice_daily")
