@@ -334,6 +334,8 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
     )
     if not brightness_supported(supported_color_modes):
         params.pop(ATTR_BRIGHTNESS, None)
+        params.pop(ATTR_BRIGHTNESS_STEP, None)
+        params.pop(ATTR_BRIGHTNESS_STEP_PCT, None)
     if ColorMode.COLOR_TEMP not in supported_color_modes:
         params.pop(ATTR_COLOR_TEMP_KELVIN, None)
     if ColorMode.HS not in supported_color_modes:
@@ -571,39 +573,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         raw_params = dict(call.data["params"])
 
-        if (
-            raw_params.get(ATTR_BRIGHTNESS) == 0
-            or raw_params.get(ATTR_BRIGHTNESS_PCT) == 0
-            or raw_params.get(ATTR_WHITE) == 0
-        ):
-            raise HomeAssistantError(
-                "light.adjust does not accept zero brightness or white values"
-            )
+        if light.__class__.async_adjust is not LightEntity.async_adjust:
+            params = filter_turn_on_params(light, raw_params)
+            if not params:
+                return
+            await light.async_adjust(**params)
+            return
 
         has_step_adjust = (
             ATTR_BRIGHTNESS_STEP in raw_params
             or ATTR_BRIGHTNESS_STEP_PCT in raw_params
         )
 
-        if light.__class__.async_adjust is not LightEntity.async_adjust and has_step_adjust:
-            await light.async_adjust(**filter_turn_on_params(light, raw_params))
-            return
-
         if (
-            light.__class__.async_adjust is LightEntity.async_adjust
-            and not light.is_on
+            not light.is_on
             and has_step_adjust
         ):
             return
 
-        params = process_turn_on_params(hass, light, raw_params.copy())
+        params = filter_turn_on_params(
+            light,
+            process_turn_on_params(hass, light, raw_params.copy()),
+        )
+
+        if not params:
+            return
 
         if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
             raise HomeAssistantError(
                 "light.adjust does not accept zero brightness or white values"
             )
 
-        await light.async_adjust(**filter_turn_on_params(light, params))
+        await light.async_adjust(**params)
 
     async def async_handle_toggle_service(
         light: LightEntity, call: ServiceCall
