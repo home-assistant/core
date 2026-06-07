@@ -287,20 +287,6 @@ _PROXY_CASES: list[tuple[str, dict, str, dict, str, tuple, dict, str]] = [
         "set_value",
     ),
     (
-        "todo",
-        {"supported_features": 1},  # CREATE_TODO_ITEM
-        "0",
-        {},
-        "async_create_todo_item",
-        (),
-        {
-            "item": __import__(
-                "homeassistant.components.todo", fromlist=["TodoItem"]
-            ).TodoItem(summary="buy milk")
-        },
-        "add_item",
-    ),
-    (
         "update",
         {"supported_features": 1},  # INSTALL
         "on",

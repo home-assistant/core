@@ -9,11 +9,12 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
+    Forecast,
     WeatherEntity,
     WeatherEntityFeature,
 )
 
-from . import SandboxProxyEntity
+from . import SandboxProxyEntity, raise_not_proxied
 
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
@@ -23,10 +24,12 @@ if TYPE_CHECKING:
 class SandboxWeatherEntity(SandboxProxyEntity, WeatherEntity):
     """Proxy for a ``weather`` entity in a sandbox.
 
-    Forecasts are computed by the sandbox-side ``WeatherEntity`` and
-    pushed through the ``weather.get_forecasts`` service path, not over
-    the entity-method bridge — the proxy only mirrors the condition +
-    instantaneous attributes.
+    The proxy mirrors the condition + instantaneous attributes. Forecasts are a
+    server-side query (the ``weather.get_forecasts`` service and the
+    ``weather/subscribe_forecast`` WS command call ``async_forecast_*`` on the
+    entity) that the entity-method bridge can't express yet, so they raise
+    rather than silently returning an empty forecast. See
+    ``sandbox/docs/query-shaped-rpcs.md``.
     """
 
     def __init__(
@@ -80,3 +83,15 @@ class SandboxWeatherEntity(SandboxProxyEntity, WeatherEntity):
     def wind_bearing(self) -> float | str | None:
         """Return the cached wind bearing."""
         return self._state_cache.get(ATTR_WEATHER_WIND_BEARING)
+
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Raise — forecasts are a server-side query, not yet proxied."""
+        raise_not_proxied("Fetching the daily weather forecast")
+
+    async def async_forecast_hourly(self) -> list[Forecast] | None:
+        """Raise — forecasts are a server-side query, not yet proxied."""
+        raise_not_proxied("Fetching the hourly weather forecast")
+
+    async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+        """Raise — forecasts are a server-side query, not yet proxied."""
+        raise_not_proxied("Fetching the twice-daily weather forecast")
