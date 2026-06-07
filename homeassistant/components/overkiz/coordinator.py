@@ -28,7 +28,13 @@ from homeassistant.util.decorator import Registry
 if TYPE_CHECKING:
     from . import OverkizDataConfigEntry
 
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    EVENT_EXECUTION_FAILED,
+    IGNORED_OVERKIZ_DEVICES,
+    LOGGER,
+    UPDATE_INTERVAL,
+)
 
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Event], Coroutine[Any, Any, None]]
@@ -222,8 +228,30 @@ async def on_execution_state_changed(
     coordinator: OverkizDataUpdateCoordinator, event: Event
 ) -> None:
     """Handle execution changed event."""
-    if event.exec_id in coordinator.executions and event.new_state in [
-        ExecutionState.COMPLETED,
-        ExecutionState.FAILED,
-    ]:
+    if event.exec_id not in coordinator.executions:
+        return
+
+    execution = coordinator.executions[event.exec_id]
+
+    if event.new_state == ExecutionState.FAILED:
+        failure_type = event.failure_type or "unknown"
+        LOGGER.warning(
+            "Execution %s failed for device %s (command: %s, failure_type: %s)",
+            event.exec_id,
+            execution.get("device_url", "unknown"),
+            execution.get("command_name", "unknown"),
+            failure_type,
+        )
+        coordinator.hass.bus.async_fire(
+            EVENT_EXECUTION_FAILED,
+            {
+                "exec_id": event.exec_id,
+                "device_url": execution.get("device_url", "unknown"),
+                "command_name": execution.get("command_name", "unknown"),
+                "failure_type": failure_type,
+                "failure_type_code": event.failure_type_code,
+            },
+        )
+
+    if event.new_state in [ExecutionState.COMPLETED, ExecutionState.FAILED]:
         del coordinator.executions[event.exec_id]

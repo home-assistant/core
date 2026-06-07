@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
+from pyoverkiz.enums import EventName, ExecutionState, FailureType
 from pyoverkiz.exceptions import (
     InvalidEventListenerIdException,
     MaintenanceException,
@@ -13,18 +14,29 @@ from pyoverkiz.exceptions import (
 )
 import pytest
 
-from homeassistant.components.overkiz.const import UPDATE_INTERVAL
+from homeassistant.components.overkiz.const import (
+    DOMAIN,
+    EVENT_EXECUTION_FAILED,
+    UPDATE_INTERVAL,
+)
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
+from .helpers import build_event
 
-from tests.common import async_fire_time_changed
+from tests.common import async_capture_events, async_fire_time_changed
 
 TEMPERATURE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#2",
     "sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature",
+)
+
+SHUTTER = FixtureDevice(
+    "setup/cloud_somfy_tahoma_switch_europe.json",
+    "io://1234-5678-1698/0",
+    "cover.somfy_connected_roller_shutter",
 )
 
 
@@ -78,3 +90,148 @@ async def test_transient_error_is_retried(
     await hass.async_block_till_done()
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
+
+
+async def test_execution_failure_fires_event(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """When an execution fails, an overkiz_execution_failed event is fired."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    # Pre-populate the coordinator's execution tracking
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data.coordinator
+    coordinator.executions["exec-1"] = {
+        "device_url": SHUTTER.device_url,
+        "command_name": "setClosure",
+    }
+
+    events = async_capture_events(hass, EVENT_EXECUTION_FAILED)
+
+    mock_client.queue_events(
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=SHUTTER.device_url,
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED.value,
+                failure_type="TRANSMISSION_ERROR",
+                failure_type_code=FailureType.ERROR_WHILE_EXECUTING,
+            )
+        ]
+    )
+    await coordinator.async_refresh()
+
+    assert len(events) == 1
+    event_data = events[0].data
+    assert event_data["exec_id"] == "exec-1"
+    assert event_data["device_url"] == SHUTTER.device_url
+    assert event_data["command_name"] == "setClosure"
+    assert event_data["failure_type"] == "TRANSMISSION_ERROR"
+    assert event_data["failure_type_code"] == FailureType.ERROR_WHILE_EXECUTING
+
+    # Execution is cleaned up after failure
+    assert "exec-1" not in coordinator.executions
+
+
+async def test_execution_failure_unknown_exec_id_is_ignored(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """An execution state change for an unknown exec_id is silently ignored."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data.coordinator
+
+    events = async_capture_events(hass, EVENT_EXECUTION_FAILED)
+
+    mock_client.queue_events(
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=SHUTTER.device_url,
+                exec_id="unknown-exec-id",
+                new_state=ExecutionState.FAILED.value,
+            )
+        ]
+    )
+    await coordinator.async_refresh()
+
+    # No event should be fired for unknown executions
+    assert len(events) == 0
+    assert "unknown-exec-id" not in coordinator.executions
+
+
+async def test_execution_failure_uses_unknown_fallbacks(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Missing failure metadata falls back to 'unknown'."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data.coordinator
+    coordinator.executions["exec-1"] = {}
+
+    events = async_capture_events(hass, EVENT_EXECUTION_FAILED)
+
+    mock_client.queue_events(
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=SHUTTER.device_url,
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED.value,
+            )
+        ]
+    )
+    await coordinator.async_refresh()
+
+    assert len(events) == 1
+    event_data = events[0].data
+    assert event_data["exec_id"] == "exec-1"
+    assert event_data["device_url"] == "unknown"
+    assert event_data["command_name"] == "unknown"
+    assert event_data["failure_type"] == "unknown"
+    assert event_data["failure_type_code"] is None
+
+
+async def test_execution_completed_cleans_up_without_event(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """When an execution completes, it is cleaned up without firing a failure event."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data.coordinator
+    coordinator.executions["exec-1"] = {
+        "device_url": SHUTTER.device_url,
+        "command_name": "setClosure",
+    }
+
+    events = async_capture_events(hass, EVENT_EXECUTION_FAILED)
+
+    mock_client.queue_events(
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=SHUTTER.device_url,
+                exec_id="exec-1",
+                new_state=ExecutionState.COMPLETED.value,
+            )
+        ]
+    )
+    await coordinator.async_refresh()
+
+    # No failure event should be fired for a successful execution
+    assert len(events) == 0
+
+    # Execution is cleaned up after completion
+    assert "exec-1" not in coordinator.executions

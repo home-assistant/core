@@ -40,6 +40,7 @@ CONF_API_TYPE: Final = "api_type"
 CONF_HUB: Final = "hub"
 DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
+EVENT_EXECUTION_FAILED: Final = "overkiz_execution_failed"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_LOCAL: Final = timedelta(seconds=5)

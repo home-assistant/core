@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
+from pyoverkiz.enums import FailureType
 from pyoverkiz.models import Event
 
 from homeassistant.components.overkiz.const import UPDATE_INTERVAL
@@ -37,6 +38,9 @@ def build_event(
     device_states: list[dict[str, Any]] | None = None,
     exec_id: str | None = None,
     new_state: str | None = None,
+    failure_type: str | None = None,
+    failure_type_code: FailureType | None = None,
+    **extra_kwargs: Any,
 ) -> Event:
     """Create a pyoverkiz event object with a test-friendly interface."""
     return Event(
@@ -45,6 +49,9 @@ def build_event(
         device_states=device_states,
         exec_id=exec_id,
         new_state=new_state,
+        failure_type=failure_type,
+        failure_type_code=failure_type_code,
+        **extra_kwargs,
     )
 
 
