@@ -154,11 +154,18 @@ took the codebase from Phase 11 to Phase 17. What's still open:
   --snapshot-update` per integration) and ~70 `created_at` snapshot
   drifts (fix is integration-side freezegun, or an optional Phase
   17b clock-pinning fixture on the compat plugin — ~30 LOC).
-- **`calendar` / `todo` / `weather` query-shaped RPCs.** The Phase
-  13 proxies return empty lists for `async_get_events`, `todo_items`,
-  and `weather.async_forecast_*` because the action-call channel
-  can't express server-side queries. Add a query-shaped RPC if the
-  compat sweep ever surfaces an integration that needs them.
+- **Query-shaped RPCs (calendar / weather / media_player / update /
+  vacuum).** The fire-and-forget action-call channel can't express
+  server-side queries, subscriptions, or WS-only mutations, so these
+  proxy APIs now **raise `HomeAssistantError`** (via
+  `entity.raise_not_proxied`) instead of silently returning empty.
+  `todo` is a special case: its To-do panel reads the sync `todo_items`
+  property (which feeds `state`), so it can't be a query at all — it's in
+  `SANDBOX_INCOMPATIBLE_PLATFORMS` (routed to main, no proxy) until a
+  push primitive lands. Full catalogue, interim behaviour, and the two
+  missing primitives (request/response + subscription RPC) in
+  [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md). Planned
+  design: [`plans/plan-query-rpc.md`](plans/plan-query-rpc.md).
 - **Non-idempotent service handlers** (`ai_task`, `image`).
   `ALWAYS_MAIN` punt for the sandbox; a future spec on service-handler-level
   interception or sandbox-aware integration hooks is the long-term
