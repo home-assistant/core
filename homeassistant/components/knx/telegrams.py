@@ -118,7 +118,6 @@ class Telegrams:
         """Load history from store."""
         if self._uninitialized_store is None:
             return
-        info = self._get_backend_info()
         try:
             needs_migration = await self._uninitialized_store.needs_migration()
             if needs_migration:
@@ -128,29 +127,24 @@ class Telegrams:
                 )
                 await self._uninitialized_store.initialize()
             else:
-                _LOGGER.debug("Initializing KNX telegram storage (%s)", info)
+                _LOGGER.debug("Initializing KNX telegram storage")
                 async with asyncio.timeout(10):
                     await self._uninitialized_store.initialize()
             _LOGGER.info("Successfully initialized KNX telegram storage")
         except TimeoutError:
-            _LOGGER.error(
-                "Timeout initializing KNX telegram storage (%s)",
-                info,
-            )
+            _LOGGER.error("Timeout initializing KNX telegram storage")
             await self._abort_store_init()
             return
         except KnxTelegramStoreException as err:
             _LOGGER.error(
-                "Database error initializing KNX telegram storage (%s): %s",
-                info,
+                "Database error initializing KNX telegram storage: %s",
                 err,
             )
             await self._abort_store_init()
             return
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
-                "Error initializing KNX telegram storage (%s): %s",
-                info,
+                "Error initializing KNX telegram storage: %s",
                 err,
             )
             await self._abort_store_init()
@@ -364,10 +358,6 @@ class Telegrams:
             destination_name=dst_name,
             data_secure=m.data_secure,
         )
-
-    def _get_backend_info(self) -> str:
-        """Get meaningful information about the current backend."""
-        return self.db_path
 
     def _resolve_dpt(
         self, main: int | None, sub: int | None
