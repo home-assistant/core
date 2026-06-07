@@ -54,12 +54,12 @@ async def test_default_state(
     assert entry.original_device_class == "presence"
 
 
-async def test_config_entry(
+async def test_multiple_targets(
     hass: HomeAssistant,
     label_registry: lr.LabelRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test binary sensor from config entry."""
+    """Test binary sensor from config entry with multiple targets."""
     hass.states.async_set("binary_sensor.kitchen", "on")
     hass.states.async_set("binary_sensor.bedroom", "on")
 
