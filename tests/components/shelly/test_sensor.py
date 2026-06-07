@@ -728,6 +728,33 @@ async def test_rpc_restored_sleeping_sensor(
     assert state.state == "22.9"
 
 
+async def test_rpc_restored_sensor_when_not_initialized(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test restored mains-powered RPC sensor when device is not initialized."""
+    entry = await init_integration(hass, 2, skip_setup=True)
+    device = register_device(device_registry, entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_tc",
+        entry,
+        device_id=device.id,
+    )
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_rpc_restored_sleeping_sensor_no_last_state(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -1361,6 +1388,32 @@ async def test_rpc_device_virtual_number_sensor(
     mock_rpc_device.mock_update()
     assert (state := hass.states.get(entity_id))
     assert state.state == "56.7"
+
+
+async def test_rpc_device_virtual_number_sensor_no_unit(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a virtual number sensor with no unit key in meta.ui."""
+    config = deepcopy(mock_rpc_device.config)
+    config["number:203"] = {
+        "name": "Virtual number sensor",
+        "min": 0,
+        "max": 100,
+        "meta": {"ui": {"step": 0.1, "view": "label"}},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["number:203"] = {"value": 34.5}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    assert (state := hass.states.get("sensor.test_name_virtual_number_sensor"))
+    assert state.state == "34.5"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
 
 @pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")

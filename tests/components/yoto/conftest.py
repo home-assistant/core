@@ -9,11 +9,14 @@ import jwt
 import pytest
 from yoto_api import (
     Card,
+    Chapter,
     Device,
+    Group,
     PlaybackEvent,
     PlaybackStatus,
     PlayerInfo,
     PlayerStatus,
+    Track,
     YotoPlayer,
 )
 
@@ -31,17 +34,38 @@ from tests.common import MockConfigEntry
 USER_ID = "auth0|user-test"
 PLAYER_ID = "player-test"
 CARD_ID = "card-test"
+GROUP_ID = "group-test"
 SCOPES = " ".join(YOTO_SCOPES)
 ACCESS_TOKEN = jwt.encode({"sub": USER_ID}, "test-secret-long-enough-for-hmac-sha256")
 
 
 def _build_card() -> Card:
-    """Build a representative Yoto library card."""
+    """Build a representative Yoto library card with chapters and tracks."""
     return Card(
         id=CARD_ID,
         title="Outer Space",
         author="Ladybird Audio Adventures",
         cover_image_large="https://example.test/cover.jpg",
+        chapters={
+            "01": Chapter(
+                key="01",
+                title="Introduction",
+                icon="https://example.test/ch01.png",
+                tracks={
+                    "01-INT": Track(key="01-INT", title="Welcome", duration=120),
+                    "01-MAIN": Track(
+                        key="01-MAIN", title="The Story Begins", duration=240
+                    ),
+                },
+            ),
+            "02": Chapter(
+                key="02",
+                title="Planets",
+                tracks={
+                    "02-MER": Track(key="02-MER", title="Mercury", duration=180),
+                },
+            ),
+        },
     )
 
 
@@ -98,6 +122,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
+def _build_group() -> Group:
+    """Build a representative Yoto card group."""
+    return Group(
+        id=GROUP_ID,
+        name="Bedtime",
+        image_url="https://example.test/group.jpg",
+        card_ids=[CARD_ID],
+    )
+
+
 @pytest.fixture
 def mock_yoto_client() -> Generator[MagicMock]:
     """Patch YotoClient used by the runtime to a configurable mock."""
@@ -107,6 +141,7 @@ def mock_yoto_client() -> Generator[MagicMock]:
         client = client_class.return_value
         client.players = {PLAYER_ID: _build_player()}
         client.library = {CARD_ID: _build_card()}
+        client.groups = {GROUP_ID: _build_group()}
         client.token = MagicMock(refresh_token="mock-refresh-token")
         yield client
 

@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock
 import aiohttp
 import pytest
 
+from homeassistant.components.eafm import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -34,7 +35,7 @@ async def async_setup_test_fixture(
 
     entry = MockConfigEntry(
         version=1,
-        domain="eafm",
+        domain=DOMAIN,
         entry_id="VikingRecorder1234",
         data={"station": "L1234"},
         title="Viking Recorder",
