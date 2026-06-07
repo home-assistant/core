@@ -120,9 +120,9 @@ class LockGroup(GroupEntity, LockEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id
 
-    def update_group_member(self, entities: set[str]) -> None:
+    def update_group_member(self, entities: list[str]) -> None:
         """Update the group member."""
-        self.group._member_entity_ids = list(entities)  # noqa: SLF001
+        self.group._member_entity_ids = entities  # noqa: SLF001
 
     @callback
     def async_update_group_state(self) -> None:
