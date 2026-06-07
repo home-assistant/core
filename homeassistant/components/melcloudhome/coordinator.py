@@ -90,7 +90,6 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         """Fetch data from the MELCloud Home API."""
         try:
             data = await self.client.get_context()
-            self._notify_new_units(data)
         except MelCloudHomeAuthenticationError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -110,4 +109,5 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         else:
+            self._notify_new_units(data)
             return data

@@ -2,7 +2,15 @@
 
 from typing import Any
 
-from aiomelcloudhome import ATAFanSpeed, ATAOperationMode, ATAUnit, ATWUnit, ATWZoneMode
+from aiomelcloudhome import (
+    ATAFanSpeed,
+    ATAOperationMode,
+    ATAUnit,
+    ATAVaneHorizontal,
+    ATAVaneVertical,
+    ATWUnit,
+    ATWZoneMode,
+)
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -13,7 +21,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import MelCloudHomeConfigEntry
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
 
 ATA_HVAC_MODE_TO_OPERATION: dict[HVACMode, ATAOperationMode] = {
@@ -39,6 +47,34 @@ ATA_FAN_SPEED_TO_HA: dict[ATAFanSpeed, str] = {
 
 HA_FAN_SPEED_TO_ATA: dict[str, ATAFanSpeed] = {
     value: key for key, value in ATA_FAN_SPEED_TO_HA.items()
+}
+
+ATA_VANE_VERTICAL_TO_HA: dict[ATAVaneVertical, str] = {
+    ATAVaneVertical.AUTO: "auto",
+    ATAVaneVertical.SWING: "swing",
+    ATAVaneVertical.ONE: "1",
+    ATAVaneVertical.TWO: "2",
+    ATAVaneVertical.THREE: "3",
+    ATAVaneVertical.FOUR: "4",
+    ATAVaneVertical.FIVE: "5",
+}
+
+HA_VANE_VERTICAL_TO_ATA: dict[str, ATAVaneVertical] = {
+    value: key for key, value in ATA_VANE_VERTICAL_TO_HA.items()
+}
+
+ATA_VANE_HORIZONTAL_TO_HA: dict[ATAVaneHorizontal, str] = {
+    ATAVaneHorizontal.AUTO: "auto",
+    ATAVaneHorizontal.SWING: "swing",
+    ATAVaneHorizontal.LEFT: "left",
+    ATAVaneHorizontal.LEFT_CENTRE: "left_centre",
+    ATAVaneHorizontal.CENTRE: "centre",
+    ATAVaneHorizontal.RIGHT_CENTRE: "right_centre",
+    ATAVaneHorizontal.RIGHT: "right",
+}
+
+HA_VANE_HORIZONTAL_TO_ATA: dict[str, ATAVaneHorizontal] = {
+    value: key for key, value in ATA_VANE_HORIZONTAL_TO_HA.items()
 }
 
 ATW_ZONE_MODE_TO_HVAC_MODE: dict[ATWZoneMode, HVACMode] = {
@@ -102,15 +138,6 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     """Climate entity for a MELCloud Home Air-to-Air unit."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_hvac_modes = [
-        HVACMode.OFF,
-        HVACMode.HEAT,
-        HVACMode.COOL,
-        HVACMode.AUTO,
-        HVACMode.DRY,
-        HVACMode.FAN_ONLY,
-    ]
-    _attr_fan_modes = list(ATA_FAN_SPEED_TO_HA.values())
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -119,34 +146,85 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     )
 
     @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return supported features, adding swing modes based on vane capabilities."""
+        if (
+            self.unit.settings is not None
+            and self.unit.settings.get("VaneVerticalDirection") is not None
+        ):
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+        if (
+            self.unit.settings is not None
+            and self.unit.settings.get("VaneHorizontalDirection") is not None
+        ):
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+        return self._attr_supported_features
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return HVAC modes supported by this unit based on its capabilities."""
+        modes = [HVACMode.OFF, HVACMode.HEAT]
+        if (
+            self.unit.capabilities is None
+            or self.unit.capabilities.has_cool_operation_mode is not False
+        ):
+            modes.append(HVACMode.COOL)
+        if (
+            self.unit.capabilities is None
+            or self.unit.capabilities.has_auto_operation_mode is not False
+        ):
+            modes.append(HVACMode.AUTO)
+        if (
+            self.unit.capabilities is None
+            or self.unit.capabilities.has_dry_operation_mode is not False
+        ):
+            modes.append(HVACMode.DRY)
+        if (
+            self.unit.capabilities is None
+            or self.unit.capabilities.has_fan_operation_mode is not False
+        ):
+            modes.append(HVACMode.FAN_ONLY)
+        return modes
+
+    @property
+    def fan_modes(self) -> list[str]:
+        """Return fan modes supported by this unit based on its capabilities."""
+        unit = self.unit
+        capabilities = unit.capabilities if unit else None
+        number = (
+            capabilities.number_of_fan_speeds
+            if capabilities is not None
+            and capabilities.number_of_fan_speeds is not None
+            else len(ATA_FAN_SPEED_TO_HA) - 1
+        )
+        all_speeds = list(ATA_FAN_SPEED_TO_HA.values())
+        return [all_speeds[0], *all_speeds[1 : number + 1]]
+
+    @property
     def current_temperature(self) -> float | None:
         """Return the current room temperature."""
-        unit = self.unit
-        return unit.room_temperature if unit else None
+        return self.unit.room_temperature if self.unit else None
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        unit = self.unit
-        return unit.set_temperature if unit else None
+        return self.unit.set_temperature if self.unit else None
 
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
-        unit = self.unit
-        if unit is None or not unit.power:
+        if self.unit is None or not self.unit.power:
             return HVACMode.OFF
-        if unit.operation_mode is None:
+        if self.unit.operation_mode is None:
             return HVACMode.OFF
-        return ATA_OPERATION_TO_HVAC_MODE.get(unit.operation_mode, HVACMode.OFF)
+        return ATA_OPERATION_TO_HVAC_MODE.get(self.unit.operation_mode, HVACMode.OFF)
 
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
-        unit = self.unit
-        if unit is None or unit.set_fan_speed is None:
+        if self.unit.set_fan_speed is None:
             return None
-        return ATA_FAN_SPEED_TO_HA.get(unit.set_fan_speed)
+        return ATA_FAN_SPEED_TO_HA.get(self.unit.set_fan_speed)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
@@ -166,6 +244,56 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
             return
         await self.coordinator.client.control_ata_unit(
             self._unit_id, set_temperature=temperature
+        )
+        await self.coordinator.async_request_refresh()
+
+    @property
+    def swing_horizontal_modes(self) -> list[str] | None:
+        """Return horizontal vane positions as swing modes."""
+        unit = self.unit
+        caps = unit.capabilities if unit else None
+        if unit is None or (caps is not None and caps.has_vane_horizontal is False):
+            return None
+        return list(ATA_VANE_HORIZONTAL_TO_HA.values())
+
+    @property
+    def swing_modes(self) -> list[str] | None:
+        """Return vertical vane positions as swing modes."""
+        if self.unit.settings.get("VaneVerticalDirection") is None:
+            return None
+        return list(ATA_VANE_VERTICAL_TO_HA.values())
+
+    @property
+    def swing_mode(self) -> str | None:
+        """Return the current vertical vane direction."""
+        if self.unit.settings.get("VaneVerticalDirection") is None:
+            return None
+        return ATA_VANE_VERTICAL_TO_HA.get(self.unit.settings["VaneVerticalDirection"])
+
+    @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return the current horizontal vane direction."""
+        if self.unit.settings.get("VaneHorizontalDirection") is None:
+            return None
+        return ATA_VANE_HORIZONTAL_TO_HA.get(
+            self.unit.settings["VaneHorizontalDirection"]
+        )
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set the horizontal vane direction."""
+        if (vane := HA_VANE_HORIZONTAL_TO_ATA.get(swing_horizontal_mode)) is None:
+            return
+        await self.coordinator.client.control_ata_unit(
+            self._unit_id, vane_horizontal_direction=vane
+        )
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set the vertical vane direction."""
+        if (vane := HA_VANE_VERTICAL_TO_ATA.get(swing_mode)) is None:
+            return
+        await self.coordinator.client.control_ata_unit(
+            self._unit_id, vane_vertical_direction=vane
         )
         await self.coordinator.async_request_refresh()
 
@@ -199,57 +327,46 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
     )
 
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        unit: ATWUnit,
-        zone_number: int,
-    ) -> None:
-        """Initialize the ATW zone climate entity."""
-        super().__init__(coordinator, unit, zone_number)
-        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-        if unit.capabilities is None or unit.capabilities.has_cooling_mode:
-            self._attr_hvac_modes.append(HVACMode.COOL)
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return HVAC modes supported by this zone based on unit capabilities."""
+        modes = [HVACMode.OFF, HVACMode.HEAT]
+        if (
+            self.unit.capabilities is None
+            or self.unit.capabilities.has_cooling_mode is not False
+        ):
+            modes.append(HVACMode.COOL)
+        return modes
 
     @property
     def _zone_mode(self) -> ATWZoneMode | None:
         """Return the current ATW zone mode."""
-        unit = self.unit
-        if unit is None:
-            return None
         if self.zone_number == 1:
-            return unit.operation_mode_zone1
-        return unit.operation_mode_zone2
+            return self.unit.operation_mode_zone1
+        return self.unit.operation_mode_zone2
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current zone temperature."""
-        unit = self.unit
-        if unit is None:
-            return None
         return (
-            unit.room_temperature_zone1
+            self.unit.room_temperature_zone1
             if self.zone_number == 1
-            else unit.room_temperature_zone2
+            else self.unit.room_temperature_zone2
         )
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target zone temperature."""
-        unit = self.unit
-        if unit is None:
-            return None
         return (
-            unit.set_temperature_zone1
+            self.unit.set_temperature_zone1
             if self.zone_number == 1
-            else unit.set_temperature_zone2
+            else self.unit.set_temperature_zone2
         )
 
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
-        unit = self.unit
-        if unit is None or not unit.power:
+        if not self.unit.power:
             return HVACMode.OFF
 
         zone_mode = self._zone_mode
