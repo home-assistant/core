@@ -2303,3 +2303,46 @@ async def test_entity_platforms_with_multiple_on_states_with_state_match(
         group_state2,
         grouped_groups,
     )
+
+
+async def test_migrate_from_version_1_to_2(hass: HomeAssistant) -> None:
+    """Test migrating from version 1 to 2."""
+    hass.states.async_set("binary_sensor.kitchen", "on")
+    hass.states.async_set("binary_sensor.bedroom", "on")
+
+    group_config_entry = MockConfigEntry(
+        data={},
+        domain="group",
+        options={
+            "entities": [
+                "binary_sensor.kitchen",
+                "binary_sensor.bedroom",
+            ],
+            "group_type": "binary_sensor",
+            "name": "Fancy Group",
+            "all": False,
+        },
+        title="Fancy Group",
+    )
+    group_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(group_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.fancy_group")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    entry = hass.config_entries.async_entries("group")[0]
+    assert entry.version == 2
+    assert entry.options == {
+        "all": False,
+        "entities": {
+            "entity_id": [
+                "binary_sensor.kitchen",
+                "binary_sensor.bedroom",
+            ],
+        },
+        "group_type": "binary_sensor",
+        "name": "Fancy Group",
+    }
