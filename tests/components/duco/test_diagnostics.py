@@ -4,7 +4,12 @@ from dataclasses import replace
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 
-from duco_connectivity import ApiInfo, DucoConnectionError
+from duco_connectivity import ApiInfo
+from duco_connectivity.exceptions import (
+    DucoConnectionError,
+    DucoError,
+    DucoResponseError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -34,25 +39,40 @@ async def test_diagnostics(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    "failing_method",
+    ("failing_method", "raised_error"),
     [
-        "async_get_api_info",
-        "async_get_lan_info",
-        "async_get_diagnostics",
-        "async_get_write_requests_remaining",
+        pytest.param(
+            "async_get_api_info",
+            DucoConnectionError("Server disconnected"),
+            id="api-info-connection-error",
+        ),
+        pytest.param(
+            "async_get_lan_info",
+            DucoConnectionError("Server disconnected"),
+            id="lan-info-connection-error",
+        ),
+        pytest.param(
+            "async_get_diagnostics",
+            DucoResponseError(500, "/info", "bad response"),
+            id="diagnostics-response-error",
+        ),
+        pytest.param(
+            "async_get_write_requests_remaining",
+            DucoResponseError(500, "/info", "bad response"),
+            id="write-budget-response-error",
+        ),
     ],
 )
-async def test_diagnostics_connection_error(
+async def test_diagnostics_client_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     failing_method: str,
+    raised_error: DucoError,
 ) -> None:
-    """Test that a connection error during diagnostics returns a 500 response."""
-    getattr(mock_duco_client, failing_method).side_effect = DucoConnectionError(
-        "Server disconnected"
-    )
+    """Test that client errors during diagnostics return a 500 response."""
+    getattr(mock_duco_client, failing_method).side_effect = raised_error
     assert await async_setup_component(hass, DIAGNOSTICS_DOMAIN, {})
     await hass.async_block_till_done()
     client = await hass_client()
