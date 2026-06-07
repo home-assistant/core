@@ -156,8 +156,8 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
                     scene_entity_ids.append(entity_id)
         return {
             STATE_ATTRIBUTE_ROOM_NAME: self._room_name,
-            "scene_ids": self._scene_ids,
-            "scene_entity_ids": scene_entity_ids,
+            "scene_ids": sorted(set(self._scene_ids)),
+            "scene_entity_ids": sorted(set(scene_entity_ids)),
         }
 
     @property

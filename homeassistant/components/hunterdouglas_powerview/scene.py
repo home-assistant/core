@@ -101,10 +101,10 @@ class PowerViewScene(HDEntity, Scene):
 
         return {
             STATE_ATTRIBUTE_ROOM_NAME: self._room_name,
-            "shade_ids": self._shade_ids,
-            "shade_entity_ids": shade_entity_ids,
-            "scheduled_event_ids": self._automation_ids,
-            "scheduled_event_entity_ids": automation_entity_ids,
+            "shade_ids": sorted(set(self._shade_ids)),
+            "shade_entity_ids": sorted(set(shade_entity_ids)),
+            "scheduled_event_ids": sorted(set(self._automation_ids)),
+            "scheduled_event_entity_ids": sorted(set(automation_entity_ids)),
         }
 
     async def async_activate(self, **kwargs: Any) -> None:

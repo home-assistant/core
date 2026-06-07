@@ -88,29 +88,23 @@ class PowerViewScheduleSwitch(HDEntity, SwitchEntity):
         if schedule_index is not None:
             name = f"{name} {schedule_index}"
         self._attr_name = name
-        self._attr_extra_state_attributes = {
+        self._static_attributes = {
             STATE_ATTRIBUTE_ROOM_NAME: room_name,
             "scene_name": scene_name,
             "scene_id": automation.scene_id,
-            "scene_entity_id": None,
             "execution_time": automation.get_execution_time(),
             "execution_days": automation.get_execution_days(),
         }
 
-    async def async_added_to_hass(self) -> None:
-        """Resolve scene PowerView ID to HA entity ID once registered."""
-        await super().async_added_to_hass()
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return schedule attributes with scene entity ID resolved dynamically."""
         entity_registry = er.async_get(self.hass)
         serial = self._device_info.serial_number
         entity_id = entity_registry.async_get_entity_id(
             Platform.SCENE, DOMAIN, f"{serial}_{self._automation.scene_id}"
         )
-        if entity_id:
-            self._attr_extra_state_attributes = {
-                **self._attr_extra_state_attributes,
-                "scene_entity_id": entity_id,
-            }
-            self.async_write_ha_state()
+        return {**self._static_attributes, "scene_entity_id": entity_id}
 
     @property
     def is_on(self) -> bool:
