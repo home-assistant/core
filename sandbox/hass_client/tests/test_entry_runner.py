@@ -10,14 +10,17 @@ from types import ModuleType
 from typing import Any
 
 from hass_client._proto import sandbox_pb2 as pb
-from hass_client.channel import Channel
+from hass_client.channel import Channel, ChannelRemoteError
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.entry_runner import EntryRunner
 from hass_client.flow_runner import FlowRunner
+from hass_client.messages import struct_to_dict
 import pytest
 
 from homeassistant import config_entries as ha_config_entries, loader as ha_loader
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 
 class _LoopbackWriter:
@@ -194,3 +197,110 @@ async def test_call_service_dispatches_through_services(
     # `result is None` on the dict wire).
     assert not result.HasField("response")
     assert seen == [{"hello": "world"}]
+
+
+class _FakeEntity:
+    """Minimal stand-in entity exercising the EntityQuery handler."""
+
+    async def async_release_notes(self) -> str:
+        return "## notes"
+
+    async def echo(self, **kwargs: Any) -> dict[str, Any]:
+        return kwargs
+
+    async def boom(self) -> None:
+        raise ServiceValidationError("bad input")
+
+
+class _FakeComponent:
+    """Stand-in EntityComponent that resolves entities by id."""
+
+    def __init__(self, entities: dict[str, Any]) -> None:
+        self._entities = entities
+
+    def get_entity(self, entity_id: str) -> Any:
+        return self._entities.get(entity_id)
+
+
+def _install_fake_entity(runner: EntryRunner, entity_id: str) -> None:
+    domain = entity_id.split(".", 1)[0]
+    instances = runner.hass.data.setdefault(DATA_INSTANCES, {})
+    instances[domain] = _FakeComponent({entity_id: _FakeEntity()})
+
+
+async def test_entity_query_invokes_method(
+    channels: tuple[Channel, Channel], runner: EntryRunner
+) -> None:
+    """``entity_query`` resolves the entity, runs the method, wraps the value."""
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+    _install_fake_entity(runner, "update.demo")
+
+    msg = pb.EntityQuery(sandbox_entity_id="update.demo", method="async_release_notes")
+    result = await main.call("sandbox/entity_query", msg)
+    assert struct_to_dict(result.result) == {"value": "## notes"}
+
+
+async def test_entity_query_passes_kwargs(
+    channels: tuple[Channel, Channel], runner: EntryRunner
+) -> None:
+    """``entity_query`` forwards the decoded args as kwargs."""
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+    _install_fake_entity(runner, "update.demo")
+
+    msg = pb.EntityQuery(sandbox_entity_id="update.demo", method="echo")
+    msg.args.update({"a": "x", "b": "y"})
+    result = await main.call("sandbox/entity_query", msg)
+    assert struct_to_dict(result.result) == {"value": {"a": "x", "b": "y"}}
+
+
+async def test_entity_query_unknown_entity(
+    channels: tuple[Channel, Channel], runner: EntryRunner
+) -> None:
+    """An unknown entity_id surfaces as a channel error."""
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+
+    msg = pb.EntityQuery(
+        sandbox_entity_id="update.missing", method="async_release_notes"
+    )
+    with pytest.raises(ChannelRemoteError):
+        await main.call("sandbox/entity_query", msg)
+
+
+async def test_entity_query_unknown_method(
+    channels: tuple[Channel, Channel], runner: EntryRunner
+) -> None:
+    """An unknown method surfaces as a channel error."""
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+    _install_fake_entity(runner, "update.demo")
+
+    msg = pb.EntityQuery(sandbox_entity_id="update.demo", method="does_not_exist")
+    with pytest.raises(ChannelRemoteError):
+        await main.call("sandbox/entity_query", msg)
+
+
+async def test_entity_query_method_raises(
+    channels: tuple[Channel, Channel], runner: EntryRunner
+) -> None:
+    """A method that raises propagates the exception type on the error frame."""
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+    _install_fake_entity(runner, "update.demo")
+
+    msg = pb.EntityQuery(sandbox_entity_id="update.demo", method="boom")
+    with pytest.raises(ChannelRemoteError) as err:
+        await main.call("sandbox/entity_query", msg)
+    assert err.value.error_type == "ServiceValidationError"

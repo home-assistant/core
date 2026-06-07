@@ -14,25 +14,37 @@ Two layers are covered:
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import datetime
 from typing import Any
 
 import pytest
 
 from homeassistant.components.calendar import CalendarEvent
-from homeassistant.components.media_player import BrowseMedia, MediaClass
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
+    SearchMedia,
+    SearchMediaQuery,
+)
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.bridge import SandboxBridge
 from homeassistant.components.sandbox.channel import Channel
 from homeassistant.components.sandbox.entity.calendar import _calendar_event_from_dict
-from homeassistant.components.sandbox.entity.media_player import _browse_media_from_dict
+from homeassistant.components.sandbox.entity.media_player import (
+    _browse_media_from_dict,
+    _search_media_from_dict,
+)
+from homeassistant.components.sandbox.entity.vacuum import _segment_from_dict
 from homeassistant.components.sandbox.messages import (
     dict_to_struct,
     make_entity_description,
     struct_to_dict,
 )
+from homeassistant.components.vacuum import Segment
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from ._helpers import make_channel_pair
 
@@ -298,3 +310,231 @@ async def test_browse_media_proxy(hass: HomeAssistant, entry: ConfigEntry) -> No
     assert captured[0].service == "browse_media"
     data = struct_to_dict(captured[0].service_data)
     assert data == {"media_content_type": "library", "media_content_id": "root"}
+
+
+# --- EntityQuery round-trip rebuild helpers (no wire) ---------------------
+
+
+def test_search_media_round_trip() -> None:
+    """A ``SearchMedia`` survives ``as_dict`` → rebuild → ``as_dict``."""
+    search = SearchMedia(
+        result=[
+            BrowseMedia(
+                media_class=MediaClass.MUSIC,
+                media_content_id="track/1",
+                media_content_type="music",
+                title="Song",
+                can_play=True,
+                can_expand=False,
+            ),
+            BrowseMedia(
+                media_class=MediaClass.ALBUM,
+                media_content_id="album/2",
+                media_content_type="album",
+                title="Record",
+                can_play=True,
+                can_expand=True,
+            ),
+        ]
+    )
+    rebuilt = _search_media_from_dict(search.as_dict())
+    assert rebuilt.as_dict() == search.as_dict()
+    assert [item.title for item in rebuilt.result] == ["Song", "Record"]
+
+
+def test_segment_round_trip() -> None:
+    """A ``Segment`` survives ``asdict`` → rebuild."""
+    segment = Segment(id="3", name="Kitchen", group="downstairs")
+    rebuilt = _segment_from_dict(dataclasses.asdict(segment))
+    assert rebuilt == segment
+
+
+# --- EntityQuery proxy behaviour ------------------------------------------
+
+
+def _entity_query_responder(captured: list[pb.EntityQuery], value: Any) -> Any:
+    """Return a stub ``sandbox/entity_query`` handler returning ``value``."""
+
+    async def _on_query(payload: pb.EntityQuery) -> pb.EntityQueryResult:
+        captured.append(payload)
+        result = pb.EntityQueryResult()
+        result.result.CopyFrom(dict_to_struct({"value": value}))
+        return result
+
+    return _on_query
+
+
+async def test_search_media_proxy(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """``async_search_media`` forwards EntityQuery and rebuilds ``SearchMedia``."""
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+    sandbox_entity_id = "media_player.synthetic"
+    captured: list[pb.EntityQuery] = []
+    value = SearchMedia(
+        result=[
+            BrowseMedia(
+                media_class=MediaClass.MUSIC,
+                media_content_id="track/1",
+                media_content_type="music",
+                title="Jazz Hit",
+                can_play=True,
+                can_expand=False,
+            )
+        ]
+    ).as_dict()
+    sandbox_channel.register(
+        "sandbox/entity_query", _entity_query_responder(captured, value)
+    )
+    try:
+        proxy = await _register(
+            bridge, sandbox_channel, entry, "media_player", sandbox_entity_id
+        )
+        result = await proxy.async_search_media(SearchMediaQuery(search_query="jazz"))
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert isinstance(result, SearchMedia)
+    assert result.result[0].title == "Jazz Hit"
+    assert captured[0].method == "async_internal_search_media"
+    assert struct_to_dict(captured[0].args) == {"search_query": "jazz"}
+
+
+async def test_release_notes_proxy(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """``async_release_notes`` forwards EntityQuery and returns the str."""
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+    sandbox_entity_id = "update.synthetic"
+    captured: list[pb.EntityQuery] = []
+    sandbox_channel.register(
+        "sandbox/entity_query",
+        _entity_query_responder(captured, "## 1.1\n- Fixed things"),
+    )
+    try:
+        proxy = await _register(
+            bridge, sandbox_channel, entry, "update", sandbox_entity_id
+        )
+        result = await proxy.async_release_notes()
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert result == "## 1.1\n- Fixed things"
+    assert captured[0].method == "async_release_notes"
+    assert struct_to_dict(captured[0].args) == {}
+
+
+async def test_get_segments_proxy(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """``async_get_segments`` forwards EntityQuery and rebuilds ``Segment``s."""
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+    sandbox_entity_id = "vacuum.synthetic"
+    captured: list[pb.EntityQuery] = []
+    value = [
+        {"id": "1", "name": "Kitchen", "group": "downstairs"},
+        {"id": "2", "name": "Hall"},
+    ]
+    sandbox_channel.register(
+        "sandbox/entity_query", _entity_query_responder(captured, value)
+    )
+    try:
+        proxy = await _register(
+            bridge, sandbox_channel, entry, "vacuum", sandbox_entity_id
+        )
+        result = await proxy.async_get_segments()
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert all(isinstance(segment, Segment) for segment in result)
+    assert [segment.name for segment in result] == ["Kitchen", "Hall"]
+    assert result[1].group is None
+    assert captured[0].method == "async_get_segments"
+
+
+@pytest.mark.parametrize(
+    ("method", "args", "expected_method", "expected_args"),
+    [
+        (
+            "async_update_event",
+            ("uid-1", {"summary": "New"}),
+            "async_update_event",
+            {
+                "uid": "uid-1",
+                "event": {"summary": "New"},
+                "recurrence_id": None,
+                "recurrence_range": None,
+            },
+        ),
+        (
+            "async_delete_event",
+            ("uid-2",),
+            "async_delete_event",
+            {"uid": "uid-2", "recurrence_id": None, "recurrence_range": None},
+        ),
+    ],
+)
+async def test_calendar_mutation_proxy(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    method: str,
+    args: tuple[Any, ...],
+    expected_method: str,
+    expected_args: dict[str, Any],
+) -> None:
+    """Calendar update/delete forward through EntityQuery (None result)."""
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+    sandbox_entity_id = "calendar.synthetic"
+    captured: list[pb.EntityQuery] = []
+    sandbox_channel.register(
+        "sandbox/entity_query", _entity_query_responder(captured, None)
+    )
+    try:
+        proxy = await _register(
+            bridge, sandbox_channel, entry, "calendar", sandbox_entity_id
+        )
+        result = await getattr(proxy, method)(*args)
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert result is None
+    assert captured[0].method == expected_method
+    assert struct_to_dict(captured[0].args) == expected_args
+
+
+# --- EntityQuery error paths ----------------------------------------------
+
+
+async def test_entity_query_error_translates(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """A sandbox-side error surfaces as a translated ``HomeAssistantError``."""
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+    sandbox_entity_id = "update.synthetic"
+
+    async def _on_query(payload: pb.EntityQuery) -> pb.EntityQueryResult:
+        raise ServiceValidationError("nope")
+
+    sandbox_channel.register("sandbox/entity_query", _on_query)
+    try:
+        proxy = await _register(
+            bridge, sandbox_channel, entry, "update", sandbox_entity_id
+        )
+        with pytest.raises(HomeAssistantError):
+            await proxy.async_release_notes()
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+
+async def test_entity_query_channel_closed(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """A closed channel degrades to a clean ``HomeAssistantError``."""
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+    sandbox_entity_id = "update.synthetic"
+    sandbox_channel.register("sandbox/entity_query", _entity_query_responder([], None))
+    proxy = await _register(bridge, sandbox_channel, entry, "update", sandbox_entity_id)
+    await main_channel.close()
+    await sandbox_channel.close()
+
+    with pytest.raises(HomeAssistantError):
+        await proxy.async_release_notes()
