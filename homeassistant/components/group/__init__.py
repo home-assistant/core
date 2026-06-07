@@ -180,7 +180,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if not entry.options[CONF_HIDE_MEMBERS]:
         return
 
-    for member in entry.options[CONF_ENTITIES]:
+    entity_ids = entry.options[CONF_ENTITIES].get(CONF_ENTITY_ID, [])
+    for member in entity_ids:
         if not (entity_id := er.async_resolve_entity_id(registry, member)):
             continue
         if (entity_entry := registry.async_get(entity_id)) is None:

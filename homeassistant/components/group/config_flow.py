@@ -7,7 +7,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.const import CONF_ENTITIES, CONF_TYPE
+from homeassistant.const import CONF_ENTITIES, CONF_ENTITY_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
@@ -381,11 +381,14 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
 
 def _async_hide_members(
-    hass: HomeAssistant, members: list[str], hidden_by: er.RegistryEntryHider | None
+    hass: HomeAssistant,
+    members: dict[str, Any],
+    hidden_by: er.RegistryEntryHider | None,
 ) -> None:
     """Hide or unhide group members."""
     registry = er.async_get(hass)
-    for member in members:
+    entity_ids = members.get(CONF_ENTITY_ID, [])
+    for member in entity_ids:
         if not (entity_id := er.async_resolve_entity_id(registry, member)):
             continue
         if entity_id not in registry.entities:
