@@ -234,7 +234,7 @@ async def on_execution_state_changed(
     execution = coordinator.executions[event.exec_id]
 
     if event.new_state == ExecutionState.FAILED:
-        failure_type = getattr(event, "failure_type", None) or "unknown"
+        failure_type = event.failure_type or "unknown"
         LOGGER.warning(
             "Execution %s failed for device %s (command: %s, failure_type: %s)",
             event.exec_id,
@@ -249,7 +249,7 @@ async def on_execution_state_changed(
                 "device_url": execution.get("device_url", "unknown"),
                 "command_name": execution.get("command_name", "unknown"),
                 "failure_type": failure_type,
-                "failure_type_code": getattr(event, "failure_type_code", None),
+                "failure_type_code": event.failure_type_code,
             },
         )
 
