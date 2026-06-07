@@ -50,7 +50,7 @@ class GroupEntity(Entity):
     _attr_should_poll = False
     _entity_ids: list[str]
     _target_config: dict[str, Any]
-    _domain: str
+    _domains: list[str]
 
     @callback
     def async_start_preview(
@@ -89,7 +89,7 @@ class GroupEntity(Entity):
         return {
             entity_id
             for entity_id in entity_ids
-            if split_entity_id(entity_id)[0] == self._domain
+            if split_entity_id(entity_id)[0] in self._domains
             and entity_id != self.entity_id
         }
 

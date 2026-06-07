@@ -121,7 +121,7 @@ class FanGroup(GroupEntity, FanEntity):
         """Initialize a FanGroup entity."""
         super().__init__()
         self._target_config = target_config
-        self._domain = FAN_DOMAIN
+        self._domains = [FAN_DOMAIN]
         self._fans: dict[int, set[str]] = {flag: set() for flag in SUPPORTED_FLAGS}
         self._percentage = None
         self._oscillating = None

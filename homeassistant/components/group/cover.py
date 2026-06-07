@@ -119,7 +119,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Initialize a CoverGroup entity."""
         super().__init__()
         self._target_config = target_config
-        self._domain = COVER_DOMAIN
+        self._domains = [COVER_DOMAIN]
         self._covers: dict[str, set[str]] = {
             KEY_OPEN_CLOSE: set(),
             KEY_STOP: set(),

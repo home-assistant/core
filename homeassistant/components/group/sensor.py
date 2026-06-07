@@ -357,7 +357,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         """Initialize a sensor group."""
         super().__init__()
         self._target_config = target_config
-        self._domain = SENSOR_DOMAIN
+        self._domains = [SENSOR_DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN]
         self.hass = hass
         self._sensor_type = sensor_type
         self._configured_state_class = state_class

@@ -166,7 +166,7 @@ class LightGroup(GroupEntity, LightEntity):
         """Initialize a light group."""
         super().__init__()
         self._target_config = target_config
-        self._domain = LIGHT_DOMAIN
+        self._domains = [LIGHT_DOMAIN]
         self._attr_name = name
         self._attr_unique_id = unique_id
         self.mode = any

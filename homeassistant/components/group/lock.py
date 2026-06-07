@@ -114,7 +114,7 @@ class LockGroup(GroupEntity, LockEntity):
         """Initialize a lock group."""
         super().__init__()
         self._target_config = target_config
-        self._domain = LOCK_DOMAIN
+        self._domains = [LOCK_DOMAIN]
         self.group = GenericGroup(self, target_config.get("entity_id", []))
         self._attr_supported_features = LockEntityFeature.OPEN
         self._attr_name = name

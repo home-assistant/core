@@ -121,7 +121,7 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         """Initialize a BinarySensorGroup entity."""
         super().__init__()
         self._target_config = target_config
-        self._domain = BINARY_SENSOR_DOMAIN
+        self._domains = [BINARY_SENSOR_DOMAIN]
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._device_class = device_class

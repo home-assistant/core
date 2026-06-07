@@ -166,7 +166,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         """Initialize a NotifyGroup."""
         super().__init__()
         self._target_config = target_config
-        self._domain = NOTIFY_DOMAIN
+        self._domains = [NOTIFY_DOMAIN]
         self._attr_name = name
         self._attr_unique_id = unique_id
 

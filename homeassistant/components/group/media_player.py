@@ -127,7 +127,7 @@ class MediaPlayerGroup(GroupEntity, MediaPlayerEntity):
         """Initialize a Media Group entity."""
         super().__init__()
         self._target_config = target_config
-        self._domain = MEDIA_PLAYER_DOMAIN
+        self._domains = [MEDIA_PLAYER_DOMAIN]
         self._name = name
         self._attr_unique_id = unique_id
         self._features: dict[str, set[str]] = {

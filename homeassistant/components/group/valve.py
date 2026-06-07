@@ -114,7 +114,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         """Initialize a ValveGroup entity."""
         super().__init__()
         self._target_config = target_config
-        self._domain = VALVE_DOMAIN
+        self._domains = [VALVE_DOMAIN]
         self._valves: dict[str, set[str]] = {
             KEY_OPEN_CLOSE: set(),
             KEY_STOP: set(),

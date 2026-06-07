@@ -119,7 +119,7 @@ class EventGroup(GroupEntity, EventEntity):
         """Initialize an event group."""
         super().__init__()
         self._target_config = target_config
-        self._domain = EVENT_DOMAIN
+        self._domains = [EVENT_DOMAIN]
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_event_types = []

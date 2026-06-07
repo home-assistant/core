@@ -123,7 +123,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
         """Initialize a switch group."""
         super().__init__()
         self._target_config = target_config
-        self._domain = SWITCH_DOMAIN
+        self._domains = [SWITCH_DOMAIN]
         self._attr_name = name
         self._attr_unique_id = unique_id
         self.mode = any

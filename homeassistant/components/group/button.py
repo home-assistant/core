@@ -111,7 +111,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         """Initialize a button group."""
         super().__init__()
         self._target_config = target_config
-        self._domain = BUTTON_DOMAIN
+        self._domains = [BUTTON_DOMAIN]
         self._attr_name = name
         self._attr_unique_id = unique_id
 
