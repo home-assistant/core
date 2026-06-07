@@ -1,5 +1,6 @@
 """Roborock Coordinator."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -21,7 +22,7 @@ from roborock.roborock_message import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -117,6 +118,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         # to the base class. This is reset on successful data update.
         self._last_update_success_time: datetime | None = None
         self._has_connected_locally: bool = False
+        self._unsubs: list[Callable[[], None]] = []
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -168,6 +170,15 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         else:
             # Force a map refresh on first setup
             self.last_home_update = dt_util.utcnow() - IMAGE_CACHE_INTERVAL
+
+        self._unsubs.append(
+            self.properties_api.status.add_update_listener(self._handle_trait_update)
+        )
+        self._unsubs.append(
+            self.properties_api.consumables.add_update_listener(
+                self._handle_trait_update
+            )
+        )
 
     async def update_map(self) -> None:
         """Update the currently selected map."""
@@ -266,12 +277,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         self.last_update_state = self.properties_api.status.state_name
         self._last_update_success_time = dt_util.utcnow()
         _LOGGER.debug("Data update successful %s", self._last_update_success_time)
-        return DeviceState(
-            status=self.properties_api.status,
-            dnd_timer=self.properties_api.dnd,
-            consumable=self.properties_api.consumables,
-            clean_summary=self.properties_api.clean_summary,
-        )
+        return self._device_state
 
     def _should_suppress_update_failure(self) -> bool:
         """Determine if we should suppress update failure reporting.
@@ -289,6 +295,31 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         failure_duration = dt_util.utcnow() - self._last_update_success_time
         _LOGGER.debug("Update failure duration: %s", failure_duration)
         return failure_duration < MIN_UNAVAILABLE_DURATION
+
+    @property
+    def _device_state(self) -> DeviceState:
+        """Return the current device state."""
+        return DeviceState(
+            status=self.properties_api.status,
+            dnd_timer=self.properties_api.dnd,
+            consumable=self.properties_api.consumables,
+            clean_summary=self.properties_api.clean_summary,
+        )
+
+    @callback
+    def _handle_trait_update(self) -> None:
+        """Handle trait updates from push notifications."""
+        _LOGGER.debug("Trait updated, updating coordinator data")
+        self.async_set_updated_data(self._device_state)
+        # We optimize streaming updates to catch state transitions immediately, but
+        # secondary updates (like refreshing the map) can happen on their own interval.
+
+    async def async_shutdown(self) -> None:
+        """Shutdown coordinator and unsubscribe update listeners."""
+        await super().async_shutdown()
+        for unsub in self._unsubs:
+            unsub()
+        self._unsubs.clear()
 
     async def get_routines(self) -> list[HomeDataScene]:
         """Get routines."""
