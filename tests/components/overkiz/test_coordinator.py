@@ -198,3 +198,39 @@ async def test_execution_failure_uses_unknown_fallbacks(
     assert event_data["command_name"] == "unknown"
     assert event_data["failure_type"] == "unknown"
     assert event_data["failure_type_code"] is None
+
+
+async def test_execution_completed_cleans_up_without_event(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """When an execution completes, it is cleaned up without firing a failure event."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data.coordinator
+    coordinator.executions["exec-1"] = {
+        "device_url": SHUTTER.device_url,
+        "command_name": "setClosure",
+    }
+
+    events = async_capture_events(hass, EVENT_EXECUTION_FAILED)
+
+    mock_client.queue_events(
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=SHUTTER.device_url,
+                exec_id="exec-1",
+                new_state=ExecutionState.COMPLETED.value,
+            )
+        ]
+    )
+    await coordinator.async_refresh()
+
+    # No failure event should be fired for a successful execution
+    assert len(events) == 0
+
+    # Execution is cleaned up after completion
+    assert "exec-1" not in coordinator.executions
