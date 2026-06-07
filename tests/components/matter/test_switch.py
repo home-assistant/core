@@ -261,34 +261,10 @@ async def test_boolean_state_configuration_alarm_enabled_switches(
     audible_state = hass.states.get(audible_entity_id)
     assert visual_state
     assert audible_state
-    assert visual_entry == snapshot(
-        name=(
-            "test_boolean_state_configuration_alarm_enabled_switches"
-            "[ikea_klippbok_water_leak]"
-            f"[{visual_entity_id}-entry]"
-        )
-    )
-    assert visual_state == snapshot(
-        name=(
-            "test_boolean_state_configuration_alarm_enabled_switches"
-            "[ikea_klippbok_water_leak]"
-            f"[{visual_entity_id}-state]"
-        )
-    )
-    assert audible_entry == snapshot(
-        name=(
-            "test_boolean_state_configuration_alarm_enabled_switches"
-            "[ikea_klippbok_water_leak]"
-            f"[{audible_entity_id}-entry]"
-        )
-    )
-    assert audible_state == snapshot(
-        name=(
-            "test_boolean_state_configuration_alarm_enabled_switches"
-            "[ikea_klippbok_water_leak]"
-            f"[{audible_entity_id}-state]"
-        )
-    )
+    assert visual_entry == snapshot(name=f"{visual_entity_id}-entry")
+    assert visual_state == snapshot(name=f"{visual_entity_id}-state")
+    assert audible_entry == snapshot(name=f"{audible_entity_id}-entry")
+    assert audible_state == snapshot(name=f"{audible_entity_id}-state")
     assert visual_state.state == "on"
     assert audible_state.state == "on"
 
