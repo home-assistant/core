@@ -56,7 +56,7 @@ class GenericGroup(Group):
         super().__init__(entity)
         self._member_entity_ids = member_entity_ids
 
-    @cached_property
+    @property
     def member_entity_ids(self) -> list[str]:
         """Return the list of member entity IDs."""
         return self._member_entity_ids
