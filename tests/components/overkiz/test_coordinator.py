@@ -200,3 +200,4 @@ async def test_execution_failure_uses_unknown_fallbacks(
     assert event_data["device_url"] == "unknown"
     assert event_data["command_name"] == "unknown"
     assert event_data["failure_type"] == "unknown"
+    assert event_data["failure_type_code"] is None
