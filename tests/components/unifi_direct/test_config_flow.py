@@ -8,6 +8,8 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import MOCK_CONFIG
+
 
 async def test_user_flow_success(
     hass: HomeAssistant, mock_setup_entry, mock_unifiap_config_flow
@@ -72,6 +74,26 @@ async def test_user_flow_cannot_connect(
         result["flow_id"], user_input=user_input
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_entry_exists(
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap_config_flow, mock_config_entry
+) -> None:
+    """Test where an entry already exists and we try to set it up."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_import_flow(
