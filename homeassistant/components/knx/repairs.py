@@ -15,15 +15,16 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
+    from .telegrams import TelegramDict
 
 from .const import (
     CONF_KNX_KNXKEY_PASSWORD,
     DOMAIN,
     REPAIR_ISSUE_DATA_SECURE_GROUP_KEY,
+    REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
     KNXConfigEntryData,
 )
 from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
-from .telegrams import SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM, TelegramDict
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
 
@@ -49,6 +50,8 @@ async def async_create_fix_flow(
 @callback
 def data_secure_group_key_issue_dispatcher(knx_module: KNXModule) -> Callable[[], None]:
     """Watcher for DataSecure group key issues."""
+    from .telegrams import SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM  # noqa: PLC0415
+
     return async_dispatcher_connect(
         knx_module.hass,
         signal=SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
@@ -160,3 +163,26 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
             self.hass.config_entries.async_update_entry(config_entry, data=new_data)
             self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
         return self.async_create_entry(data={})
+
+
+@callback
+def async_create_telegram_storage_issue(hass: HomeAssistant) -> None:
+    """Create a repair issue for storage initialization failure."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="telegram_storage_error",
+    )
+
+
+@callback
+def async_delete_telegram_storage_issue(hass: HomeAssistant) -> None:
+    """Delete the repair issue for storage initialization failure."""
+    ir.async_delete_issue(
+        hass,
+        DOMAIN,
+        REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+    )

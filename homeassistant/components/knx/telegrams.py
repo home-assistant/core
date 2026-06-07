@@ -19,7 +19,6 @@ from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util
@@ -28,12 +27,14 @@ from homeassistant.util.signal_type import SignalType
 from .const import (
     CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
-    DOMAIN,
     KNX_TELEGRAM_DB_PATH_DEFAULT,
-    REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
     KNXConfigEntryData,
 )
 from .project import KNXProject
+from .repairs import (
+    async_create_telegram_storage_issue,
+    async_delete_telegram_storage_issue,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,7 +137,7 @@ class Telegrams:
                 "Timeout initializing KNX telegram storage (%s)",
                 info,
             )
-            await self._abort_store_init(info, "Timeout")
+            await self._abort_store_init()
             return
         except KnxTelegramStoreException as err:
             _LOGGER.error(
@@ -144,7 +145,7 @@ class Telegrams:
                 info,
                 err,
             )
-            await self._abort_store_init(info, str(err))
+            await self._abort_store_init()
             return
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
@@ -152,9 +153,9 @@ class Telegrams:
                 info,
                 err,
             )
-            await self._abort_store_init(info, str(err))
+            await self._abort_store_init()
             return
-        ir.async_delete_issue(self.hass, DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+        async_delete_telegram_storage_issue(self.hass)
         self.store = self._uninitialized_store
         self.store.start()
         self._uninitialized_store = None
@@ -177,28 +178,13 @@ class Telegrams:
                 self.last_ga_telegrams[t_dict["destination"]] = t_dict
         _LOGGER.debug("Hydrated %d unique telegrams from store", len(result))
 
-    async def _abort_store_init(self, info: str, error: str) -> None:
+    async def _abort_store_init(self) -> None:
         """Create a repair issue and tear down a store that failed to init."""
-        self._create_repair_issue(info, error)
+        async_create_telegram_storage_issue(self.hass)
         if self._uninitialized_store is not None:
             with contextlib.suppress(Exception):
                 await self._uninitialized_store.close()
         self._uninitialized_store = None
-
-    def _create_repair_issue(self, info: str, error: str) -> None:
-        """Create a repair issue for storage initialization failure."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="telegram_storage_error",
-            translation_placeholders={
-                "info": info,
-                "error": error,
-            },
-        )
 
     async def stop(self) -> None:
         """Stop history store."""
