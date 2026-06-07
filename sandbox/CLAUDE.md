@@ -154,18 +154,23 @@ took the codebase from Phase 11 to Phase 17. What's still open:
   --snapshot-update` per integration) and ~70 `created_at` snapshot
   drifts (fix is integration-side freezegun, or an optional Phase
   17b clock-pinning fixture on the compat plugin — ~30 LOC).
-- **Query-shaped RPCs (calendar / weather / media_player / update /
-  vacuum).** The fire-and-forget action-call channel can't express
-  server-side queries, subscriptions, or WS-only mutations, so these
-  proxy APIs now **raise `HomeAssistantError`** (via
-  `entity.raise_not_proxied`) instead of silently returning empty.
-  `todo` is a special case: its To-do panel reads the sync `todo_items`
-  property (which feeds `state`), so it can't be a query at all — it's in
-  `SANDBOX_INCOMPATIBLE_PLATFORMS` (routed to main, no proxy) until a
-  push primitive lands. Full catalogue, interim behaviour, and the two
-  missing primitives (request/response + subscription RPC) in
-  [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md). Planned
-  design: [`plans/plan-query-rpc.md`](plans/plan-query-rpc.md).
+- **Query-shaped RPCs — request/response DONE; subscriptions open.**
+  The server-side query and WS-only-mutation entity APIs
+  (calendar/weather/media_player/update/vacuum) now answer with real
+  data: ops with a `SupportsResponse` service ride the `call_service`
+  `return_response` path, the service-less ones cross via a generic
+  `sandbox/entity_query` RPC, and main rebuilds each rich return type.
+  See [`status/STATUS-plan-query-rpc.md`](status/STATUS-plan-query-rpc.md).
+  What's still open is the **subscription/push** primitive: the
+  `*/subscribe` commands (`weather/subscribe_forecast`,
+  `calendar/event/subscribe`) get only the one-shot fetch, and `todo`
+  stays in `SANDBOX_INCOMPATIBLE_PLATFORMS` (routed to main, no proxy)
+  because its To-do panel reads the sync `todo_items` property that feeds
+  `state` — it needs that pushed item-list cache. Plus the
+  `media_player.browse_media` media-source caveat (browse omits the
+  main-side `media_source` tree). Full catalogue in
+  [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md); plan in
+  [`plans/plan-query-rpc.md`](plans/plan-query-rpc.md).
 - **Non-idempotent service handlers** (`ai_task`, `image`).
   `ALWAYS_MAIN` punt for the sandbox; a future spec on service-handler-level
   interception or sandbox-aware integration hooks is the long-term

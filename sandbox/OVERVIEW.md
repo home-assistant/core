@@ -614,29 +614,28 @@ the phase that resolved each one.
   v1 (`sandbox/` + `homeassistant/components/sandbox/` +
   `tests/components/sandbox/`) was removed ahead of the "shipped a stable
   release" condition, relying on git history for rollback.
-- **Query-shaped RPCs** (`calendar` / `weather` / `media_player` /
-  `update` / `vacuum`). Server-side query, subscription, and WS-only
-  mutation APIs the fire-and-forget action-call channel can't express
-  (`async_get_events`, `async_forecast_*`, `async_browse_media` /
-  `async_search_media`, `async_release_notes`, `async_get_segments`,
-  calendar event update/delete). These proxies now **raise
-  `HomeAssistantError`** via `entity.raise_not_proxied` instead of
-  returning empty. The catalogue + the planned request/response design
-  (a generic `EntityQuery` RPC for the service-less ops, reusing the
-  existing `call_service` `return_response` path for the rest) live in
-  [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md) /
-  [`plans/plan-query-rpc.md`](plans/plan-query-rpc.md). Subscriptions
-  (`weather/subscribe_forecast`, `calendar/event/subscribe`) are
-  deferred. `todo` is now in `SANDBOX_INCOMPATIBLE_PLATFORMS` (routed to
-  main) because its To-do panel reads the sync `todo_items` property
-  that feeds `state` — it needs a pushed item-list cache, not a query.
-  **Caveat (`media_player.browse_media`):** even once wired, a sandboxed
-  player's browse will surface only its **own** sources — the
-  `media_source` tree it normally merges via
-  `media_source.async_browse_media(self.hass, …)` is empty inside the
-  sandbox, because `media_source` runs on main, outside the boundary.
-  Not a bug; closing it needs a cross-boundary hook, pairing with the
-  opt-in sharing work above.
+- **Query-shaped subscriptions** (`calendar` / `weather`). The
+  request/response query RPCs are now **implemented**: the server-side
+  query and WS-only mutation APIs (`async_get_events`,
+  `async_forecast_*`, `async_browse_media` / `async_search_media`,
+  `async_release_notes`, `async_get_segments`, calendar event
+  update/delete) answer with real data — ops with a `SupportsResponse`
+  service ride the `call_service` `return_response` path, the rest cross
+  via a generic `sandbox/entity_query` RPC, and main rebuilds each rich
+  return type. See [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md) /
+  [`plans/plan-query-rpc.md`](plans/plan-query-rpc.md). What's still open
+  is the **subscription/push** primitive: `weather/subscribe_forecast`
+  and `calendar/event/subscribe` get only the one-shot fetch, never
+  streamed updates. `todo` stays in `SANDBOX_INCOMPATIBLE_PLATFORMS`
+  (routed to main) because its To-do panel reads the sync `todo_items`
+  property that feeds `state` — it needs that same pushed item-list
+  cache, not a query.
+  **Caveat (`media_player.browse_media`):** a sandboxed player's browse
+  surfaces only its **own** sources — the `media_source` tree it
+  normally merges via `media_source.async_browse_media(self.hass, …)` is
+  empty inside the sandbox, because `media_source` runs on main, outside
+  the boundary. Not a bug; closing it needs a cross-boundary hook,
+  pairing with the opt-in sharing work above.
 - **Diagnostic snapshot drift.** ~30 integrations have
   `__snapshots__/` files that include `entry.as_dict()` and now show
   `+ 'sandbox': 'built-in'`. The fix lives in those integrations'

@@ -223,6 +223,23 @@ is a noted future optimisation. Exception translation rebuilds sandbox-side `vol
 `vol.MultipleInvalid` (with their `.path`) from a structured `error_data` frame
 field, so callers on main see the local-entity error shape.
 
+**Server-side queries (request/response).** The query-shaped entity APIs that
+*ask* the entity a question now cross too. Ops with a `SupportsResponse` service
+ride the existing `call_service` path with `return_response=True`
+(`calendar.get_events`, `weather.get_forecasts`, `media_player.browse_media`);
+the rest cross via a generic `sandbox/entity_query` RPC that names the entity
+method + kwargs and returns the serialised result wrapped as `{"value": …}`
+(`media_player.search_media`, `update.release_notes`, `vacuum.get_segments`, the
+WS-only `calendar` event update/delete). Both decode the response with the
+`as_dict`-aware JSON encoder on the sandbox side and rebuild the rich return
+type (`BrowseMedia`, `CalendarEvent`, `SearchMedia`, `Segment`) on main with
+explicit field mapping. Sandbox-raised errors propagate as channel error frames
+and translate exactly like a service call. Still deferred: the
+subscription/push primitive (`weather/subscribe_forecast`,
+`calendar/event/subscribe`, the `todo` item-list push). Caveat: a sandboxed
+`media_player`'s browse surfaces only its own sources — the `media_source` tree
+runs on main, outside the boundary. See [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md).
+
 **Service & event mirroring.** After `async_setup_entry` succeeds, the entry's
 domain joins a refcounted `ApprovedDomains` set that gates both mirrors.
 `ServiceMirror` forwards `register_service` and installs a forwarder that
@@ -354,7 +371,7 @@ waits on the websocket transport). See
 - **State-sharing opt-in consumer** + main-side filtering ([`docs/design-share-states.md`](docs/design-share-states.md)); would let the lockdown helpers (§3) return to sandboxes.
 - **Cross-sandbox in-process dependencies** — ESPHome serial / BLE proxy, and IR/RF command flows, where one integration depends on another's in-process surface across a sandbox boundary.
 - **`Context` group attribute** (§10) — a core `Context` field naming which sandbox group originated an action, a richer audit answer than today's `user_id=None`. Context restoration from seen ids, dropping the unused token, and removing the per-group system user all **shipped** (`plans/plan-auth-context.md`); the wire still carries `context_id` only, so the sandbox can never fabricate attribution.
-- **Query-shaped RPCs** for the server-side query / subscribe / WS-only-mutation entity APIs the fire-and-forget bridge can't express — `calendar` (listings, event subscribe/update/delete), `todo` (item list/subscribe/move), `weather` (forecasts), `media_player` (browse/search), `update` (release notes), `vacuum` (segments). They currently raise `HomeAssistantError` instead of silently returning empty. Full catalogue + the two missing primitives (request/response + subscription) in [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md).
+- **Query-shaped subscriptions** — the request/response RPCs shipped (§8: service-path + `entity_query`), so `calendar`/`weather`/`media_player`/`update`/`vacuum` queries answer with real data. What remains is the **subscription/push** primitive for the streaming `*/subscribe` commands (`weather/subscribe_forecast`, `calendar/event/subscribe`) and the `todo` item-list push that would un-block the `todo` platform, plus the `media_player.browse_media` media-source caveat (a sandboxed player's browse omits the main-side `media_source` tree). Full catalogue in [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md).
 - **pip/egress validation** for custom-integration dependencies in the container (§7).
 
 ---
