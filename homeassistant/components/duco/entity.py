@@ -1,6 +1,6 @@
 """Base entity for the Duco integration."""
 
-from duco_connectivity.models import Node
+from duco_connectivity.models import Node, NodeType
 
 from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -25,7 +25,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             identifiers={(DOMAIN, f"{mac}_{node.node_id}")},
             manufacturer="Duco",
             model=coordinator.board_info.box_name
-            if node.general.node_type == "BOX"
+            if node.general.node_type == NodeType.BOX
             else node.general.node_type,
             name=node.general.name or f"Node {node.node_id}",
         )
@@ -34,7 +34,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
                 "connections": {(CONNECTION_NETWORK_MAC, mac)},
                 "serial_number": coordinator.board_info.serial_board_box,
             }
-            if node.general.node_type == "BOX"
+            if node.general.node_type == NodeType.BOX
             else {ATTR_VIA_DEVICE: (DOMAIN, f"{mac}_1")}
         )
         self._attr_device_info = device_info
