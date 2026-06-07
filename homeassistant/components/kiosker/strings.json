@@ -57,6 +57,9 @@
       }
     },
     "button": {
+      "blackout_clear": {
+        "name": "Clear blackout"
+      },
       "clear_cache": {
         "name": "Clear cache"
       },
