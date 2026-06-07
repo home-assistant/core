@@ -1473,6 +1473,7 @@ async def test_invalid_service_calls(hass: HomeAssistant) -> None:
     assert add_entities.call_count == 1
     grouped_light = add_entities.call_args[0][0][0]
     grouped_light.hass = hass
+    grouped_light._entity_ids = ["light.test1", "light.test2"]
 
     service_call_events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
