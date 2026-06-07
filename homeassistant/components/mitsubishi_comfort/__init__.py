@@ -13,7 +13,12 @@ from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionE
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -62,7 +67,7 @@ async def async_setup_entry(
         await account.login()
         devices = await account.discover_devices()
     except AuthenticationError as err:
-        raise ConfigEntryError("Mitsubishi cloud authentication failed") from err
+        raise ConfigEntryAuthFailed("Mitsubishi cloud authentication failed") from err
     except DeviceConnectionError as err:
         raise ConfigEntryNotReady("Cannot reach Mitsubishi cloud") from err
 
@@ -102,20 +107,40 @@ async def async_setup_entry(
         if not address or not info.password or not info.crypto_serial:
             # No LAN address yet: the device is registered, so DHCP discovery
             # supplies its IP and reloads the entry to add it.
-            _LOGGER.debug("Device %s has no known LAN address yet", info.label)
+            _LOGGER.warning("Device %s has no known LAN address yet", info.label)
             continue
         device = _make_device(info, serial, address, session)
         coordinators[serial] = MitsubishiComfortCoordinator(
             hass, entry, device, info.mac
         )
 
+    if not coordinators and devices:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "no_device_addresses",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="no_device_addresses",
+        )
+    elif coordinators:
+        ir.async_delete_issue(hass, DOMAIN, "no_device_addresses")
+
     await asyncio.gather(
         *(c.async_config_entry_first_refresh() for c in coordinators.values())
     )
 
     entry.runtime_data = coordinators
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
+) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(

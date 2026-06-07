@@ -212,6 +212,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if Mode.AUTO in self._device.supported_modes:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -285,3 +286,10 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         await self.async_set_hvac_mode(HVACMode.OFF)
+
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        for mode in (HVACMode.HEAT_COOL, HVACMode.COOL, HVACMode.HEAT):
+            if mode in self.hvac_modes:
+                await self.async_set_hvac_mode(mode)
+                return
