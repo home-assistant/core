@@ -1216,7 +1216,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.8.2
+habluetooth==6.8.3
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
