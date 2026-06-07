@@ -2,8 +2,8 @@
 
 from unifi_ap import UniFiAPConnectionException
 
-from homeassistant import config_entries
 from homeassistant.components.unifi_direct.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -14,7 +14,7 @@ async def test_user_flow_success(
 ) -> None:
     """Test a successful config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -41,7 +41,7 @@ async def test_user_flow_cannot_connect(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -65,7 +65,7 @@ async def test_import_flow(
     """Test import initiated flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
+        context={"source": SOURCE_IMPORT},
         data={
             CONF_HOST: "192.168.1.2",
             CONF_USERNAME: "admin",
@@ -94,7 +94,7 @@ async def test_import_flow_cannot_connect(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
+        context={"source": SOURCE_IMPORT},
         data={
             CONF_HOST: "192.168.1.2",
             CONF_USERNAME: "admin",
