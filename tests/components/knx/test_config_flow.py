@@ -1649,15 +1649,10 @@ async def test_options_communication_settings(
         user_input={
             CONF_KNX_STATE_UPDATER: False,
             CONF_KNX_RATE_LIMIT: 40,
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "telegram_store_sqlite"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 30,
+            CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
+            "telegram_store_sqlite": {
+                CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 30,
+            },
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY

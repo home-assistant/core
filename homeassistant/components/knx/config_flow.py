@@ -16,6 +16,7 @@ from xknx.io.self_description import request_description
 from xknx.io.util import validate_ip as xknx_validate_ip
 from xknx.secure.keyring import Keyring, XMLInterface
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -945,12 +946,16 @@ class KNXOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage KNX communication settings."""
         if user_input is not None:
+            telegram_store_data = user_input.get("telegram_store_sqlite", {})
             self.new_entry_data |= KNXConfigEntryData(
                 state_updater=user_input[CONF_KNX_STATE_UPDATER],
                 rate_limit=user_input[CONF_KNX_RATE_LIMIT],
                 telegram_db_load_hours=user_input[CONF_KNX_TELEGRAM_DB_LOAD_HOURS],
+                telegram_db_retention_days=telegram_store_data[
+                    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS
+                ],
             )
-            return await self.async_step_telegram_store_sqlite()
+            return self.finish_flow()
 
         data_schema = {
             vol.Required(
@@ -989,45 +994,31 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 ),
                 vol.Coerce(int),
             ),
-        }
-        return self.async_show_form(
-            step_id="communication_settings",
-            data_schema=vol.Schema(data_schema),
-            last_step=False,
-        )
-
-    async def async_step_telegram_store_sqlite(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage SQLite telegram store settings."""
-        if user_input is not None:
-            self.new_entry_data |= KNXConfigEntryData(
-                telegram_db_retention_days=user_input[
-                    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS
-                ],
-            )
-            return self.finish_flow()
-
-        data_schema = {
-            vol.Required(
-                CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
-                default=self.initial_data.get(
-                    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
-                    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
+            vol.Required("telegram_store_sqlite"): data_entry_flow.section(
+                vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+                            default=self.initial_data.get(
+                                CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+                                KNX_TELEGRAM_DB_RETENTION_DEFAULT,
+                            ),
+                        ): vol.All(
+                            selector.NumberSelector(
+                                selector.NumberSelectorConfig(
+                                    min=0,
+                                    mode=selector.NumberSelectorMode.BOX,
+                                    unit_of_measurement="days",
+                                ),
+                            ),
+                            vol.Coerce(int),
+                        ),
+                    }
                 ),
-            ): vol.All(
-                selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        mode=selector.NumberSelectorMode.BOX,
-                        unit_of_measurement="days",
-                    ),
-                ),
-                vol.Coerce(int),
             ),
         }
         return self.async_show_form(
-            step_id="telegram_store_sqlite",
+            step_id="communication_settings",
             data_schema=vol.Schema(data_schema),
             last_step=True,
         )
