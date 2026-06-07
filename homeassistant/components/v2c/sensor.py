@@ -151,7 +151,7 @@ async def async_setup_entry(
 
     entities: list[V2CSensorBaseEntity] = []
     for description in TRYDAN_SENSORS:
-        if description.key in ("voltage_installation") and not deprecate_entity(
+        if description.key == "voltage_installation" and not deprecate_entity(
             hass=hass,
             entity_registry=entity_registry,
             platform_domain=Platform.SENSOR,
