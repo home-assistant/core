@@ -1,6 +1,6 @@
 {
-  "id": 3,
-  "name": "Test Cover",
+  "id": 2,
+  "name": "No Position",
   "profile": 2002,
   "image": "default",
   "favorite": 0,
@@ -20,7 +20,7 @@
   "attributes": [
     {
       "id": 1,
-      "node_id": 3,
+      "node_id": 2,
       "instance": 0,
       "minimum": 0,
       "maximum": 4,
@@ -46,7 +46,7 @@
     },
     {
       "id": 2,
-      "node_id": 3,
+      "node_id": 2,
       "instance": 0,
       "minimum": 0,
       "maximum": 0,

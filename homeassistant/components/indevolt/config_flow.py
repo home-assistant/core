@@ -22,6 +22,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     """Configuration flow for Indevolt integration."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""

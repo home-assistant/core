@@ -945,7 +945,7 @@ async def test_statistics_sensors_migration(
     node = Node(client, copy.deepcopy(zp3111_state))
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
     controller_base_unique_id = f"{client.driver.controller.home_id}.1.statistics"

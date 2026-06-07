@@ -258,8 +258,6 @@ async def _async_get_local_service_info(hass: HomeAssistant) -> AsyncServiceInfo
         "internal_url": "",
         # Old base URL, for backward compatibility
         "base_url": "",
-        # Always needs authentication
-        "requires_api_password": True,
     }
 
     # Get instance URL's

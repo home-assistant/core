@@ -246,3 +246,75 @@ async def test_subentry_entry_not_loaded(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "entry_not_loaded"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauth flow updates the API key."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_key"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            AuthenticationError(
+                message="invalid key",
+                response=httpx.Response(
+                    status_code=401,
+                    request=httpx.Request(method="POST", url="https://example.com"),
+                ),
+                body=None,
+            ),
+            "invalid_auth",
+        ),
+        (OpenAIError("boom"), "cannot_connect"),
+        (Exception("boom"), "unknown"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test errors during reauth and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_openai_client.chat.completions.create.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_key"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_openai_client.chat.completions.create.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_key"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_key"
