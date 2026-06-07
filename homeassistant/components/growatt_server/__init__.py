@@ -28,6 +28,7 @@ from collections.abc import Mapping
 import datetime
 from json import JSONDecodeError
 import logging
+from typing import Any
 
 import growattServer
 from growattServer import GrowattV1ApiErrorCode
@@ -178,14 +179,14 @@ async def async_migrate_entry(
                     )
                     return False
 
-                if not plant_info or "data" not in plant_info or not plant_info["data"]:
+                if not plant_info or "data" not in plant_info or not plant_info["data"]:  # type: ignore[comparison-overlap,call-overload]
                     _LOGGER.error(
                         "No plants found for this account. "
                         "Migration will retry on next restart"
                     )
                     return False
 
-                first_plant_id = plant_info["data"][0]["plantId"]
+                first_plant_id = plant_info["data"][0]["plantId"]  # type: ignore[call-overload]
 
                 # Update config entry with resolved plant_id
                 new_data = dict(config_entry.data)
@@ -330,6 +331,7 @@ async def async_setup_entry(
 
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
+    api: Any
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
