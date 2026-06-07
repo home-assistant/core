@@ -153,6 +153,27 @@ message CallServiceResult {
   optional ServiceResponse response = 1;    // unset when no response returned
 }
 
+// --- entity_query (main -> sandbox) ---------------------------------------
+
+// Generic request/response RPC for the server-side entity queries that have
+// NO SupportsResponse service to ride (media search, release notes, vacuum
+// segments, the WS-only calendar event edits). Main names the entity + method
+// and passes the kwargs; the sandbox invokes the real entity method and
+// returns the serialised result. Ops that DO map to a SupportsResponse
+// service use call_service instead — see docs/query-shaped-rpcs.md.
+message EntityQuery {
+  string sandbox_entity_id = 1;
+  string method = 2;                       // e.g. "async_search_media"
+  google.protobuf.Struct args = 3;         // kwargs, dynamic
+  optional string context_id = 4;          // same wire-safe id rule as CallService
+}
+
+message EntityQueryResult {
+  // Wrapped as {"value": <return>} so scalar / list / None returns are all
+  // representable (a Struct's top level must be an object).
+  google.protobuf.Struct result = 1;
+}
+
 // --- get_translations (main -> sandbox) -----------------------------------
 
 // Pull a sandboxed integration's frontend translation strings. Main issues

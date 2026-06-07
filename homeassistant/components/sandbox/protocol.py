@@ -32,6 +32,13 @@ Main → Sandbox calls:
   the main→sandbox service mirroring path). Payload mirrors a
   ``ServiceCall``: ``(domain, service, target, service_data, context,
   return_response)``. Returns either ``None`` or a service-response dict.
+* ``sandbox/entity_query`` — generic request/response RPC for the
+  server-side entity queries with no ``SupportsResponse`` service to ride
+  (media search, update release notes, vacuum segments, the WS-only calendar
+  event edits). Payload ``{sandbox_entity_id, method, args, context_id}``;
+  the sandbox resolves the entity, invokes ``method`` with ``args`` as kwargs,
+  and returns the serialised result wrapped as ``{"value": <return>}``.
+  Ops that map to a ``SupportsResponse`` service use ``call_service`` instead.
 * ``sandbox/get_translations`` — pull a sandboxed integration's frontend
   translation strings. Payload ``{language, domains: [str]}`` (main batches
   every owned custom domain of one group into a single request). Response
@@ -100,6 +107,7 @@ MSG_READY: Final = "sandbox/ready"
 MSG_ENTRY_SETUP: Final = "sandbox/entry_setup"
 MSG_ENTRY_UNLOAD: Final = "sandbox/entry_unload"
 MSG_CALL_SERVICE: Final = "sandbox/call_service"
+MSG_ENTITY_QUERY: Final = "sandbox/entity_query"
 MSG_GET_TRANSLATIONS: Final = "sandbox/get_translations"
 MSG_SHUTDOWN: Final = "sandbox/shutdown"
 
@@ -117,6 +125,7 @@ MSG_STORE_REMOVE: Final = "sandbox/store_remove"
 
 __all__ = [
     "MSG_CALL_SERVICE",
+    "MSG_ENTITY_QUERY",
     "MSG_ENTRY_SETUP",
     "MSG_ENTRY_UNLOAD",
     "MSG_FIRE_EVENT",

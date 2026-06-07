@@ -197,6 +197,23 @@ class SandboxProxyEntity(Entity):
             return struct_to_dict(result.response.data)
         return {}
 
+    async def _entity_query(self, method: str, **args: Any) -> Any:
+        """Forward a server-side entity query to the sandbox.
+
+        The request/response companion to :meth:`_call_service` for the
+        query-shaped entity APIs that have no ``SupportsResponse`` service to
+        ride. ``method`` names the real entity method to invoke on the sandbox
+        side; ``args`` are its kwargs. Returns the deserialised return value
+        (``None`` for mutations). ``self._context`` is forwarded so attribution
+        survives exactly as it does for a service call.
+        """
+        return await self._bridge.async_entity_query(
+            sandbox_entity_id=self.description.sandbox_entity_id,
+            method=method,
+            args=args,
+            context=self._context,
+        )
+
 
 # Lazy import to avoid a circular dependency at module import time
 # (bridge imports build_proxy → entity imports proxies → proxies import

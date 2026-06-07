@@ -14,6 +14,9 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util.json import json_loads
 
@@ -21,7 +24,12 @@ from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
 from .messages import dict_to_struct, struct_to_dict
-from .protocol import MSG_CALL_SERVICE, MSG_ENTRY_SETUP, MSG_ENTRY_UNLOAD
+from .protocol import (
+    MSG_CALL_SERVICE,
+    MSG_ENTITY_QUERY,
+    MSG_ENTRY_SETUP,
+    MSG_ENTRY_UNLOAD,
+)
 from .sources import FetchPrimitive, SandboxSourceError, async_ensure_integration_source
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +61,7 @@ class EntryRunner:
         channel.register(MSG_ENTRY_SETUP, self._handle_entry_setup)
         channel.register(MSG_ENTRY_UNLOAD, self._handle_entry_unload)
         channel.register(MSG_CALL_SERVICE, self._handle_call_service)
+        channel.register(MSG_ENTITY_QUERY, self._handle_entity_query)
 
     async def _handle_entry_setup(self, msg: pb.EntrySetup) -> pb.EntrySetupResult:
         """Build a :class:`ConfigEntry`, register it, and call async_setup."""
@@ -152,6 +161,41 @@ class EntryRunner:
             target=target,
         )
         return pb.CallServiceResult()
+
+    async def _handle_entity_query(self, msg: pb.EntityQuery) -> pb.EntityQueryResult:
+        """Invoke a server-side entity method and return its serialised result.
+
+        Resolves the entity on the private hass by ``sandbox_entity_id``,
+        ``getattr``s the named method, and awaits it with the decoded kwargs.
+        The return is wrapped as ``{"value": …}`` and run through the same
+        ``as_dict``-aware JSON encoder used for service responses, so rich
+        types (``SearchMedia``, ``BrowseMedia``, ``Segment`` dataclasses)
+        cross verbatim. A raised exception (``ServiceValidationError`` /
+        ``BrowseError`` / ``SearchError`` / ``HomeAssistantError`` /
+        ``vol.Invalid``) propagates as a channel error frame, exactly like
+        ``call_service``, so main rebuilds the same error shape.
+        """
+        entity = _resolve_entity(self.hass, msg.sandbox_entity_id)
+        method = getattr(entity, msg.method, None)
+        if not callable(method):
+            raise HomeAssistantError(
+                f"entity_query: {msg.sandbox_entity_id!r} has no method"
+                f" {msg.method!r}"
+            )
+        value = await method(**struct_to_dict(msg.args))
+        result = pb.EntityQueryResult()
+        result.result.CopyFrom(dict_to_struct(_json_safe({"value": value})))
+        return result
+
+
+def _resolve_entity(hass: HomeAssistant, entity_id: str) -> Entity:
+    """Return the live entity object for ``entity_id`` or raise."""
+    domain = entity_id.split(".", 1)[0]
+    component = hass.data.get(DATA_INSTANCES, {}).get(domain)
+    entity = component.get_entity(entity_id) if component is not None else None
+    if entity is None:
+        raise HomeAssistantError(f"entity_query: unknown entity_id {entity_id!r}")
+    return entity
 
 
 def _json_safe(result: Any) -> dict[str, Any]:

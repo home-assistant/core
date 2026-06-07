@@ -18,6 +18,7 @@ MSG_READY: Final = "sandbox/ready"
 MSG_ENTRY_SETUP: Final = "sandbox/entry_setup"
 MSG_ENTRY_UNLOAD: Final = "sandbox/entry_unload"
 MSG_CALL_SERVICE: Final = "sandbox/call_service"
+MSG_ENTITY_QUERY: Final = "sandbox/entity_query"
 MSG_GET_TRANSLATIONS: Final = "sandbox/get_translations"
 MSG_SHUTDOWN: Final = "sandbox/shutdown"
 
@@ -35,6 +36,7 @@ MSG_STORE_REMOVE: Final = "sandbox/store_remove"
 
 __all__ = [
     "MSG_CALL_SERVICE",
+    "MSG_ENTITY_QUERY",
     "MSG_ENTRY_SETUP",
     "MSG_ENTRY_UNLOAD",
     "MSG_FIRE_EVENT",
