@@ -115,13 +115,14 @@ class LockGroup(GroupEntity, LockEntity):
         super().__init__()
         self._target_config = target_config
         self._domain = LOCK_DOMAIN
+        self.group = GenericGroup(self, target_config.get("entity_id", []))
         self._attr_supported_features = LockEntityFeature.OPEN
         self._attr_name = name
         self._attr_unique_id = unique_id
 
     def update_group_member(self, entities: set[str]) -> None:
         """Update the group member."""
-        self.group.member_entity_ids = list(entities)
+        self.group._member_entity_ids = list(entities)  # noqa: SLF001
 
     @callback
     def async_update_group_state(self) -> None:

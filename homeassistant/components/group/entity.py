@@ -59,7 +59,7 @@ class GroupEntity(Entity):
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 
-        self.update_entities()
+        self.update_entities(False)
         for entity_id in self._entity_ids:
             if (state := self.hass.states.get(entity_id)) is None:
                 continue
@@ -94,7 +94,7 @@ class GroupEntity(Entity):
         }
 
     @callback
-    def update_entities(self) -> None:
+    def update_entities(self, update_group_members: bool = True) -> None:
         """Update the entities in the group."""
         selected = async_extract_referenced_entity_ids(
             self.hass,
@@ -106,7 +106,8 @@ class GroupEntity(Entity):
             selected.referenced | selected.indirectly_referenced
         )
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: sorted(self._entity_ids)}
-        self.update_group_member(self._entity_ids)
+        if update_group_members:
+            self.update_group_member(self._entity_ids)
 
     def update_group_member(self, entities: set[str]) -> None:
         """Update the group member."""
