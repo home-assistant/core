@@ -13,7 +13,7 @@ from aiomelcloudhome.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -109,5 +109,10 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         else:
-            self._notify_new_units(data)
             return data
+
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Notify entity callbacks after coordinator data has been updated."""
+        if self.data is not None:
+            self._notify_new_units(self.data)

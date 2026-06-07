@@ -159,7 +159,19 @@
             },
             {
               "name": "HasZone2",
-              "value": "0"
+              "value": "1"
+            },
+            {
+              "name": "OperationModeZone2",
+              "value": "HeatRoomTemperature"
+            },
+            {
+              "name": "SetTemperatureZone2",
+              "value": "22"
+            },
+            {
+              "name": "RoomTemperatureZone2",
+              "value": "21"
             },
             {
               "name": "InStandbyMode",
@@ -172,9 +184,9 @@
           ],
           "capabilities": {
             "hasHotWater": true,
-            "hasZone2": false,
+            "hasZone2": true,
             "hasHalfDegrees": false,
-            "hasCoolingMode": false,
+            "hasCoolingMode": true,
             "minSetTankTemperature": 40,
             "maxSetTankTemperature": 60,
             "hasStandbyMode": false,

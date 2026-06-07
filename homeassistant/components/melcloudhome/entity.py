@@ -91,13 +91,3 @@ class MelCloudHomeATWZoneEntity(MelCloudHomeATWUnitEntity):
     def zone_number(self) -> int:
         """Return the zone number."""
         return self._zone_number
-
-
-class MelCloudHomeATWTankEntity(MelCloudHomeATWUnitEntity):
-    """Base entity for the ATW tank/DHW entity."""
-
-    def __init__(self, coordinator: MelCloudHomeCoordinator, unit: ATWUnit) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self._attr_unique_id = f"{unit.id}_tank"
-        self._attr_name = "Hot water"

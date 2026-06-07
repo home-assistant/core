@@ -39,6 +39,28 @@ def mock_melcloud_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_control_ata_unit() -> Generator[AsyncMock]:
+    """Mock MELCloud Home ATA unit control."""
+    mock = AsyncMock()
+    with patch(
+        "homeassistant.components.melcloudhome.coordinator.MELCloudHome.control_ata_unit",
+        new=mock,
+    ):
+        yield mock
+
+
+@pytest.fixture
+def mock_control_atw_unit() -> Generator[AsyncMock]:
+    """Mock MELCloud Home ATW unit control."""
+    mock = AsyncMock()
+    with patch(
+        "homeassistant.components.melcloudhome.coordinator.MELCloudHome.control_atw_unit",
+        new=mock,
+    ):
+        yield mock
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock a MELCloud Home config entry."""
     return MockConfigEntry(

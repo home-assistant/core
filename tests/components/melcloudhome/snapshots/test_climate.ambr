@@ -1,0 +1,56 @@
+# serializer version: 1
+# name: test_ata_climate_state
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'auto',
+        'speed_1',
+        'speed_2',
+        'speed_3',
+        'speed_4',
+        'speed_5',
+      ]),
+      'friendly_name': 'Living Room AC',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 937>,
+      'swing_horizontal_mode': 'centre',
+      'swing_horizontal_modes': list([
+        'auto',
+        'swing',
+        'left',
+        'left_centre',
+        'centre',
+        'right_centre',
+        'right',
+      ]),
+      'swing_mode': 'auto',
+      'swing_modes': list([
+        'auto',
+        'swing',
+        'position_1',
+        'position_2',
+        'position_3',
+        'position_4',
+        'position_5',
+      ]),
+      'temperature': 21.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.living_room_ac',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
