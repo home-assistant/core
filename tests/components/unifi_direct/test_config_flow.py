@@ -18,7 +18,7 @@ async def test_user_flow_success(
     )
     assert result["type"] is FlowResultType.FORM
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             "host": "192.168.1.2",
@@ -28,7 +28,14 @@ async def test_user_flow_success(
         },
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "UniFi AP (192.168.1.2)"
+    assert result["data"] == {
+        "host": "192.168.1.2",
+        "username": "admin",
+        "password": "password",
+        "port": 22,
+    }
 
 
 async def test_user_flow_cannot_connect(
@@ -45,7 +52,7 @@ async def test_user_flow_cannot_connect(
     )
     assert result["type"] is FlowResultType.FORM
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             "host": "192.168.1.2",
@@ -55,8 +62,8 @@ async def test_user_flow_cannot_connect(
         },
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_import_flow(
