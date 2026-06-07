@@ -300,6 +300,6 @@ class SmartThingsAudioVolumeLevelEntity(SmartThingsEntity, NumberEntity):
         """Set the value."""
         await self.execute_device_command(
             Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL,
-            Command.VOLUME_LEVEL,
+            Command.SET_VOLUME_LEVEL,
             int(value),
         )
