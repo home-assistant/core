@@ -8,11 +8,7 @@ import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
 
 import knx_frontend as knx_panel
-from knx_telegram_store import (
-    KnxTelegramStoreException,
-    TelegramQuery,
-    TelegramQueryResult,
-)
+from knx_telegram_store import KnxTelegramStoreException, TelegramQuery
 import voluptuous as vol
 from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
@@ -302,36 +298,6 @@ async def ws_project_file_remove(
     connection.send_result(msg["id"])
 
 
-async def _query_telegram_store(
-    knx: KNXModule,
-    connection: websocket_api.ActiveConnection,
-    msg: dict,
-    query: TelegramQuery,
-) -> TelegramQueryResult | None:
-    """Run a telegram store query.
-
-    Send a websocket error and return ``None`` if the store is not
-    initialized or the query fails.
-    """
-    if knx.telegrams.store is None:
-        connection.send_error(
-            msg["id"],
-            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
-            "Telegram storage backend not initialized. "
-            "Check logs/Repairs for initialization errors.",
-        )
-        return None
-    try:
-        return await knx.telegrams.store.query(query)
-    except KnxTelegramStoreException as err:
-        connection.send_error(
-            msg["id"],
-            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
-            f"Database error: {err}",
-        )
-        return None
-
-
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -351,8 +317,22 @@ async def ws_group_monitor_info(
     start_time = dt_util.now() - timedelta(hours=load_hours)
 
     query = TelegramQuery(start_time=start_time, limit=10_000, order_descending=True)
-    result = await _query_telegram_store(knx, connection, msg, query)
-    if result is None:
+    if knx.telegrams.store is None:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            "Telegram storage backend not initialized. "
+            "Check logs/Repairs for initialization errors.",
+        )
+        return
+    try:
+        result = await knx.telegrams.store.query(query)
+    except KnxTelegramStoreException as err:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            f"Database error: {err}",
+        )
         return
 
     connection.send_result(
@@ -435,8 +415,22 @@ async def ws_query_telegrams(
         offset=msg.get("offset", 0),
         order_descending=msg.get("order_descending", True),
     )
-    result = await _query_telegram_store(knx, connection, msg, query)
-    if result is None:
+    if knx.telegrams.store is None:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            "Telegram storage backend not initialized. "
+            "Check logs/Repairs for initialization errors.",
+        )
+        return
+    try:
+        result = await knx.telegrams.store.query(query)
+    except KnxTelegramStoreException as err:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            f"Database error: {err}",
+        )
         return
 
     connection.send_result(
