@@ -580,9 +580,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "light.adjust does not accept zero brightness or white values"
             )
 
-        if not light.is_on and (
+        has_step_adjust = (
             ATTR_BRIGHTNESS_STEP in raw_params
             or ATTR_BRIGHTNESS_STEP_PCT in raw_params
+        )
+
+        if light.__class__.async_adjust is not LightEntity.async_adjust and has_step_adjust:
+            await light.async_adjust(**filter_turn_on_params(light, raw_params))
+            return
+
+        if (
+            light.__class__.async_adjust is LightEntity.async_adjust
+            and not light.is_on
+            and has_step_adjust
         ):
             return
 

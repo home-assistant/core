@@ -10,6 +10,8 @@ import voluptuous as vol
 from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
@@ -129,6 +131,8 @@ def async_create_preview_light(
 FORWARDED_ATTRIBUTES = frozenset(
     {
         ATTR_BRIGHTNESS,
+        ATTR_BRIGHTNESS_STEP,
+        ATTR_BRIGHTNESS_STEP_PCT,
         ATTR_COLOR_TEMP_KELVIN,
         ATTR_EFFECT,
         ATTR_FLASH,
