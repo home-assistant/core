@@ -183,6 +183,24 @@ class CallServiceResult(_message.Message):
     response: ServiceResponse
     def __init__(self, response: _Optional[_Union[ServiceResponse, _Mapping]] = ...) -> None: ...
 
+class EntityQuery(_message.Message):
+    __slots__ = ("sandbox_entity_id", "method", "args", "context_id")
+    SANDBOX_ENTITY_ID_FIELD_NUMBER: _ClassVar[int]
+    METHOD_FIELD_NUMBER: _ClassVar[int]
+    ARGS_FIELD_NUMBER: _ClassVar[int]
+    CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
+    sandbox_entity_id: str
+    method: str
+    args: _struct_pb2.Struct
+    context_id: str
+    def __init__(self, sandbox_entity_id: _Optional[str] = ..., method: _Optional[str] = ..., args: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., context_id: _Optional[str] = ...) -> None: ...
+
+class EntityQueryResult(_message.Message):
+    __slots__ = ("result",)
+    RESULT_FIELD_NUMBER: _ClassVar[int]
+    result: _struct_pb2.Struct
+    def __init__(self, result: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+
 class GetTranslations(_message.Message):
     __slots__ = ("language", "domains")
     LANGUAGE_FIELD_NUMBER: _ClassVar[int]
