@@ -133,11 +133,7 @@ async def _get_media_mime_type(
     hass: HomeAssistant, identifier: IcloudMediaSourceIdentifier
 ) -> str:
     photo = await hass.async_add_executor_job(_get_photo_asset, hass, identifier)
-    if photo is None:
-        raise Unresolvable(
-            translation_domain=DOMAIN,
-            translation_key="photo_not_found",
-        )
+
     match photo.item_type:
         case "image":
             if photo.filename.lower().endswith(".png"):
@@ -158,7 +154,7 @@ class PhotoCache:
     """Simple in-memory cache for PhotoAsset objects."""
 
     _instance: PhotoCache
-    _lock = threading.Lock()
+    _lock = threading.RLock()
 
     @classmethod
     def instance(cls) -> PhotoCache:

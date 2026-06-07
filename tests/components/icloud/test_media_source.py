@@ -473,7 +473,7 @@ async def test_resolve_media(
     ("media_content_id", "service", "has_value", "exception"),
     [
         (
-            "/invalid_account_id/ablum/album_id1/photo_id1",
+            "/invalid_account_id/album/album_id1/photo_id1",
             None,
             None,
             Unresolvable,
@@ -569,7 +569,7 @@ async def test_resolve_media_exceptions(
     has_value: bool,
     exception: type[Exception],
 ) -> None:
-    """Test browsing media with exceptions."""
+    """Test resolving media with exceptions."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -605,10 +605,10 @@ async def test_resolve_media_exceptions(
         ("invalid_type", "stream_id2", "Invalid album view type"),
     ],
     ids=[
-        "invalid_album_id_in_album_view",
-        "invalid_album_id_in_shared_view",
-        "photos_not_available_for_album_view",
-        "photos_not_available_for_shared_view",
+        "photo_not_found_in_album",
+        "album_not_found_in_album_view",
+        "photo_not_found_in_shared_view",
+        "album_not_found_in_shared_view",
         "invalid_view_type",
     ],
 )
