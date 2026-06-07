@@ -614,13 +614,29 @@ the phase that resolved each one.
   v1 (`sandbox/` + `homeassistant/components/sandbox/` +
   `tests/components/sandbox/`) was removed ahead of the "shipped a stable
   release" condition, relying on git history for rollback.
-- **`calendar` / `todo` / `weather` query-shaped RPCs.** `async_get_events`
-  (calendar), `todo_items` (todo), and `weather.async_forecast_*`
-  return server-side query results the action-call channel can't
-  express. The Phase 13 proxies return empty lists for these; a
-  separate query-shaped RPC is owed if the compat sweep ever surfaces
-  an integration that depends on these surfaces (it hasn't yet — see
-  [`BACKLOG.md`](BACKLOG.md)).
+- **Query-shaped RPCs** (`calendar` / `weather` / `media_player` /
+  `update` / `vacuum`). Server-side query, subscription, and WS-only
+  mutation APIs the fire-and-forget action-call channel can't express
+  (`async_get_events`, `async_forecast_*`, `async_browse_media` /
+  `async_search_media`, `async_release_notes`, `async_get_segments`,
+  calendar event update/delete). These proxies now **raise
+  `HomeAssistantError`** via `entity.raise_not_proxied` instead of
+  returning empty. The catalogue + the planned request/response design
+  (a generic `EntityQuery` RPC for the service-less ops, reusing the
+  existing `call_service` `return_response` path for the rest) live in
+  [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md) /
+  [`plans/plan-query-rpc.md`](plans/plan-query-rpc.md). Subscriptions
+  (`weather/subscribe_forecast`, `calendar/event/subscribe`) are
+  deferred. `todo` is now in `SANDBOX_INCOMPATIBLE_PLATFORMS` (routed to
+  main) because its To-do panel reads the sync `todo_items` property
+  that feeds `state` — it needs a pushed item-list cache, not a query.
+  **Caveat (`media_player.browse_media`):** even once wired, a sandboxed
+  player's browse will surface only its **own** sources — the
+  `media_source` tree it normally merges via
+  `media_source.async_browse_media(self.hass, …)` is empty inside the
+  sandbox, because `media_source` runs on main, outside the boundary.
+  Not a bug; closing it needs a cross-boundary hook, pairing with the
+  opt-in sharing work above.
 - **Diagnostic snapshot drift.** ~30 integrations have
   `__snapshots__/` files that include `entry.as_dict()` and now show
   `+ 'sandbox': 'built-in'`. The fix lives in those integrations'
