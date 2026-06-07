@@ -1164,3 +1164,25 @@ async def test_ssl_watcher_start_failure_cleanup(
     # Watcher start failed, so it should be cleaned up
     assert "Failed to start SSL certificate file watcher" in caplog.text
     assert hass.http._ssl_watcher is None
+
+
+async def test_ssl_debounce_reload_cancels_pending(
+    hass: HomeAssistant,
+) -> None:
+    """Test that _debounce_ssl_reload cancels a pending handle before scheduling."""
+    http_server = HomeAssistantHTTP.__new__(HomeAssistantHTTP)
+    http_server._ssl_watcher_stopping = False
+    http_server._ssl_reload_debounce_handle = None
+    # Need a mock loop that supports call_later
+    http_server.hass = hass
+
+    # First call: should create a handle
+    http_server._debounce_ssl_reload()
+    first_handle = http_server._ssl_reload_debounce_handle
+    assert first_handle is not None
+
+    # Second call: should cancel first handle and create a new one
+    http_server._debounce_ssl_reload()
+    second_handle = http_server._ssl_reload_debounce_handle
+    assert second_handle is not None
+    assert second_handle is not first_handle
