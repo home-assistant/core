@@ -28,7 +28,13 @@ from homeassistant.util.decorator import Registry
 if TYPE_CHECKING:
     from . import OverkizDataConfigEntry
 
-from .const import DOMAIN, EVENT_EXECUTION_FAILED, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    EVENT_EXECUTION_FAILED,
+    IGNORED_OVERKIZ_DEVICES,
+    LOGGER,
+    UPDATE_INTERVAL,
+)
 
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Event], Coroutine[Any, Any, None]]
@@ -233,7 +239,7 @@ async def on_execution_state_changed(
             event.exec_id,
             execution.get("device_url", "unknown"),
             execution.get("command_name", "unknown"),
-            getattr(event, "failure_type", "unknown"),
+            getattr(event, "failure_type", None) or "unknown",
         )
         coordinator.hass.bus.async_fire(
             EVENT_EXECUTION_FAILED,
@@ -241,7 +247,7 @@ async def on_execution_state_changed(
                 "exec_id": event.exec_id,
                 "device_url": execution.get("device_url", "unknown"),
                 "command_name": execution.get("command_name", "unknown"),
-                "failure_type": getattr(event, "failure_type", "unknown"),
+                "failure_type": getattr(event, "failure_type", None) or "unknown",
                 "failure_type_code": getattr(event, "failure_type_code", None),
             },
         )

@@ -23,7 +23,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import build_event, async_deliver_events
+from .helpers import async_deliver_events, build_event
 
 from tests.common import async_capture_events, async_fire_time_changed
 
