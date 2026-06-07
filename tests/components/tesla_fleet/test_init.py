@@ -751,17 +751,27 @@ async def test_energy_live_refresh_ratelimited(
     assert mock_live_status.call_count == 3
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "second_refresh_call_count", "third_refresh_call_count"),
+    [
+        (RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10}), 2, 3),
+        (RateLimited({}), 3, 4),
+    ],
+)
 async def test_energy_info_refresh_ratelimited(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_site_info: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    side_effect: RateLimited,
+    second_refresh_call_count: int,
+    third_refresh_call_count: int,
 ) -> None:
     """Test coordinator refresh handles 429."""
 
     await setup_platform(hass, normal_config_entry)
 
-    mock_site_info.side_effect = RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10})
+    mock_site_info.side_effect = side_effect
     freezer.tick(ENERGY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -774,14 +784,13 @@ async def test_energy_info_refresh_ratelimited(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Should not call for another 10 seconds
-    assert mock_site_info.call_count == 2
+    assert mock_site_info.call_count == second_refresh_call_count
 
     freezer.tick(ENERGY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_site_info.call_count == 3
+    assert mock_site_info.call_count == third_refresh_call_count
 
 
 async def test_energy_history_refresh_ratelimited(
