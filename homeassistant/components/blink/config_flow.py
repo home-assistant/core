@@ -27,15 +27,17 @@ _LOGGER = logging.getLogger(__name__)
 async def validate_input(blink: Blink) -> None:
     """Validate the user input allows us to connect."""
     try:
-        await blink.start()
+        result = await blink.start()
     except (LoginError, TokenRefreshFailed) as err:
         raise InvalidAuth from err
+    if not result:
+        raise InvalidAuth
 
 
-async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> bool:
+async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> None:
     """Send 2FA pin to blink servers."""
-    await blink.send_2fa_code(pin)
-    return True
+    if not await blink.send_2fa_code(pin):
+        raise BlinkSetupError
 
 
 class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -97,6 +99,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle 2FA step."""
         errors = {}
         if user_input is not None:
+            assert self.blink is not None
             try:
                 await _send_blink_2fa_pin(self.blink, user_input.get(CONF_PIN))
             except BlinkSetupError:
