@@ -2,10 +2,9 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from blinkpy.auth import BlinkTwoFARequiredError, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import BlinkSetupError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.blink import DOMAIN
@@ -166,9 +165,7 @@ async def test_reauth_completes(hass: HomeAssistant) -> None:
             "homeassistant.components.blink.config_flow.Blink.start",
             return_value=True,
         ),
-        patch(
-            "homeassistant.components.blink.async_setup_entry", return_value=True
-        ),
+        patch("homeassistant.components.blink.async_setup_entry", return_value=True),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -285,9 +282,7 @@ async def test_reconfigure_completes(hass: HomeAssistant) -> None:
             "homeassistant.components.blink.config_flow.Blink.start",
             return_value=True,
         ),
-        patch(
-            "homeassistant.components.blink.async_setup_entry", return_value=True
-        ),
+        patch("homeassistant.components.blink.async_setup_entry", return_value=True),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
