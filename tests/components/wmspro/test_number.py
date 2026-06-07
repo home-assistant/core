@@ -151,8 +151,8 @@ async def test_number_set_and_restore_value(
     assert float(entity.state) == float(target_value)
 
     # Simulate restart by unloading and recreating the entity
-    await unload_config_entry(hass, mock_config_entry)
-    await setup_config_entry(hass, mock_config_entry)
+    assert await unload_config_entry(hass, mock_config_entry)
+    assert await setup_config_entry(hass, mock_config_entry)
     entity = hass.states.get(entity_name)
     assert entity is not None
     assert float(entity.state) == float(target_value)

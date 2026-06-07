@@ -1,5 +1,6 @@
 """Tests for the wmspro integration."""
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -18,18 +19,19 @@ async def setup_config_entry(
 
 async def unload_config_entry(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    config_entry: ConfigEntry,
 ) -> bool:
     """Unload a config entry."""
-    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    result = await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     return result
 
 
 async def remove_config_entry(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
+    config_entry: ConfigEntry,
+) -> dict[str, bool]:
     """Remove a config entry."""
-    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    result = await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
+    return result
