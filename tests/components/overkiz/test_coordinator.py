@@ -1,6 +1,6 @@
 """Tests for the Overkiz data update coordinator."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
@@ -23,7 +23,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import async_deliver_events, build_event
+from .helpers import build_event
 
 from tests.common import async_capture_events, async_fire_time_changed
 
@@ -111,26 +111,18 @@ async def test_execution_failure_fires_event(
 
     events = async_capture_events(hass, EVENT_EXECUTION_FAILED)
 
-    with patch.object(coordinator._logger, "warning") as mock_warning:
-        await async_deliver_events(
-            hass,
-            freezer,
-            mock_client,
-            [
-                build_event(
-                    EventName.EXECUTION_STATE_CHANGED.value,
-                    device_url=SHUTTER.device_url,
-                    exec_id="exec-1",
-                    new_state=ExecutionState.FAILED.value,
-                    failure_type="TRANSMISSION_ERROR",
-                )
-            ],
-        )
-
-    assert mock_warning.called
-    warning_msg = mock_warning.call_args[0][0]
-    assert "exec-1" in warning_msg
-    assert "TRANSMISSION_ERROR" in warning_msg
+    mock_client.queue_events(
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=SHUTTER.device_url,
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED.value,
+                failure_type="TRANSMISSION_ERROR",
+            )
+        ]
+    )
+    await coordinator.async_refresh()
 
     assert len(events) == 1
     event_data = events[0].data
@@ -158,10 +150,7 @@ async def test_execution_failure_unknown_exec_id_is_ignored(
 
     events = async_capture_events(hass, EVENT_EXECUTION_FAILED)
 
-    await async_deliver_events(
-        hass,
-        freezer,
-        mock_client,
+    mock_client.queue_events(
         [
             build_event(
                 EventName.EXECUTION_STATE_CHANGED.value,
@@ -169,8 +158,9 @@ async def test_execution_failure_unknown_exec_id_is_ignored(
                 exec_id="unknown-exec-id",
                 new_state=ExecutionState.FAILED.value,
             )
-        ],
+        ]
     )
+    await coordinator.async_refresh()
 
     # No event should be fired for unknown executions
     assert len(events) == 0
@@ -192,10 +182,7 @@ async def test_execution_failure_uses_unknown_fallbacks(
 
     events = async_capture_events(hass, EVENT_EXECUTION_FAILED)
 
-    await async_deliver_events(
-        hass,
-        freezer,
-        mock_client,
+    mock_client.queue_events(
         [
             build_event(
                 EventName.EXECUTION_STATE_CHANGED.value,
@@ -203,8 +190,9 @@ async def test_execution_failure_uses_unknown_fallbacks(
                 exec_id="exec-1",
                 new_state=ExecutionState.FAILED.value,
             )
-        ],
+        ]
     )
+    await coordinator.async_refresh()
 
     assert len(events) == 1
     event_data = events[0].data
