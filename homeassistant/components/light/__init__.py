@@ -569,7 +569,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not call.data["params"]:
             return
 
-        raw_params = call.data["params"]
+        raw_params = dict(call.data["params"])
 
         if (
             raw_params.get(ATTR_BRIGHTNESS) == 0
@@ -596,7 +596,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ):
             return
 
-        params = process_turn_on_params(hass, light, raw_params)
+        params = process_turn_on_params(hass, light, raw_params.copy())
 
         if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
             raise HomeAssistantError(

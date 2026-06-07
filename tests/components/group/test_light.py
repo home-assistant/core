@@ -10,6 +10,7 @@ from homeassistant.components.group import DOMAIN, SERVICE_RELOAD, light as grou
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_COLOR_MODE,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
@@ -1609,6 +1610,63 @@ async def test_adjust_service_call_targets_on_members_for_all_group_step(
     _, data = entities[0].last_call("turn_on")
     assert data == {ATTR_BRIGHTNESS: 54}
     assert entities[1].last_call("turn_on") is None
+
+
+@pytest.mark.parametrize(
+    ("step_attr", "step_value", "expected_brightness"),
+    [
+        (ATTR_BRIGHTNESS_STEP, -10, (90, 40)),
+        (ATTR_BRIGHTNESS_STEP_PCT, -10, (74, 26)),
+    ],
+)
+async def test_adjust_service_call_preserves_group_member_brightness_steps(
+    hass: HomeAssistant,
+    step_attr: str,
+    step_value: int,
+    expected_brightness: tuple[int, int],
+) -> None:
+    """Test step adjust resolves independently for each active group member."""
+    entities = [
+        MockLight("test1", STATE_ON),
+        MockLight("test2", STATE_ON),
+        MockLight("test3", STATE_OFF),
+    ]
+    setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
+
+    for entity, brightness in zip(entities, (100, 50, 25), strict=True):
+        entity.supported_color_modes = {ColorMode.BRIGHTNESS}
+        entity.color_mode = ColorMode.BRIGHTNESS
+        entity.brightness = brightness
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["light.test1", "light.test2", "light.test3"],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_ADJUST,
+        {ATTR_ENTITY_ID: "light.light_group", step_attr: step_value},
+        blocking=True,
+    )
+
+    for entity, expected in zip(entities[:2], expected_brightness, strict=True):
+        _, data = entity.last_call("turn_on")
+        assert data == {ATTR_BRIGHTNESS: expected}
+
+    assert entities[2].last_call("turn_on") is None
 
 
 async def test_adjust_service_call_reaches_nested_all_group(
