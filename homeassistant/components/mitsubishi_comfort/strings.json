@@ -22,23 +22,6 @@
       }
     }
   },
-  "issues": {
-    "no_device_addresses": {
-      "title": "Mitsubishi devices found but no local addresses available",
-      "description": "Your Mitsubishi Comfort account has devices, but Home Assistant cannot determine their local IP addresses. This usually happens when devices are on a different network (VLAN) than Home Assistant. Go to the integration options to manually enter device IP addresses."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Device IP Addresses",
-        "description": "Enter the local IP address for each device. Leave blank to use DHCP discovery. Devices: {devices}"
-      }
-    },
-    "abort": {
-      "no_devices": "No devices found in the device registry"
-    }
-  },
   "exceptions": {
     "communication_error": {
       "message": "Error communicating with {device_name}"
@@ -48,6 +31,23 @@
     },
     "update_failed": {
       "message": "{device_name} returned no data"
+    }
+  },
+  "issues": {
+    "no_device_addresses": {
+      "description": "Your Mitsubishi Comfort account has devices, but Home Assistant cannot determine their local IP addresses. This usually happens when devices are on a different network (VLAN) than Home Assistant. Go to the integration options to manually enter device IP addresses.",
+      "title": "Mitsubishi devices found but no local addresses available"
+    }
+  },
+  "options": {
+    "abort": {
+      "no_devices": "No devices found in the device registry"
+    },
+    "step": {
+      "init": {
+        "description": "Enter the local IP address for each device. Leave blank to use DHCP discovery. Devices: {devices}",
+        "title": "Device IP Addresses"
+      }
     }
   }
 }
