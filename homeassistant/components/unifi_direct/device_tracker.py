@@ -1,4 +1,5 @@
 """Support for Unifi AP direct access."""
+
 import logging
 
 from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
