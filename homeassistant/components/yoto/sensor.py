@@ -1,0 +1,130 @@
+"""Sensor platform for the Yoto integration."""
+
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from yoto_api import CardInsertionState, DayMode, PowerSource, YotoPlayer
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
+
+from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
+from .entity import YotoPlayerEntity
+
+PARALLEL_UPDATES = 0
+
+
+def _enum_state(value: CardInsertionState | PowerSource | None) -> str | None:
+    """Return an enum member as a lowercase string, or None if unset."""
+    return value.name.lower() if value is not None else None
+
+
+def _day_mode_state(value: DayMode | None) -> str | None:
+    """Return day/night, treating the firmware's UNKNOWN as unset."""
+    if value is None or value is DayMode.UNKNOWN:
+        return None
+    return value.name.lower()
+
+
+@dataclass(frozen=True, kw_only=True)
+class YotoSensorEntityDescription(SensorEntityDescription):
+    """Describes a Yoto sensor entity."""
+
+    value_fn: Callable[[YotoPlayer], StateType]
+
+
+SENSORS: tuple[YotoSensorEntityDescription, ...] = (
+    YotoSensorEntityDescription(
+        key="battery_level",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda player: player.status.battery_level_percentage,
+    ),
+    YotoSensorEntityDescription(
+        key="card_insertion_state",
+        translation_key="card_insertion_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.name.lower() for state in CardInsertionState],
+        value_fn=lambda player: _enum_state(player.status.card_insertion_state),
+    ),
+    YotoSensorEntityDescription(
+        key="day_mode",
+        translation_key="day_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["day", "night"],
+        value_fn=lambda player: _day_mode_state(player.status.day_mode),
+    ),
+    YotoSensorEntityDescription(
+        key="power_source",
+        translation_key="power_source",
+        device_class=SensorDeviceClass.ENUM,
+        options=[source.name.lower() for source in PowerSource],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda player: _enum_state(player.extended_status.power_source),
+    ),
+    YotoSensorEntityDescription(
+        key="ssid",
+        translation_key="ssid",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda player: player.extended_status.network_ssid,
+    ),
+    YotoSensorEntityDescription(
+        key="wifi_rssi",
+        translation_key="wifi_rssi",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda player: player.extended_status.wifi_strength,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: YotoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Yoto sensor platform."""
+    coordinator = entry.runtime_data
+    async_add_entities(
+        YotoSensor(coordinator, player, description)
+        for player in coordinator.client.players.values()
+        for description in SENSORS
+    )
+
+
+class YotoSensor(YotoPlayerEntity, SensorEntity):
+    """Representation of a Yoto player sensor."""
+
+    entity_description: YotoSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: YotoDataUpdateCoordinator,
+        player: YotoPlayer,
+        description: YotoSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, player)
+        self.entity_description = description
+        self._attr_unique_id = f"{player.id}_{description.key}"
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(self.player)
