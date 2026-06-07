@@ -152,7 +152,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Migrate Entity selector to Target selector
         new_options = dict(entry.options)
         current_entities = new_options[CONF_ENTITIES]
-        new_options[CONF_ENTITIES][CONF_ENTITY_ID] = current_entities
+        new_options[CONF_ENTITIES] = {CONF_ENTITY_ID: current_entities}
 
         _LOGGER.debug(
             "Migrating from version 1 to version 2: %s -> %s",
