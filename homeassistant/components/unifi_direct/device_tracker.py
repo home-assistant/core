@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -29,7 +30,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see,
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Unifi direct scanner."""
@@ -50,7 +51,7 @@ class UnifiDirectScanner:
             port=config[CONF_PORT],
         )
 
-    async def async_update_and_report(self, async_see) -> bool:
+    async def async_update_and_report(self, async_see: AsyncSeeCallback) -> bool:
         """Update the client info from AP and report to the tracker."""
         try:
             clients = await self._hass.async_add_executor_job(self._ap.get_clients)
