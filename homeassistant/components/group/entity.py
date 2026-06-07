@@ -106,7 +106,7 @@ class GroupEntity(Entity):
         self._entity_ids = []
         # Prepend entities from config to ensure order for explicitly configured entities
         if entity_list := self._target_config.get("entity_id"):
-            self._entity_ids = entity_list
+            self._entity_ids = list(entity_list)
 
         self._entity_ids.extend(
             [

@@ -714,6 +714,7 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             "type": "min",
         },
         title="My min_max",
+        version=2,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
