@@ -70,13 +70,12 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_EMAIL])
-            self._abort_if_unique_id_configured()
-
             errors = await self._async_validate_credentials(
                 user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
             if not errors:
+                await self.async_set_unique_id(user_input[CONF_EMAIL])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
                     data={
