@@ -8,7 +8,9 @@
       'multicast_port': 3671,
       'rate_limit': 0,
       'state_updater': True,
-      'telegram_db_path': ':memory:',
+      'telegram_db_load_hours': 24,
+      'telegram_db_path': 'knx/telegrams.db',
+      'telegram_db_retention_days': 10,
     }),
     'config_store': dict({
       'entities': dict({
@@ -42,7 +44,9 @@
       'multicast_port': 3671,
       'rate_limit': 0,
       'state_updater': True,
+      'telegram_db_load_hours': 24,
       'telegram_db_path': ':memory:',
+      'telegram_db_retention_days': 10,
       'user_password': '**REDACTED**',
     }),
     'config_store': dict({
@@ -71,7 +75,9 @@
       'multicast_port': 3671,
       'rate_limit': 0,
       'state_updater': True,
-      'telegram_db_path': ':memory:',
+      'telegram_db_load_hours': 24,
+      'telegram_db_path': 'knx/telegrams.db',
+      'telegram_db_retention_days': 10,
     }),
     'config_store': dict({
       'entities': dict({
@@ -99,7 +105,9 @@
       'multicast_port': 3671,
       'rate_limit': 0,
       'state_updater': True,
-      'telegram_db_path': ':memory:',
+      'telegram_db_load_hours': 24,
+      'telegram_db_path': 'knx/telegrams.db',
+      'telegram_db_retention_days': 10,
     }),
     'config_store': dict({
       'entities': dict({

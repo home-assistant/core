@@ -92,13 +92,8 @@ class Telegrams:
         self.store: BufferedSqliteStore | None = None
         self._uninitialized_store: BufferedSqliteStore | None = None
 
-        full_path = (
-            self.db_path
-            if self.db_path == ":memory:"
-            else hass.config.path(STORAGE_DIR, self.db_path)
-        )
-        if full_path != ":memory:":
-            os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        full_path = hass.config.path(STORAGE_DIR, self.db_path)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
         self._uninitialized_store = BufferedSqliteStore(
             full_path,
             retention_days=self.retention_days,
@@ -151,6 +146,14 @@ class Telegrams:
             )
             await self._abort_store_init(info, str(err))
             return
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error(
+                "Error initializing KNX telegram storage (%s): %s",
+                info,
+                err,
+            )
+            await self._abort_store_init(info, str(err))
+            return
         ir.async_delete_issue(self.hass, DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
         self.store = self._uninitialized_store
         self.store.start()
@@ -164,6 +167,9 @@ class Telegrams:
             result = await self.store.get_last_unique_telegrams()
         except KnxTelegramStoreException as err:
             _LOGGER.warning("Database error hydrating last_ga_telegrams: %s", err)
+            return
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Error hydrating last_ga_telegrams: %s", err)
             return
         for m in result:
             if m.payload is not None:
@@ -204,6 +210,8 @@ class Telegrams:
             _LOGGER.warning(
                 "Database error stopping KNX telegram storage backend: %s", err
             )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Error stopping KNX telegram storage backend: %s", err)
 
     def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
@@ -305,10 +313,8 @@ class Telegrams:
 
     async def migrate_telegrams(self) -> None:
         """Migrate telegrams from JSON storage to the current store."""
-        if (
-            not isinstance(self.store, BufferedSqliteStore)
-            or self.db_path == ":memory:"
-        ):
+
+        if not isinstance(self.store, BufferedSqliteStore):
             return
 
         history_store = Store[Any](
@@ -338,6 +344,8 @@ class Telegrams:
             await history_store.async_remove()
         except KnxTelegramStoreException as err:
             _LOGGER.error("Database error migrating KNX telegram history: %s", err)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Error migrating KNX telegram history: %s", err)
 
     def model_to_dict(self, m: StoredTelegram) -> TelegramDict:
         """Convert a StoredTelegram model to a TelegramDict."""

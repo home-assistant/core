@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import copy
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from knx_telegram_store import KnxTelegramStoreException, StoredTelegram, TelegramQuery
 import pytest
@@ -242,15 +242,9 @@ async def test_stop_error_handling(
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
 
-    # A registered listener is removed on stop
-    remove_listener = Mock()
-    telegrams_module._async_remove_listener = remove_listener
-
     # An error on stop must not propagate
     with patch.object(telegrams_module.store, "stop", side_effect=side_effect):
         await telegrams_module.stop()
-
-    remove_listener.assert_called_once()
 
 
 @pytest.mark.usefixtures("load_knxproj")

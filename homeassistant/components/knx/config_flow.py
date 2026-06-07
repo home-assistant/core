@@ -57,6 +57,7 @@ from .const import (
     DEFAULT_ROUTING_IA,
     DOMAIN,
     KNX_MODULE_KEY,
+    KNX_TELEGRAM_DB_PATH_DEFAULT,
     KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     KNXConfigEntryData,
@@ -77,6 +78,7 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
     state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
     telegram_db_retention_days=KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     telegram_db_load_hours=KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
+    telegram_db_path=KNX_TELEGRAM_DB_PATH_DEFAULT,
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
