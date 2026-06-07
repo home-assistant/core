@@ -1,7 +1,5 @@
 """Helpers for the powerwall integration."""
 
-from __future__ import annotations
-
 from tesla_powerwall import ApiError
 
 # tesla_powerwall 0.5.2 raises ApiError with a fixed message of the form

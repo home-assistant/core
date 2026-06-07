@@ -1,7 +1,6 @@
 """Test the Powerwall config flow."""
 
 from datetime import timedelta
-import hashlib
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -137,13 +136,12 @@ async def test_form_pw3_restricted(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    expected_unique_id = hashlib.sha256(
-        VALID_CONFIG[CONF_PASSWORD].encode()
-    ).hexdigest()
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"Powerwall {VALID_CONFIG[CONF_IP_ADDRESS]}"
     assert result2["data"] == VALID_CONFIG
-    assert result2["result"].unique_id == expected_unique_id
+    # Restricted gateways expose no stable hardware id, so we set no unique id
+    # rather than deriving one from the credential.
+    assert result2["result"].unique_id is None
     assert len(mock_setup_entry.mock_calls) == 1
 
 

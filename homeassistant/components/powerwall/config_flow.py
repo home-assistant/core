@@ -1,7 +1,6 @@
 """Config flow for Tesla Powerwall integration."""
 
 from collections.abc import Mapping
-import hashlib
 import logging
 from typing import Any
 
@@ -75,7 +74,9 @@ async def _powerwall_is_reachable(ip_address: str, password: str) -> bool:
     return True
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, str]
+) -> dict[str, str | None]:
     """Validate the user input allows us to connect.
 
     Data has the keys from schema with values provided by the user.
@@ -95,14 +96,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
 
         ip_address = data[CONF_IP_ADDRESS]
         if gateway_din is None:
-            # PW3-style restricted gateway — no DIN exposed via HTTP. Fall back
-            # to a hash of the password (gateway serial-derived) for a stable
-            # unique id that survives IP changes. DHCP discovery (which carries
-            # the real DIN as the hostname) can later upgrade the entry.
-            unique_id = hashlib.sha256(password.encode()).hexdigest()
+            # PW3-style restricted gateway — no DIN exposed via HTTP. We have no
+            # stable hardware identifier to use as a unique id, so leave it unset
+            # and rely on IP-based dedup. DHCP discovery (which carries the real
+            # DIN as the hostname) can later assign a unique id to the entry.
             return {
                 "title": f"Powerwall {ip_address}",
-                "unique_id": unique_id,
+                "unique_id": None,
             }
         assert title is not None
         # Return info that you want to store in the config entry.
@@ -178,7 +178,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(
         self, user_input: dict[str, Any]
-    ) -> tuple[dict[str, Any] | None, dict[str, str] | None, dict[str, str]]:
+    ) -> tuple[dict[str, str] | None, dict[str, str | None] | None, dict[str, str]]:
         """Try to connect to the powerwall."""
         info = None
         errors: dict[str, str] = {}
@@ -244,6 +244,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if not errors:
                 assert info is not None
+                assert info["title"] is not None
                 if info["unique_id"]:
                     await self.async_set_unique_id(
                         info["unique_id"], raise_on_progress=False
