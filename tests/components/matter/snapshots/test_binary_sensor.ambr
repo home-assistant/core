@@ -1116,6 +1116,57 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[ikea_klippbok_water_leak][binary_sensor.klippbok_water_leak_sensor_water_leak-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.klippbok_water_leak_sensor_water_leak',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water leak',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Water leak',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_leak',
+    'unique_id': '00000000000004D2-0000000000000140-MatterNodeDevice-1-WaterLeakDetector-69-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[ikea_klippbok_water_leak][binary_sensor.klippbok_water_leak_sensor_water_leak-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'KLIPPBOK water leak sensor Water leak',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.klippbok_water_leak_sensor_water_leak',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[longan_link_thermostat][binary_sensor.longan_link_hvac_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

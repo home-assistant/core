@@ -554,6 +554,108 @@
     'state': 'on',
   })
 # ---
+# name: test_switches[ikea_klippbok_water_leak][switch.klippbok_water_leak_sensor_audible_alarm_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.klippbok_water_leak_sensor_audible_alarm_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Audible alarm enabled',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bullhorn',
+    'original_name': 'Audible alarm enabled',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audible_alarm_enabled',
+    'unique_id': '00000000000004D2-0000000000000140-MatterNodeDevice-1-BooleanStateConfigurationAudibleAlarmEnabled-128-5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[ikea_klippbok_water_leak][switch.klippbok_water_leak_sensor_audible_alarm_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'KLIPPBOK water leak sensor Audible alarm enabled',
+      'icon': 'mdi:bullhorn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.klippbok_water_leak_sensor_audible_alarm_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[ikea_klippbok_water_leak][switch.klippbok_water_leak_sensor_visual_alarm_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.klippbok_water_leak_sensor_visual_alarm_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Visual alarm enabled',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alarm-light',
+    'original_name': 'Visual alarm enabled',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'visual_alarm_enabled',
+    'unique_id': '00000000000004D2-0000000000000140-MatterNodeDevice-1-BooleanStateConfigurationVisualAlarmEnabled-128-5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[ikea_klippbok_water_leak][switch.klippbok_water_leak_sensor_visual_alarm_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'KLIPPBOK water leak sensor Visual alarm enabled',
+      'icon': 'mdi:alarm-light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.klippbok_water_leak_sensor_visual_alarm_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switches[inovelli_vtm30][switch.white_series_onoff_switch_switch_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
