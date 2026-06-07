@@ -54,7 +54,7 @@ CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: Final = "telegram_db_retention_days"
 CONF_KNX_TELEGRAM_DB_LOAD_HOURS: Final = "telegram_db_load_hours"
 CONF_KNX_TELEGRAM_DB_PATH: Final = "telegram_db_path"
 
-KNX_TELEGRAM_RETENTION_DEFAULT: Final = 10  # days
+KNX_TELEGRAM_DB_RETENTION_DEFAULT: Final = 10  # days
 KNX_TELEGRAM_LOAD_HOURS_DEFAULT: Final = 24  # 1 day
 KNX_TELEGRAM_DB_PATH_DEFAULT: Final = "knx/telegrams.db"  # relative to STORAGE_DIR
 

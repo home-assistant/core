@@ -48,8 +48,8 @@ from homeassistant.components.knx.const import (
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     DOMAIN,
+    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
-    KNX_TELEGRAM_RETENTION_DEFAULT,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -1043,7 +1043,7 @@ async def test_form_with_automatic_connection_handling(
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
         CONF_KNX_STATE_UPDATER: True,
-        CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: KNX_TELEGRAM_RETENTION_DEFAULT,
+        CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: KNX_TELEGRAM_DB_RETENTION_DEFAULT,
         CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     }
     knx_setup.assert_called_once()

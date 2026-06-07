@@ -57,8 +57,8 @@ from .const import (
     DEFAULT_ROUTING_IA,
     DOMAIN,
     KNX_MODULE_KEY,
+    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
-    KNX_TELEGRAM_RETENTION_DEFAULT,
     KNXConfigEntryData,
 )
 from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
@@ -75,7 +75,7 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
     rate_limit=CONF_KNX_DEFAULT_RATE_LIMIT,
     route_back=False,
     state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
-    telegram_db_retention_days=KNX_TELEGRAM_RETENTION_DEFAULT,
+    telegram_db_retention_days=KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     telegram_db_load_hours=KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
 )
 
@@ -1010,7 +1010,8 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             vol.Required(
                 CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
                 default=self.initial_data.get(
-                    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS, KNX_TELEGRAM_RETENTION_DEFAULT
+                    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+                    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
                 ),
             ): vol.All(
                 selector.NumberSelector(

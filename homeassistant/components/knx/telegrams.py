@@ -31,7 +31,7 @@ from .const import (
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DOMAIN,
     KNX_TELEGRAM_DB_PATH_DEFAULT,
-    KNX_TELEGRAM_RETENTION_DEFAULT,
+    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
     KNXConfigEntryData,
 )
@@ -91,7 +91,7 @@ class Telegrams:
         )
         self.retention_days: int = int(
             config.get(
-                CONF_KNX_TELEGRAM_DB_RETENTION_DAYS, KNX_TELEGRAM_RETENTION_DEFAULT
+                CONF_KNX_TELEGRAM_DB_RETENTION_DAYS, KNX_TELEGRAM_DB_RETENTION_DEFAULT
             )
         )
         self.store: BufferedSqliteStore | None = None
