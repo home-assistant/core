@@ -8,21 +8,19 @@ import serialx
 import ultraheat_api
 import voluptuous as vol
 
-from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import DOMAIN, ULTRAHEAT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MANUAL_PATH = "Enter Manually"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DEVICE): str,
+        vol.Required(CONF_DEVICE): SerialPortSelector(),
     }
 )
 
@@ -39,9 +37,6 @@ class LandisgyrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if user_input[CONF_DEVICE] == CONF_MANUAL_PATH:
-                return await self.async_step_setup_serial_manual_path()
-
             dev_path = user_input[CONF_DEVICE]
             _LOGGER.debug("Using this path : %s", dev_path)
 
@@ -50,30 +45,8 @@ class LandisgyrConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
-        ports = await get_usb_ports(self.hass)
-        ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
-
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(ports)})
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
-
-    async def async_step_setup_serial_manual_path(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Set path manually."""
-        errors = {}
-
-        if user_input is not None:
-            dev_path = user_input[CONF_DEVICE]
-            try:
-                return await self.validate_and_create_entry(dev_path)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-
-        schema = vol.Schema({vol.Required(CONF_DEVICE): str})
         return self.async_show_form(
-            step_id="setup_serial_manual_path",
-            data_schema=schema,
-            errors=errors,
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
     async def validate_and_create_entry(self, dev_path):
@@ -109,25 +82,6 @@ class LandisgyrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Successfully connected to %s. Got data: %s", port, data)
         return data.model, data.device_number
-
-
-async def get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
-    """Return a dict of USB ports and their friendly names."""
-    ports = await usb.async_scan_serial_ports(hass)
-    port_descriptions = {}
-    for port in ports:
-        if isinstance(port, usb.USBDevice):
-            human_name = usb.human_readable_device_name(
-                port.device,
-                port.serial_number,
-                port.manufacturer,
-                port.description,
-                port.vid,
-                port.pid,
-            )
-            port_descriptions[port.device] = human_name
-
-    return port_descriptions
 
 
 class CannotConnect(HomeAssistantError):
