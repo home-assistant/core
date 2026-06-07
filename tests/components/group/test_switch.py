@@ -53,7 +53,7 @@ async def test_default_state(
     state = hass.states.get("switch.multimedia_group")
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ENTITY_ID) == ["switch.tv", "switch.soundbar"]
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["switch.soundbar", "switch.tv"]
 
     entry = entity_registry.async_get("switch.multimedia_group")
     assert entry

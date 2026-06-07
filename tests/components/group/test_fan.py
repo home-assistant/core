@@ -135,10 +135,12 @@ async def test_state(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
     hass.states.async_set(CEILING_FAN_ENTITY_ID, STATE_UNKNOWN, {})
     await hass.async_block_till_done()
     state = hass.states.get(FAN_GROUP)
-    assert state.attributes[ATTR_ENTITY_ID] == [
-        *FULL_FAN_ENTITY_IDS,
-        *LIMITED_FAN_ENTITY_IDS,
-    ]
+    assert state.attributes[ATTR_ENTITY_ID] == sorted(
+        [
+            *FULL_FAN_ENTITY_IDS,
+            *LIMITED_FAN_ENTITY_IDS,
+        ]
+    )
 
     # All group members unavailable -> unavailable
     hass.states.async_set(CEILING_FAN_ENTITY_ID, STATE_UNAVAILABLE)
@@ -228,10 +230,12 @@ async def test_attributes(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(FAN_GROUP)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_ENTITY_ID] == [
-        *FULL_FAN_ENTITY_IDS,
-        *LIMITED_FAN_ENTITY_IDS,
-    ]
+    assert state.attributes[ATTR_ENTITY_ID] == sorted(
+        [
+            *FULL_FAN_ENTITY_IDS,
+            *LIMITED_FAN_ENTITY_IDS,
+        ]
+    )
 
     # Add Entity that supports speed
     hass.states.async_set(
