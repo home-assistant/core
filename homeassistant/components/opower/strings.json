@@ -124,6 +124,11 @@
       }
     }
   },
+  "exceptions": {
+    "login_error": {
+      "message": "Error during login: {error}"
+    }
+  },
   "issues": {
     "national_grid_migration": {
       "description": "The utility **{utility}** is no longer supported by the Opower integration. National Grid US now requires its own dedicated integration.\n\nPlease [set up the new National Grid US integration]({add_integration}), then remove this Opower entry.",

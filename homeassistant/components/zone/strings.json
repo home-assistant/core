@@ -1,8 +1,138 @@
 {
+  "common": {
+    "condition_behavior_name": "Check when",
+    "condition_for_name": "For at least",
+    "condition_zone_description": "The zone to test against.",
+    "condition_zone_name": "Zone",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
+    "trigger_zone_description": "The zone to trigger on.",
+    "trigger_zone_name": "Zone"
+  },
+  "conditions": {
+    "in_zone": {
+      "description": "Tests if one or more persons or device trackers are in a zone.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::zone::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::zone::common::condition_for_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::zone::common::condition_zone_description%]",
+          "name": "[%key:component::zone::common::condition_zone_name%]"
+        }
+      },
+      "name": "Is in zone"
+    },
+    "not_in_zone": {
+      "description": "Tests if one or more persons or device trackers are not in a zone.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::zone::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::zone::common::condition_for_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::zone::common::condition_zone_description%]",
+          "name": "[%key:component::zone::common::condition_zone_name%]"
+        }
+      },
+      "name": "Is not in zone"
+    },
+    "occupancy_is_detected": {
+      "description": "Tests if a zone is occupied.",
+      "fields": {
+        "for": {
+          "name": "[%key:component::zone::common::condition_for_name%]"
+        },
+        "zone": {
+          "description": "The zone to monitor.",
+          "name": "[%key:component::zone::common::condition_zone_name%]"
+        }
+      },
+      "name": "Zone occupancy is detected"
+    },
+    "occupancy_is_not_detected": {
+      "description": "Tests if a zone is empty.",
+      "fields": {
+        "for": {
+          "name": "[%key:component::zone::common::condition_for_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::zone::conditions::occupancy_is_detected::fields::zone::description%]",
+          "name": "[%key:component::zone::common::condition_zone_name%]"
+        }
+      },
+      "name": "Zone occupancy is not detected"
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads zones from the YAML-configuration.",
       "name": "Reload zones"
+    }
+  },
+  "triggers": {
+    "entered": {
+      "description": "Triggers when one or more persons or device trackers enter a zone.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::zone::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::zone::common::trigger_for_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::zone::common::trigger_zone_description%]",
+          "name": "[%key:component::zone::common::trigger_zone_name%]"
+        }
+      },
+      "name": "Entered zone"
+    },
+    "left": {
+      "description": "Triggers when one or more persons or device trackers leave a zone.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::zone::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::zone::common::trigger_for_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::zone::common::trigger_zone_description%]",
+          "name": "[%key:component::zone::common::trigger_zone_name%]"
+        }
+      },
+      "name": "Left zone"
+    },
+    "occupancy_cleared": {
+      "description": "Triggers when a zone transitions from occupied to unoccupied.",
+      "fields": {
+        "for": {
+          "name": "[%key:component::zone::common::trigger_for_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::zone::triggers::occupancy_detected::fields::zone::description%]",
+          "name": "[%key:component::zone::triggers::occupancy_detected::fields::zone::name%]"
+        }
+      },
+      "name": "Zone occupancy cleared"
+    },
+    "occupancy_detected": {
+      "description": "Triggers when a zone transitions to an occupied state.",
+      "fields": {
+        "for": {
+          "name": "[%key:component::zone::common::trigger_for_name%]"
+        },
+        "zone": {
+          "description": "The zone to monitor.",
+          "name": "Zone"
+        }
+      },
+      "name": "Zone occupancy detected"
     }
   }
 }

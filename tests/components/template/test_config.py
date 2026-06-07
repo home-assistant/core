@@ -3,16 +3,82 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.template import DOMAIN
+from homeassistant.components.template import DOMAIN, PLATFORMS
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
     async_validate_config_section,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.discovery import Platform
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
+
+from tests.common import assert_platform_setup_creates_issue, assert_setup_component
+
+
+@pytest.mark.parametrize(
+    "platform_domain",
+    [platform for platform in PLATFORMS if platform != Platform.DEVICE_TRACKER],
+)
+async def test_platform_config_creates_issue(
+    hass: HomeAssistant,
+    platform_domain: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    await assert_platform_setup_creates_issue(
+        hass,
+        platform_domain,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
+
+
+async def test_platform_device_tracker_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    caplog.clear()
+    integration_domain = DOMAIN
+    platform_domain = Platform.DEVICE_TRACKER
+    with assert_setup_component(1, platform_domain):
+        assert await async_setup_component(
+            hass,
+            platform_domain,
+            {platform_domain: {"platform": integration_domain}},
+        )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(platform_domain)) == 0
+    assert (
+        f"The {integration_domain} platform for the {platform_domain} integration does not support platform"
+        " setup, please remove it from your config" in caplog.text
+    )
+
+    issue = issue_registry.async_get_issue(
+        "homeassistant",
+        f"platform_integration_no_support_{platform_domain}_{integration_domain}",
+    )
+
+    assert issue
+    assert issue.issue_domain == integration_domain
+    assert issue.learn_more_url is None
+    assert issue.translation_key == "platform_setup_not_supported"
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "platform_domain": platform_domain,
+        "integration_domain": integration_domain,
+        "platform_key": f"platform: {integration_domain}",
+        "yaml_example": f"```yaml\n{platform_domain}:\n  - platform: {integration_domain}\n```",
+    }
 
 
 @pytest.mark.parametrize(
@@ -210,7 +276,7 @@ async def test_invalid_binary_sensor_schema_with_auto_off(
 ) -> None:
     """Test invalid config schemas create issue and log warning."""
 
-    await async_setup_component(hass, "template", {"template": [config]})
+    await async_setup_component(hass, DOMAIN, {"template": [config]})
 
     assert (
         expected_error is None and "ERROR" not in caplog.text
@@ -470,7 +536,7 @@ async def test_invalid_schema_raises_issue(
 ) -> None:
     """Test invalid config schemas create issue and log warning."""
 
-    await async_setup_component(hass, "template", {"template": [config]})
+    await async_setup_component(hass, DOMAIN, {"template": [config]})
 
     assert expected_warning in caplog.text
 
@@ -487,7 +553,7 @@ async def test_multiple_configuration_keys(
     """Test multiple configurations keys create entities."""
     await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [{"binary_sensor": [{"name": "Foo", "state": "{{ True }}"}]}],
             "template mytemplates": [

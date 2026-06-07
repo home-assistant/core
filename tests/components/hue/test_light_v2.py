@@ -52,7 +52,7 @@ async def test_lights(
     assert light_1.attributes["effect"] == "off"
 
     # test light which supports color temperature only
-    light_2 = hass.states.get("light.hue_light_with_color_temperature_only")
+    light_2 = hass.states.get("light.test_room_hue_light_with_color_temperature_only")
     assert light_2 is not None
     assert (
         light_2.attributes["friendly_name"] == "Hue light with color temperature only"
@@ -77,7 +77,7 @@ async def test_lights(
     assert light_3.attributes["dynamics"] == "dynamic_palette"
 
     # test light which supports on/off only
-    light_4 = hass.states.get("light.hue_on_off_light")
+    light_4 = hass.states.get("light.test_room_hue_on_off_light")
     assert light_4 is not None
     assert light_4.attributes["friendly_name"] == "Hue on/off light"
     assert light_4.state == "off"
@@ -93,7 +93,7 @@ async def test_light_turn_on_service(
 
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
-    test_light_id = "light.hue_light_with_color_temperature_only"
+    test_light_id = "light.test_room_hue_light_with_color_temperature_only"
 
     # verify the light is off before we start
     assert hass.states.get(test_light_id).state == "off"
@@ -428,7 +428,7 @@ async def test_grouped_lights(
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     # test if entities for hue groups are created and enabled by default
-    for entity_id in ("light.test_zone", "light.test_room"):
+    for entity_id in ("light.test_zone", "light.test_room_test_room"):
         entity_entry = entity_registry.async_get(entity_id)
 
         assert entity_entry
@@ -463,7 +463,7 @@ async def test_grouped_lights(
     }
 
     # test light created for hue room
-    test_entity = hass.states.get("light.test_room")
+    test_entity = hass.states.get("light.test_room_test_room")
     assert test_entity is not None
     assert test_entity.attributes["friendly_name"] == "Test Room"
     assert test_entity.state == "off"
@@ -481,8 +481,8 @@ async def test_grouped_lights(
         "Hue light with color temperature only",
     }
     assert test_entity.attributes["entity_id"] == {
-        "light.hue_light_with_color_temperature_only",
-        "light.hue_on_off_light",
+        "light.test_room_hue_light_with_color_temperature_only",
+        "light.test_room_hue_on_off_light",
     }
 
     # Test calling the turn on service on a grouped light
@@ -1022,7 +1022,7 @@ async def test_light_turn_on_service_deprecation(
     """Test calling the turn on service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    test_light_id = "light.hue_light_with_color_temperature_only"
+    test_light_id = "light.test_room_hue_light_with_color_temperature_only"
 
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
@@ -1046,3 +1046,29 @@ async def test_light_turn_on_service_deprecation(
         blocking=True,
     )
     assert mock_bridge_v2.mock_requests[0]["json"]["effects"]["effect"] == "no_effect"
+
+
+async def test_light_with_zero_mirek(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test light doesn't crash when bridge reports zero mirek values.
+
+    Regression test for https://github.com/home-assistant/core/issues/116258
+    """
+    # Patch the fixture data to have zero mirek values before loading
+    for resource in v2_resources_test_data:
+        if resource.get("type") == "light" and "color_temperature" in resource:
+            resource["color_temperature"]["mirek_schema"]["mirek_minimum"] = 0
+            resource["color_temperature"]["mirek_schema"]["mirek_maximum"] = 0
+            break
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    # Should not raise ZeroDivisionError during setup
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    test_light = hass.states.get("light.hue_light_with_color_and_color_temperature_1")
+    assert test_light is not None
+    # Should fall back to defaults instead of crashing
+    assert test_light.attributes["max_color_temp_kelvin"] == 6535
+    assert test_light.attributes["min_color_temp_kelvin"] == 2000
