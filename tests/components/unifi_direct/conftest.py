@@ -1,7 +1,7 @@
 """Fixtures for UniFi AP Direct integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -26,6 +26,16 @@ MOCK_DEVICE_DATA = {
     "AA:BB:CC:DD:EE:FF": {"ip": "192.168.1.100", "hostname": "my-phone"},
     "11:22:33:44:55:66": {"ip": "192.168.1.101", "hostname": "my-laptop"},
 }
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.unifi_direct.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture
