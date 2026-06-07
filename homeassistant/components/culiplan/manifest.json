@@ -1,0 +1,13 @@
+{
+  "domain": "culiplan",
+  "name": "Culiplan",
+  "codeowners": ["@culiplan"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/culiplan",
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "loggers": ["homeassistant.components.culiplan"],
+  "quality_scale": "silver",
+  "requirements": ["python-socketio>=5.12.0"]
+}

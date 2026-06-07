@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "calendar": {
+      "meal_plan": {
+        "default": "mdi:silverware-fork-knife"
+      }
+    }
+  }
+}

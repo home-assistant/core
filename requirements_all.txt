@@ -2735,6 +2735,9 @@ python-sn2==0.4.0
 # homeassistant.components.snoo
 python-snoo==0.8.3
 
+# homeassistant.components.culiplan
+python-socketio==5.12.0
+
 # homeassistant.components.songpal
 python-songpal==0.16.2
 

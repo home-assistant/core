@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "Connect Culiplan"
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Culiplan",
+        "description": "Your Culiplan session has expired. Click **Submit** to re-authenticate."
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "wrong_account": "The authenticated Culiplan account does not match the existing entry. Re-authenticate with the same account or remove the entry and add the new account.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "calendar": {
+      "meal_plan": {
+        "name": "Meal plan"
+      }
+    }
+  }
+}

@@ -1,0 +1,273 @@
+# Quality scale for the Culiplan integration (Core-ready slim build).
+#
+# Per HA Core review guidance, the first PR ships a single platform
+# (calendar). Follow-up PRs will add the todo, sensor, and binary_sensor
+# platforms after this one merges, mirroring the Mealie integration's
+# multi-platform rollout. This slim build honestly targets **Silver** on
+# day one of the Core PR. Gold/Platinum are reachable once docs land on
+# home-assistant.io and brand assets ship via home-assistant/brands.
+
+rules:
+  # ─── Bronze ────────────────────────────────────────────────────────────────
+  action-setup:
+    status: exempt
+    comment: |
+      No services / actions are registered by this slim build. All voice-
+      facing surface is via the LLM API (llm_api.py) rather than HA service
+      calls.
+  appropriate-polling:
+    status: done
+    comment: |
+      DataUpdateCoordinator polls every 5 minutes; Socket.IO push delivers
+      sub-second updates between polls.
+  brands:
+    status: todo
+    comment: |
+      Brand assets (icon, logo) need to ship in home-assistant/brands. A
+      separate PR will be opened against that repo alongside the Core PR.
+  common-modules:
+    status: done
+    comment: |
+      const.py, helpers.py, coordinator.py, api.py follow the standard
+      layout; entity platforms in their own per-platform modules.
+  config-flow-test-coverage:
+    status: done
+    comment: |
+      tests/components/culiplan/test_config_flow.py covers OAuth happy
+      path, abort-on-duplicate, reauth, reconfigure (same-account and
+      wrong-account), and the options flow.
+  config-flow:
+    status: done
+    comment: |
+      Full UI config flow with OAuth + reauth + reconfigure. The Options
+      flow exposes the pantry expiry windows.
+  dependency-transparency:
+    status: done
+    comment: |
+      Only `python-socketio` is required, published on PyPI under its
+      canonical name with full source.
+  docs-actions:
+    status: exempt
+    comment: |
+      No services registered — see action-setup above.
+  docs-high-level-description:
+    status: todo
+    comment: |
+      The home-assistant.io documentation page will be added as a
+      separate PR against the documentation repo; the URL in
+      manifest.json (`/integrations/culiplan`) is reserved for that PR.
+  docs-installation-instructions:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description — the install steps go on
+      the home-assistant.io documentation page.
+  docs-removal-instructions:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description.
+  entity-event-setup:
+    status: done
+    comment: |
+      All entity classes inherit from CoordinatorEntity, which subscribes
+      / unsubscribes via async_added_to_hass / async_will_remove_from_hass.
+      No entity listens to additional buses or signals.
+  entity-unique-id:
+    status: done
+    comment: |
+      Every entity sets `_attr_unique_id = f"{entry.entry_id}_<key>"`, so
+      a second config entry cannot collide with the first.
+  has-entity-name:
+    status: done
+    comment: |
+      All entity classes set `_attr_has_entity_name = True` and pair with
+      `_attr_translation_key`.
+  runtime-data:
+    status: done
+    comment: |
+      Per-entry runtime data lives on `ConfigEntry.runtime_data` (typed
+      `CuliplanConfigEntry`).
+  test-before-configure:
+    status: exempt
+    comment: |
+      OAuth itself is the "before configure" check — HA's
+      AbstractOAuth2FlowHandler will not create an entry without a valid
+      token. Additionally, `_fetch_account_id` calls `/api/users/me` so
+      a token that's syntactically valid but server-revoked is caught
+      before the entry is created.
+  test-before-setup:
+    status: done
+    comment: |
+      `__init__.async_setup_entry` ensures the OAuth token is valid
+      before constructing the API client; the coordinator's first
+      refresh raises `ConfigEntryNotReady` on transient network
+      failures and `ConfigEntryAuthFailed` on 401.
+  unique-config-entry:
+    status: done
+    comment: |
+      The Culiplan account id (from `/api/users/me`) is the entry
+      `unique_id`; `_abort_if_unique_id_configured` runs in
+      `async_oauth_create_entry`.
+
+  # ─── Silver ────────────────────────────────────────────────────────────────
+  action-exceptions:
+    status: exempt
+    comment: |
+      No services registered.
+  config-entry-unloading:
+    status: done
+    comment: |
+      `async_unload_entry` unloads all platforms; the coordinator's
+      Socket.IO connection is closed via the `async_on_unload` hook;
+      the LLM API is unregistered via the same mechanism.
+  docs-configuration-parameters:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description.
+  docs-installation-parameters:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description.
+  entity-unavailable:
+    status: done
+    comment: |
+      CoordinatorEntity drives availability from
+      `coordinator.last_update_success`.
+  integration-owner:
+    status: done
+    comment: |
+      `manifest.json` codeowners is `["@culiplan"]`.
+  log-when-unavailable:
+    status: done
+    comment: |
+      The coordinator logs `UpdateFailed` at WARNING (via HA's logger);
+      socket connect / reconnect events are logged at DEBUG. The API
+      client maps 401 to `ConfigEntryAuthFailed`.
+  parallel-updates:
+    status: done
+    comment: |
+      All entities share a single DataUpdateCoordinator (one HTTP burst
+      per refresh), so no `parallel_updates` cap is needed.
+  reauthentication-flow:
+    status: done
+    comment: |
+      `async_step_reauth` + `async_step_reauth_confirm` trigger HA's
+      standard re-auth UI; `api.py._raise_for_status` flips a 401 into
+      `ConfigEntryAuthFailed` to drive the flow.
+  test-coverage:
+    status: done
+    comment: |
+      `pytest --cov` exceeds 95% on the slim package. See
+      `pyproject.toml` (`fail_under = 95`).
+
+  # ─── Gold ──────────────────────────────────────────────────────────────────
+  devices:
+    status: done
+    comment: |
+      `build_device_info` returns a single DeviceInfo per entry; all
+      entities attach to that one device.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Cloud service — no LAN discovery surface.
+  discovery:
+    status: exempt
+    comment: |
+      Cloud service — not discoverable on the LAN.
+  docs-data-update:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description.
+  docs-examples:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description.
+  docs-known-limitations:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description.
+  docs-supported-devices:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description.
+  docs-supported-functions:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description.
+  docs-troubleshooting:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description.
+  docs-use-cases:
+    status: todo
+    comment: |
+      Tracked under docs-high-level-description.
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Single device per entry (the user's Culiplan account).
+  entity-category:
+    status: done
+    comment: |
+      The calendar entity uses the default category.
+  entity-device-class:
+    status: exempt
+    comment: |
+      The calendar platform has no device-class concept. Follow-up
+      sensor / binary_sensor platforms will set device classes when they
+      land.
+  entity-disabled-by-default:
+    status: done
+    comment: |
+      The calendar entity ships enabled — there is no event-driven entity
+      that should be off by default in this build.
+  entity-translations:
+    status: done
+    comment: |
+      Every entity class sets `_attr_translation_key`; matching strings
+      exist in `strings.json` / `translations/en.json`.
+  exception-translations:
+    status: todo
+    comment: |
+      The slim build's API client raises generic `CuliplanApiError` and
+      `ConfigEntryAuthFailed`. No user-facing `HomeAssistantError` with
+      `translation_key` is raised; the exceptions block stays empty for
+      now. A follow-up will add translated exceptions once the LLM tool
+      surface starts surfacing errors to users.
+  icon-translations:
+    status: done
+    comment: |
+      `icons.json` keys all entities by their translation_key.
+  reconfiguration-flow:
+    status: done
+    comment: |
+      `async_step_reconfigure` re-runs OAuth, enforces same-account via
+      `_async_finish_reconfigure`, and merges new tokens into the
+      existing entry.
+  repair-issues:
+    status: exempt
+    comment: |
+      No premium / discoverable error conditions in the slim build — the
+      HACS distribution carries the Premium upsell repair flow.
+  stale-devices:
+    status: exempt
+    comment: |
+      One device per entry; nothing to mark stale.
+
+  # ─── Platinum ──────────────────────────────────────────────────────────────
+  async-dependency:
+    status: done
+    comment: |
+      The single PyPI requirement (`python-socketio>=5.12.0`) is fully
+      async; we use `socketio.AsyncClient`.
+  inject-websession:
+    status: done
+    comment: |
+      All HTTP calls route through
+      `aiohttp_client.async_get_clientsession(hass)`. No
+      `aiohttp.ClientSession()` is constructed anywhere in this build.
+  strict-typing:
+    status: done
+    comment: |
+      `mypy --strict homeassistant/components/culiplan/` passes. The only
+      per-line ignores are 4 `[misc]` markers on `python-socketio`
+      decorator handlers (the library ships no `py.typed`).
