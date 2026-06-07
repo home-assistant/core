@@ -46,7 +46,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -104,7 +104,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Light Group config entry."""
-    target_config = config_entry.options[CONF_ENTITIES]
+    target_config = dict(config_entry.options[CONF_ENTITIES])
+    entity_ids = target_config.get("entity_id", [])
+    if entity_ids:
+        registry = er.async_get(hass)
+        entities = er.async_validate_entity_ids(registry, entity_ids)
+        target_config["entity_id"] = entities
     mode = config_entry.options.get(CONF_ALL, False)
 
     async_add_entities(

@@ -105,6 +105,7 @@ class GroupEntity(Entity):
         self._entity_ids = self.filter_entities_by_domain(
             selected.referenced | selected.indirectly_referenced
         )
+        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: sorted(self._entity_ids)}
         if hasattr(self, "update_group_member"):
             self.update_group_member(self._entity_ids)
 
