@@ -5,6 +5,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,12 +23,26 @@ async def async_setup_entry(
         [
             DemoBinarySensor(
                 "binary_1",
+                "binary_1",
                 "Basement Floor Wet",
                 False,
                 BinarySensorDeviceClass.MOISTURE,
             ),
             DemoBinarySensor(
-                "binary_2", "Movement Backyard", True, BinarySensorDeviceClass.MOTION
+                "binary_2",
+                "binary_2",
+                "Movement Backyard",
+                True,
+                BinarySensorDeviceClass.MOTION,
+            ),
+            DemoBinarySensor(
+                "binary_3",
+                "sensor_1",
+                "Outside Temperature",
+                False,
+                BinarySensorDeviceClass.BATTERY_CHARGING,
+                EntityCategory.DIAGNOSTIC,
+                "Battery Charging",
             ),
         ]
     )
@@ -43,9 +58,12 @@ class DemoBinarySensor(BinarySensorEntity):
     def __init__(
         self,
         unique_id: str,
+        device_id: str,
         device_name: str,
         state: bool,
         device_class: BinarySensorDeviceClass,
+        entity_category: EntityCategory | None = None,
+        entity_name: str | None = None,
     ) -> None:
         """Initialize the demo sensor."""
         self._unique_id = unique_id
@@ -54,10 +72,12 @@ class DemoBinarySensor(BinarySensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
+                (DOMAIN, device_id)
             },
             name=device_name,
         )
+        self._attr_entity_category = entity_category
+        self._attr_name = entity_name
 
     @property
     def unique_id(self) -> str:
