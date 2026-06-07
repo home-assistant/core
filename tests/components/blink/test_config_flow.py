@@ -175,6 +175,7 @@ async def test_reauth_completes(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+    assert mock_entry.data["password"] == "new_password"
 
 
 async def test_form_user(hass: HomeAssistant) -> None:
@@ -292,3 +293,4 @@ async def test_reconfigure_completes(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
+    assert mock_entry.data["password"] == "new_password"
