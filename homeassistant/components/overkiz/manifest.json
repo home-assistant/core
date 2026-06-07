@@ -13,7 +13,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["boto3", "botocore", "pyoverkiz", "s3transfer"],
-  "requirements": ["pyoverkiz==2.0.0rc9"],
+  "requirements": ["pyoverkiz==2.0.0"],
   "zeroconf": [
     {
       "name": "gateway*",
