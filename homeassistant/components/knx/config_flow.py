@@ -105,7 +105,7 @@ _PORT_SELECTOR = vol.All(
 class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a KNX config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize KNX config flow."""
