@@ -1,14 +1,13 @@
 """Tests for UniFi AP Direct device tracker."""
 
-from unittest.mock import AsyncMock, patch
-
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.unifi_direct import device_tracker
+from homeassistant import config_entries
+from homeassistant.components.unifi_direct.config_flow import UniFiAPConnectionException
 from homeassistant.components.unifi_direct.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.setup import async_setup_component
 
 
 async def test_device_tracker_entities_created(
@@ -42,6 +41,8 @@ async def test_device_tracker_entities_created(
 
 async def test_setup_scanner_legacy_platform_imports_config_entry(
     hass: HomeAssistant,
+    mock_unifiap_config_flow,
+    mock_unifiap,
 ) -> None:
     """Test legacy device tracker setup triggers config flow import."""
     config = {
@@ -51,24 +52,21 @@ async def test_setup_scanner_legacy_platform_imports_config_entry(
         CONF_PORT: 22,
     }
 
-    with patch.object(
-        hass.config_entries.flow,
-        "async_init",
-        new=AsyncMock(
-            return_value={"type": data_entry_flow.FlowResultType.CREATE_ENTRY}
-        ),
-    ) as mock_flow_init:
-        assert await device_tracker.async_setup_scanner(hass, config, AsyncMock())
-
-    mock_flow_init.assert_awaited_once_with(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=config,
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {"device_tracker": [{"platform": DOMAIN, **config}]},
     )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == config
+    assert entries[0].source == config_entries.SOURCE_IMPORT
 
 
 async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mock_unifiap_config_flow, issue_registry: IssueRegistry
 ) -> None:
     """Test that issue is created when legacy device tracker setup cannot connect."""
     config = {
@@ -78,23 +76,19 @@ async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
         CONF_PORT: 22,
     }
 
-    with patch.object(
-        hass.config_entries.flow,
-        "async_init",
-        new=AsyncMock(
-            return_value={
-                "type": data_entry_flow.FlowResultType.ABORT,
-                "reason": "cannot_connect",
-            }
-        ),
-    ):
-        assert await device_tracker.async_setup_scanner(hass, config, AsyncMock())
+    mock_unifiap_config_flow.return_value.get_clients.side_effect = (
+        UniFiAPConnectionException("fail")
+    )
+
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {"device_tracker": [{"platform": DOMAIN, **config}]},
+    )
+    await hass.async_block_till_done()
 
     # Verify the issue was created in the registry
-    issue_registry_instance = ir.async_get(hass)
-    issue = issue_registry_instance.async_get_issue(
-        DOMAIN, "yaml_import_cannot_connect"
-    )
+    issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
     assert issue is not None
     assert issue.translation_key == "yaml_import_cannot_connect"
     assert issue.translation_placeholders == {"host": "192.168.1.2"}
