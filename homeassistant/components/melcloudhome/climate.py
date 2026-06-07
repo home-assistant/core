@@ -250,14 +250,18 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     @property
     def swing_modes(self) -> list[str] | None:
         """Return vertical vane positions as swing modes."""
-        return list(ATA_VANE_VERTICAL_TO_HA.values()) if self.unit.settings else None
+        return (
+            list(ATA_VANE_VERTICAL_TO_HA.values())
+            if self.unit.settings.get("VaneVerticalDirection") is not None
+            else None
+        )
 
     @property
     def swing_mode(self) -> str | None:
         """Return the current vertical vane direction."""
         return (
             ATA_VANE_VERTICAL_TO_HA.get(self.unit.settings["VaneVerticalDirection"])
-            if self.unit.settings
+            if self.unit.settings.get("VaneVerticalDirection") is not None
             else None
         )
 
