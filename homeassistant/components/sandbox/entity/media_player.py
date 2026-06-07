@@ -31,7 +31,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.exceptions import HomeAssistantError
 
-from . import SandboxProxyEntity, raise_not_proxied
+from . import SandboxProxyEntity
 
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
@@ -61,6 +61,18 @@ def _browse_media_from_dict(data: dict[str, Any]) -> BrowseMedia:
         thumbnail=data.get("thumbnail"),
         not_shown=int(data.get("not_shown") or 0),
         can_search=bool(data.get("can_search", False)),
+    )
+
+
+def _search_media_from_dict(data: dict[str, Any]) -> SearchMedia:
+    """Rebuild a :class:`SearchMedia` from its ``as_dict`` shape.
+
+    ``SearchMedia.as_dict`` holds its results under ``result`` as a list of
+    ``BrowseMedia`` dicts, so the rebuild reuses :func:`_browse_media_from_dict`
+    per item. ``version`` is constructor-defaulted.
+    """
+    return SearchMedia(
+        result=[_browse_media_from_dict(item) for item in data.get("result", [])]
     )
 
 
@@ -276,8 +288,24 @@ class SandboxMediaPlayerEntity(SandboxProxyEntity, MediaPlayerEntity):
         return _browse_media_from_dict(entity_response)
 
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
-        """Raise — media search is a server-side query, not yet proxied."""
-        raise_not_proxied("Searching media")
+        """Search via ``EntityQuery`` against the real entity.
+
+        Forwarded to ``async_internal_search_media`` (which rebuilds the
+        ``SearchMediaQuery`` from flat kwargs on the sandbox side) rather than
+        ``async_search_media``, so the query crosses as plain JSON kwargs.
+        ``media_filter_classes`` cross as their ``MediaClass`` string values.
+        """
+        args: dict[str, Any] = {"search_query": query.search_query}
+        if query.media_content_type is not None:
+            args["media_content_type"] = query.media_content_type
+        if query.media_content_id is not None:
+            args["media_content_id"] = query.media_content_id
+        if query.media_filter_classes is not None:
+            args["media_filter_classes"] = [
+                getattr(item, "value", item) for item in query.media_filter_classes
+            ]
+        response = await self._entity_query("async_internal_search_media", **args)
+        return _search_media_from_dict(response or {})
 
     async def async_clear_playlist(self) -> None:
         """Forward clear_playlist."""
