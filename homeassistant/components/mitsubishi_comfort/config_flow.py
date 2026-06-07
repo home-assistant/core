@@ -134,9 +134,7 @@ class MitsubishiComfortOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage device IP addresses."""
-        addresses: dict[str, str] = dict(
-            self.config_entry.data.get(CONF_ADDRESSES, {})
-        )
+        addresses: dict[str, str] = dict(self.config_entry.data.get(CONF_ADDRESSES, {}))
 
         if user_input is not None:
             new_addresses: dict[str, str] = {}
@@ -162,9 +160,7 @@ class MitsubishiComfortOptionsFlow(OptionsFlow):
                 if conn_type == dr.CONNECTION_NETWORK_MAC:
                     mac = dr.format_mac(conn_id)
                     current_ip = addresses.get(mac, "")
-                    schema_dict[
-                        vol.Optional(mac, default=current_ip)
-                    ] = str
+                    schema_dict[vol.Optional(mac, default=current_ip)] = str
                     device_names.append(dev_entry.name or mac)
 
         if not schema_dict:
