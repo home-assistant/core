@@ -2,10 +2,10 @@
 
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import EventName, OverkizState
+from pyoverkiz.enums import EventName, OverkizCommand, OverkizCommandParam, OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,6 +13,10 @@ from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
+)
+from homeassistant.components.overkiz.number import (
+    _async_set_native_value_away_mode_duration,
+    _overkiz_value_fn_away_mode_duration,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -182,3 +186,163 @@ async def test_number_unavailability(
     assert (
         hass.states.get(EXPECTED_NUMBER_OF_SHOWER.entity_id).state == STATE_UNAVAILABLE
     )
+
+
+def _make_device(op_mode_value=None, duration_value=None) -> MagicMock:
+    """Build a minimal mock Device with the relevant states."""
+    device = MagicMock()
+
+    def states_get(key):
+        if key == OverkizState.CORE_OPERATING_MODE:
+            if op_mode_value is None:
+                return None
+            state = MagicMock()
+            state.value = op_mode_value
+            return state
+        if key == OverkizState.IO_AWAY_MODE_DURATION:
+            if duration_value is None:
+                return None
+            state = MagicMock()
+            state.value = duration_value
+            return state
+        return None
+
+    device.states.get.side_effect = states_get
+    return device
+
+
+def test_value_fn_absence_off_returns_zero() -> None:
+    """When core:OperatingModeState has absence=off, return 0 regardless of duration."""
+    device = _make_device(
+        op_mode_value={OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF},
+        duration_value="52",
+    )
+    assert _overkiz_value_fn_away_mode_duration(device) == 0.0
+
+
+def test_value_fn_absence_on_duration_always_returns_99() -> None:
+    """When absence is on and duration is 'always', return 99."""
+    device = _make_device(
+        op_mode_value={OverkizCommandParam.ABSENCE: OverkizCommandParam.ON},
+        duration_value=OverkizCommandParam.ALWAYS,
+    )
+    assert _overkiz_value_fn_away_mode_duration(device) == 99.0
+
+
+def test_value_fn_absence_on_timed_duration() -> None:
+    """When absence is on and duration is a number, return the float value."""
+    device = MagicMock()
+
+    def states_get(key):
+        if key == OverkizState.CORE_OPERATING_MODE:
+            state = MagicMock()
+            state.value = {OverkizCommandParam.ABSENCE: OverkizCommandParam.ON}
+            return state
+        if key == OverkizState.IO_AWAY_MODE_DURATION:
+            state = MagicMock()
+            state.value = "52"
+            return state
+        return None
+
+    device.states.get.side_effect = states_get
+    assert _overkiz_value_fn_away_mode_duration(device) == 52.0
+
+
+def test_value_fn_no_op_mode_state_duration_always() -> None:
+    """When core:OperatingModeState is absent, fall back to duration state."""
+    device = _make_device(op_mode_value=None, duration_value=OverkizCommandParam.ALWAYS)
+    assert _overkiz_value_fn_away_mode_duration(device) == 99.0
+
+
+def test_value_fn_no_op_mode_state_timed_duration() -> None:
+    """When core:OperatingModeState is absent, return numeric duration."""
+    device = _make_device(op_mode_value=None, duration_value="14")
+    assert _overkiz_value_fn_away_mode_duration(device) == 14.0
+
+
+def test_value_fn_no_duration_state_returns_none() -> None:
+    """When io:AwayModeDurationState is absent, return None."""
+    device = _make_device(
+        op_mode_value={OverkizCommandParam.ABSENCE: OverkizCommandParam.ON},
+        duration_value=None,
+    )
+    assert _overkiz_value_fn_away_mode_duration(device) is None
+
+
+def test_value_fn_op_mode_not_dict_falls_through() -> None:
+    """When core:OperatingModeState value is not a dict, fall through to duration."""
+    device = _make_device(op_mode_value="unexpected_string", duration_value="7")
+    assert _overkiz_value_fn_away_mode_duration(device) == 7.0
+
+
+async def test_set_value_zero_cancels_absence() -> None:
+    """Value 0 must cancel absence via SET_CURRENT_OPERATING_MODE(absence=off)."""
+    execute = AsyncMock()
+    with patch("homeassistant.components.overkiz.number.asyncio.sleep"):
+        await _async_set_native_value_away_mode_duration(0, execute)
+
+    execute.assert_any_call(
+        OverkizCommand.SET_CURRENT_OPERATING_MODE,
+        {
+            OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+            OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+        },
+    )
+    execute.assert_called_with(OverkizCommand.REFRESH_AWAY_MODE_DURATION)
+
+
+async def test_set_value_one_cancels_absence() -> None:
+    """Value 1 is unsupported by the device and must cancel absence."""
+    execute = AsyncMock()
+    with patch("homeassistant.components.overkiz.number.asyncio.sleep"):
+        await _async_set_native_value_away_mode_duration(1, execute)
+
+    execute.assert_any_call(
+        OverkizCommand.SET_CURRENT_OPERATING_MODE,
+        {
+            OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+            OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+        },
+    )
+
+
+async def test_set_value_timed_duration() -> None:
+    """Values 2-98 must set duration then activate absence."""
+    execute = AsyncMock()
+    with patch("homeassistant.components.overkiz.number.asyncio.sleep"):
+        await _async_set_native_value_away_mode_duration(52, execute)
+
+    calls = execute.call_args_list
+    assert calls[0] == call(OverkizCommand.SET_AWAY_MODE_DURATION, 52)
+    assert calls[1] == call(
+        OverkizCommand.SET_CURRENT_OPERATING_MODE,
+        {
+            OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+            OverkizCommandParam.ABSENCE: OverkizCommandParam.ON,
+        },
+    )
+    assert calls[-1] == call(OverkizCommand.REFRESH_AWAY_MODE_DURATION)
+
+
+async def test_set_value_99_indefinite_absence() -> None:
+    """Value 99 must cancel first then activate without duration (device reports 'always')."""
+    execute = AsyncMock()
+    with patch("homeassistant.components.overkiz.number.asyncio.sleep"):
+        await _async_set_native_value_away_mode_duration(99, execute)
+
+    calls = execute.call_args_list
+    assert calls[0] == call(
+        OverkizCommand.SET_CURRENT_OPERATING_MODE,
+        {
+            OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+            OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+        },
+    )
+    assert calls[1] == call(
+        OverkizCommand.SET_CURRENT_OPERATING_MODE,
+        {
+            OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+            OverkizCommandParam.ABSENCE: OverkizCommandParam.ON,
+        },
+    )
+    assert calls[-1] == call(OverkizCommand.REFRESH_AWAY_MODE_DURATION)
