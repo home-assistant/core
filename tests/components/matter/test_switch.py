@@ -240,24 +240,55 @@ async def test_boolean_state_configuration_alarm_enabled_switches(
     entity_registry: er.EntityRegistry,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test Boolean State Configuration alarm enabled switches."""
 
-    def get_entity_id(translation_key: str) -> str:
-        """Return the entity ID for an alarm switch."""
+    def get_switch_entry(translation_key: str) -> er.RegistryEntry:
+        """Return the registry entry for an alarm switch."""
         for state in hass.states.async_all(Platform.SWITCH):
             entry = entity_registry.async_get(state.entity_id)
             if entry and entry.translation_key == translation_key:
-                return entry.entity_id
+                return entry
         pytest.fail(f"Missing switch for {translation_key}")
 
-    visual_entity_id = get_entity_id("visual_alarm_enabled")
-    audible_entity_id = get_entity_id("audible_alarm_enabled")
+    visual_entry = get_switch_entry("visual_alarm_enabled")
+    audible_entry = get_switch_entry("audible_alarm_enabled")
+    visual_entity_id = visual_entry.entity_id
+    audible_entity_id = audible_entry.entity_id
 
     visual_state = hass.states.get(visual_entity_id)
     audible_state = hass.states.get(audible_entity_id)
     assert visual_state
     assert audible_state
+    assert visual_entry == snapshot(
+        name=(
+            "test_boolean_state_configuration_alarm_enabled_switches"
+            "[ikea_klippbok_water_leak]"
+            f"[{visual_entity_id}-entry]"
+        )
+    )
+    assert visual_state == snapshot(
+        name=(
+            "test_boolean_state_configuration_alarm_enabled_switches"
+            "[ikea_klippbok_water_leak]"
+            f"[{visual_entity_id}-state]"
+        )
+    )
+    assert audible_entry == snapshot(
+        name=(
+            "test_boolean_state_configuration_alarm_enabled_switches"
+            "[ikea_klippbok_water_leak]"
+            f"[{audible_entity_id}-entry]"
+        )
+    )
+    assert audible_state == snapshot(
+        name=(
+            "test_boolean_state_configuration_alarm_enabled_switches"
+            "[ikea_klippbok_water_leak]"
+            f"[{audible_entity_id}-state]"
+        )
+    )
     assert visual_state.state == "on"
     assert audible_state.state == "on"
 
