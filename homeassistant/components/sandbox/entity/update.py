@@ -9,7 +9,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 
-from . import SandboxProxyEntity
+from . import SandboxProxyEntity, raise_not_proxied
 
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
@@ -97,3 +97,7 @@ class SandboxUpdateEntity(SandboxProxyEntity, UpdateEntity):
         if version is not None:
             payload["version"] = version
         await self._call_service("install", **payload)
+
+    async def async_release_notes(self) -> str | None:
+        """Raise — ``update/release_notes`` is a WS query, not yet proxied."""
+        raise_not_proxied("Fetching update release notes")
