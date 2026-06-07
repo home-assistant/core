@@ -1,7 +1,5 @@
 """Provides a switch for switchable NUT outlets."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 import re
