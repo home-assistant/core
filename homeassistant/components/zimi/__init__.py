@@ -64,7 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool
             "Zimi setup with missing states for %d devices", len(api.missing_states)
         )
         for key in api.missing_states:
-            device = api.devices[key]
+            device = api.devices.get(key)
+            if device is None:
+                continue
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -84,7 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool
             len(api.obsolete_firmware),
         )
         for key in api.obsolete_firmware:
-            device = api.devices[key]
+            device = api.devices.get(key)
+            if device is None:
+                continue
             ir.async_create_issue(
                 hass,
                 DOMAIN,
