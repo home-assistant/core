@@ -46,7 +46,6 @@ FIXTURES = [
     "heiman_smoke_detector",
     "ikea_air_quality_monitor",
     "ikea_bilresa_dual_button",
-    "ikea_klippbok_water_leak",
     "ikea_scroll_wheel",
     "inovelli_vtm30",
     "inovelli_vtm31",
