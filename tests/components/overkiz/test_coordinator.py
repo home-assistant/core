@@ -118,6 +118,7 @@ async def test_execution_failure_fires_event(
                 exec_id="exec-1",
                 new_state=ExecutionState.FAILED.value,
                 failure_type="TRANSMISSION_ERROR",
+                failure_type_code="CODE_42",
             )
         ]
     )
@@ -129,7 +130,7 @@ async def test_execution_failure_fires_event(
     assert event_data["device_url"] == SHUTTER.device_url
     assert event_data["command_name"] == "setClosure"
     assert event_data["failure_type"] == "TRANSMISSION_ERROR"
-    assert event_data["failure_type_code"] is None
+    assert event_data["failure_type_code"] == "CODE_42"
 
     # Execution is cleaned up after failure
     assert "exec-1" not in coordinator.executions
