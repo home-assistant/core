@@ -48,7 +48,7 @@ class GroupEntity(Entity):
     _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_GROUP_ENTITIES})
 
     _attr_should_poll = False
-    _entity_ids: set[str]
+    _entity_ids: list[str]
     _target_config: dict[str, Any]
     _domain: str
 
@@ -102,14 +102,27 @@ class GroupEntity(Entity):
             expand_group=True,
             primary_entities_only=False,
         )
-        self._entity_ids = self.filter_entities_by_domain(
-            selected.referenced | selected.indirectly_referenced
+
+        self._entity_ids = []
+        # Prepend entities from config to ensure order for explicitly configured entities
+        if entity_list := self._target_config.get("entity_id"):
+            self._entity_ids = entity_list
+
+        self._entity_ids.extend(
+            [
+                entity
+                for entity in self.filter_entities_by_domain(
+                    selected.referenced | selected.indirectly_referenced
+                )
+                if entity not in self._entity_ids
+            ]
         )
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: sorted(self._entity_ids)}
+
+        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: self._entity_ids}
         if update_group_members:
             self.update_group_member(self._entity_ids)
 
-    def update_group_member(self, entities: set[str]) -> None:
+    def update_group_member(self, entities: list[str]) -> None:
         """Update the group member."""
 
     async def async_added_to_hass(self) -> None:
@@ -136,12 +149,15 @@ class GroupEntity(Entity):
         def async_update_entities(added: set[str], removed: set[str]) -> None:
             """Handle entity changes."""
             for entity_id in added:
-                self._entity_ids.add(entity_id)
+                if entity_id not in self._entity_ids:
+                    self._entity_ids.append(entity_id)
             for entity_id in removed:
-                self._entity_ids.discard(entity_id)
+                if entity_id in self._entity_ids:
+                    self._entity_ids.remove(entity_id)
 
             # Ensure the group does not include itself as member
-            self._entity_ids.discard(self.entity_id)
+            if self.entity_id in self._entity_ids:
+                self._entity_ids.remove(self.entity_id)
 
             self._attr_extra_state_attributes = {
                 ATTR_ENTITY_ID: sorted(self._entity_ids)
