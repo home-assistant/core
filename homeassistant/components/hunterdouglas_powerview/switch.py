@@ -1,7 +1,5 @@
 """Support for Hunter Douglas PowerView scheduled events."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -45,15 +43,13 @@ async def async_setup_entry(
         key = automation.scene_id
         scene = pv_entry.scene_data.get(key)
         scene_name = scene.name if scene is not None else str(key)
-        room_name = getattr(
-            pv_entry.room_data.get(getattr(scene, "room_id", None)), ATTR_NAME, ""
-        )
+        room_ids = scene.room_id if scene is not None else []
+        room = pv_entry.room_data.get(room_ids[0]) if room_ids else None
+        room_name = getattr(room, ATTR_NAME, "")
 
         scene_automation_index[key] = scene_automation_index.get(key, 0) + 1
         schedule_index = (
-            scene_automation_index[key]
-            if scene_automation_counts[key] > 1
-            else None
+            scene_automation_index[key] if scene_automation_counts[key] > 1 else None
         )
 
         entities.append(

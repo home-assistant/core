@@ -140,9 +140,9 @@ async def test_scene_shade_cross_references_v2(
     assert state is not None
     assert state.attributes["shade_ids"] == [40458]
     assert set(state.attributes["shade_entity_ids"]) == {
-        "cover.kitchen_roller",
-        "cover.kitchen_roller_front",
-        "cover.kitchen_roller_rear",
+        "cover.kitchen_kitchen_roller",
+        "cover.kitchen_kitchen_roller_front",
+        "cover.kitchen_kitchen_roller_rear",
     }
 
 
@@ -162,7 +162,7 @@ async def test_scene_shade_cross_references_v3(
     state = hass.states.get("scene.powerview_generation_3_close_bed_4")
     assert state is not None
     assert state.attributes["shade_ids"] == [173]
-    assert "cover.bed_4" in state.attributes["shade_entity_ids"]
+    assert "cover.bedroom_4_bed_4" in state.attributes["shade_entity_ids"]
 
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")

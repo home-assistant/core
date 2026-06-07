@@ -24,7 +24,7 @@ async def test_cover_scene_cross_references_v2(
 
     # Shade 40458 ("Kitchen Roller") appears in 4 scenes:
     # 61648 (Open All), 64679 (Open Kitchen), 24626 (Close All), 51159 (Close Kitchen)
-    state = hass.states.get("cover.kitchen_roller")
+    state = hass.states.get("cover.kitchen_kitchen_roller")
     assert state is not None
 
     scene_ids = state.attributes["scene_ids"]
@@ -53,7 +53,7 @@ async def test_cover_scene_cross_references_v3(
 
     # Shade 173 ("Bed 4") appears in 4 scenes:
     # 220 (Close Bed 4), 255 (Open Bed 4), 299 (Open All), 301 (Close All)
-    state = hass.states.get("cover.bed_4")
+    state = hass.states.get("cover.bedroom_4_bed_4")
     assert state is not None
 
     scene_ids = state.attributes["scene_ids"]

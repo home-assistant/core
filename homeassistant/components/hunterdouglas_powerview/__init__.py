@@ -7,7 +7,7 @@ from aiopvapi.automations import Automations
 from aiopvapi.resources.model import PowerviewData
 from aiopvapi.resources.shade_data import PowerviewShadeData
 from aiopvapi.rooms import Rooms
-from aiopvapi.scene_members import SceneMembers
+from aiopvapi.scene_members import SceneMembers, build_shade_scene_mapping
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
 
@@ -108,20 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
                 f"Connection error to PowerView hub {hub_address}: {err}"
             ) from err
 
-    scene_to_shade_ids: dict[int, list[int]] = {}
-    shade_to_scene_ids: dict[int, list[int]] = {}
-    if scene_member_data:
-        for member in scene_member_data.raw:
-            s_id = member["sceneId"]
-            sh_id = member["shadeId"]
-            scene_to_shade_ids.setdefault(s_id, []).append(sh_id)
-            shade_to_scene_ids.setdefault(sh_id, []).append(s_id)
-    elif hub.api_version >= 3:
-        # Gen3 embeds shadeIds directly in scene data; no separate API call needed
-        for scene in scene_data.processed.values():
-            for sh_id in scene.raw_data.get("shadeIds", []):
-                scene_to_shade_ids.setdefault(scene.id, []).append(sh_id)
-                shade_to_scene_ids.setdefault(sh_id, []).append(scene.id)
+    scene_to_shade_ids, shade_to_scene_ids = build_shade_scene_mapping(
+        scene_data, scene_member_data
+    )
 
     scene_to_automation_ids: dict[int, list[int]] = {}
     if automation_data:
