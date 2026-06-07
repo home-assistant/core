@@ -483,6 +483,46 @@ async def test_assist_api_prompt(
     )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
+    # Create two sensors with different display precisions
+    power1 = entity_registry.async_get_or_create(
+        "sensor",
+        "power1",
+        "mock-id-power-1",
+        original_name="Power 1",
+        suggested_object_id="power1",
+        device_id=device.id,
+    )
+    entity_registry.async_update_entity_options(
+        power1.entity_id,
+        "sensor",
+        {"display_precision": 0},
+    )
+    hass.states.async_set(
+        power1.entity_id,
+        "1234.1234",
+        {"friendly_name": "Power 1"},
+    )
+    async_expose_entity(hass, "conversation", power1.entity_id, True)
+    power2 = entity_registry.async_get_or_create(
+        "sensor",
+        "power2",
+        "mock-id-power-2",
+        original_name="Power 2",
+        suggested_object_id="power2",
+        device_id=device.id,
+    )
+    entity_registry.async_update_entity_options(
+        power2.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2},
+    )
+    hass.states.async_set(
+        power2.entity_id,
+        "1234.1234",
+        {"friendly_name": "Power 2"},
+    )
+    async_expose_entity(hass, "conversation", power2.entity_id, True)
+
     def create_entity(
         device: dr.DeviceEntry,
         write_state=True,
@@ -600,6 +640,14 @@ Live Context: An overview of the areas and the devices in this smart home:
   domain: light
   state: 'on'
   areas: Test Area, Alternative name
+- names: Power 1
+  domain: sensor
+  state: '1234'
+  areas: Test Area, Alternative name
+- names: Power 2
+  domain: sensor
+  state: '1234.12'
+  areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
   state: unavailable
@@ -642,6 +690,12 @@ Static Context: An overview of the areas and the devices in this smart home:
   domain: light
 - names: Living Room
   domain: light
+  areas: Test Area, Alternative name
+- names: Power 1
+  domain: sensor
+  areas: Test Area, Alternative name
+- names: Power 2
+  domain: sensor
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
