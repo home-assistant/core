@@ -38,8 +38,7 @@ if TYPE_CHECKING:
 
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
 
-# As of pyoverkiz 2.0, events are a discriminated union keyed on their name;
-# each handler narrows to its own subtype, so the registry value type is loose.
+# Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Any], Coroutine[Any, Any, None]]
 ] = Registry()
