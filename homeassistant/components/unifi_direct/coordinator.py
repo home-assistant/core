@@ -16,16 +16,16 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
 
-type UnifiDirectConfigEntry = ConfigEntry[UniFiDirectDataUpdateCoordinator]
+type UniFiDirectConfigEntry = ConfigEntry[UniFiDirectDataUpdateCoordinator]
 
 
 class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Class to manage fetching data from the UniFi AP."""
 
-    config_entry: UnifiDirectConfigEntry
+    config_entry: UniFiDirectConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: UnifiDirectConfigEntry
+        self, hass: HomeAssistant, config_entry: UniFiDirectConfigEntry
     ) -> None:
         """Initialize the coordinator using a config entry."""
         self.config_entry = config_entry

@@ -89,11 +89,11 @@ async def async_setup_entry(
     @callback
     def _async_update_devices() -> None:
         """Add new devices from the coordinator."""
-        new_entities: list[UnifiScannerEntity] = []
+        new_entities: list[UniFiScannerEntity] = []
         for mac in coordinator.data:
             if mac not in tracked:
                 tracked.add(mac)
-                new_entities.append(UnifiScannerEntity(coordinator, mac))
+                new_entities.append(UniFiScannerEntity(coordinator, mac))
         if new_entities:
             async_add_entities(new_entities)
 
@@ -101,7 +101,7 @@ async def async_setup_entry(
     _async_update_devices()
 
 
-class UnifiScannerEntity(
+class UniFiScannerEntity(
     CoordinatorEntity[UniFiDirectDataUpdateCoordinator], ScannerEntity
 ):
     """Representation of a device connected to a UniFi AP Direct."""

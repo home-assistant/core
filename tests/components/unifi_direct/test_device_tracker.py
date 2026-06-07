@@ -1,7 +1,8 @@
 """Tests for UniFi AP Direct device tracker."""
 
+from unifi_ap import UniFiAPConnectionException
+
 from homeassistant import config_entries
-from homeassistant.components.unifi_direct.config_flow import UniFiAPConnectionException
 from homeassistant.components.unifi_direct.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant

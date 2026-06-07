@@ -35,7 +35,7 @@ def validate_connection_data(data: dict[str, Any]) -> None:
         )
         ap.get_clients()
     except (UniFiAPConnectionException, UniFiAPDataException) as err:
-        raise ConnectionError("Failed to connect to UniFi AP") from err
+        raise CannotConnect("Failed to connect to UniFi AP") from err
 
 
 class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -54,7 +54,7 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_connection_data, user_input
                 )
-            except ConnectionError:
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
@@ -76,10 +76,14 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(
                 validate_connection_data, import_data
             )
-        except ConnectionError:
+        except CannotConnect:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=f"{DEFAULT_NAME} ({import_data[CONF_HOST]})",
             data=import_data,
         )
+
+
+class CannotConnect(Exception):
+    """Custom exception for failing to connect to the UniFiAP."""

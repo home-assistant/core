@@ -3,12 +3,12 @@
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import UnifiDirectConfigEntry, UniFiDirectDataUpdateCoordinator
+from .coordinator import UniFiDirectConfigEntry, UniFiDirectDataUpdateCoordinator
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: UnifiDirectConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UniFiDirectConfigEntry) -> bool:
     """Set up UniFi Direct from a config entry."""
     coordinator = UniFiDirectDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnifiDirectConfigEntry) 
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: UnifiDirectConfigEntry
+    hass: HomeAssistant, entry: UniFiDirectConfigEntry
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
