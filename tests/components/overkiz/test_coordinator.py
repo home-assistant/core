@@ -96,7 +96,6 @@ async def test_execution_failure_fires_event(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """When an execution fails, an overkiz_execution_failed event is fired."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
@@ -140,7 +139,6 @@ async def test_execution_failure_unknown_exec_id_is_ignored(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """An execution state change for an unknown exec_id is silently ignored."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
@@ -171,7 +169,6 @@ async def test_execution_failure_uses_unknown_fallbacks(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Missing failure metadata falls back to 'unknown'."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
