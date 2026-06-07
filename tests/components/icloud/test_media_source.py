@@ -595,63 +595,6 @@ async def test_resolve_media_exceptions(
         await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}{media_content_id}", None)
 
 
-# @pytest.mark.parametrize(
-#     ("media_content_id"),
-#     [
-#         ("/test_account_id/album/album_id1/photo_id1",),
-#         ("/test_account_id/album/album_id2/photo_id2",),
-#         ("/test_account_id/album/album_id1/photo_id3",),
-#         ("/test_account_id/shared/stream_id1/shared_id1",),
-#         ("/test_account_id/shared/stream_id1/shared_id2",),
-#     ],
-#     ids=[
-#         "album_1_photo",
-#         "album_2_photo",
-#         "album_3_photo_png",
-#         "shared_stream_photo",
-#         "shared_stream_movie",
-#     ],
-# )
-# @pytest.mark.parametrize(
-#     "exception",
-#     [
-#         web.HTTPBadRequest(""),
-#         web.HTTPNotFound(""),
-#         ClientTimeout(""),
-#     ],
-#     ids=[
-#         "http_bad_request",
-#         "http_not_found",
-#         "client_timeout",
-#     ],
-# )
-# async def test_resolve_media_exceptions(
-#     hass: HomeAssistant,
-#     config_entry: MockConfigEntry,
-#     icloud_client: AsyncMock,
-#     media_content_id: str,
-#     provider: str,
-#     method: str,
-#     exception: Exception,
-# ) -> None:
-#     """Test resolving media with exceptions."""
-#     config_entry.add_to_hass(hass)
-#     await hass.config_entries.async_setup(config_entry.entry_id)
-#     await hass.async_block_till_done()
-
-#     assert config_entry.state is ConfigEntryState.LOADED
-
-#     provider = getattr(icloud_client, provider)
-#     getattr(provider, method).side_effect = exception
-
-#     with pytest.raises(Unresolvable):
-#         await async_resolve_media(
-#             hass,
-#             f"{URI_SCHEME}{DOMAIN}{media_content_id}",
-#             None,
-#         )
-
-
 @pytest.mark.parametrize(
     ("album_type", "aid", "exc_message"),
     [

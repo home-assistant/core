@@ -102,7 +102,7 @@ def _get_photo_album(
 
 def _get_photo_asset(
     hass: HomeAssistant, identifier: IcloudMediaSourceIdentifier
-) -> PhotoAsset | None:
+) -> PhotoAsset:
     """Get photo asset synchronously."""
 
     icloud_account = _get_icloud_account(hass, identifier)
@@ -163,14 +163,20 @@ class PhotoCache:
     @classmethod
     def instance(cls) -> PhotoCache:
         """Get the singleton instance of the photo cache."""
-        if not hasattr(cls, "_instance"):
-            cls._instance = cls()
-        return cls._instance
+        with cls._lock:
+            if not hasattr(cls, "_instance"):
+                cls._instance = cls()
+            return cls._instance
 
     def __init__(self, max_size: int = MAX_PHOTO_CACHE_SIZE) -> None:
         """Initialize the photo cache."""
         self._cache: OrderedDict[str, PhotoAsset] = OrderedDict()
         self._max_size = max_size
+
+    def clear(self) -> None:
+        """Clear the photo cache."""
+        with self._lock:
+            self._cache.clear()
 
     def get(self, photo_id: str) -> PhotoAsset | None:
         """Get a photo from the cache."""
@@ -300,10 +306,12 @@ class IcloudMediaSource(MediaSource):
 
         if identifier and identifier.config_entry_id is not None:
             icloud_account = _get_icloud_account(self._hass, identifier)
-            for entry in self._get_config_entries():
-                if entry.unique_id == identifier.config_entry_id:
-                    title_parts.append(entry.title)
-                    break
+            entry = self._hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, identifier.config_entry_id
+            )
+
+            if entry:
+                title_parts.append(entry.title)
             else:
                 raise Unresolvable(
                     translation_domain=DOMAIN,
@@ -487,6 +495,7 @@ class IcloudMediaSource(MediaSource):
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="account_not_initialized",
+                translation_placeholders={"entry": identifier.config_entry_id},
             )
 
         if identifier.shared_album is True:
@@ -590,9 +599,6 @@ class IcloudMediaSourceView(HomeAssistantView):
         photo = await self._hass.async_add_executor_job(
             _get_photo_asset, self._hass, identifier
         )
-
-        if photo is None:
-            raise web.HTTPNotFound
 
         url = photo.versions.get(version, {}).get("url")
         if url is None:
