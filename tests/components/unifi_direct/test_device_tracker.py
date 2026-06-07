@@ -90,6 +90,8 @@ async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
 
     # Verify the issue was created in the registry
     issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
+
+    assert len(issue_registry.issues) == 1
     assert issue is not None
     assert issue.translation_key == "yaml_import_cannot_connect"
     assert issue.translation_placeholders == {"host": "192.168.1.2"}

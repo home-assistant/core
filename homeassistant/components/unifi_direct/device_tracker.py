@@ -59,6 +59,7 @@ async def async_setup_scanner(
             translation_key="yaml_import_cannot_connect",
             translation_placeholders={"host": config[CONF_HOST]},
         )
+        return False
 
     ir.async_create_issue(
         hass,
