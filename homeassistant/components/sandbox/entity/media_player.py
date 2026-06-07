@@ -29,11 +29,39 @@ from homeassistant.components.media_player import (
     SearchMedia,
     SearchMediaQuery,
 )
+from homeassistant.exceptions import HomeAssistantError
 
 from . import SandboxProxyEntity, raise_not_proxied
 
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
+
+
+def _browse_media_from_dict(data: dict[str, Any]) -> BrowseMedia:
+    """Rebuild a :class:`BrowseMedia` tree from its ``as_dict`` shape.
+
+    ``BrowseMedia.as_dict`` is frontend-shaped — it carries
+    ``children_media_class`` and emits ``not_shown`` / ``children`` only at the
+    parent level — so fields map across explicitly rather than via a ``**data``
+    splat. ``children`` recurses; numbers arriving as floats through the wire
+    Struct are coerced back to the constructor's ``int`` / ``bool`` types.
+    """
+    children = data.get("children")
+    return BrowseMedia(
+        media_class=data["media_class"],
+        media_content_id=data["media_content_id"],
+        media_content_type=data["media_content_type"],
+        title=data["title"],
+        can_play=bool(data["can_play"]),
+        can_expand=bool(data["can_expand"]),
+        children=(
+            [_browse_media_from_dict(child) for child in children] if children else None
+        ),
+        children_media_class=data.get("children_media_class"),
+        thumbnail=data.get("thumbnail"),
+        not_shown=int(data.get("not_shown") or 0),
+        can_search=bool(data.get("can_search", False)),
+    )
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
@@ -224,8 +252,28 @@ class SandboxMediaPlayerEntity(SandboxProxyEntity, MediaPlayerEntity):
         media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
-        """Raise — media browsing is a server-side query, not yet proxied."""
-        raise_not_proxied("Browsing media")
+        """Browse via the ``media_player.browse_media`` service.
+
+        Caveat: a sandboxed player's browse surfaces only its OWN sources. The
+        ``media_source`` tree a player normally merges in (via
+        ``media_source.async_browse_media(self.hass, …)``) is empty here —
+        ``media_source`` runs on main, outside the sandbox boundary, so the
+        sandbox's private hass has nothing to resolve against. Not a bug;
+        closing it needs a cross-boundary hook (pairs with the opt-in sharing
+        work). See ``sandbox/docs/query-shaped-rpcs.md``.
+        """
+        service_data: dict[str, Any] = {}
+        if media_content_type is not None:
+            service_data["media_content_type"] = media_content_type
+        if media_content_id is not None:
+            service_data["media_content_id"] = media_content_id
+        response = await self._call_service(
+            "browse_media", return_response=True, **service_data
+        )
+        entity_response = response.get(self.description.sandbox_entity_id)
+        if not entity_response:
+            raise HomeAssistantError("Sandbox returned no browse_media result")
+        return _browse_media_from_dict(entity_response)
 
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
         """Raise — media search is a server-side query, not yet proxied."""

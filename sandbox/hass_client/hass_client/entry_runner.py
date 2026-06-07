@@ -10,9 +10,12 @@ ephemeral state used by the integration's lifecycle hooks.
 
 import logging
 from types import MappingProxyType
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.json import json_bytes
+from homeassistant.util.json import json_loads
 
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
@@ -139,7 +142,7 @@ class EntryRunner:
                 return_response=True,
             )
             response = pb.CallServiceResult()
-            response.response.data.CopyFrom(dict_to_struct(result or {}))
+            response.response.data.CopyFrom(dict_to_struct(_json_safe(result)))
             return response
         await self.hass.services.async_call(
             msg.domain,
@@ -149,6 +152,21 @@ class EntryRunner:
             target=target,
         )
         return pb.CallServiceResult()
+
+
+def _json_safe(result: Any) -> dict[str, Any]:
+    """Coerce a service response into a plain JSON-safe dict.
+
+    Entity service responses are keyed by entity_id and the value may be a
+    rich object rather than a plain dict — ``media_player.browse_media``
+    returns ``{entity_id: BrowseMedia}``, for instance. ``dict_to_struct``
+    only accepts JSON scalars/dicts/lists, so the response is run through the
+    same ``as_dict``-aware JSON encoder the websocket API uses for service
+    responses, yielding the exact wire shape main rebuilds from.
+    """
+    if not result:
+        return {}
+    return json_loads(json_bytes(result))
 
 
 def _entry_from_proto(msg: pb.EntrySetup) -> ConfigEntry:
