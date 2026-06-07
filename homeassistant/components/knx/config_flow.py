@@ -50,6 +50,7 @@ from .const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
@@ -80,6 +81,14 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
     telegram_db_retention_days=KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     telegram_db_load_hours=KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     telegram_db_path=KNX_TELEGRAM_DB_PATH_DEFAULT,
+)
+
+CONF_OPTIONS: Final = (
+    CONF_KNX_STATE_UPDATER,
+    CONF_KNX_RATE_LIMIT,
+    CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+    CONF_KNX_TELEGRAM_DB_PATH,
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
@@ -186,9 +195,11 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         title = self.new_title or f"KNX {self.new_entry_data[CONF_KNX_CONNECTION_TYPE]}"
+        entry_data = DEFAULT_ENTRY_DATA | self.new_entry_data
         return self.async_create_entry(
             title=title,
-            data=DEFAULT_ENTRY_DATA | self.new_entry_data,
+            data={k: v for k, v in entry_data.items() if k not in CONF_OPTIONS},
+            options={k: v for k, v in entry_data.items() if k in CONF_OPTIONS},
         )
 
     async def async_step_user(
@@ -921,19 +932,16 @@ class KNXOptionsFlow(OptionsFlowWithReload):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize KNX options flow."""
-        self.initial_data = dict(config_entry.data)
+        self.initial_data = dict(config_entry.options)
         self.new_entry_data: KNXConfigEntryData = {}
 
     @callback
     def finish_flow(self) -> ConfigFlowResult:
         """Update the ConfigEntry and finish the flow."""
-        new_data = self.initial_data | self.new_entry_data
-
-        self.hass.config_entries.async_update_entry(
-            self.config_entry,
-            data=new_data,
+        return self.async_create_entry(
+            title="",
+            data=self.initial_data | self.new_entry_data,
         )
-        return self.async_create_entry(title="", data={})
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

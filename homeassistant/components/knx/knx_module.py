@@ -85,7 +85,7 @@ class KNXModule:
 
         default_state_updater = (
             TrackerOptions(tracker_type=StateTrackerType.EXPIRE, update_interval_min=60)
-            if self.entry.data[CONF_KNX_STATE_UPDATER]
+            if self.entry.options[CONF_KNX_STATE_UPDATER]
             else TrackerOptions(
                 tracker_type=StateTrackerType.INIT, update_interval_min=60
             )
@@ -93,7 +93,7 @@ class KNXModule:
         self.xknx = XKNX(
             address_format=self.project.get_address_format(),
             connection_config=self.connection_config(),
-            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
+            rate_limit=self.entry.options[CONF_KNX_RATE_LIMIT],
             state_updater=default_state_updater,
         )
         self.xknx.connection_manager.register_connection_state_changed_cb(
@@ -103,7 +103,7 @@ class KNXModule:
             hass=hass,
             xknx=self.xknx,
             project=self.project,
-            config=cast(KNXConfigEntryData, entry.data),
+            config=cast(KNXConfigEntryData, entry.options),
         )
         self.interface_device = KNXInterfaceDevice(
             hass=hass, entry=entry, xknx=self.xknx

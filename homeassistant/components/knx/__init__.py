@@ -18,8 +18,12 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_KNX_DEFAULT_RATE_LIMIT,
+    CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_EXPOSE,
     CONF_KNX_KNXKEY_FILENAME,
+    CONF_KNX_RATE_LIMIT,
+    CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
     CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
@@ -168,16 +172,32 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.version == 1:
         new_data = {**entry.data}
+        new_options = {**entry.options}
         new_data.pop("telegram_log_size", None)
-        new_data.setdefault(
+
+        for key in (
+            CONF_KNX_STATE_UPDATER,
+            CONF_KNX_RATE_LIMIT,
+            CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+            CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+            CONF_KNX_TELEGRAM_DB_PATH,
+        ):
+            if key in new_data:
+                new_options[key] = new_data.pop(key)
+
+        new_options.setdefault(
             CONF_KNX_TELEGRAM_DB_RETENTION_DAYS, KNX_TELEGRAM_DB_RETENTION_DEFAULT
         )
-        new_data.setdefault(
+        new_options.setdefault(
             CONF_KNX_TELEGRAM_DB_LOAD_HOURS, KNX_TELEGRAM_LOAD_HOURS_DEFAULT
         )
-        new_data.setdefault(CONF_KNX_TELEGRAM_DB_PATH, KNX_TELEGRAM_DB_PATH_DEFAULT)
+        new_options.setdefault(CONF_KNX_TELEGRAM_DB_PATH, KNX_TELEGRAM_DB_PATH_DEFAULT)
+        new_options.setdefault(CONF_KNX_STATE_UPDATER, CONF_KNX_DEFAULT_STATE_UPDATER)
+        new_options.setdefault(CONF_KNX_RATE_LIMIT, CONF_KNX_DEFAULT_RATE_LIMIT)
 
-        hass.config_entries.async_update_entry(entry, data=new_data, version=2)
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, options=new_options, version=2
+        )
         _LOGGER.info("Migration to version 2 successful")
 
     return True

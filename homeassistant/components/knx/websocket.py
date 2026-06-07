@@ -313,7 +313,9 @@ async def ws_group_monitor_info(
     msg: dict,
 ) -> None:
     """Handle get info command of group monitor."""
-    load_hours = knx.entry.data[CONF_KNX_TELEGRAM_DB_LOAD_HOURS]
+    load_hours = knx.entry.options.get(
+        CONF_KNX_TELEGRAM_DB_LOAD_HOURS, KNX_TELEGRAM_LOAD_HOURS_DEFAULT
+    )
     start_time = dt_util.now() - timedelta(hours=load_hours)
 
     query = TelegramQuery(start_time=start_time, limit=10_000, order_descending=True)
@@ -396,7 +398,7 @@ async def ws_query_telegrams(
     """Handle query telegrams command."""
     start_time = msg.get("start_time")
     if start_time is None:
-        load_hours = knx.entry.data.get(
+        load_hours = knx.entry.options.get(
             CONF_KNX_TELEGRAM_DB_LOAD_HOURS, KNX_TELEGRAM_LOAD_HOURS_DEFAULT
         )
         start_time = dt_util.now() - timedelta(hours=load_hours)

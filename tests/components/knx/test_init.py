@@ -377,6 +377,8 @@ async def test_async_migrate_entry_v1_to_v2(hass: HomeAssistant) -> None:
         data={
             "telegram_log_size": 1000,
             "other_setting": "some_value",
+            CONF_KNX_STATE_UPDATER: True,
+            CONF_KNX_RATE_LIMIT: 30,
         },
     )
     config_entry.add_to_hass(hass)
@@ -388,15 +390,25 @@ async def test_async_migrate_entry_v1_to_v2(hass: HomeAssistant) -> None:
 
     assert config_entry.version == 2
     assert "telegram_log_size" not in config_entry.data
+    assert CONF_KNX_STATE_UPDATER not in config_entry.data
+    assert CONF_KNX_RATE_LIMIT not in config_entry.data
+    assert CONF_KNX_TELEGRAM_DB_RETENTION_DAYS not in config_entry.data
+    assert CONF_KNX_TELEGRAM_DB_LOAD_HOURS not in config_entry.data
+    assert CONF_KNX_TELEGRAM_DB_PATH not in config_entry.data
+
+    assert config_entry.options[CONF_KNX_STATE_UPDATER] is True
+    assert config_entry.options[CONF_KNX_RATE_LIMIT] == 30
     assert (
-        config_entry.data[CONF_KNX_TELEGRAM_DB_RETENTION_DAYS]
+        config_entry.options[CONF_KNX_TELEGRAM_DB_RETENTION_DAYS]
         == KNX_TELEGRAM_DB_RETENTION_DEFAULT
     )
     assert (
-        config_entry.data[CONF_KNX_TELEGRAM_DB_LOAD_HOURS]
+        config_entry.options[CONF_KNX_TELEGRAM_DB_LOAD_HOURS]
         == KNX_TELEGRAM_LOAD_HOURS_DEFAULT
     )
-    assert config_entry.data[CONF_KNX_TELEGRAM_DB_PATH] == KNX_TELEGRAM_DB_PATH_DEFAULT
+    assert (
+        config_entry.options[CONF_KNX_TELEGRAM_DB_PATH] == KNX_TELEGRAM_DB_PATH_DEFAULT
+    )
     assert config_entry.data["other_setting"] == "some_value"
 
 
