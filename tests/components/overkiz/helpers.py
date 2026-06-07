@@ -37,6 +37,7 @@ def build_event(
     device_states: list[dict[str, Any]] | None = None,
     exec_id: str | None = None,
     new_state: str | None = None,
+    **extra_kwargs: Any,
 ) -> Event:
     """Create a pyoverkiz event object with a test-friendly interface."""
     return Event(
@@ -45,6 +46,7 @@ def build_event(
         device_states=device_states,
         exec_id=exec_id,
         new_state=new_state,
+        **extra_kwargs,
     )
 
 
