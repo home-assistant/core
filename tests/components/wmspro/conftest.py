@@ -1,33 +1,60 @@
 """Common fixtures for the wmspro tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+
+from . import remove_config_entry
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+async def mock_config_entry(hass: HomeAssistant) -> AsyncGenerator[MockConfigEntry]:
     """Return a dummy config entry."""
-    return MockConfigEntry(
+    mock_config_entry = MockConfigEntry(
         title="WebControl",
         domain=DOMAIN,
         data={CONF_HOST: "webcontrol"},
     )
+    yield mock_config_entry
+
+    # cleanup after test if not already done by test itself
+    if hass.config_entries.async_get_entry(mock_config_entry.entry_id):
+        await remove_config_entry(hass, mock_config_entry)
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
+async def mock_setup_entry() -> AsyncGenerator[AsyncMock]:
     """Override async_setup_entry."""
+
+    hass: HomeAssistant | None = None
+    config_entry: MockConfigEntry | None = None
+
+    def fake_setup_entry(local_hass, local_entry):
+        nonlocal hass, config_entry
+        hass = local_hass
+        config_entry = local_entry
+        return True
+
     with patch(
-        "homeassistant.components.wmspro.async_setup_entry", return_value=True
+        "homeassistant.components.wmspro.async_setup_entry",
+        wraps=fake_setup_entry,
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+    # cleanup after test if not already done by test itself
+    if (
+        hass
+        and config_entry
+        and hass.config_entries.async_get_entry(config_entry.entry_id)
+    ):
+        await remove_config_entry(hass, config_entry)
 
 
 @pytest.fixture
@@ -207,7 +234,7 @@ def mock_dest_refresh() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_action_call() -> Generator[AsyncMock]:
+def mock_action_call() -> Generator[Callable]:
     """Override Action.__call__."""
 
     async def fake_call(self, **kwargs):
@@ -221,7 +248,7 @@ def mock_action_call() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_action_list_call() -> Generator[AsyncMock]:
+def mock_action_list_call() -> Generator[Callable]:
     """Override ActionList.__call__."""
 
     async def fake_list_call(self, **kwargs):

@@ -394,3 +394,9 @@ async def test_config_flow_multiple_entries(
         CONF_HOST: "5.6.7.8",
     }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        assert entry.state is ConfigEntryState.LOADED
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.config_entries.async_remove(entry.entry_id)
+        await hass.async_block_till_done()
