@@ -129,7 +129,7 @@ def _make_handler(
                 stderr_data,
             )
         if process.returncode != 0:
-            _LOGGER.exception(
+            _LOGGER.error(
                 "Error running command: `%s`, return code: %s", cmd, process.returncode
             )
 

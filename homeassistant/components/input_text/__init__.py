@@ -70,7 +70,7 @@ def _cv_input_text(config: dict[str, Any]) -> dict[str, Any]:
     maximum: int = config[CONF_MAX]
     if minimum > maximum:
         raise vol.Invalid(
-            f"Max len ({minimum}) is not greater than min len ({maximum})"
+            f"Max len ({maximum}) must not be smaller than min len ({minimum})"
         )
     state: str | None = config.get(CONF_INITIAL)
     if state is not None and (len(state) < minimum or len(state) > maximum):

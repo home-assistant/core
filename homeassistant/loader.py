@@ -53,7 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 
 #
 # Integration.get_component will check preload platforms and
-# try to import the code to avoid a thundering heard of import
+# try to import the code to avoid a thundering herd of import
 # executor jobs later in the startup process.
 #
 # default platforms are prepopulated in this list to ensure that

@@ -53,7 +53,7 @@ def _cv_input_number(cfg):
     maximum = cfg.get(CONF_MAX)
     if minimum >= maximum:
         raise vol.Invalid(
-            f"Maximum ({minimum}) is not greater than minimum ({maximum})"
+            f"Maximum ({maximum}) must be greater than minimum ({minimum})"
         )
     state = cfg.get(CONF_INITIAL)
     if state is not None and (state < minimum or state > maximum):

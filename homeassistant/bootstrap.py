@@ -35,7 +35,7 @@ from . import (
 # Pre-import frontend deps which have no requirements here to avoid
 # loading them at run time and blocking the event loop. We do this ahead
 # of time so that we do not have to flag frontend deps with `import_executor`
-# as it would create a thundering heard of executor jobs trying to import
+# as it would create a thundering herd of executor jobs trying to import
 # frontend deps at the same time.
 from .components import (
     api as api_pre_import,  # noqa: F401
