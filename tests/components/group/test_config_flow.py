@@ -98,7 +98,7 @@ async def test_config_flow(
             result["flow_id"],
             {
                 "name": "Living Room",
-                "entities": members,
+                "entities": {"entity_id": members},
                 **extra_input,
             },
         )
@@ -108,7 +108,7 @@ async def test_config_flow(
     assert result["title"] == "Living Room"
     assert result["data"] == {}
     assert result["options"] == {
-        "entities": members,
+        "entities": {"entity_id": members},
         "group_type": group_type,
         "hide_members": False,
         "name": "Living Room",
@@ -119,7 +119,7 @@ async def test_config_flow(
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
     assert config_entry.options == {
-        "entities": members,
+        "entities": {"entity_id": members},
         "group_type": group_type,
         "hide_members": False,
         "name": "Living Room",
@@ -192,7 +192,7 @@ async def test_config_flow_hides_members(
         result["flow_id"],
         {
             "name": "Living Room",
-            "entities": members,
+            "entities": {"entity_id": members},
             "hide_members": hide_members,
             **extra_input,
         },
@@ -232,7 +232,7 @@ async def test_options(
 ) -> None:
     """Test reconfiguring."""
     members1 = [f"{group_type}.one", f"{group_type}.two"]
-    members2 = [f"{group_type}.four", f"{group_type}.five"]
+    members2 = [f"{group_type}.five", f"{group_type}.four"]
 
     for member in members1:
         hass.states.async_set(member, member_state, {})
@@ -243,12 +243,13 @@ async def test_options(
         data={},
         domain=DOMAIN,
         options={
-            "entities": members1,
+            "entities": {"entity_id": members1},
             "group_type": group_type,
             "name": "Bed Room",
             **extra_options,
         },
         title="Bed Room",
+        version=2,
     )
     group_config_entry.add_to_hass(hass)
 
@@ -263,21 +264,18 @@ async def test_options(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == group_type
-    assert (
-        get_schema_suggested_value(result["data_schema"].schema, "entities") == members1
-    )
+    assert get_schema_suggested_value(result["data_schema"].schema, "entities") == {
+        "entity_id": members1
+    }
     assert "name" not in result["data_schema"].schema
-    assert result["data_schema"].schema["entities"].config["exclude_entities"] == [
-        f"{group_type}.bed_room"
-    ]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"entities": members2, **options_options},
+        user_input={"entities": {"entity_id": members2}, **options_options},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "entities": members2,
+        "entities": {"entity_id": members2},
         "group_type": group_type,
         "hide_members": False,
         "name": "Bed Room",
@@ -285,7 +283,7 @@ async def test_options(
     }
     assert config_entry.data == {}
     assert config_entry.options == {
-        "entities": members2,
+        "entities": {"entity_id": members2},
         "group_type": group_type,
         "hide_members": False,
         "name": "Bed Room",
@@ -336,12 +334,13 @@ async def test_all_options(
         data={},
         domain=DOMAIN,
         options={
-            "entities": members1,
+            "entities": {"entity_id": members1},
             "group_type": group_type,
             "name": "Bed Room",
             **extra_options,
         },
         title="Bed Room",
+        version=2,
     )
     group_config_entry.add_to_hass(hass)
 
@@ -359,12 +358,12 @@ async def test_all_options(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "entities": members2,
+            "entities": {"entity_id": members2},
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "entities": members2,
+        "entities": {"entity_id": members2},
         "group_type": group_type,
         "hide_members": False,
         "name": "Bed Room",
@@ -372,7 +371,7 @@ async def test_all_options(
     }
     assert config_entry.data == {}
     assert config_entry.options == {
-        "entities": members2,
+        "entities": {"entity_id": members2},
         "group_type": group_type,
         "hide_members": False,
         "name": "Bed Room",
@@ -439,13 +438,14 @@ async def test_options_flow_hides_members(
         data={},
         domain=DOMAIN,
         options={
-            "entities": members,
+            "entities": {"entity_id": members},
             "group_type": group_type,
             "hide_members": False,
             "name": "Bed Room",
             **extra_input,
         },
         title="Bed Room",
+        version=2,
     )
     group_config_entry.add_to_hass(hass)
 
@@ -458,7 +458,7 @@ async def test_options_flow_hides_members(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "entities": members,
+            "entities": {"entity_id": members},
             "hide_members": hide_members,
         },
     )
@@ -539,7 +539,10 @@ async def test_config_flow_preview(
             "type": "group/start_preview",
             "flow_id": result["flow_id"],
             "flow_type": "config_flow",
-            "user_input": {"name": "My group", "entities": input_entities}
+            "user_input": {
+                "name": "My group",
+                "entities": {"entity_id": input_entities},
+            }
             | extra_user_input,
         }
     )
@@ -571,7 +574,10 @@ async def test_config_flow_preview(
             "type": "group/start_preview",
             "flow_id": result["flow_id"],
             "flow_type": "config_flow",
-            "user_input": {"name": "My group", "entities": input_entities}
+            "user_input": {
+                "name": "My group",
+                "entities": {"entity_id": input_entities},
+            }
             | extra_user_input,
         }
     )
@@ -642,13 +648,14 @@ async def test_option_flow_preview(
         data={},
         domain=DOMAIN,
         options={
-            "entities": input_entities,
+            "entities": {"entity_id": input_entities},
             "group_type": domain,
             "hide_members": False,
             "name": "My group",
         }
         | extra_config_flow_data,
         title="My group",
+        version=2,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -669,7 +676,8 @@ async def test_option_flow_preview(
             "type": "group/start_preview",
             "flow_id": result["flow_id"],
             "flow_type": "options_flow",
-            "user_input": {"entities": input_entities} | extra_user_input,
+            "user_input": {"entities": {"entity_id": input_entities}}
+            | extra_user_input,
         }
     )
     msg = await client.receive_json()
@@ -699,7 +707,7 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         data={},
         domain=DOMAIN,
         options={
-            "entities": input_entities,
+            "entities": {"entity_id": input_entities},
             "group_type": "sensor",
             "hide_members": False,
             "name": "My sensor group",

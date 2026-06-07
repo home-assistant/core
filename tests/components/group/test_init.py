@@ -1973,12 +1973,13 @@ async def test_setup_and_remove_config_entry(
         data={},
         domain=group.DOMAIN,
         options={
-            "entities": members1,
+            "entities": {"entity_id": members1},
             "group_type": group_type,
             "name": "Bed Room",
             **extra_options,
         },
         title="Bed Room",
+        version=2,
     )
     group_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(group_config_entry.entry_id)
@@ -2062,13 +2063,14 @@ async def test_unhide_members_on_remove(
         data={},
         domain=group.DOMAIN,
         options={
-            "entities": members,
+            "entities": {"entity_id": members},
             "group_type": group_type,
             "hide_members": hide_members,
             "name": "Bed Room",
             **extra_options,
         },
         title="Bed Room",
+        version=2,
     )
     group_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(group_config_entry.entry_id)
