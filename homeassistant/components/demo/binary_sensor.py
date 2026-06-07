@@ -23,13 +23,11 @@ async def async_setup_entry(
         [
             DemoBinarySensor(
                 "binary_1",
-                "binary_1",
                 "Basement Floor Wet",
                 False,
                 BinarySensorDeviceClass.MOISTURE,
             ),
             DemoBinarySensor(
-                "binary_2",
                 "binary_2",
                 "Movement Backyard",
                 True,
@@ -37,12 +35,12 @@ async def async_setup_entry(
             ),
             DemoBinarySensor(
                 "binary_3",
-                "sensor_1",
                 "Outside Temperature",
                 False,
                 BinarySensorDeviceClass.BATTERY_CHARGING,
-                EntityCategory.DIAGNOSTIC,
-                "Battery Charging",
+                device_id="sensor_1",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_name="Battery Charging",
             ),
         ]
     )
@@ -58,10 +56,10 @@ class DemoBinarySensor(BinarySensorEntity):
     def __init__(
         self,
         unique_id: str,
-        device_id: str,
         device_name: str,
         state: bool,
         device_class: BinarySensorDeviceClass,
+        device_id: str | None = None,
         entity_category: EntityCategory | None = None,
         entity_name: str | None = None,
     ) -> None:
@@ -72,7 +70,7 @@ class DemoBinarySensor(BinarySensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, device_id)
+                (DOMAIN, device_id or unique_id)
             },
             name=device_name,
         )
