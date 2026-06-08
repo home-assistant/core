@@ -838,7 +838,7 @@ devolo-home-control-api==0.19.0
 devolo-plc-api==1.5.1
 
 # homeassistant.components.chacon_dio
-dio-chacon-wifi-api==1.2.2
+dio-chacon-wifi-api==1.3.0
 
 # homeassistant.components.directv
 directv==0.4.0
