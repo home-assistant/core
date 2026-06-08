@@ -943,6 +943,24 @@ async def test_miscale_s400_packet2(hass: HomeAssistant) -> None:
     assert impedance_high_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ohm"
     assert impedance_high_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
+    profile_id_sensor = hass.states.get("sensor.body_composition_scale_beef_profile_id")
+    profile_id_sensor_attr = profile_id_sensor.attributes
+    assert profile_id_sensor.state == "1"
+    assert (
+        profile_id_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Profile ID"
+    )
+
+    stabilized_binary_sensor = hass.states.get(
+        "binary_sensor.body_composition_scale_beef_stabilized"
+    )
+    stabilized_binary_sensor_attr = stabilized_binary_sensor.attributes
+    assert stabilized_binary_sensor.state == "on"
+    assert (
+        stabilized_binary_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Stabilized"
+    )
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
