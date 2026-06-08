@@ -174,7 +174,6 @@ class UnifiSpeedtestButton(ButtonEntity):
     """Button to trigger a UniFi speedtest."""
 
     _attr_has_entity_name = True
-    _attr_device_class = ButtonDeviceClass.UPDATE
     _attr_entity_category = EntityCategory.CONFIG
     _attr_name = "Speedtest"
 

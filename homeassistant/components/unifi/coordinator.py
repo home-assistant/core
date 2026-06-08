@@ -59,7 +59,7 @@ class UnifiSpeedtestCoordinator(
         super().__init__(
             hass,
             LOGGER,
-            name="Unifi Speedtest",
+            name="UniFi Speedtest",
             update_interval=hub.config.option_speedtest_interval,
             always_update=False,
             config_entry=hub.config.entry,

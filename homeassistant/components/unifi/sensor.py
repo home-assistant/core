@@ -784,7 +784,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 class UnifiSpeedtestSensorEntityDescription(SensorEntityDescription):
     """Class describing UniFi speedtest sensor entity."""
 
-    value_fn: Callable[[SpeedtestStatus], StateType]
+    value_fn: Callable[[SpeedtestStatus], StateType | datetime]
 
 
 SPEEDTEST_SENSORS: tuple[UnifiSpeedtestSensorEntityDescription, ...] = (
@@ -815,6 +815,17 @@ SPEEDTEST_SENSORS: tuple[UnifiSpeedtestSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         value_fn=lambda status: status.ping,
     ),
+    UnifiSpeedtestSensorEntityDescription(
+        key="last_run",
+        name="Speedtest Last Run",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: (
+            dt_util.utc_from_timestamp(status.timestamp / 1000)
+            if status.timestamp > 0
+            else None
+        ),
+    ),
 )
 
 
@@ -837,12 +848,22 @@ class UnifiSpeedtestSensor(CoordinatorEntity[UnifiSpeedtestCoordinator], SensorE
         self.hub = coordinator.hub
         self._attr_device_info = self.hub.device_info
         self._attr_unique_id = f"speedtest_{interface_name}_{description.key}-{self.hub.config.entry.unique_id}"
-        # Assuming description.name is something like "Speedtest Download"
-        # we want "Speedtest eth0 Download"
-        self._attr_name = f"Speedtest {interface_name} {description.key.capitalize()}"
+        # Append the interface to the entity name
+        self._attr_name = (
+            f"{description.name} ({interface_name})" if description.name else None
+        )
 
     @property
-    def native_value(self) -> StateType:
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not self.coordinator.last_update_success:
+            return False
+        if self.coordinator.data is None:
+            return False
+        return self.interface_name in self.coordinator.data
+
+    @property
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             return None

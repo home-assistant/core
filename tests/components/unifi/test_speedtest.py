@@ -46,6 +46,10 @@ async def test_speedtest_sensors(
     )
     assert hass.states.get("sensor.unifi_network_speedtest_eth0_upload").state == "50.0"
     assert hass.states.get("sensor.unifi_network_speedtest_eth0_ping").state == "10.0"
+    assert (
+        hass.states.get("sensor.unifi_network_speedtest_eth0_last_run").state
+        == "2020-09-13T12:26:40+00:00"
+    )
 
     # Verify that sensors are created based on the initial fetch for eth2
     assert (
@@ -55,6 +59,10 @@ async def test_speedtest_sensors(
         hass.states.get("sensor.unifi_network_speedtest_eth2_upload").state == "100.0"
     )
     assert hass.states.get("sensor.unifi_network_speedtest_eth2_ping").state == "5.0"
+    assert (
+        hass.states.get("sensor.unifi_network_speedtest_eth2_last_run").state
+        == "2020-09-13T12:26:40+00:00"
+    )
 
 
 @pytest.mark.usefixtures("config_entry_setup")
@@ -152,6 +160,10 @@ async def test_speedtest_button(
     )
     assert hass.states.get("sensor.unifi_network_speedtest_eth0_upload").state == "60.0"
     assert hass.states.get("sensor.unifi_network_speedtest_eth0_ping").state == "9.0"
+    assert (
+        hass.states.get("sensor.unifi_network_speedtest_eth0_last_run").state
+        == "2020-09-13T12:27:10+00:00"
+    )
 
     assert (
         hass.states.get("sensor.unifi_network_speedtest_eth2_download").state == "220.0"
@@ -160,6 +172,10 @@ async def test_speedtest_button(
         hass.states.get("sensor.unifi_network_speedtest_eth2_upload").state == "120.0"
     )
     assert hass.states.get("sensor.unifi_network_speedtest_eth2_ping").state == "4.0"
+    assert (
+        hass.states.get("sensor.unifi_network_speedtest_eth2_last_run").state
+        == "2020-09-13T12:27:10+00:00"
+    )
 
 
 @pytest.mark.usefixtures("config_entry_setup")
