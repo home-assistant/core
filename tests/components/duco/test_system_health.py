@@ -79,5 +79,8 @@ async def test_system_health_multiple_loaded_entries(
     info = await get_system_health_info(hass, DOMAIN)
 
     assert info["loaded_entries"] == 2
-    assert await info["write_requests_remaining (SILENT_CONNECT: 192.168.1.100)"] == 100
-    assert await info["write_requests_remaining (SECOND_BOX: 192.168.1.101)"] == 75
+    assert (
+        await info["write_requests_remaining (SILENT_CONNECT: aa:bb:cc:dd:ee:ff)"]
+        == 100
+    )
+    assert await info["write_requests_remaining (SECOND_BOX: aa:bb:cc:dd:ee:00)"] == 75
