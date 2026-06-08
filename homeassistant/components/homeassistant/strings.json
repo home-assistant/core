@@ -135,6 +135,10 @@
       "description": "The {integration_title} integration is being removed as it depends on system packages that can only be installed on systems running a deprecated architecture. To resolve this, remove the {domain} entry from your configuration.yaml file and restart Home Assistant.",
       "title": "The {integration_title} integration is being removed"
     },
+    "deprecated_trigger_behavior": {
+      "description": "An automation, script or template entity uses the trigger behavior option `{deprecated_behavior}`, which has been renamed to `{new_behavior}`. The old value still works for now, but support for it will be removed in a future release.\n\nTo fix this issue, edit the affected automations and scripts and change the behavior option from `{deprecated_behavior}` to `{new_behavior}`, then restart Home Assistant.",
+      "title": "Deprecated trigger behavior option in use"
+    },
     "deprecated_yaml": {
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
       "title": "The {integration_title} YAML configuration is being removed"
