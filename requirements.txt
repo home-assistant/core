@@ -7,7 +7,7 @@ aiodns==4.0.4
 aiogithubapi==26.0.0
 aiohttp-asyncmdnsresolver==0.2.0
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.14.0
+aiohttp==3.14.1
 aiohttp_cors==0.8.1
 aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
