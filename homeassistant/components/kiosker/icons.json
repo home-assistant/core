@@ -50,8 +50,35 @@
       "ambient_light": {
         "default": "mdi:brightness-6"
       },
+      "blackout_background": {
+        "default": "mdi:palette"
+      },
+      "blackout_button_background": {
+        "default": "mdi:palette"
+      },
+      "blackout_button_foreground": {
+        "default": "mdi:palette-outline"
+      },
+      "blackout_button_text": {
+        "default": "mdi:button-cursor"
+      },
+      "blackout_expire": {
+        "default": "mdi:timer-outline"
+      },
+      "blackout_foreground": {
+        "default": "mdi:palette-outline"
+      },
+      "blackout_icon": {
+        "default": "mdi:emoticon-outline"
+      },
+      "blackout_sound": {
+        "default": "mdi:music-note"
+      },
       "blackout_state": {
         "default": "mdi:monitor-off"
+      },
+      "blackout_text": {
+        "default": "mdi:text"
       },
       "last_interaction": {
         "default": "mdi:gesture-tap"
