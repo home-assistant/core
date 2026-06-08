@@ -56,6 +56,17 @@ AIRPURIFIER_TABLE_SWITCHES: tuple[SwitchbotSwitchEntityDescription, ...] = (
     ),
 )
 
+CIRCULATOR_FAN_PRO_SWITCHES: tuple[SwitchbotSwitchEntityDescription, ...] = (
+    SwitchbotSwitchEntityDescription(
+        key="vertical_oscillation",
+        translation_key="vertical_oscillation",
+        device_class=SwitchDeviceClass.SWITCH,
+        is_on_fn=lambda device: device.get_vertical_oscillating_state(),
+        turn_on_fn=lambda device: device.set_vertical_oscillation(True),
+        turn_off_fn=lambda device: device.set_vertical_oscillation(False),
+    ),
+)
+
 PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,6 +105,11 @@ async def async_setup_entry(
                 SwitchbotFanHorizontalOscillationSwitch(coordinator),
                 SwitchbotFanVerticalOscillationSwitch(coordinator),
             ]
+        )
+    elif isinstance(coordinator.device, switchbot.SwitchbotCirculatorFanPro):
+        async_add_entities(
+            SwitchbotGenericSwitch(coordinator, desc)
+            for desc in CIRCULATOR_FAN_PRO_SWITCHES
         )
     else:
         async_add_entities([SwitchBotSwitch(coordinator)])

@@ -589,6 +589,33 @@ CIRCULATOR_FAN_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
+CIRCULATOR_FAN_PRO_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Circulator Fan Pro",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\xfd\xc0\xb1\x9a\xd9\x98\x0b\x00\x00\x00\x00\x00\x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00Y\x00\x11\xb3@"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Circulator Fan Pro",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\xfd\xc0\xb1\x9a\xd9\x98\x0b\x00\x00\x00\x00\x00\x00",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00Y\x00\x11\xb3@"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Circulator Fan Pro"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
 K20_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="K20 Vacuum",
     manufacturer_data={
