@@ -1,9 +1,16 @@
 """Common fixtures for the Hypontech Cloud tests."""
 
 from collections.abc import Generator
+from typing import Any, cast
 from unittest.mock import AsyncMock, patch
 
-from hyponcloud import AdminInfo, InverterData, OverviewData, PlantData
+from hyponcloud import (
+    AdminInfo,
+    InverterData,
+    OverviewData,
+    PlantData,
+    PlantMonitorData,
+)
 import pytest
 
 from homeassistant.components.hypontech.const import DOMAIN
@@ -56,6 +63,16 @@ def load_inverters_fixture() -> list[InverterData]:
 
 
 @pytest.fixture
+def load_monitor_fixture() -> dict[str, PlantMonitorData]:
+    """Load plant monitor fixture data."""
+    data = load_json_object_fixture("monitor.json", DOMAIN)
+    return {
+        plant_id: PlantMonitorData.from_dict(cast(dict[str, Any], monitor))
+        for plant_id, monitor in data.items()
+    }
+
+
+@pytest.fixture
 def load_admin_info_fixture() -> AdminInfo:
     """Load admin info fixture data."""
     data = load_json_object_fixture("admin_info.json", DOMAIN)
@@ -73,6 +90,7 @@ def mock_hyponcloud(
     load_plant_list_fixture: list[PlantData],
     load_inverters_fixture: list[InverterData],
     load_admin_info_fixture: AdminInfo,
+    load_monitor_fixture: dict[str, PlantMonitorData],
 ) -> Generator[AsyncMock]:
     """Mock HyponCloud."""
     with (
@@ -89,4 +107,7 @@ def mock_hyponcloud(
         mock_client.get_list.return_value = load_plant_list_fixture
         mock_client.get_overview.return_value = load_overview_fixture
         mock_client.get_inverters.return_value = load_inverters_fixture
+        mock_client.get_monitor.side_effect = lambda plant_id, *args, **kwargs: (
+            load_monitor_fixture[plant_id]
+        )
         yield mock_client
