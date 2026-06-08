@@ -18,6 +18,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN, HARDWARE_ID
 
@@ -54,7 +55,10 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         # Use a dedicated session with a real CookieJar.
         # The shared HA aiohttp session may drop OAuth cookies between steps,
         # causing silent 2FA failures on some Blink account configurations.
-        self._blink_session = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True))
+        # async_create_clientsession handles lifecycle management automatically.
+        self._blink_session = async_create_clientsession(
+            self.hass, cookie_jar=aiohttp.CookieJar(unsafe=True)
+        )
         self.auth = Auth(
             {**user_input, "hardware_id": HARDWARE_ID},
             no_prompt=True,
@@ -197,9 +201,6 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     def _async_finish_flow(self) -> ConfigFlowResult:
         """Finish with setup."""
         assert self.auth
-        # Close the dedicated OAuth session; blinkpy will use its own session going forward.
-        if hasattr(self, "_blink_session") and not self._blink_session.closed:
-            self.hass.async_create_task(self._blink_session.close())
 
         if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
             return self.async_update_reload_and_abort(
