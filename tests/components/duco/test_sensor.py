@@ -17,7 +17,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.duco.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN, SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -210,6 +210,56 @@ async def test_deregistered_node_removes_device(
         identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_2")}
     )
     assert device is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_box_node_not_removed_on_transient_incomplete_node_list(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test BOX-linked entities survive a transient node list without node 1."""
+    await setup_platform_integration(
+        hass, mock_config_entry, [Platform.FAN, Platform.SENSOR]
+    )
+
+    box_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_{BOX_NODE_ID}")}
+    )
+    assert box_device is not None
+    assert hass.states.get("fan.living") is not None
+
+    mock_duco_client.async_get_nodes.return_value = [
+        node for node in mock_sensor_nodes if node.node_id != BOX_NODE_ID
+    ]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_{BOX_NODE_ID}")}
+        )
+        is not None
+    )
+    state = hass.states.get("fan.living")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("fan.living")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
