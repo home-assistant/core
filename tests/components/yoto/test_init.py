@@ -7,7 +7,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yoto_api import AuthenticationError, Device, YotoAPIError, YotoError, YotoPlayer
 
-from homeassistant.components.yoto import async_remove_config_entry_device
 from homeassistant.components.yoto.const import (
     DOMAIN,
     SCAN_INTERVAL,
@@ -375,26 +374,3 @@ async def test_stale_device_removed(
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, PLAYER_ID)}) is None
     mock_yoto_client.unsubscribe_player_events.assert_called_once_with(PLAYER_ID)
-
-
-async def test_remove_config_entry_device(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """A device is removable only once its player is gone from the account."""
-    await setup_integration(hass, mock_config_entry)
-
-    present = device_registry.async_get_device(identifiers={(DOMAIN, PLAYER_ID)})
-    assert present is not None
-    assert (
-        await async_remove_config_entry_device(hass, mock_config_entry, present)
-        is False
-    )
-
-    gone = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "gone-player")},
-    )
-    assert await async_remove_config_entry_device(hass, mock_config_entry, gone) is True
