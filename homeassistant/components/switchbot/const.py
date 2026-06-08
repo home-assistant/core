@@ -56,6 +56,7 @@ class SupportedModels(StrEnum):
     STRIP_LIGHT_3 = "strip_light_3"
     RGBICWW_STRIP_LIGHT = "rgbicww_strip_light"
     RGBICWW_FLOOR_LAMP = "rgbicww_floor_lamp"
+    RGBICWW_CEILING_LIGHT = "rgbicww_ceiling_light"
     PERMANENT_OUTDOOR_LIGHT = "permanent_outdoor_light"
     PLUG_MINI_EU = "plug_mini_eu"
     RELAY_SWITCH_2PM = "relay_switch_2pm"
@@ -108,6 +109,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.STRIP_LIGHT_3: SupportedModels.STRIP_LIGHT_3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT: SupportedModels.RGBICWW_STRIP_LIGHT,
     SwitchbotModel.RGBICWW_FLOOR_LAMP: SupportedModels.RGBICWW_FLOOR_LAMP,
+    SwitchbotModel.RGBICWW_CEILING_LIGHT: SupportedModels.RGBICWW_CEILING_LIGHT,
     SwitchbotModel.PERMANENT_OUTDOOR_LIGHT: SupportedModels.PERMANENT_OUTDOOR_LIGHT,
     SwitchbotModel.PLUG_MINI_EU: SupportedModels.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM: SupportedModels.RELAY_SWITCH_2PM,
@@ -162,6 +164,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.STRIP_LIGHT_3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT,
     SwitchbotModel.RGBICWW_FLOOR_LAMP,
+    SwitchbotModel.RGBICWW_CEILING_LIGHT,
     SwitchbotModel.PERMANENT_OUTDOOR_LIGHT,
     SwitchbotModel.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM,
@@ -194,6 +197,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.STRIP_LIGHT_3: switchbot.SwitchbotStripLight3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT: switchbot.SwitchbotRgbicLight,
     SwitchbotModel.RGBICWW_FLOOR_LAMP: switchbot.SwitchbotRgbicLight,
+    SwitchbotModel.RGBICWW_CEILING_LIGHT: switchbot.SwitchbotRgbicwwCeilingLight,
     SwitchbotModel.PERMANENT_OUTDOOR_LIGHT: switchbot.SwitchbotPermanentOutdoorLight,
     SwitchbotModel.PLUG_MINI_EU: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
