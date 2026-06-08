@@ -13,6 +13,7 @@ from homeassistant.components.smtp.const import (
     CONF_SENDER_NAME,
     CONF_SERVER,
     DOMAIN,
+    SUBENTRY_TYPE_RECIPIENT,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, FlowType
 from homeassistant.const import (
@@ -194,6 +195,36 @@ async def test_form_errors(
         CONF_VERIFY_SSL: True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("smtp")
+async def test_form_recipient_already_configured(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort when subentry is already configured."""
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_RECIPIENT),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_NAME: "Rick Astley",
+            CONF_RECIPIENT: "recipient@example.com",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("smtp")
