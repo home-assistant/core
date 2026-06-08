@@ -871,6 +871,8 @@ async def test_miscale_s400_packet1(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_S400_SERVICE_INFO)
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 5
+
     impedance_low_sensor = hass.states.get(
         "sensor.body_composition_scale_beef_impedance_low"
     )
@@ -889,6 +891,23 @@ async def test_miscale_s400_packet1(hass: HomeAssistant) -> None:
     assert mass_sensor_attr[ATTR_FRIENDLY_NAME] == "Body Composition Scale BEEF Weight"
     assert mass_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
     assert mass_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    heart_rate_sensor = hass.states.get("sensor.body_composition_scale_beef_heart_rate")
+    heart_rate_sensor_attr = heart_rate_sensor.attributes
+    assert heart_rate_sensor.state == "92"
+    assert (
+        heart_rate_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Heart Rate"
+    )
+    assert heart_rate_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "bpm"
+
+    profile_id_sensor = hass.states.get("sensor.body_composition_scale_beef_profile_id")
+    profile_id_sensor_attr = profile_id_sensor.attributes
+    assert profile_id_sensor.state == "1"
+    assert (
+        profile_id_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Profile ID"
+    )
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -909,6 +928,8 @@ async def test_miscale_s400_packet2(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 0
     inject_bluetooth_service_info_bleak(hass, MISCALE_S400_PACKET2_SERVICE_INFO)
     await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
 
     impedance_high_sensor = hass.states.get(
         "sensor.body_composition_scale_beef_impedance_high"
