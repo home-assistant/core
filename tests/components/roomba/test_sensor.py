@@ -27,3 +27,22 @@ async def test_entities(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_not_ready_code(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+) -> None:
+    """Test the not ready code sensor reflects the reported notReady value."""
+    mock_roomba.master_state["state"]["reported"]["cleanMissionStatus"]["notReady"] = 68
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_roomba_not_ready_code")
+    assert state is not None
+    assert state.state == "68"
