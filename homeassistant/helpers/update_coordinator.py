@@ -678,6 +678,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             always_update=always_update,
         )
         self._save_delay = save_delay
+        self._save_pending = False
         # ``Store`` is bound to ``Mapping | Sequence``; ``_DataT`` is unbounded, so the
         # store is typed ``Any`` while the coordinator stays generic over ``_DataT``.
         self._store: Store[Any] = Store(hass, store_version, storage_key)
@@ -704,7 +705,18 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     @callback
     def _schedule_save(self) -> None:
         """Schedule saving the current data to storage."""
+        self._save_pending = True
         self._store.async_delay_save(lambda: self.data, self._save_delay)
+
+    async def async_shutdown(self) -> None:
+        """Cancel any scheduled call, and flush any pending save."""
+        await super().async_shutdown()
+        # Removal unloads the entry (awaiting this) before the REMOVED signal deletes
+        # the store. Flushing here writes the latest data and cancels the delayed-save
+        # timer, so it can't fire afterwards and recreate the just-deleted file.
+        if self._save_pending and self.data is not None:
+            self._save_pending = False
+            await self._store.async_save(self.data)
 
     @callback
     def _async_refresh_finished(self) -> None:
