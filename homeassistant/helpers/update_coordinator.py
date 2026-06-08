@@ -27,15 +27,20 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.util.dt import utcnow
+from homeassistant.util.hass_dict import HassKey
 
 from . import entity, event
 from .debounce import Debouncer
+from .dispatcher import async_dispatcher_connect
+from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _DataT = TypeVar("_DataT", default=dict[str, Any])
+
+_RESTORE_CLEANUP_KEY: HassKey[set[str]] = HassKey("restore_coordinator_cleanup")
 
 
 class UpdateFailed(HomeAssistantError):
@@ -631,6 +636,129 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         """Handle when a refresh has finished."""
         if self.last_update_success:
             self.last_update_success_time = utcnow()
+
+
+class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+    """DataUpdateCoordinator that persists ``data`` and restores it on startup.
+
+    The data must be JSON-serializable. It is restored in :meth:`_async_setup`, so the
+    coordinator must be driven via :meth:`async_config_entry_first_refresh`, and saved after
+    each successful refresh and after :meth:`async_set_updated_data`, batched by
+    ``save_delay``. The store is automatically removed when the config entry is removed.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        *,
+        config_entry: config_entries.ConfigEntry,
+        name: str,
+        storage_key: str,
+        update_interval: timedelta | None = None,
+        update_method: Callable[[], Awaitable[_DataT]] | None = None,
+        setup_method: Callable[[], Awaitable[None]] | None = None,
+        request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
+        always_update: bool = True,
+        store_version: int = 1,
+        save_delay: float = 0,
+    ) -> None:
+        """Initialize the restoring data update coordinator."""
+        super().__init__(
+            hass,
+            logger,
+            config_entry=config_entry,
+            name=name,
+            update_interval=update_interval,
+            update_method=update_method,
+            setup_method=setup_method,
+            request_refresh_debouncer=request_refresh_debouncer,
+            always_update=always_update,
+        )
+        self._save_delay = save_delay
+        # ``Store`` is bound to ``Mapping | Sequence``; ``_DataT`` is unbounded, so the
+        # store is typed ``Any`` while the coordinator stays generic over ``_DataT``.
+        self._store: Store[Any] = Store(hass, store_version, storage_key)
+        self._setup_store_removal(config_entry.entry_id)
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator, restoring previously stored data."""
+        await super()._async_setup()
+        # Use ``is not None`` so falsy-but-valid payloads (e.g. ``[]`` or ``{}``)
+        # are restored.
+        if (stored := await self._store.async_load()) is not None:
+            self.data = stored
+
+    @callback
+    def _schedule_save(self) -> None:
+        """Schedule saving the current data to storage."""
+        self._store.async_delay_save(lambda: self.data, self._save_delay)
+
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Persist data after a successful refresh.
+
+        A failed refresh keeps the previously stored data untouched.
+        """
+        if self.last_update_success and self.data is not None:
+            self._schedule_save()
+
+    @callback
+    def async_set_updated_data(self, data: _DataT) -> None:
+        """Manually update data and persist it.
+
+        The base method does not route through :meth:`_async_refresh_finished`, so the
+        save is scheduled here to cover push/webhook based sources.
+        """
+        super().async_set_updated_data(data)
+        self._schedule_save()
+
+    async def async_remove_store(self) -> None:
+        """Remove the stored data.
+
+        Harmless to call when nothing is stored.
+        """
+        await self._store.async_remove()
+
+    @callback
+    def _setup_store_removal(self, entry_id: str) -> None:
+        """Remove the store when the config entry is removed.
+
+        ``SIGNAL_CONFIG_ENTRY_CHANGED``/``REMOVED`` is the only signal that reliably
+        distinguishes removal from an unload during a reload. The dispatcher listener
+        closure captures only primitives, never ``self``, so a reload does not leak this
+        coordinator. Registration is deduplicated per storage key so reloads do not
+        accumulate listeners.
+        """
+        hass = self.hass
+        storage_key = self._store.key
+        store_version = self._store.version
+
+        registered = hass.data.setdefault(_RESTORE_CLEANUP_KEY, set())
+        if storage_key in registered:
+            return
+        registered.add(storage_key)
+
+        @callback
+        def _handle_entry_changed(
+            change: config_entries.ConfigEntryChange,
+            entry: config_entries.ConfigEntry,
+        ) -> None:
+            if (
+                change is not config_entries.ConfigEntryChange.REMOVED
+                or entry.entry_id != entry_id
+            ):
+                return
+            unsub()
+            registered.discard(storage_key)
+            store: Store[Any] = Store(hass, store_version, storage_key)
+            hass.async_create_task(
+                store.async_remove(), f"Remove restore store {storage_key}"
+            )
+
+        unsub = async_dispatcher_connect(
+            hass, config_entries.SIGNAL_CONFIG_ENTRY_CHANGED, _handle_entry_changed
+        )
 
 
 class BaseCoordinatorEntity[
