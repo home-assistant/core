@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from data_grand_lyon_ha import (
     TclPassage,
     TclPassageType,
+    TclStop,
     VelovAvailabilityLevel,
     VelovBikeStandAvailability,
     VelovStation,
@@ -47,6 +48,39 @@ MOCK_DEPARTURES = [
         heure_passage=datetime(2026, 4, 10, 14, 8),
         id_tarret_destination=0,
         course_theorique="B",
+    ),
+]
+
+MOCK_TCL_STOPS = [
+    TclStop(
+        id=100,
+        gid=1100,
+        adresse="Place Bellecour",  # codespell:ignore adresse
+        ascenseur=False,
+        commune="Lyon 2",
+        desserte=["C3", "27"],
+        escalator=False,
+        insee="69382",
+        last_update=datetime(2026, 4, 10, 0, 0),
+        lat=45.757,
+        lon=4.832,
+        nom="Bellecour",
+        pmr=True,
+    ),
+    TclStop(
+        id=200,
+        gid=1200,
+        adresse="Cours Lafayette",  # codespell:ignore adresse
+        ascenseur=True,
+        commune="Lyon 3",
+        desserte=["C3", "T1"],
+        escalator=True,
+        insee="69383",
+        last_update=datetime(2026, 4, 10, 0, 0),
+        lat=45.763,
+        lon=4.846,
+        nom="Part-Dieu",
+        pmr=True,
     ),
 ]
 
@@ -147,5 +181,6 @@ def mock_tcl_client() -> Generator[AsyncMock]:
     ) as mock_cls:
         client = mock_cls.return_value
         client.get_tcl_passages.return_value = MOCK_DEPARTURES
+        client.get_tcl_stops.return_value = MOCK_TCL_STOPS
         client.get_velov_stations.return_value = [MOCK_VELOV_STATION]
         yield client
