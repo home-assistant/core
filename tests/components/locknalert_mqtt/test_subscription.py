@@ -3,6 +3,7 @@
 from unittest.mock import ANY
 
 from homeassistant.components.locknalert_mqtt.subscription import (
+    EntitySubscription,
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
@@ -217,3 +218,54 @@ async def test_no_change(
 
     async_fire_mqtt_message(hass, "test-topic1", "test-payload")
     assert len(calls) == 2
+
+
+# ---------------------------------------------------------------------------
+# EntitySubscription.subscribe: noop when should_subscribe is falsy
+# ---------------------------------------------------------------------------
+
+
+async def test_entity_subscription_subscribe_noop_when_not_pending(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """EntitySubscription.subscribe does nothing when should_subscribe is not True."""
+    await mqtt_mock_entry()
+
+    @callback
+    def msg_callback(msg):
+        pass
+
+    sub = EntitySubscription(
+        hass=hass,
+        topic="test/topic",
+        message_callback=msg_callback,
+        unsubscribe_callback=None,
+        should_subscribe=None,
+        entity_id=None,
+        job_type=None,
+    )
+    sub.subscribe()
+    assert sub.unsubscribe_callback is None
+
+
+async def test_entity_subscription_subscribe_noop_when_topic_is_none(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """EntitySubscription.subscribe does nothing when topic is None even if should_subscribe is True."""
+    await mqtt_mock_entry()
+
+    @callback
+    def msg_callback(msg):
+        pass
+
+    sub = EntitySubscription(
+        hass=hass,
+        topic=None,
+        message_callback=msg_callback,
+        unsubscribe_callback=None,
+        should_subscribe=True,
+        entity_id=None,
+        job_type=None,
+    )
+    sub.subscribe()
+    assert sub.unsubscribe_callback is None

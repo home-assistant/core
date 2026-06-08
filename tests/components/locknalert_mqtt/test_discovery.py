@@ -13,8 +13,15 @@ from aiolocknalert.abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
 import pytest
 
 from homeassistant import config_entries
+import voluptuous as vol
+
 from homeassistant.components import locknalert_mqtt as mqtt
-from homeassistant.components.locknalert_mqtt.const import SUPPORTED_COMPONENTS
+from homeassistant.components.locknalert_mqtt.const import (
+    ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_PAYLOAD,
+    ATTR_DISCOVERY_TOPIC,
+    SUPPORTED_COMPONENTS,
+)
 from homeassistant.components.locknalert_mqtt.discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
@@ -3060,3 +3067,120 @@ async def test_discovery_with_late_via_device_discovery(
     assert via_device_entry.name == "My Switch"
 
     await help_check_discovered_items(hass, device_registry)
+
+
+# ---------------------------------------------------------------------------
+# async_setup_non_entity_entry_helper
+# ---------------------------------------------------------------------------
+
+
+async def test_async_setup_non_entity_entry_helper_calls_async_setup(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """async_setup_non_entity_entry_helper wires discovery and calls async_setup for valid payloads."""
+    from homeassistant.components.locknalert_mqtt.entity import (  # noqa: PLC0415
+        async_setup_non_entity_entry_helper,
+    )
+
+    await mqtt_mock_entry()
+
+    async_setup_mock = AsyncMock()
+    discovery_schema = vol.Schema({vol.Required("name"): str}, extra=vol.ALLOW_EXTRA)
+
+    async_setup_non_entity_entry_helper(
+        hass,
+        "test_domain",
+        async_setup_mock,
+        discovery_schema,
+    )
+
+    payload = MQTTDiscoveryPayload({"name": "test"})
+    payload.discovery_data = {
+        ATTR_DISCOVERY_HASH: ("test_domain", "abc123"),
+        ATTR_DISCOVERY_TOPIC: "homeassistant/test_domain/abc123/config",
+        ATTR_DISCOVERY_PAYLOAD: payload,
+    }
+    async_dispatcher_send(
+        hass, MQTT_DISCOVERY_NEW.format("test_domain", "mqtt"), payload
+    )
+    await hass.async_block_till_done()
+
+    async_setup_mock.assert_called_once()
+
+
+async def test_async_setup_non_entity_entry_helper_handles_schema_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """async_setup_non_entity_entry_helper calls _handle_discovery_failure on invalid schema."""
+    from homeassistant.components.locknalert_mqtt.entity import (  # noqa: PLC0415
+        async_setup_non_entity_entry_helper,
+    )
+
+    await mqtt_mock_entry()
+
+    async_setup_mock = AsyncMock()
+    discovery_schema = vol.Schema({vol.Required("required_key"): str})
+
+    async_setup_non_entity_entry_helper(
+        hass,
+        "test_domain2",
+        async_setup_mock,
+        discovery_schema,
+    )
+
+    payload = MQTTDiscoveryPayload({"name": "test"})
+    payload.discovery_data = {
+        ATTR_DISCOVERY_HASH: ("test_domain2", "abc456"),
+        ATTR_DISCOVERY_TOPIC: "homeassistant/test_domain2/abc456/config",
+        ATTR_DISCOVERY_PAYLOAD: payload,
+    }
+    async_dispatcher_send(
+        hass, MQTT_DISCOVERY_NEW.format("test_domain2", "mqtt"), payload
+    )
+    await hass.async_block_till_done()
+
+    async_setup_mock.assert_not_called()
+    assert "Error" in caplog.text
+
+
+async def test_async_setup_non_entity_entry_helper_skips_when_mqtt_disabled(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """async_setup_non_entity_entry_helper skips setup when MQTT entry is disabled."""
+    from homeassistant.components.locknalert_mqtt.entity import (  # noqa: PLC0415
+        async_setup_non_entity_entry_helper,
+    )
+    from unittest.mock import patch  # noqa: PLC0415
+
+    await mqtt_mock_entry()
+
+    async_setup_mock = AsyncMock()
+    discovery_schema = vol.Schema({vol.Required("name"): str}, extra=vol.ALLOW_EXTRA)
+
+    async_setup_non_entity_entry_helper(
+        hass,
+        "test_domain3",
+        async_setup_mock,
+        discovery_schema,
+    )
+
+    payload = MQTTDiscoveryPayload({"name": "test"})
+    payload.discovery_data = {
+        ATTR_DISCOVERY_HASH: ("test_domain3", "abc789"),
+        ATTR_DISCOVERY_TOPIC: "homeassistant/test_domain3/abc789/config",
+        ATTR_DISCOVERY_PAYLOAD: payload,
+    }
+    with patch(
+        "homeassistant.components.locknalert_mqtt.entity.mqtt_config_entry_enabled",
+        return_value=False,
+    ):
+        async_dispatcher_send(
+            hass, MQTT_DISCOVERY_NEW.format("test_domain3", "mqtt"), payload
+        )
+        await hass.async_block_till_done()
+
+    async_setup_mock.assert_not_called()

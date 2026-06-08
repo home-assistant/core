@@ -646,3 +646,21 @@ async def test_ensure_job_after_cooldown_schedule_extends_when_later() -> None:
     debouncer.async_schedule()
     assert debouncer._next_execute_time >= first_time
     debouncer._async_cancel_timer()
+
+
+async def test_ensure_job_after_cooldown_cleanup_logs_non_cancelled_exception(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """async_cleanup logs an exception when the task raises something other than CancelledError."""
+
+    async def raise_value_error():
+        raise ValueError("unexpected task error")
+
+    debouncer = EnsureJobAfterCooldown(0.0, AsyncMock())
+    task = asyncio.get_event_loop().create_task(raise_value_error())
+    debouncer._task = task
+
+    with caplog.at_level(logging.ERROR, logger="homeassistant.components.locknalert_mqtt"):
+        await debouncer.async_cleanup()
+
+    assert "Error cleaning up task" in caplog.text

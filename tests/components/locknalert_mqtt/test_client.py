@@ -7,13 +7,17 @@ from aiolocknalert.client import MQTTError
 import pytest
 
 from homeassistant.components.locknalert_mqtt.client import (
+    async_on_subscribe_done,
     async_publish,
     async_subscribe_internal,
     publish,
+    subscribe,
 )
+from homeassistant.components.locknalert_mqtt.const import MQTT_PROCESSED_SUBSCRIPTIONS
 from homeassistant.components.locknalert_mqtt.models import DATA_MQTT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.typing import MqttMockHAClientGenerator
 
@@ -182,3 +186,127 @@ async def test_mqtt_async_publish_raises_ha_error_on_mqtt_error(
         pytest.raises(HomeAssistantError),
     ):
         await async_publish(hass, "test/topic", "payload")
+
+
+# ---------------------------------------------------------------------------
+# async_on_subscribe_done
+# ---------------------------------------------------------------------------
+
+
+async def test_async_on_subscribe_done_immediate_when_already_active(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """async_on_subscribe_done schedules callback immediately when subscription is already active."""
+    await mqtt_mock_entry()
+    mqtt_data = hass.data[DATA_MQTT]
+    mqtt_data.client.is_active_subscription = MagicMock(return_value=True)
+    mqtt_data.client.is_pending_subscription = MagicMock(return_value=False)
+
+    called: list[bool] = []
+
+    @callback
+    def on_subscribed() -> None:
+        called.append(True)
+
+    unsub = async_on_subscribe_done(hass, "test/topic", 0, on_subscribed)
+    assert callable(unsub)
+    await hass.async_block_till_done()
+    assert called == [True]
+    unsub()
+
+
+async def test_async_on_subscribe_done_waits_for_dispatcher_signal(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """async_on_subscribe_done calls callback when MQTT_PROCESSED_SUBSCRIPTIONS dispatched with matching topic."""
+    await mqtt_mock_entry()
+    mqtt_data = hass.data[DATA_MQTT]
+    mqtt_data.client.is_active_subscription = MagicMock(return_value=False)
+
+    called: list[bool] = []
+
+    @callback
+    def on_subscribed() -> None:
+        called.append(True)
+
+    unsub = async_on_subscribe_done(hass, "test/topic", 0, on_subscribed)
+    assert not called
+    async_dispatcher_send(hass, MQTT_PROCESSED_SUBSCRIPTIONS, [("test/topic", 0)])
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert called == [True]
+    unsub()
+
+
+async def test_async_on_subscribe_done_ignores_non_matching_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """async_on_subscribe_done does not call callback when dispatched subscriptions do not match."""
+    await mqtt_mock_entry()
+    mqtt_data = hass.data[DATA_MQTT]
+    mqtt_data.client.is_active_subscription = MagicMock(return_value=False)
+
+    called: list[bool] = []
+
+    @callback
+    def on_subscribed() -> None:
+        called.append(True)
+
+    unsub = async_on_subscribe_done(hass, "test/topic", 0, on_subscribed)
+    async_dispatcher_send(hass, MQTT_PROCESSED_SUBSCRIPTIONS, [("other/topic", 0)])
+    await hass.async_block_till_done()
+    assert not called
+    unsub()
+
+
+# ---------------------------------------------------------------------------
+# subscribe (threadsafe)
+# ---------------------------------------------------------------------------
+
+
+async def test_subscribe_threadsafe_returns_callable_remove(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """subscribe() from a non-async thread returns a callable remove function."""
+    await mqtt_mock_entry()
+
+    @callback
+    def msg_callback(msg):
+        pass
+
+    remove = await hass.async_add_executor_job(subscribe, hass, "test/topic", msg_callback)
+    assert callable(remove)
+    remove()
+
+
+# ---------------------------------------------------------------------------
+# MQTT.async_subscribe: non-Callback job_type wraps with catch_log_exception
+# ---------------------------------------------------------------------------
+
+
+async def test_mqtt_class_async_subscribe_non_callback_wraps_with_catch_log_exception(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """MQTT.async_subscribe wraps non-Callback callbacks with catch_log_exception."""
+    await mqtt_mock_entry()
+
+    async def async_msg_callback(msg):
+        pass
+
+    with patch(
+        "homeassistant.components.locknalert_mqtt.client.catch_log_exception",
+        return_value=async_msg_callback,
+    ) as mock_catch:
+        async_subscribe_internal(
+            hass,
+            "test/topic",
+            async_msg_callback,
+            job_type=HassJobType.Coroutinefunction,
+        )
+
+    mock_catch.assert_called_once()
