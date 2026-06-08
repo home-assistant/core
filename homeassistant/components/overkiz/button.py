@@ -120,7 +120,7 @@ async def async_setup_entry(
                 description,
             )
             for command in device.definition.commands
-            if (description := SUPPORTED_COMMANDS.get(command.command_name))
+            if (description := SUPPORTED_COMMANDS.get(command))
         )
 
     async_add_entities(entities)

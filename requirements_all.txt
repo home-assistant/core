@@ -2084,7 +2084,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.17.2
+pydaikin==2.18.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2432,7 +2432,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.20.4
+pyoverkiz[nexity]==2.0.0
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -3246,7 +3246,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==11.3.0
+uiprotect==11.8.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3430,7 +3430,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.6.5
 
 # homeassistant.components.yoto
-yoto-api==3.2.0
+yoto-api==4.0.2
 
 # homeassistant.components.youless
 youless-api==2.2.0
