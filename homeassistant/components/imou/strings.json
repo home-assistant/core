@@ -24,21 +24,6 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "live_resolution": "Live stream resolution",
-          "update_interval": "Polling interval (seconds)"
-        },
-        "data_description": {
-          "live_resolution": "Resolution of the live stream URL returned by Imou",
-          "update_interval": "How often to poll Imou cloud for device list and status updates"
-        },
-        "title": "Configure Imou"
-      }
-    }
-  },
   "entity": {
     "button": {
       "mute": {
@@ -60,6 +45,21 @@
     "camera": {
       "camera": {
         "name": "Live view"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "live_resolution": "Live stream resolution",
+          "update_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "live_resolution": "Resolution of the live stream URL returned by Imou",
+          "update_interval": "How often to poll Imou cloud for device list and status updates"
+        },
+        "title": "Configure Imou"
       }
     }
   },
