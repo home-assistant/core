@@ -8,6 +8,11 @@
         "default": "mdi:led-on"
       }
     },
+    "number": {
+      "voltage_installation": {
+        "default": "mdi:sine-wave"
+      }
+    },
     "sensor": {
       "battery_power": {
         "default": "mdi:home-battery"
