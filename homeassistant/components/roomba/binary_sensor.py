@@ -21,7 +21,7 @@ async def async_setup_entry(
     domain_data = config_entry.runtime_data
     roomba = domain_data.roomba
     blid = domain_data.blid
-    entities: list[IRobotEntity] = [RoombaCharging(roomba, blid)]
+    entities: list[BinarySensorEntity] = [RoombaCharging(roomba, blid)]
     status = roomba_reported_state(roomba).get("bin", {})
     if "full" in status:
         entities.append(RoombaBinStatus(roomba, blid))
