@@ -42,7 +42,7 @@ async def test_migration(
 async def test_setup_connect_not_ready(hass: HomeAssistant) -> None:
     """Test that setup raises ConfigEntryNotReady when inverter is unreachable."""
     config_entry = MockConfigEntry(
-        minor_version=2,
+        version=2,
         domain=DOMAIN,
         data={
             CONF_HOST: TEST_HOST,
