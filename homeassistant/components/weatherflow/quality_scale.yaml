@@ -117,7 +117,7 @@ rules:
       infrastructure (Zeroconf, SSDP, DHCP). Discovery happens at the
       listener level within the integration itself, not via manifest-declared
       discovery protocols.
-  docs-data-update: done
+  docs-data-update: todo
   docs-examples:
     status: todo
     comment: No automation or dashboard usage examples are present in the docs.
