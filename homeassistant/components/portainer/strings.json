@@ -217,6 +217,18 @@
       "message": "A timeout occurred while trying to connect to the Portainer instance."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "disk_space_sensors": "Enable disk space sensors"
+        },
+        "data_description": {
+          "disk_space_sensors": "Enable Docker disk space sensors. Disable if you experience timeouts on lower-end hardware"
+        }
+      }
+    }
+  },
   "services": {
     "prune_images": {
       "description": "Prunes unused images on a Portainer endpoint.",
