@@ -1,15 +1,11 @@
 {
   "domain": "osram_infrared",
-  "name": "Osram IR",
+  "name": "OSRAM Infrared",
   "codeowners": ["@freeDom-"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["infrared"],
   "documentation": "https://www.home-assistant.io/integrations/osram_infrared",
-  "homekit": {},
-  "integration_type": "entity",
+  "integration_type": "device",
   "iot_class": "assumed_state",
-  "quality_scale": "bronze",
-  "requirements": [],
-  "ssdp": [],
-  "zeroconf": []
+  "quality_scale": "bronze"
 }

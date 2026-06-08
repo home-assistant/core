@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This Osram light has already been configured with this infrared entity.",
+      "already_configured": "This OSRAM light has already been configured with this infrared entity.",
       "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
     },
     "error": {
@@ -15,10 +15,17 @@
         },
         "data_description": {
           "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
+          "infrared_receiver_entity_id": "The optional infrared receiver entity used to detect commands sent by the physical remote."
         },
-        "description": "Select at least one infrared emitter to use with your Osram light.",
-        "title": "Set up Osram IR Remote"
+        "description": "Select an infrared emitter to use with your OSRAM light. Optionally select a receiver to track commands sent by the physical remote.",
+        "title": "Set up OSRAM infrared light"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "mode": {
+        "name": "Mode"
       }
     }
   }
