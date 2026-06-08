@@ -45,15 +45,6 @@ class OverkizExecutor:
         """Return Overkiz device sharing the same base url."""
         return self.coordinator.data.get(f"{self.base_device_url}#{index}")
 
-    def select_command(self, *commands: str) -> str | None:
-        """Select first existing command in a list of commands."""
-        existing_commands = self.device.definition.commands
-        return next((c for c in commands if c in existing_commands), None)
-
-    def has_command(self, *commands: str) -> bool:
-        """Return True if a command exists in a list of commands."""
-        return self.select_command(*commands) is not None
-
     def select_definition_state(self, *states: str) -> StateDefinition | None:
         """Select first existing definition state in a list of states."""
         for state_name in states:

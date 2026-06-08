@@ -1319,7 +1319,7 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
 
     with (
         patch(
-            "homeassistant.components.overkiz.executor.OverkizExecutor.has_command",
+            "pyoverkiz.models.Device.supports_command",
             return_value=False,
         ),
         pytest.raises(ServiceValidationError),
