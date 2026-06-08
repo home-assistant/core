@@ -24,14 +24,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import BOX_NODE_ID, DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-BOX_NODE_ID = 1
 
 
 @dataclass(frozen=True, kw_only=True)
