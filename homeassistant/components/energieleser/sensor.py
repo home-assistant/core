@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from energieleser import (
     GasleserDevice,
@@ -101,7 +102,8 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
     ),
     StromleserSensorEntityDescription(
         key="power_l1",
-        translation_key="power_l1",
+        translation_key="power_phase",
+        translation_placeholders={"phase": "1"},
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.power_l1.value if d.power_l1 else None,
@@ -110,7 +112,8 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
     ),
     StromleserSensorEntityDescription(
         key="power_l2",
-        translation_key="power_l2",
+        translation_key="power_phase",
+        translation_placeholders={"phase": "2"},
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.power_l2.value if d.power_l2 else None,
@@ -119,7 +122,8 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
     ),
     StromleserSensorEntityDescription(
         key="power_l3",
-        translation_key="power_l3",
+        translation_key="power_phase",
+        translation_placeholders={"phase": "3"},
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.power_l3.value if d.power_l3 else None,
@@ -128,7 +132,6 @@ STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
     ),
     StromleserSensorEntityDescription(
         key="signal_strength_dbm",
-        translation_key="signal_strength_dbm",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -152,6 +155,7 @@ GASLESER_SENSORS: tuple[GasleserSensorEntityDescription, ...] = (
     GasleserSensorEntityDescription(
         key="current_flow_rate",
         translation_key="flow_rate",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.current_flow_rate,
@@ -167,7 +171,6 @@ GASLESER_SENSORS: tuple[GasleserSensorEntityDescription, ...] = (
     ),
     GasleserSensorEntityDescription(
         key="signal_strength_dbm",
-        translation_key="signal_strength_dbm",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -220,7 +223,6 @@ WASSERLESER_SENSORS: tuple[WasserleserSensorEntityDescription, ...] = (
     ),
     WasserleserSensorEntityDescription(
         key="signal_strength_dbm",
-        translation_key="signal_strength_dbm",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -234,7 +236,8 @@ WASSERLESER_SENSORS: tuple[WasserleserSensorEntityDescription, ...] = (
 WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
     WaermeleserSensorEntityDescription(
         key="total_energy_t1",
-        translation_key="heat_energy_tariff_1",
+        translation_key="heat_energy_tariff",
+        translation_placeholders={"tariff": "1"},
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -243,7 +246,8 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
     ),
     WaermeleserSensorEntityDescription(
         key="total_energy_t2",
-        translation_key="heat_energy_tariff_2",
+        translation_key="heat_energy_tariff",
+        translation_placeholders={"tariff": "2"},
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -252,7 +256,8 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
     ),
     WaermeleserSensorEntityDescription(
         key="total_energy_t3",
-        translation_key="heat_energy_tariff_3",
+        translation_key="heat_energy_tariff",
+        translation_placeholders={"tariff": "3"},
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -261,7 +266,6 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
     ),
     WaermeleserSensorEntityDescription(
         key="power",
-        translation_key="heat_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -306,8 +310,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
     ),
     WaermeleserSensorEntityDescription(
         key="temperature_difference",
-        translation_key="heat_temperature_difference",
-        device_class=SensorDeviceClass.TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
         native_unit_of_measurement=UnitOfTemperature.KELVIN,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=(
@@ -319,7 +322,6 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
     ),
     WaermeleserSensorEntityDescription(
         key="signal_strength_dbm",
-        translation_key="signal_strength_dbm",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -342,25 +344,25 @@ async def async_setup_entry(
 
     if isinstance(device, StromleserOneDevice):
         async_add_entities(
-            StromleserSensor(coordinator=coordinator, description=description)
+            StromleserSensor(coordinator, description)
             for description in STROMLESER_SENSORS
             if description.present_fn(device)
         )
     elif isinstance(device, GasleserDevice):
         async_add_entities(
-            GasleserSensor(coordinator=coordinator, description=description)
+            GasleserSensor(coordinator, description)
             for description in GASLESER_SENSORS
             if description.present_fn(device)
         )
     elif isinstance(device, WasserleserDevice):
         async_add_entities(
-            WasserleserSensor(coordinator=coordinator, description=description)
+            WasserleserSensor(coordinator, description)
             for description in WASSERLESER_SENSORS
             if description.present_fn(device)
         )
     elif isinstance(device, WaermeleserDevice):
         async_add_entities(
-            WaermeleserSensor(coordinator=coordinator, description=description)
+            WaermeleserSensor(coordinator, description)
             for description in WAERMELESER_SENSORS
             if description.present_fn(device)
         )
@@ -373,7 +375,6 @@ class _EnergieleserSensorBase(CoordinatorEntity[EnergieleserCoordinator], Sensor
 
     def __init__(
         self,
-        *,
         coordinator: EnergieleserCoordinator,
         description: SensorEntityDescription,
     ) -> None:
@@ -391,7 +392,7 @@ class _EnergieleserSensorBase(CoordinatorEntity[EnergieleserCoordinator], Sensor
             identifiers={(DOMAIN, coordinator.device_id)},
             name=coordinator.device_id,
             manufacturer="nineti GmbH",
-            model=device_model_name(coordinator.device_type),
+            model=device_model_name(coordinator.data.device_type),
             serial_number=serial_number,
             configuration_url=f"http://{host}/",
         )
@@ -406,7 +407,8 @@ class StromleserSensor(_EnergieleserSensorBase):
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data
-        assert isinstance(device, StromleserOneDevice)
+        if TYPE_CHECKING:
+            assert isinstance(device, StromleserOneDevice)
         return self.entity_description.value_fn(device)
 
     @property
@@ -414,7 +416,8 @@ class StromleserSensor(_EnergieleserSensorBase):
         """Return the unit, preferring the device-reported one when available."""
         if self.entity_description.unit_fn is not None:
             device = self.coordinator.data
-            assert isinstance(device, StromleserOneDevice)
+            if TYPE_CHECKING:
+                assert isinstance(device, StromleserOneDevice)
             unit = self.entity_description.unit_fn(device)
             if unit:
                 return unit
@@ -430,7 +433,8 @@ class GasleserSensor(_EnergieleserSensorBase):
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data
-        assert isinstance(device, GasleserDevice)
+        if TYPE_CHECKING:
+            assert isinstance(device, GasleserDevice)
         return self.entity_description.value_fn(device)
 
 
@@ -443,7 +447,8 @@ class WasserleserSensor(_EnergieleserSensorBase):
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data
-        assert isinstance(device, WasserleserDevice)
+        if TYPE_CHECKING:
+            assert isinstance(device, WasserleserDevice)
         return self.entity_description.value_fn(device)
 
 
@@ -456,5 +461,6 @@ class WaermeleserSensor(_EnergieleserSensorBase):
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data
-        assert isinstance(device, WaermeleserDevice)
+        if TYPE_CHECKING:
+            assert isinstance(device, WaermeleserDevice)
         return self.entity_description.value_fn(device)

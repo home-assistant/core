@@ -25,8 +25,11 @@
     'name': None,
     'object_id_base': 'Gas flow rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Gas flow rate',
     'platform': 'energieleser',
@@ -41,6 +44,7 @@
 # name: test_gasleser_sensors[sensor.gas_8530321017_gas_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'GAS_8530321017 Gas flow rate',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
@@ -140,7 +144,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'signal_strength_dbm',
+    'translation_key': None,
     'unique_id': 'GAS_8530321017_signal_strength_dbm',
     'unit_of_measurement': 'dBm',
   })
@@ -430,7 +434,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_l1',
+    'translation_key': 'power_phase',
     'unique_id': 'STROM_ONE_8529546829_power_l1',
     'unit_of_measurement': 'W',
   })
@@ -488,7 +492,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_l2',
+    'translation_key': 'power_phase',
     'unique_id': 'STROM_ONE_8529546829_power_l2',
     'unit_of_measurement': 'W',
   })
@@ -546,7 +550,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_l3',
+    'translation_key': 'power_phase',
     'unique_id': 'STROM_ONE_8529546829_power_l3',
     'unit_of_measurement': 'W',
   })
@@ -601,7 +605,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'signal_strength_dbm',
+    'translation_key': None,
     'unique_id': 'STROM_ONE_8529546829_signal_strength_dbm',
     'unit_of_measurement': 'dBm',
   })
@@ -659,7 +663,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'heat_energy_tariff_1',
+    'translation_key': 'heat_energy_tariff',
     'unique_id': 'HEAT_0000000001_total_energy_t1',
     'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
   })
@@ -717,7 +721,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'heat_energy_tariff_2',
+    'translation_key': 'heat_energy_tariff',
     'unique_id': 'HEAT_0000000001_total_energy_t2',
     'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
   })
@@ -775,7 +779,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'heat_energy_tariff_3',
+    'translation_key': 'heat_energy_tariff',
     'unique_id': 'HEAT_0000000001_total_energy_t3',
     'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
   })
@@ -891,7 +895,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'heat_power',
+    'translation_key': None,
     'unique_id': 'HEAT_0000000001_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
@@ -1004,7 +1008,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'signal_strength_dbm',
+    'translation_key': None,
     'unique_id': 'HEAT_0000000001_signal_strength_dbm',
     'unit_of_measurement': 'dBm',
   })
@@ -1025,7 +1029,7 @@
     'state': '-51.0',
   })
 # ---
-# name: test_waermeleser_sensors[sensor.heat_0000000001_temperature_difference-entry]
+# name: test_waermeleser_sensors[sensor.heat_0000000001_temperature_delta-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1041,7 +1045,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heat_0000000001_temperature_difference',
+    'entity_id': 'sensor.heat_0000000001_temperature_delta',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1049,34 +1053,34 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperature difference',
+    'object_id_base': 'Temperature delta',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
-    'original_name': 'Temperature difference',
+    'original_name': 'Temperature delta',
     'platform': 'energieleser',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'heat_temperature_difference',
+    'translation_key': None,
     'unique_id': 'HEAT_0000000001_temperature_difference',
     'unit_of_measurement': <UnitOfTemperature.KELVIN: 'K'>,
   })
 # ---
-# name: test_waermeleser_sensors[sensor.heat_0000000001_temperature_difference-state]
+# name: test_waermeleser_sensors[sensor.heat_0000000001_temperature_delta-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'HEAT_0000000001 Temperature difference',
+      'device_class': 'temperature_delta',
+      'friendly_name': 'HEAT_0000000001 Temperature delta',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.KELVIN: 'K'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heat_0000000001_temperature_difference',
+    'entity_id': 'sensor.heat_0000000001_temperature_delta',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1233,7 +1237,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'signal_strength_dbm',
+    'translation_key': None,
     'unique_id': 'WASSER_0499632826_signal_strength_dbm',
     'unit_of_measurement': 'dBm',
   })

@@ -3,7 +3,6 @@
 from datetime import timedelta
 
 from energieleser import (
-    DeviceType,
     EnergieleserClient,
     EnergieleserConnectionError,
     EnergieleserDevice,
@@ -27,8 +26,6 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
     """Coordinator that polls a single energieleser device."""
 
     config_entry: EnergieleserConfigEntry
-    device_id: str
-    device_type: DeviceType
 
     def __init__(
         self,
@@ -63,5 +60,4 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
             raise UpdateFailed(
                 f"Error communicating with energieleser device {self.device_id}: {err}"
             ) from err
-        self.device_type = device.device_type
         return device

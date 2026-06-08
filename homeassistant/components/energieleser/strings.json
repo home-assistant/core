@@ -43,26 +43,14 @@
       "gas_consumption": {
         "name": "Total gas"
       },
-      "heat_energy_tariff_1": {
-        "name": "Energy tariff 1"
-      },
-      "heat_energy_tariff_2": {
-        "name": "Energy tariff 2"
-      },
-      "heat_energy_tariff_3": {
-        "name": "Energy tariff 3"
+      "heat_energy_tariff": {
+        "name": "Energy tariff {tariff}"
       },
       "heat_flow_temperature": {
         "name": "Flow temperature"
       },
-      "heat_power": {
-        "name": "Power"
-      },
       "heat_return_temperature": {
         "name": "Return temperature"
-      },
-      "heat_temperature_difference": {
-        "name": "Temperature difference"
       },
       "heat_total_volume": {
         "name": "Total volume"
@@ -70,23 +58,14 @@
       "heat_volume_flow": {
         "name": "Volume flow"
       },
-      "power_l1": {
-        "name": "Phase 1 power"
-      },
-      "power_l2": {
-        "name": "Phase 2 power"
-      },
-      "power_l3": {
-        "name": "Phase 3 power"
+      "power_phase": {
+        "name": "Phase {phase} power"
       },
       "power_total": {
         "name": "Active power"
       },
       "pulse_count": {
         "name": "Pulse count"
-      },
-      "signal_strength_dbm": {
-        "name": "Signal strength"
       },
       "water_consumption": {
         "name": "Total water"
