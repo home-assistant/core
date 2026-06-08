@@ -7,6 +7,7 @@ from unittest.mock import patch
 from aiohttp import ClientSession, ClientWebSocketResponse
 from freezegun.api import FrozenDateTimeFactory
 
+from homeassistant.components.image_upload import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -31,7 +32,7 @@ async def test_upload_image(
         tempfile.TemporaryDirectory() as tempdir,
         patch.object(hass.config, "path", return_value=tempdir),
     ):
-        assert await async_setup_component(hass, "image_upload", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         ws_client: ClientWebSocketResponse = await hass_ws_client()
         client: ClientSession = await hass_client()
 

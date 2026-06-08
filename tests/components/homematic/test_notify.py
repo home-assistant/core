@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from homeassistant.components.homematic import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -17,7 +18,7 @@ async def test_setup_full(hass: HomeAssistant) -> None:
     ):
         await async_setup_component(
             hass,
-            "homematic",
+            DOMAIN,
             {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
         )
     with assert_setup_component(1, domain="notify") as handle_config:
@@ -47,7 +48,7 @@ async def test_setup_without_optional(hass: HomeAssistant) -> None:
     ):
         await async_setup_component(
             hass,
-            "homematic",
+            DOMAIN,
             {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
         )
     with assert_setup_component(1, domain="notify") as handle_config:

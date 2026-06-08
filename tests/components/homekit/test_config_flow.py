@@ -393,10 +393,10 @@ async def test_options_flow_devices(
     with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
-        assert await async_setup_component(hass, "homekit", {"homekit": {}})
+        assert await async_setup_component(hass, DOMAIN, {"homekit": {}})
         assert await async_setup_component(hass, "homeassistant", {})
         assert await async_setup_component(hass, "demo", {"demo": {}})
-        assert await async_setup_component(hass, "homekit", {"homekit": {}})
+        assert await async_setup_component(hass, DOMAIN, {"homekit": {}})
 
         hass.states.async_set("climate.old", "off")
         await hass.async_block_till_done()

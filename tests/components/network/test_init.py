@@ -770,7 +770,7 @@ async def test_websocket_network_url(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test the network/url websocket command."""
-    assert await async_setup_component(hass, "network", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
 
@@ -812,7 +812,7 @@ async def test_repair_docker_host_network_not_docker(
 ) -> None:
     """Test repair is not created when not in Docker."""
     with patch("homeassistant.util.package.is_docker_env", return_value=False):
-        assert await async_setup_component(hass, "network", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert not issue_registry.async_get_issue(DOMAIN, "docker_host_network")
 
@@ -827,7 +827,7 @@ async def test_repair_docker_host_network_with_host_networking(
         patch("homeassistant.util.package.is_docker_env", return_value=True),
         patch("homeassistant.components.network.Path.exists", return_value=True),
     ):
-        assert await async_setup_component(hass, "network", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert not issue_registry.async_get_issue(DOMAIN, "docker_host_network")
 
@@ -844,7 +844,7 @@ async def test_repair_docker_host_network_without_host_networking(
         patch("homeassistant.util.package.is_docker_env", return_value=True),
         patch("homeassistant.components.network.Path.exists", return_value=False),
     ):
-        assert await async_setup_component(hass, "network", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert (issue := issue_registry.async_get_issue(DOMAIN, "docker_host_network"))
     assert issue == snapshot
