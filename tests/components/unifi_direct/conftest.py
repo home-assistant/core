@@ -49,17 +49,10 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_unifiap() -> Generator[MagicMock]:
     """Mock UniFiAP to return known clients."""
-    with patch("homeassistant.components.unifi_direct.coordinator.UniFiAP") as mock:
-        ap_instance = MagicMock()
-        ap_instance.get_clients.return_value = MOCK_DEVICE_DATA
-        mock.return_value = ap_instance
-        yield mock
-
-
-@pytest.fixture
-def mock_unifiap_config_flow() -> Generator[MagicMock]:
-    """Mock UniFiAP for config flow."""
-    with patch("homeassistant.components.unifi_direct.config_flow.UniFiAP") as mock:
+    with (
+        patch("homeassistant.components.unifi_direct.coordinator.UniFiAP") as mock,
+        patch("homeassistant.components.unifi_direct.config_flow.UniFiAP", new=mock),
+    ):
         ap_instance = MagicMock()
         ap_instance.get_clients.return_value = MOCK_DEVICE_DATA
         mock.return_value = ap_instance

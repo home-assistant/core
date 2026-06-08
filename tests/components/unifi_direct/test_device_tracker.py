@@ -42,7 +42,6 @@ async def test_device_tracker_entities_created(
 
 async def test_setup_scanner_legacy_platform_imports_config_entry(
     hass: HomeAssistant,
-    mock_unifiap_config_flow,
     mock_unifiap,
 ) -> None:
     """Test legacy device tracker setup triggers config flow import."""
@@ -67,7 +66,7 @@ async def test_setup_scanner_legacy_platform_imports_config_entry(
 
 
 async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
-    hass: HomeAssistant, mock_unifiap_config_flow, issue_registry: IssueRegistry
+    hass: HomeAssistant, mock_unifiap, issue_registry: IssueRegistry
 ) -> None:
     """Test that issue is created when legacy device tracker setup cannot connect."""
     config = {
@@ -77,8 +76,8 @@ async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
         CONF_PORT: 22,
     }
 
-    mock_unifiap_config_flow.return_value.get_clients.side_effect = (
-        UniFiAPConnectionException("fail")
+    mock_unifiap.return_value.get_clients.side_effect = UniFiAPConnectionException(
+        "fail"
     )
 
     assert await async_setup_component(

@@ -12,7 +12,7 @@ from .conftest import MOCK_CONFIG
 
 
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_setup_entry, mock_unifiap_config_flow
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap
 ) -> None:
     """Test a successful config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -41,12 +41,12 @@ async def test_user_flow_success(
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry, mock_unifiap_config_flow
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap
 ) -> None:
     """Test config flow when connection fails."""
     # Make the UniFiAP.get_clients raise an exception
-    mock_unifiap_config_flow.return_value.get_clients.side_effect = (
-        UniFiAPConnectionException("fail")
+    mock_unifiap.return_value.get_clients.side_effect = UniFiAPConnectionException(
+        "fail"
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -68,7 +68,7 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Remove the UniFiAP.get_clients side effect and see if the flow recovers
-    mock_unifiap_config_flow.return_value.get_clients.side_effect = None
+    mock_unifiap.return_value.get_clients.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
@@ -77,7 +77,7 @@ async def test_user_flow_cannot_connect(
 
 
 async def test_user_flow_entry_exists(
-    hass: HomeAssistant, mock_setup_entry, mock_unifiap_config_flow, mock_config_entry
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap, mock_config_entry
 ) -> None:
     """Test where an entry already exists and we try to set it up."""
     mock_config_entry.add_to_hass(hass)
@@ -96,9 +96,7 @@ async def test_user_flow_entry_exists(
     assert result["reason"] == "already_configured"
 
 
-async def test_import_flow(
-    hass: HomeAssistant, mock_setup_entry, mock_unifiap_config_flow
-) -> None:
+async def test_import_flow(hass: HomeAssistant, mock_setup_entry, mock_unifiap) -> None:
     """Test import initiated flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -122,11 +120,11 @@ async def test_import_flow(
 
 
 async def test_import_flow_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry, mock_unifiap_config_flow
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap
 ) -> None:
     """Test import config flow when connection fails."""
-    mock_unifiap_config_flow.return_value.get_clients.side_effect = (
-        UniFiAPConnectionException("fail")
+    mock_unifiap.return_value.get_clients.side_effect = UniFiAPConnectionException(
+        "fail"
     )
 
     result = await hass.config_entries.flow.async_init(
