@@ -192,14 +192,18 @@ class PushoverNotificationService(BaseNotificationService):
 
         Called from the executor; blocking I/O is acceptable here.
         """
-        if not self._receipt_tags:
+        # Take a snapshot to avoid RuntimeError if send_message modifies
+        # _receipt_tags concurrently from another executor thread.
+        receipt_tags_snapshot = dict(self._receipt_tags)
+
+        if not receipt_tags_snapshot:
             _LOGGER.debug("Entry %s: no receipts to cancel", self._entry_id)
             return
 
         if tag:
             receipts_to_cancel = [
                 receipt
-                for receipt, msg_tags in self._receipt_tags.items()
+                for receipt, msg_tags in receipt_tags_snapshot.items()
                 if tag in msg_tags
             ]
             _LOGGER.debug(
@@ -209,7 +213,7 @@ class PushoverNotificationService(BaseNotificationService):
                 receipts_to_cancel,
             )
         else:
-            receipts_to_cancel = list(self._receipt_tags)
+            receipts_to_cancel = list(receipt_tags_snapshot)
             _LOGGER.debug(
                 "Entry %s: cancelling all receipts: %s",
                 self._entry_id,
