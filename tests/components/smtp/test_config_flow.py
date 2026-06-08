@@ -92,7 +92,6 @@ async def test_form(
 @pytest.mark.usefixtures("smtp")
 async def test_form_already_configured(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort when entry is already configured."""
@@ -279,13 +278,26 @@ async def test_import_errors(
 
 
 @pytest.mark.usefixtures("smtp")
-async def test_import_already_configured(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
+async def test_import_already_configured(hass: HomeAssistant) -> None:
     """Test import flow aborts if already configured."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home Assistant",
+        data={
+            CONF_NAME: "notifier_name",
+            CONF_SENDER: "email@example.com",
+            CONF_SENDER_NAME: "Home Assistant",
+            CONF_SERVER: "mail.example.com",
+            CONF_PORT: 587,
+            CONF_ENCRYPTION: "starttls",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_VERIFY_SSL: True,
+            CONF_RECIPIENT: "recipient@example.com",
+        },
+        entry_id="123456789",
+    )
 
     config_entry.add_to_hass(hass)
 

@@ -146,13 +146,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import config from yaml."""
 
         deprecate_yaml_issue(self.hass)
-        self._async_abort_entries_match(
-            {
-                CONF_SERVER: import_info.get(CONF_SERVER, DEFAULT_HOST),
-                CONF_SENDER: import_info[CONF_SENDER],
-                CONF_USERNAME: import_info.get(CONF_USERNAME),
-            }
-        )
+        self._async_abort_entries_match(import_info)
 
         errors = await self.hass.async_add_executor_job(validate_input, import_info)
         if not errors:
