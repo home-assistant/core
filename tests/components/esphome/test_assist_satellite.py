@@ -2435,7 +2435,7 @@ async def test_get_configuration_without_announce_feature(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test getting and setting the satellite configuration."""
+    """Test getting the satellite configuration in the background without ANNOUNCE."""
     expected_config = AssistSatelliteConfiguration(
         available_wake_words=[
             AssistSatelliteWakeWord("1234", "okay nabu", ["en"]),
