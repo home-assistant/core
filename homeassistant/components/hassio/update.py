@@ -377,7 +377,7 @@ class SupervisorRPiFirmwareUpdateEntity(UpdateEntity):
         return (
             "<ha-alert alert-type='warning'>"
             "Do not interrupt the firmware flash. "
-            "Power loss during the EEPROM update can brick your device."
+            "Power loss during the EEPROM update can render your device inoperable."
             "</ha-alert>\n\n"
             "<ha-alert alert-type='info'>"
             "A reboot is required after install for the new firmware to "
