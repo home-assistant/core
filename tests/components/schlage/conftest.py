@@ -97,4 +97,5 @@ def mock_lock_attrs() -> dict[str, Any]:
         "firmware_version": "1.0",
         "lock_and_leave_enabled": True,
         "beeper_enabled": True,
+        "connected": True,
     }

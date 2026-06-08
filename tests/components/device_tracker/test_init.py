@@ -11,6 +11,7 @@ from homeassistant.components import device_tracker, zone
 from homeassistant.components.device_tracker import (
     SourceType,
     TrackerEntity,
+    TrackingType,
     const,
     legacy,
 )
@@ -801,7 +802,11 @@ async def test_modern_platform_setup(hass: HomeAssistant) -> None:
     state = hass.states.get(entity1.entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes == {"in_zones": [], "source_type": SourceType.ROUTER}
+    assert state.attributes == {
+        "in_zones": [],
+        "source_type": SourceType.ROUTER,
+        "tracking_type": TrackingType.POSITION,
+    }
 
     state = hass.states.get(entity2.entity_id)
     assert state
@@ -809,6 +814,7 @@ async def test_modern_platform_setup(hass: HomeAssistant) -> None:
     assert state.attributes == {
         "in_zones": [],
         "source_type": SourceType.GPS,
+        "tracking_type": TrackingType.POSITION,
         "latitude": 10.0,
         "longitude": 5.0,
         "gps_accuracy": 1,
@@ -820,6 +826,7 @@ async def test_modern_platform_setup(hass: HomeAssistant) -> None:
     assert state.attributes == {
         "in_zones": [],
         "source_type": SourceType.ROUTER,
+        "tracking_type": TrackingType.POSITION,
     }
 
 

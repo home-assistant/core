@@ -513,8 +513,8 @@ async def test_logging(
     """Testing the access log works."""
     await asyncio.gather(
         *(
-            async_setup_component(hass, component, {})
-            for component in ("http", "logger", "api")
+            async_setup_component(hass, domain, {})
+            for domain in ("http", "logger", "api")
         )
     )
     hass.states.async_set("logging.entity", "hello")

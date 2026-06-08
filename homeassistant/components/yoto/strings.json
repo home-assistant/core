@@ -31,11 +31,32 @@
     }
   },
   "exceptions": {
+    "card_detail_failed": {
+      "message": "Could not load Yoto card details: {error}"
+    },
     "command_failed": {
       "message": "Yoto command failed: {error}"
     },
+    "invalid_media_id": {
+      "message": "Not a Yoto media identifier: {media_id}"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "play_failed": {
+      "message": "Failed to play Yoto media: {error}"
+    },
+    "unknown_card": {
+      "message": "Unknown Yoto card: {card_id}"
+    },
+    "unknown_chapter": {
+      "message": "Unknown chapter {chapter_key} on card {card_id}"
+    },
+    "unknown_group": {
+      "message": "Unknown Yoto group: {group_id}"
+    },
+    "unknown_track": {
+      "message": "Unknown track {track_key} on card {card_id}"
     },
     "update_error": {
       "message": "Error communicating with Yoto: {error}"

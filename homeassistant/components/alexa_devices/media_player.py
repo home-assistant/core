@@ -1,8 +1,7 @@
 """Media player platform for Alexa Devices."""
 
-from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Final
+from typing import Any
 
 from aioamazondevices.structures import (
     AmazonMediaControls,
@@ -38,18 +37,6 @@ STANDARD_SUPPORTED_FEATURES = (
 )
 
 
-@dataclass(frozen=True, kw_only=True)
-class AmazonDevicesMediaPlayerEntityDescription(MediaPlayerEntityDescription):
-    """Describes an Alexa Devices media player entity."""
-
-
-MEDIA_PLAYERS: Final = (
-    AmazonDevicesMediaPlayerEntityDescription(
-        key="media",
-    ),
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AmazonConfigEntry,
@@ -69,9 +56,10 @@ async def async_setup_entry(
                 continue
 
             known_devices.add(serial_num)
-            new_entities.extend(
-                AlexaDevicesMediaPlayer(coordinator, serial_num, description)
-                for description in MEDIA_PLAYERS
+            new_entities.append(
+                AlexaDevicesMediaPlayer(
+                    coordinator, serial_num, MediaPlayerEntityDescription(key="media")
+                )
             )
 
         if new_entities:
@@ -85,8 +73,6 @@ async def async_setup_entry(
 class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     """Representation of an Alexa device media player."""
 
-    entity_description: AmazonDevicesMediaPlayerEntityDescription
-
     _attr_name = None  # Uses the device name
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = 0.05
@@ -95,7 +81,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         self,
         coordinator: AmazonDevicesCoordinator,
         serial_num: str,
-        description: AmazonDevicesMediaPlayerEntityDescription,
+        description: MediaPlayerEntityDescription,
     ) -> None:
         """Initialize."""
         self._prev_volume: int | None = None
@@ -156,9 +142,11 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def is_volume_muted(self) -> bool | None:
         """Return True if the volume is muted."""
-        if not self.volume_state:
+        if not self.volume_state or self.volume_state.volume is None:
             return None
-        return self.volume_state.volume == 0
+        # is_muted is True when Alexa has muted the device
+        # volume == 0 is where we have muted by setting volume to 0
+        return self.volume_state.is_muted or self.volume_state.volume == 0
 
     @property
     def media_title(self) -> str | None:
@@ -212,7 +200,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def media_content_type(self) -> MediaType | None:
         """Content type — tells HA what kind of media is playing."""
-        if self.state in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
+        if self.state in (MediaPlayerState.PLAYING, MediaPlayerState.PAUSED):
             return MediaType.MUSIC
         return None
 
@@ -225,7 +213,8 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         **kwargs: Any,
     ) -> None:
         """Play a piece of media."""
-        await self.async_call_alexa_music(media_id, media_type)
+        provider = media_type.value if isinstance(media_type, MediaType) else media_type
+        await self.async_call_alexa_music(media_id, provider)
 
     @alexa_api_call
     async def async_call_alexa_music(
@@ -259,12 +248,20 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
             return
         if mute:
             self._prev_volume = self.volume_state.volume
-            target_volume = 0
-        else:
-            if self._prev_volume is None:
-                return
-            target_volume = self._prev_volume
+            await self.async_set_volume_level(0)
+            return
+
+        if self.volume_state.is_muted and self._prev_volume is None:
+            # is muted by Alexa which we can see but not control
+            # when muted this way, volume is still set
+            # changing volume will unmute
+            # if HA set volume to 0 then Alexa muted we just default to 30%
+            self._prev_volume = self.volume_state.volume or 30
+        if self._prev_volume is None:
+            return
+        target_volume = self._prev_volume
         await self.async_set_volume_level(target_volume / 100)
+        self._prev_volume = None
 
     @alexa_api_call
     async def _send_media_command(self, command: AmazonMediaControls) -> None:

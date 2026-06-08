@@ -22,6 +22,7 @@ from .const import (  # noqa: F401
     ATTR_LOCATION_NAME,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    ATTR_TRACKING_TYPE,
     CONF_ASSOCIATED_ZONE,
     CONF_CONSIDER_HOME,
     CONF_NEW_DEVICE_DEFAULTS,
@@ -36,6 +37,7 @@ from .const import (  # noqa: F401
     PLATFORM_TYPE_LEGACY,
     SCAN_INTERVAL,
     SourceType,
+    TrackingType,
 )
 from .entity import (  # noqa: F401
     BaseScannerEntity,

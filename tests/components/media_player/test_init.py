@@ -113,6 +113,28 @@ async def test_get_image_http(
     assert content == b"image"
 
 
+async def test_get_image_http_unauthenticated(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test get image via http command without a valid token is unauthorized."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    # Without a token the request is unauthorized
+    resp = await client.get("/api/media_player_proxy/media_player.bedroom")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # An invalid token is also unauthorized
+    resp = await client.get(
+        "/api/media_player_proxy/media_player.bedroom?token=invalid"
+    )
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
 async def test_get_image_http_remote(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
@@ -143,6 +165,37 @@ async def test_get_image_http_remote(
         assert content == b"image"
 
 
+async def test_get_image_http_missing_image(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test advertised local image with missing bytes returns not found."""
+    with (
+        patch(
+            "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+            None,
+        ),
+        patch(
+            "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_hash",
+            "missing-image",
+        ),
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        client = await hass_client_no_auth()
+
+        with patch(
+            "homeassistant.components.media_player.MediaPlayerEntity.async_get_media_image",
+            return_value=(None, None),
+        ):
+            resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
 async def test_get_image_http_log_credentials_redacted(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -169,7 +222,7 @@ async def test_get_image_http_log_credentials_redacted(
 
         resp = await client.get(state.attributes["entity_picture"])
 
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
     assert f"Error retrieving proxied image from {url}" not in caplog.text
     assert (
         "Error retrieving proxied image from "

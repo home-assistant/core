@@ -798,7 +798,7 @@ class MQTT:
             keepalive=self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
             # See:
             # https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
-            # `clean_start` (bool) – (MQTT v5.0 only) `True`, `False` or
+            # `clean_start` (bool) - (MQTT v5.0 only) `True`, `False` or
             # `MQTT_CLEAN_START_FIRST_ONLY`. Sets the MQTT v5.0 clean_start flag
             #  always, never or on the first successful connect only,
             # respectively. MQTT session data (such as outstanding messages and
