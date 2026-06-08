@@ -1690,6 +1690,50 @@ async def test_reload_does_not_delete_store_or_leak_listeners(
     assert crd2.config_entry is entry
 
 
+async def test_pending_save_does_not_resurrect_removed_store(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a pending delayed save cannot recreate the store after removal."""
+    entry = MockConfigEntry()
+
+    async def update_method() -> dict[str, Any]:
+        return {"value": "fetched"}
+
+    crd = get_restore_crd(
+        hass,
+        config_entry=entry,
+        update_method=update_method,
+        save_delay=30,
+    )
+    await crd.async_config_entry_first_refresh()
+
+    # A delayed save is scheduled but nothing has been written yet
+    assert RESTORE_KEY not in hass_storage
+
+    # Removal unloads the entry (awaiting async_shutdown) before the REMOVED signal
+    # fires; mirror that ordering. Shutdown flushes the pending save and cancels its
+    # timer, then removal deletes the store.
+    await crd.async_shutdown()
+    async_dispatcher_send(
+        hass,
+        config_entries.SIGNAL_CONFIG_ENTRY_CHANGED,
+        config_entries.ConfigEntryChange.REMOVED,
+        entry,
+    )
+    await hass.async_block_till_done()
+
+    assert RESTORE_KEY not in hass_storage
+
+    # The previously scheduled delayed save must not fire and recreate the store
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert RESTORE_KEY not in hass_storage
+
+
 async def test_no_persist_initial_none(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
