@@ -189,7 +189,7 @@ async def test_litterrobot_5_panel_brightness(
     data = {ATTR_ENTITY_ID: entity_id}
 
     robot: LitterRobot5 = mock_account_with_litterrobot_5.robots[0]
-    setattr(robot, "set_panel_brightness", AsyncMock(return_value=True))
+    robot.set_panel_brightness = AsyncMock(return_value=True)
 
     for count, option in enumerate(select.attributes[ATTR_OPTIONS]):
         data[ATTR_OPTION] = option

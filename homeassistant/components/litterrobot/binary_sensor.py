@@ -4,7 +4,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, LitterRobot5, Robot
+from pylitterbot import (
+    FeederRobot,
+    LitterRobot,
+    LitterRobot3,
+    LitterRobot4,
+    LitterRobot5,
+    Robot,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
