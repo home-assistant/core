@@ -1,14 +1,14 @@
 """Data update coordinator for OpenEVSE."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
 from openevsehttp.__main__ import OpenEVSE
+from openevsehttp.exceptions import AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -48,9 +48,9 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Handle websocket data update."""
         self.async_set_updated_data(None)
 
-    def start_websocket(self) -> None:
+    async def async_start_websocket(self) -> None:
         """Start the websocket listener."""
-        self.charger.ws_start()
+        await self.charger.ws_start()
 
     async def async_stop_websocket(self) -> None:
         """Stop the websocket listener."""
@@ -63,5 +63,11 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.charger.update()
         except TimeoutError as error:
             raise UpdateFailed(
-                f"Timeout communicating with charger: {error}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from error
+        except AuthenticationError as error:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
             ) from error

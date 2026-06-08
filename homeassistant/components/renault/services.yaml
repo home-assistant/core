@@ -17,7 +17,7 @@ ac_start:
     when:
       example: "2020-05-01T17:45:00"
       selector:
-        text:
+        datetime:
 
 ac_cancel:
   fields:

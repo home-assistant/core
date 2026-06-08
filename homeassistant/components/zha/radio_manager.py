@@ -1,7 +1,5 @@
 """ZHA radio manager."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator
 import contextlib
@@ -409,7 +407,7 @@ class ZhaMultiPANMigrationHelper:
                     create_backup=True
                 )
                 break
-            except OSError as err:
+            except (OSError, HomeAssistantError) as err:
                 if retry >= BACKUP_RETRIES - 1:
                     raise
 
@@ -450,7 +448,7 @@ class ZhaMultiPANMigrationHelper:
             try:
                 await self._radio_mgr.restore_backup(overwrite_ieee=True)
                 break
-            except OSError as err:
+            except (OSError, HomeAssistantError) as err:
                 if retry >= MIGRATION_RETRIES - 1:
                     raise
 

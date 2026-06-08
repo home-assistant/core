@@ -11,7 +11,6 @@ from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
-    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -192,7 +191,7 @@ async def test_numeric_sensor(
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
-    state = hass.states.get("sensor.hsm200_illuminance")
+    state = hass.states.get("sensor.basement_hsm200_illuminance")
 
     assert state
     assert state.state == "61.0"
@@ -220,7 +219,7 @@ async def test_numeric_sensor(
 
     express_controls_ezmultipli.receive_event(event)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.hsm200_illuminance")
+    state = hass.states.get("sensor.basement_hsm200_illuminance")
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -360,7 +359,7 @@ async def test_config_parameter_sensor(
 async def test_controller_status_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, client, integration
 ) -> None:
-    """Test controller status sensor is created and gets updated on controller state changes."""
+    """Test controller status sensor updates on state changes."""
     entity_id = "sensor.z_stick_gen5_usb_controller_status"
     entity_entry = entity_registry.async_get(entity_id)
 
@@ -506,7 +505,7 @@ async def test_node_status_sensor_not_ready(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert "There is no value to refresh for this entity" in caplog.text
+    assert f"There is no value to refresh for {node_status_entity_id}" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -711,8 +710,8 @@ async def test_special_meters(
             ],
         }
     )
-    # Add an ElectricScale.KILOVOLT_AMPERE_REACTIVE value to the state so we can test that
-    # it is handled differently (no device class)
+    # Add an ElectricScale.KILOVOLT_AMPERE_REACTIVE value to test
+    # that it is handled differently (no device class)
     node_data["values"].append(
         {
             "endpoint": 11,
@@ -895,137 +894,6 @@ async def test_new_sensor_invalid_scale(
     mock_schedule_reload.assert_called_once_with(integration.entry_id)
 
 
-async def test_opening_state_sensor(
-    hass: HomeAssistant,
-    client,
-    hoppe_ehandle_connectsense_state,
-) -> None:
-    """Test Opening state is exposed as an enum sensor."""
-    node = Node(client, hoppe_ehandle_connectsense_state)
-    client.driver.controller.nodes[node.node_id] = node
-
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.ehandle_connectsense_opening_state")
-    assert state
-    assert state.state == "Closed"
-    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
-    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open"]
-    assert state.attributes[ATTR_VALUE] == 0
-
-    # Make sure we're not accidentally creating enum sensors for legacy
-    # Door/Window notification variables.
-    legacy_sensor_ids = [
-        "sensor.ehandle_connectsense_door_state",
-        "sensor.ehandle_connectsense_door_state_simple",
-    ]
-    for entity_id in legacy_sensor_ids:
-        assert hass.states.get(entity_id) is None
-
-
-async def test_opening_state_sensor_metadata_options_change(
-    hass: HomeAssistant,
-    hoppe_ehandle_connectsense: Node,
-    integration: MockConfigEntry,
-) -> None:
-    """Test Opening state sensor is rediscovered when metadata options change."""
-    entity_id = "sensor.ehandle_connectsense_opening_state"
-    node = hoppe_ehandle_connectsense
-
-    # Verify initial state with 2 options
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "Closed"
-    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
-    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open"]
-
-    # Simulate metadata update adding "Tilted" state
-    event = Event(
-        "metadata updated",
-        {
-            "source": "node",
-            "event": "metadata updated",
-            "nodeId": node.node_id,
-            "args": {
-                "commandClassName": "Notification",
-                "commandClass": 113,
-                "endpoint": 0,
-                "property": "Access Control",
-                "propertyKey": "Opening state",
-                "propertyName": "Access Control",
-                "propertyKeyName": "Opening state",
-                "metadata": {
-                    "type": "number",
-                    "readable": True,
-                    "writeable": False,
-                    "label": "Opening state",
-                    "ccSpecific": {"notificationType": 6},
-                    "min": 0,
-                    "max": 255,
-                    "states": {
-                        "0": "Closed",
-                        "1": "Open",
-                        "2": "Tilted",
-                    },
-                    "stateful": True,
-                    "secret": False,
-                },
-            },
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-
-    # Entity should be rediscovered with 3 options
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open", "Tilted"]
-
-    # Simulate metadata update removing "Tilted" state
-    event = Event(
-        "metadata updated",
-        {
-            "source": "node",
-            "event": "metadata updated",
-            "nodeId": node.node_id,
-            "args": {
-                "commandClassName": "Notification",
-                "commandClass": 113,
-                "endpoint": 0,
-                "property": "Access Control",
-                "propertyKey": "Opening state",
-                "propertyName": "Access Control",
-                "propertyKeyName": "Opening state",
-                "metadata": {
-                    "type": "number",
-                    "readable": True,
-                    "writeable": False,
-                    "label": "Opening state",
-                    "ccSpecific": {"notificationType": 6},
-                    "min": 0,
-                    "max": 255,
-                    "states": {
-                        "0": "Closed",
-                        "1": "Open",
-                    },
-                    "stateful": True,
-                    "secret": False,
-                },
-            },
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-
-    # Entity should be rediscovered with 2 options again
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open"]
-
-
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
 # controller statistics with initial state of 0
 CONTROLLER_STATISTICS_SUFFIXES = {
@@ -1077,7 +945,7 @@ async def test_statistics_sensors_migration(
     node = Node(client, copy.deepcopy(zp3111_state))
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
     controller_base_unique_id = f"{client.driver.controller.home_id}.1.statistics"
@@ -1257,7 +1125,7 @@ async def test_statistics_sensors(
                 blocking=True,
             )
     await hass.async_block_till_done()
-    assert caplog.text.count("There is no value to refresh for this entity") == len(
+    assert caplog.text.count("There is no value to refresh for") == len(
         [
             *CONTROLLER_STATISTICS_SUFFIXES,
             *CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN,

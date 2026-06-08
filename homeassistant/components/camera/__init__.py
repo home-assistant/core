@@ -1,10 +1,8 @@
 """Component to interface with cameras."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Container, Coroutine, Mapping
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
@@ -14,16 +12,16 @@ import logging
 import os
 from random import SystemRandom
 import time
-from typing import Any, Final, final
+from typing import Any, Final, final, override
 
-from aiohttp import hdrs, web
+from aiohttp import web
 import attr
 from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -58,7 +56,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.loader import bind_hass
 
 from .const import (
     CAMERA_IMAGE_TIMEOUT,
@@ -163,7 +160,6 @@ class CameraCapabilities:
     frontend_stream_types: set[StreamType]
 
 
-@bind_hass
 async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) -> str:
     """Request a stream for a camera entity."""
     camera = get_camera_from_entity_id(hass, entity_id)
@@ -212,7 +208,6 @@ async def _async_get_image(
     raise HomeAssistantError("Unable to get image")
 
 
-@bind_hass
 async def async_get_image(
     hass: HomeAssistant,
     entity_id: str,
@@ -247,14 +242,12 @@ async def _async_get_stream_image(
     return None
 
 
-@bind_hass
 async def async_get_stream_source(hass: HomeAssistant, entity_id: str) -> str | None:
     """Fetch the stream source for a camera entity."""
     camera = get_camera_from_entity_id(hass, entity_id)
     return await camera.stream_source()
 
 
-@bind_hass
 async def async_get_mjpeg_stream(
     hass: HomeAssistant, request: web.Request, entity_id: str
 ) -> web.StreamResponse | None:
@@ -452,7 +445,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.stream: Stream | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
-        self.access_tokens: collections.deque = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque(maxlen=2)
         self._warned_old_signature = False
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None
@@ -552,10 +545,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     ) -> None:
         """Handle the async WebRTC offer.
 
-        Async means that it could take some time to process the offer and responses/message
-        will be sent with the send_message callback.
-        This method is used by cameras with CameraEntityFeature.STREAM.
-        An integration overriding this method must also implement async_on_webrtc_candidate.
+        Async means that it could take some time to process
+        the offer and responses/message will be sent with the
+        send_message callback.
+        This method is used by cameras with
+        CameraEntityFeature.STREAM.
+        An integration overriding this method must also
+        implement async_on_webrtc_candidate.
 
         Integrations can override with a native WebRTC implementation.
         """
@@ -714,7 +710,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @callback
     def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
-        """Return the WebRTC client configuration and extend it with the registered ice servers."""
+        """Return the WebRTC client configuration.
+
+        Extend it with the registered ice servers.
+        """
         config = self._async_get_webrtc_client_configuration()
 
         ice_servers = async_get_ice_servers(self.hass)
@@ -777,29 +776,25 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 class CameraView(HomeAssistantView):
     """Base CameraView."""
 
-    requires_auth = False
+    use_query_token_for_auth = True
 
     def __init__(self, component: EntityComponent[Camera]) -> None:
         """Initialize a basic camera view."""
         self.component = component
 
+    @callback
+    @override
+    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
+        """Return valid auth tokens, which can be used for query token authentication."""
+        if (camera := self.component.get_entity(match_info["entity_id"])) is None:
+            return ()
+
+        return camera.access_tokens
+
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (camera := self.component.get_entity(entity_id)) is None:
             raise web.HTTPNotFound
-
-        authenticated = (
-            request[KEY_AUTHENTICATED]
-            or request.query.get("token") in camera.access_tokens
-        )
-
-        if not authenticated:
-            # Attempt with invalid bearer token, raise unauthorized
-            # so ban middleware can handle it.
-            if hdrs.AUTHORIZATION in request.headers:
-                raise web.HTTPUnauthorized
-            # Invalid sigAuth or camera access token
-            raise web.HTTPForbidden
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
@@ -931,6 +926,7 @@ async def websocket_get_prefs(
         vol.Optional(PREF_ORIENTATION): vol.Coerce(Orientation),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_update_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -1005,7 +1001,9 @@ async def async_handle_snapshot_service(
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
         raise HomeAssistantError(
-            f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+            f"Cannot write `{snapshot_file}`, no access to path;"
+            " `allowlist_external_dirs` may need to be adjusted"
+            " in `configuration.yaml`"
         )
 
     try:

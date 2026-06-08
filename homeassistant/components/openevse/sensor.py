@@ -1,7 +1,5 @@
 """Support for monitoring an OpenEVSE Charger."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -77,7 +75,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
             "1": "level_1",
             "2": "level_2",
             "a": "automatic",
-        }.get(ev.service_level.lower()),
+        }.get(str(ev.service_level).lower()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -101,7 +99,8 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="charging_current",
         translation_key="charging_current",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ev: ev.charging_current,
@@ -117,7 +116,8 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="charging_power",
         translation_key="charging_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
+        native_unit_of_measurement=UnitOfPower.MILLIWATT,
+        suggested_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ev: ev.charging_power,

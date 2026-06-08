@@ -1,7 +1,5 @@
 """Support for AtlanticHeatRecoveryVentilation."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -69,7 +67,9 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return cast(float, temperature.value)
 

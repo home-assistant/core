@@ -1,7 +1,5 @@
 """Support for Somfy Smart Thermostat."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -42,10 +40,10 @@ OVERKIZ_TO_PRESET_MODES: dict[OverkizCommandParam, str] = {
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
 TARGET_TEMP_TO_OVERKIZ = {
-    PRESET_HOME: OverkizState.SOMFY_THERMOSTAT_AT_HOME_TARGET_TEMPERATURE,
-    PRESET_AWAY: OverkizState.SOMFY_THERMOSTAT_AWAY_MODE_TARGET_TEMPERATURE,
-    PRESET_FREEZE: OverkizState.SOMFY_THERMOSTAT_FREEZE_MODE_TARGET_TEMPERATURE,
-    PRESET_NIGHT: OverkizState.SOMFY_THERMOSTAT_SLEEPING_MODE_TARGET_TEMPERATURE,
+    PRESET_HOME: OverkizState.SOMFYTHERMOSTAT_AT_HOME_TARGET_TEMPERATURE,
+    PRESET_AWAY: OverkizState.SOMFYTHERMOSTAT_AWAY_MODE_TARGET_TEMPERATURE,
+    PRESET_FREEZE: OverkizState.SOMFYTHERMOSTAT_FREEZE_MODE_TARGET_TEMPERATURE,
+    PRESET_NIGHT: OverkizState.SOMFYTHERMOSTAT_SLEEPING_MODE_TARGET_TEMPERATURE,
 }
 
 # controllableName is somfythermostat:SomfyThermostatTemperatureSensor
@@ -90,9 +88,9 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
         if self.hvac_mode == HVACMode.AUTO:
-            state_key = OverkizState.SOMFY_THERMOSTAT_HEATING_MODE
+            state_key = OverkizState.SOMFYTHERMOSTAT_HEATING_MODE
         else:
-            state_key = OverkizState.SOMFY_THERMOSTAT_DEROGATION_HEATING_MODE
+            state_key = OverkizState.SOMFYTHERMOSTAT_DEROGATION_HEATING_MODE
 
         if state := self.executor.select_state(state_key):
             return OVERKIZ_TO_PRESET_MODES[OverkizCommandParam(cast(str, state))]
@@ -103,7 +101,9 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return cast(float, temperature.value)
         return None

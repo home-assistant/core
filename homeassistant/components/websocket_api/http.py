@@ -1,7 +1,5 @@
 """View to accept incoming websocket connection."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine
@@ -94,7 +92,9 @@ class WebSocketHandler:
         self._hass = hass
         self._loop = hass.loop
         self._request: web.Request = request
-        self._wsock = web.WebSocketResponse(heartbeat=55)
+        # decode_text=False so orjson decodes the raw TEXT bytes directly
+        # instead of decoding to str first and re-scanning.
+        self._wsock = web.WebSocketResponse(heartbeat=55, decode_text=False)
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
@@ -216,7 +216,8 @@ class WebSocketHandler:
         if (queue_size_after_add := len(message_queue)) >= MAX_PENDING_MSG:
             self._logger.error(
                 (
-                    "%s: Client unable to keep up with pending messages. Reached %s pending"
+                    "%s: Client unable to keep up with"
+                    " pending messages. Reached %s pending"
                     " messages. The system's load is too high or an integration is"
                     " misbehaving; Last message was: %s"
                 ),
@@ -280,7 +281,8 @@ class WebSocketHandler:
 
         self._logger.error(
             (
-                "%s: Client unable to keep up with pending messages. Stayed over %s for %s"
+                "%s: Client unable to keep up with"
+                " pending messages. Stayed over %s for %s"
                 " seconds. The system's load is too high or an integration is"
                 " misbehaving; Last message was: %s"
             ),
@@ -401,7 +403,8 @@ class WebSocketHandler:
                 msg = await self._wsock.receive(AUTH_MESSAGE_TIMEOUT)
             except TimeoutError as err:
                 raise Disconnect(
-                    f"Did not receive auth message within {AUTH_MESSAGE_TIMEOUT} seconds"
+                    "Did not receive auth message within"
+                    f" {AUTH_MESSAGE_TIMEOUT} seconds"
                 ) from err
 
             if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
@@ -551,8 +554,10 @@ class WebSocketHandler:
                 if disconnect_warn is None:
                     logger.debug("%s: Disconnected", self.description)
                 elif connection is None:
-                    # Auth phase disconnects (connection is None) should be logged at debug level
-                    # as they can be from random port scanners or non-legitimate connections
+                    # Auth phase disconnects (connection is
+                    # None) should be logged at debug level
+                    # as they can be from random port scanners
+                    # or non-legitimate connections
                     logger.debug(
                         "%s: Disconnected during auth phase: %s",
                         self.description,

@@ -1,7 +1,5 @@
 """Config flow for the Cync integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -90,7 +88,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required and prompts for their Cync credentials."""
+        """Inform the user that reauth is required and prompt for Cync credentials."""
         errors: dict[str, str] = {}
 
         reauth_entry = self._get_reauth_entry()

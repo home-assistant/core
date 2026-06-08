@@ -2,8 +2,12 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, patch
+
+from pylutron_caseta.color_value import ColorMode as LutronColorMode, WarmCoolColorValue
 
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
@@ -15,6 +19,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 ENTRY_MOCK_DATA = {
     CONF_HOST: "1.1.1.1",
@@ -32,6 +38,8 @@ _LEAP_DEVICE_TYPES = {
         "TempInWallPaddleDimmer",
         "WallDimmerWithPreset",
         "Dimmed",
+        "WhiteTune",
+        "SpectrumTune",
     ],
     "switch": [
         "WallSwitch",
@@ -101,6 +109,7 @@ class MockBridge:
         self.occupancy_groups = {}
         self.scenes = self.get_scenes()
         self.devices = self.load_devices()
+        self.battery_statuses = {"802": "Good"}
         self.buttons = self.load_buttons()
         self._subscribers: dict[str, list] = {}
         self.smart_away_state = smart_away_state
@@ -167,6 +176,35 @@ class MockBridge:
             "1026": {"id": "1026", "name": "Dining Room", "parent_id": "3"},
             "1205": {"id": "1205", "name": "Hallway", "parent_id": "3"},
         }
+
+    async def set_value(
+        self,
+        device_id: str,
+        value: int | None = None,
+        fade_time: timedelta | None = None,
+        color_value: LutronColorMode | None = None,
+    ) -> None:
+        """Mock changing device state and invoke callbacks."""
+        # Update internal device state so HA will later report it as on/off
+        if device_id in self.devices and value is not None:
+            self.devices[device_id]["current_state"] = value
+
+        # Notify all subscribers for that device_id
+        if hasattr(self, "_subscribers") and device_id in self._subscribers:
+            for callback in self._subscribers[device_id]:
+                callback()
+
+    async def set_warm_dim(
+        self,
+        device_id: str,
+        value: int | None = None,
+        fade_time: timedelta | None = None,
+    ) -> None:
+        """Mock changing the warm dim state and invoke callbacks."""
+        if device_id in self.devices and value is not None:
+            self.devices[device_id]["current_state"] = value
+            self.devices[device_id]["warm_dim"] = True
+        self.call_subscribers(device_id)
 
     def load_devices(self):
         """Load mock devices into self.devices."""
@@ -240,6 +278,19 @@ class MockBridge:
                 "type": "WallDimmer",
                 "model": None,
                 "serial": 5442321,
+                "tilt": None,
+                "area": "1025",
+            },
+            "902": {
+                "device_id": "902",
+                "current_state": 0,
+                "fan_speed": None,
+                "zone": "901",
+                "name": "Kitchen_Other Lights",
+                "button_groups": None,
+                "type": "WallDimmer",
+                "model": None,
+                "serial": 5442322,
                 "tilt": None,
                 "area": "1025",
             },
@@ -346,11 +397,6 @@ class MockBridge:
     def tap_button(self, button_id: str):
         """Mock a button press and release message for the given button ID."""
 
-    async def set_value(self, device_id: str, value: int) -> None:
-        """Mock setting a device value."""
-        if device_id in self.devices:
-            self.devices[device_id]["current_state"] = value
-
     async def raise_cover(self, device_id: str) -> None:
         """Mock raising a cover."""
 
@@ -360,9 +406,53 @@ class MockBridge:
     async def stop_cover(self, device_id: str) -> None:
         """Mock stopping a cover."""
 
+    async def get_battery_status(self, device_id: str) -> str | None:
+        """Mock reading battery status for a device."""
+        return self.battery_statuses.get(device_id)
+
     async def close(self):
         """Close the mock bridge connection."""
         self.is_currently_connected = False
+
+
+class MockBridgeWithColorLight(MockBridge):
+    """Mock bridge that also exposes color-capable lights."""
+
+    def load_devices(self):
+        """Add white-tune and spectrum-tune lights to the mock devices."""
+        devices = super().load_devices()
+        devices["903"] = {
+            "device_id": "903",
+            "current_state": 50,
+            "fan_speed": None,
+            "zone": "903",
+            "name": "Kitchen_Color Light",
+            "button_groups": None,
+            "type": "WhiteTune",
+            "model": None,
+            "serial": 5442323,
+            "tilt": None,
+            "area": "1025",
+            "white_tuning_range": {"Min": 2700, "Max": 6500},
+            "color": WarmCoolColorValue(3000),
+        }
+        devices["904"] = {
+            "device_id": "904",
+            "current_state": 50,
+            "fan_speed": None,
+            "zone": "904",
+            "name": "Kitchen_Spectrum Light",
+            "button_groups": None,
+            "type": "SpectrumTune",
+            "model": None,
+            "serial": 5442324,
+            "tilt": None,
+            "area": "1025",
+            "white_tuning_range": {"Min": 2700, "Max": 6500},
+            "warm_dim": True,
+            "color": WarmCoolColorValue(3000),
+        }
+        return devices
 
 
 def make_mock_entry() -> MockConfigEntry:

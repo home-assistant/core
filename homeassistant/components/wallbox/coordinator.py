@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the wallbox integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -239,7 +237,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @_require_authentication
     async def _async_update_data(self) -> dict[str, Any]:
-        """Get new sensor data for Wallbox component. Set update interval to be UPDATE_INTERVAL * #wallbox chargers configured, this is necessary due to rate limitations."""
+        """Get new sensor data for Wallbox component."""
 
         self.update_interval = timedelta(
             seconds=UPDATE_INTERVAL
@@ -390,6 +388,31 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_pause_charger(self, pause: bool) -> None:
         """Set wallbox to pause or resume."""
         await self.hass.async_add_executor_job(self._pause_charger, pause)
+        await self.async_request_refresh()
+
+    def _resume_schedule(self) -> None:
+        """Resume schedule and EcoSmart mode after a manual stop."""
+        try:
+            self._wallbox.resumeSchedule(self._station)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
+                raise InsufficientRights(
+                    translation_domain=DOMAIN,
+                    translation_key="insufficient_rights",
+                    hass=self.hass,
+                ) from wallbox_connection_error
+            if wallbox_connection_error.response.status_code == 429:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="too_many_requests"
+                ) from wallbox_connection_error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_failed"
+            ) from wallbox_connection_error
+
+    @_require_authentication
+    async def async_resume_schedule(self) -> None:
+        """Resume schedule and EcoSmart mode after a manual stop."""
+        await self.hass.async_add_executor_job(self._resume_schedule)
         await self.async_request_refresh()
 
     def _set_eco_smart(self, option: str) -> None:

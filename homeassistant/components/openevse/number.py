@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .helpers import openevse_exception_handler
 
 PARALLEL_UPDATES = 0
 
@@ -42,10 +43,10 @@ NUMBER_TYPES: tuple[OpenEVSENumberDescription, ...] = (
     OpenEVSENumberDescription(
         key="charge_rate",
         translation_key="charge_rate",
-        value_fn=lambda ev: ev.max_current_soft,
-        min_value_fn=lambda ev: ev.min_amps,
-        max_value_fn=lambda ev: ev.max_amps,
-        set_value_fn=lambda ev, value: ev.set_current(value),
+        value_fn=lambda ev: ev.max_current_soft or 0,
+        min_value_fn=lambda ev: ev.min_amps or 0,
+        max_value_fn=lambda ev: ev.max_amps or 0,
+        set_value_fn=lambda ev, value: ev.set_current(int(value)),
         native_step=1.0,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -113,4 +114,5 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.entity_description.set_value_fn(self.coordinator.charger, value)
+        with openevse_exception_handler(value):
+            await self.entity_description.set_value_fn(self.coordinator.charger, value)

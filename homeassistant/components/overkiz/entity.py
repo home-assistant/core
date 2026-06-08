@@ -1,10 +1,8 @@
 """Parent class for every Overkiz device."""
 
-from __future__ import annotations
-
 from typing import cast
 
-from pyoverkiz.enums import OverkizAttribute, OverkizState
+from pyoverkiz.enums import APIType, OverkizAttribute, OverkizCommandParam, OverkizState
 from pyoverkiz.models import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -46,7 +44,21 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.device.available and super().available
+        if self.device.available:
+            return super().available
+
+        # Workaround: local API may incorrectly report
+        # available=False (Somfy-TaHoma-Developer-Mode#217)
+        if self.coordinator.client.server_config.api_type != APIType.LOCAL:
+            return False
+
+        if status_state := self.device.states.get(OverkizState.CORE_STATUS):
+            return (
+                status_state.value == OverkizCommandParam.AVAILABLE
+                and super().available
+            )
+
+        return False
 
     @property
     def is_sub_device(self) -> bool:
@@ -73,7 +85,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         manufacturer = (
             self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)
             or self.executor.select_state(OverkizState.CORE_MANUFACTURER_NAME)
-            or self.coordinator.client.server.manufacturer
+            or self.coordinator.client.server_config.manufacturer
         )
 
         model = (
@@ -104,7 +116,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             hw_version=self.device.controllable_name,
             suggested_area=suggested_area,
             via_device=(DOMAIN, self.executor.get_gateway_id()),
-            configuration_url=self.coordinator.client.server.configuration_url,
+            configuration_url=self.coordinator.client.server_config.configuration_url,
         )
 
 

@@ -1,7 +1,5 @@
 """AI Task integration for Ollama."""
 
-from __future__ import annotations
-
 from json import JSONDecodeError
 import logging
 

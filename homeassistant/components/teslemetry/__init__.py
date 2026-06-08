@@ -262,7 +262,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
-                configuration_url="https://teslemetry.com/console",
+                configuration_url=f"https://teslemetry.com/console/vehicle/{vin}",
                 name=product["display_name"],
                 model=vehicle.model,
                 model_id=vin[3],
@@ -324,7 +324,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",
-                configuration_url="https://teslemetry.com/console",
+                configuration_url=f"https://teslemetry.com/console/energy/{site_id}",
                 name=product.get("site_name", "Energy Site"),
                 serial_number=str(site_id),
             )
@@ -453,9 +453,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TeslemetryConfigEntry
 ) -> bool:
     """Migrate config entry."""
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         access_token = config_entry.data[CONF_ACCESS_TOKEN]
@@ -514,7 +511,7 @@ def async_setup_energy_device(
         *data.get("components_gateways", []),
         *data.get("components_batteries", []),
     ):
-        if part_name := component.get("part_name"):
+        if (part_name := component.get("part_name")) and part_name != "Unknown":
             models.add(part_name)
     if models:
         energysite.device["model"] = ", ".join(sorted(models))

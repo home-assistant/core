@@ -1,7 +1,5 @@
 """Lights on Zigbee Home Automation networks."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import functools
 import logging
@@ -173,7 +171,7 @@ class Light(LightEntity, ZHAEntity):
         """Return the current effect."""
         return self.entity_data.entity.effect
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         color_temp = (
@@ -191,7 +189,7 @@ class Light(LightEntity, ZHAEntity):
         )
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_data.entity.async_turn_off(

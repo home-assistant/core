@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -41,9 +43,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': -30.222626,
       'longitude': -97.6236871,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.test_location',
@@ -59,7 +64,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -95,16 +102,19 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Route',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 30.2226265,
       'longitude': -97.6236871,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.test_route',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'home',
+    'state': 'not_home',
   })
 # ---
 # name: test_device_tracker_alt[device_tracker.test_location-statealt]
@@ -112,9 +122,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': -30.222626,
       'longitude': -97.6236871,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.test_location',
@@ -129,9 +142,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Route',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 30.2226265,
       'longitude': -97.6236871,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.test_route',

@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["srpenergy"],
-  "requirements": ["srpenergy==1.3.6"]
+  "requirements": ["srpenergy==1.3.8"]
 }

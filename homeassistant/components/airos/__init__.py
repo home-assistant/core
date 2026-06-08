@@ -1,7 +1,5 @@
 """The Ubiquiti airOS integration."""
 
-from __future__ import annotations
-
 import logging
 
 from airos.airos6 import AirOS6
@@ -33,13 +31,20 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN, SECTION_ADVANCED_SETTINGS
-from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
+from .coordinator import (
+    AirOSConfigEntry,
+    AirOSDataUpdateCoordinator,
+    AirOSFirmwareUpdateCoordinator,
+    AirOSRuntimeData,
+)
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,8 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
     ) as err:
         raise ConfigEntryAuthFailed from err
     except AirOSKeyDataMissingError as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryError("key_data_missing") from err
     except Exception as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryError("unknown") from err
 
     airos_class: type[AirOS8 | AirOS6] = (
@@ -86,10 +93,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
 
     airos_device = airos_class(**conn_data)
 
-    coordinator = AirOSDataUpdateCoordinator(hass, entry, device_data, airos_device)
-    await coordinator.async_config_entry_first_refresh()
+    data_coordinator = AirOSDataUpdateCoordinator(
+        hass, entry, device_data, airos_device
+    )
+    await data_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    firmware_coordinator: AirOSFirmwareUpdateCoordinator | None = None
+    if device_data["fw_major"] >= 8:
+        firmware_coordinator = AirOSFirmwareUpdateCoordinator(hass, entry, airos_device)
+        await firmware_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = AirOSRuntimeData(
+        status=data_coordinator,
+        firmware=firmware_coordinator,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
@@ -98,10 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
     """Migrate old config entry."""
-
-    # This means the user has downgraded from a future version
-    if entry.version > 2:
-        return False
 
     # 1.1 Migrate config_entry to add advanced ssl settings
     if entry.version == 1 and entry.minor_version == 1:

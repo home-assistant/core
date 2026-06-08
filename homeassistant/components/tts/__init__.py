@@ -1,7 +1,5 @@
 """Provide functionality for TTS."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, MutableMapping
 from dataclasses import dataclass, field
@@ -142,7 +140,7 @@ class TTSCache:
     """If an error occurred while loading, contains the error."""
 
     _consumers: list[asyncio.Queue[bytes | None]] | None = None
-    """A queue for each current consumer to notify of new data while the generator is loading."""
+    """Queue for consumers to receive data while loading."""
 
     def __init__(
         self,
@@ -615,6 +613,10 @@ class ResultStream:
         async for chunk in converted_audio:
             yield chunk
 
+    def delete(self) -> None:
+        """Remove the result stream from the manager."""
+        self._manager.async_delete_result_stream(self.token)
+
 
 def _hash_options(options: dict) -> str:
     """Hashes an options dictionary."""
@@ -810,6 +812,11 @@ class SpeechManager:
         if stream:
             stream.last_used = monotonic()
         return stream
+
+    @callback
+    def async_delete_result_stream(self, token: str) -> None:
+        """Delete a result stream given a token."""
+        self.token_to_stream.pop(token, None)
 
     @callback
     def async_create_result_stream(
