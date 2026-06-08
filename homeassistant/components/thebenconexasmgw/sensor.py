@@ -53,7 +53,7 @@ class TotalInOutSensor(ConexaSMGWEntity, SensorEntity):
             self._attr_icon = "mdi:home-export-outline"
         # TODO: How to handle error cases? pylint: disable=fixme
 
-        self.__key = key
+        self._key = key
         self._attr_native_value = coordinator.data[key].value
         # As far as I know the Conexa 3.0 returns always Wh but there is the possibility that it returns Joules
         if coordinator.data[key].unit.upper() == "J":
@@ -72,5 +72,5 @@ class TotalInOutSensor(ConexaSMGWEntity, SensorEntity):
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data[self.__key].value
+        self._attr_native_value = self.coordinator.data[self._key].value
         self.async_write_ha_state()

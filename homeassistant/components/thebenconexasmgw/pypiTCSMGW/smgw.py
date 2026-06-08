@@ -54,7 +54,7 @@ class NoUsagePtIdFound(ConexaSmgwErr):
     """The smgw returned no valid usage point ID."""
 
 
-async def checkNetworkConnection(session: aiohttp.ClientSession, host):
+async def checkNetworkConnection(host):
     """Checks if the smgw can be reached on port 443."""
     writer = None
     try:

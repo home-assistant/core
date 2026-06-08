@@ -23,7 +23,7 @@ class ThebenRuntimeData:
     """Data for the Theben Conexa Smartmeter gateway integration."""
 
     api: ConexaSMGW
-    coordinator: SmgwSensorCoordinator
+    coordinator: "SmgwSensorCoordinator"
 
 
 type ThebenConfigEntry = ConfigEntry[ThebenRuntimeData]
@@ -37,7 +37,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name="My Sensor Local Poll",
+            name="Theben Conexa Local Poll",
             config_entry=entry,
             # Set to None so HA doesn't poll on a standard rolling interval
             update_interval=None,
@@ -49,7 +49,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
         self._scheduled_updates = async_track_utc_time_change(
             hass,
             self._scheduled_update,
-            minute=["0", "15", "30", "45"],
+            minute=[0, 15, 30, 45],
             second=40,
         )
         self._unscheduled_updates: CALLBACK_TYPE | None = None

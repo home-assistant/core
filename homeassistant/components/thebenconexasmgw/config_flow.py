@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -20,7 +21,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(
             CONF_HOST, default="192.168.1.200"
-        ): str,  # TODO many electricity grid operators use this IP as default should this integration assume so also? pylint: disable=fixme
+        ): str,  # TODO many electricity grid operators use this IP as 'hardcoded' static IP should this integration assume so also? pylint: disable=fixme
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
     }
@@ -35,8 +36,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         # This function tries to establish a TCP connection and raises an exception on error
-        await checkNetworkConnection(async_get_clientsession(hass), data[CONF_HOST])
-    except Exception as e:
+        await checkNetworkConnection(data[CONF_HOST])
+    except (OSError, aiohttp.ClientError) as e:
         raise CannotConnect from e
 
     try:
@@ -47,7 +48,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             data[CONF_PASSWORD],
         )
         _LOGGER.debug("SMGW returned valid query URL %s", m2murl)
-    except Exception as e:
+    except (OSError, aiohttp.ClientError) as e:
         # The smgw unfortunately does not reply with invalid auth it just times out
         # So after we checked that connection is possible we assume Invalid auth if something happens
         raise InvalidAuth from e

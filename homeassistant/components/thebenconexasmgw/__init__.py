@@ -2,6 +2,8 @@
 
 import logging
 
+import aiohttp
+
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -24,10 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> bo
 
     try:
         # This function tries to establish a TCP connection and raises an exception on error
-        await checkNetworkConnection(
-            async_get_clientsession(hass), entry.data[CONF_HOST]
-        )
-    except Exception as e:
+        await checkNetworkConnection(entry.data[CONF_HOST])
+    except (OSError, aiohttp.ClientError) as e:
         raise ConfigEntryNotReady("Device is not reachable") from e
 
     coordinator = SmgwSensorCoordinator(hass, entry)
@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> bo
             ),
             coordinator=coordinator,
         )
-    except Exception as e:
+    except (OSError, aiohttp.ClientError) as e:
         raise ConfigEntryAuthFailed("Authentication failed") from e
 
     # Check if we got a different URL back -> Something is seriously wrong
