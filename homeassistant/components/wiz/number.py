@@ -26,6 +26,8 @@ class WizNumberEntityDescription(NumberEntityDescription):
     required_feature: str
     set_value_fn: Callable[[wizlight, int], Coroutine[None, None, None]]
     value_fn: Callable[[wizlight], int | None]
+    # Optional fallback, checked against runtime state when required_feature is
+    # not advertised by the bulb type.
     supported_fn: Callable[[wizlight], bool] | None = None
 
 
@@ -70,7 +72,13 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
 def _supports_number_description(
     device: wizlight, description: WizNumberEntityDescription
 ) -> bool:
-    """Return whether the device supports a number description."""
+    """Return whether the device supports a number description.
+
+    When the bulb type does not advertise the required feature, ``supported_fn``
+    is evaluated as a fallback. It inspects the current runtime state (e.g.
+    whether a ratio is present), so the result depends on the device state at
+    call time.
+    """
     return getattr(device.bulbtype.features, description.required_feature, False) or (
         description.supported_fn is not None and description.supported_fn(device)
     )
