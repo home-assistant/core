@@ -88,13 +88,10 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
     """
 
     _attr_supported_features = LightEntityFeature.TRANSITION
+    _prev_brightness: int | None = None
 
     def __init__(self, light: dict[str, Any], data: LutronCasetaData) -> None:
-        """Initialize the light and set the supported color modes.
-
-        :param light: The lutron light device to initialize.
-        :param data: The integration data
-        """
+        """Initialize the light and set the supported color modes."""
         super().__init__(light, data)
 
         self._attr_min_color_temp_kelvin = self._get_min_color_temp_kelvin(light)
@@ -115,28 +112,23 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             DEVICE_TYPE_COLOR_TUNE,
         )
 
-    def _get_min_color_temp_kelvin(self, light: dict[str, Any]) -> int:
-        """Return minimum supported color temperature.
+        # Capture the initial brightness so _prev_brightness is correct on startup
+        self._sync_prev_brightness_from_device()
 
-        :param light: The light to get the minimum color temperature for.
-        """
+    def _get_min_color_temp_kelvin(self, light: dict[str, Any]) -> int:
+        """Return minimum supported color temperature."""
         white_tune_range = light.get("white_tuning_range")
         # Default to 1.4k if not found
         if white_tune_range is None or "Min" not in white_tune_range:
             return 1400
-
         return white_tune_range.get("Min")
 
     def _get_max_color_temp_kelvin(self, light: dict[str, Any]) -> int:
-        """Return maximum supported color temperature.
-
-        :param light: The light to get the maximum color temperature for.
-        """
+        """Return maximum supported color temperature."""
         white_tune_range = light.get("white_tuning_range")
         # Default to 10k if not found
         if white_tune_range is None or "Max" not in white_tune_range:
             return 10000
-
         return white_tune_range.get("Max")
 
     @property
@@ -144,20 +136,42 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         """Return the brightness of the light."""
         return to_hass_level(self._device["current_state"])
 
+    def _sync_prev_brightness_from_device(self) -> None:
+        """Keep previous brightness in sync with device state."""
+        current_level = self._device.get("current_state")
+        if current_level is None:
+            return
+
+        hass_brightness = to_hass_level(current_level)
+        if hass_brightness > 0:
+            # Any non-zero brightness (HA or physical) becomes the new last level
+            self._prev_brightness = hass_brightness
+
+    async def async_update(self) -> None:
+        """Update when forcing a refresh of the device."""
+        await super().async_update()
+        self._sync_prev_brightness_from_device()
+
+    def _handle_bridge_update(self) -> None:
+        """Handle updated data from the bridge."""
+        self._sync_prev_brightness_from_device()
+        super()._handle_bridge_update()
+
     async def _async_set_brightness(
         self, brightness: int | None, color_value: LutronColorMode | None, **kwargs: Any
     ) -> None:
-        args = {}
+        args: dict[str, Any] = {}
         if ATTR_TRANSITION in kwargs:
             args["fade_time"] = timedelta(seconds=kwargs[ATTR_TRANSITION])
 
         if brightness is not None:
             brightness = to_lutron_level(brightness)
+
         await self._smartbridge.set_value(
             self.device_id, value=brightness, color_value=color_value, **args
         )
 
-    async def _async_set_warm_dim(self, brightness: int | None, **kwargs: Any):
+    async def _async_set_warm_dim(self, brightness: int | None, **kwargs: Any) -> None:
         """Set the light to warm dim mode."""
         set_warm_dim_kwargs: dict[str, Any] = {}
         if ATTR_TRANSITION in kwargs:
@@ -176,10 +190,13 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         """Turn the light on."""
         # first check for "white mode" (WarmDim)
         if (white_color := kwargs.get(ATTR_WHITE)) is not None:
+            # Only remember non-zero levels (see brightness handling below)
+            if white_color:
+                self._prev_brightness = white_color
             await self._async_set_warm_dim(white_color)
             return
 
-        brightness = kwargs.pop(ATTR_BRIGHTNESS, None)
+        # Parse the color first, so a color-only call can leave brightness alone
         color: LutronColorMode | None = None
         hs_color: tuple[float, float] | None = kwargs.pop(ATTR_HS_COLOR, None)
         kelvin_color: int | None = kwargs.pop(ATTR_COLOR_TEMP_KELVIN, None)
@@ -189,20 +206,33 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         elif kelvin_color is not None:
             color = WarmCoolColorValue(kelvin_color)
 
-        # if user is pressing on button nothing is set, so set brightness to 255
-        if color is None and brightness is None:
+        brightness: int | None
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs.pop(ATTR_BRIGHTNESS)
+            # Only remember non-zero levels, so a later turn-on without an
+            # explicit brightness never restores the light to "off"
+            if brightness:
+                self._prev_brightness = brightness
+        elif color is not None:
+            # Color-only change: pass None so the device keeps its brightness
+            brightness = None
+        elif self._prev_brightness is None:
+            # No history at all: default to full brightness
             brightness = 255
+        else:
+            # Restore the last known non-zero brightness
+            brightness = self._prev_brightness
 
         await self._async_set_brightness(brightness, color, **kwargs)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
+        # Do not touch _prev_brightness here; we want the last non-zero level to survive.
         await self._async_set_brightness(0, None, **kwargs)
 
     @property
     def color_mode(self) -> ColorMode:
         """Return the current color mode of the light."""
-
         currently_warm_dim = self._device.get("warm_dim", False)
         if self.supports_warm_dim and currently_warm_dim:
             return ColorMode.WHITE
