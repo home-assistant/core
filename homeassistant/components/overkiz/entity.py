@@ -49,7 +49,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
 
         # Workaround: local API may incorrectly report
         # available=False (Somfy-TaHoma-Developer-Mode#217)
-        if self.coordinator.client.api_type != APIType.LOCAL:
+        if self.coordinator.client.server_config.api_type != APIType.LOCAL:
             return False
 
         if status_state := self.device.states.get(OverkizState.CORE_STATUS):
@@ -85,7 +85,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         manufacturer = (
             self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)
             or self.executor.select_state(OverkizState.CORE_MANUFACTURER_NAME)
-            or self.coordinator.client.server.manufacturer
+            or self.coordinator.client.server_config.manufacturer
         )
 
         model = (
@@ -116,7 +116,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             hw_version=self.device.controllable_name,
             suggested_area=suggested_area,
             via_device=(DOMAIN, self.executor.get_gateway_id()),
-            configuration_url=self.coordinator.client.server.configuration_url,
+            configuration_url=self.coordinator.client.server_config.configuration_url,
         )
 
 

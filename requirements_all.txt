@@ -1219,7 +1219,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.8.1
+habluetooth==6.8.3
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1272,7 +1272,7 @@ hole==0.9.0
 holidays==0.98
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260527.4
+home-assistant-frontend==20260527.5
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.6.1
@@ -2435,7 +2435,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.20.4
+pyoverkiz[nexity]==2.0.0
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -3249,7 +3249,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==10.5.0
+uiprotect==11.8.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3433,7 +3433,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.6.5
 
 # homeassistant.components.yoto
-yoto-api==3.2.0
+yoto-api==4.0.2
 
 # homeassistant.components.youless
 youless-api==2.2.0
