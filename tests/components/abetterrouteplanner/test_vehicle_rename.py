@@ -1,0 +1,373 @@
+"""Tests for vehicle rename propagation to the HA device registry.
+
+The listener is registered via ``entry.async_on_unload(
+garage_coordinator.async_add_listener(_propagate_renames))`` after the
+first garage refresh. It iterates ``coordinator.data``, looks up each
+vehicle's device via ``dr.async_get_device(identifiers={(DOMAIN, scope)})``,
+guards on ``device.name_by_user is not None``, and calls
+``dr.async_update_device(device.id, name=new_name)`` when
+``vehicle.name or vehicle.vehicle_model`` differs from the current
+``device.name``.
+
+Design note: these tests avoid ``freezegun``'s ``FrozenDateTimeFactory``
+entirely.  Under a frozen clock ``asyncio.sleep(PREWARM_WINDOW_SECONDS)``
+inside ``async_setup_entry`` never wakes up (the asyncio event loop uses
+``time.monotonic`` which is frozen) and the test hangs.  Instead, each test
+triggers the garage-coordinator refresh directly via
+``coordinator.async_refresh()``, which exercises the same listener code-path
+without needing to advance real time.  The 0.5 s real-time prewarm sleep is
+left in place — patching ``asyncio.sleep`` globally would also short-circuit
+the SSE retry backoff and turn the eager-started ``_run_sse_loop`` into a
+tight loop that prevents ``async_setup_entry`` from returning.
+"""
+
+from typing import Any
+from unittest.mock import AsyncMock
+
+import pytest
+
+from homeassistant.components.abetterrouteplanner import AbrpData
+from homeassistant.components.abetterrouteplanner.api import AbrpVehicle
+from homeassistant.components.abetterrouteplanner.const import (
+    CONF_KNOWN_VEHICLE_IDS,
+    CONF_VEHICLE_IDS,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
+
+from .conftest import (
+    MOCK_VEHICLE_ID,
+    MOCK_VEHICLE_ID_2,
+    MOCK_VEHICLE_MODEL,
+    SENSOR_TEST_SUB,
+)
+
+from tests.common import MockConfigEntry
+
+# Two synthetic vehicle-model strings for "vehicle_model changes" test cases.
+_VEHICLE_MODEL_V1 = "mg:4:22:std:fwd:w21"
+_VEHICLE_MODEL_V2 = "mg:4:22:std:fwd:w22"
+
+
+async def _setup_integration(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Register the integration's OAuth implementation and set up the entry.
+
+    The 0.5 s real-time prewarm sleep in ``async_setup_entry`` is allowed to
+    elapse.  A global ``asyncio.sleep`` patch would also short-circuit the
+    SSE backoff in ``_run_sse_loop`` and turn the eager-started SSE task
+    into a tight loop that prevents ``async_setup_entry`` from returning,
+    so this helper accepts the small wall-clock cost instead.
+    """
+    assert await async_setup_component(hass, "auth", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+async def _poll(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Trigger one garage-coordinator refresh and drain the event bus.
+
+    Directly calls ``async_refresh()`` on the coordinator so tests do not
+    need ``freezer`` and the resulting ``asyncio.sleep`` / select-timeout
+    interaction with a frozen clock.
+    """
+    runtime_data: AbrpData = entry.runtime_data
+    await runtime_data.garage_coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+
+def _make_vehicle(
+    vehicle_id: int = MOCK_VEHICLE_ID,
+    name: str | None = None,
+    vehicle_model: str = MOCK_VEHICLE_MODEL,
+) -> AbrpVehicle:
+    """Build a minimal ``AbrpVehicle`` with controlled name for rename tests."""
+    return AbrpVehicle(
+        vehicle_id=vehicle_id, name=name, vehicle_model=vehicle_model, paint=None
+    )
+
+
+def _device_scope(entry: MockConfigEntry, vehicle_id: int) -> str:
+    """Return the device-identifier scope string for a given vehicle."""
+    return f"{entry.unique_id}_{vehicle_id}"
+
+
+# ---------------------------------------------------------------------------
+# Tests 1, 3, 4, 5 — parametrize table
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.parametrize(
+    (
+        "poll1_name",
+        "poll1_vehicle_model",
+        "poll2_name",
+        "poll2_vehicle_model",
+        "expected_name",
+    ),
+    [
+        pytest.param(
+            "MG4",
+            _VEHICLE_MODEL_V1,
+            "Sofie's MG4",
+            _VEHICLE_MODEL_V1,
+            "Sofie's MG4",
+            id="rename_propagates",
+        ),
+        pytest.param(
+            "MG4",
+            _VEHICLE_MODEL_V1,
+            "MG4",
+            _VEHICLE_MODEL_V1,
+            "MG4",
+            id="no_op_unchanged",
+        ),
+        pytest.param(
+            None,
+            _VEHICLE_MODEL_V1,
+            None,
+            _VEHICLE_MODEL_V2,
+            _VEHICLE_MODEL_V2,
+            id="fallback_vehicle_model_changes",
+        ),
+        pytest.param(
+            None,
+            _VEHICLE_MODEL_V1,
+            "Custom",
+            _VEHICLE_MODEL_V1,
+            "Custom",
+            id="null_to_custom_string",
+        ),
+        pytest.param(
+            "Foo",
+            _VEHICLE_MODEL_V1,
+            None,
+            _VEHICLE_MODEL_V1,
+            _VEHICLE_MODEL_V1,
+            id="custom_string_to_null_fallback",
+        ),
+    ],
+)
+async def test_rename_propagation_table(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    poll1_name: str | None,
+    poll1_vehicle_model: str,
+    poll2_name: str | None,
+    poll2_vehicle_model: str,
+    expected_name: str,
+) -> None:
+    """Rename listener propagates (or correctly skips) vehicle name changes.
+
+    Sequence:
+    1. Poll 1: vehicle with ``poll1_name``/``poll1_vehicle_model`` → device registered.
+    2. Poll 2: vehicle data updated to ``poll2_name``/``poll2_vehicle_model``.
+    3. Assert ``device.name == expected_name``.
+
+    Cases ``rename_propagates``, ``fallback_vehicle_model_changes``,
+    ``null_to_custom_string``, ``custom_string_to_null_fallback`` FAIL on
+    current code: no rename listener exists, so ``device.name`` stays at the
+    poll-1 value and the assertion against ``expected_name`` fails.
+
+    Case ``no_op_unchanged`` passes trivially — name was already correct.
+    """
+    mock_abrp_client.return_value = [
+        _make_vehicle(MOCK_VEHICLE_ID, poll1_name, poll1_vehicle_model)
+    ]
+    await _setup_integration(hass, config_entry_with_vehicles)
+
+    scope = _device_scope(config_entry_with_vehicles, MOCK_VEHICLE_ID)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+    assert device is not None
+    assert device.name == (poll1_name or poll1_vehicle_model)
+
+    # Trigger poll 2: vehicle renamed/remodelled in ABRP
+    mock_abrp_client.return_value = [
+        _make_vehicle(MOCK_VEHICLE_ID, poll2_name, poll2_vehicle_model)
+    ]
+    await _poll(hass, config_entry_with_vehicles)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+    assert device is not None
+    assert device.name == expected_name
+
+
+# ---------------------------------------------------------------------------
+# name_by_user guard
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+async def test_name_by_user_guard_prevents_overwrite(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A user-set ``name_by_user`` must prevent ABRP renames from propagating.
+
+    Walk-through:
+    1. Poll 1: vehicle named "MG4" → device registered with ``name="MG4"``.
+    2. User sets ``name_by_user="My Tesla"`` via the HA UI.
+    3. Poll 2: ABRP renames vehicle to "Sofie's MG4".
+    4. The listener must see ``device.name_by_user is not None`` → skip.
+
+    After poll 2, ``device.name_by_user`` must remain ``"My Tesla"`` and
+    ``device.name`` must remain ``"MG4"`` — the integration-side name is
+    not overwritten when the user owns the label.
+
+    Active regression guard: a missing guard in the listener would
+    overwrite ``device.name`` and fail the final assertion.
+    """
+    mock_abrp_client.return_value = [
+        _make_vehicle(MOCK_VEHICLE_ID, "MG4", _VEHICLE_MODEL_V1)
+    ]
+    await _setup_integration(hass, config_entry_with_vehicles)
+
+    scope = _device_scope(config_entry_with_vehicles, MOCK_VEHICLE_ID)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+    assert device is not None
+    assert device.name == "MG4"
+
+    # User renames the device in the HA UI
+    device_registry.async_update_device(device.id, name_by_user="My Tesla")
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+    assert device.name_by_user == "My Tesla"
+
+    # Poll 2: ABRP rename arrives — listener must skip due to name_by_user guard
+    mock_abrp_client.return_value = [
+        _make_vehicle(MOCK_VEHICLE_ID, "Sofie's MG4", _VEHICLE_MODEL_V1)
+    ]
+    await _poll(hass, config_entry_with_vehicles)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+    assert device is not None
+    assert device.name_by_user == "My Tesla"
+    assert device.name == "MG4"
+
+
+# ---------------------------------------------------------------------------
+# New vehicle mid-life robustness
+# ---------------------------------------------------------------------------
+
+_NEW_VEHICLE_ID = 999_000_001
+
+
+@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+async def test_new_vehicle_mid_life_does_not_crash(
+    hass: HomeAssistant,
+    token_entry: dict[str, Any],
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A new vehicle appearing in a poll must not crash the rename listener.
+
+    The rename listener calls ``dr.async_get_device`` for every vehicle in
+    ``coordinator.data``.  A vehicle that's not currently selected returns
+    ``None`` from ``async_get_device`` (no device has ever been registered
+    for it); the listener must guard with ``if device is None: continue``.
+
+    To exercise the rename None-guard in isolation we pre-seed
+    ``CONF_KNOWN_VEHICLE_IDS`` with the new vehicle id — the auto-add listener
+    then treats it as known-but-not-selected (the spouse-vehicle
+    escape hatch) and leaves it alone, so this test continues to assert
+    the rename-listener-specific contract without entangling with the
+    auto-onboard reload path.
+
+    Asserts:
+    - Entry remains LOADED (no exception in listener).
+    - No device is created for the new vehicle (it's user-declined via
+      ``KNOWN`` minus ``VEHICLE_IDS`` membership).
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SENSOR_TEST_SUB,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": token_entry,
+            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID)],
+            CONF_KNOWN_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(_NEW_VEHICLE_ID)],
+        },
+    )
+    mock_abrp_client.return_value = [
+        _make_vehicle(MOCK_VEHICLE_ID, "MG4", _VEHICLE_MODEL_V1)
+    ]
+    await _setup_integration(hass, entry)
+
+    # Poll 2: a brand-new vehicle appears that was never in CONF_VEHICLE_IDS.
+    mock_abrp_client.return_value = [
+        _make_vehicle(MOCK_VEHICLE_ID, "MG4", _VEHICLE_MODEL_V1),
+        _make_vehicle(_NEW_VEHICLE_ID, "Brand New Vehicle", _VEHICLE_MODEL_V1),
+    ]
+    await _poll(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    # No device created for the new vehicle: it's known-but-not-selected.
+    new_scope = _device_scope(entry, _NEW_VEHICLE_ID)
+    assert device_registry.async_get_device(identifiers={(DOMAIN, new_scope)}) is None
+
+
+# ---------------------------------------------------------------------------
+# Vehicle disappears mid-life robustness
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+async def test_vehicle_disappears_mid_life_does_not_crash(
+    hass: HomeAssistant,
+    token_entry: dict[str, Any],
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A vehicle falling out of a poll must not crash the rename listener.
+
+    The listener iterates only the vehicles present in the *current*
+    ``coordinator.data``.  A vehicle that was registered in the initial poll
+    but absent from a later poll is simply not iterated — its device survives
+    unchanged (``stale-devices`` is a separate task).
+
+    Asserts:
+    - Entry remains LOADED.
+    - Orphaned device's ``name`` is unchanged (listener never touched it).
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SENSOR_TEST_SUB,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": token_entry,
+            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
+        },
+    )
+
+    vehicle_a = _make_vehicle(MOCK_VEHICLE_ID, "Vehicle A", _VEHICLE_MODEL_V1)
+    vehicle_b = _make_vehicle(MOCK_VEHICLE_ID_2, "Vehicle B", _VEHICLE_MODEL_V1)
+    mock_abrp_client.return_value = [vehicle_a, vehicle_b]
+    await _setup_integration(hass, entry)
+
+    scope_b = _device_scope(entry, MOCK_VEHICLE_ID_2)
+    device_b = device_registry.async_get_device(identifiers={(DOMAIN, scope_b)})
+    assert device_b is not None
+    assert device_b.name == "Vehicle B"
+
+    # Poll 2: vehicle B disappears from ABRP (stale-devices scenario)
+    mock_abrp_client.return_value = [vehicle_a]
+    await _poll(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Orphaned device B must be untouched — name unchanged, device still present
+    device_b = device_registry.async_get_device(identifiers={(DOMAIN, scope_b)})
+    assert device_b is not None
+    assert device_b.name == "Vehicle B"

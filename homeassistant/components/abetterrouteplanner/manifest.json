@@ -1,0 +1,10 @@
+{
+  "domain": "abetterrouteplanner",
+  "name": "A Better Routeplanner",
+  "codeowners": ["@mtandersson"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/abetterrouteplanner",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "quality_scale": "platinum"
+}
