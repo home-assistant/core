@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "api_error": "The Karakeep API returned an unexpected response.",
@@ -10,10 +11,23 @@
       "invalid_url_format": "Enter a valid URL including http:// or https://."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "token": "API token"
+        },
+        "data_description": {
+          "token": "The API token used to connect to your Karakeep instance."
+        },
+        "description": "Enter a new API token for your Karakeep instance."
+      },
       "user": {
         "data": {
           "token": "API token",
           "url": "URL"
+        },
+        "data_description": {
+          "token": "The API token used to connect to your Karakeep instance.",
+          "url": "The URL of your Karakeep instance, including http:// or https://."
         },
         "description": "Connect to your Karakeep instance."
       }

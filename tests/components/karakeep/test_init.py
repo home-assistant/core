@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from aiokarakeep import KarakeepAuthError, KarakeepConnectionError
 
 from homeassistant.components.karakeep.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -40,6 +40,9 @@ async def test_setup_entry_auth_failure(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 async def test_setup_entry_connection_failure(
