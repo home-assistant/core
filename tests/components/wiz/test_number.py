@@ -20,6 +20,8 @@ from . import (
     async_setup_integration,
 )
 
+DUAL_HEAD_RATIO_ENTITY_ID = "number.mock_title_dual_head_ratio"
+
 
 async def test_ratio_not_created_without_ratio(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
@@ -27,7 +29,7 @@ async def test_ratio_not_created_without_ratio(
     """Test the ratio entity is not created for lights that report no ratio."""
     await async_setup_integration(hass, bulb_type=FAKE_TURNABLE_BULB)
 
-    entity_id = "number.mock_title_dual_head_ratio"
+    entity_id = DUAL_HEAD_RATIO_ENTITY_ID
     assert entity_registry.async_get(entity_id) is None
     assert hass.states.get(entity_id) is None
 
@@ -62,7 +64,7 @@ async def test_ratio_operation(
     """Test changing a dual head ratio."""
     bulb, _ = await async_setup_integration(hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB)
     await async_push_update(hass, bulb, {"mac": FAKE_MAC})
-    entity_id = "number.mock_title_dual_head_ratio"
+    entity_id = DUAL_HEAD_RATIO_ENTITY_ID
     assert (
         entity_registry.async_get(entity_id).unique_id == f"{FAKE_MAC}_dual_head_ratio"
     )
@@ -98,7 +100,7 @@ async def test_ratio_operation_without_dual_head_feature(
     await async_setup_integration(hass, wizlight=bulb)
 
     bulb.updateState.assert_called_once()
-    entity_id = "number.mock_title_dual_head_ratio"
+    entity_id = DUAL_HEAD_RATIO_ENTITY_ID
     assert (
         entity_registry.async_get(entity_id).unique_id == f"{FAKE_MAC}_dual_head_ratio"
     )
