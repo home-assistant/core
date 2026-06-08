@@ -37,6 +37,9 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Yoto credentials are no longer valid. Please reauthenticate your account."
+    },
     "card_detail_failed": {
       "message": "Could not load Yoto card details: {error}"
     },

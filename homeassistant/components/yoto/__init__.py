@@ -36,7 +36,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: YotoConfigEntry) -> bool
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from err
     except (aiohttp.ClientError, OAuth2TokenRequestError) as err:
         raise ConfigEntryNotReady from err
 

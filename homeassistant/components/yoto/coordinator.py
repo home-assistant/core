@@ -63,7 +63,10 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         try:
             await self.client.refresh()
         except AuthenticationError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except YotoError as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -101,7 +104,10 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         try:
             await self._session.async_ensure_token_valid()
         except OAuth2TokenRequestReauthError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (aiohttp.ClientError, OAuth2TokenRequestError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -114,7 +120,10 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         try:
             await self.client.refresh()
         except AuthenticationError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except YotoError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
