@@ -1816,6 +1816,11 @@ class PipelineInput:
                             await self.run.text_to_speech(tts_input)
 
         except PipelineError as err:
+            if self.run.tts_stream:
+                # Clean up TTS stream
+                self.run.tts_stream.delete()
+                self.run.tts_stream = None
+
             self.run.process_event(
                 PipelineEvent(
                     PipelineEventType.ERROR,

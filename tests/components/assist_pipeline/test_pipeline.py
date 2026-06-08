@@ -2314,3 +2314,46 @@ async def test_invalid_pipeline_does_not_create_tts_stream(
         )
 
     assert len(hass.data[tts.DATA_TTS_MANAGER].token_to_stream) == 0
+
+
+async def test_pipeline_error_before_tts_does_not_leak_result_stream(
+    hass: HomeAssistant,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_components,
+) -> None:
+    """Test that a pipeline error before TTS will not leak a ResultStream."""
+
+    async def audio_data() -> AsyncGenerator[bytes]:
+        yield make_10ms_chunk(b"not used")
+
+    with patch.object(
+        mock_wake_word_provider_entity,
+        "async_process_audio_stream",
+        side_effect=assist_pipeline.error.WakeWordTimeoutError(
+            code="timeout", message="timeout"
+        ),
+    ):
+        for i in range(10):
+            with patch("secrets.token_urlsafe", return_value=f"mocked-token-{i}"):
+                await assist_pipeline.async_pipeline_from_audio_stream(
+                    hass,
+                    context=Context(),
+                    event_callback=lambda event: None,
+                    stt_metadata=stt.SpeechMetadata(
+                        language="",
+                        format=stt.AudioFormats.WAV,
+                        codec=stt.AudioCodecs.PCM,
+                        bit_rate=stt.AudioBitRates.BITRATE_16,
+                        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                        channel=stt.AudioChannels.CHANNEL_MONO,
+                    ),
+                    stt_stream=audio_data(),
+                    start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+                    end_stage=assist_pipeline.PipelineStage.TTS,
+                    wake_word_settings=assist_pipeline.WakeWordSettings(
+                        audio_seconds_to_buffer=1.5
+                    ),
+                    audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+                )
+
+    assert len(hass.data[tts.DATA_TTS_MANAGER].token_to_stream) == 0
