@@ -73,6 +73,47 @@ from . import assert_no_messages
             id="kwarg_now_with_utc",
         ),
         pytest.param(
+            # ``UTC`` re-exported from ``homeassistant.util.dt`` is still the
+            # UTC case, handled by the ``enforce-utcnow`` checker.
+            """
+        import datetime
+
+        from homeassistant.util import dt as dt_util
+
+        now = datetime.datetime.now(dt_util.UTC)
+        """,
+            id="dt_util_utc",
+        ),
+        pytest.param(
+            """
+        import datetime
+
+        from homeassistant.util import dt as dt_util
+
+        now = datetime.datetime.now(tz=dt_util.UTC)
+        """,
+            id="kwarg_dt_util_utc",
+        ),
+        pytest.param(
+            """
+        from datetime import datetime
+        from homeassistant.util.dt import UTC
+
+        now = datetime.now(UTC)
+        """,
+            id="from_util_dt_import_utc",
+        ),
+        pytest.param(
+            """
+        import datetime
+
+        import homeassistant.util.dt as dt_util
+
+        now = datetime.datetime.now(dt_util.UTC)
+        """,
+            id="import_util_dt_as_dt_util_utc",
+        ),
+        pytest.param(
             # Calling ``.now`` on something that is not ``datetime.datetime``
             # must not be flagged.
             """
