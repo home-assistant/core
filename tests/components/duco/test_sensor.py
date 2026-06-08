@@ -18,6 +18,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.duco.sensor import BOX_NODE_ID
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -234,7 +235,7 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
     assert hass.states.get("fan.living") is not None
 
     mock_duco_client.async_get_nodes.return_value = [
-        node for node in mock_sensor_nodes if node.node_id != 1
+        node for node in mock_sensor_nodes if node.node_id != BOX_NODE_ID
     ]
 
     freezer.tick(SCAN_INTERVAL)
