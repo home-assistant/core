@@ -3,10 +3,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser."
     },
     "flow_title": "{device_type} · {host}",

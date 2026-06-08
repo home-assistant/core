@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from energieleser import (
     EnergieleserConnectionError,
+    EnergieleserError,
     EnergieleserUnknownDeviceError,
     GasleserDevice,
 )
@@ -77,6 +78,11 @@ async def test_user_flow_gasleser(
             EnergieleserUnknownDeviceError("FOO_0000000001"),
             "unknown_device_type",
             id="unknown_device_type",
+        ),
+        pytest.param(
+            EnergieleserError("boom"),
+            "unknown",
+            id="unknown",
         ),
     ],
 )
@@ -162,6 +168,11 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
             EnergieleserUnknownDeviceError("FOO_0000000001"),
             "unknown_device_type",
             id="unknown_device_type",
+        ),
+        pytest.param(
+            EnergieleserError("boom"),
+            "unknown",
+            id="unknown",
         ),
     ],
 )

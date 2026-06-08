@@ -5,6 +5,7 @@ from typing import Any
 from energieleser import (
     EnergieleserClient,
     EnergieleserConnectionError,
+    EnergieleserError,
     EnergieleserUnknownDeviceError,
 )
 import voluptuous as vol
@@ -50,6 +51,8 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except EnergieleserUnknownDeviceError:
                 errors["base"] = "unknown_device_type"
+            except EnergieleserError:
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
                     device.device_id, raise_on_progress=False
@@ -85,6 +88,8 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except EnergieleserUnknownDeviceError:
             return self.async_abort(reason="unknown_device_type")
+        except EnergieleserError:
+            return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(device.device_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
