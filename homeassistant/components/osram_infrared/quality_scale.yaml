@@ -5,160 +5,50 @@ rules:
     comment: |
       This integration does not provide additional service actions.
       Light functionality is exposed through the standard light entity actions.
-
-  appropriate-polling:
-    status: done
-    comment: |
-      This integration does not poll. The light entity inherits from
-      InfraredEmitterConsumerEntity, which sets should_poll to False.
-
+  appropriate-polling: done
   brands:
     status: todo
     comment: |
       Add branding assets for osram_infrared to the Home Assistant brands
       repository.
-
-  common-modules:
-    status: done
-    comment: |
-      Shared entity behavior and device information are implemented in
-      entity.py.
-
-  config-flow-test-coverage:
-    status: done
-    comment: |
-      Added tests covering the successful config flow, the absence of infrared
-      emitters, and duplicate configuration attempts.
-
-  config-flow:
-    status: done
-    comment: |
-      The integration can be configured from the UI by selecting an existing
-      infrared emitter entity.
-
-  dependency-transparency:
-    status: todo
-    comment: |
-      The OSRAM command definitions must be merged into infrared-protocols,
-      released on PyPI, and consumed through the infrared integration's pinned
-      dependency version before this rule can be marked done.
-
-  docs-actions:
-    status: exempt
-    comment: |
-      This integration does not provide additional service actions.
-
-  docs-high-level-description:
-    status: todo
-    comment: |
-      Add an integration documentation page describing the supported OSRAM
-      LEDVANCE infrared light bulbs and the use of an infrared emitter entity.
-
-  docs-installation-instructions:
-    status: todo
-    comment: |
-      Document the requirement for a configured infrared emitter entity and
-      the UI setup flow.
-
-  docs-removal-instructions:
-    status: todo
-    comment: |
-      Document how to remove the integration from Home Assistant.
-
-  entity-event-setup:
-    status: done
-    comment: |
-      Infrared emitter availability tracking is inherited from
-      InfraredEmitterConsumerEntity. The helper subscribes in
-      async_added_to_hass and removes the subscription through async_on_remove.
-
-  entity-unique-id:
-    status: done
-    comment: |
-      The light entity defines a stable unique ID derived from the config entry
-      ID and an entity-specific suffix.
-
-  has-entity-name:
-    status: done
-    comment: |
-      The shared entity base class sets has_entity_name to True. The primary
-      light entity uses name = None so that it takes the device name.
-
-  runtime-data:
-    status: done
-    comment: |
-      This integration does not create or store runtime client data. The
-      selected infrared emitter entity ID is persisted in the config entry.
-
-  test-before-configure:
-    status: done
-    comment: |
-      The config flow verifies that at least one infrared emitter entity exists
-      before allowing configuration and restricts selection to registered
-      infrared emitter entities.
-
-  test-before-setup:
-    status: done
-    comment: |
-      Perform validation during async_setup_entry that the configured infrared
-      emitter entity still exists. Raise ConfigEntryNotReady as appropriate
-      before forwarding platform setup.
-
-  unique-config-entry:
-    status: done
-    comment: |
-      The config flow assigns a unique ID based on the selected infrared
-      emitter entity and aborts if it is already configured.
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
     status: exempt
     comment: |
       This integration does not provide additional service actions.
-
-  config-entry-unloading:
-    status: done
-    comment: |
-      The integration implements async_unload_entry and unloads forwarded
-      platforms.
-
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: todo
     comment: |
       Document the selected infrared emitter entity and any future options.
-
   docs-installation-parameters:
     status: todo
     comment: |
       Document the infrared emitter entity selected during installation.
-
-  entity-unavailable:
-    status: done
-    comment: |
-      The light entity inherits infrared-emitter availability tracking from
-      InfraredEmitterConsumerEntity.
-
-  integration-owner:
-    status: done
-    comment: |
-      The manifest declares @freeDom- as code owner.
-
-  log-when-unavailable:
-    status: done
-    comment: |
-      InfraredEmitterConsumerEntity logs availability changes for its emitter.
-
-  parallel-updates:
-    status: done
-    comment: |
-      The light platform defines PARALLEL_UPDATES = 1 to serialize infrared
-      transmissions.
-
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |
       This integration does not authenticate with a device or service.
-
   test-coverage:
     status: todo
     comment: |
@@ -167,119 +57,92 @@ rules:
       emitter availability changes.
 
   # Gold
-  devices:
-    status: done
-    comment: |
-      The light entity is associated with an OSRAM device through DeviceInfo.
-
+  devices: done
   diagnostics:
     status: todo
     comment: |
       Evaluate whether diagnostics add useful information for this
       assumed-state infrared integration.
-
   discovery-update-info:
     status: exempt
     comment: |
       This integration does not use discovery.
-
   discovery:
     status: exempt
     comment: |
       The integration is configured manually by selecting an existing infrared
       emitter entity.
-
   docs-data-update:
     status: todo
     comment: |
       Document that the light uses assumed state because infrared transmission
       does not provide device feedback.
-
   docs-examples:
     status: todo
     comment: |
       Add example automations for setting a color, brightness, and an effect.
-
   docs-known-limitations:
     status: todo
     comment: |
       Document assumed state, possible state drift when using the physical
       remote, discrete hue presets, and approximate relative brightness
       tracking.
-
   docs-supported-devices:
     status: todo
     comment: |
       Document the tested OSRAM LEDVANCE bulb models and any known unsupported
       variants.
-
   docs-supported-functions:
     status: todo
     comment: |
       Document on/off control, discrete HS colors, white mode, relative
       brightness, and native effects.
-
   docs-troubleshooting:
     status: todo
     comment: |
       Document emitter availability checks and common infrared transmission
       issues.
-
   docs-use-cases:
     status: todo
     comment: |
       Describe replacing the original OSRAM infrared remote with a Home
       Assistant-controlled infrared emitter.
-
   dynamic-devices:
     status: exempt
     comment: |
       Each config entry represents one manually configured infrared-controlled
       light. Devices are not discovered dynamically.
-
   entity-category:
     status: exempt
     comment: |
       The integration currently exposes only the primary light entity.
-
   entity-device-class:
     status: exempt
     comment: |
       Light entities do not require a device class.
-
   entity-disabled-by-default:
     status: exempt
     comment: |
       The integration currently exposes only the primary light entity.
-
-  entity-translations:
-    status: done
-    comment: |
-      The primary light entity uses the device name and does not require a
-      translated entity suffix.
-
+  entity-translations: done
   exception-translations:
     status: todo
     comment: |
       Ensure any user-facing HomeAssistantError exceptions use translation
       keys instead of hard-coded messages.
-
   icon-translations:
     status: exempt
     comment: |
       The integration does not define custom entity icons.
-
   reconfiguration-flow:
     status: todo
     comment: |
       Add a reconfiguration flow so that the infrared emitter entity can be
       changed without removing and recreating the integration.
-
   repair-issues:
     status: exempt
     comment: |
       No conditions currently require repair issues.
-
   stale-devices:
     status: exempt
     comment: |
@@ -287,17 +150,11 @@ rules:
       device. There are no dynamically managed devices.
 
   # Platinum
-  async-dependency:
-    status: done
-    comment: |
-      Infrared protocol generation is local CPU-only work and does not perform
-      blocking I/O.
-
+  async-dependency: done
   inject-websession:
     status: exempt
     comment: |
       This integration does not perform HTTP requests.
-
   strict-typing:
     status: todo
     comment: |
