@@ -17,7 +17,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_ID,
-    CONF_NAME,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -54,9 +53,8 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle config flow initiation."""
         if info:
-            name = info[CONF_NAME]
             device = info[CONF_DEVICE]
-            gw_id = cv.slugify(info.get(CONF_ID, name))
+            gw_id = cv.slugify(info[CONF_ID])
 
             entries = [e.data for e in self._async_current_entries()]
 
@@ -83,7 +81,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
             except ConnectionError, SerialException:
                 return self._show_form({"base": "cannot_connect"})
 
-            return self._create_entry(gw_id, name, device)
+            return self._create_entry(gw_id, device)
 
         return self._show_form()
 
@@ -99,20 +97,17 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Required(CONF_NAME): str,
                     vol.Required(CONF_DEVICE): str,
-                    vol.Optional(CONF_ID): str,
+                    vol.Required(CONF_ID): str,
                 }
             ),
             errors=errors or {},
         )
 
-    def _create_entry(self, gw_id, name, device):
+    def _create_entry(self, gw_id, device):
         """Create entry for the OpenTherm Gateway device."""
         return self.async_create_entry(
-            title=name, data={CONF_ID: gw_id, CONF_DEVICE: device, CONF_NAME: name}
+            title="OpenTherm Gateway", data={CONF_ID: gw_id, CONF_DEVICE: device}
         )
 
 
