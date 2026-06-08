@@ -916,6 +916,9 @@ async def test_camera_image_with_attribute_change(
         mock_auth.return_value.async_post_api_request.side_effect = fake_camera_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_get_live_snapshot = AsyncMock(
+            return_value=FAKE_IMG
+        )
         mock_auth.return_value.async_get_image = AsyncMock(return_value=FAKE_IMG)
         mock_webhook.return_value = "https://example.com"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -923,8 +926,6 @@ async def test_camera_image_with_attribute_change(
         await hass.async_block_till_done()
 
         webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-        component = hass.data["camera"]
-        entity = component.get_entity(camera_entity)
 
         # Fake webhook activation
         response = {
@@ -938,9 +939,10 @@ async def test_camera_image_with_attribute_change(
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
         # Check that getting image succeeds while camera is idle without exception
-        result = await entity.async_camera_image()
+        result = await camera.async_get_image(hass, camera_entity)
         assert result is not None
-        assert result == FAKE_IMG
+        assert result.content_type == "image/jpeg"
+        assert result.content == FAKE_IMG
 
         # Trigger some polling cycle to let API throttling work
         for _ in range(polling_cycles):
@@ -966,8 +968,8 @@ async def test_camera_image_with_attribute_change(
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
         # Check that getting image does not raise the exception and return None
-        result = await entity.async_camera_image()
-        assert result is None
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_image(hass, camera_entity)
 
         # Change mocked status
         camera_entity_id = camera_id
