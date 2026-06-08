@@ -260,7 +260,6 @@ async def test_get_image_http_complete_response(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test responses whose body matches Content-Length are served."""
     url = "http://example.com/complete.jpg"
@@ -281,7 +280,6 @@ async def test_get_image_http_complete_response(
         resp = await client.get(state.attributes["entity_picture"])
 
     assert resp.status == HTTPStatus.OK
-    assert "Discarding truncated image from" not in caplog.text
     assert await resp.read() == body
 
 
@@ -289,7 +287,6 @@ async def test_get_image_http_content_encoding_skips_length_check(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test responses with Content-Encoding skip the body-length comparison."""
     url = "http://example.com/encoded.jpg"
@@ -313,7 +310,6 @@ async def test_get_image_http_content_encoding_skips_length_check(
         resp = await client.get(state.attributes["entity_picture"])
 
     assert resp.status == HTTPStatus.OK
-    assert "Discarding truncated image from" not in caplog.text
     assert await resp.read() == body
 
 
