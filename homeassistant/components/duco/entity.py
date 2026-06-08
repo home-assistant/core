@@ -5,7 +5,7 @@ from duco_connectivity.models import Node, NodeType
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import BOX_NODE_ID, DOMAIN
 from .coordinator import DucoCoordinator
 
 
@@ -48,7 +48,10 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             if model_id := coordinator.board_info.box_sub_type_name:
                 device_info["model_id"] = model_id
         else:
-            device_info["via_device"] = (DOMAIN, coordinator.device_identifier(1))
+            device_info["via_device"] = (
+                DOMAIN,
+                coordinator.device_identifier(BOX_NODE_ID),
+            )
 
         self._attr_device_info = device_info
 

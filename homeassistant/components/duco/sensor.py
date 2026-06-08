@@ -31,8 +31,16 @@ from .entity import DucoEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-PRIMARY_SENSOR_KEYS = {"co2", "humidity"}
 PRIMARY_BOX_SENSOR_KEYS = {"rssi_wifi"}
+
+
+def _primary_sensor_key(node_type: NodeType) -> str | None:
+    """Return the primary sensor key for the given node type."""
+    if node_type in (NodeType.UCCO2, NodeType.VLVCO2, NodeType.VLVCO2RH):
+        return "co2"
+    if node_type in (NodeType.BSRH, NodeType.UCRH, NodeType.VLVRH):
+        return "humidity"
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -228,7 +236,7 @@ class DucoSensorEntity(DucoEntity, SensorEntity):
         """Initialize the sensor entity."""
         super().__init__(coordinator, node)
         self.entity_description = description
-        if description.key in PRIMARY_SENSOR_KEYS:
+        if description.key == _primary_sensor_key(node.general.node_type):
             self._attr_name = None
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_{node.node_id}_{description.key}"
