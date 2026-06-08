@@ -1527,20 +1527,24 @@ async def test_endpoint_sub_device(
     )
     assert endpoint_1_device
     assert endpoint_1_device.via_device_id == node_device.id
-    assert endpoint_1_device.name == "Binary Power Switch (1)"
+    assert endpoint_1_device.name == "In Wall Dual Relay Switch Binary Power Switch (1)"
 
     endpoint_2_device = device_registry.async_get_device(
         identifiers={get_device_id(driver, node, 2)}
     )
     assert endpoint_2_device
     assert endpoint_2_device.via_device_id == node_device.id
-    assert endpoint_2_device.name == "Binary Power Switch (2)"
+    assert endpoint_2_device.name == "In Wall Dual Relay Switch Binary Power Switch (2)"
 
     # Each relay lives on its endpoint sub-device, not on the node device.
-    entity_1 = entity_registry.async_get("switch.binary_power_switch_1")
+    entity_1 = entity_registry.async_get(
+        "switch.in_wall_dual_relay_switch_binary_power_switch_1"
+    )
     assert entity_1
     assert entity_1.device_id == endpoint_1_device.id
-    entity_2 = entity_registry.async_get("switch.binary_power_switch_2")
+    entity_2 = entity_registry.async_get(
+        "switch.in_wall_dual_relay_switch_binary_power_switch_2"
+    )
     assert entity_2
     assert entity_2.device_id == endpoint_2_device.id
 

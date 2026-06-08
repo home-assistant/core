@@ -645,25 +645,28 @@ def get_device_info(
     driver: Driver, node: ZwaveNode, endpoint: Endpoint | None = None
 ) -> DeviceInfo:
     """Get DeviceInfo for a node or one of its endpoint sub-devices."""
+    node_name = node.name or node.device_config.description or f"Node {node.node_id}"
     if endpoint is None or endpoint.index == 0:
         return DeviceInfo(
             identifiers={get_device_id(driver, node)},
             sw_version=node.firmware_version,
-            name=node.name or node.device_config.description or f"Node {node.node_id}",
+            name=node_name,
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
             suggested_area=node.location or None,
         )
 
     if endpoint.endpoint_label:
-        name = endpoint.endpoint_label
+        endpoint_name = endpoint.endpoint_label
     elif endpoint.device_class:
-        name = f"{endpoint.device_class.specific.label} ({endpoint.index})"
+        endpoint_name = f"{endpoint.device_class.specific.label} ({endpoint.index})"
     else:
-        name = f"Endpoint {endpoint.index}"
+        endpoint_name = f"Endpoint {endpoint.index}"
+    # Prefix the sub-device name with the node name so it's clear which node the
+    # endpoint sub-device belongs to.
     return DeviceInfo(
         identifiers={get_device_id(driver, node, endpoint.index)},
-        name=name,
+        name=f"{node_name} {endpoint_name}",
         via_device=get_device_id(driver, node),
     )
 
