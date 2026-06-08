@@ -1,5 +1,8 @@
-"""Constants for OwnTracks."""
+"""Constants for the OwnTracks integration."""
 
+DOMAIN = "owntracks"
+
+ATTR_ALTITUDE = "altitude"
 from typing import Final
 
 DOMAIN: Final = "owntracks"

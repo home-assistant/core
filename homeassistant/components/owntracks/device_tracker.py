@@ -33,6 +33,8 @@ from .const import (
     DOMAIN,
 )
 
+from . import DOMAIN
+from .const import ATTR_ALTITUDE
 _RESTORED_OWNTRACKS_ATTRIBUTES: tuple[str, ...] = (
     ATTR_ADDRESS,
     ATTR_BATTERY_STATUS,
@@ -75,7 +77,6 @@ async def async_setup_entry(
         async_add_entities([entity])
 
     hass.data[DOMAIN]["context"].set_async_see(_receive_data)
-
     async_add_entities(entities)
 
 
@@ -104,7 +105,12 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific attributes."""
-        return self._data.get("attributes")
+        # TrackerEntity.state_attributes is @final and does not include altitude,
+        # so altitude must be exposed via extra_state_attributes instead.
+        attr = dict(self._data.get("attributes") or {})
+        if self._data.get("altitude") is not None:
+            attr[ATTR_ALTITUDE] = self._data["altitude"]
+        return attr or None
 
     @property
     def location_accuracy(self) -> float:
@@ -117,7 +123,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         # Check with "get" instead of "in" because value can be None
         if self._data.get("gps"):
             return self._data["gps"][0]
-
         return None
 
     @property
@@ -126,7 +131,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         # Check with "get" instead of "in" because value can be None
         if self._data.get("gps"):
             return self._data["gps"][1]
-
         return None
 
     @property
@@ -171,6 +175,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
             "gps_accuracy": attr.get(ATTR_GPS_ACCURACY),
             "battery": attr.get(ATTR_BATTERY_LEVEL),
             "source_type": attr.get(ATTR_SOURCE_TYPE),
+            "altitude": attr.get(ATTR_ALTITUDE),
             "attributes": attributes,
         }
 
