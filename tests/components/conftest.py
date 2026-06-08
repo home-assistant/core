@@ -722,6 +722,7 @@ def supervisor_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
         auto_update=True,
         country=None,
         detect_blocking_io=False,
+        feature_flags={},
     )
     return supervisor_client.supervisor.info
 

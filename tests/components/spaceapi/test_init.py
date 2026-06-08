@@ -97,7 +97,7 @@ async def mock_client(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Start the Home Assistant HTTP component."""
-    await async_setup_component(hass, "spaceapi", CONFIG)
+    await async_setup_component(hass, DOMAIN, CONFIG)
 
     hass.states.async_set(
         "test.temp1",
@@ -199,7 +199,7 @@ async def test_spaceapi_no_auth_required(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test SpaceAPI is accessible without authentication."""
-    assert await async_setup_component(hass, "spaceapi", CONFIG)
+    assert await async_setup_component(hass, DOMAIN, CONFIG)
 
     hass.states.async_set("test.test_door", "on")
 
@@ -215,7 +215,7 @@ async def test_spaceapi_cors_headers(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test CORS headers are present on SpaceAPI responses."""
-    assert await async_setup_component(hass, "spaceapi", CONFIG)
+    assert await async_setup_component(hass, DOMAIN, CONFIG)
 
     hass.states.async_set("test.test_door", "on")
 

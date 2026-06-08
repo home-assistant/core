@@ -3,8 +3,17 @@
 import logging
 from typing import Any
 
+from aiohttp import ClientConnectorError
 from pygti.auth import GTI_DEFAULT_HOST
-from pygti.exceptions import CannotConnect, InvalidAuth
+from pygti.exceptions import GTIError, GTIUnauthorizedError
+from pygti.models import (
+    CNRequest,
+    DLRequest,
+    GTITime,
+    RegionalSDNameType,
+    SDName,
+    SDNameType,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -66,10 +75,10 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 response = await self.hub.authenticate()
                 _LOGGER.debug("Init gti: %r", response)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except GTIUnauthorizedError:
                 errors["base"] = "invalid_auth"
+            except GTIError, ClientConnectorError:
+                errors["base"] = "cannot_connect"
 
             if not errors:
                 self.data = user_input
@@ -87,15 +96,14 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = {}
 
             check_name = await self.hub.gti.checkName(
-                {"theName": {"name": user_input[CONF_STATION]}, "maxList": 20}
+                CNRequest(theName=SDName(name=user_input[CONF_STATION]), maxList=20)
             )
 
-            stations = check_name.get("results")
-
             self.stations = {
-                f"{station.get('name')}": station
-                for station in stations
-                if station.get("type") == "STATION"
+                station.name: station
+                for station in (check_name.results or [])
+                if station.type == RegionalSDNameType.STATION
+                and station.name is not None
             }
 
             if not self.stations:
@@ -121,7 +129,13 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="station_select", data_schema=schema)
 
-        self.data.update({"station": self.stations[user_input[CONF_STATION]]})
+        self.data.update(
+            {
+                "station": self.stations[user_input[CONF_STATION]].model_dump(
+                    mode="json", exclude_none=True
+                )
+            }
+        )
 
         title = self.data[CONF_STATION]["name"]
 
@@ -151,32 +165,30 @@ class OptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors = {}
         if not self.departure_filters:
-            departure_list = {}
             hub = self.config_entry.runtime_data
 
             try:
                 departure_list = await hub.gti.departureList(
-                    {
-                        "station": {
-                            "type": "STATION",
-                            "id": self.config_entry.data[CONF_STATION].get("id"),
-                        },
-                        "time": {"date": "heute", "time": "jetzt"},
-                        "maxList": 5,
-                        "maxTimeOffset": 200,
-                        "useRealtime": True,
-                        "returnFilters": True,
-                    }
+                    DLRequest(
+                        station=SDName(
+                            id=self.config_entry.data[CONF_STATION].get("id"),
+                            type=SDNameType.STATION,
+                        ),
+                        time=GTITime(date="heute", time="jetzt"),
+                        maxList=5,
+                        maxTimeOffset=200,
+                        useRealtime=True,
+                        returnFilters=True,
+                    )
                 )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except GTIUnauthorizedError:
                 errors["base"] = "invalid_auth"
-
-            if not errors:
+            except GTIError, ClientConnectorError:
+                errors["base"] = "cannot_connect"
+            else:
                 self.departure_filters = {
-                    str(i): departure_filter
-                    for i, departure_filter in enumerate(departure_list["filter"])
+                    str(i): f.model_dump(mode="json", exclude_none=True)
+                    for i, f in enumerate(departure_list.filter or [])
                 }
 
         if user_input is not None and not errors:
@@ -206,8 +218,8 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Optional(CONF_FILTER, default=old_filter): cv.multi_select(
                         {
                             key: (
-                                f"{departure_filter['serviceName']},"
-                                f" {departure_filter['label']}"
+                                f"{departure_filter.get('serviceName', '')},"
+                                f" {departure_filter.get('label', '')}"
                             )
                             for key, departure_filter in self.departure_filters.items()
                         }

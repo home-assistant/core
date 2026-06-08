@@ -237,7 +237,7 @@ async def setup_test_accessories_with_controller(
 
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data=data,
         title="test",

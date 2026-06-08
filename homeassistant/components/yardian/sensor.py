@@ -13,10 +13,10 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
+from .entity import YardianEntity
 
 # Values above this threshold indicate the API returned an absolute
 # timestamp instead of a relative delay, so convert to a remaining delta.
@@ -99,11 +99,10 @@ async def async_setup_entry(
     )
 
 
-class YardianSensor(CoordinatorEntity[YardianUpdateCoordinator], SensorEntity):
+class YardianSensor(YardianEntity, SensorEntity):
     """Representation of a Yardian sensor defined by description."""
 
     entity_description: YardianSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -114,7 +113,6 @@ class YardianSensor(CoordinatorEntity[YardianUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.yid}_{description.key}"
-        self._attr_device_info = coordinator.device_info
 
     @property
     def native_value(self) -> StateType:
