@@ -6,13 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import (
-    ExecutionState,
-    OverkizCommand,
-    OverkizCommandParam,
-    OverkizState,
-)
-from pyoverkiz.models import CommandDefinitions
+from pyoverkiz.enums import ExecutionState, OverkizCommandParam, OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -1321,29 +1315,17 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
     handler still checks the atomic command and aborts cleanly if it is
     missing.
     """
-    entry = await setup_overkiz_integration(
-        fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture
-    )
-
-    # Drop the atomic command from the device so the handler's guard is exercised
-    # against realistic data instead of mocking the integration internals.
-    device = entry.runtime_data.coordinator.data[
-        DYNAMIC_EXTERIOR_VENETIAN_BLIND.device_url
-    ]
-    device.definition.commands = CommandDefinitions(
-        [
-            command
-            for command in device.definition.commands.values()
-            if command.command_name != OverkizCommand.SET_CLOSURE_AND_ORIENTATION
-        ]
-    )
+    # DYNAMIC_VENETIAN_BLIND supports setClosure and setOrientation (so it passes
+    # the SET_POSITION | SET_TILT_POSITION required_features filter) but not the
+    # atomic setClosureAndOrientation command, exactly the case this guard handles.
+    await setup_overkiz_integration(fixture=DYNAMIC_VENETIAN_BLIND.fixture)
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             "set_cover_position_and_tilt",
             {
-                ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
+                ATTR_ENTITY_ID: DYNAMIC_VENETIAN_BLIND.entity_id,
                 ATTR_POSITION: 50,
                 ATTR_TILT_POSITION: 50,
             },
