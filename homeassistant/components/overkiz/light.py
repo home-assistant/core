@@ -56,16 +56,16 @@ class OverkizLight(OverkizEntity, LightEntity):
     def is_on(self) -> bool:
         """Return true if light is on."""
         return (
-            self.executor.select_state(OverkizState.CORE_ON_OFF)
+            self.device.states.get_value(OverkizState.CORE_ON_OFF)
             == OverkizCommandParam.ON
         )
 
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int] (0-255)."""
-        red = self.executor.select_state(OverkizState.CORE_RED_COLOR_INTENSITY)
-        green = self.executor.select_state(OverkizState.CORE_GREEN_COLOR_INTENSITY)
-        blue = self.executor.select_state(OverkizState.CORE_BLUE_COLOR_INTENSITY)
+        red = self.device.states.get_value(OverkizState.CORE_RED_COLOR_INTENSITY)
+        green = self.device.states.get_value(OverkizState.CORE_GREEN_COLOR_INTENSITY)
+        blue = self.device.states.get_value(OverkizState.CORE_BLUE_COLOR_INTENSITY)
 
         if red is None or green is None or blue is None:
             return None
@@ -75,7 +75,7 @@ class OverkizLight(OverkizEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light (0-255)."""
-        value = self.executor.select_state(OverkizState.CORE_LIGHT_INTENSITY)
+        value = self.device.states.get_value(OverkizState.CORE_LIGHT_INTENSITY)
         if value is not None:
             return round(cast(int, value) * 255 / 100)
 

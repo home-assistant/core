@@ -43,13 +43,13 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         super().__init__(device_url, coordinator)
         self._attr_max_temp = cast(
             float,
-            self.executor.select_state(
+            self.device.states.get_value(
                 OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
             ),
         )
         self._attr_min_temp = cast(
             float,
-            self.executor.select_state(
+            self.device.states.get_value(
                 OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
             ),
         )
@@ -59,7 +59,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         """Return the current temperature."""
         return cast(
             float,
-            self.executor.select_state(
+            self.device.states.get_value(
                 OverkizState.MODBUSLINK_MIDDLE_WATER_TEMPERATURE
             ),
         )
@@ -69,7 +69,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         """Return the temperature corresponding to the PRESET."""
         return cast(
             float,
-            self.executor.select_state(OverkizState.CORE_WATER_TARGET_TEMPERATURE),
+            self.device.states.get_value(OverkizState.CORE_WATER_TARGET_TEMPERATURE),
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -82,7 +82,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     @property
     def is_boost_mode_on(self) -> bool:
         """Return true if boost mode is on."""
-        return self.executor.select_state(OverkizState.MODBUSLINK_DHW_BOOST_MODE) in (
+        return self.device.states.get_value(OverkizState.MODBUSLINK_DHW_BOOST_MODE) in (
             OverkizCommandParam.ON,
             OverkizCommandParam.PROG,
         )
@@ -90,7 +90,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     @property
     def is_eco_mode_on(self) -> bool:
         """Return true if eco mode is on."""
-        return self.executor.select_state(OverkizState.MODBUSLINK_DHW_MODE) in (
+        return self.device.states.get_value(OverkizState.MODBUSLINK_DHW_MODE) in (
             OverkizCommandParam.MANUAL_ECO_ACTIVE,
             OverkizCommandParam.AUTO_MODE,
         )
@@ -98,7 +98,9 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     @property
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
-        return self.executor.select_state(OverkizState.MODBUSLINK_DHW_ABSENCE_MODE) in (
+        return self.device.states.get_value(
+            OverkizState.MODBUSLINK_DHW_ABSENCE_MODE
+        ) in (
             OverkizCommandParam.ON,
             OverkizCommandParam.PROG,
         )
@@ -116,7 +118,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             return STATE_ECO
 
         if (
-            cast(str, self.executor.select_state(OverkizState.MODBUSLINK_DHW_MODE))
+            cast(str, self.device.states.get_value(OverkizState.MODBUSLINK_DHW_MODE))
             == OverkizCommandParam.MANUAL_ECO_INACTIVE
         ):
             # STATE_ELECTRIC is a substitution for OverkizCommandParam.MANUAL
