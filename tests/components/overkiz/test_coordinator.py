@@ -6,11 +6,11 @@ from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import EventName, ExecutionState, FailureType
 from pyoverkiz.exceptions import (
-    InvalidEventListenerIdException,
-    MaintenanceException,
-    ServiceUnavailableException,
-    TooManyConcurrentRequestsException,
-    TooManyRequestsException,
+    InvalidEventListenerIdError,
+    MaintenanceError,
+    ServiceUnavailableError,
+    TooManyConcurrentRequestsError,
+    TooManyRequestsError,
 )
 import pytest
 
@@ -43,11 +43,11 @@ SHUTTER = FixtureDevice(
 @pytest.mark.parametrize(
     "exception",
     [
-        TooManyConcurrentRequestsException("Too many concurrent requests"),
-        TooManyRequestsException("Too many requests"),
-        MaintenanceException("Server is down for maintenance"),
-        ServiceUnavailableException("Server is unavailable"),
-        InvalidEventListenerIdException("Invalid event listener id"),
+        TooManyConcurrentRequestsError("Too many concurrent requests"),
+        TooManyRequestsError("Too many requests"),
+        MaintenanceError("Server is down for maintenance"),
+        ServiceUnavailableError("Server is unavailable"),
+        InvalidEventListenerIdError("Invalid event listener id"),
         TimeoutError("Timed out"),
         ClientConnectorError(Mock(), Mock()),
     ],
