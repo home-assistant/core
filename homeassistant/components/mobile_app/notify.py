@@ -240,7 +240,7 @@ class MobileAppNotificationService(BaseNotificationService):
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
-        # Applies Apple ActivityKit Live Activity routing when the payload asks
+        # Applies Live Activity routing when the payload asks
         # for it; otherwise it returns the original generic mobile push data.
         remote_push = prepare_live_activity_remote_push(self.hass, entry.data, data)
         try:
