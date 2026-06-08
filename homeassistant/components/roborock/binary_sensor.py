@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from roborock.data import CleanFluidStatus, RoborockStateCode
+from roborock.data.v1.v1_containers import StatusField, StatusV2
+from roborock.devices.traits.v1 import PropertiesApi
 from roborock.roborock_message import RoborockZeoProtocol
 
 from homeassistant.components.binary_sensor import (
@@ -38,6 +40,9 @@ class RoborockBinarySensorDescription(BinarySensorEntityDescription):
     is_dock_entity: bool = False
     """Whether this sensor is for the dock."""
 
+    support_fn: Callable[[PropertiesApi], bool] = lambda _: True
+    """Function to determine if binary sensor is supported by the device."""
+
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockBinarySensorDescriptionA01(BinarySensorEntityDescription):
@@ -55,6 +60,9 @@ BINARY_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.dry_status,
         is_dock_entity=True,
+        support_fn=lambda api: api.device_features.is_field_supported(
+            StatusV2, StatusField.DRY_STATUS
+        ),
     ),
     RoborockBinarySensorDescription(
         key="water_box_carriage_status",
@@ -62,6 +70,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_box_carriage_status,
+        support_fn=lambda api: api.device_features.is_support_water_mode,
     ),
     RoborockBinarySensorDescription(
         key="water_box_status",
@@ -69,6 +78,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_box_status,
+        support_fn=lambda api: api.device_features.is_support_water_mode,
     ),
     RoborockBinarySensorDescription(
         key="water_shortage",
@@ -76,6 +86,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_shortage_status,
+        support_fn=lambda api: api.device_features.is_support_water_mode,
     ),
     RoborockBinarySensorDescription(
         key="dirty_box_full",
@@ -84,6 +95,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.dirty_water_box_status,
         is_dock_entity=True,
+        support_fn=lambda api: api.wash_towel_mode is not None,
     ),
     RoborockBinarySensorDescription(
         key="clean_box_empty",
@@ -92,6 +104,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.clear_water_box_status,
         is_dock_entity=True,
+        support_fn=lambda api: api.wash_towel_mode is not None,
     ),
     RoborockBinarySensorDescription(
         key="clean_fluid_empty",
@@ -104,6 +117,10 @@ BINARY_SENSOR_DESCRIPTIONS = [
             else None
         ),
         is_dock_entity=True,
+        support_fn=lambda api: (
+            api.wash_towel_mode is not None
+            and api.device_features.is_clean_fluid_delivery_supported
+        ),
     ),
     RoborockBinarySensorDescription(
         key="in_cleaning",
@@ -157,12 +174,7 @@ async def async_setup_entry(
         )
         for coordinator in config_entry.runtime_data.v1
         for description in BINARY_SENSOR_DESCRIPTIONS
-        # Note: Currently coordinator.data is always available
-        # on startup but won't be in the future
-        if (
-            coordinator.data is not None
-            and description.value_fn(coordinator.data) is not None
-        )
+        if description.support_fn(coordinator.properties_api)
     ]
     entities.extend(
         RoborockBinarySensorEntityA01(

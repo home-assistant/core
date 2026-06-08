@@ -7,7 +7,7 @@ import logging
 import pathlib
 import tempfile
 from typing import Any
-from unittest.mock import AsyncMock, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from roborock import (
@@ -41,6 +41,7 @@ from roborock.devices.traits.v1.clean_summary import CleanSummaryTrait
 from roborock.devices.traits.v1.command import CommandTrait
 from roborock.devices.traits.v1.common import V1TraitMixin
 from roborock.devices.traits.v1.consumeable import ConsumableTrait
+from roborock.devices.traits.v1.device_features import DeviceFeaturesTrait
 from roborock.devices.traits.v1.do_not_disturb import DoNotDisturbTrait
 from roborock.devices.traits.v1.dust_collection_mode import DustCollectionModeTrait
 from roborock.devices.traits.v1.home import HomeTrait
@@ -344,6 +345,18 @@ def make_home_trait(
     return home_trait
 
 
+def make_device_features() -> Mock:
+    """Create fake device features."""
+    device_features = MagicMock(spec=DeviceFeaturesTrait)
+    device_features.is_supported_drying = True
+    device_features.is_support_water_mode = True
+    device_features.is_clean_fluid_delivery_supported = True
+    device_features.is_support_clean_estimate = True
+    device_features.is_clean_route_setting_supported = True
+    device_features.is_field_supported.return_value = True
+    return device_features
+
+
 def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     """Create v1 properties for each fake device."""
     v1_properties = AsyncMock(spec=PropertiesApi)
@@ -351,6 +364,7 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
         trait_spec=StatusTrait,
         dataclass_template=STATUS,
     )
+    v1_properties.device_features = make_device_features()
     _fan_speed_mapping = {m.code: m.value for m in VacuumModes}
     _water_mode_mapping = {m.code: m.value for m in WaterModes}
     _mop_route_mapping = {m.code: m.value for m in CleanRoutes}

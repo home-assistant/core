@@ -4,7 +4,6 @@ from unittest.mock import Mock
 
 import pytest
 from roborock import RoborockException
-from roborock.data import RoborockDockTypeCode
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockTimeout
 from syrupy.assertion import SnapshotAssertion
@@ -46,15 +45,8 @@ async def test_buttons(
 
 @pytest.fixture
 def non_wash_n_fill_dock(fake_vacuum: FakeDevice) -> None:
-    """Override dock_type to a non-wash-n-fill value so dock buttons are gated out."""
-    status = fake_vacuum.v1_properties.status
-    original_refresh = status.refresh.side_effect
-
-    async def patched_refresh() -> None:
-        await original_refresh()
-        status.dock_type = RoborockDockTypeCode.auto_empty_dock
-
-    status.refresh.side_effect = patched_refresh
+    """Disable wash towel mode to indicate this device has no wash functions."""
+    fake_vacuum.v1_properties.wash_towel_mode = None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
