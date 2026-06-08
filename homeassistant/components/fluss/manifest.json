@@ -1,7 +1,7 @@
 {
   "domain": "fluss",
   "name": "Fluss+",
-  "codeowners": ["@fluss"],
+  "codeowners": ["@Marcello17"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fluss",
   "iot_class": "cloud_polling",

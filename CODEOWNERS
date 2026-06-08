@@ -574,8 +574,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
-/homeassistant/components/fluss/ @fluss
-/tests/components/fluss/ @fluss
+/homeassistant/components/fluss/ @Marcello17
+/tests/components/fluss/ @Marcello17
 /homeassistant/components/flux_led/ @icemanch
 /tests/components/flux_led/ @icemanch
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
