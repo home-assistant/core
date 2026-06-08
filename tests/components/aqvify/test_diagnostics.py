@@ -28,4 +28,4 @@ async def test_diagnostics_config_entry(
         hass, hass_client, mock_config_entry
     )
 
-    assert result == snapshot()
+    assert result == snapshot
