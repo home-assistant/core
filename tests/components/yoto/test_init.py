@@ -85,13 +85,13 @@ async def test_status_push_tick(
     """The status-push timer publishes a request every 60 s."""
     mock_yoto_client.is_mqtt_connected = True
     await setup_integration(hass, mock_config_entry)
-    mock_yoto_client.request_status_push.reset_mock()
+    mock_yoto_client.request_player_status.reset_mock()
 
     freezer.tick(STATUS_PUSH_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_yoto_client.request_status_push.assert_called_once_with("player-test")
+    mock_yoto_client.request_player_status.assert_called_once_with("player-test")
 
 
 async def test_status_push_skipped_when_mqtt_disconnected(
@@ -102,14 +102,14 @@ async def test_status_push_skipped_when_mqtt_disconnected(
 ) -> None:
     """The status-push timer is a no-op while MQTT is reconnecting."""
     await setup_integration(hass, mock_config_entry)
-    mock_yoto_client.request_status_push.reset_mock()
+    mock_yoto_client.request_player_status.reset_mock()
     mock_yoto_client.is_mqtt_connected = False
 
     freezer.tick(STATUS_PUSH_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_yoto_client.request_status_push.assert_not_called()
+    mock_yoto_client.request_player_status.assert_not_called()
 
 
 async def test_periodic_poll_refreshes_players(
