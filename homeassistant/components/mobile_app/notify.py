@@ -54,7 +54,7 @@ from .const import (
     SIGNAL_RECORD_NOTIFICATION,
 )
 from .helpers import device_info
-from .live_activity import prepare_live_activity_remote_push
+from .live_activity import is_live_activity_push, prepare_live_activity_remote_push
 from .push_notification import PushChannel
 from .util import supports_push
 
@@ -240,15 +240,21 @@ class MobileAppNotificationService(BaseNotificationService):
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
-        # Applies Live Activity routing when the payload asks
-        # for it; otherwise it returns the original generic mobile push data.
-        remote_push = prepare_live_activity_remote_push(self.hass, entry.data, data)
+        if is_live_activity_push(self.hass, entry.data, data):
+            remote_push = prepare_live_activity_remote_push(self.hass, entry.data, data)
+            send_data = remote_push.data
+            target_push_token = remote_push.target_push_token
+            on_success = remote_push.async_handle_success
+        else:
+            send_data = data
+            target_push_token = None
+            on_success = None
         try:
             await _send_message(
                 async_get_clientsession(self.hass),
                 entry,
-                remote_push.data,
-                target_push_token=remote_push.target_push_token,
+                send_data,
+                target_push_token=target_push_token,
             )
         except HomeAssistantError as e:
             if e.translation_key == "rate_limit_exceeded_sending_notification":
@@ -256,7 +262,8 @@ class MobileAppNotificationService(BaseNotificationService):
             else:
                 _LOGGER.error(str(e))
         else:
-            remote_push.async_handle_success()
+            if on_success:
+                on_success()
 
 
 async def _send_message(

@@ -61,6 +61,13 @@ class LiveActivityRemotePush:
             self.success_callback()
 
 
+def is_live_activity_push(
+    hass: HomeAssistant, registration: Mapping[str, Any], data: dict[str, Any]
+) -> bool:
+    """Return True if this notification should be routed as a Live Activity push."""
+    return resolve_live_activity_push(hass, registration, data) is not None
+
+
 def prepare_live_activity_remote_push(
     hass: HomeAssistant, registration: Mapping[str, Any], data: dict[str, Any]
 ) -> LiveActivityRemotePush:
@@ -85,7 +92,7 @@ def resolve_live_activity_push(
 ) -> LiveActivityPush | None:
     """Return Live Activity token routing data for a notification, or ``None``.
 
-    Core needs to choose the Apple ActivityKit route before calling the relay:
+    Core needs to choose the Live Activity route before calling the relay:
     updates and ends must use the stored per-activity token for the tag, while a
     new or expired tag must use the device's push-to-start token.
     """
