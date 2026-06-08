@@ -157,7 +157,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature."""
-        if state := self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]:
+        if state := self.device.states.get(OverkizState.CORE_TARGET_TEMPERATURE):
             return state.value_as_float
         return None
 
@@ -165,7 +165,9 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return temperature.value_as_float
         return None

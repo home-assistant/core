@@ -332,7 +332,7 @@ async def setup_owntracks(
     ).add_to_hass(hass)
 
     with patch.object(owntracks, "OwnTracksContext", ctx_cls):
-        assert await async_setup_component(hass, "owntracks", {"owntracks": config})
+        assert await async_setup_component(hass, DOMAIN, {"owntracks": config})
         await hass.async_block_till_done()
 
 

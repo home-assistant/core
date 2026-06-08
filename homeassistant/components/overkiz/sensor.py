@@ -550,7 +550,7 @@ async def async_setup_entry(
                 description,
             )
             for state in device.definition.states
-            if (description := SUPPORTED_STATES.get(state.qualified_name))
+            if (description := SUPPORTED_STATES.get(state))
         )
 
     async_add_entities(entities)
@@ -597,12 +597,12 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             return default_unit
 
         attrs = self.device.attributes
-        if (unit := attrs[f"{state.name}MeasuredValueType"]) and (
+        if (unit := attrs.get(f"{state.name}MeasuredValueType")) and (
             unit_value := unit.value_as_str
         ):
             return OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)
 
-        if (unit := attrs[OverkizAttribute.CORE_MEASURED_VALUE_TYPE]) and (
+        if (unit := attrs.get(OverkizAttribute.CORE_MEASURED_VALUE_TYPE)) and (
             unit_value := unit.value_as_str
         ):
             ha_unit = OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)

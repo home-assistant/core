@@ -467,10 +467,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
     data: dict[str, Any] = dict(entry.data)
     options: dict[str, Any] = dict(entry.options)
-    if entry.version > 2 or (entry.version == 2 and entry.minor_version > 1):
-        # This means the user has downgraded from a future version
-        # We allow read support for version 2.1
-        return False
 
     if entry.version == 1 and entry.minor_version < 2:
         # Can be removed when the config entry is bumped to version 2.1
@@ -504,6 +500,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Can be removed with HA Core 2027.1
         new_entry_data = entry.data.copy()
         new_entry_data[CONF_PROTOCOL] = PROTOCOL_5
+        # Create temporary certificate files from entry
+        await async_create_certificate_temp_files(hass, new_entry_data)
         # Try the connection with protocol version 5
         # And update the protocol if successful
         if await hass.async_add_executor_job(
