@@ -408,26 +408,6 @@ def async_register_os_in_dev_reg(
 
 
 @callback
-def async_register_rpi_firmware_in_dev_reg(
-    entry_id: str, dev_reg: dr.DeviceRegistry
-) -> None:
-    """Register the Raspberry Pi firmware as a device.
-
-    Nested under the OS device so the firmware update entity lives on its own
-    device rather than cluttering the OS one.
-    """
-    params = DeviceInfo(
-        identifiers={(DOMAIN, "rpi_firmware")},
-        manufacturer="Raspberry Pi",
-        model=SupervisorEntityModel.RPI_FIRMWARE,
-        name="Raspberry Pi Firmware",
-        entry_type=dr.DeviceEntryType.SERVICE,
-        via_device=(DOMAIN, "OS"),
-    )
-    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
-
-
-@callback
 def async_register_host_in_dev_reg(
     entry_id: str,
     dev_reg: dr.DeviceRegistry,
@@ -876,7 +856,6 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
 
         # Build clean coordinator data
         self.is_hass_os = info.hassos is not None
-
         new_data = HassioMainData(
             core=core_info,
             supervisor=supervisor_info,

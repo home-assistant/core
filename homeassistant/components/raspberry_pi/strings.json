@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "update": {
+      "rpi_firmware": {
+        "name": "Firmware"
+      }
+    }
+  }
+}

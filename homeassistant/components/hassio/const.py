@@ -149,10 +149,6 @@ DATA_HASSIO_HTTP_CONFIG: HassKey[dict[str, Any]] = HassKey("hassio_http_config")
 DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
 DATA_HASSIO_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
-# Supervisor `os_info.board` values for boards on which the os-agent exposes
-# `io.hass.os.Boards.RaspberryPi.Firmware` (Raspberry Pi 4/5 and Yellow).
-BOARDS_WITH_RASPBERRYPI_FIRMWARE = frozenset({"rpi4-64", "rpi5-64", "yellow"})
-
 PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
 PLACEHOLDER_KEY_ADDON_DOCUMENTATION = "addon_documentation"
@@ -210,4 +206,3 @@ class SupervisorEntityModel(StrEnum):
     SUPERVISOR = "Home Assistant Supervisor"
     HOST = "Home Assistant Host"
     MOUNT = "Home Assistant Mount"
-    RPI_FIRMWARE = "Raspberry Pi"

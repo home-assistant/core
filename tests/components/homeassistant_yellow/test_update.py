@@ -1,7 +1,8 @@
 """Test Yellow firmware update entity."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiohasupervisor.models import RaspberryPiFirmwareInfo
 import pytest
 
 from homeassistant.components.homeassistant_hardware.helpers import (
@@ -144,3 +145,49 @@ async def test_yellow_update_entity_state(
         f"{state.attributes['title']} {state.attributes['installed_version']}"
         == expected
     )
+
+
+async def test_yellow_rpi_firmware_update_entity(
+    hass: HomeAssistant, mock_rpi_firmware_info: AsyncMock
+) -> None:
+    """Test the Raspberry Pi EEPROM firmware entity on the Yellow device."""
+    mock_rpi_firmware_info.return_value = RaspberryPiFirmwareInfo(
+        current_version="1765222194",
+        latest_version="1778498402",
+        update_available=True,
+        update_blocked=False,
+        update_pending=False,
+        blocked_reason=None,
+    )
+    await async_setup_component(hass, "homeassistant", {})
+
+    yellow_config_entry = MockConfigEntry(
+        title="Home Assistant Yellow",
+        domain="homeassistant_yellow",
+        data={
+            "firmware": "ezsp",
+            "firmware_version": "7.3.1.0 build 0",
+            "device": RADIO_DEVICE,
+        },
+        version=1,
+        minor_version=3,
+    )
+    yellow_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.is_hassio", return_value=True
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+    ):
+        assert await hass.config_entries.async_setup(yellow_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("update.home_assistant_yellow_firmware")
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["installed_version"] == "2025-12-08"
+    assert state.attributes["latest_version"] == "2026-05-11"

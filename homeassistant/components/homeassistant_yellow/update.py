@@ -2,6 +2,7 @@
 
 import logging
 
+from aiohasupervisor import SupervisorError
 from universal_silabs_flasher.flasher import YellowFlasher
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
@@ -10,12 +11,14 @@ from homeassistant.components.homeassistant_hardware.coordinator import (
 from homeassistant.components.homeassistant_hardware.update import (
     BaseFirmwareUpdateEntity,
     FirmwareUpdateEntityDescription,
+    RaspberryPiFirmwareUpdateEntity,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    async_get_raspberry_pi_firmware_info,
 )
-from homeassistant.components.update import UpdateDeviceClass
+from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -141,9 +144,33 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the firmware update config entry."""
-    entity = _async_create_update_entity(hass, config_entry, async_add_entities)
+    entities: list[UpdateEntity] = [
+        _async_create_update_entity(hass, config_entry, async_add_entities)
+    ]
 
-    async_add_entities([entity])
+    try:
+        rpi_firmware = await async_get_raspberry_pi_firmware_info(hass)
+    except SupervisorError as err:
+        # async_get_raspberry_pi_firmware_info handles 404 gracefully, anything
+        # else is a genuine Supervisor error that we should log.
+        _LOGGER.warning("Raspberry Pi firmware info unavailable: %s", err)
+        rpi_firmware = None
+
+    if rpi_firmware is not None and not rpi_firmware.update_blocked:
+        entities.append(
+            RaspberryPiFirmwareUpdateEntity(
+                rpi_firmware,
+                DeviceInfo(
+                    identifiers={(DOMAIN, "yellow")},
+                    name=MODEL,
+                    model=MODEL,
+                    manufacturer=MANUFACTURER,
+                ),
+                unique_id="yellow_rpi_firmware",
+            )
+        )
+
+    async_add_entities(entities)
 
 
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):

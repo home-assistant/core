@@ -5,27 +5,35 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
+from aiohasupervisor.models import RaspberryPiFirmwareInfo
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
 from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 from yarl import URL
 
 from homeassistant.components.update import (
+    UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FirmwareUpdateCoordinator
 from .helpers import async_register_firmware_info_callback
 from .util import (
+    RPI_FIRMWARE_RELEASE_URL,
     ApplicationType,
     FirmwareInfo,
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
+    async_get_raspberry_pi_firmware_info,
+    async_update_raspberry_pi_firmware,
+    humanize_rpi_firmware_version,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -288,3 +296,91 @@ class BaseFirmwareUpdateEntity(
             self.async_write_ha_state()
 
         self._firmware_info_callback(firmware_info)
+
+
+class RaspberryPiFirmwareUpdateEntity(UpdateEntity):
+    """Update entity for the Raspberry Pi firmware (bootloader EEPROM and VL805).
+
+    There is no coordinator. The firmware state only changes after a reboot
+    (which restarts Core and re-fetches at setup) or right after the install
+    action (re-fetched in async_install), so polling would never show anything
+    new. The board integration passes in the DeviceInfo so the entity ends up
+    on that board's device.
+    """
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
+    )
+    _attr_translation_key = "rpi_firmware"
+
+    def __init__(
+        self,
+        firmware: RaspberryPiFirmwareInfo,
+        device_info: DeviceInfo,
+        unique_id: str,
+    ) -> None:
+        """Initialize entity."""
+        self._firmware = firmware
+        self._attr_device_info = device_info
+        self._attr_unique_id = unique_id
+
+    @property
+    def installed_version(self) -> str | None:
+        """Composite installed firmware version.
+
+        Once an update is applied (update_pending), report the new version as
+        installed so the entity reads "up to date". The running firmware only
+        changes after the reboot, which the Supervisor flags with a
+        REBOOT_REQUIRED repair.
+        """
+        if self._firmware.update_pending:
+            return humanize_rpi_firmware_version(self._firmware.latest_version)
+        return humanize_rpi_firmware_version(self._firmware.current_version)
+
+    @property
+    def latest_version(self) -> str | None:
+        """Composite available firmware version."""
+        return humanize_rpi_firmware_version(self._firmware.latest_version)
+
+    @property
+    def release_url(self) -> str | None:
+        """Return a link to the official Raspberry Pi bootloader docs."""
+        return RPI_FIRMWARE_RELEASE_URL
+
+    async def async_release_notes(self) -> str | None:
+        """Return the pre-install warning and reboot notice as ha-alert boxes."""
+        return (
+            "<ha-alert alert-type='warning'>"
+            "Do not interrupt the firmware flash. "
+            "Power loss during the EEPROM update can render your device "
+            "inoperable."
+            "</ha-alert>\n\n"
+            "<ha-alert alert-type='info'>"
+            "A reboot is required after install for the new firmware to "
+            "take effect."
+            "</ha-alert>\n"
+        )
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        # The flash is a single blocking host call with no progress output, so
+        # all we can show is a boolean in-progress state while it runs.
+        self._attr_in_progress = True
+        self.async_write_ha_state()
+        try:
+            await async_update_raspberry_pi_firmware(self.hass)
+        except HomeAssistantError:
+            self._attr_in_progress = False
+            self.async_write_ha_state()
+            raise
+        self._attr_in_progress = False
+        # Re-fetch so the entity picks up update_pending and reads "up to date".
+        refreshed = await async_get_raspberry_pi_firmware_info(self.hass)
+        if refreshed is not None:
+            self._firmware = refreshed
+        self.async_write_ha_state()
