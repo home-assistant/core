@@ -561,7 +561,7 @@ def diff_file(filename: str, content: str) -> list[str]:
     )
 
 
-def generate_lock_file(output_path: str, source_file: tuple[str, ...]) -> None:
+def generate_lock_file(output_path: str, source_files: tuple[str, ...]) -> None:
     """Resolve requirements_all.txt into a hash-pinned lock file.
 
     This shells out to `uv pip compile --generate-hashes`, which performs a
@@ -579,7 +579,7 @@ def generate_lock_file(output_path: str, source_file: tuple[str, ...]) -> None:
             output_path,
             "--custom-compile-command",
             GENERATED_MESSAGE,
-            *source_file,
+            *source_files,
         ],
         check=True,
     )
@@ -648,22 +648,10 @@ def main(validate: bool, ci: bool) -> int:
 
         return 0
 
-    sourcefile_to_lockfile = {}
-    for lock_file, source_files in PIP_COMPILE_LOCK_FILES.items():
-        for source_file in source_files:
-            sourcefile_to_lockfile.setdefault(source_file, []).append(lock_file)
-    generate_lock_files = set()
-
     for filename, content in files:
-        if lock_files := sourcefile_to_lockfile.get(filename):
-            file = Path(filename)
-            if not file.is_file() or file.read_text(encoding="utf-8") != content:
-                generate_lock_files.update(lock_files)
-
         Path(filename).write_text(content)
 
-    for lock_file in generate_lock_files:
-        source_files = PIP_COMPILE_LOCK_FILES[lock_file]
+    for lock_file, source_files in PIP_COMPILE_LOCK_FILES.items():
         generate_lock_file(lock_file, source_files)
 
     return 0
