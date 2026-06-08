@@ -43,7 +43,6 @@ SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
         key="interface",
         translation_key="interface",
         data_key="intf_description",
-        icon="mdi:lan",
     ),
 )
 
