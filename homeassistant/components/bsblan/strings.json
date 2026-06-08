@@ -154,7 +154,7 @@
   },
   "issues": {
     "outdated_firmware": {
-      "description": "Your BSB-LAN device is running firmware {firmware_version}, which is no longer supported. Please update your BSB-LAN board firmware to a newer version to keep using this integration.",
+      "description": "Your BSB-LAN device is running firmware {firmware_version}, which uses an older JSON-API version that only supports a reduced set of features. Update your BSB-LAN firmware to enable full support, including multiple heating circuits.",
       "title": "Update your BSB-LAN firmware"
     }
   },

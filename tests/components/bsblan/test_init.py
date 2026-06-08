@@ -3,7 +3,12 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
-from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
+from bsblan import (
+    BSBLANAuthError,
+    BSBLANConnectionError,
+    BSBLANError,
+    BSBLANVersionError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -43,22 +48,23 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_creates_outdated_firmware_issue(
+async def test_setup_minimal_mode_creates_outdated_firmware_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test setup creates a repair issue and fails for unsupported firmware v1."""
+    """Test a device below JSON-API v2 loads in minimal mode and raises a repair."""
+    mock_bsblan.json_api_version = "1.0"
     mock_bsblan.device.return_value.version = "1.0.38-20200730234859"
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # The library cannot operate with v1 firmware, so setup fails, but the
-    # repair issue must be surfaced instead of a generic error.
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    # The library still operates with a reduced feature set, so setup succeeds
+    # but a repair issue recommends upgrading the firmware.
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     issue = issue_registry.async_get_issue(
         DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"
@@ -68,19 +74,44 @@ async def test_setup_creates_outdated_firmware_issue(
     assert issue.translation_key == "outdated_firmware"
 
 
-async def test_setup_no_outdated_firmware_issue_for_supported_firmware(
+async def test_setup_full_mode_no_outdated_firmware_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test setup does not create a repair issue for supported firmware."""
-    mock_bsblan.device.return_value.version = "2.1.0"
+    """Test a device at JSON-API v2 or higher does not raise a repair issue."""
+    mock_bsblan.json_api_version = "2.0"
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"
+    )
+    assert issue is None
+
+
+async def test_setup_version_error_raises_config_entry_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test setup fails when no supported JSON-API version can be retrieved."""
+    mock_bsblan.initialize.side_effect = BSBLANVersionError("unsupported", version=None)
+    mock_bsblan.device_info = mock_bsblan.device.return_value
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    # A hard version error fails setup rather than creating a repair issue.
     issue = issue_registry.async_get_issue(
         DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"
     )
