@@ -90,7 +90,7 @@ class OPNsenseDeviceTrackerEntity(
         device_data = self.device_data
         if device_data:
             ip = device_data.get("ip")
-            if ip is not None:
+            if ip:
                 return str(ip)
         return None
 
