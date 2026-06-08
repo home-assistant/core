@@ -20,9 +20,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
-    NumberSelector,
-    NumberSelectorConfig,
-    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -34,14 +31,10 @@ from .const import (
     CONF_APP_ID,
     CONF_APP_SECRET,
     CONF_OPTION_LIVE_RESOLUTION,
-    CONF_OPTION_UPDATE_INTERVAL,
     DEFAULT_LIVE_RESOLUTION,
-    DEFAULT_UPDATE_INTERVAL_SECONDS,
     DOMAIN,
     LIVE_RESOLUTION_HD,
     LIVE_RESOLUTION_SD,
-    MAX_UPDATE_INTERVAL_SECONDS,
-    MIN_UPDATE_INTERVAL_SECONDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,17 +125,6 @@ class ImouOptionsFlow(OptionsFlow):
                                 options=[LIVE_RESOLUTION_HD, LIVE_RESOLUTION_SD],
                                 translation_key=CONF_OPTION_LIVE_RESOLUTION,
                                 mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
-                        vol.Required(
-                            CONF_OPTION_UPDATE_INTERVAL,
-                            default=DEFAULT_UPDATE_INTERVAL_SECONDS,
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_UPDATE_INTERVAL_SECONDS,
-                                max=MAX_UPDATE_INTERVAL_SECONDS,
-                                mode=NumberSelectorMode.BOX,
-                                unit_of_measurement="s",
                             )
                         ),
                     }

@@ -31,7 +31,6 @@ PARAM_STATE = "state"
 PARAM_HEADER_DETECT = "header_detect"
 
 CONF_OPTION_LIVE_RESOLUTION = "live_resolution"
-CONF_OPTION_UPDATE_INTERVAL = "update_interval"
 # Config entry option values (selector keys; must be [a-z0-9-_]+ for translations).
 LIVE_RESOLUTION_HD = "hd"
 LIVE_RESOLUTION_SD = "sd"
@@ -41,9 +40,6 @@ PYIMOUAPI_LIVE_RESOLUTIONS: dict[str, str] = {
     LIVE_RESOLUTION_HD: "HD",
     LIVE_RESOLUTION_SD: "SD",
 }
-MIN_UPDATE_INTERVAL_SECONDS = 30
-MAX_UPDATE_INTERVAL_SECONDS = 900
-DEFAULT_UPDATE_INTERVAL_SECONDS = 120
 
 # How long each PTZ button press moves the camera, in milliseconds (Imou cloud API).
 PTZ_MOVE_DURATION_MS = 500

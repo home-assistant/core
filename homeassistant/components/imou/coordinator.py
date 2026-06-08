@@ -13,27 +13,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_OPTION_UPDATE_INTERVAL,
-    DEFAULT_UPDATE_INTERVAL_SECONDS,
-    DOMAIN,
-    UPDATE_TIMEOUT,
-    imou_device_identifier,
-)
+from .const import DOMAIN, UPDATE_TIMEOUT, imou_device_identifier
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=DEFAULT_UPDATE_INTERVAL_SECONDS)
-
-
-def get_update_interval(config_entry: ConfigEntry) -> timedelta:
-    """Return the coordinator polling interval from config entry options."""
-    return timedelta(
-        seconds=config_entry.options.get(
-            CONF_OPTION_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL_SECONDS
-        )
-    )
-
+SCAN_INTERVAL = timedelta(seconds=120)
 
 type ImouConfigEntry = ConfigEntry[ImouDataUpdateCoordinator]
 
@@ -54,7 +38,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             name="ImouDataUpdateCoordinator",
-            update_interval=get_update_interval(config_entry),
+            update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
             always_update=True,
         )

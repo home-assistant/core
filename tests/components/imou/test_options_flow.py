@@ -2,7 +2,6 @@
 
 from homeassistant.components.imou.const import (
     CONF_OPTION_LIVE_RESOLUTION,
-    CONF_OPTION_UPDATE_INTERVAL,
     LIVE_RESOLUTION_HD,
 )
 from homeassistant.core import HomeAssistant
@@ -15,7 +14,7 @@ async def test_options_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test polling interval can be updated."""
+    """Test live stream resolution can be updated."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -24,14 +23,10 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_OPTION_LIVE_RESOLUTION: LIVE_RESOLUTION_HD,
-            CONF_OPTION_UPDATE_INTERVAL: 90,
-        },
+        user_input={CONF_OPTION_LIVE_RESOLUTION: LIVE_RESOLUTION_HD},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {
-        CONF_OPTION_LIVE_RESOLUTION: LIVE_RESOLUTION_HD,
-        CONF_OPTION_UPDATE_INTERVAL: 90,
+        CONF_OPTION_LIVE_RESOLUTION: LIVE_RESOLUTION_HD
     }
