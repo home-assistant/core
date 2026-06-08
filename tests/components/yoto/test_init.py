@@ -223,6 +223,29 @@ async def test_poll_reauth_on_authentication_error(
     )
 
 
+@pytest.mark.usefixtures("mock_yoto_client")
+async def test_poll_reauth_on_invalid_refresh_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An unrecoverable token refresh during the poll starts a reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestReauthError(request_info=Mock(), domain=DOMAIN),
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert any(
+        flow["context"]["source"] == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress()
+    )
+
+
 async def test_setup_retries_when_mqtt_unavailable(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
