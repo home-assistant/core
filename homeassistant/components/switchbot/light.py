@@ -42,6 +42,13 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
         async_add_entities([SwitchbotAirPurifierLightEntity(coordinator)])
+    elif isinstance(coordinator.device, switchbot.SwitchbotRgbicwwCeilingLight):
+        async_add_entities(
+            [
+                SwitchbotRgbicwwCeilingLightMainEntity(coordinator),
+                SwitchbotRgbicwwCeilingLightColorEntity(coordinator),
+            ]
+        )
     else:
         async_add_entities([SwitchbotLightEntity(coordinator)])
 
@@ -226,3 +233,131 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
         """Instruct the light to turn off."""
         _LOGGER.debug("Turning off light %s, address %s", kwargs, self._address)
         await self._device.turn_off()
+
+
+class SwitchbotRgbicwwCeilingLightMainEntity(SwitchbotEntity, LightEntity):
+    """Main (warm-white) sub-light of an RGBICWW Ceiling Light."""
+
+    _device: switchbot.SwitchbotRgbicwwCeilingLight
+    _attr_translation_key = "rgbicww_ceiling_main_light"
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _attr_color_mode = ColorMode.COLOR_TEMP
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}-main"
+
+    @property
+    def max_color_temp_kelvin(self) -> int:
+        """Return the max color temperature."""
+        return self._device.max_temp
+
+    @property
+    def min_color_temp_kelvin(self) -> int:
+        """Return the min color temperature."""
+        return self._device.min_temp
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the light is on."""
+        return self._device.is_main_on
+
+    @property
+    def brightness(self) -> int | None:
+        """Return the brightness of the light."""
+        return max(0, min(255, round(self._device.main_brightness * 2.55)))
+
+    @property
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature of the light."""
+        return self._device.color_temp
+
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the main light on."""
+        _LOGGER.debug("Turning on main light %s, address %s", kwargs, self._address)
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            kelvin = max(2700, min(6500, kwargs[ATTR_COLOR_TEMP_KELVIN]))
+            await self._device.set_main_color_temp(kelvin)
+            return
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = round(cast(int, kwargs[ATTR_BRIGHTNESS]) / 255 * 100)
+            await self._device.set_main_brightness(brightness)
+            return
+        await self._device.turn_on_main()
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the main light off."""
+        _LOGGER.debug("Turning off main light %s, address %s", kwargs, self._address)
+        await self._device.turn_off_main()
+
+
+class SwitchbotRgbicwwCeilingLightColorEntity(SwitchbotEntity, LightEntity):
+    """Color (RGB) sub-light of an RGBICWW Ceiling Light."""
+
+    _device: switchbot.SwitchbotRgbicwwCeilingLight
+    _attr_translation_key = "rgbicww_ceiling_color_light"
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}-color"
+
+    @property
+    def supported_features(self) -> LightEntityFeature:
+        """Return the supported features."""
+        return LightEntityFeature.EFFECT if self.effect_list else LightEntityFeature(0)
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the light is on."""
+        return self._device.on
+
+    @property
+    def brightness(self) -> int | None:
+        """Return the brightness of the light."""
+        return max(0, min(255, round(self._device.brightness * 2.55)))
+
+    @property
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the RGB color of the light."""
+        return self._device.rgb
+
+    @property
+    def effect_list(self) -> list[str] | None:
+        """Return the list of effects supported by the light."""
+        return self._device.get_effect_list
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect of the light."""
+        return self._device.get_effect()
+
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the color light on."""
+        _LOGGER.debug("Turning on color light %s, address %s", kwargs, self._address)
+        brightness = round(
+            cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness)) / 255 * 100
+        )
+        if ATTR_EFFECT in kwargs:
+            await self._device.set_effect(kwargs[ATTR_EFFECT])
+            return
+        if ATTR_RGB_COLOR in kwargs:
+            rgb = kwargs[ATTR_RGB_COLOR]
+            await self._device.set_rgb(brightness, rgb[0], rgb[1], rgb[2])
+            return
+        if ATTR_BRIGHTNESS in kwargs:
+            await self._device.set_brightness(brightness)
+            return
+        await self._device.turn_on_color()
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the color light off."""
+        _LOGGER.debug("Turning off color light %s, address %s", kwargs, self._address)
+        await self._device.turn_off_color()
