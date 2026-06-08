@@ -2,12 +2,12 @@
 
 from typing import Any
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SENDER
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.util import yaml as yaml_util
 
-from .const import DOMAIN
+from .const import CONF_SERVER, DOMAIN
 
 
 @callback
@@ -34,7 +34,10 @@ def deprecate_yaml_issue(
         create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_error_{config.get(CONF_NAME, 'unknown')}",
+            (
+                f"deprecated_yaml_import_issue_error_{config.get(CONF_NAME, 'unknown')}"
+                f"_{config[CONF_SENDER]}_{config[CONF_SERVER]}"
+            ),
             breaks_in_ha_version="2026.12.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,

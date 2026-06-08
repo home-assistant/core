@@ -492,5 +492,8 @@ async def test_init_import_flow_errors(
     )
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
-        issue_id="deprecated_yaml_import_issue_error_notifier_name",
+        issue_id=(
+            "deprecated_yaml_import_issue_error_notifier_name"
+            "_email@example.com_mail.example.com"
+        ),
     )
