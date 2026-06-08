@@ -51,11 +51,7 @@ def _build_node_zone_groups(zones_info: InfoZonesOverview) -> dict[int, NodeZone
 
 def _base_url(host: str) -> URL:
     """Return the base configuration URL for the configured Duco host."""
-    try:
-        return URL.build(scheme="http", host=host)
-    except ValueError:
-        # Hosts may already include a port, which URL.build rejects in `host`.
-        return URL(f"http://{host}")
+    return URL(f"//{host}").with_scheme("http")
 
 
 @dataclass
