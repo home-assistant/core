@@ -31,7 +31,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_assumed_state = not self.device.states
         self._attr_unique_id = self.device.device_url
 
-        if self.is_sub_device:
+        if self.device.identifier.is_sub_device:
             # In case of sub entity, use the provided label as name
             self._attr_name = self.device.label
 
@@ -57,11 +57,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         return False
 
     @property
-    def is_sub_device(self) -> bool:
-        """Return True if device is a sub device."""
-        return self.device.identifier.is_sub_device
-
-    @property
     def device(self) -> Device:
         """Return Overkiz device linked to this entity."""
         return self.coordinator.data[self.device_url]
@@ -71,7 +66,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         # Some devices, such as the Smart Thermostat have several devices
         # in one physical device, with same device url, terminated by '#' and a number.
         # In this case, we use the base device url as the device identifier.
-        if self.is_sub_device:
+        if self.device.identifier.is_sub_device:
             # Only return the url of the base device, to inherit device name
             # and model from parent device.
             return DeviceInfo(
@@ -130,7 +125,7 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
 
-        if self.is_sub_device:
+        if self.device.identifier.is_sub_device:
             # In case of sub device, use the provided label
             # and append the name of the type of entity
             self._attr_name = f"{self.device.label} {description.name}"
