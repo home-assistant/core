@@ -369,7 +369,11 @@ class ReolinkHost:
                 )
 
         # start long polling if ONVIF push failed immediately
-        if not self._onvif_push_supported and not self._api.baichuan.privacy_mode():
+        if (
+            self._onvif_long_poll_supported
+            and not self._onvif_push_supported
+            and not self._api.baichuan.privacy_mode()
+        ):
             _LOGGER.debug(
                 "Camera model %s does not support ONVIF push,"
                 " using ONVIF long polling instead",
@@ -378,20 +382,21 @@ class ReolinkHost:
             try:
                 await self._async_start_long_polling(initial=True)
             except NotSupportedError:
-                _LOGGER.debug(
-                    "Camera model %s does not support ONVIF long"
-                    " polling, using fast polling instead",
-                    self._api.model,
-                )
                 self._onvif_long_poll_supported = False
                 await self._api.unsubscribe()
-                await self._async_poll_all_motion()
             else:
                 self._cancel_long_poll_check = async_call_later(
                     self._hass,
                     FIRST_ONVIF_LONG_POLL_TIMEOUT,
                     self._async_check_onvif_long_poll,
                 )
+
+        if not self._onvif_long_poll_supported:
+            _LOGGER.debug(
+                "Camera model %s does not support ONVIF push and long polling, using fast polling instead",
+                self._api.model,
+            )
+            await self._async_poll_all_motion()
 
         self._cancel_tcp_push_check = None
 
@@ -822,7 +827,7 @@ class ReolinkHost:
             return
 
         try:
-            if self._api.session_active:
+            if self._api.session_active and not self._api.baichuan.privacy_mode():
                 await self._api.get_motion_state_all_ch()
         except ReolinkError as err:
             if not self._fast_poll_error:
@@ -834,7 +839,7 @@ class ReolinkHost:
                 )
             self._fast_poll_error = True
         else:
-            if self._api.session_active:
+            if self._api.session_active and not self._api.baichuan.privacy_mode():
                 self._fast_poll_error = False
         finally:
             # schedule next poll
