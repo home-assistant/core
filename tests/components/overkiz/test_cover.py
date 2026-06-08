@@ -6,7 +6,13 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import ExecutionState, OverkizCommandParam, OverkizState
+from pyoverkiz.enums import (
+    ExecutionState,
+    OverkizCommand,
+    OverkizCommandParam,
+    OverkizState,
+)
+from pyoverkiz.models import CommandDefinitions
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -1315,15 +1321,24 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
     handler still checks the atomic command and aborts cleanly if it is
     missing.
     """
-    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
+    entry = await setup_overkiz_integration(
+        fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture
+    )
 
-    with (
-        patch(
-            "pyoverkiz.models.Device.supports_command",
-            return_value=False,
-        ),
-        pytest.raises(ServiceValidationError),
-    ):
+    # Drop the atomic command from the device so the handler's guard is exercised
+    # against realistic data instead of mocking the integration internals.
+    device = entry.runtime_data.coordinator.data[
+        DYNAMIC_EXTERIOR_VENETIAN_BLIND.device_url
+    ]
+    device.definition.commands = CommandDefinitions(
+        [
+            command
+            for command in device.definition.commands.values()
+            if command.command_name != OverkizCommand.SET_CLOSURE_AND_ORIENTATION
+        ]
+    )
+
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             "set_cover_position_and_tilt",
