@@ -2274,3 +2274,43 @@ async def test_stt_vad_enabled_based_on_audio_processing(
 
         # VAD should NOT be created when requires_external_vad is False
         mock_vad.assert_not_called()
+
+
+async def test_invalid_pipeline_does_not_create_tts_stream(
+    hass: HomeAssistant,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_components,
+) -> None:
+    """Test that an invalid pipeline won't create a TTS ResultStream."""
+    pipeline = async_get_pipeline(hass, None)
+    await async_update_pipeline(hass, pipeline, stt_engine="does-not-exist")
+
+    async def audio_data() -> AsyncGenerator[bytes]:
+        yield make_10ms_chunk(b"not used")
+
+    with patch.object(
+        mock_wake_word_provider_entity,
+        "async_process_audio_stream",
+        side_effect=assist_pipeline.error.WakeWordTimeoutError(
+            code="timeout", message="timeout"
+        ),
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=lambda event: None,
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            start_stage=assist_pipeline.PipelineStage.STT,
+            end_stage=assist_pipeline.PipelineStage.TTS,
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
+
+    assert len(hass.data[tts.DATA_TTS_MANAGER].token_to_stream) == 0
