@@ -14,8 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .coordinator import OPNsenseDeviceTrackerCoordinator
-from .types import DeviceDetails, OPNsenseConfigEntry
+from .coordinator import OPNsenseConfigEntry, OPNsenseDeviceTrackerCoordinator
+from .types import DeviceDetails
 
 
 @dataclass(frozen=True, kw_only=True)

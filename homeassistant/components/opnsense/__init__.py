@@ -22,8 +22,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
-from .coordinator import OPNsenseDeviceTrackerCoordinator
-from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
+from .coordinator import (
+    OPNsenseConfigEntry,
+    OPNsenseDeviceTrackerCoordinator,
+    OPNsenseRuntimeData,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {

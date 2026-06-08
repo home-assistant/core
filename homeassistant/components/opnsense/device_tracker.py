@@ -7,8 +7,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import OPNsenseDeviceTrackerCoordinator
-from .types import DeviceDetails, OPNsenseConfigEntry
+from .coordinator import OPNsenseConfigEntry, OPNsenseDeviceTrackerCoordinator
+from .types import DeviceDetails
 
 
 async def async_setup_entry(
