@@ -26,10 +26,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         """Initialize the device."""
         super().__init__(coordinator)
         self.device_url = device_url
-        split_device_url = self.device_url.split("#")
-        self.base_device_url = split_device_url[0]
-        if len(split_device_url) == 2:
-            self.index_device_url = split_device_url[1]
         self.executor = OverkizExecutor(device_url, coordinator)
 
         self._attr_assumed_state = not self.device.states
@@ -63,7 +59,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     @property
     def is_sub_device(self) -> bool:
         """Return True if device is a sub device."""
-        return "#" in self.device_url and not self.device_url.endswith("#1")
+        return self.device.identifier.is_sub_device
 
     @property
     def device(self) -> Device:
@@ -79,7 +75,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             # Only return the url of the base device, to inherit device name
             # and model from parent device.
             return DeviceInfo(
-                identifiers={(DOMAIN, self.executor.base_device_url)},
+                identifiers={(DOMAIN, self.device.identifier.base_device_url)},
             )
 
         manufacturer = (
@@ -104,7 +100,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         )
 
         return DeviceInfo(
-            identifiers={(DOMAIN, self.executor.base_device_url)},
+            identifiers={(DOMAIN, self.device.identifier.base_device_url)},
             name=self.device.label,
             manufacturer=str(manufacturer),
             model=str(model),
@@ -115,7 +111,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             model_id=self.device.widget,
             hw_version=self.device.controllable_name,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, self.executor.get_gateway_id()),
+            via_device=(DOMAIN, self.device.identifier.gateway_id),
             configuration_url=self.coordinator.client.server_config.configuration_url,
         )
 
