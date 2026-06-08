@@ -891,6 +891,23 @@ async def test_get_live_context_tool_filter(
         original_name="Front Door",
         suggested_object_id="front_door",
     )
+    # Two entities sharing the same name in different areas
+    office_ac = entity_registry.async_get_or_create(
+        "climate",
+        "test",
+        "office_ac",
+        original_name="AC",
+        device_id=office_device.id,
+        suggested_object_id="office_ac",
+    )
+    kitchen_ac = entity_registry.async_get_or_create(
+        "climate",
+        "test",
+        "kitchen_ac",
+        original_name="AC",
+        device_id=kitchen_device.id,
+        suggested_object_id="kitchen_ac",
+    )
     entity_registry.async_update_entity(
         kitchen_light.entity_id, aliases=[er.COMPUTED_NAME, "Cooking Lamp"]
     )
@@ -900,6 +917,8 @@ async def test_get_live_context_tool_filter(
         kitchen_light.entity_id,
         office_switch.entity_id,
         front_door.entity_id,
+        office_ac.entity_id,
+        kitchen_ac.entity_id,
     ):
         async_expose_entity(hass, "conversation", entity_id, True)
 
@@ -907,6 +926,8 @@ async def test_get_live_context_tool_filter(
     hass.states.async_set(kitchen_light.entity_id, "off")
     hass.states.async_set(office_switch.entity_id, "on")
     hass.states.async_set(front_door.entity_id, "locked")
+    hass.states.async_set(office_ac.entity_id, "cool")
+    hass.states.async_set(kitchen_ac.entity_id, "heat")
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
@@ -1104,13 +1125,38 @@ async def test_get_live_context_tool_filter(
     result = await api.async_call_tool(
         llm.ToolInput(
             tool_name="GetLiveContext",
-            tool_args={"domain": "climate"},
+            tool_args={"domain": "fan"},
         )
     )
     assert result == {
         "success": False,
-        "error": "No exposed entities found in domain(s): climate",
+        "error": "No exposed entities found in domain(s): fan",
     }
+
+    # Entities sharing a name are all returned rather than failing as an
+    # ambiguous match, since this tool only returns context.
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "AC"},
+        )
+    )
+    assert result["success"] is True
+    assert result["result"].count("domain: climate") == 2
+    assert "Office" in result["result"]
+    assert "Kitchen" in result["result"]
+
+    # Combining a shared name with an area narrows to the single match
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "AC", "area": "Kitchen"},
+        )
+    )
+    assert result["success"] is True
+    assert result["result"].count("domain: climate") == 1
+    assert "Kitchen" in result["result"]
+    assert "Office" not in result["result"]
 
 
 async def test_script_tool(
