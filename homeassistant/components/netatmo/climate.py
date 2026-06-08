@@ -280,7 +280,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             return
 
         if data["event_type"] == EVENT_TYPE_THERM_MODE:
-            self._attr_preset_mode = NETATMO_MAP_PRESET[home[EVENT_TYPE_THERM_MODE]]
+            self._attr_preset_mode = NETATMO_MAP_PRESET.get(
+                home.get(EVENT_TYPE_THERM_MODE), PRESET_SCHEDULE
+            )
             self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
             if self._attr_preset_mode == PRESET_FROST_GUARD:
                 self._attr_target_temperature = self._hg_temperature
@@ -422,9 +424,12 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._hg_temperature = self.home.get_hg_temp()
         self._attr_current_temperature = self.device.therm_measured_temperature
         self._attr_target_temperature = self.device.therm_setpoint_temperature
-        self._attr_preset_mode = NETATMO_MAP_PRESET[
-            getattr(self.device, "therm_setpoint_mode", STATE_NETATMO_SCHEDULE)
-        ]
+        self._attr_preset_mode = NETATMO_MAP_PRESET.get(
+            getattr(self.device, "therm_setpoint_mode", None)
+            or getattr(self.device, "cooling_setpoint_mode", None)
+            or STATE_NETATMO_SCHEDULE,
+            PRESET_SCHEDULE,
+        )
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
         self._away = self._attr_hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
