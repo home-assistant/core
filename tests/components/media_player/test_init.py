@@ -314,6 +314,7 @@ async def test_get_image_http_content_encoding_skips_length_check(
 
     assert resp.status == HTTPStatus.OK
     assert "Discarding truncated image from" not in caplog.text
+    assert await resp.read() == body
 
 
 async def test_get_image_http_truncated_fetch_is_not_cached(
