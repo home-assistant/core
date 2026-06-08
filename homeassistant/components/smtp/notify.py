@@ -1,5 +1,6 @@
 """Mail (SMTP) notification service."""
 
+import asyncio
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -36,6 +37,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -56,6 +58,7 @@ from .const import (
     DOMAIN,
     ENCRYPTION_OPTIONS,
 )
+from .issue import deprecate_yaml_issue
 
 PLATFORMS = [Platform.NOTIFY]
 
@@ -87,11 +90,19 @@ def get_service(
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
     if config:
-        hass.create_task(
+        result = asyncio.run_coroutine_threadsafe(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
-        )
+            ),
+            hass.loop,
+        ).result()
+        if result.get("type") is FlowResultType.CREATE_ENTRY or (
+            result.get("type") is FlowResultType.ABORT
+            and result.get("reason") == "already_configured"
+        ):
+            deprecate_yaml_issue(hass, config)
+        else:
+            deprecate_yaml_issue(hass, config, import_success=False)
         return None
 
     if discovery_info is None:

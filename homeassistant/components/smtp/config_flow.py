@@ -52,7 +52,6 @@ from .const import (
     ENCRYPTION_OPTIONS,
     SUBENTRY_TYPE_RECIPIENT,
 )
-from .issue import deprecate_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,7 +144,6 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
 
-        deprecate_yaml_issue(self.hass)
         self._async_abort_entries_match(import_info)
 
         errors = await self.hass.async_add_executor_job(validate_input, import_info)
@@ -169,7 +167,6 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
                 ],
             )
 
-        deprecate_yaml_issue(self.hass, import_success=False)
         return self.async_abort(reason=errors["base"])
 
 

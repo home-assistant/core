@@ -66,8 +66,8 @@
   },
   "issues": {
     "deprecated_yaml_import_issue_error": {
-      "description": "Configuring SMTP using YAML is being removed but there was an error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the SMTP YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.",
-      "title": "The SMTP YAML configuration import failed"
+      "description": "YAML configuration for SMTP is being deprecated, but an error occurred while importing your existing configuration.\n\nVerify that the YAML configuration is valid, then restart Home Assistant to try again. Alternatively remove the SMTP YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.\n\n**Configuration that could not be imported:**\n\n```{config}```",
+      "title": "Failed to import SMTP YAML configuration"
     }
   },
   "selector": {
