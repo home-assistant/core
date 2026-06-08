@@ -641,10 +641,12 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator that persists ``data`` and restores it on startup.
 
-    The data must be JSON-serializable. It is restored in :meth:`_async_setup`, so the
-    coordinator must be driven via :meth:`async_config_entry_first_refresh`, and saved after
-    each successful refresh and after :meth:`async_set_updated_data`, batched by
-    ``save_delay``. The store is automatically removed when the config entry is removed.
+    The data must be JSON-serializable. It is restored by :meth:`async_restore_data`,
+    called automatically during setup; coordinators not driven via
+    :meth:`async_config_entry_first_refresh` should call it themselves before the first
+    update. Data is saved after each successful refresh and after
+    :meth:`async_set_updated_data`, batched by ``save_delay``. The store is removed when
+    the config entry is removed.
     """
 
     def __init__(
@@ -682,8 +684,19 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         self._setup_store_removal(config_entry.entry_id)
 
     async def _async_setup(self) -> None:
-        """Set up the coordinator, restoring previously stored data."""
+        """Set up the coordinator and restore stored data."""
         await super()._async_setup()
+        await self.async_restore_data()
+
+    async def async_restore_data(self) -> None:
+        """Restore the data from the store.
+
+        Called automatically during setup. Coordinators not driven via
+        :meth:`async_config_entry_first_refresh` should call this once before the first
+        update. Does nothing if data is already loaded.
+        """
+        if self.data is not None:
+            return
         # Use ``is not None`` so falsy-but-valid payloads (e.g. ``[]`` or ``{}``)
         # are restored.
         if (stored := await self._store.async_load()) is not None:
@@ -709,7 +722,10 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         self._schedule_save()
 
     async def async_remove_store(self) -> None:
-        """Remove the stored data."""
+        """Remove the stored data.
+
+        Safe to call when nothing is stored.
+        """
         await self._store.async_remove()
 
     @callback
