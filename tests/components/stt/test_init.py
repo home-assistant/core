@@ -113,7 +113,7 @@ async def mock_setup(
         TEST_DOMAIN,
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
-    assert await async_setup_component(hass, "stt", {"stt": {"platform": TEST_DOMAIN}})
+    assert await async_setup_component(hass, DOMAIN, {"stt": {"platform": TEST_DOMAIN}})
     await hass.async_block_till_done()
 
 
@@ -268,11 +268,11 @@ async def test_stream_audio_uses_enum_values(
     assert isinstance(metadata.codec, AudioCodecs)
     assert metadata.codec == AudioCodecs.PCM
     assert isinstance(metadata.bit_rate, AudioBitRates)
-    assert metadata.bit_rate == AudioBitRates.BITRATE_16
+    assert metadata.bit_rate is AudioBitRates.BITRATE_16
     assert isinstance(metadata.sample_rate, AudioSampleRates)
-    assert metadata.sample_rate == AudioSampleRates.SAMPLERATE_16000
+    assert metadata.sample_rate is AudioSampleRates.SAMPLERATE_16000
     assert isinstance(metadata.channel, AudioChannels)
-    assert metadata.channel == AudioChannels.CHANNEL_MONO
+    assert metadata.channel is AudioChannels.CHANNEL_MONO
 
 
 @pytest.mark.parametrize(
@@ -460,7 +460,7 @@ async def test_ws_list_engines(
 
 async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test async_default_engine."""
-    assert await async_setup_component(hass, "stt", {"stt": {}})
+    assert await async_setup_component(hass, DOMAIN, {"stt": {}})
     await hass.async_block_till_done()
 
     assert async_default_engine(hass) is None
@@ -478,7 +478,7 @@ async def test_default_engine(
         TEST_DOMAIN,
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
-    assert await async_setup_component(hass, "stt", {"stt": {"platform": TEST_DOMAIN}})
+    assert await async_setup_component(hass, DOMAIN, {"stt": {"platform": TEST_DOMAIN}})
     await hass.async_block_till_done()
 
     assert async_default_engine(hass) == TEST_DOMAIN
@@ -583,7 +583,7 @@ async def test_get_engine_legacy(
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
     assert await async_setup_component(
-        hass, "stt", {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
+        hass, DOMAIN, {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
     )
     await hass.async_block_till_done()
 

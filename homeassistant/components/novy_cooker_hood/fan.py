@@ -3,7 +3,7 @@
 import math
 from typing import Any
 
-from rf_protocols.codes.novy.cooker_hood import get_codes_for_code
+from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.components.radio_frequency import (
@@ -19,7 +19,6 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .commands import COMMAND_MINUS, COMMAND_PLUS
 from .const import CONF_TRANSMITTER, SPEED_COUNT
 from .entity import NovyCookerHoodEntity
 
@@ -57,7 +56,7 @@ class NovyCookerHoodFan(
         """Initialize the fan."""
         super().__init__(entry)
         self._rf_transmitter_entity_id = entry.data[CONF_TRANSMITTER]
-        self._codes = get_codes_for_code(entry.data[CONF_CODE])
+        self._code: int = entry.data[CONF_CODE]
         self._level = 0
         self._attr_unique_id = entry.entry_id
 
@@ -111,7 +110,7 @@ class NovyCookerHoodFan(
     async def async_increase_speed(self, percentage_step: int | None = None) -> None:
         """Bump speed up by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
-        plus = await self._codes.async_load_command(COMMAND_PLUS)
+        plus = NovyCookerHoodButton.PLUS.to_command(channel=self._code)
         for _ in range(steps):
             await self._send_command(plus)
         self._level = min(SPEED_COUNT, self._level + steps)
@@ -120,7 +119,7 @@ class NovyCookerHoodFan(
     async def async_decrease_speed(self, percentage_step: int | None = None) -> None:
         """Bump speed down by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
-        minus = await self._codes.async_load_command(COMMAND_MINUS)
+        minus = NovyCookerHoodButton.MINUS.to_command(channel=self._code)
         for _ in range(steps):
             await self._send_command(minus)
         self._level = max(0, self._level - steps)
@@ -135,11 +134,11 @@ class NovyCookerHoodFan(
 
     async def _async_set_level(self, level: int) -> None:
         """Reset to off with `SPEED_COUNT` minus presses, then climb to level."""
-        minus = await self._codes.async_load_command(COMMAND_MINUS)
+        minus = NovyCookerHoodButton.MINUS.to_command(channel=self._code)
         for _ in range(SPEED_COUNT):
             await self._send_command(minus)
         if level > 0:
-            plus = await self._codes.async_load_command(COMMAND_PLUS)
+            plus = NovyCookerHoodButton.PLUS.to_command(channel=self._code)
             for _ in range(level):
                 await self._send_command(plus)
         self._level = level

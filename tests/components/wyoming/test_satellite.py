@@ -23,6 +23,7 @@ from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, assist_satellite, intent
+from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.assist_satellite import WyomingAssistSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.const import STATE_ON
@@ -43,7 +44,7 @@ async def setup_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     we can patch functions before the satellite task is run during setup.
     """
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -1508,7 +1509,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_started_event.wait()
             timer_started = mock_client.timer_started
@@ -1530,7 +1531,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_updated_event.wait()
             timer_updated = mock_client.timer_updated
@@ -1548,7 +1549,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_updated_event.wait()
             timer_updated = mock_client.timer_updated
@@ -1570,7 +1571,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_updated_event.wait()
             timer_updated = mock_client.timer_updated
@@ -1592,7 +1593,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_updated_event.wait()
             timer_updated = mock_client.timer_updated
@@ -1609,7 +1610,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_cancelled_event.wait()
             timer_cancelled = mock_client.timer_cancelled
@@ -1629,7 +1630,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_started_event.wait()
             timer_started = mock_client.timer_started
@@ -1646,7 +1647,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             device_id=device.device_id,
         )
 
-        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        assert result.response_type is intent_helper.IntentResponseType.ACTION_DONE
         async with asyncio.timeout(1):
             await mock_client.timer_finished_event.wait()
             timer_finished = mock_client.timer_finished

@@ -429,6 +429,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
+        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
+        stop_tilt_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
         key=UIClass.ROLLER_SHUTTER,
@@ -628,7 +631,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """
         state_name = self.entity_description.current_position_state
 
-        if not state_name or not (state := self.device.states[state_name]):
+        if not state_name or not (state := self.device.states.get(state_name)):
             return None
 
         position = state.value_as_int
@@ -642,9 +645,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 state_name,
             )
 
-            if fallback_state := self.device.states[
+            if fallback_state := self.device.states.get(
                 OverkizState.CORE_MEMORIZED_1_POSITION
-            ]:
+            ):
                 position = fallback_state.value_as_int
             else:
                 return None
@@ -658,7 +661,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 state_name,
             )
 
-            if fallback_state := self.device.states[OverkizState.CORE_TARGET_CLOSURE]:
+            if fallback_state := self.device.states.get(
+                OverkizState.CORE_TARGET_CLOSURE
+            ):
                 position = fallback_state.value_as_int
             else:
                 return None
@@ -704,7 +709,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """
         state_name = self.entity_description.current_tilt_position_state
 
-        if state_name and (state := self.device.states[state_name]):
+        if state_name and (state := self.device.states.get(state_name)):
             position = state.value_as_int
             if position is None:
                 return None
@@ -849,6 +854,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         target_value = target_closure.value_as_int
 
         if current_value is None or target_value is None:
+            return None
+
+        if current_value in (_POSITION_MY, _POSITION_UNKNOWN):
             return None
 
         return current_value - target_value

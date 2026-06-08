@@ -95,9 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             prefer_cache=False,
         )
     except RoborockInvalidCredentials as err:
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise ConfigEntryAuthFailed(
-            "Invalid credentials",
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
@@ -118,9 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         ) from err
     except RoborockException as err:
         _LOGGER.debug("Failed to get Roborock home data: %s", err)
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise ConfigEntryNotReady(
-            "Failed to get Roborock home data",
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
@@ -145,10 +141,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             **get_device_info(device),
         )
 
-    enabled_devices = [
-        device for device in devices if not _is_device_disabled(device_registry, device)
-    ]
+    enabled_devices = []
+    disabled_devices = []
+    for device in devices:
+        if _is_device_disabled(device_registry, device):
+            disabled_devices.append(device)
+        else:
+            enabled_devices.append(device)
     _LOGGER.debug("%d of %d devices are enabled", len(enabled_devices), len(devices))
+
+    # Close connections for disabled devices to prevent their background
+    # reconnect loops from triggering MQTT session restarts that would
+    # disrupt coordinator setup for the enabled devices.
+    if disabled_devices:
+        close_results = await asyncio.gather(
+            *[device.close() for device in disabled_devices],
+            return_exceptions=True,
+        )
+        for device, close_result in zip(disabled_devices, close_results, strict=True):
+            if isinstance(close_result, Exception):
+                _LOGGER.debug(
+                    "Failed to close disabled Roborock device %s: %s",
+                    device.duid,
+                    close_result,
+                )
 
     coordinators = await asyncio.gather(
         *build_setup_functions(hass, entry, enabled_devices, user_data),
@@ -178,9 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         len(v1_coords) + len(a01_coords) + len(b01_q7_coords) + len(b01_q10_coords) == 0
         and enabled_devices
     ):
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise ConfigEntryNotReady(
-            "No devices were able to successfully setup",
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
