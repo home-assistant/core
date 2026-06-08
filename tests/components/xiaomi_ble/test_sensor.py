@@ -856,7 +856,7 @@ async def test_miscale_v2_stabilized(hass: HomeAssistant) -> None:
 
 
 async def test_miscale_s400_packet1(hass: HomeAssistant) -> None:
-    """Test MiScale S400 first packet: mass + impedance_low + heart_rate + profile_id."""
+    """Test MiScale S400 first packet: mass + impedance_low + heart_rate + profile_id + stabilized."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="8C:D0:B2:F6:BE:EF",
@@ -949,16 +949,6 @@ async def test_miscale_s400_packet2(hass: HomeAssistant) -> None:
     assert (
         profile_id_sensor_attr[ATTR_FRIENDLY_NAME]
         == "Body Composition Scale BEEF Profile ID"
-    )
-
-    stabilized_binary_sensor = hass.states.get(
-        "binary_sensor.body_composition_scale_beef_stabilized"
-    )
-    stabilized_binary_sensor_attr = stabilized_binary_sensor.attributes
-    assert stabilized_binary_sensor.state == "on"
-    assert (
-        stabilized_binary_sensor_attr[ATTR_FRIENDLY_NAME]
-        == "Body Composition Scale BEEF Stabilized"
     )
 
     assert await hass.config_entries.async_unload(entry.entry_id)
