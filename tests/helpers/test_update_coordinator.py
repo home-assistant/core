@@ -1722,3 +1722,29 @@ async def test_async_remove_store_helper(
 
     # Harmless to call again
     await crd.async_remove_store()
+
+
+async def test_async_restore_data_manual(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test async_restore_data restores without async_config_entry_first_refresh."""
+    hass_storage[RESTORE_KEY] = {"version": 1, "data": {"value": "stored"}}
+    crd = get_restore_crd(hass, config_entry=MockConfigEntry())
+
+    assert crd.data is None
+    await crd.async_restore_data()
+    assert crd.data == {"value": "stored"}
+
+
+async def test_async_restore_data_skips_when_data_present(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test async_restore_data does not overwrite data that is already set."""
+    hass_storage[RESTORE_KEY] = {"version": 1, "data": {"value": "stored"}}
+    crd = get_restore_crd(hass, config_entry=MockConfigEntry())
+
+    crd.async_set_updated_data({"value": "pushed"})
+    await crd.async_restore_data()
+    assert crd.data == {"value": "pushed"}
+
+    await flush_store(crd._store)
