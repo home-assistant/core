@@ -14,6 +14,7 @@ from homeassistant.components import (
     vacuum,
     valve,
 )
+from homeassistant.components.conversation import DOMAIN
 from homeassistant.components.cover import intent as cover_intent
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.media_player import (
@@ -65,7 +66,7 @@ class MockTodoListEntity(todo.TodoListEntity):
 async def init_components(hass: HomeAssistant):
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, "intent", {})
 
 

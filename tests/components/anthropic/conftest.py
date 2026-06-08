@@ -89,7 +89,7 @@ async def mock_init_component(
         new_callable=AsyncMock,
         return_value=AsyncPage(data=model_list),
     ):
-        assert await async_setup_component(hass, "anthropic", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield
 

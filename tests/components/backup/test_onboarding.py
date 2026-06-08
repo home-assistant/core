@@ -8,6 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import backup, onboarding
+from homeassistant.components.backup import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -56,7 +57,7 @@ async def test_onboarding_view_after_done(
     mock_onboarding_storage(hass_storage, {"done": [onboarding.const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
-    assert await async_setup_component(hass, "backup", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -109,7 +110,7 @@ async def test_onboarding_backup_info(
     mock_onboarding_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
-    assert await async_setup_component(hass, "backup", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -229,7 +230,7 @@ async def test_onboarding_backup_restore(
     mock_onboarding_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
-    assert await async_setup_component(hass, "backup", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -340,7 +341,7 @@ async def test_onboarding_backup_restore_error(
     mock_onboarding_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
-    assert await async_setup_component(hass, "backup", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -383,7 +384,7 @@ async def test_onboarding_backup_restore_unexpected_error(
     mock_onboarding_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
-    assert await async_setup_component(hass, "backup", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -408,7 +409,7 @@ async def test_onboarding_backup_upload(
     mock_onboarding_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
-    assert await async_setup_component(hass, "backup", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()

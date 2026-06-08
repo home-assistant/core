@@ -42,7 +42,7 @@ async def async_setup_test_fixture(
     )
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "eafm", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert entry.state is ConfigEntryState.LOADED
     await hass.async_block_till_done()
 
