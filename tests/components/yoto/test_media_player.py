@@ -145,7 +145,7 @@ async def test_state_unavailable_when_offline(
 ) -> None:
     """When the player reports offline the entity is unavailable."""
     player = next(iter(mock_yoto_client.players.values()))
-    player.status.is_online = False
+    player.is_online = False
 
     await setup_integration(hass, mock_config_entry)
 

@@ -1306,6 +1306,10 @@ class GetLiveContextTool(Tool):
                     name=name_filter,
                     area_name=area_filter,
                     domains=domain_filter,
+                    # This tool only returns context, so multiple entities
+                    # sharing a name (e.g. "AC" in two areas) should all be
+                    # returned rather than failing as an ambiguous match.
+                    allow_duplicate_names=True,
                 ),
                 states=exposed_states,
             )
