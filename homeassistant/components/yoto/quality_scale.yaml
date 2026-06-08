@@ -56,7 +56,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
@@ -70,8 +70,8 @@ rules:
     comment: Authorization is the only configuration; reauth covers re-linking the account.
   repair-issues:
     status: exempt
-    comment: Auth failures go through the reauth flow; other errors are transient and retried by the coordinator.
-  stale-devices: todo
+    comment: No repair issues are raised yet.
+  stale-devices: done
 
   # Platinum
   async-dependency: done

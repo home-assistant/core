@@ -10,6 +10,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
@@ -61,3 +62,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: YotoConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: YotoConfigEntry) -> bool:
     """Unload a Yoto config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    entry: YotoConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Allow deleting a device whose player is no longer in the account."""
+    coordinator = entry.runtime_data
+    return not any(
+        identifier[0] == DOMAIN and identifier[1] in coordinator.data
+        for identifier in device_entry.identifiers
+    )
