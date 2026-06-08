@@ -44,9 +44,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bo
     minor_version = entry.minor_version
 
     _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     new_data: dict[str, Any] = {**entry.data, CONF_FILTERS: {}}
 

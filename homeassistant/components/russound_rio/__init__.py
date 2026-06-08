@@ -115,9 +115,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: RussoundConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         (
