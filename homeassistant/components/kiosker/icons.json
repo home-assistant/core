@@ -15,6 +15,9 @@
       }
     },
     "button": {
+      "blackout_clear": {
+        "default": "mdi:monitor"
+      },
       "clear_cache": {
         "default": "mdi:cached"
       },

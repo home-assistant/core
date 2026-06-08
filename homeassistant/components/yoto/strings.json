@@ -52,6 +52,9 @@
     "unknown_chapter": {
       "message": "Unknown chapter {chapter_key} on card {card_id}"
     },
+    "unknown_group": {
+      "message": "Unknown Yoto group: {group_id}"
+    },
     "unknown_track": {
       "message": "Unknown track {track_key} on card {card_id}"
     },

@@ -573,6 +573,21 @@ async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
         )
 
 
+async def test_fails_on_bad_parse(hass: HomeAssistant) -> None:
+    """Test that validation fails when sentence is malformed."""
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "id": "trigger1",
+                    "platform": "conversation",
+                    "command": ["[test)"],
+                },
+            ],
+        )
+
+
 async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) -> None:
     """Test wildcards in trigger sentences."""
     assert await async_setup_component(
