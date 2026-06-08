@@ -71,10 +71,49 @@ def _get_icloud_account(
     return entry.runtime_data
 
 
-def _get_photo_album(
-    icloud_account: IcloudAccount, identifier: IcloudMediaSourceIdentifier
+async def _get_photo_library(
+    hass: HomeAssistant,
+    icloud_account: IcloudAccount,
+    identifier: IcloudMediaSourceIdentifier,
+) -> AlbumContainer:
+    """Get photo library."""
+
+    def get_photo_library_sync() -> AlbumContainer:
+        """Get photo library synchronously."""
+        if icloud_account.api is None or icloud_account.api.photos is None:
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="account_not_initialized",
+                translation_placeholders={"entry": identifier.config_entry_id},
+            )
+        return (
+            icloud_account.api.photos.shared_streams
+            if identifier.shared_album is True
+            else icloud_account.api.photos.albums
+        )
+
+    return await hass.async_add_executor_job(get_photo_library_sync)
+
+
+async def _get_photo_album(
+    hass: HomeAssistant,
+    icloud_account: IcloudAccount,
+    identifier: IcloudMediaSourceIdentifier,
 ) -> BasePhotoAlbum:
     """Get photo album from identifier."""
+
+    def _find_album_sync() -> BasePhotoAlbum | None:
+        """Find album synchronously."""
+        album: BasePhotoAlbum | None = (
+            albums.get(identifier.album_id) if albums and identifier.album_id else None
+        )
+        if not album:
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="album_not_found",
+            )
+        return album
+
     albums: AlbumContainer | None = None
     if icloud_account.api is None:
         raise Unresolvable(
@@ -83,27 +122,22 @@ def _get_photo_album(
             translation_placeholders={"entry": identifier.config_entry_id},
         )
 
-    albums = (
-        icloud_account.api.photos.shared_streams
-        if identifier.shared_album is True
-        else icloud_account.api.photos.albums
-    )
+    albums = await _get_photo_library(hass, icloud_account, identifier)
 
-    album = albums.get(identifier.album_id) if albums and identifier.album_id else None
-
-    if not album:
-        raise Unresolvable(
-            translation_domain=DOMAIN,
-            translation_key="album_not_found",
-        )
-
-    return album
+    return await hass.async_add_executor_job(_find_album_sync)
 
 
-def _get_photo_asset(
+async def _get_photo_asset(
     hass: HomeAssistant, identifier: IcloudMediaSourceIdentifier
 ) -> PhotoAsset:
-    """Get photo asset synchronously."""
+    """Get photo asset asynchronously."""
+
+    def _get_photo_asset_sync(album: BasePhotoAlbum) -> PhotoAsset | None:
+        """Get photo asset synchronously."""
+        for item in album.photos:
+            if item.id == identifier.photo_id:
+                return item
+        return None
 
     icloud_account = _get_icloud_account(hass, identifier)
 
@@ -115,12 +149,8 @@ def _get_photo_asset(
 
     photo: PhotoAsset | None = PhotoCache.instance().get(identifier.photo_id)
     if photo is None:
-        album = _get_photo_album(icloud_account, identifier)
-        for item in album.photos:
-            PhotoCache.instance().set(item.id, item)
-            if item.id == identifier.photo_id:
-                photo = item
-                break
+        album: BasePhotoAlbum = await _get_photo_album(hass, icloud_account, identifier)
+        photo = await hass.async_add_executor_job(_get_photo_asset_sync, album)
     if photo is None:
         raise Unresolvable(
             translation_domain=DOMAIN,
@@ -132,7 +162,7 @@ def _get_photo_asset(
 async def _get_media_mime_type(
     hass: HomeAssistant, identifier: IcloudMediaSourceIdentifier
 ) -> str:
-    photo = await hass.async_add_executor_job(_get_photo_asset, hass, identifier)
+    photo: PhotoAsset = await _get_photo_asset(hass, identifier)
 
     match photo.item_type:
         case "image":
@@ -293,7 +323,7 @@ class IcloudMediaSource(MediaSource):
             DOMAIN, include_disabled=False, include_ignore=False
         )
 
-    def _build_title_for_identifier(
+    async def _build_title_for_identifier(
         self,
         identifier: IcloudMediaSourceIdentifier | None,
     ) -> str:
@@ -321,7 +351,7 @@ class IcloudMediaSource(MediaSource):
             title_parts.append("Albums")
 
         if identifier and identifier.album_id is not None:
-            album = _get_photo_album(icloud_account, identifier)
+            album = await _get_photo_album(self._hass, icloud_account, identifier)
             title_parts.append(album.title)
 
         return " / ".join(title_parts)
@@ -367,7 +397,7 @@ class IcloudMediaSource(MediaSource):
             identifier=None,
             media_class=MediaClass.DIRECTORY,
             media_content_type=MediaType.ALBUM,
-            title=self._build_title_for_identifier(None),
+            title=await self._build_title_for_identifier(None),
             can_play=False,
             can_expand=True,
             children_media_class=MediaClass.DIRECTORY,
@@ -398,7 +428,7 @@ class IcloudMediaSource(MediaSource):
             identifier=None,
             media_class=MediaClass.DIRECTORY,
             media_content_type=MediaType.ALBUM,
-            title=self._build_title_for_identifier(identifier),
+            title=await self._build_title_for_identifier(identifier),
             can_play=False,
             can_expand=True,
             children_media_class=MediaClass.DIRECTORY,
@@ -445,15 +475,11 @@ class IcloudMediaSource(MediaSource):
             identifier=None,
             media_class=MediaClass.DIRECTORY,
             media_content_type=MediaType.ALBUM,
-            title=self._build_title_for_identifier(identifier),
+            title=await self._build_title_for_identifier(identifier),
             can_play=False,
             can_expand=True,
             children_media_class=MediaClass.DIRECTORY,
-            children=[
-                *await self._hass.async_add_executor_job(
-                    self._browse_albums, identifier, icloud_account
-                )
-            ],
+            children=[*await self._browse_albums(identifier, icloud_account)],
         )
 
     async def _async_build_photos(
@@ -468,23 +494,19 @@ class IcloudMediaSource(MediaSource):
             identifier=None,
             media_class=MediaClass.DIRECTORY,
             media_content_type=MediaType.ALBUM,
-            title=self._build_title_for_identifier(identifier),
+            title=await self._build_title_for_identifier(identifier),
             can_play=False,
             can_expand=True,
             children_media_class=MediaClass.DIRECTORY,
-            children=[
-                *await self._hass.async_add_executor_job(
-                    self._get_photo_list, identifier, icloud_account
-                ),
-            ],
+            children=[*await self._get_photo_list(identifier, icloud_account)],
         )
 
-    def _browse_albums(
+    async def _browse_albums(
         self,
         identifier: IcloudMediaSourceIdentifier,
         icloud_account: IcloudAccount,
     ) -> list[BrowseMediaSource]:
-        """Browse albums synchronously."""
+        """Browse albums asynchronously."""
 
         albums: AlbumContainer | None = None
         if icloud_account.api is None:
@@ -494,15 +516,7 @@ class IcloudMediaSource(MediaSource):
                 translation_placeholders={"entry": identifier.config_entry_id},
             )
 
-        if identifier.shared_album is True:
-            albums = icloud_account.api.photos.shared_streams
-        elif identifier.shared_album is False:
-            albums = icloud_account.api.photos.albums
-        else:
-            raise BrowseError(
-                translation_domain=DOMAIN,
-                translation_key="album_type_not_specified",
-            )
+        albums = await _get_photo_library(self._hass, icloud_account, identifier)
 
         children: list[BrowseMediaSource] = []
         if albums is not None:
@@ -528,39 +542,50 @@ class IcloudMediaSource(MediaSource):
                 )
         return children
 
-    def _get_photo_list(
+    async def _get_photo_list(
         self,
         identifier: IcloudMediaSourceIdentifier,
         icloud_account: IcloudAccount,
     ) -> list[BrowseMediaSource]:
-        """Get list of photos synchronously."""
-        album = _get_photo_album(icloud_account, identifier)
-        items: list[BrowseMediaSource] = []
-        for photo in album.photos:
-            PhotoCache.instance().set(photo.id, photo)
-            photo_id = IcloudMediaSourceIdentifier(
-                config_entry_id=identifier.config_entry_id,
-                shared_album=identifier.shared_album,
-                album_id=identifier.album_id,
-                photo_id=photo.id,
-            )
+        """Get list of photos asynchronously."""
 
-            item = BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=str(photo_id),
-                media_class=(
-                    MediaClass.IMAGE if photo.item_type == "image" else MediaClass.VIDEO
-                ),
-                media_content_type=(
-                    MediaType.IMAGE if photo.item_type == "image" else MediaType.VIDEO
-                ),
-                can_play=True,
-                can_expand=False,
-                title=photo.filename,
-                thumbnail=f"/api/icloud/media_source/serve/thumb/{b64encode(str(photo_id).encode()).decode()}",
-            )
-            items.append(item)
-        return items
+        def _get_photo_list_sync(album: BasePhotoAlbum) -> list[BrowseMediaSource]:
+            """Get list of photos synchronously."""
+            items: list[BrowseMediaSource] = []
+            for photo in album.photos:
+                PhotoCache.instance().set(photo.id, photo)
+                photo_id = IcloudMediaSourceIdentifier(
+                    config_entry_id=identifier.config_entry_id,
+                    shared_album=identifier.shared_album,
+                    album_id=identifier.album_id,
+                    photo_id=photo.id,
+                )
+
+                item = BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=str(photo_id),
+                    media_class=(
+                        MediaClass.IMAGE
+                        if photo.item_type == "image"
+                        else MediaClass.VIDEO
+                    ),
+                    media_content_type=(
+                        MediaType.IMAGE
+                        if photo.item_type == "image"
+                        else MediaType.VIDEO
+                    ),
+                    can_play=True,
+                    can_expand=False,
+                    title=photo.filename,
+                    thumbnail=f"/api/icloud/media_source/serve/thumb{'_image' if photo.item_type == 'image' else ''}/{b64encode(str(photo_id).encode()).decode()}",
+                )
+                items.append(item)
+            return items
+
+        album: BasePhotoAlbum = await _get_photo_album(
+            self._hass, icloud_account, identifier
+        )
+        return await self._hass.async_add_executor_job(_get_photo_list_sync, album)
 
 
 class IcloudMediaSourceView(HomeAssistantView):
@@ -592,9 +617,7 @@ class IcloudMediaSourceView(HomeAssistantView):
             _LOGGER.error("Error decoding iCloud media source identifier: %s", err)
             raise web.HTTPBadRequest from err
 
-        photo = await self._hass.async_add_executor_job(
-            _get_photo_asset, self._hass, identifier
-        )
+        photo = await _get_photo_asset(self._hass, identifier)
 
         url = photo.versions.get(version, {}).get("url")
         if url is None:
@@ -615,6 +638,9 @@ class IcloudMediaSourceView(HomeAssistantView):
         )
         response_headers[hdrs.LAST_MODIFIED] = icloud_response.headers.get(
             hdrs.LAST_MODIFIED, "0"
+        )
+        response_headers[hdrs.CONTENT_LENGTH] = icloud_response.headers.get(
+            hdrs.CONTENT_LENGTH, "0"
         )
         response = web.StreamResponse(
             status=icloud_response.status,
