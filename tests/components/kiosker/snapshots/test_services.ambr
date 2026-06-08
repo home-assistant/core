@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_navigate_url
+  _Call(
+    tuple(
+      'https://example.com',
+    ),
+    dict({
+    }),
+  )
+# ---
+# name: test_set_blackout[all_fields]
+  _Call(
+    tuple(
+      dict({
+        'background': '#000000',
+        'buttonBackground': '#ff0000',
+        'buttonForeground': '#00ff00',
+        'buttonText': 'Dismiss',
+        'dismissible': True,
+        'expire': 30,
+        'foreground': '#ffffff',
+        'icon': 'star',
+        'sound': '1007',
+        'text': 'Hello World',
+        'visible': True,
+      }),
+    ),
+    dict({
+    }),
+  )
+# ---
+# name: test_set_blackout[defaults]
+  _Call(
+    tuple(
+      dict({
+        'background': '#000000',
+        'buttonBackground': '#ffffff',
+        'buttonForeground': '#000000',
+        'buttonText': None,
+        'dismissible': False,
+        'expire': 60,
+        'foreground': '#ffffff',
+        'icon': None,
+        'sound': None,
+        'text': None,
+        'visible': True,
+      }),
+    ),
+    dict({
+    }),
+  )
+# ---
