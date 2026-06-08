@@ -29,7 +29,7 @@ async def test_device_tracker_entities_created(
         for entry in entity_registry.entities.values()
         if entry.domain == "device_tracker" and entry.platform == "unifi_direct"
     ]
-    assert len(entries) >= 2
+    assert len(entries) == 2
 
     entity_ids = {entry.entity_id for entry in entries}
     assert any(

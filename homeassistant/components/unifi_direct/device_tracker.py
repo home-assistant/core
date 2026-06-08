@@ -7,7 +7,7 @@ from homeassistant.components.device_tracker import (
     AsyncSeeCallback,
     ScannerEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_SSH_PORT, DOMAIN
-from .coordinator import UniFiDirectDataUpdateCoordinator
+from .coordinator import UniFiDirectConfigEntry, UniFiDirectDataUpdateCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -80,11 +80,11 @@ async def async_setup_scanner(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UniFiDirectConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi AP Direct."""
-    coordinator: UniFiDirectDataUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     tracked: set[str] = set()
 
     @callback
