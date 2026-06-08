@@ -1,6 +1,8 @@
 """Test cases for the Shelly component."""
 
+import asyncio
 from ipaddress import IPv4Address
+from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.block_device import COAP
@@ -608,7 +610,7 @@ async def test_ble_scanner_unsupported_firmware_fixed(
     """Test device init with unsupported firmware."""
     issue_id = BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
     entry = await init_integration(
-        hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.AUTO}
     )
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
@@ -621,6 +623,80 @@ async def test_ble_scanner_unsupported_firmware_fixed(
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize(
+    ("starting_options", "expected_mode"),
+    [
+        ({CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}, BLEScannerMode.AUTO),
+        ({CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE}, BLEScannerMode.PASSIVE),
+        ({CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED}, BLEScannerMode.DISABLED),
+        ({}, None),
+    ],
+    ids=["active_to_auto", "passive_kept", "disabled_kept", "no_option"],
+)
+async def test_migrate_ble_scanner_mode(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    starting_options: dict[str, Any],
+    expected_mode: BLEScannerMode | None,
+) -> None:
+    """Active migrates to Auto once; other modes stay put."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.37",
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+            "gen": 2,
+        },
+        unique_id=MOCK_MAC,
+        options=starting_options,
+        title="Test name",
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.minor_version == 3
+    assert entry.options.get(CONF_BLE_SCANNER_MODE) == expected_mode
+
+
+@pytest.mark.parametrize(
+    ("entry_version", "entry_minor_version"),
+    [(2, 1), (1, 4)],
+    ids=["future_major", "future_minor"],
+)
+async def test_migrate_ble_scanner_mode_future_version(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entry_version: int,
+    entry_minor_version: int,
+) -> None:
+    """Future versions are not downgraded."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.37",
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+            "gen": 2,
+        },
+        unique_id=MOCK_MAC,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
+        title="Test name",
+        version=entry_version,
+        minor_version=entry_minor_version,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.version == entry_version
+    assert entry.minor_version == entry_minor_version
+    assert entry.options[CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
 
 
 async def test_blu_trv_stale_device_removal(
@@ -694,3 +770,108 @@ async def test_empty_device_removal(
 
     # verify that the empty sub-device is removed
     assert device_registry.async_get(sub_device_entry.id) is None
+
+
+async def test_rpc_waits_for_ble_scanner_at_startup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test setup waits for the bluetooth scanner to be registered."""
+    connect_event = asyncio.Event()
+    reached_connect = asyncio.Event()
+
+    async def _block_until_released(*args: Any, **kwargs: Any) -> Mock:
+        reached_connect.set()
+        await connect_event.wait()
+        return Mock()
+
+    entry = await init_integration(
+        hass,
+        2,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
+        skip_setup=True,
+    )
+
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_connect_scanner",
+        _block_until_released,
+    ):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(entry.entry_id)
+        )
+        async with asyncio.timeout(2):
+            await reached_connect.wait()
+
+        # Setup must still be waiting for the scanner to be registered.
+        assert not setup_task.done()
+
+        connect_event.set()
+        async with asyncio.timeout(2):
+            assert await setup_task is True
+
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_rpc_ble_scanner_startup_wait_times_out(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test setup finishes if the bluetooth scanner never registers."""
+    connect_event = asyncio.Event()
+
+    async def _never_returns(*args: Any, **kwargs: Any) -> Mock:
+        await connect_event.wait()
+        return Mock()
+
+    entry = await init_integration(
+        hass,
+        2,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
+        skip_setup=True,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.shelly.coordinator.async_connect_scanner",
+            _never_returns,
+        ),
+        patch("homeassistant.components.shelly.STARTUP_SCANNER_WAIT", 0.05),
+    ):
+        async with asyncio.timeout(5):
+            assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    assert entry.state is ConfigEntryState.LOADED
+    connect_event.set()
+    await hass.async_block_till_done()
+
+
+async def test_rpc_disabled_ble_scanner_does_not_wait_at_startup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test setup does not wait when the BLE scanner is disabled."""
+    block_event = asyncio.Event()
+
+    async def _block_forever(self: Any) -> None:
+        await block_event.wait()
+
+    entry = await init_integration(
+        hass,
+        2,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED},
+        skip_setup=True,
+    )
+
+    with patch(
+        "homeassistant.components.shelly.coordinator.ShellyRpcCoordinator"
+        "._async_connect_ble_scanner",
+        _block_forever,
+    ):
+        # Scanner setup is blocked, but a disabled proxy must not wait for it.
+        async with asyncio.timeout(2):
+            assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    assert entry.state is ConfigEntryState.LOADED
+    block_event.set()
+    await hass.async_block_till_done()

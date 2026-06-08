@@ -1,7 +1,5 @@
 """The madvr-envy integration."""
 
-from __future__ import annotations
-
 import logging
 
 from madvr.madvr import Madvr
@@ -29,7 +27,7 @@ async def async_handle_unload(coordinator: MadVRCoordinator) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bool:
     """Set up the integration from a config entry."""
     assert entry.unique_id
-    madVRClient = Madvr(
+    mad_vr_client = Madvr(
         host=entry.data[CONF_HOST],
         logger=_LOGGER,
         port=entry.data[CONF_PORT],
@@ -37,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
         connect_timeout=10,
         loop=hass.loop,
     )
-    coordinator = MadVRCoordinator(hass, entry, madVRClient)
+    coordinator = MadVRCoordinator(hass, entry, mad_vr_client)
 
     entry.runtime_data = coordinator
 

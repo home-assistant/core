@@ -5,6 +5,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from hassil.parse_expression import parse_sentence
+from hassil.parser import ParseError
 from hassil.util import (
     PUNCTUATION_END,
     PUNCTUATION_END_WORD,
@@ -13,11 +15,12 @@ from hassil.util import (
 )
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -103,6 +106,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def handle_ask_question(call: ServiceCall) -> dict[str, Any]:
         """Handle a Show View service call."""
         satellite_entity_id: str = call.data[ATTR_ENTITY_ID]
+        if call.context.user_id:
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(
+                    context=call.context,
+                    permission=POLICY_CONTROL,
+                    user_id=call.context.user_id,
+                )
+            if not user.permissions.check_entity(satellite_entity_id, POLICY_CONTROL):
+                raise Unauthorized(
+                    context=call.context,
+                    permission=POLICY_CONTROL,
+                    user_id=call.context.user_id,
+                    perm_category=CAT_ENTITIES,
+                )
+
         satellite_entity: AssistSatelliteEntity | None = component.get_entity(
             satellite_entity_id
         )
@@ -147,6 +166,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             [cv.string],
                             has_one_non_empty_item,
                             has_no_punctuation,
+                            is_valid_sentence,
                         ),
                     }
                 ],
@@ -191,6 +211,17 @@ def has_no_punctuation(value: list[str]) -> list[str]:
             or PUNCTUATION_END_WORD.search(sentence)
         ):
             raise vol.Invalid("sentence should not contain punctuation")
+
+    return value
+
+
+def is_valid_sentence(value: list[str]) -> list[str]:
+    """Validate result can be parsed by hassil."""
+    for sentence in value:
+        try:
+            parse_sentence(sentence)
+        except ParseError as err:
+            raise vol.Invalid(f"invalid sentence: {err}") from err
 
     return value
 

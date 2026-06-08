@@ -1,10 +1,10 @@
 """Offer sentence based automation rules."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from hassil.parse_expression import parse_sentence
+from hassil.parser import ParseError
 from hassil.recognize import RecognizeResult
 from hassil.util import (
     PUNCTUATION_END,
@@ -44,6 +44,17 @@ def has_no_punctuation(value: list[str]) -> list[str]:
     return value
 
 
+def is_valid_sentence(value: list[str]) -> list[str]:
+    """Validate result can be parsed by hassil."""
+    for sentence in value:
+        try:
+            parse_sentence(sentence)
+        except ParseError as err:
+            raise vol.Invalid(f"invalid sentence: {err}") from err
+
+    return value
+
+
 def has_one_non_empty_item(value: list[str]) -> list[str]:
     """Validate result has at least one item."""
     if len(value) < 1:
@@ -60,7 +71,11 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_COMMAND): vol.All(
-            cv.ensure_list, [cv.string], has_one_non_empty_item, has_no_punctuation
+            cv.ensure_list,
+            [cv.string],
+            has_one_non_empty_item,
+            has_no_punctuation,
+            is_valid_sentence,
         ),
     }
 )

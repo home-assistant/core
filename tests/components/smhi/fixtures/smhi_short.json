@@ -1,148 +1,37 @@
 {
-  "approvedTime": "2023-08-07T07:07:34Z",
-  "referenceTime": "2023-08-07T07:00:00Z",
-  "geometry": {
-    "type": "Point",
-    "coordinates": [[15.990068, 57.997072]]
-  },
+  "createdTime": "2026-04-02T11:01:32Z",
+  "referenceTime": "2026-04-02T10:45:00Z",
+  "geometry": { "type": "Point", "coordinates": [16.158549, 58.577821] },
   "timeSeries": [
     {
-      "validTime": "2023-08-07T08:00:00Z",
-      "parameters": [
-        {
-          "name": "spp",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "percent",
-          "values": [-9]
-        },
-        {
-          "name": "pcat",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "category",
-          "values": [0]
-        },
-        {
-          "name": "pmin",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "kg/m2/h",
-          "values": [0.0]
-        },
-        {
-          "name": "pmean",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "kg/m2/h",
-          "values": [0.0]
-        },
-        {
-          "name": "pmax",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "kg/m2/h",
-          "values": [0.0]
-        },
-        {
-          "name": "pmedian",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "kg/m2/h",
-          "values": [0.0]
-        },
-        {
-          "name": "tcc_mean",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "octas",
-          "values": [8]
-        },
-        {
-          "name": "lcc_mean",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "octas",
-          "values": [8]
-        },
-        {
-          "name": "mcc_mean",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "octas",
-          "values": [7]
-        },
-        {
-          "name": "hcc_mean",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "octas",
-          "values": [7]
-        },
-        {
-          "name": "t",
-          "levelType": "hl",
-          "level": 2,
-          "unit": "Cel",
-          "values": [18.4]
-        },
-        {
-          "name": "msl",
-          "levelType": "hmsl",
-          "level": 0,
-          "unit": "hPa",
-          "values": [992.4]
-        },
-        {
-          "name": "vis",
-          "levelType": "hl",
-          "level": 2,
-          "unit": "km",
-          "values": [0.4]
-        },
-        {
-          "name": "wd",
-          "levelType": "hl",
-          "level": 10,
-          "unit": "degree",
-          "values": [93]
-        },
-        {
-          "name": "ws",
-          "levelType": "hl",
-          "level": 10,
-          "unit": "m/s",
-          "values": [2.5]
-        },
-        {
-          "name": "r",
-          "levelType": "hl",
-          "level": 2,
-          "unit": "percent",
-          "values": [100]
-        },
-        {
-          "name": "tstm",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "percent",
-          "values": [37]
-        },
-        {
-          "name": "gust",
-          "levelType": "hl",
-          "level": 10,
-          "unit": "m/s",
-          "values": [6.2]
-        },
-        {
-          "name": "Wsymb2",
-          "levelType": "hl",
-          "level": 0,
-          "unit": "category",
-          "values": [7]
-        }
-      ]
+      "time": "2026-04-02T11:00:00Z",
+      "intervalParametersStartTime": "2026-04-02T10:00:00Z",
+      "data": {
+        "air_temperature": 10.4,
+        "wind_from_direction": 255,
+        "wind_speed": 3.4,
+        "wind_speed_of_gust": 6.8,
+        "relative_humidity": 80,
+        "air_pressure_at_mean_sea_level": 1011.5,
+        "visibility_in_air": 17.9,
+        "thunderstorm_probability": 0,
+        "probability_of_frozen_precipitation": 0.0,
+        "cloud_area_fraction": 8,
+        "low_type_cloud_area_fraction": 8,
+        "medium_type_cloud_area_fraction": 8,
+        "high_type_cloud_area_fraction": 2,
+        "cloud_base_altitude": 528,
+        "cloud_top_altitude": 2250,
+        "precipitation_amount_mean_deterministic": 0.0,
+        "precipitation_amount_mean": 0.0,
+        "precipitation_amount_min": 0.1,
+        "precipitation_amount_max": 0.3,
+        "precipitation_amount_median": 0.0,
+        "probability_of_precipitation": 10,
+        "precipitation_frozen_part": 0,
+        "predominant_precipitation_type_at_surface": 1,
+        "symbol_code": 6
+      }
     }
   ]
 }

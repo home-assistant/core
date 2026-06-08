@@ -1,7 +1,5 @@
 """API for Google Drive bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass
 import json
@@ -119,13 +117,13 @@ class DriveClient:
         """Get storage quota of the current user."""
         res = await self._api.get_user(params={"fields": "storageQuota"})
 
-        storageQuota = res["storageQuota"]
-        limit = storageQuota.get("limit")
+        storage_quota = res["storageQuota"]
+        limit = storage_quota.get("limit")
         return StorageQuotaData(
             limit=int(limit) if limit is not None else None,
-            usage=int(storageQuota.get("usage", 0)),
-            usage_in_drive=int(storageQuota.get("usageInDrive", 0)),
-            usage_in_trash=int(storageQuota.get("usageInTrash", 0)),
+            usage=int(storage_quota.get("usage", 0)),
+            usage_in_drive=int(storage_quota.get("usageInDrive", 0)),
+            usage_in_trash=int(storage_quota.get("usageInTrash", 0)),
         )
 
     async def async_create_ha_root_folder_if_not_exists(self) -> tuple[str, str]:
@@ -134,7 +132,8 @@ class DriveClient:
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='root' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 "trashed=false",
             ]
         )
@@ -198,7 +197,8 @@ class DriveClient:
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='backup' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 "trashed=false",
             ]
         )
@@ -222,7 +222,8 @@ class DriveClient:
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='backup' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 f"properties has {{ key='backup_id' and value='{backup_id}' }}",
             ]
         )

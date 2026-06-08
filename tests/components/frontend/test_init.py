@@ -25,6 +25,7 @@ from homeassistant.components.frontend import (
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
     add_extra_js_url,
+    async_panel_exists,
     async_register_built_in_panel,
     async_remove_panel,
     remove_extra_js_url,
@@ -745,6 +746,18 @@ async def test_get_panels(
     assert "Removing unknown panel map" not in caplog.text
 
 
+@pytest.mark.usefixtures("frontend")
+async def test_async_panel_exists(hass: HomeAssistant) -> None:
+    """Test async_panel_exists helper."""
+    assert async_panel_exists(hass, "test_panel") is False
+
+    async_register_built_in_panel(hass, "test_panel")
+    assert async_panel_exists(hass, "test_panel") is True
+
+    async_remove_panel(hass, "test_panel")
+    assert async_panel_exists(hass, "test_panel") is False
+
+
 async def test_get_panels_non_admin(
     hass: HomeAssistant, ws_client: MockHAClientWebSocket, hass_admin_user: MockUser
 ) -> None:
@@ -1145,7 +1158,7 @@ async def test_setup_with_development_pr_and_token(
     mock_github_api,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that setup succeeds when both development_pr and github_token are provided."""
+    """Test setup with both development_pr and github_token."""
     hass.config.config_dir = str(tmp_path)
 
     aioclient_mock.get(

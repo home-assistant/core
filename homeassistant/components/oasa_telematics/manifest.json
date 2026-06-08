@@ -6,5 +6,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["oasatelematics"],
   "quality_scale": "legacy",
-  "requirements": ["oasatelematics==0.3"]
+  "requirements": ["oasatelematics==0.4"]
 }

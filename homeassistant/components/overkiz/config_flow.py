@@ -1,26 +1,28 @@
 """Config flow for Overkiz integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, cast
 
 from aiohttp import ClientConnectorCertificateError, ClientError
+from pyoverkiz.auth.credentials import (
+    LocalTokenCredentials,
+    UsernamePasswordCredentials,
+)
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SERVERS_WITH_LOCAL_API, SUPPORTED_SERVERS
 from pyoverkiz.enums import APIType, Server
 from pyoverkiz.exceptions import (
-    BadCredentialsException,
-    CozyTouchBadCredentialsException,
-    MaintenanceException,
-    NotAuthenticatedException,
-    NotSuchTokenException,
-    TooManyAttemptsBannedException,
-    TooManyRequestsException,
-    UnknownUserException,
+    BadCredentialsError,
+    CozyTouchBadCredentialsError,
+    MaintenanceError,
+    NoSuchTokenError,
+    NotAuthenticatedError,
+    TooManyAttemptsBannedError,
+    TooManyRequestsError,
+    UnknownUserError,
 )
 from pyoverkiz.obfuscate import obfuscate_id
-from pyoverkiz.utils import generate_local_server, is_overkiz_gateway
+from pyoverkiz.utils import create_local_server_config, is_overkiz_gateway
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
@@ -42,6 +44,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overkiz (by Somfy)."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     _verify_ssl: bool = True
     _api_type: APIType = APIType.CLOUD
@@ -59,19 +62,18 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
             )
             client = OverkizClient(
-                username="",
-                password="",
-                token=user_input[CONF_TOKEN],
+                server=create_local_server_config(host=user_input[CONF_HOST]),
+                credentials=LocalTokenCredentials(user_input[CONF_TOKEN]),
                 session=session,
-                server=generate_local_server(host=user_input[CONF_HOST]),
                 verify_ssl=user_input[CONF_VERIFY_SSL],
             )
         else:  # APIType.CLOUD
             session = async_create_clientsession(self.hass)
             client = OverkizClient(
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-                server=SUPPORTED_SERVERS[user_input[CONF_HUB]],
+                server=user_input[CONF_HUB],
+                credentials=UsernamePasswordCredentials(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                ),
                 session=session,
             )
 
@@ -150,27 +152,28 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.async_validate_input(user_input)
-            except TooManyRequestsException:
+            except TooManyRequestsError:
                 errors["base"] = "too_many_requests"
-            except (BadCredentialsException, NotAuthenticatedException) as exception:
-                # If authentication with CozyTouch auth server is valid, but token is invalid
-                # for Overkiz API server, the hardware is not supported.
+            except (BadCredentialsError, NotAuthenticatedError) as exception:
+                # If authentication with CozyTouch auth server is
+                # valid, but token is invalid for Overkiz API
+                # server, the hardware is not supported.
                 if user_input[CONF_HUB] in {
                     Server.ATLANTIC_COZYTOUCH,
                     Server.SAUTER_COZYTOUCH,
                     Server.THERMOR_COZYTOUCH,
-                } and not isinstance(exception, CozyTouchBadCredentialsException):
+                } and not isinstance(exception, CozyTouchBadCredentialsError):
                     description_placeholders["unsupported_device"] = "CozyTouch"
                     errors["base"] = "unsupported_hardware"
                 else:
                     errors["base"] = "invalid_auth"
             except TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
-            except MaintenanceException:
+            except MaintenanceError:
                 errors["base"] = "server_in_maintenance"
-            except TooManyAttemptsBannedException:
+            except TooManyAttemptsBannedError:
                 errors["base"] = "too_many_attempts"
-            except UnknownUserException:
+            except UnknownUserError:
                 # If the user has no supported CozyTouch devices on
                 # the Overkiz API server. Login will return unknown user.
                 if user_input[CONF_HUB] in {
@@ -239,12 +242,12 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 user_input = await self.async_validate_input(user_input)
-            except TooManyRequestsException:
+            except TooManyRequestsError:
                 errors["base"] = "too_many_requests"
             except (
-                BadCredentialsException,
-                NotSuchTokenException,
-                NotAuthenticatedException,
+                BadCredentialsError,
+                NoSuchTokenError,
+                NotAuthenticatedError,
             ):
                 errors["base"] = "invalid_auth"
             except ClientConnectorCertificateError as exception:
@@ -253,11 +256,11 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             except (TimeoutError, ClientError) as exception:
                 errors["base"] = "cannot_connect"
                 LOGGER.debug(exception)
-            except MaintenanceException:
+            except MaintenanceError:
                 errors["base"] = "server_in_maintenance"
-            except TooManyAttemptsBannedException:
+            except TooManyAttemptsBannedError:
                 errors["base"] = "too_many_attempts"
-            except UnknownUserException:
+            except UnknownUserError:
                 # Somfy Protect accounts are not supported since they don't use
                 # the Overkiz API server. Login will return unknown user.
                 description_placeholders["unsupported_device"] = "Somfy Protect"

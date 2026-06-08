@@ -1,1 +1,1 @@
-"""Tests for the denonavr integration."""
+"""Tests for the Denon AVR Network Receivers integration."""

@@ -1,7 +1,5 @@
 """Sensors for Yardian integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -11,16 +9,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .coordinator import YardianUpdateCoordinator
+from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
+from .entity import YardianEntity
 
 # Values above this threshold indicate the API returned an absolute
 # timestamp instead of a relative delay, so convert to a remaining delta.
@@ -56,6 +52,7 @@ SENSOR_DESCRIPTIONS: tuple[YardianSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         value_fn=lambda coordinator: coordinator.data.oper_info.get("iRainDelay"),
     ),
     YardianSensorEntityDescription(
@@ -71,6 +68,7 @@ SENSOR_DESCRIPTIONS: tuple[YardianSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        suggested_display_precision=0,
         value_fn=_zone_delay_value,
     ),
     YardianSensorEntityDescription(
@@ -80,6 +78,7 @@ SENSOR_DESCRIPTIONS: tuple[YardianSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        suggested_display_precision=0,
         value_fn=lambda coordinator: coordinator.data.oper_info.get(
             "iWaterHammerDuration"
         ),
@@ -89,22 +88,21 @@ SENSOR_DESCRIPTIONS: tuple[YardianSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YardianConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yardian sensors."""
-    coordinator: YardianUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         YardianSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
     )
 
 
-class YardianSensor(CoordinatorEntity[YardianUpdateCoordinator], SensorEntity):
+class YardianSensor(YardianEntity, SensorEntity):
     """Representation of a Yardian sensor defined by description."""
 
     entity_description: YardianSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -115,7 +113,6 @@ class YardianSensor(CoordinatorEntity[YardianUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.yid}_{description.key}"
-        self._attr_device_info = coordinator.device_info
 
     @property
     def native_value(self) -> StateType:

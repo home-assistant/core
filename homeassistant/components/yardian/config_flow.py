@@ -1,7 +1,5 @@
 """Config flow for Yardian integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -36,10 +34,10 @@ class YardianConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_fetch_device_info(self, host: str, access_token: str) -> DeviceInfo:
         """Fetch device info from Yardian."""
-        yarcli = AsyncYardianClient(
+        yarcli = await AsyncYardianClient.create(
             async_get_clientsession(self.hass),
             host,
-            access_token,
+            token=access_token,
         )
         return await yarcli.fetch_device_info()
 

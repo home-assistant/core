@@ -1,7 +1,5 @@
 """Support for Overkiz select."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
@@ -146,7 +144,7 @@ async def async_setup_entry(
                 description,
             )
             for state in device.definition.states
-            if (description := SUPPORTED_STATES.get(state.qualified_name))
+            if (description := SUPPORTED_STATES.get(state))
         )
 
     async_add_entities(entities)

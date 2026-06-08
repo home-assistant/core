@@ -1,7 +1,5 @@
 """Diagnostics support for Enphase Envoy."""
 
-from __future__ import annotations
-
 import copy
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
