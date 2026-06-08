@@ -231,7 +231,6 @@ def is_valid_sentence(value: list[str]) -> list[str]:
         except ParseError as err:
             raise vol.Invalid(f"invalid sentence: {err}") from err
     return value
-    return value
 
 
 def has_one_non_empty_item(value: list[str]) -> list[str]:
