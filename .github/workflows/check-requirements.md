@@ -432,7 +432,7 @@ of scope for the package's stated purpose.
 
 1. **Reaches outside the package's declared scope into Home Assistant
    internals.** A third-party library should interact with Home
-   Assistant only through the public, documented Python API it imports
+   Assistant only through the public, documented Python API it imports from the library
    — never by touching the filesystem of `config_dir` or by reading
    internal authentication / session state. Flag any code that opens,
    reads, writes, or resolves paths to artifacts it does not own
@@ -501,8 +501,7 @@ Aggregate the findings for the package and produce one of:
   Use `☑️` (**not** `✅`) so a passing scan is not read as an
   endorsement.
 - `⚠️ <one-line summary>` when patterns were found that have plausible
-  legitimate uses (e.g. an integration helper that legitimately reads
-  `configuration.yaml`, or a self-update feature documented upstream).
+  legitimate uses.
   Include the file path, line number, snippet, and permalink for each
   match in the bullet's detail so a human reviewer can decide.
 - `❌ <one-line summary>` for patterns with no legitimate explanation
