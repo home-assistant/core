@@ -111,10 +111,6 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate old entry to a newer version."""
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     if config_entry.version < 2 and config_entry.minor_version < 2:
         _LOGGER.debug(
             "Migrating configuration from version %s.%s",

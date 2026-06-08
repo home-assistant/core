@@ -253,9 +253,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -
         entry.version,
         entry.minor_version,
     )
-    if entry.version > 1:
-        # Downgrade from future version
-        return False
 
     # 1->2: Migrate from unique id as email address to unique id as rruid
     if entry.minor_version == 1:

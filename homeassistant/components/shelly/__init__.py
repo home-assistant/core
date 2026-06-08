@@ -134,8 +134,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Migrate old config entries."""
-    if entry.version > 1 or (entry.version == 1 and entry.minor_version > 3):
-        return False
+
     if entry.minor_version < 3:
         # One-time flip of explicit Active scanning to Auto so existing
         # installs get the new battery-friendly default; Passive stays

@@ -230,10 +230,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> 
         entry.minor_version,
     )
 
-    if entry.version > 1:
-        # Downgraded from a future version; cannot migrate.
-        return False
-
     # 1.1 -> 1.2: Add CONF_HEATING_CIRCUITS. Attempt to discover available
     # heating circuits from the device; fall back to [1] (pre-multi-circuit
     # default) if the device is unreachable or the endpoint is unsupported.
