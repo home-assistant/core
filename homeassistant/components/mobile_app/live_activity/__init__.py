@@ -75,6 +75,15 @@ def prepare_live_activity_remote_push(
     if not (resolved := resolve_live_activity_push(hass, registration, data)):
         return LiveActivityRemotePush(data=data)
 
+    success_callback: Callable[[], None] | None = None
+    if resolved.event is LiveActivityEvent.END:
+        success_callback = partial(
+            remove_live_activity_token,
+            hass,
+            registration[ATTR_WEBHOOK_ID],
+            resolved.tag,
+        )
+
     return LiveActivityRemotePush(
         data={
             **data,
@@ -84,6 +93,7 @@ def prepare_live_activity_remote_push(
             },
         },
         target_push_token=resolved.token,
+        success_callback=success_callback,
     )
 
 
