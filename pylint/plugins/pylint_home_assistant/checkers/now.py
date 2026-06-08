@@ -23,7 +23,7 @@ class HassEnforceNowChecker(HassEnforceDatetimeNowChecker):
 
     name = "home_assistant_enforce_now"
     msgs = {
-        "C7415": (
+        "C7425": (
             "Use `homeassistant.util.dt.now()` instead of `datetime.now(<tz>)`",
             "home-assistant-enforce-now",
             "Used when ``datetime.datetime.now(<tz>)`` is called with a non-UTC "
