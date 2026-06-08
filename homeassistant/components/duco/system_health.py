@@ -56,7 +56,7 @@ async def _async_get_write_requests_remaining_summary(
             f"{_entry_write_requests_remaining_key(config_entry)}: "
             f"{result if not isinstance(result, dict) else f'Failed: {result["error"]}'}"
         )
-        for config_entry, result in zip(config_entries, results, strict=False)
+        for config_entry, result in zip(config_entries, results, strict=True)
     )
 
 
