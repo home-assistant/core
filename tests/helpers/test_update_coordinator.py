@@ -1500,7 +1500,7 @@ async def test_no_persist_on_failed_refresh(
 async def test_persist_on_async_set_updated_data(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test pushing data via async_set_updated_data persists it (webhook path)."""
+    """Test pushing data via async_set_updated_data persists it."""
     crd = get_restore_crd(hass, config_entry=MockConfigEntry())
 
     crd.async_set_updated_data({"value": "pushed"})
@@ -1566,7 +1566,7 @@ async def test_restore_falsy_but_valid(
     hass_storage: dict[str, Any],
     stored: list[Any] | dict[str, Any],
 ) -> None:
-    """Test falsy-but-valid stored payloads are restored (proves the is-not-None guard)."""
+    """Test falsy-but-valid stored payloads are restored."""
     hass_storage[RESTORE_KEY] = {"version": 1, "data": stored}
     seen: list[Any] = []
 
