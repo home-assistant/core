@@ -175,8 +175,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self._attr_available = False
                 self._attr_is_streaming = False
                 self._monitoring = None
-                if self.device_type != "NDB":
-                    self._attr_motion_detection_enabled = False
+                self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring off",
@@ -186,8 +185,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self._attr_available = True
                 self._attr_is_streaming = False
                 self._monitoring = False
-                if self.device_type != "NDB":
-                    self._attr_motion_detection_enabled = False
+                self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_CONNECTION:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning on and marking as available",
@@ -196,8 +194,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
                 self._attr_available = True
                 self._monitoring = False
-                if self.device_type != "NDB":
-                    self._attr_motion_detection_enabled = False
+                self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring on",
@@ -340,7 +337,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             self._monitoring = None
             self._attr_motion_detection_enabled = False
         else:
-            self._attr_available = self.device.alim_status is not None
+            self._attr_available = True
 
             if self.device_type == "NDB":
                 self._monitoring = self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
