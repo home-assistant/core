@@ -1,3 +1,3 @@
 """Constants for the MELCloud Home integration."""
 
-DOMAIN = "melcloudhome"
+DOMAIN = "melcloud_home"

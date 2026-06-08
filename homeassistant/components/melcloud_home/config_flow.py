@@ -39,16 +39,17 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_credentials(
         self, email: str, password: str
-    ) -> dict[str, str]:
+    ) -> tuple[dict[str, str], str | None]:
         """Validate credentials against MELCloud Home API."""
         session = async_get_clientsession(self.hass)
         auth = MelCloudHomeAuth(username=email, password=password, session=session)
         client = MELCloudHome(auth=auth, session=session)
 
         errors: dict[str, str] = {}
+        user_id: str | None = None
 
         try:
-            await client.get_context()
+            context = await client.get_context()
         except MelCloudHomeAuthenticationError:
             errors["base"] = "invalid_auth"
         except MelCloudHomeConnectionError:
@@ -60,8 +61,10 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Unexpected error while validating MELCloud Home credentials"
             )
             errors["base"] = "unknown"
+        else:
+            user_id = context.id
 
-        return errors
+        return errors, user_id
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -70,11 +73,11 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            errors = await self._async_validate_credentials(
+            errors, user_id = await self._async_validate_credentials(
                 user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
             if not errors:
-                await self.async_set_unique_id(user_input[CONF_EMAIL])
+                await self.async_set_unique_id(user_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],

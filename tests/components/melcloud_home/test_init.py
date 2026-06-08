@@ -11,7 +11,7 @@ from aiomelcloudhome.exceptions import (
 )
 import pytest
 
-from homeassistant.components.melcloudhome.const import DOMAIN
+from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -86,7 +86,7 @@ async def test_new_ata_unit_callback(
     assert not ata_entities
 
     mock_melcloud_client.return_value = UserContext.model_validate(fixture)
-    await mock_config_entry.runtime_data.coordinator.async_refresh()
+    await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     ata_entities = [
@@ -126,7 +126,7 @@ async def test_new_atw_unit_callback(
     assert not atw_entities
 
     mock_melcloud_client.return_value = UserContext.model_validate(fixture)
-    await mock_config_entry.runtime_data.coordinator.async_refresh()
+    await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     atw_entities = [

@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import MelCloudHomeConfigEntry
+from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
 
 ATA_HVAC_MODE_TO_OPERATION: dict[HVACMode, ATAOperationMode] = {
@@ -97,7 +97,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home climate entities from a config entry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     def _async_add_new_ata_units(units: list[ATAUnit]) -> None:
         async_add_entities(ATAClimateEntity(coordinator, unit) for unit in units)
@@ -118,20 +118,8 @@ async def async_setup_entry(
     coordinator.new_ata_callbacks.append(_async_add_new_ata_units)
     coordinator.new_atw_callbacks.append(_async_add_new_atw_units)
 
-    _async_add_new_ata_units(
-        [
-            unit
-            for building in coordinator.data.buildings
-            for unit in building.air_to_air_units
-        ]
-    )
-    _async_add_new_atw_units(
-        [
-            unit
-            for building in coordinator.data.buildings
-            for unit in building.air_to_water_units
-        ]
-    )
+    _async_add_new_ata_units(list(coordinator.ata_units.values()))
+    _async_add_new_atw_units(list(coordinator.atw_units.values()))
 
 
 class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
@@ -139,51 +127,44 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
 
     _attr_translation_key = "ata_unit"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.TURN_ON
-        | ClimateEntityFeature.TURN_OFF
-    )
 
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return supported features, adding swing modes based on vane capabilities."""
-        if (
-            self.unit.settings is not None
-            and self.unit.settings.get("VaneVerticalDirection") is not None
-        ):
-            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
-        if (
-            self.unit.settings is not None
-            and self.unit.settings.get("VaneHorizontalDirection") is not None
-        ):
-            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
-        return self._attr_supported_features
+    def __init__(self, coordinator: MelCloudHomeCoordinator, unit: ATAUnit) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, unit)
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
+        if unit.settings is not None:
+            if unit.settings.get("VaneVerticalDirection") is not None:
+                features |= ClimateEntityFeature.SWING_MODE
+            if unit.settings.get("VaneHorizontalDirection") is not None:
+                features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+        self._attr_supported_features = features
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return HVAC modes supported by this unit based on its capabilities."""
+        if self.unit.capabilities is None:
+            return [
+                HVACMode.OFF,
+                HVACMode.HEAT,
+                HVACMode.COOL,
+                HVACMode.AUTO,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
+            ]
+
         modes = [HVACMode.OFF, HVACMode.HEAT]
-        if (
-            self.unit.capabilities is None
-            or self.unit.capabilities.has_cool_operation_mode is not False
-        ):
+        if self.unit.capabilities.has_cool_operation_mode is not False:
             modes.append(HVACMode.COOL)
-        if (
-            self.unit.capabilities is None
-            or self.unit.capabilities.has_auto_operation_mode is not False
-        ):
+        if self.unit.capabilities.has_auto_operation_mode is not False:
             modes.append(HVACMode.AUTO)
-        if (
-            self.unit.capabilities is None
-            or self.unit.capabilities.has_dry_operation_mode is not False
-        ):
+        if self.unit.capabilities.has_dry_operation_mode is not False:
             modes.append(HVACMode.DRY)
-        if (
-            self.unit.capabilities is None
-            or self.unit.capabilities.has_fan_operation_mode is not False
-        ):
+        if self.unit.capabilities.has_fan_operation_mode is not False:
             modes.append(HVACMode.FAN_ONLY)
         return modes
 

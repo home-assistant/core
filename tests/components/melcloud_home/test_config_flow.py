@@ -10,7 +10,7 @@ from aiomelcloudhome.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.melcloudhome.const import DOMAIN
+from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -90,7 +90,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test we handle duplicate entries."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=MOCK_USER_INPUT[CONF_EMAIL],
+        unique_id="user-uuid-1",
         data=MOCK_USER_INPUT,
     )
     existing_entry.add_to_hass(hass)

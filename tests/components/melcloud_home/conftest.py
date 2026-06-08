@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from aiomelcloudhome import UserContext
 import pytest
 
-from homeassistant.components.melcloudhome.const import DOMAIN
+from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from tests.common import MockConfigEntry, load_json_value_fixture
@@ -27,11 +27,11 @@ def mock_melcloud_client() -> Generator[AsyncMock]:
     )
     with (
         patch(
-            "homeassistant.components.melcloudhome.config_flow.MELCloudHome.get_context",
+            "homeassistant.components.melcloud_home.config_flow.MELCloudHome.get_context",
             new=mocked_get_context,
         ),
         patch(
-            "homeassistant.components.melcloudhome.coordinator.MELCloudHome.get_context",
+            "homeassistant.components.melcloud_home.coordinator.MELCloudHome.get_context",
             new=mocked_get_context,
         ),
     ):
@@ -43,7 +43,7 @@ def mock_control_ata_unit() -> Generator[AsyncMock]:
     """Mock MELCloud Home ATA unit control."""
     mock = AsyncMock()
     with patch(
-        "homeassistant.components.melcloudhome.coordinator.MELCloudHome.control_ata_unit",
+        "homeassistant.components.melcloud_home.coordinator.MELCloudHome.control_ata_unit",
         new=mock,
     ):
         yield mock
@@ -54,7 +54,7 @@ def mock_control_atw_unit() -> Generator[AsyncMock]:
     """Mock MELCloud Home ATW unit control."""
     mock = AsyncMock()
     with patch(
-        "homeassistant.components.melcloudhome.coordinator.MELCloudHome.control_atw_unit",
+        "homeassistant.components.melcloud_home.coordinator.MELCloudHome.control_atw_unit",
         new=mock,
     ):
         yield mock

@@ -446,7 +446,7 @@ FLOWS = {
         "medcom_ble",
         "media_extractor",
         "melcloud",
-        "melcloudhome",
+        "melcloud_home",
         "melnor",
         "met",
         "met_eireann",

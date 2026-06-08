@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 
-from aiomelcloudhome import ATAUnit, ATWUnit, Building
+from aiomelcloudhome import ATAUnit, ATWUnit
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -33,43 +33,34 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
         )
 
     @abstractmethod
-    def _units_for_building(self, building: Building) -> list[_UnitT]:
-        """Return the list of units from a building."""
+    def _units_dict(self) -> dict[str, _UnitT]:
+        """Return the coordinator's units dict keyed by id."""
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return super().available and any(
-            unit.id == self._unit_id
-            for building in self.coordinator.data.buildings
-            for unit in self._units_for_building(building)
-        )
+        return super().available and self._unit_id in self._units_dict()
 
     @property
     def unit(self) -> _UnitT:
         """Return the current unit state from coordinator data."""
-        return next(
-            unit
-            for building in self.coordinator.data.buildings
-            for unit in self._units_for_building(building)
-            if unit.id == self._unit_id
-        )
+        return self._units_dict()[self._unit_id]
 
 
 class MelCloudHomeATAUnitEntity(MelCloudHomeUnitEntity[ATAUnit]):
     """Base entity for a MELCloud Home Air-to-Air unit."""
 
-    def _units_for_building(self, building: Building) -> list[ATAUnit]:
-        """Return ATA units from a building."""
-        return building.air_to_air_units
+    def _units_dict(self) -> dict[str, ATAUnit]:
+        """Return ATA units dict from coordinator."""
+        return self.coordinator.ata_units
 
 
 class MelCloudHomeATWUnitEntity(MelCloudHomeUnitEntity[ATWUnit]):
     """Base entity for a MELCloud Home Air-to-Water unit."""
 
-    def _units_for_building(self, building: Building) -> list[ATWUnit]:
-        """Return ATW units from a building."""
-        return building.air_to_water_units
+    def _units_dict(self) -> dict[str, ATWUnit]:
+        """Return ATW units dict from coordinator."""
+        return self.coordinator.atw_units
 
 
 class MelCloudHomeATWZoneEntity(MelCloudHomeATWUnitEntity):

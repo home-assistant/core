@@ -4160,7 +4160,7 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "melcloudhome": {
+    "melcloud_home": {
       "name": "MELCloud Home",
       "integration_type": "hub",
       "config_flow": true,

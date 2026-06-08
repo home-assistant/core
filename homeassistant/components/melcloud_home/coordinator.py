@@ -1,7 +1,6 @@
 """Coordinator for MELCloud Home."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -23,14 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(seconds=60)
 
 
-type MelCloudHomeConfigEntry = ConfigEntry[MelCloudHomeData]
-
-
-@dataclass(frozen=True, kw_only=True)
-class MelCloudHomeData:
-    """Runtime data stored in the config entry."""
-
-    coordinator: MelCloudHomeCoordinator
+type MelCloudHomeConfigEntry = ConfigEntry[MelCloudHomeCoordinator]
 
 
 class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
@@ -53,6 +45,8 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
+        self.ata_units: dict[str, ATAUnit] = {}
+        self.atw_units: dict[str, ATWUnit] = {}
         self.known_ata: set[str] = set()
         self.known_atw: set[str] = set()
         self.new_ata_callbacks: list[Callable[[list[ATAUnit]], None]] = []
@@ -63,6 +57,7 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         current_ata = [
             unit for building in data.buildings for unit in building.air_to_air_units
         ]
+        self.ata_units = {unit.id: unit for unit in current_ata}
         current_ata_ids = {unit.id for unit in current_ata}
         self.known_ata &= current_ata_ids
         new_ata_ids = current_ata_ids - self.known_ata
@@ -76,6 +71,7 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         current_atw_units = [
             unit for building in data.buildings for unit in building.air_to_water_units
         ]
+        self.atw_units = {unit.id: unit for unit in current_atw_units}
         current_atw_ids = {unit.id for unit in current_atw_units}
         self.known_atw &= current_atw_ids
         new_atw_ids = current_atw_ids - self.known_atw
