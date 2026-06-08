@@ -1168,7 +1168,7 @@ async def test_rgbww_template(
 @pytest.mark.usefixtures("setup_single_attribute_light")
 async def test_xy_template(
     hass: HomeAssistant,
-    expected_color: tuple[int, int, int, int, int] | None,
+    expected_color: tuple[float, float] | None,
     expected_color_mode: ColorMode,
 ) -> None:
     """Test the xy template."""

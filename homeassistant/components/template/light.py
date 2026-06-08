@@ -205,12 +205,12 @@ def two_color_list(
     option_two: str,
     min_2: int,
     max_2: int,
-) -> Callable[[Any], list[int] | None]:
+) -> Callable[[Any], list[int | float] | None]:
     """Convert the result to a list of 2 numbers that represent a color."""
 
     option_range = f"({min_1}-{max_1}, {min_2}-{max_2})"
 
-    def convert(result: Any) -> list[int] | None:
+    def convert(result: Any) -> list[int | float] | None:
         if template_validators.check_result_for_none(result):
             return None
 
@@ -230,8 +230,8 @@ def two_color_list(
                     option,
                     result,
                     (
-                        f"expected an {option_one} value between {min_1} and {max_1} and "
-                        f"a {option_two} value between {min_2} and {max_2}: {option_range}"
+                        f"expected {option_one} value between {min_1} and {max_1} and "
+                        f"{option_two} value between {min_2} and {max_2}: {option_range}"
                     ),
                 )
                 return None
@@ -322,7 +322,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self.setup_template(
             CONF_HS,
             "_attr_hs_color",
-            two_color_list(self, CONF_HS, "hue", 0, 360, "saturation", 0, 100),
+            two_color_list(self, CONF_HS, "a hue", 0, 360, "a saturation", 0, 100),
             self._update_color("_attr_hs_color", ColorMode.HS),
             render_complex=True,
         )
@@ -345,7 +345,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self.setup_template(
             CONF_XY,
             "_attr_xy_color",
-            two_color_list(self, CONF_XY, "x", 0, 1, "y", 0, 1),
+            two_color_list(self, CONF_XY, "an x", 0, 1, "a y", 0, 1),
             self._update_color("_attr_xy_color", ColorMode.XY),
             render_complex=True,
         )
