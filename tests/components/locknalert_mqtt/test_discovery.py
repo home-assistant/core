@@ -3154,7 +3154,6 @@ async def test_async_setup_non_entity_entry_helper_skips_when_mqtt_disabled(
     from homeassistant.components.locknalert_mqtt.entity import (  # noqa: PLC0415
         async_setup_non_entity_entry_helper,
     )
-    from unittest.mock import patch  # noqa: PLC0415
 
     await mqtt_mock_entry()
 

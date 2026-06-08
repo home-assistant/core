@@ -278,7 +278,9 @@ async def test_subscribe_threadsafe_returns_callable_remove(
     def msg_callback(msg):
         pass
 
-    remove = await hass.async_add_executor_job(subscribe, hass, "test/topic", msg_callback)
+    remove = await hass.async_add_executor_job(
+        subscribe, hass, "test/topic", msg_callback
+    )
     assert callable(remove)
     remove()
 

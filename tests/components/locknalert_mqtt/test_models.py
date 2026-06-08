@@ -79,7 +79,9 @@ def test_process_write_state_requests_logs_value_error(
     entity.entity_id = "alarm_control_panel.bad"
     entity.async_write_ha_state.side_effect = ValueError("bad state value")
 
-    with caplog.at_level(logging.ERROR, logger="homeassistant.components.locknalert_mqtt"):
+    with caplog.at_level(
+        logging.ERROR, logger="homeassistant.components.locknalert_mqtt"
+    ):
         state.write_state_request(entity)
         state.process_write_state_requests(_make_msg())
 
@@ -96,7 +98,9 @@ def test_process_write_state_requests_logs_unexpected_exception(
     entity.entity_id = "alarm_control_panel.crash"
     entity.async_write_ha_state.side_effect = RuntimeError("internal crash")
 
-    with caplog.at_level(logging.ERROR, logger="homeassistant.components.locknalert_mqtt"):
+    with caplog.at_level(
+        logging.ERROR, logger="homeassistant.components.locknalert_mqtt"
+    ):
         state.write_state_request(entity)
         state.process_write_state_requests(_make_msg())
 

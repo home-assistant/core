@@ -660,7 +660,9 @@ async def test_ensure_job_after_cooldown_cleanup_logs_non_cancelled_exception(
     task = asyncio.get_event_loop().create_task(raise_value_error())
     debouncer._task = task
 
-    with caplog.at_level(logging.ERROR, logger="homeassistant.components.locknalert_mqtt"):
+    with caplog.at_level(
+        logging.ERROR, logger="homeassistant.components.locknalert_mqtt"
+    ):
         await debouncer.async_cleanup()
 
     assert "Error cleaning up task" in caplog.text

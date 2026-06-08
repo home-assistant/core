@@ -7,7 +7,6 @@ import pytest
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.locknalert_mqtt import (
     SERVICE_PUBLISH,
-    async_migrate_entry,
     async_remove_config_entry_device,
     async_subscribe_connection_status,
     is_connected,
@@ -120,7 +119,7 @@ async def test_setup_entry_fails_if_broker_unreachable(
 async def test_migrate_entry_future_version_returns_false(
     hass: HomeAssistant,
 ) -> None:
-    """async_migrate_entry returns False for entries from a future version."""
+    """Setup fails for entries from a future major version (migration returns False)."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_BROKER: "mock-broker"},
@@ -129,14 +128,14 @@ async def test_migrate_entry_future_version_returns_false(
         minor_version=0,
     )
     entry.add_to_hass(hass)
-    result = await async_migrate_entry(hass, entry)
+    result = await hass.config_entries.async_setup(entry.entry_id)
     assert result is False
 
 
 async def test_migrate_entry_v2_future_minor_returns_false(
     hass: HomeAssistant,
 ) -> None:
-    """async_migrate_entry returns False for v2 entries with future minor version."""
+    """Setup fails for v2 entries with an unrecognised minor version."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_BROKER: "mock-broker"},
@@ -145,14 +144,15 @@ async def test_migrate_entry_v2_future_minor_returns_false(
         minor_version=2,
     )
     entry.add_to_hass(hass)
-    result = await async_migrate_entry(hass, entry)
+    result = await hass.config_entries.async_setup(entry.entry_id)
     assert result is False
 
 
 async def test_migrate_entry_v1_0_moves_option_fields(
     hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
-    """async_migrate_entry migrates ENTRY_OPTION_FIELDS from data to options for v1.0 entries."""
+    """Migration moves ENTRY_OPTION_FIELDS from data to options for v1.0 entries."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -167,7 +167,8 @@ async def test_migrate_entry_v1_0_moves_option_fields(
         minor_version=0,
     )
     entry.add_to_hass(hass)
-    result = await async_migrate_entry(hass, entry)
+    result = await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     assert result is True
     assert CONF_DISCOVERY not in entry.data
     assert CONF_DISCOVERY in entry.options
@@ -179,8 +180,9 @@ async def test_migrate_entry_v1_0_moves_option_fields(
 
 async def test_migrate_entry_v1_2_noop_returns_true(
     hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
-    """async_migrate_entry returns True without changes for already-migrated v1.2 entries."""
+    """Setup succeeds without changes for an already-migrated v1.2 entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_BROKER: "mock-broker"},
@@ -189,7 +191,8 @@ async def test_migrate_entry_v1_2_noop_returns_true(
         minor_version=2,
     )
     entry.add_to_hass(hass)
-    result = await async_migrate_entry(hass, entry)
+    result = await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     assert result is True
     assert entry.minor_version == 2
 
@@ -350,9 +353,7 @@ async def test_reload_service_raises_service_validation_error_on_bad_config(
         ),
         pytest.raises(ServiceValidationError),
     ):
-        await hass.services.async_call(
-            DOMAIN, SERVICE_RELOAD, {}, blocking=True
-        )
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
 
 
 # ---------------------------------------------------------------------------
