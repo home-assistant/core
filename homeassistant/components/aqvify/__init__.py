@@ -2,6 +2,7 @@
 
 import logging
 
+from aiohttp import ClientResponseError
 from pyaqvify import AqvifyAPI, AqvifyAuthException
 
 from homeassistant.const import CONF_API_KEY, Platform
@@ -23,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqvifyConfigEntry) -> bo
         await _api.async_get_account_id()
     except AqvifyAuthException as err:
         raise ConfigEntryAuthFailed(f"Invalid Aqvify API key: {err}") from err
-    except Exception as err:
+    except (ClientResponseError, TimeoutError) as err:
         raise ConfigEntryNotReady(f"Failed to connect to Aqvify API: {err}") from err
 
     coordinator = AqvifyCoordinator(hass, entry)

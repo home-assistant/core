@@ -28,7 +28,7 @@ PARALLEL_UPDATES = 0
 class AqvifySensorEntityDescription(SensorEntityDescription):
     """Description of an Aqvify sensor entity."""
 
-    value_fn: Callable[[AqvifyDeviceData], StateType | datetime | None]
+    value_fn: Callable[[AqvifyDeviceData], float | int | None]
 
 
 ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (

@@ -35,7 +35,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         title="Aqvify test",
         data={"api_key": "fake_api_key"},
         entry_id="aqvify_test",
-        unique_id="aqvify_unique_id",
+        unique_id="test_account_id",
     )
     config_entry.add_to_hass(hass)
     return config_entry
@@ -43,9 +43,9 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 @pytest.fixture
 def mock_aqvify_client(
-    device_fixture,
-    device_data_fixture,
-    account_fixture,
+    device_fixture: list[dict[str, Any]],
+    device_data_fixture: dict[str, Any],
+    account_fixture: dict[str, Any],
 ) -> Generator[MagicMock]:
     """Mock an Aqvify client."""
 

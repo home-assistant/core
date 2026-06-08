@@ -15,7 +15,7 @@
       'identifiers': set({
         tuple(
           'aqvify',
-          'aqvify_unique_id_DeviceKey_1',
+          'test_account_id_DeviceKey_1',
         ),
       }),
       'labels': set({
@@ -44,7 +44,7 @@
       'identifiers': set({
         tuple(
           'aqvify',
-          'aqvify_unique_id_DeviceKey_2',
+          'test_account_id_DeviceKey_2',
         ),
       }),
       'labels': set({

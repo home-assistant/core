@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_value',
-    'unique_id': 'aqvify_unique_id_DeviceKey_1_meter_value',
+    'unique_id': 'test_account_id_DeviceKey_1_meter_value',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_level',
-    'unique_id': 'aqvify_unique_id_DeviceKey_1_water_level',
+    'unique_id': 'test_account_id_DeviceKey_1_water_level',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
@@ -153,7 +153,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_value',
-    'unique_id': 'aqvify_unique_id_DeviceKey_2_meter_value',
+    'unique_id': 'test_account_id_DeviceKey_2_meter_value',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
@@ -211,7 +211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_level',
-    'unique_id': 'aqvify_unique_id_DeviceKey_2_water_level',
+    'unique_id': 'test_account_id_DeviceKey_2_water_level',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---

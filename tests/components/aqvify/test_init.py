@@ -65,7 +65,6 @@ async def test_device_registry_integration(
 ) -> None:
     """Test device registry integration creates correct devices."""
     await setup_integration(hass, mock_config_entry)
-    await hass.async_block_till_done()
 
     # Get all devices created for this config entry
     device_entries = dr.async_entries_for_config_entry(
