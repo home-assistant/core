@@ -22,7 +22,7 @@ def deprecate_yaml_issue(
             f"deprecated_yaml_{DOMAIN}",
             is_fixable=False,
             issue_domain=DOMAIN,
-            breaks_in_ha_version="2026.12.0",
+            breaks_in_ha_version="2027.1.0",
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
             translation_placeholders={
@@ -38,7 +38,7 @@ def deprecate_yaml_issue(
                 f"deprecated_yaml_import_issue_error_{config.get(CONF_NAME, 'unknown')}"
                 f"_{config[CONF_SENDER]}_{config[CONF_SERVER]}"
             ),
-            breaks_in_ha_version="2026.12.0",
+            breaks_in_ha_version="2027.1.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml_import_issue_error",
