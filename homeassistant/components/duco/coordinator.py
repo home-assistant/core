@@ -19,7 +19,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import BOX_NODE_ID, DOMAIN, SCAN_INTERVAL
 from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +54,7 @@ def _base_url(host: str) -> URL:
     try:
         return URL.build(scheme="http", host=host)
     except ValueError:
+        # Hosts may already include a port, which URL.build rejects in `host`.
         return URL(f"http://{host}")
 
 
@@ -118,7 +119,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         device_registry = dr.async_get(self.hass)
 
         for node in self.data.nodes.values():
-            if node.node_id == 1:
+            if node.node_id == BOX_NODE_ID:
                 continue
 
             device = device_registry.async_get_device(
