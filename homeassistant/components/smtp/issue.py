@@ -4,19 +4,19 @@ from typing import Any
 
 from homeassistant.const import CONF_NAME, CONF_SENDER
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import yaml as yaml_util
 
 from .const import CONF_SERVER, DOMAIN
 
 
 @callback
-def deprecate_yaml_issue(
+def async_deprecate_yaml_issue(
     hass: HomeAssistant, config: dict[str, Any], *, import_success: bool = True
 ) -> None:
     """Deprecate yaml issue."""
     if import_success:
-        create_issue(
+        async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
@@ -31,7 +31,7 @@ def deprecate_yaml_issue(
             },
         )
     else:
-        create_issue(
+        async_create_issue(
             hass,
             DOMAIN,
             (

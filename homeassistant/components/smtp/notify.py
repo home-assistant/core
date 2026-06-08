@@ -1,6 +1,5 @@
 """Mail (SMTP) notification service."""
 
-import asyncio
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -58,7 +57,7 @@ from .const import (
     DOMAIN,
     ENCRYPTION_OPTIONS,
 )
-from .issue import deprecate_yaml_issue
+from .issue import async_deprecate_yaml_issue
 
 PLATFORMS = [Platform.NOTIFY]
 
@@ -83,26 +82,23 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
     if config:
-        result = asyncio.run_coroutine_threadsafe(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            ),
-            hass.loop,
-        ).result()
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
         if result.get("type") is FlowResultType.CREATE_ENTRY or (
             result.get("type") is FlowResultType.ABORT
             and result.get("reason") == "already_configured"
         ):
-            deprecate_yaml_issue(hass, config)
+            async_deprecate_yaml_issue(hass, config)
         else:
-            deprecate_yaml_issue(hass, config, import_success=False)
+            async_deprecate_yaml_issue(hass, config, import_success=False)
         return None
 
     if discovery_info is None:
@@ -124,7 +120,7 @@ def get_service(
         ssl_context,
     )
 
-    if mail_service.connection_is_valid():
+    if await hass.async_add_executor_job(mail_service.connection_is_valid):
         return mail_service
 
     return None
