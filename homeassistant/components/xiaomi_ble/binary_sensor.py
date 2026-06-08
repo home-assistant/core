@@ -102,6 +102,9 @@ BINARY_SENSOR_DESCRIPTIONS = {
     ExtendedBinarySensorDeviceClass.TOOTHBRUSH: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.TOOTHBRUSH,
     ),
+    ExtendedBinarySensorDeviceClass.STABILIZED: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.STABILIZED,
+    ),
 }
 
 
