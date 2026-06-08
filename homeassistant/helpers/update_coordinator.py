@@ -695,8 +695,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         """
         if self.data is not None:
             return
-        # Use ``is not None`` so falsy-but-valid payloads (e.g. ``[]`` or ``{}``)
-        # are restored.
+        # Use ``is not None`` so falsy-but-valid payloads (``[]``/``{}``) are restored.
         if (stored := await self._store.async_load()) is not None:
             self.data = stored
 
@@ -735,7 +734,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         storage_key = self._store.key
         store_version = self._store.version
 
-        # A reload builds a new coordinator with the same storage key; register once.
+        # A reload builds a new coordinator with the same storage key.
         registered = hass.data.setdefault(_RESTORE_CLEANUP_KEY, set())
         if storage_key in registered:
             return
