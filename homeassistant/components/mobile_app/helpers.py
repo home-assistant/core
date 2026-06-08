@@ -45,7 +45,7 @@ class RemotePush:
     """Outgoing remote push payload with an optional post-send success callback."""
 
     data: dict[str, Any]
-    success_callback: Callable[[], None] | None = None
+    success_callback: Callable[[], object] | None = None
 
 
 def setup_decrypt(

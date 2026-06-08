@@ -56,7 +56,7 @@ def prepare_live_activity_remote_push(
     if not (resolved := resolve_live_activity_push(hass, registration, data)):
         return RemotePush(data=data)
 
-    success_callback: Callable[[], None] | None = None
+    success_callback: Callable[[], object] | None = None
     if resolved.event is LiveActivityEvent.END:
         success_callback = partial(
             remove_live_activity_token,
