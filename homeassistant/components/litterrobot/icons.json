@@ -94,7 +94,7 @@
       },
       "visits_today": {
         "default": "mdi:counter"
-      },
+      }
     },
     "switch": {
       "night_light_mode": {
