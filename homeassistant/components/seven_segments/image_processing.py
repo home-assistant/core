@@ -90,7 +90,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         self._write_file = config[CONF_WRITE_FILE]
         self._debug_image = config[CONF_DEBUG_IMAGE]
 
-        safe_name = self._attr_name.replace(' ', '_')
+        safe_name = self._attr_name.replace(" ", "_")
         self.filepath = os.path.join(
             hass.config.config_dir,
             f"ssocr-{safe_name}.png",
