@@ -144,7 +144,7 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
     # Disabled by default since all Overkiz hubs have this
     # virtual device, but only a few users actually use this.
     OverkizAlarmDescription(
-        key=UIWidget.TSKALARM_CONTROLLER,
+        key=UIWidget.TSK_ALARM_CONTROLLER,
         entity_registry_enabled_default=False,
         supported_features=(
             AlarmControlPanelEntityFeature.ARM_AWAY

@@ -48,7 +48,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     def min_temp(self) -> float:
         """Return the minimum temperature."""
 
-        min_temp = self.device.states[OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE]
+        min_temp = self.device.states.get(
+            OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
+        )
         if min_temp:
             return cast(float, min_temp.value_as_float)
         return DEFAULT_MIN_TEMP
@@ -57,7 +59,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     def max_temp(self) -> float:
         """Return the maximum temperature."""
 
-        max_temp = self.device.states[OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE]
+        max_temp = self.device.states.get(
+            OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
+        )
         if max_temp:
             return cast(float, max_temp.value_as_float)
         return DEFAULT_MAX_TEMP
