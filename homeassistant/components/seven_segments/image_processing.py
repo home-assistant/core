@@ -133,14 +133,13 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         """Process the image."""
         input_data = None
 
-        with io.BytesIO(image) as stream:
-            with Image.open(stream) as img:
-                if self._write_file:
-                    img.save(self.filepath, "png")
-                else:
-                    with io.BytesIO() as out_stream:
-                        img.save(out_stream, "png")
-                        input_data = out_stream.getvalue()
+        with io.BytesIO(image) as stream, Image.open(stream) as img:
+            if self._write_file:
+                img.save(self.filepath, "png")
+            else:
+                with io.BytesIO() as out_stream:
+                    img.save(out_stream, "png")
+                    input_data = out_stream.getvalue()
 
         with subprocess.Popen(
             self._command,
