@@ -7,7 +7,9 @@ from operator import itemgetter
 from pathlib import Path
 import pkgutil
 import re
+import subprocess
 import sys
+import tempfile
 import tomllib
 from typing import Any
 
@@ -260,6 +262,11 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
 )
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
+
+PIP_COMPILE_LOCK_FILES = {
+    "requirements_all.lock": ("requirements_all.txt",),
+    "requirements_ci.lock": ("requirements_all.txt", "requirements_test.txt"),
+}
 
 
 def explore_module(package: str, explore_children: bool) -> list[str]:
@@ -554,6 +561,28 @@ def diff_file(filename: str, content: str) -> list[str]:
     )
 
 
+def generate_lock_file(output_path: str, source_file: tuple[str, ...]) -> None:
+    """Resolve requirements_all.txt into a hash-pinned lock file.
+
+    This shells out to `uv pip compile --generate-hashes`, which performs a
+    full networked dependency resolution, so callers should only invoke it
+    when requirements/dependencies have changed.
+    """
+    subprocess.run(
+        [
+            "uv",
+            "pip",
+            "compile",
+            "--generate-hashes",
+            "--quiet",
+            "--output-file",
+            output_path,
+            *source_file,
+        ],
+        check=True,
+    )
+
+
 def main(validate: bool, ci: bool) -> int:
     """Run the script."""
     if not Path("requirements_all.txt").is_file():
@@ -596,6 +625,16 @@ def main(validate: bool, ci: bool) -> int:
             if diff:
                 errors.append("".join(diff))
 
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            for lock_file, source_files in PIP_COMPILE_LOCK_FILES.items():
+                tmp_lock = str(Path(tmp_dir) / lock_file)
+                generate_lock_file(tmp_lock, source_files)
+                lock_diff = diff_file(
+                    lock_file, Path(tmp_lock).read_text(encoding="utf-8")
+                )
+                if lock_diff:
+                    errors.append("".join(lock_diff))
+
         if errors:
             print("ERROR - FOUND THE FOLLOWING DIFFERENCES")
             print()
@@ -607,8 +646,24 @@ def main(validate: bool, ci: bool) -> int:
 
         return 0
 
+    sourcefile_to_lockfile = {}
+    for lock_file, source_files in PIP_COMPILE_LOCK_FILES.items():
+        for source_file in source_files:
+            sourcefile_to_lockfile.setdefault(source_file, []).append(lock_file)
+    print(sourcefile_to_lockfile)
+    generate_lock_files = set()
+
     for filename, content in files:
+        if lock_files := sourcefile_to_lockfile.get(filename):
+            file = Path(filename)
+            if not file.is_file() or file.read_text(encoding="utf-8") != content:
+                generate_lock_files.update(lock_files)
+
         Path(filename).write_text(content)
+
+    for lock_file in generate_lock_files:
+        source_files = PIP_COMPILE_LOCK_FILES[lock_file]
+        generate_lock_file(lock_file, source_files)
 
     return 0
 
