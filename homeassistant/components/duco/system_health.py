@@ -1,6 +1,5 @@
 """Provide info to system health."""
 
-import asyncio
 from typing import Any
 
 from duco_connectivity.exceptions import DucoConnectionError
@@ -44,20 +43,15 @@ async def _async_get_write_requests_remaining_summary(
     """Get a per-entry write-request summary for system health."""
     # Keep one translated system health label; multiple Duco boxes are
     # summarized in the value to avoid ambiguous per-entry labels.
-    results = await asyncio.gather(
-        *(
-            _async_get_write_requests_remaining(config_entry)
-            for config_entry in config_entries
-        )
-    )
-
-    return "; ".join(
-        (
+    summaries: list[str] = []
+    for config_entry in config_entries:
+        result = await _async_get_write_requests_remaining(config_entry)
+        summaries.append(
             f"{_entry_write_requests_remaining_key(config_entry)}: "
             f"{result if not isinstance(result, dict) else f'Failed: {result["error"]}'}"
         )
-        for config_entry, result in zip(config_entries, results, strict=True)
-    )
+
+    return "; ".join(summaries)
 
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
