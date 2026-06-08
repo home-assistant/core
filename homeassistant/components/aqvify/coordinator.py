@@ -5,11 +5,12 @@ from datetime import timedelta
 import logging
 
 from aiohttp import ClientResponseError
-from pyaqvify import AqvifyAPI, AqvifyDeviceData, AqvifyDevices
+from pyaqvify import AqvifyAPI, AqvifyAuthException, AqvifyDeviceData, AqvifyDevices
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -48,6 +49,17 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
         self.api_client = AqvifyAPI(
             entry.data[CONF_API_KEY], websession=async_get_clientsession(hass)
         )
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        try:
+            await self.api_client.async_get_account_id()
+        except AqvifyAuthException as err:
+            raise ConfigEntryAuthFailed(f"Invalid Aqvify API key: {err}") from err
+        except (ClientResponseError, TimeoutError) as err:
+            raise ConfigEntryNotReady(
+                f"Failed to connect to Aqvify API: {err}"
+            ) from err
 
     async def _async_update_data(self) -> AqvifyCoordinatorData:
         """Fetch device state."""

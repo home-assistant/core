@@ -94,32 +94,12 @@ async def test_form_invalid(
 
 
 async def test_same_account_setup(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_aqvify_client: MagicMock
+    hass: HomeAssistant, mock_config_entry: AsyncMock, mock_aqvify_client: MagicMock
 ) -> None:
     """Test setup same account twice."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_API_KEY: "test-api-key",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Aqvify"
-    assert result["data"] == {
-        CONF_API_KEY: "test-api-key",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-    # Setup config entry with same account.
+    # Create an existing config entry for the same user account
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
