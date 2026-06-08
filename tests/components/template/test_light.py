@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import light, template
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
@@ -67,7 +68,10 @@ ON_OFF_ACTIONS = {
 }
 
 
-BRIGHTNESS_DATA = {"brightness": "{{ brightness }}"}
+BRIGHTNESS_DATA = {
+    "brightness": "{{ brightness }}",
+    "brightness_pct": "{{ brightness_pct }}",
+}
 SET_LEVEL_ACTION = make_test_action("set_level", BRIGHTNESS_DATA)
 ON_OFF_SET_LEVEL_ACTIONS = {
     **ON_OFF_ACTIONS,
@@ -683,7 +687,7 @@ async def test_level_action_no_template(
         calls,
         SERVICE_TURN_ON,
         {ATTR_BRIGHTNESS: 124},
-        {ATTR_BRIGHTNESS: 124},
+        {ATTR_BRIGHTNESS: 124, ATTR_BRIGHTNESS_PCT: 49},
         "set_level",
     )
 
