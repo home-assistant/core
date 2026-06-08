@@ -43,6 +43,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import condition
+from .condition import _IN_ZONES_DOMAINS
 from .const import DOMAIN
 
 EVENT_ENTER = "enter"
@@ -52,6 +53,19 @@ DEFAULT_EVENT = EVENT_ENTER
 _LOGGER = logging.getLogger(__name__)
 
 _EVENT_DESCRIPTION = {EVENT_ENTER: "entering", EVENT_LEAVE: "leaving"}
+
+
+def _state_has_zone_info(state: State) -> bool:
+    """Return True if the state can be matched against a zone.
+
+    For device_tracker and person entities an ``in_zones`` attribute is
+    sufficient even when the state has no coordinates (e.g. a scanner-based
+    tracker); other entities are matched by their coordinates.
+    """
+    return location.has_location(state) or (
+        state.domain in _IN_ZONES_DOMAINS and ATTR_IN_ZONES in state.attributes
+    )
+
 
 _LEGACY_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
     vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
@@ -127,8 +141,8 @@ class LegacyZoneTrigger(Trigger):
             from_s = zone_event.data["old_state"]
             to_s = zone_event.data["new_state"]
 
-            if (from_s and not location.has_location(from_s)) or (
-                to_s and not location.has_location(to_s)
+            if (from_s and not _state_has_zone_info(from_s)) or (
+                to_s and not _state_has_zone_info(to_s)
             ):
                 return
 

@@ -276,7 +276,7 @@ async def test_invalid_binary_sensor_schema_with_auto_off(
 ) -> None:
     """Test invalid config schemas create issue and log warning."""
 
-    await async_setup_component(hass, "template", {"template": [config]})
+    await async_setup_component(hass, DOMAIN, {"template": [config]})
 
     assert (
         expected_error is None and "ERROR" not in caplog.text
@@ -536,7 +536,7 @@ async def test_invalid_schema_raises_issue(
 ) -> None:
     """Test invalid config schemas create issue and log warning."""
 
-    await async_setup_component(hass, "template", {"template": [config]})
+    await async_setup_component(hass, DOMAIN, {"template": [config]})
 
     assert expected_warning in caplog.text
 
@@ -553,7 +553,7 @@ async def test_multiple_configuration_keys(
     """Test multiple configurations keys create entities."""
     await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [{"binary_sensor": [{"name": "Foo", "state": "{{ True }}"}]}],
             "template mytemplates": [

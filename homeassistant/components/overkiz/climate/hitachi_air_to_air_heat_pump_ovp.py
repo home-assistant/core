@@ -118,13 +118,13 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            main_op_state := self.device.states[OverkizState.OVP_MAIN_OPERATION]
+            main_op_state := self.device.states.get(OverkizState.OVP_MAIN_OPERATION)
         ) and main_op_state.value_as_str:
             if main_op_state.value_as_str.lower() == OverkizCommandParam.OFF:
                 return HVACMode.OFF
 
         if (
-            mode_change_state := self.device.states[OverkizState.OVP_MODE_CHANGE]
+            mode_change_state := self.device.states.get(OverkizState.OVP_MODE_CHANGE)
         ) and mode_change_state.value_as_str:
             # The OVP protocol has 'auto cooling' and 'auto heating' values
             # that are equivalent to the HLRRWIFI protocol without spaces
@@ -147,7 +147,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if (
-            state := self.device.states[OverkizState.OVP_FAN_SPEED]
+            state := self.device.states.get(OverkizState.OVP_FAN_SPEED)
         ) and state.value_as_str:
             return OVERKIZ_TO_FAN_MODES[state.value_as_str]
 
@@ -160,7 +160,9 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     @property
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        if (state := self.device.states[OverkizState.OVP_SWING]) and state.value_as_str:
+        if (
+            state := self.device.states.get(OverkizState.OVP_SWING)
+        ) and state.value_as_str:
             return OVERKIZ_TO_SWING_MODES[state.value_as_str]
 
         return None
@@ -173,7 +175,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def target_temperature(self) -> int | None:
         """Return the target temperature."""
         if (
-            temperature := self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
+            temperature := self.device.states.get(OverkizState.CORE_TARGET_TEMPERATURE)
         ) and temperature.value_as_int:
             return temperature.value_as_int
 
@@ -183,7 +185,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def current_temperature(self) -> int | None:
         """Return current temperature."""
         if (
-            state := self.device.states[OverkizState.OVP_ROOM_TEMPERATURE]
+            state := self.device.states.get(OverkizState.OVP_ROOM_TEMPERATURE)
         ) and state.value_as_int:
             return state.value_as_int
 
@@ -197,7 +199,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
-            state := self.device.states[OverkizState.CORE_HOLIDAYS_MODE]
+            state := self.device.states.get(OverkizState.CORE_HOLIDAYS_MODE)
         ) and state.value_as_str:
             if state.value_as_str == OverkizCommandParam.ON:
                 return PRESET_HOLIDAY_MODE
@@ -225,7 +227,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def auto_manu_mode(self) -> str | None:
         """Return auto/manu mode."""
         if (
-            state := self.device.states[OverkizState.CORE_AUTO_MANU_MODE]
+            state := self.device.states.get(OverkizState.CORE_AUTO_MANU_MODE)
         ) and state.value_as_str:
             return state.value_as_str
         return None
@@ -235,7 +237,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def temperature_change(self) -> int | None:
         """Return temperature change state."""
         if (
-            state := self.device.states[OverkizState.OVP_TEMPERATURE_CHANGE]
+            state := self.device.states.get(OverkizState.OVP_TEMPERATURE_CHANGE)
         ) and state.value_as_int:
             return state.value_as_int
 
@@ -266,7 +268,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         """
         if value:
             return value
-        if (state := self.device.states[state_name]) is not None and (
+        if (state := self.device.states.get(state_name)) is not None and (
             value := state.value_as_str
         ) is not None:
             return value
