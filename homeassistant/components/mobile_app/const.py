@@ -20,7 +20,6 @@ DATA_CONFIG_ENTRIES = "config_entries"
 DATA_DELETED_IDS = "deleted_ids"
 DATA_DEVICES = "devices"
 
-# Apple ActivityKit per-activity push tokens, stored by webhook_id and tag
 DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
 DATA_STORE = "store"
 DATA_NOTIFY = "notify"
