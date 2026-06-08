@@ -41,6 +41,8 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
         async_add_entities([SwitchbotAirPurifierLightEntity(coordinator)])
+    elif isinstance(coordinator.device, switchbot.SwitchbotCirculatorFanPro):
+        async_add_entities([SwitchbotCirculatorFanProLightEntity(coordinator)])
     else:
         async_add_entities([SwitchbotLightEntity(coordinator)])
 
@@ -225,3 +227,49 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
         """Instruct the light to turn off."""
         _LOGGER.debug("Turning off light %s, address %s", kwargs, self._address)
         await self._device.turn_off()
+
+
+class SwitchbotCirculatorFanProLightEntity(SwitchbotEntity, LightEntity):
+    """Two-level night light of a Circulator Fan Pro.
+
+    The night light has two brightness levels (high / low), mapped onto HA
+    brightness: > 50% selects the high level, otherwise low.
+    """
+
+    _device: switchbot.SwitchbotCirculatorFanPro
+    _attr_translation_key = "circulator_fan_pro_light"
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}-light"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the night light is on."""
+        return self._device.is_night_light_on()
+
+    @property
+    def brightness(self) -> int | None:
+        """Return the brightness (level 1 high -> 255, level 2 low -> 128)."""
+        level = self._device.get_night_light_level()
+        if not level:
+            return None
+        return 128 if level == 2 else 255
+
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the night light on (picking high/low from the requested brightness)."""
+        _LOGGER.debug("Turning on night light %s, address %s", kwargs, self._address)
+        low = (
+            requested := kwargs.get(ATTR_BRIGHTNESS)
+        ) is not None and requested <= 128
+        await self._device.turn_on_light(low=low)
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the night light off."""
+        _LOGGER.debug("Turning off night light %s, address %s", kwargs, self._address)
+        await self._device.turn_off_light()

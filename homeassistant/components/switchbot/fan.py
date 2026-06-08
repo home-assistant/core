@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 import switchbot
-from switchbot import AirPurifierMode, FanMode
+from switchbot import AirPurifierMode
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -42,7 +42,6 @@ class SwitchBotFanEntity(SwitchbotEntity, FanEntity, RestoreEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _attr_preset_modes = FanMode.get_modes()
     _attr_translation_key = "fan"
     _attr_name = None
 
@@ -50,6 +49,7 @@ class SwitchBotFanEntity(SwitchbotEntity, FanEntity, RestoreEntity):
         """Initialize the switchbot."""
         super().__init__(coordinator)
         self._attr_is_on = False
+        self._attr_preset_modes = self._device.fan_modes
 
     @property
     @override

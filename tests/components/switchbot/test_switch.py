@@ -22,6 +22,7 @@ from . import (
     AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
     AIR_PURIFIER_TABLE_US_SERVICE_INFO,
     AIR_PURIFIER_US_SERVICE_INFO,
+    CIRCULATOR_FAN_PRO_SERVICE_INFO,
     PLUG_MINI_EU_SERVICE_INFO,
     RELAY_SWITCH_1_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
@@ -455,3 +456,42 @@ async def test_standing_fan_oscillation_switches(
         )
         assert mocked_set.await_count == 2
         mocked_set.assert_awaited_with(False)
+
+
+@pytest.mark.parametrize(
+    ("service", "mock_method"),
+    [
+        (SERVICE_TURN_ON, "set_vertical_oscillation"),
+        (SERVICE_TURN_OFF, "set_vertical_oscillation"),
+    ],
+)
+async def test_circulator_fan_pro_vertical_oscillation_switch(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    mock_method: str,
+) -> None:
+    """Test the Circulator Fan Pro vertical oscillation switch."""
+    inject_bluetooth_service_info(hass, CIRCULATOR_FAN_PRO_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="circulator_fan_pro")
+    entry.add_to_hass(hass)
+
+    mocked_instance = AsyncMock(return_value=True)
+    with patch.multiple(
+        "homeassistant.components.switchbot.switch.switchbot.SwitchbotCirculatorFanPro",
+        get_basic_info=AsyncMock(return_value=None),
+        update=AsyncMock(return_value=None),
+        **{mock_method: mocked_instance},
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "switch.test_name_vertical_oscillation"},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once()

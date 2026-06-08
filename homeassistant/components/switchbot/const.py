@@ -39,6 +39,7 @@ class SupportedModels(StrEnum):
     ROLLER_SHADE = "roller_shade"
     HUBMINI_MATTER = "hubmini_matter"
     CIRCULATOR_FAN = "circulator_fan"
+    CIRCULATOR_FAN_PRO = "circulator_fan_pro"
     K20_VACUUM = "k20_vacuum"
     S10_VACUUM = "s10_vacuum"
     K10_VACUUM = "k10_vacuum"
@@ -90,6 +91,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RELAY_SWITCH_1: SupportedModels.RELAY_SWITCH_1,
     SwitchbotModel.ROLLER_SHADE: SupportedModels.ROLLER_SHADE,
     SwitchbotModel.CIRCULATOR_FAN: SupportedModels.CIRCULATOR_FAN,
+    SwitchbotModel.CIRCULATOR_FAN_PRO: SupportedModels.CIRCULATOR_FAN_PRO,
     SwitchbotModel.K20_VACUUM: SupportedModels.K20_VACUUM,
     SwitchbotModel.S10_VACUUM: SupportedModels.S10_VACUUM,
     SwitchbotModel.S20_VACUUM: SupportedModels.S20_VACUUM,
@@ -171,6 +173,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_VISION_PRO,
     SwitchbotModel.LOCK_VISION,
     SwitchbotModel.LOCK_PRO_WIFI,
+    SwitchbotModel.CIRCULATOR_FAN_PRO,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -204,6 +207,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.LOCK_VISION_PRO: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_VISION: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_PRO_WIFI: switchbot.SwitchbotLock,
+    SwitchbotModel.CIRCULATOR_FAN_PRO: switchbot.SwitchbotCirculatorFanPro,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {

@@ -181,6 +181,7 @@
           "preset_mode": {
             "state": {
               "baby": "Baby",
+              "hurricane": "Hurricane",
               "natural": "Natural",
               "normal": "[%key:common::state::normal%]",
               "sleep": "Sleep"
@@ -219,6 +220,9 @@
     },
     "light": {
       "air_purifier_light": {
+        "name": "[%key:component::light::title%]"
+      },
+      "circulator_fan_pro_light": {
         "name": "[%key:component::light::title%]"
       },
       "light": {
@@ -364,6 +368,9 @@
       },
       "wireless_charging": {
         "name": "Wireless charging"
+      },
+      "vertical_oscillation": {
+        "name": "Vertical oscillation"
       }
     },
     "vacuum": {
