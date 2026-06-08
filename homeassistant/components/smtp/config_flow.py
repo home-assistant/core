@@ -101,7 +101,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {CONF_RECIPIENT: RecipientSubentryFlowHandler}
+        return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlowHandler}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -133,7 +133,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Start subentry flow after creating main entry."""
         subentry_result = await self.hass.config_entries.subentries.async_init(
-            (result["result"].entry_id, CONF_RECIPIENT),
+            (result["result"].entry_id, SUBENTRY_TYPE_RECIPIENT),
             context=SubentryFlowContext(source=SOURCE_USER),
         )
         result["next_flow"] = (
