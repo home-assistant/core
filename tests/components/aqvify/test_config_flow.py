@@ -173,7 +173,7 @@ async def test_reauth_flow_error(
     side_effect: Exception,
     expected_error: str,
 ) -> None:
-    """Test reauthentication."""
+    """Test reauthentication error handling."""
 
     result = await mock_config_entry.start_reauth_flow(hass)
 

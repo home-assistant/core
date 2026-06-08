@@ -93,9 +93,6 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={
-                "aqvify_url": "https://app.aqvify.com/User",
-            },
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
