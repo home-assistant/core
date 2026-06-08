@@ -474,9 +474,18 @@ async def test_reauth_flow_works(
 
 
 async def test_reauth_flow_works_without_credentials(
-    hass: HomeAssistant, config_entry: MockConfigEntry, product_class_mock
+    hass: HomeAssistant, product_class_mock
 ) -> None:
-    """Test that reauth flow works when submitted without credentials."""
+    """Test that reauth flow clears credentials when submitted without them."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            config_flow.CONF_HOST: "172.100.123.4",
+            config_flow.CONF_PORT: 80,
+            config_flow.CONF_USERNAME: "admin",
+            config_flow.CONF_PASSWORD: "secret",
+        },
+    )
     config_entry.add_to_hass(hass)
 
     result = await config_entry.start_reauth_flow(hass)
@@ -493,6 +502,8 @@ async def test_reauth_flow_works_without_credentials(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert config_entry.data[config_flow.CONF_USERNAME] is None
+    assert config_entry.data[config_flow.CONF_PASSWORD] is None
 
 
 @pytest.mark.parametrize(

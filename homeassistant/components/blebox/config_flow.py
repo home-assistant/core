@@ -290,12 +290,8 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={
-                        k: v
-                        for k, v in {
-                            CONF_USERNAME: username,
-                            CONF_PASSWORD: password,
-                        }.items()
-                        if v is not None
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
                     },
                 )
 
