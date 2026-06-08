@@ -20,7 +20,7 @@ from homeassistant.components.notify import (
     NotifyEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_MANUFACTURER
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -50,9 +50,10 @@ from .const import (
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
     DOMAIN,
+    MANUFACTURER_APPLE,
     SIGNAL_RECORD_NOTIFICATION,
 )
-from .helpers import device_info
+from .helpers import RemotePush, device_info
 from .live_activity import prepare_live_activity_remote_push
 from .push_notification import PushChannel
 from .util import supports_push
@@ -239,7 +240,10 @@ class MobileAppNotificationService(BaseNotificationService):
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
-        remote_push = prepare_live_activity_remote_push(self.hass, entry.data, data)
+        if entry.data[ATTR_MANUFACTURER] == MANUFACTURER_APPLE:
+            remote_push = prepare_live_activity_remote_push(self.hass, entry.data, data)
+        else:
+            remote_push = RemotePush(data=data)
         try:
             await _send_message(
                 async_get_clientsession(self.hass), entry, remote_push.data

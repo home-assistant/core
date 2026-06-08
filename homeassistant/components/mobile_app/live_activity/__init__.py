@@ -29,7 +29,7 @@ from ..const import (
     DOMAIN,
     STORAGE_SAVE_DELAY_SECONDS,
 )
-from ..helpers import savable_state
+from ..helpers import RemotePush, savable_state
 
 
 class LiveActivityEvent(StrEnum):
@@ -49,20 +49,12 @@ class LiveActivityPush:
     tag: str
 
 
-@dataclass(slots=True)
-class LiveActivityRemotePush:
-    """Remote notification data with any Apple ActivityKit routing applied."""
-
-    data: dict[str, Any]
-    success_callback: Callable[[], None] | None = None
-
-
 def prepare_live_activity_remote_push(
     hass: HomeAssistant, registration: Mapping[str, Any], data: dict[str, Any]
-) -> LiveActivityRemotePush:
+) -> RemotePush:
     """Return remote notification data with any ActivityKit routing applied."""
     if not (resolved := resolve_live_activity_push(hass, registration, data)):
-        return LiveActivityRemotePush(data=data)
+        return RemotePush(data=data)
 
     success_callback: Callable[[], None] | None = None
     if resolved.event is LiveActivityEvent.END:
@@ -73,7 +65,7 @@ def prepare_live_activity_remote_push(
             resolved.tag,
         )
 
-    return LiveActivityRemotePush(
+    return RemotePush(
         data={
             **data,
             ATTR_LIVE_ACTIVITY_TOKEN: resolved.token,

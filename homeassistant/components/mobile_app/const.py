@@ -53,6 +53,8 @@ ATTR_TAG = "tag"
 
 ATTR_TOKEN = "token"
 
+MANUFACTURER_APPLE = "Apple"
+
 CLEAR_NOTIFICATION = "clear_notification"
 
 ATTR_EVENT_DATA = "event_data"

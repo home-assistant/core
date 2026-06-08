@@ -1,6 +1,7 @@
 """Helpers for mobile_app."""
 
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -37,6 +38,14 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(slots=True)
+class RemotePush:
+    """Outgoing remote push payload with an optional post-send success callback."""
+
+    data: dict[str, Any]
+    success_callback: Callable[[], None] | None = None
 
 
 def setup_decrypt(
