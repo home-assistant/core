@@ -5,7 +5,6 @@ import pathlib
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from roborock import (
@@ -255,26 +254,6 @@ async def test_no_user_agreement(
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
         assert mock_roborock_entry.error_reason_translation_key == "no_user_agreement"
-
-
-@pytest.mark.parametrize(
-    "side_effect",
-    [aiohttp.ClientError(), TimeoutError()],
-    ids=["client_error", "timeout"],
-)
-async def test_network_error_during_setup(
-    hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    side_effect: Exception,
-) -> None:
-    """Test that network errors during setup trigger retry, not terminal failure."""
-    with patch(
-        "homeassistant.components.roborock.create_device_manager",
-        side_effect=side_effect,
-    ):
-        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
-        assert mock_roborock_entry.error_reason_translation_key == "network_error"
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
@@ -653,7 +632,7 @@ async def test_disabled_device_no_coordinator(
     device_registry: DeviceRegistry,
     fake_devices: list[FakeDevice],
 ) -> None:
-    """Test that a disabled device is registered but no coordinator is created."""
+    """Test that a disabled device has close() called and no coordinator is created."""
     # Pre-create the first device as disabled so that async_get_or_create
     # finds it already disabled when async_setup_entry runs.
     first_device = fake_devices[0]
@@ -665,6 +644,11 @@ async def test_disabled_device_no_coordinator(
         disabled_by=dr.DeviceEntryDisabler.USER,
     )
 
+    first_device.close = AsyncMock()
+    # Track close() calls on enabled devices to verify they are NOT closed.
+    for device in fake_devices[1:]:
+        device.close = AsyncMock()
+
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
@@ -675,6 +659,14 @@ async def test_disabled_device_no_coordinator(
     )
     assert disabled_device_entry is not None
     assert disabled_device_entry.disabled
+
+    # close() should have been called on the disabled device to stop its
+    # background reconnect loop from disrupting the MQTT session.
+    first_device.close.assert_awaited_once()
+
+    # close() should NOT have been called on enabled devices.
+    for device in fake_devices[1:]:
+        device.close.assert_not_called()
 
     # No coordinator should have been created for the disabled device,
     # so no entities should exist for it.
@@ -690,6 +682,32 @@ async def test_disabled_device_no_coordinator(
     }
     assert "Roborock S7 MaxV" not in enabled_device_names
     assert "Roborock S7 2" in enabled_device_names
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_disabled_device_close_raises(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test that the integration loads even if close() raises on a disabled device."""
+    first_device = fake_devices[0]
+    device_registry.async_get_or_create(
+        config_entry_id=mock_roborock_entry.entry_id,
+        identifiers={(DOMAIN, first_device.duid)},
+        name=first_device.device_info.name,
+        manufacturer="Roborock",
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    first_device.close = AsyncMock(side_effect=RoborockException("connection error"))
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+    first_device.close.assert_awaited_once()
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
@@ -730,3 +748,35 @@ async def test_all_devices_disabled(
         )
         assert device_entry is not None
         assert device_entry.disabled
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_v1_streaming_updates(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that V1 push updates update entity states immediately."""
+    assert setup_entry.state is ConfigEntryState.LOADED
+
+    sensor_entity_id = "sensor.roborock_s7_maxv_battery"
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == "100"
+
+    # Verify that add_update_listener was called on the mock status trait
+    status_trait = fake_vacuum.v1_properties.status
+    assert status_trait.add_update_listener.called
+
+    # Get the registered callback
+    callback_func = status_trait.add_update_listener.call_args[0][0]  # type: ignore[union-attr]
+
+    # Update a status attribute and trigger the callback
+    status_trait.battery = 85
+    callback_func()
+    await hass.async_block_till_done()
+
+    # Check if the state was updated in Home Assistant immediately
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == "85"

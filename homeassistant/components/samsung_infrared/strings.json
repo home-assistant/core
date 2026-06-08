@@ -123,6 +123,26 @@
       "yellow": {
         "name": "Yellow"
       }
+    },
+    "media_player": {
+      "samsung_ir_tv": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "hdmi_1": "HDMI 1",
+              "hdmi_2": "HDMI 2",
+              "hdmi_3": "HDMI 3",
+              "hdmi_4": "HDMI 4",
+              "tv": "[%key:common::generic::tv%]"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_source": {
+      "message": "Cannot select input source {invalid_source} for media player. Valid sources: {valid_sources}."
     }
   },
   "selector": {

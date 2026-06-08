@@ -826,7 +826,7 @@ class ConfigEntry[_DataT = Any]:
                 auth_message,
             )
             logger.debug("Full exception", exc_info=True)
-            self.async_start_reauth(hass)
+            self.async_start_reauth_if_available(hass)
         except ConfigEntryNotReady as exc:
             message = str(exc)
             error_reason_translation_key = exc.translation_key
@@ -1151,6 +1151,17 @@ class ConfigEntry[_DataT = Any]:
         if same_major_version and self.minor_version == handler.MINOR_VERSION:
             return True
 
+        if self.version > handler.VERSION:
+            self.logger.error(
+                "Config entry %s for %s has version %s which is higher than the"
+                " current version %s",
+                self.title,
+                self.domain,
+                self.version,
+                handler.VERSION,
+            )
+            return False
+
         if not (integration := self._integration_for_domain):
             integration = await loader.async_get_integration(hass, self.domain)
         component = await integration.async_get_component()
@@ -1291,6 +1302,19 @@ class ConfigEntry[_DataT = Any]:
             f"config entry reauth {self.title} {self.domain} {self.entry_id}",
             eager_start=True,
         )
+
+    @callback
+    def async_start_reauth_if_available(
+        self,
+        hass: HomeAssistant,
+        context: ConfigFlowContext | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reauth flow only if the integration implements one."""
+        handler = HANDLERS.get(self.domain)
+        if handler is None or not hasattr(handler, "async_step_reauth"):
+            return
+        self.async_start_reauth(hass, context, data)
 
     async def _async_init_reauth(
         self,

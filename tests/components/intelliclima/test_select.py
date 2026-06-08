@@ -99,7 +99,7 @@ async def test_select_option_when_off_defaults_speed_to_sleep(
     single_eco_device,
 ) -> None:
     """Test selecting option when off defaults speed to sleep."""
-    # Mutate the shared fixture object – coordinator.data points to the same reference.
+    # Mutate the shared fixture object - coordinator.data points to the same reference.
     eco = list(single_eco_device.ecocomfort2_devices.values())[0]
     eco.mode_set = FanMode.off
 

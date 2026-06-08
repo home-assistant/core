@@ -520,6 +520,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "aqvify": {
+      "name": "Aqvify",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "aranet": {
       "name": "Aranet",
       "integration_type": "device",
@@ -576,7 +582,7 @@
       "name": "Ambient Radio Weather Network",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "aseko_pool_live": {
       "name": "Aseko Pool Live",
@@ -664,6 +670,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "assumed_state"
+    },
+    "avosdim": {
+      "name": "Avosdim",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
     },
     "awair": {
       "name": "Awair",
@@ -1654,6 +1665,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "edifier_infrared": {
+      "name": "Edifier Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "edimax": {
       "name": "Edimax",
       "integration_type": "hub",
@@ -1860,6 +1877,12 @@
       "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "envertech_evt800": {
+      "name": "ENVERTECH EVT800",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "environment_canada": {
       "name": "Environment Canada",
@@ -2849,6 +2872,12 @@
         "zwave"
       ]
     },
+    "helty": {
+      "name": "Helty Flow",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "here_travel_time": {
       "name": "HERE Travel Time",
       "integration_type": "service",
@@ -3216,6 +3245,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "imou": {
+      "name": "Imou",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "improv_ble": {
       "name": "Improv via BLE",
@@ -4351,7 +4386,7 @@
         "mitsubishi_comfort": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "cloud_polling",
+          "iot_class": "local_polling",
           "name": "Mitsubishi Comfort"
         }
       }
@@ -6879,7 +6914,7 @@
     "swisscom": {
       "name": "Swisscom Internet-Box",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "switchbee": {

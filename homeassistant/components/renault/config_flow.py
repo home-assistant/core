@@ -22,14 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema(
     {
-        vol.Required(RenaultConfigurationKeys.LOCALE.value): vol.In(
-            AVAILABLE_LOCALES.keys()
-        ),
-        vol.Required(RenaultConfigurationKeys.USERNAME.value): str,
-        vol.Required(RenaultConfigurationKeys.PASSWORD.value): str,
+        vol.Required(RenaultConfigurationKeys.LOCALE): vol.In(AVAILABLE_LOCALES.keys()),
+        vol.Required(RenaultConfigurationKeys.USERNAME): str,
+        vol.Required(RenaultConfigurationKeys.PASSWORD): str,
     }
 )
-REAUTH_SCHEMA = vol.Schema({vol.Required(RenaultConfigurationKeys.PASSWORD.value): str})
+REAUTH_SCHEMA = vol.Schema({vol.Required(RenaultConfigurationKeys.PASSWORD): str})
 
 
 class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -122,9 +120,9 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="kamereon",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID.value
-                    ): vol.In(accounts)
+                    vol.Required(RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID): vol.In(
+                        accounts
+                    )
                 }
             ),
         )
