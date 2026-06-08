@@ -59,9 +59,15 @@ from .const import (
 from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
 from .live_activity import async_cleanup_expired_live_activity_tokens
+
+# Imported for the decorator side effect that registers the webhook commands.
+from .live_activity.webhook import (  # noqa: F401
+    webhook_live_activity_dismissed,
+    webhook_update_live_activity_token,
+)
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
-from .webhook import handle_webhook, setup_webhook_commands
+from .webhook import handle_webhook
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -93,8 +99,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
     }
 
-    # Apple ActivityKit Live Activity tokens can expire while Home Assistant
-    # is stopped; prune stale persisted tokens and schedule the next cleanup.
+    # Tokens can expire while Home Assistant is stopped.
     hass.async_create_task(async_cleanup_expired_live_activity_tokens(hass))
 
     hass.http.register_view(RegistrationsView())
@@ -111,7 +116,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_setup_commands(hass)
-    setup_webhook_commands()
 
     async def _handle_user_removed(event: Event) -> None:
         """Remove an entry when the user is removed."""

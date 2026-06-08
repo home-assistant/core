@@ -37,7 +37,6 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
-    ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
@@ -54,7 +53,7 @@ from .const import (
     SIGNAL_RECORD_NOTIFICATION,
 )
 from .helpers import device_info
-from .live_activity import is_live_activity_push, prepare_live_activity_remote_push
+from .live_activity import prepare_live_activity_remote_push
 from .push_notification import PushChannel
 from .util import supports_push
 
@@ -240,21 +239,10 @@ class MobileAppNotificationService(BaseNotificationService):
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
-        if is_live_activity_push(self.hass, entry.data, data):
-            remote_push = prepare_live_activity_remote_push(self.hass, entry.data, data)
-            send_data = remote_push.data
-            target_push_token = remote_push.target_push_token
-            on_success = remote_push.async_handle_success
-        else:
-            send_data = data
-            target_push_token = None
-            on_success = None
+        remote_push = prepare_live_activity_remote_push(self.hass, entry.data, data)
         try:
             await _send_message(
-                async_get_clientsession(self.hass),
-                entry,
-                send_data,
-                target_push_token=target_push_token,
+                async_get_clientsession(self.hass), entry, remote_push.data
             )
         except HomeAssistantError as e:
             if e.translation_key == "rate_limit_exceeded_sending_notification":
@@ -262,16 +250,12 @@ class MobileAppNotificationService(BaseNotificationService):
             else:
                 _LOGGER.error(str(e))
         else:
-            if on_success:
-                on_success()
+            if remote_push.success_callback is not None:
+                remote_push.success_callback()
 
 
 async def _send_message(
-    session: ClientSession,
-    entry: ConfigEntry,
-    data: dict[str, Any],
-    *,
-    target_push_token: str | None = None,
+    session: ClientSession, entry: ConfigEntry, data: dict[str, Any]
 ) -> None:
     """Shared internal helper to send messages via cloud push notification services."""
     reg_info = {
@@ -282,19 +266,15 @@ async def _send_message(
     if ATTR_OS_VERSION in entry.data:
         reg_info[ATTR_OS_VERSION] = entry.data[ATTR_OS_VERSION]
 
-    payload: dict[str, Any] = {
-        **data,
-        ATTR_PUSH_TOKEN: entry.data[ATTR_APP_DATA][ATTR_PUSH_TOKEN],
-        "registration_info": reg_info,
-    }
-    if target_push_token:
-        payload[ATTR_LIVE_ACTIVITY_TOKEN] = target_push_token
-
     try:
         async with asyncio.timeout(10):
             response = await session.post(
                 entry.data[ATTR_APP_DATA][ATTR_PUSH_URL],
-                json=payload,
+                json={
+                    **data,
+                    ATTR_PUSH_TOKEN: entry.data[ATTR_APP_DATA][ATTR_PUSH_TOKEN],
+                    "registration_info": reg_info,
+                },
             )
             result: dict[str, Any] = await response.json()
 

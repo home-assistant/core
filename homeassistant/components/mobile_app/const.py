@@ -45,12 +45,9 @@ ATTR_PUSH_RATE_LIMITS_SUCCESSFUL = "successful"
 ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
 
 ATTR_LIVE_UPDATE = "live_update"
-# Core keeps the push-to-start token registered by the device separate from
-# per-activity update tokens. The relay receives the selected token as
-# live_activity_token, but app_data stores the reusable start token under a
-# distinct key so it is not confused with tag-scoped update/end tokens.
 ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN = "push_to_start_live_activity_token"
 ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
+ATTR_LIVE_ACTIVITY_EVENT = "event"
 ATTR_LIVE_ACTIVITY_EXPIRES_AT = "expires_at"
 ATTR_TAG = "tag"
 

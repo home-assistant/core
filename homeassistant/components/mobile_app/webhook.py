@@ -109,7 +109,6 @@ from .helpers import (
     safe_registration,
     webhook_response,
 )
-from .live_activity.webhook import register_live_activity_webhook_commands
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,11 +168,6 @@ def validate_schema(schema):
         return validate_and_run
 
     return wrapper
-
-
-def setup_webhook_commands() -> None:
-    """Register all webhook commands, including live activity commands."""
-    register_live_activity_webhook_commands(WEBHOOK_COMMANDS, validate_schema)
 
 
 async def handle_webhook(
