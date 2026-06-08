@@ -318,3 +318,186 @@ async def test_reauth_flow_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new_key"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow updates the API key."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_key"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            AuthenticationError(
+                message="invalid key",
+                response=httpx.Response(
+                    status_code=401,
+                    request=httpx.Request(method="POST", url="https://example.com"),
+                ),
+                body=None,
+            ),
+            "invalid_auth",
+        ),
+        (OpenAIError("boom"), "cannot_connect"),
+        (Exception("boom"), "unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test errors during reconfigure and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_openai_client.chat.completions.create.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_key"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_openai_client.chat.completions.create.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_key"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_key"
+
+
+async def test_reconfigure_flow_duplicate(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when the new API key belongs to another entry."""
+    mock_config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        title="OVHcloud AI Endpoints",
+        domain=DOMAIN,
+        data={CONF_API_KEY: "other_key"},
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "other_key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure_flow_same_key(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring with the same API key succeeds (entry excluded from match)."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "bla"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "bla"
+
+
+async def test_reconfigure_conversation_agent(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring a conversation agent updates the prompt and LLM APIs."""
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
+
+    subentry_id = next(iter(mock_config_entry.subentries))
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert CONF_MODEL not in result["data_schema"].schema
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROMPT: "updated prompt",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.data[CONF_PROMPT] == "updated prompt"
+    assert subentry.data[CONF_LLM_HASS_API] == ["assist"]
+    assert subentry.data[CONF_MODEL] == "Meta-Llama-3_3-70B-Instruct"
+
+
+async def test_reconfigure_conversation_agent_clears_llm_api(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that clearing the LLM API removes the key from the subentry data."""
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
+
+    subentry_id = next(iter(mock_config_entry.subentries))
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROMPT: "updated prompt",
+            CONF_LLM_HASS_API: [],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.data[CONF_PROMPT] == "updated prompt"
+    assert CONF_LLM_HASS_API not in subentry.data
+    assert subentry.data[CONF_MODEL] == "Meta-Llama-3_3-70B-Instruct"

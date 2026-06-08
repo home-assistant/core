@@ -125,7 +125,7 @@ async def mock_init_component(
     with patch(
         "openai.resources.models.AsyncModels.list",
     ):
-        assert await async_setup_component(hass, "openai_conversation", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
 
