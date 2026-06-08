@@ -217,13 +217,14 @@ async def test_import(
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
             CONF_VERIFY_SSL: True,
-            CONF_RECIPIENT: "recipient@example.com",
+            CONF_RECIPIENT: ["recipient@example.com"],
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "notifier_name"
     assert result["data"] == {
+        CONF_NAME: "notifier_name",
         CONF_SENDER: "email@example.com",
         CONF_SENDER_NAME: "Home Assistant",
         CONF_SERVER: "mail.example.com",
@@ -232,6 +233,7 @@ async def test_import(
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
         CONF_VERIFY_SSL: True,
+        CONF_RECIPIENT: ["recipient@example.com"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
     assert issue_registry.async_get_issue(
@@ -294,7 +296,7 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
             CONF_VERIFY_SSL: True,
-            CONF_RECIPIENT: "recipient@example.com",
+            CONF_RECIPIENT: ["recipient@example.com"],
         },
         entry_id="123456789",
     )
@@ -314,7 +316,7 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
             CONF_VERIFY_SSL: True,
-            CONF_RECIPIENT: "recipient@example.com",
+            CONF_RECIPIENT: ["recipient@example.com"],
         },
     )
 
@@ -345,7 +347,7 @@ async def test_init_import_flow(
                     CONF_USERNAME: "test-username",
                     CONF_PASSWORD: "test-password",
                     CONF_VERIFY_SSL: True,
-                    CONF_RECIPIENT: ["recipient@example.com"],
+                    CONF_RECIPIENT: "recipient@example.com",
                 }
             ]
         },

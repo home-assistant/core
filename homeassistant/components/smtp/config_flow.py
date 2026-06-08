@@ -151,11 +151,10 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = await self.hass.async_add_executor_job(validate_input, import_info)
         if not errors:
             title = (
-                import_info.pop(CONF_NAME, None)
+                import_info.get(CONF_NAME)
                 or import_info.get(CONF_SENDER_NAME)
                 or import_info[CONF_SENDER]
             )
-            recipients = import_info.pop(CONF_RECIPIENT)
             return self.async_create_entry(
                 title=title,
                 data=import_info,
@@ -166,7 +165,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
                         unique_id=recipient,
                         data={},
                     )
-                    for recipient in recipients
+                    for recipient in import_info[CONF_RECIPIENT]
                 ],
             )
 
