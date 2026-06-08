@@ -443,7 +443,7 @@ async def test_input_datetime_context(
 ) -> None:
     """Test that input_datetime context works."""
     assert await async_setup_component(
-        hass, "input_datetime", {"input_datetime": {"only_date": {"has_date": True}}}
+        hass, DOMAIN, {"input_datetime": {"only_date": {"has_date": True}}}
     )
 
     state = hass.states.get("input_datetime.only_date")

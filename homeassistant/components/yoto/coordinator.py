@@ -131,7 +131,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         # Fire-and-forget: the data/status response lands via the on_update
         # callback later, which already triggers async_set_updated_data.
         for device_id in list(self.client.players):
-            await self.client.request_status_push(device_id)
+            await self.client.request_player_status(device_id)
 
     def _mqtt_event(self, _player: YotoPlayer) -> None:
         """Handle a real-time update pushed by the Yoto MQTT broker."""

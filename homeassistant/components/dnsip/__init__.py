@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> boo
             tcp_port=entry.options[CONF_PORT],
             udp_port=entry.options[CONF_PORT],
         )
-        queries.append(resolver_ipv4.query(hostname, "A"))
+        queries.append(resolver_ipv4.query_dns(hostname, "A"))
 
     if entry.data[CONF_IPV6]:
         resolver_ipv6 = aiodns.DNSResolver(
@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> boo
             tcp_port=entry.options[CONF_PORT_IPV6],
             udp_port=entry.options[CONF_PORT_IPV6],
         )
-        queries.append(resolver_ipv6.query(hostname, "AAAA"))
+        queries.append(resolver_ipv6.query_dns(hostname, "AAAA"))
 
     async def _close_resolvers() -> None:
         if resolver_ipv4 is not None:
