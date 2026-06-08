@@ -696,44 +696,32 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
     @callback
     def _async_refresh_finished(self) -> None:
-        """Persist data after a successful refresh.
-
-        A failed refresh keeps the previously stored data untouched.
-        """
+        """Persist data after a successful refresh."""
         if self.last_update_success and self.data is not None:
             self._schedule_save()
 
     @callback
     def async_set_updated_data(self, data: _DataT) -> None:
-        """Manually update data and persist it.
-
-        The base method does not route through :meth:`_async_refresh_finished`, so the
-        save is scheduled here to cover push/webhook based sources.
-        """
+        """Manually update data and persist it."""
+        # The base method does not route through _async_refresh_finished, so persist
+        # here to cover push/webhook based sources.
         super().async_set_updated_data(data)
         self._schedule_save()
 
     async def async_remove_store(self) -> None:
-        """Remove the stored data.
-
-        Harmless to call when nothing is stored.
-        """
+        """Remove the stored data."""
         await self._store.async_remove()
 
     @callback
     def _setup_store_removal(self, entry_id: str) -> None:
-        """Remove the store when the config entry is removed.
-
-        ``SIGNAL_CONFIG_ENTRY_CHANGED``/``REMOVED`` is the only signal that reliably
-        distinguishes removal from an unload during a reload. The dispatcher listener
-        closure captures only primitives, never ``self``, so a reload does not leak this
-        coordinator. Registration is deduplicated per storage key so reloads do not
-        accumulate listeners.
-        """
+        """Set up automatic removal of the store when the config entry is removed."""
+        # Pull primitives out of self so the dispatcher closure below never captures
+        # self; otherwise a reload would leak this coordinator.
         hass = self.hass
         storage_key = self._store.key
         store_version = self._store.version
 
+        # A reload builds a new coordinator with the same storage key; register once.
         registered = hass.data.setdefault(_RESTORE_CLEANUP_KEY, set())
         if storage_key in registered:
             return
@@ -756,6 +744,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
                 store.async_remove(), f"Remove restore store {storage_key}"
             )
 
+        # REMOVED is the only signal that distinguishes removal from an unload on reload.
         unsub = async_dispatcher_connect(
             hass, config_entries.SIGNAL_CONFIG_ENTRY_CHANGED, _handle_entry_changed
         )
