@@ -22,10 +22,22 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    mock_kiosker_api.blackout_get.return_value = SimpleNamespace(visible=True)
+    mock_kiosker_api.blackout_get.return_value = SimpleNamespace(
+        visible=True, dismissible=True
+    )
     mock_kiosker_api.screensaver_get_state.return_value = SimpleNamespace(visible=False)
 
     with patch("homeassistant.components.kiosker._PLATFORMS", [Platform.BINARY_SENSOR]):
         await setup_integration(hass, mock_config_entry)
+
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        ):
+            if entity_entry.disabled_by is not None:
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, disabled_by=None
+                )
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
