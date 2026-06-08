@@ -694,6 +694,30 @@ async def test_camera_proxy_stream(hass_client: ClientSessionGenerator) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera")
+async def test_camera_proxy_query_token_auth(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test the camera proxy authenticates via the access token query param."""
+    client = await hass_client_no_auth()
+
+    state = hass.states.get("camera.demo_camera")
+    assert state is not None
+
+    # A valid access token in the query param authenticates the request
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"Test"
+
+    # Without a token the request is unauthorized
+    resp = await client.get("/api/camera_proxy/camera.demo_camera")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # An invalid token is also unauthorized
+    resp = await client.get("/api/camera_proxy/camera.demo_camera?token=invalid")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.usefixtures("mock_camera")
 async def test_state_streaming(hass: HomeAssistant) -> None:
     """Camera state."""
     demo_camera = hass.states.get("camera.demo_camera")

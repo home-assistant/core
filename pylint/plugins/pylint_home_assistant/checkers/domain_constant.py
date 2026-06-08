@@ -1,20 +1,33 @@
 """Plugin to encourage correct use of DOMAIN constants in tests."""
 
+from dataclasses import dataclass
+
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.module_info import is_test_module
 
-_FUNCTION_CHECKS: list[tuple[str, int | None, str]] = [
-    ("async_setup_component", 1, "domain"),
-    ("async_mock_service", 1, "domain"),
-    ("MockConfigEntry", None, "domain"),
+
+@dataclass
+class ArgumentCheckInfo:
+    """Data class for argument check information."""
+
+    position: int | None
+    name: str
+    allow_iterable: bool = False
+
+
+_FUNCTION_CHECKS: list[tuple[str, ArgumentCheckInfo]] = [
+    ("MockConfigEntry", ArgumentCheckInfo(None, "domain")),
+    ("async_mock_service", ArgumentCheckInfo(1, "domain")),
+    ("async_setup_component", ArgumentCheckInfo(1, "domain")),
 ]
-_METHOD_CHECKS: list[tuple[str, str, int | None, str]] = [
-    ("hass.services", "async_call", 0, "domain"),
-    ("hass.services", "call", 0, "domain"),
-    ("hass.config_entries.flow", "async_init", 0, "handler"),
+_METHOD_CHECKS: list[tuple[str, str, ArgumentCheckInfo]] = [
+    ("hass.config_entries.flow", "async_init", ArgumentCheckInfo(0, "handler")),
+    ("hass.services", "async_call", ArgumentCheckInfo(0, "domain")),
+    ("hass.services", "call", ArgumentCheckInfo(0, "domain")),
+    ("hass.states", "async_entity_ids", ArgumentCheckInfo(0, "domain_filter", True)),
 ]
 
 _DOMAIN_CONSTANTS: set[str] = {"DOMAIN", "domain"}
@@ -28,57 +41,47 @@ def _check_call_node_domain_arguments(node: nodes.Call) -> nodes.NodeNG | None:
     """
     match node.func:
         case nodes.Attribute():
-            for (
-                method_source,
-                method_name,
-                arg_position,
-                kwarg_name,
-            ) in _METHOD_CHECKS:
+            for method_source, method_name, arg_info in _METHOD_CHECKS:
                 if (
                     node.func.attrname == method_name
                     and node.func.expr.as_string() == method_source
                 ):
-                    return _check_call_node_domain_argument(
-                        node, arg_position=arg_position, kwarg_name=kwarg_name
-                    )
+                    return _check_call_node_domain_argument(node, arg_info)
         case nodes.Name():
-            for func_name, arg_position, kwarg_name in _FUNCTION_CHECKS:
+            for func_name, arg_info in _FUNCTION_CHECKS:
                 if node.func.name == func_name:
-                    return _check_call_node_domain_argument(
-                        node, arg_position=arg_position, kwarg_name=kwarg_name
-                    )
+                    return _check_call_node_domain_argument(node, arg_info)
     return None
 
 
 def _check_call_node_domain_argument(
-    call_node: nodes.Call,
-    *,
-    arg_position: int | None,
-    kwarg_name: str,
+    call_node: nodes.Call, arg_info: ArgumentCheckInfo
 ) -> nodes.NodeNG | None:
     """Ensure the argument node is a domain constant or variable.
 
     Return None if the argument node is valid, or the argument node if it is invalid.
     """
-    if arg_position is not None and len(call_node.args) > arg_position:
-        argument_node = call_node.args[arg_position]
+    if arg_info.position is not None and len(call_node.args) > arg_info.position:
+        argument_node = call_node.args[arg_info.position]
     else:
         argument_node = next(
             iter(
                 keyword.value
                 for keyword in call_node.keywords
-                if keyword.arg == kwarg_name
+                if keyword.arg == arg_info.name
             ),
             None,
         )
 
-    if argument_node and not _check_domain_argument(argument_node):
+    if argument_node and not _check_domain_argument(
+        argument_node, arg_info.allow_iterable
+    ):
         return argument_node
 
     return None
 
 
-def _check_domain_argument(arg_node: nodes.NodeNG) -> bool:
+def _check_domain_argument(arg_node: nodes.NodeNG, allow_iterable: bool) -> bool:
     """Ensure the argument node is a domain constant or variable.
 
     We allow:
@@ -106,6 +109,12 @@ def _check_domain_argument(arg_node: nodes.NodeNG) -> bool:
         case nodes.Subscript():
             # Ignore subscripts like dict["key"]
             return True
+        case nodes.Tuple():
+            if allow_iterable:
+                return all(
+                    _check_domain_argument(element, allow_iterable=False)
+                    for element in arg_node.elts
+                )
 
     return False
 

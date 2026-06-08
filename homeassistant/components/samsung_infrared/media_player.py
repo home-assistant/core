@@ -11,12 +11,26 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_DEVICE_TYPE, CONF_INFRARED_EMITTER_ENTITY_ID, SamsungDeviceType
+from .const import (
+    CONF_DEVICE_TYPE,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
+    DOMAIN,
+    SamsungDeviceType,
+)
 from .entity import SamsungIrEntity
 
 PARALLEL_UPDATES = 1
+
+SOURCE_MAP: dict[str, SamsungTVCode] = {
+    "tv": SamsungTVCode.TV,
+    "hdmi_1": SamsungTVCode.HDMI_1,
+    "hdmi_2": SamsungTVCode.HDMI_2,
+    "hdmi_3": SamsungTVCode.HDMI_3,
+    "hdmi_4": SamsungTVCode.HDMI_4,
+}
 
 
 async def async_setup_entry(
@@ -49,13 +63,17 @@ class SamsungIrTvMediaPlayer(
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_source_list = list(SOURCE_MAP.keys())
+    _attr_source = None
+    _attr_state = MediaPlayerState.ON
+    _attr_translation_key = "samsung_ir_tv"
 
     def __init__(self, entry: ConfigEntry, infrared_emitter_entity_id: str) -> None:
         """Initialize Samsung IR media player."""
         super().__init__(entry, unique_id_suffix="media_player")
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
-        self._attr_state = MediaPlayerState.ON
 
     async def async_turn_on(self) -> None:
         """Turn on the TV."""
@@ -96,3 +114,18 @@ class SamsungIrTvMediaPlayer(
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._send_command(SamsungTVCode.STOP.to_command())
+
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        if (code := SOURCE_MAP.get(source)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={
+                    "invalid_source": source,
+                    "valid_sources": ", ".join(self._attr_source_list),
+                },
+            )
+        await self._send_command(code.to_command())
+        self._attr_source = source
+        self.async_write_ha_state()
