@@ -1,5 +1,6 @@
 """Config flow for BleBox devices integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -26,6 +27,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SETUP_TIMEOUT,
     DOMAIN,
+    INVALID_AUTH,
     UNKNOWN,
     UNSUPPORTED_VERSION,
 )
@@ -46,6 +48,7 @@ STEP_SCHEMA = vol.Schema(
 LOG_MSG = {
     UNSUPPORTED_VERSION: "Outdated firmware",
     CANNOT_CONNECT: "Failed to identify device",
+    INVALID_AUTH: "Authentication failed",
     UNKNOWN: "Unknown error while identifying device",
 }
 
@@ -87,7 +90,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except UnauthorizedRequest as ex:
             return None, self.handle_step_exception(
-                ex, schema, host, port, CANNOT_CONNECT, _LOGGER.error, step_id
+                ex, schema, host, port, INVALID_AUTH, _LOGGER.error, step_id
             )
         except Error as ex:
             return None, self.handle_step_exception(
@@ -115,6 +118,8 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             product = await Box.async_from_host(api_host)
+        except UnauthorizedRequest:
+            return self.async_abort(reason="authorization_required")
         except UnsupportedBoxVersion:
             return self.async_abort(reason="unsupported_device_version")
         except UnsupportedBoxResponse:
@@ -245,4 +250,63 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_update_reload_and_abort(
             reconfigure_entry,
             data_updates=data_updates,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication upon an API authentication error."""
+        self.context["title_placeholders"] = {
+            "name": self._get_reauth_entry().title,
+            "host": entry_data[CONF_HOST],
+        }
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        host = reauth_entry.data[CONF_HOST]
+        port = reauth_entry.data[CONF_PORT]
+
+        if user_input is not None:
+            username = user_input.get(CONF_USERNAME)
+            password = user_input.get(CONF_PASSWORD)
+            websession = get_maybe_authenticated_session(self.hass, password, username)
+            api_host = ApiHost(
+                host, port, DEFAULT_SETUP_TIMEOUT, websession, self.hass.loop, _LOGGER
+            )
+            try:
+                await Box.async_from_host(api_host)
+            except UnauthorizedRequest:
+                errors["base"] = INVALID_AUTH
+            except Error:
+                errors["base"] = CANNOT_CONNECT
+            except RuntimeError:
+                errors["base"] = UNKNOWN
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={
+                        k: v
+                        for k, v in {
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: password,
+                        }.items()
+                        if v is not None
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Inclusive(CONF_USERNAME, "auth"): str,
+                    vol.Inclusive(CONF_PASSWORD, "auth"): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={"address": f"{host}:{port}"},
         )
