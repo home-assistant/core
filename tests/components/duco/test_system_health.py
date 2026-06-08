@@ -63,7 +63,7 @@ async def test_system_health_multiple_loaded_entries(
     init_integration: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test system health reports quota per loaded Duco box."""
+    """Test system health aggregates quotas for multiple loaded Duco boxes."""
     second_entry = MockConfigEntry(
         title="SECOND_BOX",
         domain=DOMAIN,
@@ -78,9 +78,6 @@ async def test_system_health_multiple_loaded_entries(
 
     info = await get_system_health_info(hass, DOMAIN)
 
-    assert info["loaded_entries"] == 2
-    assert (
-        await info["write_requests_remaining (SILENT_CONNECT: aa:bb:cc:dd:ee:ff)"]
-        == 100
+    assert await info["write_requests_remaining"] == (
+        "SILENT_CONNECT (aa:bb:cc:dd:ee:ff): 100; SECOND_BOX (aa:bb:cc:dd:ee:00): 75"
     )
-    assert await info["write_requests_remaining (SECOND_BOX: aa:bb:cc:dd:ee:00)"] == 75

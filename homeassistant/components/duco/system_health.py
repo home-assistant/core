@@ -1,5 +1,6 @@
 """Provide info to system health."""
 
+import asyncio
 from typing import Any
 
 from duco_connectivity.exceptions import DucoConnectionError
@@ -32,11 +33,28 @@ async def _async_get_write_requests_remaining(
 
 
 def _entry_write_requests_remaining_key(config_entry: DucoConfigEntry) -> str:
-    """Return the system health key for a config entry quota."""
+    """Return the identifying label for a config entry quota."""
     identifier = config_entry.unique_id or config_entry.entry_id
-    return (
-        "write_requests_remaining "
-        f"({config_entry.title or config_entry.entry_id}: {identifier})"
+    return f"{config_entry.title or config_entry.entry_id} ({identifier})"
+
+
+async def _async_get_write_requests_remaining_summary(
+    config_entries: list[DucoConfigEntry],
+) -> str:
+    """Get a per-entry write-request summary for system health."""
+    results = await asyncio.gather(
+        *(
+            _async_get_write_requests_remaining(config_entry)
+            for config_entry in config_entries
+        )
+    )
+
+    return "; ".join(
+        (
+            f"{_entry_write_requests_remaining_key(config_entry)}: "
+            f"{result if not isinstance(result, dict) else f'Failed: {result["error"]}'}"
+        )
+        for config_entry, result in zip(config_entries, results, strict=False)
     )
 
 
@@ -57,11 +75,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         }
 
     return {
-        "loaded_entries": len(config_entries),
-        **{
-            _entry_write_requests_remaining_key(config_entry): (
-                _async_get_write_requests_remaining(config_entry)
-            )
-            for config_entry in config_entries
-        },
+        "write_requests_remaining": _async_get_write_requests_remaining_summary(
+            config_entries
+        )
     }
