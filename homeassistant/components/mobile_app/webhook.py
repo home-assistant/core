@@ -171,7 +171,9 @@ def validate_schema(schema):
     return wrapper
 
 
-register_live_activity_webhook_commands(WEBHOOK_COMMANDS, validate_schema)
+def setup_webhook_commands() -> None:
+    """Register all webhook commands, including live activity commands."""
+    register_live_activity_webhook_commands(WEBHOOK_COMMANDS, validate_schema)
 
 
 async def handle_webhook(

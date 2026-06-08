@@ -61,7 +61,7 @@ from .http_api import RegistrationsView
 from .live_activity import async_cleanup_expired_live_activity_tokens
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
-from .webhook import handle_webhook
+from .webhook import handle_webhook, setup_webhook_commands
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -111,6 +111,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_setup_commands(hass)
+    setup_webhook_commands()
 
     async def _handle_user_removed(event: Event) -> None:
         """Remove an entry when the user is removed."""
