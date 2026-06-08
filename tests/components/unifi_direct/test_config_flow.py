@@ -119,6 +119,22 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry, mock_unifiap) 
     }
 
 
+async def test_import_flow_entry_exists(
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap, mock_config_entry
+) -> None:
+    """Test import flow aborts when entry already exists."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=MOCK_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_import_flow_cannot_connect(
     hass: HomeAssistant, mock_setup_entry, mock_unifiap
 ) -> None:
