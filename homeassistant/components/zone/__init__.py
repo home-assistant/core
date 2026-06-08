@@ -122,7 +122,7 @@ def async_in_zones(
     """
     min_radius: float = sys.maxsize
     min_dist: float = sys.maxsize
-    closest: State | None = None
+    active_zone: State | None = None
     zones: list[tuple[str, float, float]] = []
 
     # This can be called before async_setup by device tracker
@@ -162,7 +162,7 @@ def async_in_zones(
         # Prefer the smallest zone, using distance to its center as a tie
         # breaker. Skip this zone if it is not smaller and not equally sized but
         # closer than the current best.
-        if closest and not (
+        if active_zone and not (
             zone_radius < min_radius
             or (zone_radius == min_radius and zone_dist < min_dist)
         ):
@@ -170,12 +170,12 @@ def async_in_zones(
 
         min_radius = zone_radius
         min_dist = zone_dist
-        closest = zone
+        active_zone = zone
 
     # Sort by radius and then by distance so the smallest and closest zone is
     # first.
     zones.sort(key=lambda x: (x[2], x[1]))
-    return (closest, [itm[0] for itm in zones])
+    return (active_zone, [itm[0] for itm in zones])
 
 
 def async_get_enclosing_zones(hass: HomeAssistant, zone_entity_id: str) -> list[str]:
