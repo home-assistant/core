@@ -3396,7 +3396,7 @@ wsdot==0.0.1
 wyoming==1.10.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.14.2
+xiaomi-ble==1.14.3
 
 # homeassistant.components.knx
 xknx==3.16.0
