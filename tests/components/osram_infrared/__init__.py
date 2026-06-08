@@ -1,1 +1,1 @@
-"""Tests for the Osram IR integration."""
+"""Tests for the OSRAM infrared integration."""

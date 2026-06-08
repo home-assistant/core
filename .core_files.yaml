@@ -104,7 +104,6 @@ components: &components
   - homeassistant/components/mqtt/**
   - homeassistant/components/network/**
   - homeassistant/components/onboarding/**
-  - homeassistant/components/osram_infrared/**
   - homeassistant/components/otp/**
   - homeassistant/components/persistent_notification/**
   - homeassistant/components/person/**

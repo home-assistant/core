@@ -14,7 +14,10 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency: done
+  dependency-transparency:
+    status: todo
+    comment: |
+      Waiting for the PR in the infrared-protocol repository to be merged and released
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done

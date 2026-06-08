@@ -429,9 +429,6 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         self._attr_is_on = True
         self._attr_effect = effect
 
-        # The current static hue is not meaningful while an effect is active.
-        self._attr_color_mode = ColorMode.ONOFF
-
     @callback
     def _set_brightness_level(self, level: int) -> None:
         """Set and report the bounded assumed brightness level."""

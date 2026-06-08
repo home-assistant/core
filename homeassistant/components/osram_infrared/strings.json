@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This OSRAM light has already been configured with this infrared entity.",
-      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
+      "no_infrared_emitters": "[%key:common::config_flow::abort::no_infrared_entities%]"
     },
     "error": {
       "missing_infrared_entity": "Select an infrared emitter."
