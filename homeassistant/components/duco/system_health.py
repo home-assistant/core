@@ -42,6 +42,8 @@ async def _async_get_write_requests_remaining_summary(
     config_entries: list[DucoConfigEntry],
 ) -> str:
     """Get a per-entry write-request summary for system health."""
+    # Keep one translated system health label; multiple Duco boxes are
+    # summarized in the value to avoid ambiguous per-entry labels.
     results = await asyncio.gather(
         *(
             _async_get_write_requests_remaining(config_entry)
