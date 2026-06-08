@@ -1,7 +1,5 @@
 """Support for ValveHeatingTemperatureInterface."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -74,11 +72,13 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         )
 
     @property
-    def hvac_action(self) -> HVACAction:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
-        return OVERKIZ_TO_HVAC_ACTION[
-            cast(str, self.executor.select_state(OverkizState.CORE_OPEN_CLOSED_VALVE))
-        ]
+        if (
+            state := self.executor.select_state(OverkizState.CORE_OPEN_CLOSED_VALVE)
+        ) is None:
+            return None
+        return OVERKIZ_TO_HVAC_ACTION[cast(str, state)]
 
     @property
     def target_temperature(self) -> float:
@@ -91,7 +91,9 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return temperature.value_as_float
 
@@ -123,8 +125,9 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
 
-        # If we want to switch to manual mode via a preset, we need to pass in a temperature
-        # Manual mode will be on automatically if an user sets a temperature
+        # If we want to switch to manual mode via a preset,
+        # we need to pass in a temperature. Manual mode will
+        # be on automatically if a user sets a temperature
         if preset_mode == PRESET_MANUAL:
             if current_temperature := self.current_temperature:
                 await self.executor.async_execute_command(

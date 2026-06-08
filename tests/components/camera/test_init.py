@@ -389,6 +389,27 @@ async def test_websocket_get_prefs(
 
 
 @pytest.mark.usefixtures("mock_camera")
+async def test_websocket_update_prefs_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test updating camera preferences requires admin."""
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json(
+        {
+            "id": 7,
+            "type": "camera/update_prefs",
+            "entity_id": "camera.demo_camera",
+            "preload_stream": True,
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+
+
+@pytest.mark.usefixtures("mock_camera")
 async def test_websocket_update_preload_prefs(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -673,6 +694,30 @@ async def test_camera_proxy_stream(hass_client: ClientSessionGenerator) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera")
+async def test_camera_proxy_query_token_auth(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test the camera proxy authenticates via the access token query param."""
+    client = await hass_client_no_auth()
+
+    state = hass.states.get("camera.demo_camera")
+    assert state is not None
+
+    # A valid access token in the query param authenticates the request
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"Test"
+
+    # Without a token the request is unauthorized
+    resp = await client.get("/api/camera_proxy/camera.demo_camera")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # An invalid token is also unauthorized
+    resp = await client.get("/api/camera_proxy/camera.demo_camera?token=invalid")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.usefixtures("mock_camera")
 async def test_state_streaming(hass: HomeAssistant) -> None:
     """Camera state."""
     demo_camera = hass.states.get("camera.demo_camera")
@@ -815,7 +860,7 @@ async def _register_test_webrtc_provider(hass: HomeAssistant) -> Callable[[], No
             session_id: str,
             send_message: WebRTCSendMessage,
         ) -> None:
-            """Handle the WebRTC offer and return the answer via the provided callback."""
+            """Handle the WebRTC offer and return the answer."""
             send_message(WebRTCAnswer("answer"))
 
         async def async_on_webrtc_candidate(
@@ -896,7 +941,7 @@ async def test_camera_capabilities_webrtc(
 async def test_webrtc_provider_not_added_for_native_webrtc(
     hass: HomeAssistant,
 ) -> None:
-    """Test that a WebRTC provider is not added to a camera when the camera has native WebRTC support."""
+    """Test that a WebRTC provider is not added for native WebRTC."""
     camera_obj = get_camera_from_entity_id(hass, "camera.async")
     assert camera_obj
     assert camera_obj._webrtc_provider is None

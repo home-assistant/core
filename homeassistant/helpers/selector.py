@@ -1,7 +1,5 @@
 """Selectors for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from enum import StrEnum
@@ -57,9 +55,12 @@ class Selector[_T: Mapping[str, Any]]:
     CONFIG_SCHEMA: Callable
     config: _T
     selector_type: str
-    # Context keys that are allowed to be used in the selector, with list of allowed selector types.
-    # Selectors can use the value of other fields in the same schema as context for filtering for example.
-    # The selector defines which context keys it supports and what selector types are allowed for each key.
+    # Context keys that are allowed to be used in the
+    # selector, with list of allowed selector types. Selectors
+    # can use the value of other fields in the same schema as
+    # context for filtering for example. The selector defines
+    # which context keys it supports and what selector types
+    # are allowed for each key.
     allowed_context_keys: dict[str, set[str]] = {}
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
@@ -300,7 +301,11 @@ AddonSelectorConfig = AppSelectorConfig
 
 @SELECTORS.register("addon")
 class AddonSelector(Selector[AddonSelectorConfig]):
-    """Selector of an add-on, kept for backward compatibility after add-ons -> apps rename."""
+    """Selector of an add-on.
+
+    Kept for backward compatibility after add-ons -> apps
+    rename.
+    """
 
     selector_type = "addon"
 
@@ -420,6 +425,69 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
         """Validate the passed selection."""
         attribute: str = vol.Schema(str)(data)
         return attribute
+
+
+class AutomationBehavior(StrEnum):
+    """Possible behaviors for an automation behavior selector."""
+
+    ALL = "all"
+    FIRST = "first"
+    EACH = "each"
+    ANY = "any"
+
+
+class AutomationBehaviorSelectorMode(StrEnum):
+    """Possible modes for an automation behavior selector."""
+
+    TRIGGER = "trigger"
+    CONDITION = "condition"
+
+
+_AUTOMATION_BEHAVIOR_MODES: dict[AutomationBehaviorSelectorMode, list[str]] = {
+    AutomationBehaviorSelectorMode.TRIGGER: [
+        AutomationBehavior.FIRST,
+        AutomationBehavior.ALL,
+        AutomationBehavior.EACH,
+    ],
+    AutomationBehaviorSelectorMode.CONDITION: [
+        AutomationBehavior.ALL,
+        AutomationBehavior.ANY,
+    ],
+}
+
+
+class AutomationBehaviorConfig(BaseSelectorConfig, total=False):
+    """Class to represent an automation behavior selector config."""
+
+    mode: Required[AutomationBehaviorSelectorMode]
+    translation_key: str
+
+
+@SELECTORS.register("automation_behavior")
+class AutomationBehaviorSelector(Selector[AutomationBehaviorConfig]):
+    """Selector of an automation behavior."""
+
+    selector_type = "automation_behavior"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Required("mode"): vol.All(
+                vol.Coerce(AutomationBehaviorSelectorMode), lambda val: val.value
+            ),
+            vol.Optional("translation_key"): cv.string,
+        },
+    )
+
+    def __init__(self, config: AutomationBehaviorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        if not isinstance(data, str):
+            raise vol.Invalid("Value should be a string")
+        mode = AutomationBehaviorSelectorMode(self.config["mode"])
+        return vol.In(_AUTOMATION_BEHAVIOR_MODES[mode])(data)
 
 
 class BackupLocationSelectorConfig(BaseSelectorConfig, total=False):
@@ -1320,7 +1388,7 @@ class NumericThresholdSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a numeric threshold selector config."""
 
     mode: Required[NumericThresholdMode]
-    unit_of_measurement: list[str]
+    unit_of_measurement: list[str | None]
     number: NumberSelectorConfig
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
 
@@ -1394,7 +1462,7 @@ _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA = vol.All(
             ),
             vol.Optional("number"): vol.Coerce(float),
             vol.Optional("entity"): cv.entity_id,
-            vol.Optional("unit_of_measurement"): str,
+            vol.Optional("unit_of_measurement"): vol.Any(str, None),
         }
     ),
     vol.Any(
@@ -1457,7 +1525,7 @@ _NUMERIC_THRESHOLD_VALUE_SCHEMA = vol.All(
 
 
 def _validate_numeric_threshold_unit[_T: dict[str, Any]](
-    allowed_units: list[str],
+    allowed_units: list[str | None],
 ) -> Callable[[_T], _T]:
     """Generate a validator that checks unit_of_measurement against an allowed list."""
 
@@ -1471,8 +1539,12 @@ def _validate_numeric_threshold_unit[_T: dict[str, Any]](
         else:
             entries = (value.get("value_min", {}), value.get("value_max", {}))
         for entry in entries:
-            if "unit_of_measurement" not in entry:
+            if "number" not in entry:
                 continue
+            if "unit_of_measurement" not in entry:
+                raise vol.Invalid(
+                    f"Missing unit_of_measurement, expected one of {allowed_units}"
+                )
             unit = entry["unit_of_measurement"]
             if unit not in allowed_units:
                 raise vol.Invalid(
@@ -1535,7 +1607,7 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
             vol.Required("mode"): vol.All(
                 vol.Coerce(NumericThresholdMode), lambda val: val.value
             ),
-            vol.Optional("unit_of_measurement"): [str],
+            vol.Optional("unit_of_measurement"): [vol.Any(str, None)],
             vol.Optional("number"): NumberSelector.CONFIG_SCHEMA,
             vol.Optional("entity"): vol.All(
                 cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
@@ -1633,7 +1705,11 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
                 if field_data.get("required") and field not in _config:
                     raise vol.Invalid(f"Field {field} is required")
                 if field in _config:
-                    selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+                    field_selector = field_data["selector"]
+                    if isinstance(field_selector, Selector):
+                        field_selector(_config[field])  # type: ignore[operator]
+                    else:
+                        selector(field_selector)(_config[field])  # type: ignore[operator]
 
             for key in _config:
                 if key not in self.config["fields"]:
@@ -1767,6 +1843,34 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
+class SerialPortSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a serial port selector config."""
+
+    extra_recommended_domains: list[str]
+
+
+@SELECTORS.register("serial_port")
+class SerialPortSelector(Selector[SerialPortSelectorConfig]):
+    """Selector for a serial port."""
+
+    selector_type = "serial_port"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Optional("extra_recommended_domains"): [str],
+        }
+    )
+
+    def __init__(self, config: SerialPortSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        serial: str = vol.Schema(str)(data)
+        return serial
+
+
 class StateSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an state selector config."""
 
@@ -1852,6 +1956,7 @@ class TargetSelectorConfig(BaseSelectorConfig, total=False):
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
+    primary_entities_only: bool
 
 
 @SELECTORS.register("target")
@@ -1873,6 +1978,7 @@ class TargetSelector(Selector[TargetSelectorConfig]):
                 cv.ensure_list,
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
+            vol.Optional("primary_entities_only"): cv.boolean,
         }
     )
 

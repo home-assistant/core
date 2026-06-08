@@ -17,21 +17,26 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
 from . import (
+    AIR_PURIFIER_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+    AIR_PURIFIER_US_SERVICE_INFO,
     BULB_SERVICE_INFO,
     CEILING_LIGHT_SERVICE_INFO,
     FLOOR_LAMP_SERVICE_INFO,
+    PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
     RGBICWW_FLOOR_LAMP_SERVICE_INFO,
     RGBICWW_STRIP_LIGHT_SERVICE_INFO,
     STRIP_LIGHT_3_SERVICE_INFO,
     WOSTRIP_SERVICE_INFO,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 COMMON_PARAMETERS = (
@@ -124,6 +129,26 @@ FLOOR_LAMP_PARAMETERS = (
             "set_effect",
             ("halloween",),
         ),
+    ],
+)
+
+AIR_PURIFIER_LIGHT_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        (
+            SERVICE_TURN_ON,
+            {},
+            "turn_led_on",
+            (),
+        ),
+        (
+            SERVICE_TURN_OFF,
+            {},
+            "turn_led_off",
+            (),
+        ),
+        SET_BRIGHTNESS_PARAMETERS,
+        SET_RGB_PARAMETERS,
     ],
 )
 
@@ -355,6 +380,11 @@ async def test_strip_light_services_exception(
             "SwitchbotRgbicLight",
         ),
         ("rgbicww_floor_lamp", RGBICWW_FLOOR_LAMP_SERVICE_INFO, "SwitchbotRgbicLight"),
+        (
+            "permanent_outdoor_light",
+            PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
+            "SwitchbotPermanentOutdoorLight",
+        ),
     ],
 )
 @pytest.mark.parametrize(*FLOOR_LAMP_PARAMETERS)
@@ -437,3 +467,88 @@ async def test_floor_lamp_services_exception(
                 {**service_data, ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
+
+
+@pytest.mark.parametrize(
+    ("service_info", "sensor_type"),
+    [
+        (AIR_PURIFIER_JP_SERVICE_INFO, "air_purifier_jp"),
+        (AIR_PURIFIER_TABLE_JP_SERVICE_INFO, "air_purifier_table_jp"),
+        (AIR_PURIFIER_US_SERVICE_INFO, "air_purifier_us"),
+        (AIR_PURIFIER_TABLE_US_SERVICE_INFO, "air_purifier_table_us"),
+    ],
+)
+@pytest.mark.parametrize(*AIR_PURIFIER_LIGHT_PARAMETERS)
+async def test_air_purifier_light_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot air purifier light services."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name_light"
+
+    mocked_instance = AsyncMock(return_value=True)
+    mocked_none_instance = AsyncMock(return_value=None)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotAirPurifier",
+        **{mock_method: mocked_instance},
+        get_basic_info=mocked_none_instance,
+        update=mocked_none_instance,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+async def test_air_purifier_light_restore_state(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test restoring state of SwitchBot air purifier light."""
+    inject_bluetooth_service_info(hass, AIR_PURIFIER_JP_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="air_purifier_jp")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name_light"
+    mock_restore_cache(hass, [State(entity_id, "on")])
+
+    mocked_info = AsyncMock(
+        return_value=[
+            bytearray(
+                b"\x01\xa7\xe9\x8c\x08\x00\xb2\x01\x96\x00\x00\x00\x00\x01\x00\x17"
+            ),
+            bytearray(b"\x01\x01\x02\x03\x04\x05"),
+            bytearray(b"\x01\x01"),
+        ]
+    )
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotAirPurifier",
+        _get_basic_info_by_multi_commands=mocked_info,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_ON
+
+        assert state.attributes.get(ATTR_BRIGHTNESS) == 13
+        assert state.attributes.get(ATTR_RGB_COLOR) == (2, 3, 4)

@@ -1,7 +1,5 @@
 """Support for Waterfurnace."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -15,12 +13,11 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, WaterFurnaceConfigEntry
+from . import WaterFurnaceConfigEntry
 from .coordinator import WaterFurnaceCoordinator
+from .entity import WaterFurnaceEntity
 
 SENSORS = [
     SensorEntityDescription(
@@ -156,18 +153,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up Waterfurnace sensors from a config entry."""
     async_add_entities(
-        WaterFurnaceSensor(coordinator, description)
-        for coordinator in config_entry.runtime_data.values()
+        WaterFurnaceSensor(device_data.realtime, description)
+        for device_data in config_entry.runtime_data.values()
         for description in SENSORS
     )
 
 
-class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntity):
+class WaterFurnaceSensor(WaterFurnaceEntity, SensorEntity):
     """Implementing the Waterfurnace sensor."""
 
     entity_description: SensorEntityDescription
     _attr_should_poll = False
-    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: WaterFurnaceCoordinator, description: SensorEntityDescription
@@ -175,24 +171,7 @@ class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntit
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-
         self._attr_unique_id = f"{coordinator.unit}_{description.key}"
-
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.unit)},
-            manufacturer="WaterFurnace",
-            name="WaterFurnace System",
-        )
-
-        if coordinator.device_metadata:
-            if coordinator.device_metadata.description:
-                # Eg. Series 7
-                device_info["model"] = coordinator.device_metadata.description
-            if coordinator.device_metadata.awlabctypedesc:
-                # Eg. Series 7, 5 Ton
-                device_info["name"] = coordinator.device_metadata.awlabctypedesc
-
-        self._attr_device_info = device_info
 
     @property
     def native_value(self):

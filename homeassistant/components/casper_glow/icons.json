@@ -4,6 +4,19 @@
       "paused": {
         "default": "mdi:timer-pause"
       }
+    },
+    "button": {
+      "pause": {
+        "default": "mdi:pause"
+      },
+      "resume": {
+        "default": "mdi:play"
+      }
+    },
+    "select": {
+      "dimming_time": {
+        "default": "mdi:timer-outline"
+      }
     }
   }
 }

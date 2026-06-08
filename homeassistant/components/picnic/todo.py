@@ -1,7 +1,5 @@
 """Definition of Picnic shopping cart."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 
@@ -11,15 +9,14 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_COORDINATOR, DOMAIN
-from .coordinator import PicnicUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import PicnicConfigEntry, PicnicUpdateCoordinator
 from .services import product_search
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,11 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PicnicConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Picnic shopping cart todo platform config entry."""
-    picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+    picnic_coordinator = config_entry.runtime_data
 
     async_add_entities([PicnicCart(picnic_coordinator, config_entry)])
 
@@ -46,7 +43,7 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
     def __init__(
         self,
         coordinator: PicnicUpdateCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: PicnicConfigEntry,
     ) -> None:
         """Initialize PicnicCart."""
         super().__init__(coordinator)
@@ -70,7 +67,8 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
             TodoItem(
                 summary=f"{article['name']} ({article['unit_quantity']})",
                 uid=f"{item['id']}-{article['id']}",
-                status=TodoItemStatus.NEEDS_ACTION,  # We set 'NEEDS_ACTION' so they count as state
+                # We set 'NEEDS_ACTION' so they count as state
+                status=TodoItemStatus.NEEDS_ACTION,
             )
             for item in self.coordinator.data["cart_data"]["items"]
             for article in item["items"]

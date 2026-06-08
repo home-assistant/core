@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -41,9 +43,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': '2021 Honda Accord',
       'gps_accuracy': 10,
+      'in_zones': list([
+      ]),
       'latitude': 37.7749,
       'longitude': -122.4194,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.2021_honda_accord',

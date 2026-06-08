@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -40,9 +42,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 6 Switch 1',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '10.0.1.1',
       'mac': '00:00:00:00:01:01',
       'source_type': <SourceType.ROUTER: 'router'>,
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.switch_1',
@@ -58,7 +64,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -94,8 +102,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 1 wd_client_1',
       'host_name': 'wd_client_1',
+      'in_zones': list([
+      ]),
       'mac': '00:00:00:00:00:02',
       'source_type': <SourceType.ROUTER: 'router'>,
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.wd_client_1',
@@ -111,7 +122,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -147,9 +160,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 0 ws_client_1',
       'host_name': 'ws_client_1',
+      'in_zones': list([
+      ]),
       'ip': '10.0.0.1',
       'mac': '00:00:00:00:00:01',
       'source_type': <SourceType.ROUTER: 'router'>,
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.ws_client_1',

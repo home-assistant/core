@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
@@ -22,8 +21,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, WALLCONNECTOR_DATA_LIFETIME, WALLCONNECTOR_DATA_VITALS
-from .coordinator import WallConnectorData
+from .const import WALLCONNECTOR_DATA_LIFETIME, WALLCONNECTOR_DATA_VITALS
+from .coordinator import WallConnectorConfigEntry, WallConnectorData
 from .entity import WallConnectorEntity, WallConnectorLambdaValueGetterMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -196,11 +195,11 @@ WALL_CONNECTOR_SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WallConnectorConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the Wall Connector sensor devices."""
-    wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
+    wall_connector_data = config_entry.runtime_data
 
     all_entities = [
         WallConnectorSensorEntity(wall_connector_data, description)

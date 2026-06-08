@@ -40,9 +40,9 @@ def mock_smart_meter(freezer: FrozenDateTimeFactory) -> SmartMeter:
 
     meter = SmartMeter("TESTSN")
     meter.readings = [
-        {"read_at": "2024-06-01T12:00:00Z", "consumption": 10, "read": 10},
-        {"read_at": "2024-06-01T13:00:00Z", "consumption": 15, "read": 25},
-        {"read_at": "2024-06-01T14:00:00Z", "consumption": 25, "read": 50},
+        {"read_at": "2024-06-01T12:00:00", "consumption": 10, "read": 10},
+        {"read_at": "2024-06-01T13:00:00", "consumption": 15, "read": 25},
+        {"read_at": "2024-06-01T14:00:00", "consumption": 25, "read": 50},
     ]
     meter.yesterday_water_cost = 0.5
     meter.yesterday_sewerage_cost = 0.5

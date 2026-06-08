@@ -1,7 +1,5 @@
 """Binary sensors for Yardian integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -10,14 +8,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import YardianUpdateCoordinator
+from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
+from .entity import YardianEntity, YardianZoneEntity
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -77,44 +73,36 @@ SENSOR_DESCRIPTIONS: tuple[YardianBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YardianConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yardian binary sensors."""
-    coordinator: YardianUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
+    # 1. Global/Main device sensors
     entities: list[BinarySensorEntity] = [
         YardianBinarySensor(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
     ]
 
-    zone_descriptions = [
-        YardianBinarySensorEntityDescription(
+    # 2. Zone/Child device sensors
+    for zone_id in range(len(coordinator.data.zones)):
+        description = YardianBinarySensorEntityDescription(
             key=f"zone_enabled_{zone_id}",
-            translation_key="zone_enabled",
+            translation_key="enabled",
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             value_fn=_zone_value_factory(zone_id),
-            translation_placeholders={"zone": str(zone_id + 1)},
         )
-        for zone_id in range(len(coordinator.data.zones))
-    ]
-
-    entities.extend(
-        YardianBinarySensor(coordinator, description)
-        for description in zone_descriptions
-    )
+        entities.append(YardianZoneBinarySensor(coordinator, description, zone_id))
 
     async_add_entities(entities)
 
 
-class YardianBinarySensor(
-    CoordinatorEntity[YardianUpdateCoordinator], BinarySensorEntity
-):
-    """Representation of a Yardian binary sensor based on a description."""
+class YardianBinarySensor(YardianEntity, BinarySensorEntity):
+    """Representation of a Yardian binary sensor assigned to the main device."""
 
     entity_description: YardianBinarySensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -125,7 +113,28 @@ class YardianBinarySensor(
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.yid}-{description.key}"
-        self._attr_device_info = coordinator.device_info
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return the current state based on the description's value function."""
+        return self.entity_description.value_fn(self.coordinator)
+
+
+class YardianZoneBinarySensor(YardianZoneEntity, BinarySensorEntity):
+    """Representation of a Yardian binary sensor assigned to a zone child device."""
+
+    entity_description: YardianBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: YardianUpdateCoordinator,
+        description: YardianBinarySensorEntityDescription,
+        zone_id: int,
+    ) -> None:
+        """Initialize the Yardian zone binary sensor."""
+        super().__init__(coordinator, zone_id)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.yid}-{description.key}"
 
     @property
     def is_on(self) -> bool | None:

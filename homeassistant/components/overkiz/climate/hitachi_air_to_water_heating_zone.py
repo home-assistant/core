@@ -1,7 +1,5 @@
 """Support for HitachiAirToWaterHeatingZone."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -62,7 +60,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            state := self.device.states[OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1]
+            state := self.device.states.get(OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1)
         ) and state.value_as_str:
             return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
 
@@ -78,7 +76,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
-            state := self.device.states[OverkizState.MODBUS_YUTAKI_TARGET_MODE]
+            state := self.device.states.get(OverkizState.MODBUS_YUTAKI_TARGET_MODE)
         ) and state.value_as_str:
             return OVERKIZ_TO_PRESET_MODE[state.value_as_str]
 
@@ -93,9 +91,9 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        current_temperature = self.device.states[
+        current_temperature = self.device.states.get(
             OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1
-        ]
+        )
 
         if current_temperature:
             return current_temperature.value_as_float
@@ -105,9 +103,9 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        target_temperature = self.device.states[
+        target_temperature = self.device.states.get(
             OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1
-        ]
+        )
 
         if target_temperature:
             return target_temperature.value_as_float

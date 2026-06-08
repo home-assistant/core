@@ -31,11 +31,32 @@
       "paused": {
         "name": "Dimming paused"
       }
+    },
+    "button": {
+      "pause": {
+        "name": "Pause dimming"
+      },
+      "resume": {
+        "name": "Resume dimming"
+      }
+    },
+    "select": {
+      "dimming_time": {
+        "name": "Dimming time"
+      }
+    },
+    "sensor": {
+      "dimming_end_time": {
+        "name": "Dimming end time"
+      }
     }
   },
   "exceptions": {
     "communication_error": {
       "message": "An error occurred while communicating with the Casper Glow: {error}"
+    },
+    "device_not_found": {
+      "message": "Could not find Casper Glow device with address {address}"
     }
   }
 }

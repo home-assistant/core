@@ -1,7 +1,5 @@
 """clicksend_tts platform for notify component."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import json
 import logging
@@ -16,6 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_NAME,
     CONF_RECIPIENT,
     CONF_USERNAME,
@@ -31,7 +30,6 @@ BASE_API_URL = "https://rest.clicksend.com/v3"
 
 HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
-CONF_LANGUAGE = "language"
 CONF_VOICE = "voice"
 
 MALE_VOICE = "male"
