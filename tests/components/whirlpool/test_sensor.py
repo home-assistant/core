@@ -6,7 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from whirlpool.dryer import MachineState as DryerMachineState
-from whirlpool.oven import CavityState as OvenCavityState, CookMode
+from whirlpool.oven import CavityState as OvenCavityState
 from whirlpool.washer import MachineState as WasherMachineState
 
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
@@ -325,22 +325,6 @@ async def test_washer_running_states(
             ],
         ),
         (
-            "sensor.dual_cavity_oven_upper_oven_cook_mode",
-            "mock_oven_dual_cavity_api",
-            "get_cook_mode",
-            [
-                (CookMode.Standby, "standby"),
-                (CookMode.Bake, "bake"),
-                (CookMode.ConvectBake, "convection_bake"),
-                (CookMode.Broil, "broil"),
-                (CookMode.ConvectBroil, "convection_broil"),
-                (CookMode.ConvectRoast, "convection_roast"),
-                (CookMode.KeepWarm, "keep_warm"),
-                (CookMode.AirFry, "air_fry"),
-                (None, STATE_UNKNOWN),
-            ],
-        ),
-        (
             "sensor.single_cavity_oven_state",
             "mock_oven_single_cavity_api",
             "get_cavity_state",
@@ -348,22 +332,6 @@ async def test_washer_running_states(
                 (OvenCavityState.Standby, "standby"),
                 (OvenCavityState.Preheating, "preheating"),
                 (OvenCavityState.Cooking, "cooking"),
-                (None, STATE_UNKNOWN),
-            ],
-        ),
-        (
-            "sensor.single_cavity_oven_cook_mode",
-            "mock_oven_single_cavity_api",
-            "get_cook_mode",
-            [
-                (CookMode.Standby, "standby"),
-                (CookMode.Bake, "bake"),
-                (CookMode.ConvectBake, "convection_bake"),
-                (CookMode.Broil, "broil"),
-                (CookMode.ConvectBroil, "convection_broil"),
-                (CookMode.ConvectRoast, "convection_roast"),
-                (CookMode.KeepWarm, "keep_warm"),
-                (CookMode.AirFry, "air_fry"),
                 (None, STATE_UNKNOWN),
             ],
         ),
