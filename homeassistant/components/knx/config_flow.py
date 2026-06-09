@@ -954,7 +954,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage KNX communication settings."""
         if user_input is not None:
-            telegram_store_data = user_input.get("telegram_store_sqlite", {})
+            telegram_db_retention_days = user_input["telegram_store_sqlite"][CONF_KNX_TELEGRAM_DB_RETENTION_DAYS]
             self.new_entry_data |= KNXConfigEntryData(
                 state_updater=user_input[CONF_KNX_STATE_UPDATER],
                 rate_limit=user_input[CONF_KNX_RATE_LIMIT],
