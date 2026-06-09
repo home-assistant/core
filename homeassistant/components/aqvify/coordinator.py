@@ -69,9 +69,9 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 },
             ) from err
         except TimeoutError as err:
-            raise UpdateFailed(
+            raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="api_error",
+                translation_key="api_timeout",
                 translation_placeholders={
                     "entry": self.config_entry.title,
                     "error": str(err),
@@ -88,7 +88,7 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 translation_key="invalid_api_key",
             ) from None
         except ClientResponseError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
                 translation_placeholders={
@@ -99,7 +99,7 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
         except TimeoutError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="api_error",
+                translation_key="api_timeout",
                 translation_placeholders={
                     "entry": self.config_entry.title,
                     "error": str(err),
@@ -119,7 +119,7 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                     translation_key="invalid_api_key",
                 ) from None
             except ClientResponseError as err:
-                raise ConfigEntryNotReady(
+                raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="api_error",
                     translation_placeholders={
@@ -130,7 +130,7 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
             except TimeoutError as err:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
-                    translation_key="api_error",
+                    translation_key="api_timeout",
                     translation_placeholders={
                         "entry": self.config_entry.title,
                         "error": str(err),
