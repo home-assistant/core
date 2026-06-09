@@ -201,8 +201,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: OverkizDataConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    if entry.version > 1:
-        return False
 
     if entry.version == 1 and entry.minor_version < 2:
         await _async_migrate_strenum_unique_ids(hass, entry)

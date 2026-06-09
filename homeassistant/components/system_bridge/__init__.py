@@ -28,7 +28,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import SystemBridgeConfigFlow
 from .const import DATA_WAIT_TIMEOUT, DOMAIN, MODULES
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .services import async_setup_services
@@ -214,9 +213,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-
-    if config_entry.version > SystemBridgeConfigFlow.VERSION:
-        return False
 
     if config_entry.minor_version < 2:
         # Migrate to CONF_TOKEN, which was added in 1.2

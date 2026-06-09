@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The entered API key corresponds to a different account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,9 +11,18 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::aqvify::config::step::user::data_description::api_key%]"
+        },
+        "description": "Reauthentication required. Please enter your updated API key."
+      },
       "user": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Your Aqvify API key"
@@ -28,6 +39,17 @@
       "water_level": {
         "name": "Water level"
       }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "An error occurred while communicating with the Aqvify API for {entry}"
+    },
+    "api_timeout": {
+      "message": "Timeout occurred while communicating with the Aqvify API for {entry}"
+    },
+    "invalid_api_key": {
+      "message": "Invalid API key. Please verify your API key and try to reauthenticate."
     }
   }
 }

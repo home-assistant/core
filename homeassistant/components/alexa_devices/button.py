@@ -6,7 +6,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
+from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonServiceEntity
 
 # Coordinator is used to centralize the data updates
@@ -49,4 +49,5 @@ class AmazonRoutineButton(AmazonServiceEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle button press action."""
-        await self.coordinator.api.call_routine(self._routine)
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.call_routine(self._routine)
