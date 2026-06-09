@@ -23,6 +23,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_DEBUG,
     CONF_PASSWORD,
@@ -35,9 +36,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import create_client_context
@@ -56,6 +57,7 @@ from .const import (
     DOMAIN,
     ENCRYPTION_OPTIONS,
 )
+from .issue import async_deprecate_yaml_issue
 
 PLATFORMS = [Platform.NOTIFY]
 
@@ -80,30 +82,49 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
-    ssl_context = create_client_context() if config[CONF_VERIFY_SSL] else None
+    if config:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+        if result.get("type") is FlowResultType.CREATE_ENTRY or (
+            result.get("type") is FlowResultType.ABORT
+            and result.get("reason") == "already_configured"
+        ):
+            async_deprecate_yaml_issue(hass, config)
+        else:
+            async_deprecate_yaml_issue(hass, config, import_success=False)
+        return None
+
+    if discovery_info is None:
+        return None
+
+    ssl_context = (
+        await hass.async_add_executor_job(create_client_context)
+        if discovery_info[CONF_VERIFY_SSL]
+        else None
+    )
     mail_service = MailNotificationService(
-        config[CONF_SERVER],
-        config[CONF_PORT],
-        config[CONF_TIMEOUT],
-        config[CONF_SENDER],
-        config[CONF_ENCRYPTION],
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD),
-        config[CONF_RECIPIENT],
-        config.get(CONF_SENDER_NAME),
-        config[CONF_DEBUG],
-        config[CONF_VERIFY_SSL],
+        discovery_info[CONF_SERVER],
+        discovery_info[CONF_PORT],
+        discovery_info.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+        discovery_info[CONF_SENDER],
+        discovery_info[CONF_ENCRYPTION],
+        discovery_info.get(CONF_USERNAME),
+        discovery_info.get(CONF_PASSWORD),
+        discovery_info[CONF_RECIPIENT],
+        discovery_info.get(CONF_SENDER_NAME),
+        DEFAULT_DEBUG,
+        discovery_info[CONF_VERIFY_SSL],
         ssl_context,
     )
 
-    if mail_service.connection_is_valid():
+    if await hass.async_add_executor_job(mail_service.connection_is_valid):
         return mail_service
 
     return None

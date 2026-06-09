@@ -6,17 +6,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config as hass_config
-from homeassistant.components import notify
 from homeassistant.components.smtp.const import DOMAIN
 from homeassistant.components.smtp.notify import MailNotificationService
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import create_client_context
-
-from tests.common import get_fixture_path
 
 
 class MockSMTP(MailNotificationService):
@@ -25,49 +19,6 @@ class MockSMTP(MailNotificationService):
     def _send_email(self, msg, recipients):
         """Just return msg string and recipients for testing."""
         return msg.as_string(), recipients
-
-
-async def test_reload_notify(hass: HomeAssistant) -> None:
-    """Verify we can reload the notify service."""
-
-    with patch(
-        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
-    ):
-        assert await async_setup_component(
-            hass,
-            notify.DOMAIN,
-            {
-                notify.DOMAIN: [
-                    {
-                        "name": DOMAIN,
-                        "platform": DOMAIN,
-                        "recipient": "test@example.com",
-                        "sender": "test@example.com",
-                    },
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
-
-    yaml_path = get_fixture_path("configuration.yaml", "smtp")
-    with (
-        patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
-        patch(
-            "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
-        ),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
-    assert hass.services.has_service(notify.DOMAIN, "smtp_reloaded")
 
 
 @pytest.fixture
