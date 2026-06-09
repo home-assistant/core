@@ -14,13 +14,9 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AmazonConfigEntry
+from .coordinator import AmazonConfigEntry, alexa_api_call
 from .entity import AmazonEntity
-from .utils import (
-    alexa_api_call,
-    async_remove_dnd_from_virtual_group,
-    async_update_unique_id,
-)
+from .utils import async_remove_dnd_from_virtual_group, async_update_unique_id
 
 PARALLEL_UPDATES = 1
 
@@ -90,7 +86,6 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
 
     entity_description: AmazonSwitchEntityDescription
 
-    @alexa_api_call
     async def _switch_set_state(self, state: bool) -> None:
         """Set desired switch state."""
         method = getattr(self.coordinator.api, self.entity_description.method)
@@ -98,7 +93,8 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
         if TYPE_CHECKING:
             assert method is not None
 
-        await method(self.device, state)
+        async with alexa_api_call(self.coordinator):
+            await method(self.device, state)
         self.coordinator.data[self.device.serial_number].sensors[
             self.entity_description.key
         ].value = state
