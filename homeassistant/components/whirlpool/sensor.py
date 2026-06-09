@@ -8,11 +8,7 @@ from typing import override
 
 from whirlpool.appliance import Appliance
 from whirlpool.dryer import Dryer, MachineState as DryerMachineState
-from whirlpool.oven import (
-    Cavity as OvenCavity,
-    CavityState as OvenCavityState,
-    Oven,
-)
+from whirlpool.oven import Cavity as OvenCavity, CavityState as OvenCavityState, Oven
 from whirlpool.washer import MachineState as WasherMachineState, Washer
 
 from homeassistant.components.sensor import (

@@ -99,9 +99,21 @@ async def test_select_option_value_error(
 
 @pytest.fixture(
     params=[
-        ("select.single_cavity_oven_cook_mode", "mock_oven_single_cavity_api", whirlpool.oven.Cavity.Upper),
-        ("select.dual_cavity_oven_upper_oven_cook_mode", "mock_oven_dual_cavity_api", whirlpool.oven.Cavity.Upper),
-        ("select.dual_cavity_oven_lower_oven_cook_mode", "mock_oven_dual_cavity_api", whirlpool.oven.Cavity.Lower),
+        (
+            "select.single_cavity_oven_cook_mode",
+            "mock_oven_single_cavity_api",
+            whirlpool.oven.Cavity.Upper,
+        ),
+        (
+            "select.dual_cavity_oven_upper_oven_cook_mode",
+            "mock_oven_dual_cavity_api",
+            whirlpool.oven.Cavity.Upper,
+        ),
+        (
+            "select.dual_cavity_oven_lower_oven_cook_mode",
+            "mock_oven_dual_cavity_api",
+            whirlpool.oven.Cavity.Lower,
+        ),
     ]
 )
 def oven_cook_mode_entity(
