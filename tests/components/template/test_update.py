@@ -982,11 +982,15 @@ async def test_flow_preview(
     assert state["attributes"]["latest_version"] == "2.0"
 
 
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_release_notes_field(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    style: ConfigurationStyle,
 ) -> None:
-    """Test the new release_notes field works correctly."""
+    """Test the new release_notes field works correctly for both state and trigger entities."""
     release_notes_content = (
         "These are the **full** release notes with unlimited length. " * 20 + "END"
     )
@@ -995,7 +999,7 @@ async def test_release_notes_field(
     await setup_entity(
         hass,
         TEST_UPDATE,
-        ConfigurationStyle.MODERN,
+        style,
         1,
         {
             "installed_version": "{{ '1.0' }}",
@@ -1004,6 +1008,10 @@ async def test_release_notes_field(
             "release_summary": f"{{{{ '{release_summary_content}' }}}}",
         },
     )
+
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set(TEST_INSTALLED_SENSOR, "1.0")
+        await hass.async_block_till_done()
 
     state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
