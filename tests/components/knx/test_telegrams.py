@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.knx.const import (
     CONF_KNX_TELEGRAM_LOG_SIZE,
+    DOMAIN,
     KNX_MODULE_KEY,
 )
 from homeassistant.components.knx.telegrams import TelegramDict
@@ -78,7 +79,7 @@ async def test_store_telegam_history(
 
     await knx.receive_write("1/3/4", True)
     await hass.services.async_call(
-        "knx", "send", {"address": "2/2/2", "payload": [1, 2, 3, 4]}, blocking=True
+        DOMAIN, "send", {"address": "2/2/2", "payload": [1, 2, 3, 4]}, blocking=True
     )
     await knx.assert_write("2/2/2", (1, 2, 3, 4))
 

@@ -13,6 +13,7 @@ from uiprotect.data import (
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -21,7 +22,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -167,7 +167,7 @@ async def test_relay_switch_turn_on_off(
     await init_entry(hass, ufp, [])
 
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
@@ -176,7 +176,7 @@ async def test_relay_switch_turn_on_off(
     relay.activate_output.reset_mock()
 
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
@@ -245,7 +245,7 @@ async def test_relay_switch_command_error_raises(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
@@ -264,7 +264,7 @@ async def test_relay_switch_client_error_raises(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
@@ -284,7 +284,7 @@ async def test_relay_switch_command_when_relay_gone(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
@@ -303,7 +303,7 @@ async def test_relay_switch_command_when_bootstrap_unavailable(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
@@ -456,7 +456,7 @@ async def test_relay_switch_command_when_output_gone(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,

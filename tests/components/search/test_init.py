@@ -2,7 +2,7 @@
 
 from pytest_unordered import unordered
 
-from homeassistant.components.search import ItemType, Searcher
+from homeassistant.components.search import DOMAIN, ItemType, Searcher
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -28,7 +28,7 @@ async def test_search(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test search."""
-    assert await async_setup_component(hass, "search", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Labels
     label_energy = label_registry.async_create("Energy")

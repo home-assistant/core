@@ -86,7 +86,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         """Fetch node data from the Duco box."""
         try:
             nodes = await self.client.async_get_nodes()
-            lan_info = await self.client.async_get_lan_info()
         except DucoConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -100,7 +99,18 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+        # LAN info only backs the diagnostic RSSI sensor, so failures on this
+        # supplemental endpoint, including connection failures, should not make
+        # the primary node entities unavailable.
+        rssi_wifi = self.data.rssi_wifi if self.data else None
+        try:
+            lan_info = await self.client.async_get_lan_info()
+        except DucoError as err:
+            _LOGGER.debug("Could not fetch Duco LAN info", exc_info=err)
+        else:
+            rssi_wifi = lan_info.rssi_wifi
+
         return DucoData(
             nodes={node.node_id: node for node in nodes},
-            rssi_wifi=lan_info.rssi_wifi,
+            rssi_wifi=rssi_wifi,
         )

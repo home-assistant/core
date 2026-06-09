@@ -125,6 +125,9 @@
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
+    },
+    "unknown_exception": {
+      "message": "Unknown error occurred: {error}"
     }
   },
   "selector": {
