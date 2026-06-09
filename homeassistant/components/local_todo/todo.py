@@ -118,6 +118,7 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+        | TodoListEntityFeature.UPDATE_TODO_ITEMS
     )
     _attr_should_poll = False
 
@@ -169,7 +170,7 @@ class LocalTodoListEntity(TodoListEntity):
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item to the To-do list."""
+        """Update an item in the To-do list."""
         todo = _convert_item(item)
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
@@ -177,12 +178,23 @@ class LocalTodoListEntity(TodoListEntity):
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
+    async def async_update_todo_items(self, items: list[TodoItem]) -> None:
+        """Update multiple items in the To-do list."""
+        async with self._calendar_lock:
+            todo_store = self._new_todo_store()
+            # Only edit items for which something changes
+            await self.hass.async_add_executor_job(
+                _todo_store_bulk_edit, todo_store, items
+            )
+            await self.async_save()
+        await self.async_update_ha_state(force_refresh=True)
+
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
-        store = self._new_todo_store()
         async with self._calendar_lock:
+            todo_store = self._new_todo_store()
             for uid in uids:
-                store.delete(uid)
+                todo_store.delete(uid)
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -216,3 +228,11 @@ class LocalTodoListEntity(TodoListEntity):
         """Persist the todo list to disk."""
         content = IcsCalendarStream.calendar_to_ics(self._calendar)
         await self._store.async_store(content)
+
+
+def _todo_store_bulk_edit(todo_store: TodoStore, items: list[TodoItem]) -> None:
+    # Note that todo_store.edit is O(N), where N is the length of the store.
+    # However, todo.update_list service ensures that only items that are changed should reach here.
+    for item in items:
+        todo = _convert_item(item)
+        todo_store.edit(todo.uid, todo)

@@ -49,6 +49,15 @@ class MockTodoListEntity(TodoListEntity):
                 self._attr_todo_items[idx] = item
                 break
 
+    async def async_update_todo_items(self, items: list[TodoItem]) -> None:
+        """Update multiple items in the To-do list."""
+        list_index = {todo.uid: idx for idx, todo in enumerate(self.items) if todo.uid}
+        for item in items:
+            assert item.uid  # reassure the linter
+            idx = list_index[item.uid]
+            assert self._attr_todo_items is not None
+            self._attr_todo_items[idx] = item
+
 
 async def create_mock_platform(
     hass: HomeAssistant,

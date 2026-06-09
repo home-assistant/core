@@ -125,11 +125,21 @@
           "name": "Rename item"
         },
         "status": {
-          "description": "A status or confirmation of the to-do item.",
+          "description": "A status for the to-do item.",
           "name": "Set status"
         }
       },
       "name": "Update to-do list item"
+    },
+    "update_list": {
+      "description": "Updates every item in a to-do list, according to provided attributes.",
+      "fields": {
+        "status": {
+          "description": "A status for each item in the to-do list.",
+          "name": "Set status"
+        }
+      },
+      "name": "Update all items in a to-do list"
     }
   },
   "title": "To-do list",

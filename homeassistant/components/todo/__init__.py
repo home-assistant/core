@@ -191,6 +191,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _async_remove_completed_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
+    component.async_register_entity_service(
+        TodoServices.UPDATE_LIST,
+        cv.make_entity_service_schema(
+            {
+                # Note that future updates might make this Optional
+                vol.Required(ATTR_STATUS): vol.In(
+                    {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
+                ),
+            }
+        ),
+        _async_update_todo_list,
+        required_features=[TodoListEntityFeature.UPDATE_TODO_ITEMS],
+    )
 
     await component.async_setup(config)
     return True
@@ -263,6 +276,16 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item in the To-do list."""
+        raise NotImplementedError
+
+    async def async_update_todo_items(self, items: list[TodoItem]) -> None:
+        """Update multiple items in the To-do list."""
+        # Note that there is no fallback to async_update_todo_item since
+        # integrations need to do bulk updates efficiently, but logically this
+        # should be the same as the following.
+        #
+        # for item in items:
+        #     await self.async_update_todo_item(item)
         raise NotImplementedError
 
     async def async_move_todo_item(
@@ -468,6 +491,31 @@ async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> Non
     )
 
 
+def _prepare_update(entity: TodoListEntity, data: dict[str, Any]) -> dict[str, Any]:
+    # Note that extra fields in data are ignored.
+
+    _validate_supported_features(entity.supported_features, data)
+
+    # Prepare an update based on the fields present in the service call.
+    # This allows explicitly clearing any of the extended fields present
+    # and set to None.
+    info = {}
+    if summary := data.get(ATTR_RENAME):
+        info["summary"] = summary
+    if status := data.get(ATTR_STATUS):
+        info["status"] = TodoItemStatus(status)
+
+    # This allows explicitly clearing any of the extended fields present and set to None.
+    info.update(
+        {
+            desc.todo_item_field: data[desc.service_field]
+            for desc in TODO_ITEM_FIELDS
+            if desc.service_field in data
+        }
+    )
+    return info
+
+
 async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Update an item in the To-do list."""
     item = call.data["item"]
@@ -479,24 +527,12 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
             translation_placeholders={"item": item},
         )
 
-    _validate_supported_features(entity.supported_features, call.data)
-
     # Perform a partial update on the existing entity based on the fields
-    # present in the update. This allows explicitly clearing any of the
-    # extended fields present and set to None.
-    updated_data = dataclasses.asdict(found)
-    if summary := call.data.get("rename"):
-        updated_data["summary"] = summary
-    if status := call.data.get("status"):
-        updated_data["status"] = status
-    updated_data.update(
-        {
-            desc.todo_item_field: call.data[desc.service_field]
-            for desc in TODO_ITEM_FIELDS
-            if desc.service_field in call.data
-        }
-    )
-    await entity.async_update_todo_item(item=TodoItem(**updated_data))
+    # present in the update.
+    updated_data = _prepare_update(entity, call.data)
+    updated_item = dataclasses.replace(found, **updated_data)
+
+    await entity.async_update_todo_item(item=updated_item)
 
 
 async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
@@ -536,3 +572,25 @@ async def _async_remove_completed_items(entity: TodoListEntity, _: ServiceCall) 
     ]
     if uids:
         await entity.async_delete_todo_items(uids=uids)
+
+
+async def _async_update_todo_list(entity: TodoListEntity, call: ServiceCall) -> None:
+    """Update all items in the To-do list."""
+    todo_items = entity.todo_items
+    if not todo_items:
+        return  # Shortcut for empty todo list
+
+    updated_data = _prepare_update(entity, call.data)
+    if not updated_data:
+        return  # Shortcut for empty update
+
+    updated_items = [
+        new_item
+        for item in todo_items
+        if (new_item := dataclasses.replace(item, **updated_data)) != item
+    ]
+    if not updated_items:
+        return  # Shortcut for no changes
+
+    # Pass update to integration
+    await entity.async_update_todo_items(items=updated_items)

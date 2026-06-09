@@ -11,6 +11,7 @@ from homeassistant.components.todo import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.json import JsonValueType
 
 from .common import NoMatchingShoppingListItem, ShoppingData, ShoppingListConfigEntry
 
@@ -26,6 +27,20 @@ async def async_setup_entry(
     async_add_entities([entity], True)
 
 
+def _prepare_update(item: TodoItem) -> tuple[str | None, dict[str, JsonValueType]]:
+    """Convert a HomeAssistant TodoItem to an ShoppingList item update."""
+    # Leave checking the validity of the values to the update methods
+    info: dict[str, JsonValueType] = {}
+
+    # These attributes must be set so ignore None values
+    if (summary := item.summary) is not None:
+        info["name"] = summary
+    if (status := item.status) is not None:
+        info["complete"] = status == TodoItemStatus.COMPLETED
+
+    return item.uid, info
+
+
 class ShoppingTodoListEntity(TodoListEntity):
     """A To-do List representation of the Shopping List."""
 
@@ -37,6 +52,7 @@ class ShoppingTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
+        | TodoListEntityFeature.UPDATE_TODO_ITEMS
     )
 
     def __init__(self, data: ShoppingData, unique_id: str) -> None:
@@ -51,20 +67,28 @@ class ShoppingTodoListEntity(TodoListEntity):
         )
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item to the To-do list."""
-        data = {
-            "name": item.summary,
-            "complete": item.status == TodoItemStatus.COMPLETED,
-        }
+        """Update an item in the To-do list."""
+        uid, data = _prepare_update(item)
         try:
-            await self._data.async_update(item.uid, data)
+            await self._data.async_update(uid, data)
         except NoMatchingShoppingListItem as err:
             raise HomeAssistantError(
-                f"Shopping list item '{item.uid}' was not found"
+                f"Shopping list item '{uid}' was not found"
+            ) from err
+
+    async def async_update_todo_items(self, items: list[TodoItem]) -> None:
+        """Update multiple items in the To-do list."""
+
+        updates = [_prepare_update(item) for item in items]
+        try:
+            await self._data.async_bulk_update(updates)
+        except NoMatchingShoppingListItem as err:
+            raise HomeAssistantError(
+                "One or more Shopping list items were not found"
             ) from err
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
-        """Add an item to the To-do list."""
+        """Delete items from the To-do list."""
         await self._data.async_remove_items(set(uids))
 
     async def async_move_todo_item(
