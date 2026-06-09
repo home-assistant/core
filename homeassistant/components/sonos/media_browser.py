@@ -47,6 +47,9 @@ _LOGGER = logging.getLogger(__name__)
 
 type GetBrowseImageUrlType = Callable[[str, str, str | None], str]
 
+# Upper bound on the per-speaker browse-image art cache (see get_thumbnail_url_full).
+BROWSE_IMAGE_CACHE_SIZE = 4096
+
 
 def fix_image_url(url: str) -> str:
     """Update the image url to fully encode characters.
@@ -95,12 +98,24 @@ def get_thumbnail_url_full(
             )
         return fix_image_url(getattr(item, "album_art_uri", ""))
 
-    return urllib.parse.unquote(
-        get_browse_image_url(
-            media_content_type,
-            media_content_id,
-            media_image_id,
-        )
+    # Remember the item's real album art URI so the browse-image proxy can fetch
+    # it later, keyed by the content id that core round-trips back to us. A track's
+    # art is served by the speaker keyed by the full service URI (incl. query
+    # string), which cannot be reconstructed from the content id alone.
+    if item is not None and (art_uri := getattr(item, "album_art_uri", None)):
+        cache = media.browse_image_uris
+        cache[media_content_id] = art_uri
+        while len(cache) > BROWSE_IMAGE_CACHE_SIZE:
+            cache.pop(next(iter(cache)))
+
+    # Do not unquote: get_browse_image_url percent-encodes the content id into the
+    # proxy URL path and aiohttp unquotes it automatically, so the id round-trips
+    # intact. Unquoting here would collapse a track URI's "?sid=...&..." query
+    # string into the proxy URL, truncating the id and breaking the art lookup.
+    return get_browse_image_url(
+        media_content_type,
+        media_content_id,
+        media_image_id,
     )
 
 

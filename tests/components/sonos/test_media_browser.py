@@ -1,7 +1,8 @@
 """Tests for the Sonos Media Browser."""
 
 from functools import partial
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
+from urllib.parse import quote
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -400,3 +401,61 @@ async def test_search_media_invalid_media_content_type(
     assert response["error"]["translation_placeholders"] == {
         "media_content_type": "movie"
     }
+
+
+def test_get_thumbnail_url_full_caches_track_art() -> None:
+    """Test a non-internal browse caches the item's art URI without decoding the URL.
+
+    The proxy URL must not be unquoted: get_browse_image_url percent-encodes the
+    content id into the path, and a track URI's "?sid=...&..." query string would
+    otherwise collapse into the proxy URL and truncate the id.
+    """
+    media = Mock()
+    media.browse_image_uris = {}
+    track_uri = "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3"
+    item = MockMusicServiceItem(
+        "Come Together",
+        track_uri,
+        "playlist",
+        "object.item.audioItem.musicTrack",
+        album_art_uri="http://192.168.42.2:1400/getaa?u=track&v=1",
+    )
+    proxy_url = (
+        "/api/media_player_proxy/media_player.zone_a/browse_media/track/"
+        + quote(track_uri)
+        + "?token=abc"
+    )
+    get_browse_image_url = Mock(return_value=proxy_url)
+
+    result = get_thumbnail_url_full(
+        media,
+        False,
+        get_browse_image_url,
+        MediaType.TRACK,
+        track_uri,
+        None,
+        item,
+    )
+
+    assert media.browse_image_uris[track_uri] == item.album_art_uri
+    assert result == proxy_url
+
+
+async def test_browse_image_for_track_uses_cached_art(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+) -> None:
+    """Test a track's browse image is served from the art URI captured at browse time."""
+    entity_comp = hass.data["entity_components"]["media_player"]
+    player = entity_comp.get_entity("media_player.zone_a")
+    track_uri = "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3"
+    art_url = "http://192.168.42.2:1400/getaa?u=track&v=1"
+    player.media.browse_image_uris[track_uri] = art_url
+
+    with patch.object(
+        player, "_async_fetch_image", return_value=(b"image", "image/jpeg")
+    ) as mock_fetch:
+        result = await player.async_get_browse_image(MediaType.TRACK, track_uri)
+
+    assert result == (b"image", "image/jpeg")
+    mock_fetch.assert_awaited_once_with(art_url)

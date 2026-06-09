@@ -59,6 +59,11 @@ class SonosMedia:
         self.play_mode: str | None = None
         self.playback_status: str | None = None
 
+        # Maps a browse item's content id to the real album art URI advertised by
+        # the speaker, captured at browse time so the browse-image proxy can fetch
+        # it later (the proxy only receives the content id). Not reset by clear().
+        self.browse_image_uris: dict[str, str] = {}
+
         # This block is reset with clear()
         self.album_name: str | None = None
         self.artist: str | None = None

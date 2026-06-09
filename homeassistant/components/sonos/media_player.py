@@ -803,6 +803,19 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
             if image_url := getattr(item, "album_art_uri", None):
                 return await self._async_fetch_image(image_url)
+        elif media_content_type == MediaType.TRACK and media_content_id:
+            # A track's art URI was captured during browsing (it can't be rebuilt
+            # from the content id); fall back to a library lookup for local tracks.
+            if image_url := self.media.browse_image_uris.get(media_content_id):
+                return await self._async_fetch_image(image_url)
+            item = await self.hass.async_add_executor_job(
+                media_browser.get_media,
+                self.media.library,
+                media_content_id,
+                MEDIA_TYPES_TO_SONOS[MediaType.TRACK],
+            )
+            if image_url := getattr(item, "album_art_uri", None):
+                return await self._async_fetch_image(image_url)
 
         return (None, None)
 
