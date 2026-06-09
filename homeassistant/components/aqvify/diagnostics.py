@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from .coordinator import AqvifyConfigEntry
 
 TO_REDACT = [CONF_API_KEY]
+TO_REDACT_AQVIFY = ["name"]
 
 
 async def async_get_config_entry_diagnostics(
@@ -24,6 +25,6 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
-        "devices": async_redact_data(device_list_raw_data, ["name"]),
+        "devices": async_redact_data(device_list_raw_data, TO_REDACT_AQVIFY),
         "device_data": device_data_raw_data,
     }
