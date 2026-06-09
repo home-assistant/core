@@ -198,13 +198,6 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             self._update_update_percentage,
         )
 
-        self._on_demand_templates = {}
-
-        if CONF_RELEASE_NOTES in config:
-            template = config[CONF_RELEASE_NOTES]
-            template.hass = self.hass
-            self._on_demand_templates[CONF_RELEASE_NOTES] = template
-
         self._attr_supported_features = UpdateEntityFeature(0)
         if config[CONF_BACKUP]:
             self._attr_supported_features |= UpdateEntityFeature.BACKUP
@@ -260,9 +253,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
 
     def release_notes(self) -> str | None:
         """Return release notes rendered on demand."""
-        if (
-            release_notes_template := self._on_demand_templates.get(CONF_RELEASE_NOTES)
-        ) is None:
+        if (release_notes_template := self._config.get(CONF_RELEASE_NOTES)) is None:
             return None
 
         try:
