@@ -2,6 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
+from collections.abc import Callable
 from functools import partial
 from http import HTTPStatus
 import logging
@@ -53,7 +54,7 @@ from .const import (
     MANUFACTURER_APPLE,
     SIGNAL_RECORD_NOTIFICATION,
 )
-from .helpers import RemotePush, device_info
+from .helpers import device_info
 from .live_activity import prepare_live_activity_remote_push
 from .push_notification import PushChannel
 from .util import supports_push
@@ -240,22 +241,21 @@ class MobileAppNotificationService(BaseNotificationService):
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
+        on_success_callback: Callable[[], object] | None = None
         if entry.data[ATTR_MANUFACTURER] == MANUFACTURER_APPLE:
-            remote_push = prepare_live_activity_remote_push(self.hass, entry.data, data)
-        else:
-            remote_push = RemotePush(data=data)
-        try:
-            await _send_message(
-                async_get_clientsession(self.hass), entry, remote_push.data
+            data, on_success_callback = prepare_live_activity_remote_push(
+                self.hass, entry.data, data
             )
+        try:
+            await _send_message(async_get_clientsession(self.hass), entry, data)
         except HomeAssistantError as e:
             if e.translation_key == "rate_limit_exceeded_sending_notification":
                 _LOGGER.warning(str(e))
             else:
                 _LOGGER.error(str(e))
         else:
-            if remote_push.success_callback is not None:
-                remote_push.success_callback()
+            if on_success_callback is not None:
+                on_success_callback()
 
 
 async def _send_message(

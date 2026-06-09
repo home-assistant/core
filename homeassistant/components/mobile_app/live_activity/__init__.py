@@ -29,7 +29,7 @@ from ..const import (
     DOMAIN,
     STORAGE_SAVE_DELAY_SECONDS,
 )
-from ..helpers import RemotePush, savable_state
+from ..helpers import savable_state
 
 
 class LiveActivityEvent(StrEnum):
@@ -51,10 +51,14 @@ class LiveActivityPush:
 
 def prepare_live_activity_remote_push(
     hass: HomeAssistant, registration: Mapping[str, Any], data: dict[str, Any]
-) -> RemotePush:
-    """Return remote notification data with any ActivityKit routing applied."""
+) -> tuple[dict[str, Any], Callable[[], object] | None]:
+    """Return remote notification data and an optional on-success callback.
+
+    Applies any Live Activity routing, the callback, when set, runs after a
+    successful send.
+    """
     if not (resolved := resolve_live_activity_push(hass, registration, data)):
-        return RemotePush(data=data)
+        return data, None
 
     success_callback: Callable[[], object] | None = None
     if resolved.event is LiveActivityEvent.END:
@@ -65,8 +69,8 @@ def prepare_live_activity_remote_push(
             resolved.tag,
         )
 
-    return RemotePush(
-        data={
+    return (
+        {
             **data,
             ATTR_LIVE_ACTIVITY_TOKEN: resolved.token,
             ATTR_DATA: {
@@ -74,7 +78,7 @@ def prepare_live_activity_remote_push(
                 ATTR_LIVE_ACTIVITY_EVENT: resolved.event,
             },
         },
-        success_callback=success_callback,
+        success_callback,
     )
 
 
