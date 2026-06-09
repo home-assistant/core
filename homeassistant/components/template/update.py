@@ -213,7 +213,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             or CONF_UPDATE_PERCENTAGE in self._templates
         ):
             self._attr_supported_features |= UpdateEntityFeature.PROGRESS
-        if (CONF_RELEASE_SUMMARY in config) or (CONF_RELEASE_NOTES in config):
+        if CONF_RELEASE_NOTES in config:
             self._attr_supported_features |= UpdateEntityFeature.RELEASE_NOTES
 
         self._optimistic_in_process = (
