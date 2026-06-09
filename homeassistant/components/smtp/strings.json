@@ -22,12 +22,12 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "encryption": "Encryption method used for the SMTP connection.",
+          "encryption": "Encryption method used for the SMTP connection. **STARTTLS** upgrades a plain connection to encrypted (recommended). **SSL/TLS** uses encryption from the start. **None** sends without encryption.",
           "password": "Password or app-specific password for the SMTP account.",
-          "port": "SMTP server port number.",
+          "port": "Port number used by your SMTP server. Common values are `587` (STARTTLS) and `465` (TLS).",
           "sender": "Email address that will appear in the From field.",
           "sender_name": "Display name shown as the email sender.",
-          "server": "Hostname or IP address of the SMTP server.",
+          "server": "Hostname or IP address of the SMTP server. For example, `smtp.example.com`.",
           "username": "Username used to authenticate with the SMTP server.",
           "verify_ssl": "Enable certificate verification for secure SSL/TLS connections."
         }
