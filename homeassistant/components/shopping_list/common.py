@@ -114,7 +114,7 @@ class ShoppingData:
         for item in complete_items:
             self.hass.bus.async_fire(
                 EVENT_SHOPPING_LIST_UPDATED,
-                {"action": "complete", "item": item},
+                {"action": "update", "item": item},
                 context=context,
             )
         return complete_items
