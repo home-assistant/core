@@ -3,20 +3,15 @@
 from typing import Any
 
 from aqualogic.core import States
-import voluptuous as vol
 
-from homeassistant.components.switch import (
-    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
-    SwitchEntity,
-)
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, UPDATE_TOPIC, AquaLogicProcessor
+from . import AquaLogicConfigEntry, AquaLogicProcessor
+from .const import DOMAIN, UPDATE_TOPIC
 
 SWITCH_TYPES = {
     "lights": "Lights",
@@ -31,27 +26,31 @@ SWITCH_TYPES = {
     "aux_7": "Aux 7",
 }
 
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SWITCH_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SWITCH_TYPES)]
-        )
-    }
-)
+_STATES_MAP = {
+    "lights": States.LIGHTS,
+    "filter": States.FILTER,
+    "filter_low_speed": States.FILTER_LOW_SPEED,
+    "aux_1": States.AUX_1,
+    "aux_2": States.AUX_2,
+    "aux_3": States.AUX_3,
+    "aux_4": States.AUX_4,
+    "aux_5": States.AUX_5,
+    "aux_6": States.AUX_6,
+    "aux_7": States.AUX_7,
+}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: AquaLogicConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the switch platform."""
-    processor: AquaLogicProcessor = hass.data[DOMAIN]
+    """Set up the switch entities."""
+    processor = entry.runtime_data
 
     async_add_entities(
-        AquaLogicSwitch(processor, switch_type)
-        for switch_type in config[CONF_MONITORED_CONDITIONS]
+        AquaLogicSwitch(entry.entry_id, processor, switch_type)
+        for switch_type in SWITCH_TYPES
     )
 
 
@@ -60,22 +59,19 @@ class AquaLogicSwitch(SwitchEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, processor: AquaLogicProcessor, switch_type: str) -> None:
+    def __init__(
+        self, entry_id: str, processor: AquaLogicProcessor, switch_type: str
+    ) -> None:
         """Initialize switch."""
         self._processor = processor
-        self._state_name = {
-            "lights": States.LIGHTS,
-            "filter": States.FILTER,
-            "filter_low_speed": States.FILTER_LOW_SPEED,
-            "aux_1": States.AUX_1,
-            "aux_2": States.AUX_2,
-            "aux_3": States.AUX_3,
-            "aux_4": States.AUX_4,
-            "aux_5": States.AUX_5,
-            "aux_6": States.AUX_6,
-            "aux_7": States.AUX_7,
-        }[switch_type]
+        self._state_name = _STATES_MAP[switch_type]
         self._attr_name = f"AquaLogic {SWITCH_TYPES[switch_type]}"
+        self._attr_unique_id = f"{entry_id}_{switch_type}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            name="AquaLogic",
+            manufacturer="Hayward",
+        )
 
     @property
     def is_on(self) -> bool:

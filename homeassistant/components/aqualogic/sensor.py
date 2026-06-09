@@ -2,27 +2,19 @@
 
 from dataclasses import dataclass
 
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    PERCENTAGE,
-    UnitOfPower,
-    UnitOfTemperature,
-)
+from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, UPDATE_TOPIC, AquaLogicProcessor
+from . import AquaLogicConfigEntry, AquaLogicProcessor
+from .const import DOMAIN, UPDATE_TOPIC
 
 
 @dataclass(frozen=True)
@@ -100,34 +92,19 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
     ),
 )
 
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
-        )
-    }
-)
-
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: AquaLogicConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the sensor platform."""
-    processor: AquaLogicProcessor = hass.data[DOMAIN]
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    """Set up the sensor entities."""
+    processor = entry.runtime_data
 
-    entities = [
-        AquaLogicSensor(processor, description)
+    async_add_entities(
+        AquaLogicSensor(entry.entry_id, processor, description)
         for description in SENSOR_TYPES
-        if description.key in monitored_conditions
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class AquaLogicSensor(SensorEntity):
@@ -138,6 +115,7 @@ class AquaLogicSensor(SensorEntity):
 
     def __init__(
         self,
+        entry_id: str,
         processor: AquaLogicProcessor,
         description: AquaLogicSensorEntityDescription,
     ) -> None:
@@ -145,6 +123,12 @@ class AquaLogicSensor(SensorEntity):
         self.entity_description = description
         self._processor = processor
         self._attr_name = f"AquaLogic {description.name}"
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            name="AquaLogic",
+            manufacturer="Hayward",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -170,4 +154,6 @@ class AquaLogicSensor(SensorEntity):
             self._attr_native_value = getattr(panel, self.entity_description.key)
             self.async_write_ha_state()
         else:
+            self._attr_native_value = None
             self._attr_native_unit_of_measurement = None
+            self.async_write_ha_state()

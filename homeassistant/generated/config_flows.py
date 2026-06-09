@@ -74,6 +74,7 @@ FLOWS = {
         "aprilaire",
         "apsystems",
         "aquacell",
+        "aqualogic",
         "aqvify",
         "aranet",
         "arcam_fmj",
