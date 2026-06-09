@@ -14,6 +14,7 @@ from .const import CONF_HIDE_MEMBERS, DOMAIN, GROUP_TYPES
 from .util import async_hide_members
 
 
+@callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the Group websocket API."""
     websocket_api.async_register_command(hass, websocket_groups_for_entity)
