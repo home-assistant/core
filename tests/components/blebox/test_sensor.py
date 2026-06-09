@@ -256,7 +256,7 @@ def open_status_sensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My open sensor")
     type(product).model = PropertyMock(return_value="openSensor")
-    return (feature, "sensor.my_open_sensor")
+    return (feature, "sensor.my_open_sensor_open_status")
 
 
 async def test_open_status_sensor_init(open_status_sensor, hass: HomeAssistant) -> None:

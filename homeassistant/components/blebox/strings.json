@@ -55,6 +55,7 @@
       "frequency": { "name": "Frequency" },
       "frequency_n": { "name": "Frequency {index}" },
       "open_status": {
+        "name": "Open status",
         "state": {
           "ajar": "Ajar",
           "closed": "[%key:common::state::closed%]",
