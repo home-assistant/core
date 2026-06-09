@@ -7,7 +7,7 @@ aiodns==4.0.4
 aiogithubapi==26.0.0
 aiohttp-asyncmdnsresolver==0.2.0
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.14.0
+aiohttp==3.14.1
 aiohttp_cors==0.8.1
 aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
@@ -47,7 +47,7 @@ python-slugify==8.0.4
 PyTurboJPEG==1.8.3
 PyYAML==6.0.3
 requests==2.34.2
-rf-protocols==4.0.1
+rf-protocols==4.1.0
 securetar==2026.4.1
 SQLAlchemy==2.0.50
 standard-aifc==3.13.0
