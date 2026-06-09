@@ -1,5 +1,6 @@
 """Tests for the Mitsubishi Comfort integration setup."""
 
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 from mitsubishi_comfort import DeviceInfo
@@ -163,8 +164,13 @@ async def test_setup_entry_skips_incomplete_devices(
     mock_config_entry: MockConfigEntry,
     mock_device_info: DeviceInfo,
     mock_setup_integration: tuple[AsyncMock, MagicMock],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup skips incomplete devices and creates complete ones."""
+    """Test setup skips devices the cloud returned no credentials for.
+
+    Without a password and cryptoSerial the local API cannot be authenticated,
+    so the device is skipped (no coordinator, no entity) and the gap is logged.
+    """
     incomplete_info = DeviceInfo(
         serial="SERIAL002",
         label="Bedroom",
@@ -181,12 +187,16 @@ async def test_setup_entry_skips_incomplete_devices(
     }
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.mitsubishi_comfort"
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL002") is None
+    assert "The cloud returned no credentials for 1 device(s): Bedroom" in caplog.text
 
 
 async def test_unload_entry(
