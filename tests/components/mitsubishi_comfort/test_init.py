@@ -6,13 +6,17 @@ from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
 
-from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DOMAIN
+from homeassistant.components.mitsubishi_comfort.const import (
+    CONF_ADDRESSES,
+    CONF_CREDENTIALS,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MOCK_ADDRESS, MOCK_MAC, MOCK_PASSWORD, MOCK_USERNAME
+from .conftest import MOCK_ADDRESS, MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -77,6 +81,7 @@ async def test_setup_entry_no_address_loads_and_registers(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     mock_cloud_account: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup with no known LAN address loads and registers the device.
 
@@ -84,7 +89,8 @@ async def test_setup_entry_no_address_loads_and_registers(
     resolved address the device cannot be polled, so it creates no entity — but
     it is registered with its MAC so "registered_devices" DHCP discovery can
     supply the IP and reload the entry. Setup must not retry (which would hammer
-    the cloud API) since retrying can never resolve the address.
+    the cloud API) since retrying can never resolve the address. The missing
+    address is surfaced with a warning rather than failing silently.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -101,6 +107,31 @@ async def test_setup_entry_no_address_loads_and_registers(
     assert device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC))}
     )
+    assert "No local IP address is known" in caplog.text
+
+
+async def test_setup_entry_caches_and_replays_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+) -> None:
+    """Test credentials are replayed to discovery and persisted on the entry."""
+    mock_account, _ = mock_setup_integration
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Discovery is told to reuse cached credentials so it can skip Socket.IO.
+    assert "cached_credentials" in mock_account.discover_devices.call_args.kwargs
+    # The discovered credentials are persisted for the next setup.
+    assert mock_config_entry.data[CONF_CREDENTIALS] == {
+        MOCK_SERIAL: {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": MOCK_MAC,
+        }
+    }
 
 
 async def test_setup_entry_resolves_address_from_entry(

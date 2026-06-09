@@ -32,5 +32,19 @@
     "update_failed": {
       "message": "{device_name} returned no data"
     }
+  },
+  "options": {
+    "abort": {
+      "no_devices": "No devices are registered yet. Wait for setup to finish, then try again."
+    },
+    "error": {
+      "invalid_ip": "One or more entries are not valid IP addresses."
+    },
+    "step": {
+      "init": {
+        "description": "Enter the local IP address for each device. Leave a field blank to keep using DHCP discovery (which only works when the device is on the same network as Home Assistant). Devices: {devices}",
+        "title": "Device IP addresses"
+      }
+    }
   }
 }
