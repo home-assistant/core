@@ -412,6 +412,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: ServiceCall) -> None:
         """Reload the platforms."""
+        if not mqtt_config_entry_enabled(hass):
+            _LOGGER.debug(
+                "Skipped reloading MQTT integration, "
+                "the MQTT config entry is not enabled"
+            )
+            return
         entry: ConfigEntry = next(iter(hass.config_entries.async_entries(DOMAIN)))
         mqtt_data = hass.data[DATA_MQTT]
 
