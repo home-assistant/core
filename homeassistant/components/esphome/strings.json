@@ -200,7 +200,26 @@
       "title": "Device conflict for {name}"
     },
     "service_calls_not_allowed": {
-      "description": "The ESPHome device attempted to perform a Home Assistant action, but this functionality is not enabled.\n\nIf you trust this device and want to allow it to perform Home Assistant action, you can enable this functionality in the options flow.",
+      "fix_flow": {
+        "step": {
+          "enable": {
+            "description": "`{name}` will be allowed to perform Home Assistant actions and send events. You can disable this again at any time in the device's settings.",
+            "title": "Allow {name} to perform Home Assistant actions"
+          },
+          "ignore": {
+            "description": "`{name}` will remain unable to perform Home Assistant actions. You can enable this later in the device's settings.",
+            "title": "Keep Home Assistant actions disabled for {name}"
+          },
+          "init": {
+            "description": "The ESPHome device `{name}` attempted to perform a Home Assistant action, but this functionality is not enabled.\n\nOnly allow this if you trust the device, as it will be able to perform any Home Assistant action and send events.\n\nChoose **Allow** to enable this now, or **Ignore** to leave it disabled. You can always change this later in the device's settings.",
+            "menu_options": {
+              "enable": "Allow {name} to perform Home Assistant actions",
+              "ignore": "Ignore"
+            },
+            "title": "{name} is not permitted to perform Home Assistant actions"
+          }
+        }
+      },
       "title": "{name} is not permitted to perform Home Assistant actions"
     }
   },

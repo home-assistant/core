@@ -3,11 +3,17 @@
 import asyncio
 from unittest.mock import AsyncMock
 
-from aioesphomeapi import APIClient, BinarySensorInfo, BinarySensorState, DeviceInfo
+from aioesphomeapi import (
+    APIClient,
+    BinarySensorInfo,
+    BinarySensorState,
+    DeviceInfo,
+    HomeassistantServiceCall,
+)
 import pytest
 
 from homeassistant.components.esphome import repairs
-from homeassistant.components.esphome.const import DOMAIN
+from homeassistant.components.esphome.const import CONF_ALLOW_SERVICE_CALLS, DOMAIN
 from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
@@ -17,10 +23,11 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDeviceType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_mock_service
 from tests.components.repairs import (
     async_process_repairs_platforms,
     get_repairs,
@@ -28,6 +35,8 @@ from tests.components.repairs import (
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+SERVICE_CALLS_ISSUE_ID = "service_calls_not_enabled-11:22:33:44:55:aa"
 
 
 async def test_create_fix_flow_raises_on_unknown_issue_id(hass: HomeAssistant) -> None:
@@ -222,3 +231,94 @@ async def test_device_conflict_migration(
         identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")}
     )
     assert old_dev_entry is None
+
+
+async def _setup_service_calls_issue(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    issue_registry: ir.IssueRegistry,
+) -> MockConfigEntry:
+    """Set up a device that triggers the service calls not enabled issue."""
+    assert await async_setup_component(hass, "repairs", {})
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"esphome_version": "2023.3.0"},
+    )
+    await hass.async_block_till_done()
+    async_mock_service(hass, DOMAIN, "test")
+    device.mock_service_call(HomeassistantServiceCall(service="esphome.test", data={}))
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, SERVICE_CALLS_ISSUE_ID) is not None
+    return device.entry
+
+
+async def test_service_calls_enable(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_client: ClientSessionGenerator,
+    mock_esphome_device: MockESPHomeDeviceType,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test enabling Home Assistant actions from the repair flow."""
+    entry = await _setup_service_calls_issue(
+        hass, mock_client, mock_esphome_device, issue_registry
+    )
+    assert entry.options.get(CONF_ALLOW_SERVICE_CALLS) is not True
+
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, SERVICE_CALLS_ISSUE_ID)
+
+    flow_id = data["flow_id"]
+    assert data["type"] == FlowResultType.MENU
+    assert data["step_id"] == "init"
+
+    data = await process_repair_fix_flow(
+        client, flow_id, json={"next_step_id": "enable"}
+    )
+    flow_id = data["flow_id"]
+    assert data["type"] == FlowResultType.FORM
+    assert data["step_id"] == "enable"
+
+    data = await process_repair_fix_flow(client, flow_id)
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+
+    await hass.async_block_till_done()
+    assert entry.options[CONF_ALLOW_SERVICE_CALLS] is True
+    assert issue_registry.async_get_issue(DOMAIN, SERVICE_CALLS_ISSUE_ID) is None
+
+
+async def test_service_calls_ignore(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_client: ClientSessionGenerator,
+    mock_esphome_device: MockESPHomeDeviceType,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test dismissing the repair flow without enabling Home Assistant actions."""
+    entry = await _setup_service_calls_issue(
+        hass, mock_client, mock_esphome_device, issue_registry
+    )
+
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, SERVICE_CALLS_ISSUE_ID)
+
+    flow_id = data["flow_id"]
+    assert data["type"] == FlowResultType.MENU
+    assert data["step_id"] == "init"
+
+    data = await process_repair_fix_flow(
+        client, flow_id, json={"next_step_id": "ignore"}
+    )
+    flow_id = data["flow_id"]
+    assert data["type"] == FlowResultType.FORM
+    assert data["step_id"] == "ignore"
+
+    data = await process_repair_fix_flow(client, flow_id)
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+
+    await hass.async_block_till_done()
+    assert entry.options.get(CONF_ALLOW_SERVICE_CALLS) is not True
+    assert issue_registry.async_get_issue(DOMAIN, SERVICE_CALLS_ISSUE_ID) is None

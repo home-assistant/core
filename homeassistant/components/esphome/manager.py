@@ -316,23 +316,23 @@ class ESPHomeManager:
         else:
             device_info = self.entry_data.device_info
             assert device_info is not None
+            device_name = device_info.friendly_name or device_info.name
             async_create_issue(
                 hass,
                 DOMAIN,
                 self.services_issue,
-                is_fixable=False,
+                is_fixable=True,
                 severity=IssueSeverity.WARNING,
                 translation_key="service_calls_not_allowed",
-                translation_placeholders={
-                    "name": device_info.friendly_name or device_info.name,
-                },
+                translation_placeholders={"name": device_name},
+                data={"entry_id": self.entry.entry_id, "name": device_name},
             )
             _LOGGER.error(
                 "%s: Service call %s.%s: with data %s rejected; "
                 "If you trust this device and want to allow access for it to make "
                 "Home Assistant service calls, you can enable this "
                 "functionality in the options flow",
-                device_info.friendly_name or device_info.name,
+                device_name,
                 domain,
                 service_name,
                 service_data,
