@@ -5,13 +5,15 @@ from __future__ import annotations
 from copy import copy
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from knx_telegram_store import KnxTelegramStoreException, StoredTelegram, TelegramQuery
 import pytest
 
 from homeassistant.components.knx.const import (
     CONF_KNX_TELEGRAM_DB_PATH,
+    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DOMAIN,
     KNX_MODULE_KEY,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
@@ -23,7 +25,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
-from tests.common import async_load_json_object_fixture
+from tests.common import async_fire_time_changed, async_load_json_object_fixture
 
 MOCK_TIMESTAMP = "2023-07-02T14:51:24.045162-07:00"
 MOCK_TELEGRAMS = [
@@ -486,4 +488,93 @@ async def test_migrate_telegrams_store_error(
 
     # Setup still succeeds even though migration failed
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert telegrams_module.store is not None
+
+
+async def test_nightly_eviction_calls_evict_expired(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test expired telegrams are evicted on the nightly 3 AM run."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    await knx.setup_integration()
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert telegrams_module.store is not None
+
+    with patch.object(
+        telegrams_module.store,
+        "evict_expired",
+        new=AsyncMock(wraps=telegrams_module.store.evict_expired),
+    ) as evict_expired:
+        # Nothing should happen before 3 AM
+        freezer.move_to("2024-01-02 02:59:00+00:00")
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        evict_expired.assert_not_called()
+
+        freezer.move_to("2024-01-02 03:00:00+00:00")
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        evict_expired.assert_called_once()
+
+
+async def test_nightly_eviction_zero_retention_deletes_all(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a retention of 0 days deletes all telegrams on the nightly run."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    knx.mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        knx.mock_config_entry,
+        options=knx.mock_config_entry.options
+        | {CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 0},
+    )
+    await knx.setup_integration(add_entry_to_hass=False)
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert telegrams_module.store is not None
+
+    await knx.receive_write("1/3/4", True)
+    await hass.async_block_till_done()
+    await telegrams_module.store.flush()
+    result = await telegrams_module.store.query(TelegramQuery())
+    assert len(result.telegrams) == 1
+
+    freezer.move_to("2024-01-02 03:00:00+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await telegrams_module.store.flush()
+
+    result = await telegrams_module.store.query(TelegramQuery())
+    assert len(result.telegrams) == 0
+
+
+async def test_nightly_eviction_error_handling(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a store error during nightly eviction is logged and does not raise."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    await knx.setup_integration()
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert telegrams_module.store is not None
+
+    with patch.object(
+        telegrams_module.store,
+        "evict_expired",
+        new=AsyncMock(side_effect=KnxTelegramStoreException("evict failed")),
+    ):
+        freezer.move_to("2024-01-02 03:00:00+00:00")
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert "Database error evicting expired KNX telegrams" in caplog.text
+    # Store remains operational after the failed eviction
     assert telegrams_module.store is not None

@@ -1154,7 +1154,7 @@
               "telegram_db_retention_days": "Retention period"
             },
             "data_description": {
-              "telegram_db_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly."
+              "telegram_db_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly at 3 AM. Set to `0` to delete all telegram history on every nightly run."
             },
             "name": "Telegram store settings"
           }

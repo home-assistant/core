@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+from datetime import datetime
 import logging
 import os
 from typing import Any, TypedDict
@@ -18,8 +19,9 @@ from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalType
@@ -37,6 +39,9 @@ from .repairs import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Hour of the day (local time) at which expired telegrams are evicted nightly.
+EVICT_EXPIRED_HOUR = 3
 
 # dispatcher signal for KNX interface device triggers
 SIGNAL_KNX_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType("knx_telegram")
@@ -92,6 +97,7 @@ class Telegrams:
 
         self.store: BufferedSqliteStore | None = None
         self._uninitialized_store: BufferedSqliteStore | None = None
+        self._evict_expired_unsub: CALLBACK_TYPE | None = None
 
         full_path = hass.config.path(STORAGE_DIR, self.db_path)
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
@@ -154,6 +160,16 @@ class Telegrams:
         self.store.start()
         self._uninitialized_store = None
 
+        # Evict telegrams older than the retention period once a night. A
+        # retention of 0 days means all telegrams are deleted on each run.
+        self._evict_expired_unsub = async_track_time_change(
+            self.hass,
+            self._async_evict_expired,
+            hour=EVICT_EXPIRED_HOUR,
+            minute=0,
+            second=0,
+        )
+
         # Migrate legacy JSON storage if it exists
         await self.migrate_telegrams()
 
@@ -180,8 +196,22 @@ class Telegrams:
                 await self._uninitialized_store.close()
         self._uninitialized_store = None
 
+    async def _async_evict_expired(self, now: datetime) -> None:
+        """Delete telegrams older than the configured retention period."""
+        if self.store is None:
+            return
+        try:
+            deleted = await self.store.evict_expired()
+        except KnxTelegramStoreException as err:
+            _LOGGER.warning("Database error evicting expired KNX telegrams: %s", err)
+            return
+        _LOGGER.debug("Evicted %d expired KNX telegrams from storage", deleted)
+
     async def stop(self) -> None:
         """Stop history store."""
+        if self._evict_expired_unsub is not None:
+            self._evict_expired_unsub()
+            self._evict_expired_unsub = None
         if self.store is None:
             return
         try:
