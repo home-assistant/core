@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import logging
 from random import randint
+import shutil
 from time import monotonic
 from typing import Any, Generic, Protocol, TypeVar, override
 import urllib.error
@@ -26,13 +27,13 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
+from homeassistant.util import raise_if_invalid_filename
 from homeassistant.util.dt import utcnow
-from homeassistant.util.hass_dict import HassKey
 
 from . import entity, event
 from .debounce import Debouncer
 from .dispatcher import async_dispatcher_connect
-from .storage import Store
+from .storage import STORAGE_DIR, Store
 from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
@@ -40,7 +41,31 @@ REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _DataT = TypeVar("_DataT", default=dict[str, Any])
 
-_RESTORE_CLEANUP_KEY: HassKey[set[str]] = HassKey("restore_coordinator_cleanup")
+RESTORE_STORAGE_FOLDER = "restore_data_update_coordinator"
+
+
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the update coordinator helpers.
+
+    Removes data persisted by RestoreDataUpdateCoordinator when its config entry is
+    removed. Registered from bootstrap so removal is handled even for entries that
+    were never set up, e.g. disabled ones.
+    """
+
+    @callback
+    def _handle_entry_changed(
+        change: config_entries.ConfigEntryChange,
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        if change is not config_entries.ConfigEntryChange.REMOVED:
+            return
+        path = hass.config.path(STORAGE_DIR, RESTORE_STORAGE_FOLDER, entry.entry_id)
+        hass.async_add_executor_job(partial(shutil.rmtree, path, ignore_errors=True))
+
+    async_dispatcher_connect(
+        hass, config_entries.SIGNAL_CONFIG_ENTRY_CHANGED, _handle_entry_changed
+    )
 
 
 class UpdateFailed(HomeAssistantError):
@@ -645,8 +670,9 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     called automatically during setup; coordinators not driven via
     :meth:`async_config_entry_first_refresh` should call it themselves before the first
     update. Data is saved after each successful refresh and after
-    :meth:`async_set_updated_data`, batched by ``save_delay``. The store is removed when
-    the config entry is removed.
+    :meth:`async_set_updated_data`, batched by ``save_delay``. The data is stored
+    per config entry, keyed by ``storage_key`` which only needs to be unique within
+    the config entry, and is removed when the config entry is removed.
     """
 
     def __init__(
@@ -679,10 +705,17 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         )
         self._save_delay = save_delay
         self._save_pending = False
+        # The key is namespaced per config entry so the listener registered by
+        # async_setup can remove all of an entry's stores on removal without the
+        # integration's cooperation.
+        raise_if_invalid_filename(storage_key)
         # ``Store`` is bound to ``Mapping | Sequence``; ``_DataT`` is unbounded, so the
         # store is typed ``Any`` while the coordinator stays generic over ``_DataT``.
-        self._store: Store[Any] = Store(hass, store_version, storage_key)
-        self._setup_store_removal(config_entry.entry_id)
+        self._store: Store[Any] = Store(
+            hass,
+            store_version,
+            f"{RESTORE_STORAGE_FOLDER}/{config_entry.entry_id}/{storage_key}",
+        )
 
     async def _async_setup(self) -> None:
         """Set up the coordinator and restore stored data."""
@@ -712,8 +745,9 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         """Cancel any scheduled call, and flush any pending save."""
         await super().async_shutdown()
         # Removal unloads the entry (awaiting this) before the REMOVED signal deletes
-        # the store. Flushing here writes the latest data and cancels the delayed-save
-        # timer, so it can't fire afterwards and recreate the just-deleted file.
+        # the stored data. Flushing here writes the latest data and cancels the
+        # delayed-save timer, so it can't fire afterwards and recreate the just-deleted
+        # file.
         if self._save_pending and self.data is not None:
             self._save_pending = False
             await self._store.async_save(self.data)
@@ -738,43 +772,6 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         Safe to call when nothing is stored.
         """
         await self._store.async_remove()
-
-    @callback
-    def _setup_store_removal(self, entry_id: str) -> None:
-        """Set up automatic removal of the store when the config entry is removed."""
-        # Pull primitives out of self so the dispatcher closure below never captures
-        # self; otherwise a reload would leak this coordinator.
-        hass = self.hass
-        storage_key = self._store.key
-        store_version = self._store.version
-
-        # A reload builds a new coordinator with the same storage key.
-        registered = hass.data.setdefault(_RESTORE_CLEANUP_KEY, set())
-        if storage_key in registered:
-            return
-        registered.add(storage_key)
-
-        @callback
-        def _handle_entry_changed(
-            change: config_entries.ConfigEntryChange,
-            entry: config_entries.ConfigEntry,
-        ) -> None:
-            if (
-                change is not config_entries.ConfigEntryChange.REMOVED
-                or entry.entry_id != entry_id
-            ):
-                return
-            unsub()
-            registered.discard(storage_key)
-            store: Store[Any] = Store(hass, store_version, storage_key)
-            hass.async_create_task(
-                store.async_remove(), f"Remove restore store {storage_key}"
-            )
-
-        # REMOVED is the only signal that distinguishes removal from an unload on reload.
-        unsub = async_dispatcher_connect(
-            hass, config_entries.SIGNAL_CONFIG_ENTRY_CHANGED, _handle_entry_changed
-        )
 
 
 class BaseCoordinatorEntity[
