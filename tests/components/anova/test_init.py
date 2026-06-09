@@ -8,8 +8,8 @@ from anova_wifi import AnovaApi, InvalidLogin, NoDevicesFound, WebsocketFailure
 from anova_wifi.exceptions import LoginUnreachable
 import pytest
 
-from homeassistant.components.anova import RECONNECT_RETRY_DELAY
 from homeassistant.components.anova.const import DOMAIN
+from homeassistant.components.anova.coordinator import RECONNECT_RETRY_DELAY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
