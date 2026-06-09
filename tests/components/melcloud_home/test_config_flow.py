@@ -21,8 +21,8 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the user form and can create an entry."""
+async def test_user_flow(hass: HomeAssistant) -> None:
+    """Test the full user config flow creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
