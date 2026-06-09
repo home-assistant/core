@@ -109,6 +109,34 @@ MOCK_VELOV_STATION = VelovStation(
     ),
 )
 
+MOCK_VELOV_STATIONS = [
+    MOCK_VELOV_STATION,
+    VelovStation(
+        number=2002,
+        name="Hôtel de Ville",
+        address="",
+        commune="",
+        status=VelovStationStatus.OPEN,
+        availability=VelovAvailabilityLevel.GREEN,
+        lat=45.767,
+        lng=4.835,
+        bike_stands=15,
+        available_bikes=10,
+        available_bike_stands=5,
+        banking=True,
+        last_update=datetime(2026, 4, 10, 14, 0),
+        total_stands=VelovBikeStandAvailability(
+            bikes=10,
+            electrical_bikes=3,
+            electrical_internal_battery_bikes=2,
+            electrical_removable_battery_bikes=1,
+            mechanical_bikes=7,
+            stands=5,
+            capacity=15,
+        ),
+    ),
+]
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -182,5 +210,5 @@ def mock_tcl_client() -> Generator[AsyncMock]:
         client = mock_cls.return_value
         client.get_tcl_passages.return_value = MOCK_DEPARTURES
         client.get_tcl_stops.return_value = MOCK_TCL_STOPS
-        client.get_velov_stations.return_value = [MOCK_VELOV_STATION]
+        client.get_velov_stations.return_value = MOCK_VELOV_STATIONS
         yield client
