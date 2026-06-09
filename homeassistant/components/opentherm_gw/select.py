@@ -182,9 +182,11 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
         options=list(OpenThermSelectDHWOvrdMode),
         select_action=set_dhw_ovrd_mode,
         convert_pyotgw_state_to_ha_state=(
-            lambda state: OpenThermSelectDHWOvrdMode[PyotgwDHWOvrdMode(state).name]
-            if state in PyotgwDHWOvrdMode
-            else OpenThermSelectDHWOvrdMode.DISABLED
+            lambda state: (
+                OpenThermSelectDHWOvrdMode[PyotgwDHWOvrdMode(state).name]
+                if state in PyotgwDHWOvrdMode
+                else OpenThermSelectDHWOvrdMode.DISABLED
+            )
         ),
     ),
     OpenThermSelectEntityDescription(
