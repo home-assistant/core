@@ -70,6 +70,7 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
+            self._async_abort_entries_match({CONF_API_KEY: api_key})
             errors = await self._validate_api_key(api_key)
             if not errors:
                 return self.async_update_reload_and_abort(

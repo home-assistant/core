@@ -131,6 +131,32 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_API_KEY] == NEW_API_KEY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_duplicate(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth aborts when the new key is already used by another entry."""
+    mock_config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="My Fluss+ Devices",
+        data={CONF_API_KEY: NEW_API_KEY},
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_API_KEY] == "test_api_key"
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
