@@ -101,13 +101,16 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): NumberSelector(
-            NumberSelectorConfig(
-                min=1,
-                step=1,
-                unit_of_measurement=UnitOfTime.SECONDS,
-                mode=NumberSelectorMode.BOX,
-            )
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(
+                    min=1,
+                    step=1,
+                    unit_of_measurement=UnitOfTime.SECONDS,
+                    mode=NumberSelectorMode.BOX,
+                )
+            ),
+            vol.Coerce(int),
         ),
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): BooleanSelector(),
     }
