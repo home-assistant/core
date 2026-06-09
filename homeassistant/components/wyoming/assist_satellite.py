@@ -357,6 +357,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 "-ar",
                 str(_TTS_SAMPLE_RATE),
                 "-nostats",
+                "-protocol_whitelist",
+                "http,https,file",
                 "pipe:",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
