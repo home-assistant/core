@@ -30,13 +30,18 @@ PLATFORMS: list[Platform] = [
 type WebControlProConfigEntry = ConfigEntry[WebControlPro]
 
 
+def _build_storage_config_dir(
+    hass: HomeAssistant, entry: WebControlProConfigEntry
+) -> Path:
+    return Path(hass.config.path(STORAGE_DIR, f"{DOMAIN}-{entry.entry_id}"))
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: WebControlProConfigEntry
 ) -> bool:
     """Set up wmspro from a config entry."""
     host = entry.data[CONF_HOST]
     session = async_get_clientsession(hass)
-    config_dir = Path(hass.config.path(STORAGE_DIR, f"{DOMAIN}-{entry.entry_id}"))
+    config_dir = _build_storage_config_dir(hass, entry)
     config_dir.mkdir(parents=True, exist_ok=True)
     hub = WebControlPro(host, session, str(config_dir))
 
@@ -80,6 +85,6 @@ async def async_remove_entry(
     hass: HomeAssistant, entry: WebControlProConfigEntry
 ) -> None:
     """Remove a config entry."""
-    config_dir = Path(hass.config.path(STORAGE_DIR, f"{DOMAIN}-{entry.entry_id}"))
-    if config_dir.is_dir() and config_dir.name.startswith(DOMAIN):
+    config_dir = _build_storage_config_dir(hass, entry)
+    if config_dir.is_dir():
         await hass.async_add_executor_job(shutil.rmtree, config_dir)
