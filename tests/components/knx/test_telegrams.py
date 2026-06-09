@@ -86,7 +86,7 @@ async def test_store_telegram_history(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data
+        options=knx.mock_config_entry.options
         | {
             CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
         },
@@ -120,7 +120,7 @@ async def test_store_telegram_history_sqlite(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data
+        options=knx.mock_config_entry.options
         | {
             CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
         },
@@ -156,7 +156,7 @@ async def test_store_telegram_history_error_handling(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data
+        options=knx.mock_config_entry.options
         | {
             CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
         },
@@ -202,7 +202,7 @@ async def test_migrate_telegrams_from_json(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data
+        options=knx.mock_config_entry.options
         | {
             CONF_KNX_TELEGRAM_DB_PATH: str(db_path),
         },
@@ -235,7 +235,7 @@ async def test_stop_error_handling(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data | {CONF_KNX_TELEGRAM_DB_PATH: ":memory:"},
+        options=knx.mock_config_entry.options | {CONF_KNX_TELEGRAM_DB_PATH: ":memory:"},
     )
     await knx.setup_integration(add_entry_to_hass=False)
 
@@ -256,7 +256,7 @@ async def test_model_to_dict_resolution(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data | {CONF_KNX_TELEGRAM_DB_PATH: ":memory:"},
+        options=knx.mock_config_entry.options | {CONF_KNX_TELEGRAM_DB_PATH: ":memory:"},
     )
     await knx.setup_integration(add_entry_to_hass=False)
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
@@ -335,7 +335,7 @@ async def _setup_memory_store(hass: HomeAssistant, knx: KNXTestKit) -> None:
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data
+        options=knx.mock_config_entry.options
         | {
             CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
         },
@@ -392,7 +392,7 @@ async def test_migrate_telegrams_no_json(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data
+        options=knx.mock_config_entry.options
         | {
             CONF_KNX_TELEGRAM_DB_PATH: str(db_path),
         },
@@ -424,7 +424,7 @@ async def test_migrate_telegrams_unexpected_format(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data
+        options=knx.mock_config_entry.options
         | {
             CONF_KNX_TELEGRAM_DB_PATH: str(db_path),
         },
@@ -473,7 +473,7 @@ async def test_migrate_telegrams_store_error(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data
+        options=knx.mock_config_entry.options
         | {
             CONF_KNX_TELEGRAM_DB_PATH: str(db_path),
         },

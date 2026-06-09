@@ -17,8 +17,8 @@ from homeassistant.components.knx.config_flow import (
     CONF_KEYRING_FILE,
     CONF_KNX_GATEWAY,
     CONF_KNX_TUNNELING_TYPE,
-    CONF_OPTIONS,
-    DEFAULT_ENTRY_DATA,
+    DEFAULT_ENTRY_DATA as _DEFAULT_ENTRY_DATA,
+    DEFAULT_ENTRY_OPTIONS,
     OPTION_MANUAL_TUNNEL,
 )
 from homeassistant.components.knx.const import (
@@ -60,6 +60,10 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, get_fixture_path
+
+# Default data and options combined, as merged into a created config entry's data
+# by the test flow patch. Used to build expected entry contents in assertions.
+DEFAULT_ENTRY_DATA = {**_DEFAULT_ENTRY_DATA, **DEFAULT_ENTRY_OPTIONS}
 
 FIXTURE_KNXKEYS_PASSWORD = "test"
 FIXTURE_KEYRING = sync_load_keyring(
@@ -119,10 +123,10 @@ def merge_options_in_flow_results():
 def _assert_mock_entry_data(mock_entry: MockConfigEntry, expected_data: dict) -> None:
     """Helper to assert that mock config entry data and options are correctly separated."""
     assert dict(mock_entry.data) == {
-        k: v for k, v in expected_data.items() if k not in CONF_OPTIONS
+        k: v for k, v in expected_data.items() if k not in DEFAULT_ENTRY_OPTIONS
     }
     assert dict(mock_entry.options) == {
-        k: v for k, v in expected_data.items() if k in CONF_OPTIONS
+        k: v for k, v in expected_data.items() if k in DEFAULT_ENTRY_OPTIONS
     }
 
 

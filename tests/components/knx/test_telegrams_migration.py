@@ -42,7 +42,7 @@ async def test_migrate_telegrams_json_to_sqlite(
     knx.mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         knx.mock_config_entry,
-        data=knx.mock_config_entry.data
+        options=knx.mock_config_entry.options
         | {
             CONF_KNX_TELEGRAM_DB_PATH: db_name,
         },

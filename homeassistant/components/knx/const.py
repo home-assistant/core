@@ -102,7 +102,7 @@ REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR: Final = "telegram_backend_error"
 
 
 class KNXConfigEntryData(TypedDict, total=False):
-    """Config entry for the KNX integration."""
+    """Config entry data for the KNX integration."""
 
     connection_type: str
     individual_address: str
@@ -121,7 +121,11 @@ class KNXConfigEntryData(TypedDict, total=False):
     knxkeys_password: str  # not required
     backbone_key: str | None  # not required
     sync_latency_tolerance: int | None  # not required
-    # OptionsFlow only
+
+
+class KNXConfigEntryOptions(TypedDict, total=False):
+    """Config entry options for the KNX integration."""
+
     state_updater: bool  # default state updater: True -> expire 60; False -> init
     rate_limit: int
     #   Integration only (not forwarded to xknx)

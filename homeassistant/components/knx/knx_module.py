@@ -49,7 +49,7 @@ from .const import (
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     KNX_ADDRESS,
-    KNXConfigEntryData,
+    KNXConfigEntryOptions,
 )
 from .device import KNXInterfaceDevice
 from .entity import KnxEntityIdentifier
@@ -103,7 +103,7 @@ class KNXModule:
             hass=hass,
             xknx=self.xknx,
             project=self.project,
-            config=cast(KNXConfigEntryData, entry.options),
+            config=cast(KNXConfigEntryOptions, entry.options),
         )
         self.interface_device = KNXInterfaceDevice(
             hass=hass, entry=entry, xknx=self.xknx

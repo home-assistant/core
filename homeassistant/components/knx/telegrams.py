@@ -28,7 +28,7 @@ from .const import (
     CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     KNX_TELEGRAM_DB_PATH_DEFAULT,
-    KNXConfigEntryData,
+    KNXConfigEntryOptions,
 )
 from .project import KNXProject
 from .repairs import (
@@ -78,7 +78,7 @@ class Telegrams:
         hass: HomeAssistant,
         xknx: XKNX,
         project: KNXProject,
-        config: KNXConfigEntryData,
+        config: KNXConfigEntryOptions,
     ) -> None:
         """Initialize Telegrams class."""
         self.hass = hass

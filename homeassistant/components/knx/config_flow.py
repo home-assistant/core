@@ -50,7 +50,6 @@ from .const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
-    CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
@@ -63,6 +62,7 @@ from .const import (
     KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     KNXConfigEntryData,
+    KNXConfigEntryOptions,
 )
 from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
 from .validation import ia_validator, ip_v4_validator
@@ -75,23 +75,20 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
     local_ip=None,
     multicast_group=DEFAULT_MCAST_GRP,
     multicast_port=DEFAULT_MCAST_PORT,
-    rate_limit=CONF_KNX_DEFAULT_RATE_LIMIT,
     route_back=False,
+)
+
+DEFAULT_ENTRY_OPTIONS = KNXConfigEntryOptions(
+    rate_limit=CONF_KNX_DEFAULT_RATE_LIMIT,
     state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
     telegram_db_retention_days=KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     telegram_db_load_hours=KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     telegram_db_path=KNX_TELEGRAM_DB_PATH_DEFAULT,
 )
 
-CONF_OPTIONS: Final = (
-    CONF_KNX_STATE_UPDATER,
-    CONF_KNX_RATE_LIMIT,
-    CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
-    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
-    CONF_KNX_TELEGRAM_DB_PATH,
-)
-
 CONF_KEYRING_FILE: Final = "knxkeys_file"
+
+CONF_KNX_TELEGRAM_STORE_SECTION: Final = "telegram_store_sqlite"
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
 CONF_KNX_TUNNELING_TYPE_LABELS: Final = {
@@ -195,11 +192,10 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         title = self.new_title or f"KNX {self.new_entry_data[CONF_KNX_CONNECTION_TYPE]}"
-        entry_data = DEFAULT_ENTRY_DATA | self.new_entry_data
         return self.async_create_entry(
             title=title,
-            data={k: v for k, v in entry_data.items() if k not in CONF_OPTIONS},
-            options={k: v for k, v in entry_data.items() if k in CONF_OPTIONS},
+            data=DEFAULT_ENTRY_DATA | self.new_entry_data,
+            options=DEFAULT_ENTRY_OPTIONS,
         )
 
     async def async_step_user(
@@ -932,15 +928,15 @@ class KNXOptionsFlow(OptionsFlowWithReload):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize KNX options flow."""
-        self.initial_data = dict(config_entry.options)
-        self.new_entry_data: KNXConfigEntryOptions = {}
+        self.initial_options = dict(config_entry.options)
+        self.new_entry_options: KNXConfigEntryOptions = {}
 
     @callback
     def finish_flow(self) -> ConfigFlowResult:
         """Update the ConfigEntry and finish the flow."""
         return self.async_create_entry(
             title="",
-            options=self.initial_options | self.new_entry_options,
+            data=self.initial_options | self.new_entry_options,
         )
 
     async def async_step_init(
@@ -954,12 +950,11 @@ class KNXOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage KNX communication settings."""
         if user_input is not None:
-            telegram_db_retention_days = user_input["telegram_store_sqlite"][CONF_KNX_TELEGRAM_DB_RETENTION_DAYS]
-            self.new_entry_data |= KNXConfigEntryData(
+            self.new_entry_options |= KNXConfigEntryOptions(
                 state_updater=user_input[CONF_KNX_STATE_UPDATER],
                 rate_limit=user_input[CONF_KNX_RATE_LIMIT],
                 telegram_db_load_hours=user_input[CONF_KNX_TELEGRAM_DB_LOAD_HOURS],
-                telegram_db_retention_days=telegram_store_data[
+                telegram_db_retention_days=user_input[CONF_KNX_TELEGRAM_STORE_SECTION][
                     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS
                 ],
             )
@@ -968,13 +963,13 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         data_schema = {
             vol.Required(
                 CONF_KNX_STATE_UPDATER,
-                default=self.initial_data.get(
+                default=self.initial_options.get(
                     CONF_KNX_STATE_UPDATER, CONF_KNX_DEFAULT_STATE_UPDATER
                 ),
             ): selector.BooleanSelector(),
             vol.Required(
                 CONF_KNX_RATE_LIMIT,
-                default=self.initial_data.get(
+                default=self.initial_options.get(
                     CONF_KNX_RATE_LIMIT, CONF_KNX_DEFAULT_RATE_LIMIT
                 ),
             ): vol.All(
@@ -989,7 +984,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             ),
             vol.Required(
                 CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
-                default=self.initial_data.get(
+                default=self.initial_options.get(
                     CONF_KNX_TELEGRAM_DB_LOAD_HOURS, KNX_TELEGRAM_LOAD_HOURS_DEFAULT
                 ),
             ): vol.All(
@@ -1002,12 +997,12 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 ),
                 vol.Coerce(int),
             ),
-            vol.Required("telegram_store_section"): data_entry_flow.section(
+            vol.Required(CONF_KNX_TELEGRAM_STORE_SECTION): data_entry_flow.section(
                 vol.Schema(
                     {
                         vol.Required(
                             CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
-                            default=self.initial_data.get(
+                            default=self.initial_options.get(
                                 CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
                                 KNX_TELEGRAM_DB_RETENTION_DEFAULT,
                             ),
