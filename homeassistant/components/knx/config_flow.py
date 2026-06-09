@@ -990,7 +990,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             ): vol.All(
                 selector.NumberSelector(
                     selector.NumberSelectorConfig(
-                        min=0,
+                        min=1,
                         mode=selector.NumberSelectorMode.BOX,
                         unit_of_measurement="h",
                     ),
