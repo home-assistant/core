@@ -169,11 +169,10 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         try:
             await self._camera.save_recent_clips(output_dir=file_path)
         except OSError as err:
-            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise ServiceValidationError(
-                str(err),
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
+                translation_placeholders={"error": str(err)},
             ) from err
         except UnauthorizedError as er:
             self.coordinator.config_entry.async_start_reauth(self.hass)
@@ -191,11 +190,10 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         try:
             await self._camera.video_to_file(filename)
         except OSError as err:
-            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise ServiceValidationError(
-                str(err),
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
+                translation_placeholders={"error": str(err)},
             ) from err
         except UnauthorizedError as er:
             self.coordinator.config_entry.async_start_reauth(self.hass)
