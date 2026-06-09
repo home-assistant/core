@@ -468,6 +468,40 @@ def test_get_thumbnail_url_full_skips_non_track_cache() -> None:
     assert media.browse_image_uris == {}
 
 
+def test_get_thumbnail_url_full_evicts_oldest_track_art() -> None:
+    """Test the browse-image cache is bounded and evicts the oldest entry first."""
+    media = Mock()
+    media.browse_image_uris = {}
+    get_browse_image_url = Mock(return_value="/proxy")
+
+    with patch(
+        "homeassistant.components.sonos.media_browser.BROWSE_IMAGE_CACHE_SIZE", 2
+    ):
+        for i in range(3):
+            track_uri = f"x-sonos-spotify:track{i}?sid=1"
+            item = MockMusicServiceItem(
+                f"Track {i}",
+                track_uri,
+                "playlist",
+                "object.item.audioItem.musicTrack",
+                album_art_uri=f"http://192.168.42.2:1400/getaa?u=track{i}",
+            )
+            get_thumbnail_url_full(
+                media,
+                False,
+                get_browse_image_url,
+                MediaType.TRACK,
+                track_uri,
+                None,
+                item,
+            )
+
+    assert list(media.browse_image_uris) == [
+        "x-sonos-spotify:track1?sid=1",
+        "x-sonos-spotify:track2?sid=1",
+    ]
+
+
 async def test_browse_image_for_track_uses_cached_art(
     hass: HomeAssistant,
     async_autosetup_sonos,
@@ -485,4 +519,36 @@ async def test_browse_image_for_track_uses_cached_art(
         result = await player.async_get_browse_image(MediaType.TRACK, track_uri)
 
     assert result == (b"image", "image/jpeg")
+    mock_fetch.assert_awaited_once_with(art_url)
+
+
+async def test_browse_image_for_track_falls_back_to_library(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+) -> None:
+    """Test a track with no cached art falls back to a library lookup."""
+    entity_comp = hass.data["entity_components"]["media_player"]
+    player = entity_comp.get_entity("media_player.zone_a")
+    track_uri = "A:TRACKS/Some%20Track"
+    art_url = "http://192.168.42.2:1400/getaa?u=local&v=1"
+    item = MockMusicServiceItem(
+        "Some Track",
+        track_uri,
+        "A:TRACKS",
+        "object.item.audioItem.musicTrack",
+        album_art_uri=art_url,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.sonos.media_browser.get_media", return_value=item
+        ) as mock_get_media,
+        patch.object(
+            player, "_async_fetch_image", return_value=(b"image", "image/jpeg")
+        ) as mock_fetch,
+    ):
+        result = await player.async_get_browse_image(MediaType.TRACK, track_uri)
+
+    assert result == (b"image", "image/jpeg")
+    mock_get_media.assert_called_once()
     mock_fetch.assert_awaited_once_with(art_url)
