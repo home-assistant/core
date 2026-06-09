@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from pyicloud.services.photos import AlbumContainer, PhotoAsset
+from pyicloud.services.photos import AlbumContainer, PhotoAlbumFolder, PhotoAsset
 import pytest
 
 from homeassistant.components.icloud.const import DOMAIN
@@ -39,19 +39,29 @@ def mock_icloud_client() -> Generator[AsyncMock]:
 
         albums = [
             MagicMock(
+                spec=PhotoAlbumFolder, id="folder_id1", title="My Folder 1", albums=[]
+            ),
+            MagicMock(
                 id="album_id1",
                 title="All Photos",
                 photos=[
                     MagicMock(
                         spec=PhotoAsset,
                         id="photo_id1",
-                        filename="My Photo 1.jpg",
+                        filename="My Photo 1.JPG",
                         item_type="image",
+                        versions={
+                            "original": MagicMock(
+                                size=123456,
+                                width=4000,
+                                height=3000,
+                            )
+                        },
                     ),
                     MagicMock(
                         spec=PhotoAsset,
                         id="photo_id2",
-                        filename="My Photo 2.jpg",
+                        filename="My Photo 2.heic",
                         item_type="image",
                     ),
                     MagicMock(
@@ -69,7 +79,7 @@ def mock_icloud_client() -> Generator[AsyncMock]:
                     MagicMock(
                         spec=PhotoAsset,
                         id="photo_id2",
-                        filename="My Photo 2.jpg",
+                        filename="My Photo 2.heic",
                         item_type="image",
                     ),
                 ],
@@ -92,6 +102,18 @@ def mock_icloud_client() -> Generator[AsyncMock]:
                         id="shared_id2",
                         filename="My Video 1.mp4",
                         item_type="movie",
+                    ),
+                ],
+            ),
+            MagicMock(
+                id="stream_id2",
+                title="Random Stream",
+                photos=[
+                    MagicMock(
+                        spec=PhotoAsset,
+                        id="shared_id3",
+                        filename="My Unknown file.xyz",
+                        item_type="unknown",
                     ),
                 ],
             ),
