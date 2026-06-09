@@ -410,6 +410,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: ServiceCall) -> None:
         """Reload the platforms."""
+        if not mqtt_config_entry_enabled(hass):
+            _LOGGER.debug(
+                "Skipped reloading MQTT integration, "
+                "the MQTT config entry is not enabled"
+            )
+            return
         entry: ConfigEntry = next(iter(hass.config_entries.async_entries(DOMAIN)))
         mqtt_data = hass.data[DATA_MQTT]
 
@@ -463,22 +469,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate the options from config entry data."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
-    if entry.version > 2 or (entry.version == 2 and entry.minor_version > 1):
-        # This means the user has downgraded from a future version
+    if entry.version == 1 and entry.minor_version == 1:
+        # This means the user has upgraded from an old unsupported version
         return False
 
-    if entry.version == 1:
-        # Bump config entry to version 2.1 from version 1.2
-        # Can be removed with HA Core 2027.1
-        if entry.minor_version == 1:
-            # This means the user has upgraded from an old unsupported version
-            return False
-
-        hass.config_entries.async_update_entry(
-            entry,
-            version=2,
-            minor_version=1,
-        )
+    # Bump config entry to version 2.1 from version 1.2
+    # Can be removed with HA Core 2027.1
+    hass.config_entries.async_update_entry(
+        entry,
+        version=2,
+        minor_version=1,
+    )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version

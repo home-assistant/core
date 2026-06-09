@@ -2667,10 +2667,7 @@ async def test_migrate_config_entry_fails_on_unsupported_version(
         "data",
         "options",
     ),
-    [
-        (2, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS),
-        (3, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS),
-    ],
+    [(2, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS)],
 )
 @pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_migrate_of_incompatible_config_entry(

@@ -20,6 +20,8 @@ from . import AQUA_CONTOUR_SERVICE_INFO, setup_entry
 
 from tests.common import snapshot_platform
 
+pytestmark = pytest.mark.usefixtures("constant_advertisements")
+
 
 @pytest.mark.parametrize(
     ("service_info", "raw"),

@@ -1,13 +1,82 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_cert": "Invalid certificate",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "encryption": "Connection security",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "sender": "Sender email",
+          "sender_name": "Sender name",
+          "server": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "encryption": "Encryption method used for the SMTP connection. **STARTTLS** upgrades a plain connection to encrypted (recommended). **SSL/TLS** uses encryption from the start. **None** sends without encryption.",
+          "password": "Password or app-specific password for the SMTP account.",
+          "port": "Port number used by your SMTP server. Common values are `587` (STARTTLS) and `465` (TLS).",
+          "sender": "Email address that will appear in the From field.",
+          "sender_name": "Display name shown as the email sender.",
+          "server": "Hostname or IP address of the SMTP server. For example, `smtp.example.com`.",
+          "username": "Username used to authenticate with the SMTP server.",
+          "verify_ssl": "Enable certificate verification for secure SSL/TLS connections."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "recipient": {
+      "abort": {
+        "already_configured": "Recipient is already configured"
+      },
+      "entry_type": "Recipient",
+      "initiate_flow": {
+        "user": "Add recipient"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "recipient": "[%key:common::config_flow::data::email%]"
+          },
+          "data_description": {
+            "name": "Name of the recipient",
+            "recipient": "Email address of the recipient."
+          },
+          "description": "Set up a recipient for notifications.",
+          "title": "Recipient"
+        }
+      }
+    }
+  },
   "exceptions": {
     "remote_path_not_allowed": {
       "message": "Cannot send email with attachment \"{file_name}\" from directory \"{file_path}\" which is not secure to load data from. Only folders added to `{allow_list}` are accessible. See {url} for more information."
     }
   },
-  "services": {
-    "reload": {
-      "description": "Reloads smtp notify services.",
-      "name": "[%key:common::action::reload%]"
+  "issues": {
+    "deprecated_yaml_import_issue_error": {
+      "description": "YAML configuration for SMTP is being deprecated, but an error occurred while importing your existing configuration.\n\nVerify that the YAML configuration is valid, then restart Home Assistant to try again. Alternatively remove the SMTP YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.\n\n**Configuration that could not be imported:**\n\n```{config}```",
+      "title": "Failed to import SMTP YAML configuration"
+    }
+  },
+  "selector": {
+    "encryption": {
+      "options": {
+        "none": "None",
+        "starttls": "STARTTLS",
+        "tls": "SSL/TLS"
+      }
     }
   }
 }
