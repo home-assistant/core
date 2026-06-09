@@ -241,8 +241,11 @@ class OvenEntity(WhirlpoolOvenEntity, ClimateEntity):
 
     @property
     def hvac_action(self) -> HVACAction:
-        """Return the current action."""
-        if self._appliance.get_cavity_state(self.cavity) in OVEN_ACTIVE_STATES:
+        """Return the current action (preheating, heating, or off)."""
+        state = self._appliance.get_cavity_state(self.cavity)
+        if state == CavityState.Preheating:
+            return HVACAction.PREHEATING
+        if state == CavityState.Cooking:
             return HVACAction.HEATING
         return HVACAction.OFF
 
