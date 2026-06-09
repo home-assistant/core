@@ -19,21 +19,9 @@ from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callba
 
 @pytest.fixture(
     params=[
-        (
-            "number.single_cavity_oven_target_temperature",
-            "mock_oven_single_cavity_api",
-            whirlpool.oven.Cavity.Upper,
-        ),
-        (
-            "number.dual_cavity_oven_upper_oven_target_temperature",
-            "mock_oven_dual_cavity_api",
-            whirlpool.oven.Cavity.Upper,
-        ),
-        (
-            "number.dual_cavity_oven_lower_oven_target_temperature",
-            "mock_oven_dual_cavity_api",
-            whirlpool.oven.Cavity.Lower,
-        ),
+        ("number.single_cavity_oven_target_temperature", "mock_oven_single_cavity_api", whirlpool.oven.Cavity.Upper),
+        ("number.dual_cavity_oven_upper_oven_target_temperature", "mock_oven_dual_cavity_api", whirlpool.oven.Cavity.Upper),
+        ("number.dual_cavity_oven_lower_oven_target_temperature", "mock_oven_dual_cavity_api", whirlpool.oven.Cavity.Lower),
     ]
 )
 def oven_number_entity(
@@ -74,9 +62,10 @@ async def test_set_target_temperature(
     oven_number_entity: tuple[str, str, whirlpool.oven.Cavity],
     request: pytest.FixtureRequest,
 ) -> None:
-    """Test setting the target temperature issues a cook command."""
+    """Test setting the target temperature keeps the current cook mode."""
     entity_id, mock_fixture, cavity = oven_number_entity
     mock = request.getfixturevalue(mock_fixture)
+    mock.get_cook_mode.return_value = whirlpool.oven.CookMode.Broil
     await init_integration(hass)
 
     await hass.services.async_call(
@@ -86,7 +75,7 @@ async def test_set_target_temperature(
         blocking=True,
     )
     mock.set_cook.assert_called_once_with(
-        target_temp=220, mode=whirlpool.oven.CookMode.Bake, cavity=cavity
+        target_temp=220, mode=whirlpool.oven.CookMode.Broil, cavity=cavity
     )
 
 
