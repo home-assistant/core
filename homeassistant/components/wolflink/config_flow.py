@@ -10,7 +10,7 @@ from wolf_comm.wolf_client import FetchFailed, WolfClient
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DEVICE_ID, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,6 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        DEVICE_ID: [device.id for device in devices],
                     },
                 )
         return self.async_show_form(

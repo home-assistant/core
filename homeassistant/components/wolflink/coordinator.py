@@ -4,12 +4,13 @@ from datetime import timedelta
 import logging
 
 from httpx import RequestError
-from wolf_comm.models import Parameter
+from wolf_comm.models import Device, Parameter
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -29,25 +30,33 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
         hass: HomeAssistant,
         entry: WolflinkConfigEntry,
         wolf_client: WolfClient,
-        parameters: list[Parameter],
-        gateway_id: int,
-        device_id: int,
-        device_name: str,
+        device: Device,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
-            name=f"{DOMAIN} {device_name}",
+            name=f"{DOMAIN} {device.name}",
             update_interval=timedelta(seconds=60),
         )
         self._wolf_client = wolf_client
-        self.parameters = parameters
-        self._gateway_id = gateway_id
-        self.device_id = device_id
-        self.device_name = device_name
+        self.parameters: list[Parameter] = []
+        self._gateway_id = device.gateway
+        self.device_id = device.id
+        self.device_name = device.name
         self._refetch_parameters = False
+
+    async def _async_setup(self) -> None:
+        """Fetch parameters once during initial setup."""
+        try:
+            self.parameters = await fetch_parameters(
+                self._wolf_client, self._gateway_id, self.device_id
+            )
+        except (FetchFailed, RequestError) as exception:
+            raise ConfigEntryNotReady(
+                f"Error communicating with API: {exception}"
+            ) from exception
 
     async def _async_update_data(self) -> dict[int, tuple[int, str]]:
         """Update all stored entities for Wolf SmartSet."""

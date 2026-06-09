@@ -8,7 +8,7 @@ from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
 
 from homeassistant import config_entries
-from homeassistant.components.wolflink.const import DEVICE_ID, DOMAIN
+from homeassistant.components.wolflink.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -36,26 +36,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
-    """Test entry creation auto-adds all devices on the account."""
-    with (
-        patch(
-            "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
-            return_value=[DEVICE],
-        ),
-        patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == CONFIG[CONF_USERNAME]
-    assert result["data"] == CONFIG
-    assert result["result"].unique_id == CONFIG[CONF_USERNAME].lower()
-
-
-async def test_create_entry_multiple_devices(hass: HomeAssistant) -> None:
-    """Test entry creation with multiple devices on the account."""
+    """Test entry creation only stores credentials, not the device list."""
     with (
         patch(
             "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
@@ -68,7 +49,9 @@ async def test_create_entry_multiple_devices(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][DEVICE_ID] == [DEVICE.id, SECOND_DEVICE.id]
+    assert result["title"] == CONFIG[CONF_USERNAME]
+    assert result["data"] == CONFIG
+    assert result["result"].unique_id == CONFIG[CONF_USERNAME].lower()
 
 
 @pytest.mark.parametrize(
