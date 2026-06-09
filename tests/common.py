@@ -88,6 +88,7 @@ from homeassistant.helpers import (
     storage,
     translation,
     trigger,
+    update_coordinator,
 )
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -300,6 +301,7 @@ async def async_test_home_assistant(
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+    update_coordinator.async_setup(hass)
     await condition.async_setup(hass)
     await trigger.async_setup(hass)
 

@@ -3,8 +3,8 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
-import gc
 import logging
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
@@ -26,7 +26,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import frame, update_coordinator
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed, flush_store
@@ -1385,6 +1385,21 @@ async def test_callbacks_does_not_stop_coordinator(
 RESTORE_KEY = "test_restore_coordinator"
 
 
+@pytest.fixture
+def restore_entry() -> MockConfigEntry:
+    """Config entry for the restore coordinator under test."""
+    return MockConfigEntry()
+
+
+@pytest.fixture
+def restore_key(restore_entry: MockConfigEntry) -> str:
+    """Full storage key of the restore coordinator under test."""
+    return (
+        f"{update_coordinator.RESTORE_STORAGE_FOLDER}/"
+        f"{restore_entry.entry_id}/{RESTORE_KEY}"
+    )
+
+
 def get_restore_crd(
     hass: HomeAssistant,
     *,
@@ -1411,19 +1426,20 @@ def get_restore_crd(
 
 
 async def test_restore_on_first_refresh(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test stored data is restored during setup, before the first fetch runs."""
-    hass_storage[RESTORE_KEY] = {"version": 1, "data": {"value": "stored"}}
+    hass_storage[restore_key] = {"version": 1, "data": {"value": "stored"}}
     seen: list[Any] = []
 
     async def update_method() -> dict[str, Any]:
         seen.append(crd.data)
         return {"value": "fetched"}
 
-    crd = get_restore_crd(
-        hass, config_entry=MockConfigEntry(), update_method=update_method
-    )
+    crd = get_restore_crd(hass, config_entry=restore_entry, update_method=update_method)
     await crd.async_config_entry_first_refresh()
 
     # Data was restored during setup, so it was already available to the first fetch
@@ -1434,9 +1450,7 @@ async def test_restore_on_first_refresh(
     await flush_store(crd._store)
 
 
-async def test_no_stored_data(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
+async def test_no_stored_data(hass: HomeAssistant) -> None:
     """Test the first refresh works when nothing was stored."""
 
     async def update_method() -> dict[str, Any]:
@@ -1454,24 +1468,28 @@ async def test_no_stored_data(
 
 
 async def test_persist_after_successful_refresh(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test data is written to storage after a successful refresh."""
 
     async def update_method() -> dict[str, Any]:
         return {"value": "fetched"}
 
-    crd = get_restore_crd(
-        hass, config_entry=MockConfigEntry(), update_method=update_method
-    )
+    crd = get_restore_crd(hass, config_entry=restore_entry, update_method=update_method)
     await crd.async_config_entry_first_refresh()
     await flush_store(crd._store)
 
-    assert hass_storage[RESTORE_KEY]["data"] == {"value": "fetched"}
+    assert hass_storage[restore_key]["data"] == {"value": "fetched"}
 
 
 async def test_no_persist_on_failed_refresh(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test a failed refresh does not overwrite previously stored good data."""
     fail = False
@@ -1481,12 +1499,10 @@ async def test_no_persist_on_failed_refresh(
             raise update_coordinator.UpdateFailed("boom")
         return {"value": "good"}
 
-    crd = get_restore_crd(
-        hass, config_entry=MockConfigEntry(), update_method=update_method
-    )
+    crd = get_restore_crd(hass, config_entry=restore_entry, update_method=update_method)
     await crd.async_config_entry_first_refresh()
     await flush_store(crd._store)
-    assert hass_storage[RESTORE_KEY]["data"] == {"value": "good"}
+    assert hass_storage[restore_key]["data"] == {"value": "good"}
 
     fail = True
     await crd.async_refresh()
@@ -1494,25 +1510,30 @@ async def test_no_persist_on_failed_refresh(
     await flush_store(crd._store)
 
     # The previous good payload is still on disk, not overwritten or deleted
-    assert hass_storage[RESTORE_KEY]["data"] == {"value": "good"}
+    assert hass_storage[restore_key]["data"] == {"value": "good"}
 
 
 async def test_persist_on_async_set_updated_data(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test pushing data via async_set_updated_data persists it."""
-    crd = get_restore_crd(hass, config_entry=MockConfigEntry())
+    crd = get_restore_crd(hass, config_entry=restore_entry)
 
     crd.async_set_updated_data({"value": "pushed"})
     await flush_store(crd._store)
 
-    assert hass_storage[RESTORE_KEY]["data"] == {"value": "pushed"}
+    assert hass_storage[restore_key]["data"] == {"value": "pushed"}
 
 
 async def test_save_delay_honored(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test nothing is written until save_delay has elapsed."""
 
@@ -1521,23 +1542,26 @@ async def test_save_delay_honored(
 
     crd = get_restore_crd(
         hass,
-        config_entry=MockConfigEntry(),
+        config_entry=restore_entry,
         update_method=update_method,
         save_delay=30,
     )
     await crd.async_config_entry_first_refresh()
 
-    assert RESTORE_KEY not in hass_storage
+    assert restore_key not in hass_storage
 
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass_storage[RESTORE_KEY]["data"] == {"value": "fetched"}
+    assert hass_storage[restore_key]["data"] == {"value": "fetched"}
 
 
 async def test_store_version_honored(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test the configured store version is written to storage."""
 
@@ -1546,14 +1570,14 @@ async def test_store_version_honored(
 
     crd = get_restore_crd(
         hass,
-        config_entry=MockConfigEntry(),
+        config_entry=restore_entry,
         update_method=update_method,
         store_version=2,
     )
     await crd.async_config_entry_first_refresh()
     await flush_store(crd._store)
 
-    assert hass_storage[RESTORE_KEY]["version"] == 2
+    assert hass_storage[restore_key]["version"] == 2
 
 
 @pytest.mark.parametrize(
@@ -1564,19 +1588,19 @@ async def test_store_version_honored(
 async def test_restore_falsy_but_valid(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
     stored: list[Any] | dict[str, Any],
 ) -> None:
     """Test falsy-but-valid stored payloads are restored."""
-    hass_storage[RESTORE_KEY] = {"version": 1, "data": stored}
+    hass_storage[restore_key] = {"version": 1, "data": stored}
     seen: list[Any] = []
 
     async def update_method() -> dict[str, Any]:
         seen.append(crd.data)
         return {"value": "fetched"}
 
-    crd = get_restore_crd(
-        hass, config_entry=MockConfigEntry(), update_method=update_method
-    )
+    crd = get_restore_crd(hass, config_entry=restore_entry, update_method=update_method)
     await crd.async_config_entry_first_refresh()
 
     assert seen == [stored]
@@ -1585,7 +1609,10 @@ async def test_restore_falsy_but_valid(
 
 
 async def test_generic_non_dict_roundtrip(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test a coordinator with a non-dict generic data type round-trips."""
     payload = [{"id": 1}, {"id": 2}]
@@ -1594,16 +1621,17 @@ async def test_generic_non_dict_roundtrip(
         update_coordinator.RestoreDataUpdateCoordinator(
             hass,
             _LOGGER,
-            config_entry=MockConfigEntry(),
+            config_entry=restore_entry,
             name="test",
             storage_key=RESTORE_KEY,
         )
     )
     crd1.async_set_updated_data(payload)
     await flush_store(crd1._store)
-    assert hass_storage[RESTORE_KEY]["data"] == payload
+    assert hass_storage[restore_key]["data"] == payload
 
-    # A second coordinator with the same storage key restores the stored list
+    # After a reload, a new coordinator for the same config entry and storage key
+    # restores the stored list
     seen: list[Any] = []
 
     async def update_method() -> list[dict[str, Any]]:
@@ -1611,7 +1639,7 @@ async def test_generic_non_dict_roundtrip(
         return [{"id": 3}]
 
     crd2 = get_restore_crd(
-        hass, config_entry=MockConfigEntry(), update_method=update_method
+        hass, config_entry=restore_entry, update_method=update_method
     )
     await crd2.async_config_entry_first_refresh()
 
@@ -1620,160 +1648,139 @@ async def test_generic_non_dict_roundtrip(
     await flush_store(crd2._store)
 
 
-async def test_cleanup_removes_store_on_removed_signal(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+async def test_storage_removed_on_entry_removal(
+    hass: HomeAssistant, tmp_path: Path
 ) -> None:
-    """Test the store is removed when the config entry is removed."""
-    hass_storage[RESTORE_KEY] = {"version": 1, "data": {"value": "stored"}}
+    """Test stored data is removed when the config entry is removed.
+
+    Cleanup must not rely on the coordinator existing, so it also covers config
+    entries that were never set up, e.g. disabled ones; no coordinator is created
+    here.
+    """
+    hass.config.config_dir = str(tmp_path)
     entry = MockConfigEntry()
-    get_restore_crd(hass, config_entry=entry)
+    other_entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    other_entry.add_to_hass(hass)
 
-    assert RESTORE_KEY in hass_storage
+    folder = tmp_path / STORAGE_DIR / update_coordinator.RESTORE_STORAGE_FOLDER
+    for config_entry in (entry, other_entry):
+        (folder / config_entry.entry_id).mkdir(parents=True)
+        (folder / config_entry.entry_id / RESTORE_KEY).write_text("{}")
 
-    async_dispatcher_send(
-        hass,
-        config_entries.SIGNAL_CONFIG_ENTRY_CHANGED,
-        config_entries.ConfigEntryChange.REMOVED,
-        entry,
-    )
-    await hass.async_block_till_done()
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert RESTORE_KEY not in hass_storage
+    assert not (folder / entry.entry_id).exists()
+    assert (folder / other_entry.entry_id / RESTORE_KEY).exists()
 
 
-async def test_cleanup_ignores_other_entry_removed(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+async def test_storage_kept_on_entry_update(
+    hass: HomeAssistant, tmp_path: Path
 ) -> None:
-    """Test removing a different config entry does not remove the store."""
-    hass_storage[RESTORE_KEY] = {"version": 1, "data": {"value": "stored"}}
-    get_restore_crd(hass, config_entry=MockConfigEntry())
-
-    async_dispatcher_send(
-        hass,
-        config_entries.SIGNAL_CONFIG_ENTRY_CHANGED,
-        config_entries.ConfigEntryChange.REMOVED,
-        MockConfigEntry(),
-    )
-    await hass.async_block_till_done()
-
-    assert RESTORE_KEY in hass_storage
-
-
-async def test_reload_does_not_delete_store_or_leak_listeners(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test reloading keeps the store and does not leak listeners or coordinators."""
-    hass_storage[RESTORE_KEY] = {"version": 1, "data": {"value": "stored"}}
+    """Test updating or reloading the config entry does not remove stored data."""
+    hass.config.config_dir = str(tmp_path)
     entry = MockConfigEntry()
+    entry.add_to_hass(hass)
 
-    crd1 = get_restore_crd(hass, config_entry=entry)
-    ref = weakref.ref(crd1)
+    folder = tmp_path / STORAGE_DIR / update_coordinator.RESTORE_STORAGE_FOLDER
+    (folder / entry.entry_id).mkdir(parents=True)
+    (folder / entry.entry_id / RESTORE_KEY).write_text("{}")
 
-    # On reload the same config entry is unloaded and set up again with a new
-    # coordinator. Simulate the unload releasing the entry's hold on crd1.
-    assert entry._on_unload is not None
-    entry._on_unload.clear()
+    hass.config_entries.async_update_entry(entry, title="new title")
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    crd2 = get_restore_crd(hass, config_entry=entry)
-
-    # Only one cleanup listener is registered for the storage key
-    assert hass.data[update_coordinator._RESTORE_CLEANUP_KEY] == {RESTORE_KEY}
-
-    # A reload does not touch the store
-    assert RESTORE_KEY in hass_storage
-
-    # crd1 is collectable: the cleanup closure captured primitives, not self
-    del crd1
-    gc.collect()
-    assert ref() is None
-
-    assert crd2.config_entry is entry
+    assert (folder / entry.entry_id / RESTORE_KEY).exists()
 
 
-async def test_pending_save_does_not_resurrect_removed_store(
+async def test_pending_save_flushed_on_shutdown(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
-    """Test a pending delayed save cannot recreate the store after removal."""
-    entry = MockConfigEntry()
+    """Test shutdown flushes a pending delayed save and cancels its timer.
+
+    Removal unloads the entry (awaiting async_shutdown) before the REMOVED signal
+    deletes the stored data; a delayed save firing after that would recreate it.
+    """
 
     async def update_method() -> dict[str, Any]:
         return {"value": "fetched"}
 
     crd = get_restore_crd(
         hass,
-        config_entry=entry,
+        config_entry=restore_entry,
         update_method=update_method,
         save_delay=30,
     )
     await crd.async_config_entry_first_refresh()
 
     # A delayed save is scheduled but nothing has been written yet
-    assert RESTORE_KEY not in hass_storage
+    assert restore_key not in hass_storage
 
-    # Removal unloads the entry (awaiting async_shutdown) before the REMOVED signal
-    # fires; mirror that ordering. Shutdown flushes the pending save and cancels its
-    # timer, then removal deletes the store.
     await crd.async_shutdown()
-    async_dispatcher_send(
-        hass,
-        config_entries.SIGNAL_CONFIG_ENTRY_CHANGED,
-        config_entries.ConfigEntryChange.REMOVED,
-        entry,
-    )
-    await hass.async_block_till_done()
+    assert hass_storage[restore_key]["data"] == {"value": "fetched"}
 
-    assert RESTORE_KEY not in hass_storage
+    # Simulate the REMOVED signal deleting the stored data
+    del hass_storage[restore_key]
 
-    # The previously scheduled delayed save must not fire and recreate the store
+    # The previously scheduled delayed save must not fire and recreate the data
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert RESTORE_KEY not in hass_storage
+    assert restore_key not in hass_storage
 
 
 async def test_no_persist_initial_none(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test a failed first refresh with no data writes nothing to storage."""
 
     async def update_method() -> dict[str, Any]:
         raise update_coordinator.UpdateFailed("boom")
 
-    crd = get_restore_crd(
-        hass, config_entry=MockConfigEntry(), update_method=update_method
-    )
+    crd = get_restore_crd(hass, config_entry=restore_entry, update_method=update_method)
 
     with pytest.raises(ConfigEntryNotReady):
         await crd.async_config_entry_first_refresh()
 
     assert crd.data is None
     await flush_store(crd._store)
-    assert RESTORE_KEY not in hass_storage
+    assert restore_key not in hass_storage
 
 
 async def test_async_remove_store_helper(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test the explicit async_remove_store helper removes the store and is idempotent."""
-    hass_storage[RESTORE_KEY] = {"version": 1, "data": {"value": "stored"}}
-    crd = get_restore_crd(hass, config_entry=MockConfigEntry())
+    hass_storage[restore_key] = {"version": 1, "data": {"value": "stored"}}
+    crd = get_restore_crd(hass, config_entry=restore_entry)
 
     await crd.async_remove_store()
-    assert RESTORE_KEY not in hass_storage
+    assert restore_key not in hass_storage
 
     # Harmless to call again
     await crd.async_remove_store()
 
 
 async def test_async_restore_data_manual(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test async_restore_data restores without async_config_entry_first_refresh."""
-    hass_storage[RESTORE_KEY] = {"version": 1, "data": {"value": "stored"}}
-    crd = get_restore_crd(hass, config_entry=MockConfigEntry())
+    hass_storage[restore_key] = {"version": 1, "data": {"value": "stored"}}
+    crd = get_restore_crd(hass, config_entry=restore_entry)
 
     assert crd.data is None
     await crd.async_restore_data()
@@ -1781,14 +1788,24 @@ async def test_async_restore_data_manual(
 
 
 async def test_async_restore_data_skips_when_data_present(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    restore_key: str,
 ) -> None:
     """Test async_restore_data does not overwrite data that is already set."""
-    hass_storage[RESTORE_KEY] = {"version": 1, "data": {"value": "stored"}}
-    crd = get_restore_crd(hass, config_entry=MockConfigEntry())
+    hass_storage[restore_key] = {"version": 1, "data": {"value": "stored"}}
+    crd = get_restore_crd(hass, config_entry=restore_entry)
 
     crd.async_set_updated_data({"value": "pushed"})
     await crd.async_restore_data()
     assert crd.data == {"value": "pushed"}
 
     await flush_store(crd._store)
+
+
+@pytest.mark.parametrize("storage_key", ["../escape", "sub/key", "~home"])
+async def test_invalid_storage_key(hass: HomeAssistant, storage_key: str) -> None:
+    """Test storage keys that could escape the per-entry folder are rejected."""
+    with pytest.raises(ValueError):
+        get_restore_crd(hass, config_entry=MockConfigEntry(), storage_key=storage_key)
