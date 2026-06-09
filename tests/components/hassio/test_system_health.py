@@ -126,6 +126,7 @@ async def test_hassio_system_health(
         auto_update=True,
         country=None,
         detect_blocking_io=False,
+        feature_flags={},
     )
     hass.data[DATA_ADDONS_LIST] = [
         InstalledAddon(
@@ -316,6 +317,7 @@ async def test_hassio_system_health_with_issues(
         auto_update=True,
         country=None,
         detect_blocking_io=False,
+        feature_flags={},
     )
     hass.data[DATA_NETWORK_INFO] = NetworkInfo(
         interfaces=[],

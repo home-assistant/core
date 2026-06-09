@@ -127,7 +127,7 @@ async def async_setup_cast(
     with patch(
         "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities_for_entry"
     ) as add_entities:
-        entry = MockConfigEntry(data=data, domain="cast")
+        entry = MockConfigEntry(data=data, domain=DOMAIN)
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -226,7 +226,7 @@ async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInf
         ),
     ):
         data = {"ignore_cec": [], "known_hosts": [], "uuid": [str(info.uuid)]}
-        entry = MockConfigEntry(data=data, domain="cast")
+        entry = MockConfigEntry(data=data, domain=DOMAIN)
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -487,7 +487,7 @@ async def test_stop_discovery_called_on_stop(
 
 async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     """Test create a cast device with no UUId does not create an entity."""
-    entry = MockConfigEntry(domain="cast")
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entry.runtime_data = CastRuntimeData()
     info = get_fake_chromecast_info(uuid=None)
@@ -497,7 +497,7 @@ async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
 
 async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     """Test create cast devices with UUID creates entities."""
-    entry = MockConfigEntry(domain="cast")
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entry.runtime_data = CastRuntimeData()
     added_casts = entry.runtime_data.added_cast_devices
@@ -2108,7 +2108,7 @@ async def test_disconnect_on_stop(hass: HomeAssistant) -> None:
 
 async def test_entry_setup_no_config(hass: HomeAssistant) -> None:
     """Test deprecated empty yaml config.."""
-    await async_setup_component(hass, "cast", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries("cast")

@@ -3,12 +3,17 @@
 from datetime import datetime
 
 import aiohttp
-from yoto_api import Token, YotoClient, YotoError, YotoPlayer
+from yoto_api import AuthenticationError, Token, YotoClient, YotoError, YotoPlayer
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.event import async_track_time_interval
@@ -57,6 +62,11 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         """Set up the coordinator."""
         try:
             await self.client.refresh()
+        except AuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except YotoError as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -93,6 +103,11 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
 
         try:
             await self._session.async_ensure_token_valid()
+        except OAuth2TokenRequestReauthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (aiohttp.ClientError, OAuth2TokenRequestError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -104,6 +119,11 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
 
         try:
             await self.client.refresh()
+        except AuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except YotoError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -114,11 +134,15 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         return self.client.players
 
     async def _async_load_library(self) -> None:
-        """Load the card library; failures only affect titles and artwork."""
+        """Load the card library and groups; failures only affect browsing."""
         try:
             await self.client.update_library()
         except YotoError as err:
             _LOGGER.warning("Could not load Yoto card library: %s", err)
+        try:
+            await self.client.update_groups()
+        except YotoError as err:
+            _LOGGER.warning("Could not load Yoto card groups: %s", err)
 
     async def _async_status_push_tick(self, _now: datetime) -> None:
         """Ask each player to push a fresh status snapshot over MQTT."""
@@ -127,7 +151,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         # Fire-and-forget: the data/status response lands via the on_update
         # callback later, which already triggers async_set_updated_data.
         for device_id in list(self.client.players):
-            await self.client.request_status_push(device_id)
+            await self.client.request_player_status(device_id)
 
     def _mqtt_event(self, _player: YotoPlayer) -> None:
         """Handle a real-time update pushed by the Yoto MQTT broker."""

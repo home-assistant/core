@@ -74,7 +74,7 @@ class EvoHomeController(OverkizEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
-            state := self.device.states[OverkizState.RAMSES_RAMSES_OPERATING_MODE]
+            state := self.device.states.get(OverkizState.RAMSES_RAMSES_OPERATING_MODE)
         ) and state.value_as_str in OVERKIZ_TO_PRESET_MODES:
             return OVERKIZ_TO_PRESET_MODES[state.value_as_str]
 

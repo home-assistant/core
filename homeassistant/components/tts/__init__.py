@@ -613,6 +613,10 @@ class ResultStream:
         async for chunk in converted_audio:
             yield chunk
 
+    def delete(self) -> None:
+        """Remove the result stream from the manager."""
+        self._manager.async_delete_result_stream(self.token)
+
 
 def _hash_options(options: dict) -> str:
     """Hashes an options dictionary."""
@@ -808,6 +812,11 @@ class SpeechManager:
         if stream:
             stream.last_used = monotonic()
         return stream
+
+    @callback
+    def async_delete_result_stream(self, token: str) -> None:
+        """Delete a result stream given a token."""
+        self.token_to_stream.pop(token, None)
 
     @callback
     def async_create_result_stream(
