@@ -793,19 +793,10 @@ async def test_media_source_view_streams_timeout(
     mock_session = AsyncMock()
     mock_session.get.return_value = upstream_resp
 
-    mock_photo = SimpleNamespace(
-        filename="My Photo 1.jpg",
-        versions={"original": {"url": "https://icloud.test/original"}},
-    )
-
     with (
         patch(
             "homeassistant.components.icloud.media_source.async_get_clientsession",
             return_value=mock_session,
-        ),
-        patch(
-            "homeassistant.components.icloud.media_source._get_photo_asset",
-            return_value=mock_photo,
         ),
     ):
         config_entry.add_to_hass(hass)
@@ -820,7 +811,6 @@ async def test_media_source_view_streams_timeout(
     resp = await client.get(f"/api/icloud/media_source/serve/original/{image_id}")
 
     assert resp.status == HTTPStatus.OK
-    # with pytest.raises(ClientPayloadError):
     await resp.read()
     assert resp.headers[hdrs.CONTENT_TYPE] == "image/jpeg"
     assert (

@@ -153,7 +153,8 @@ async def _get_photo_asset(
     if photo is None:
         album: BasePhotoAlbum = await _get_photo_album(hass, icloud_account, identifier)
         photo = await hass.async_add_executor_job(_get_photo_asset_sync, album)
-        PhotoCache.instance(icloud_account).set(identifier.photo_id, photo)
+        if photo is not None:
+            PhotoCache.instance(icloud_account).set(identifier.photo_id, photo)
     if photo is None:
         raise Unresolvable(
             translation_domain=DOMAIN,
@@ -321,6 +322,7 @@ class IcloudMediaSource(MediaSource):
     ) -> str:
         """Build title for media source identifier."""
         title_parts = ["iCloud Media"]
+        icloud_account = None
 
         if identifier and identifier.config_entry_id is not None:
             icloud_account, title = _get_icloud_account_and_title(
@@ -333,7 +335,7 @@ class IcloudMediaSource(MediaSource):
         elif identifier and identifier.shared_album is False:
             title_parts.append("Albums")
 
-        if identifier and identifier.album_id is not None:
+        if icloud_account and identifier and identifier.album_id is not None:
             album = await _get_photo_album(self._hass, icloud_account, identifier)
             title_parts.append(album.title)
 
@@ -647,7 +649,7 @@ class IcloudMediaSourceView(HomeAssistantView):
             async for chunk in icloud_response.content.iter_chunked(65536):
                 await response.write(chunk)
         except TimeoutError:
-            _LOGGER.debug(
+            _LOGGER.warning(
                 "Timeout while reading iCloud, writing EOF",
             )
         finally:
