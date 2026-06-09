@@ -13,7 +13,13 @@ import pytest
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
+from homeassistant.const import (
+    CONF_PATH,
+    PERCENTAGE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_STANDBY,
+)
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -319,6 +325,50 @@ async def test_setup_config_ssl(
         await hass.async_block_till_done()
 
         assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_ext", "path_in_kwargs"),
+    [
+        pytest.param(
+            influxdb.DEFAULT_API_VERSION,
+            {CONF_PATH: "/"},
+            False,
+            id="root_path_excluded",
+        ),
+        pytest.param(
+            influxdb.DEFAULT_API_VERSION,
+            {CONF_PATH: "/custom_path"},
+            True,
+            id="custom_path_included",
+        ),
+        pytest.param(
+            influxdb.DEFAULT_API_VERSION,
+            {},
+            False,
+            id="no_path_excluded",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_config_path(
+    hass: HomeAssistant, mock_client, config_ext: dict, path_in_kwargs: bool
+) -> None:
+    """Test that path='/' is not passed to InfluxDBClient, but other paths are."""
+    config = BASE_V1_CONFIG.copy()
+    config.update(config_ext)
+
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=config)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    if path_in_kwargs:
+        assert CONF_PATH in mock_client.call_args.kwargs
+        assert mock_client.call_args.kwargs[CONF_PATH] == config_ext[CONF_PATH]
+    else:
+        assert CONF_PATH not in mock_client.call_args.kwargs
 
 
 @pytest.mark.parametrize(
