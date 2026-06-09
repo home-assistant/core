@@ -1002,7 +1002,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 ),
                 vol.Coerce(int),
             ),
-            vol.Required("telegram_store_sqlite"): data_entry_flow.section(
+            vol.Required("telegram_store_section"): data_entry_flow.section(
                 vol.Schema(
                     {
                         vol.Required(
