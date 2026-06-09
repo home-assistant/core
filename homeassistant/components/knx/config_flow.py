@@ -933,7 +933,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize KNX options flow."""
         self.initial_data = dict(config_entry.options)
-        self.new_entry_data: KNXConfigEntryData = {}
+        self.new_entry_data: KNXConfigEntryOptions = {}
 
     @callback
     def finish_flow(self) -> ConfigFlowResult:
