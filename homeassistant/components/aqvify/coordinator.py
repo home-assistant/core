@@ -65,7 +65,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 translation_key="api_error",
                 translation_placeholders={
                     "entry": self.config_entry.title,
-                    "error": str(err),
                 },
             ) from err
         except TimeoutError as err:
@@ -74,7 +73,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 translation_key="api_timeout",
                 translation_placeholders={
                     "entry": self.config_entry.title,
-                    "error": str(err),
                 },
             ) from err
 
@@ -93,7 +91,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 translation_key="api_error",
                 translation_placeholders={
                     "entry": self.config_entry.title,
-                    "error": str(err),
                 },
             ) from err
         except TimeoutError as err:
@@ -102,7 +99,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 translation_key="api_timeout",
                 translation_placeholders={
                     "entry": self.config_entry.title,
-                    "error": str(err),
                 },
             ) from err
 
@@ -124,7 +120,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                     translation_key="api_error",
                     translation_placeholders={
                         "entry": self.config_entry.title,
-                        "error": str(err),
                     },
                 ) from err
             except TimeoutError as err:
@@ -133,7 +128,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                     translation_key="api_timeout",
                     translation_placeholders={
                         "entry": self.config_entry.title,
-                        "error": str(err),
                     },
                 ) from err
 
