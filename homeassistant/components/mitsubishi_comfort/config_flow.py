@@ -99,6 +99,7 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                                     "mac": info.mac,
                                 }
                                 for serial, info in devices.items()
+                                if info.password and info.crypto_serial
                             },
                         },
                     )

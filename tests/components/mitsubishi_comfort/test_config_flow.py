@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
 
@@ -73,6 +74,55 @@ async def test_user_step_success(
         },
     }
     mock_setup_entry.assert_called_once()
+
+
+async def test_user_step_skips_credential_less_devices(
+    hass: HomeAssistant,
+    mock_cloud_account: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test devices the cloud returned no credentials for are not persisted.
+
+    Only fully-credentialed devices are seeded, matching async_setup_entry's
+    caching, so the next setup is not handed unusable cached credentials.
+    """
+    mock_cloud_account.discover_devices.return_value = {
+        MOCK_SERIAL: DeviceInfo(
+            serial=MOCK_SERIAL,
+            label="Living Room",
+            address="",
+            mac=MOCK_MAC,
+            unit_type="ductless",
+            password="dGVzdHBhc3M=",
+            crypto_serial="0102030405060708090a",
+        ),
+        "SERIAL002": DeviceInfo(
+            serial="SERIAL002",
+            label="Bedroom",
+            address="",
+            mac="11:22:33:44:55:66",
+            unit_type="ductless",
+            password="",
+            crypto_serial="",
+        ),
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CREDENTIALS] == {
+        MOCK_SERIAL: {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": MOCK_MAC,
+        }
+    }
 
 
 @pytest.mark.parametrize(
