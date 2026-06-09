@@ -1672,18 +1672,24 @@ async def test_announce(
     mock_proc.stdout.read = AsyncMock(side_effect=[pcm_audio, b""])
 
     async def create_subprocess_exec(*args, **kwargs):
-        # Verify ffmpeg is called with a list of allowed protocols
+        # Verify ffmpeg is called with a list of allowed protocols before -i
         protocol_arg_idx: int | None = None
+        input_arg_idx: int | None = None
         for arg_idx, arg in enumerate(args):
             if arg == "-protocol_whitelist":
                 protocol_arg_idx = arg_idx
-                break
+            elif arg == "-i":
+                input_arg_idx = arg_idx
 
         assert protocol_arg_idx is not None
+        assert input_arg_idx is not None
+        assert protocol_arg_idx < input_arg_idx, (
+            "-protocol_whitelist must appear before -i"
+        )
         assert (protocol_arg_idx + 1) < len(args)
 
         allowed_protocols = set(args[protocol_arg_idx + 1].split(","))
-        assert allowed_protocols == {"http", "https", "file"}
+        assert allowed_protocols == {"file", "http", "https", "tcp", "tls"}
 
         return mock_proc
 
