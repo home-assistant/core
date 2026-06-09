@@ -254,7 +254,7 @@ class MobileAppNotificationService(BaseNotificationService):
             else:
                 _LOGGER.error(str(e))
         else:
-            if on_success_callback is not None:
+            if on_success_callback:
                 on_success_callback()
 
 
