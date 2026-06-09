@@ -131,7 +131,9 @@
     }
   },
   "exceptions": {
-    "incorrect_credentials": { "message": "Incorrect credentials." },
+    "invalid_auth": {
+      "message": "[%key:component::incomfort::config::error::auth_error%]"
+    },
     "no_heaters": {
       "message": "[%key:component::incomfort::config::error::no_heaters%]"
     },

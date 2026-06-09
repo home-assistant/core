@@ -23,6 +23,7 @@ from pylint_home_assistant.checkers.sorted_platforms import (
 )
 from pylint_home_assistant.checkers.super_call import HassEnforceSuperCallChecker
 from pylint_home_assistant.checkers.type_hints import HassTypeHintChecker
+from pylint_home_assistant.checkers.utcnow import HassEnforceUtcnowChecker
 from pylint_home_assistant.helpers.integration import clear_caches
 import pytest
 
@@ -128,3 +129,11 @@ def enforce_greek_micro_char_checker_fixture(linter: UnittestLinter) -> BaseChec
     enforce_greek_micro_char_checker = HassEnforceGreekMicroCharChecker(linter)
     enforce_greek_micro_char_checker.module = "homeassistant.components.pylint_test"
     return enforce_greek_micro_char_checker
+
+
+@pytest.fixture(name="enforce_utcnow_checker")
+def enforce_utcnow_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a utcnow checker."""
+    enforce_utcnow_checker = HassEnforceUtcnowChecker(linter)
+    enforce_utcnow_checker.module = "homeassistant.components.pylint_test"
+    return enforce_utcnow_checker

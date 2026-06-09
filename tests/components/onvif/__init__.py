@@ -2,6 +2,7 @@
 
 import collections
 from collections import defaultdict
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from onvif.exceptions import ONVIFError
@@ -10,7 +11,7 @@ from zeep.exceptions import Fault
 
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
-from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
+from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH, DOMAIN
 from homeassistant.components.onvif.event_manager import EventManager
 from homeassistant.components.onvif.models import (
     Capabilities,
@@ -53,8 +54,17 @@ def setup_mock_onvif_camera(
     no_profiles=False,
     auth_failure=False,
     wrong_port=False,
+    with_full_setup=False,
 ):
-    """Prepare mock onvif.ONVIFCamera."""
+    """Prepare mock onvif.ONVIFCamera.
+
+    When ``with_full_setup`` is set, the mock is additionally configured with
+    every service ``ONVIFDevice.async_setup`` invokes, so that a config entry
+    can be fully set up end-to-end. In this mode the profile and device
+    information responses are replaced, so the flags that control them
+    (``with_h264``, ``two_profiles``, ``no_profiles``, ``auth_fail`` and
+    ``profiles_transient_failure``) have no effect.
+    """
     devicemgmt = MagicMock()
 
     device_info = MagicMock()
@@ -110,6 +120,62 @@ def setup_mock_onvif_camera(
     mock_onvif_camera.close = AsyncMock(return_value=None)
     mock_onvif_camera.xaddrs = {}
     mock_onvif_camera.services = {}
+
+    if with_full_setup:
+        devicemgmt.GetSystemDateAndTime = AsyncMock(return_value=None)
+        devicemgmt.GetDeviceInformation = AsyncMock(
+            return_value=SimpleNamespace(
+                Manufacturer=MANUFACTURER,
+                Model=MODEL,
+                FirmwareVersion=FIRMWARE_VERSION,
+                SerialNumber=SERIAL_NUMBER if with_serial else None,
+            )
+        )
+
+        media_service.GetServiceCapabilities = AsyncMock(
+            return_value=SimpleNamespace(SnapshotUri=False)
+        )
+        media_service.GetProfiles = AsyncMock(
+            return_value=[
+                SimpleNamespace(
+                    token="profile_token",
+                    Name="MainStream",
+                    VideoEncoderConfiguration=SimpleNamespace(
+                        Resolution=SimpleNamespace(Width=1920, Height=1080),
+                        Encoding="H264",
+                    ),
+                    VideoSourceConfiguration=MagicMock(),
+                    PTZConfiguration=MagicMock(),
+                )
+            ]
+        )
+
+        ptz_service = MagicMock()
+        ptz_service.GetPresets = AsyncMock(return_value=[])
+        mock_onvif_camera.create_ptz_service = AsyncMock(return_value=ptz_service)
+        mock_onvif_camera.create_imaging_service = AsyncMock(return_value=MagicMock())
+        mock_onvif_camera.get_snapshot = AsyncMock(return_value=False)
+        mock_onvif_camera.get_capabilities = AsyncMock(
+            return_value={
+                "Media": {"XAddr": "http://media"},
+                "PTZ": {"XAddr": "http://ptz"},
+                "Imaging": {"XAddr": "http://imaging"},
+                "Events": {
+                    "XAddr": None,
+                    "WSPullPointSupport": False,
+                    "WSSubscriptionPolicySupport": False,
+                },
+            }
+        )
+        # Let the real event managers run but fail gracefully at the onvif
+        # library boundary, so async_start_events returns False and setup
+        # still reaches LOADED (models a camera without working events).
+        mock_onvif_camera.create_pullpoint_manager = AsyncMock(
+            side_effect=Fault("no pullpoint support")
+        )
+        mock_onvif_camera.create_notification_manager = AsyncMock(
+            side_effect=Fault("no notification support")
+        )
 
     def mock_constructor(
         host,
@@ -209,7 +275,7 @@ async def setup_onvif_integration(
         }
 
     config_entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
+        domain=DOMAIN,
         source=source,
         data={**config},
         options=options or {},

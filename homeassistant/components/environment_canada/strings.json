@@ -112,7 +112,22 @@
       }
     }
   },
+  "exceptions": {
+    "not_connected": {
+      "message": "Environment Canada is not connected"
+    }
+  },
   "services": {
+    "get_alerts": {
+      "description": "Retrieves the alerts from the selected weather service.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Environment Canada service to retrieve alerts from.",
+          "name": "Environment Canada service"
+        }
+      },
+      "name": "Get alerts"
+    },
     "get_forecasts": {
       "description": "Retrieves the forecast from selected weather services.",
       "name": "Get forecasts"

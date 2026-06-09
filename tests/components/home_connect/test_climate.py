@@ -71,7 +71,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.CLIMATE]
 

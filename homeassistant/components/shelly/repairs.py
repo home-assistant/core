@@ -132,6 +132,9 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
 
     device = entry.runtime_data.rpc.device
 
+    if not device.initialized:
+        return
+
     if (
         (ws_config := device.config.get("ws"))
         and ws_config["enable"]
@@ -168,6 +171,9 @@ def async_manage_open_wifi_ap_issue(
         assert entry.runtime_data.rpc is not None
 
     device = entry.runtime_data.rpc.device
+
+    if not device.initialized:
+        return
 
     # Check if WiFi AP is enabled and is open (no password)
     if (
