@@ -1,7 +1,5 @@
 """Button platform for the Whirlpool Appliances integration."""
 
-from __future__ import annotations
-
 from whirlpool.oven import Cavity as OvenCavity, Oven
 
 from homeassistant.components.button import ButtonEntity

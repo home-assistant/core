@@ -1,7 +1,5 @@
 """Number platform for the Whirlpool Appliances integration."""
 
-from __future__ import annotations
-
 from whirlpool.oven import Cavity as OvenCavity, CookMode, Oven
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
