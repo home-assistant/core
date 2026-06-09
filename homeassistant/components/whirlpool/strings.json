@@ -46,6 +46,55 @@
     }
   },
   "entity": {
+    "climate": {
+      "oven": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "air_fry": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::air_fry%]",
+              "bake": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::bake%]",
+              "broil": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::broil%]",
+              "convection_bake": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_bake%]",
+              "convection_broil": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_broil%]",
+              "convection_roast": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_roast%]",
+              "keep_warm": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::keep_warm%]"
+            }
+          }
+        }
+      },
+      "oven_upper": {
+        "name": "Upper oven",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "air_fry": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::air_fry%]",
+              "bake": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::bake%]",
+              "broil": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::broil%]",
+              "convection_bake": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::convection_bake%]",
+              "convection_broil": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::convection_broil%]",
+              "convection_roast": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::convection_roast%]",
+              "keep_warm": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::keep_warm%]"
+            }
+          }
+        }
+      },
+      "oven_lower": {
+        "name": "Lower oven",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "air_fry": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::air_fry%]",
+              "bake": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::bake%]",
+              "broil": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::broil%]",
+              "convection_bake": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::convection_bake%]",
+              "convection_broil": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::convection_broil%]",
+              "convection_roast": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::convection_roast%]",
+              "keep_warm": "[%key:component::whirlpool::entity::climate::oven::state_attributes::preset_mode::state::keep_warm%]"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "refrigerator_temperature_level": {
         "name": "Temperature level"
