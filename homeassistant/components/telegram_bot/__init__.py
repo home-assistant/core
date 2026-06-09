@@ -24,6 +24,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -104,6 +105,7 @@ from .const import (
     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
     CHAT_ACTION_UPLOAD_VOICE,
     CONF_API_ENDPOINT,
+    CONF_CHAT_ID,
     CONF_CONFIG_ENTRY_ID,
     DEFAULT_API_ENDPOINT,
     DOMAIN,
@@ -952,11 +954,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     )
     entry.runtime_data = notify_service
 
+    await _async_migrate_notify_entity_unique_ids(hass, entry, bot.id)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
+
+
+async def _async_migrate_notify_entity_unique_ids(
+    hass: HomeAssistant, entry: TelegramBotConfigEntry, bot_id: int
+) -> None:
+    """Migrate notify entity unique IDs to stable subentry IDs."""
+    entity_registry = er.async_get(hass)
+    old_to_new_unique_ids = {
+        f"{bot_id}_{subentry.data[CONF_CHAT_ID]}": f"{bot_id}_{subentry.subentry_id}"
+        for subentry in entry.subentries.values()
+    }
+
+    @callback
+    def update_unique_id(registry_entry: er.RegistryEntry) -> dict[str, str] | None:
+        """Update old chat ID based unique IDs."""
+        if registry_entry.domain != Platform.NOTIFY:
+            return None
+        if (
+            new_unique_id := old_to_new_unique_ids.get(registry_entry.unique_id)
+        ) is None:
+            return None
+        if entity_registry.async_get_entity_id(
+            registry_entry.domain, registry_entry.platform, new_unique_id
+        ):
+            return None
+        return {"new_unique_id": new_unique_id}
+
+    await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
