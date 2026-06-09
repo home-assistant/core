@@ -19,9 +19,21 @@ from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callba
 
 @pytest.fixture(
     params=[
-        ("number.single_cavity_oven_target_temperature", "mock_oven_single_cavity_api", whirlpool.oven.Cavity.Upper),
-        ("number.dual_cavity_oven_upper_oven_target_temperature", "mock_oven_dual_cavity_api", whirlpool.oven.Cavity.Upper),
-        ("number.dual_cavity_oven_lower_oven_target_temperature", "mock_oven_dual_cavity_api", whirlpool.oven.Cavity.Lower),
+        (
+            "number.single_cavity_oven_target_temperature",
+            "mock_oven_single_cavity_api",
+            whirlpool.oven.Cavity.Upper,
+        ),
+        (
+            "number.dual_cavity_oven_upper_oven_target_temperature",
+            "mock_oven_dual_cavity_api",
+            whirlpool.oven.Cavity.Upper,
+        ),
+        (
+            "number.dual_cavity_oven_lower_oven_target_temperature",
+            "mock_oven_dual_cavity_api",
+            whirlpool.oven.Cavity.Lower,
+        ),
     ]
 )
 def oven_number_entity(
