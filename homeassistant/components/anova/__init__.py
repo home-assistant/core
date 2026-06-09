@@ -18,10 +18,12 @@ from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME, Plat
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.event import async_call_later
 
 from .coordinator import AnovaConfigEntry, AnovaCoordinator, AnovaData
 
 PLATFORMS = [Platform.SENSOR]
+RECONNECT_RETRY_DELAY = 30
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +55,27 @@ def _async_setup_disconnect_listener(
     )
 
 
+@callback
+def _async_schedule_reconnect_retry(
+    hass: HomeAssistant,
+    entry: AnovaConfigEntry,
+) -> None:
+    """Schedule a reconnect attempt after a delay."""
+
+    @callback
+    def _retry(_now: object) -> None:
+        if entry.state is not ConfigEntryState.LOADED:
+            return
+        entry.async_create_background_task(
+            hass,
+            _async_reconnect_websocket(hass, entry),
+            "anova_websocket_reconnect",
+        )
+
+    cancel = async_call_later(hass, RECONNECT_RETRY_DELAY, _retry)
+    entry.async_on_unload(cancel)
+
+
 async def _async_reconnect_websocket(
     hass: HomeAssistant,
     entry: AnovaConfigEntry,
@@ -64,16 +87,22 @@ async def _async_reconnect_websocket(
     except WebsocketFailure:
         try:
             await entry.runtime_data.api.authenticate()
-        except (InvalidLogin, LoginUnreachable) as err:
+        except InvalidLogin as err:
+            _LOGGER.error("Anova re-authentication failed: %s", err)
+            return
+        except LoginUnreachable as err:
             _LOGGER.warning("Failed to re-authenticate with Anova: %s", err)
+            _async_schedule_reconnect_retry(hass, entry)
             return
         try:
             await entry.runtime_data.api.create_websocket()
         except (NoDevicesFound, WebsocketFailure) as err:
             _LOGGER.warning("Failed to reconnect to Anova websocket: %s", err)
+            _async_schedule_reconnect_retry(hass, entry)
             return
     except NoDevicesFound as err:
         _LOGGER.warning("Failed to reconnect to Anova websocket: %s", err)
+        _async_schedule_reconnect_retry(hass, entry)
         return
 
     ws_handler = entry.runtime_data.api.websocket_handler
