@@ -210,3 +210,6 @@ async def async_cleanup_expired_live_activity_tokens(hass: HomeAssistant) -> Non
 
     if changed:
         await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
+
+
+from . import webhook  # noqa: E402, F401

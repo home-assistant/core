@@ -59,12 +59,6 @@ from .const import (
 from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
 from .live_activity import async_cleanup_expired_live_activity_tokens
-
-# Imported for the decorator side effect that registers the webhook commands.
-from .live_activity.webhook import (  # noqa: F401
-    webhook_live_activity_dismissed,
-    webhook_update_live_activity_token,
-)
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
