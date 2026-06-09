@@ -6,7 +6,7 @@ from syrupy.assertion import SnapshotAssertion
 from zinvolt.models import BatteryState
 
 from homeassistant.components.zinvolt.const import DOMAIN
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -42,5 +42,5 @@ async def test_offline_battery_on_grid_unknown(
 
     assert (
         hass.states.get("binary_sensor.zinvolt_batterij_grid_connection").state
-        == STATE_UNKNOWN
+        == STATE_UNAVAILABLE
     )

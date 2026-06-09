@@ -6,7 +6,7 @@ import logging
 
 from zinvolt import ZinvoltClient
 from zinvolt.exceptions import ZinvoltError
-from zinvolt.models import Battery, BatteryState, BatteryUnit, Unit, UnitType
+from zinvolt.models import Battery, BatteryState, Unit, UnitType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -77,27 +77,17 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
             battery_state = await self.client.get_battery_status(
                 self.battery.identifier
             )
+            battery_units = {
+                unit_serial_number: await self.client.get_battery_unit(
+                    self.battery.identifier, unit_serial_number
+                )
+                for unit_serial_number in self.battery_units
+            }
         except ZinvoltError as err:
             raise UpdateFailed(
                 translation_key="update_failed",
                 translation_domain=DOMAIN,
             ) from err
-        # Per-unit fetches are best-effort: the API frequently returns
-        # "DEVICE_NOT_EXIST" (HTTP 400) for known battery units, and we don't
-        # want one bad unit to take down the whole battery's update.
-        battery_units: dict[str, BatteryUnit] = {}
-        for unit_serial_number in self.battery_units:
-            try:
-                battery_units[unit_serial_number] = await self.client.get_battery_unit(
-                    self.battery.identifier, unit_serial_number
-                )
-            except ZinvoltError as err:
-                _LOGGER.debug(
-                    "Skipping battery unit %s for %s: %s",
-                    unit_serial_number,
-                    self.battery.identifier,
-                    err,
-                )
         return ZinvoltData(
             battery_state,
             {
