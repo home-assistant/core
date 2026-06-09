@@ -1379,6 +1379,7 @@ async def test_reconfigure_flow_secure_manual_to_keyfile(
     mock_config_entry = MockConfigEntry(
         title="KNX",
         domain=DOMAIN,
+        version=2,
         data={
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
@@ -1393,6 +1394,7 @@ async def test_reconfigure_flow_secure_manual_to_keyfile(
             CONF_KNX_ROUTE_BACK: False,
             CONF_KNX_LOCAL_IP: None,
         },
+        options=DEFAULT_ENTRY_OPTIONS,
     )
     gateway = _gateway_descriptor(
         "192.168.0.1",
@@ -1487,10 +1489,12 @@ async def test_reconfigure_flow_routing(hass: HomeAssistant, knx_setup) -> None:
     mock_config_entry = MockConfigEntry(
         title="KNX",
         domain=DOMAIN,
+        version=2,
         data={
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
         },
+        options=DEFAULT_ENTRY_OPTIONS,
     )
     gateway = _gateway_descriptor("192.168.0.1", 3676)
     mock_config_entry.add_to_hass(hass)
@@ -1564,7 +1568,9 @@ async def test_reconfigure_update_keyfile(hass: HomeAssistant, knx_setup) -> Non
     mock_config_entry = MockConfigEntry(
         title="KNX",
         domain=DOMAIN,
+        version=2,
         data=start_data,
+        options=DEFAULT_ENTRY_OPTIONS,
     )
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -1615,7 +1621,9 @@ async def test_reconfigure_keyfile_upload(hass: HomeAssistant, knx_setup) -> Non
     mock_config_entry = MockConfigEntry(
         title="KNX",
         domain=DOMAIN,
+        version=2,
         data=start_data,
+        options=DEFAULT_ENTRY_OPTIONS,
     )
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
