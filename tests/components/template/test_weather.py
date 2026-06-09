@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template
-from homeassistant.components.template.const import CONF_PICTURE
+from homeassistant.components.template.const import CONF_PICTURE, DOMAIN
 from homeassistant.components.weather import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -803,7 +803,7 @@ async def test_restore_weather_save_state(
     """Test Restore saved state for Weather trigger template."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": {
                 "trigger": {"platform": "event", "event_type": "test_event"},
@@ -898,7 +898,7 @@ async def test_trigger_entity_restore_state_fail(
     mock_restore_cache_with_extra_data(hass, ((saved_state, saved_extra_data),))
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": {
                 "trigger": {"platform": "event", "event_type": "test_event"},
