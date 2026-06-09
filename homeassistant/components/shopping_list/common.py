@@ -141,6 +141,57 @@ class ShoppingData:
         )
         return item
 
+    async def async_bulk_update(
+        self,
+        items: list[tuple[str | None, dict[str, JsonValueType]]],
+        context: Context | None = None,
+    ) -> list[dict[str, JsonValueType]]:
+        """Update multiple shopping list items."""
+        # Shortcut empty update
+        if not items:
+            return []
+
+        # Get both a list of valid ids and their locations in one pass.
+        items_index = {
+            uid: idx
+            for idx, itm in enumerate(self.items)
+            if isinstance((uid := itm["id"]), str) and uid
+        }
+
+        # Look for missing or invalid IDs. Only report the first one
+        # and stop before changing anything.
+        first_missing_uid = next(
+            (uid for uid, *_ in items if uid not in items_index), None
+        )
+        if first_missing_uid:
+            raise NoMatchingShoppingListItem(
+                f"Item '{first_missing_uid}' not found in shopping list"
+            )
+
+        # Apply updates and keep track of changes
+        changed: dict[str, dict[str, JsonValueType]] = {}
+        for uid, info in items:
+            assert uid  # reassure the linter
+            info = ITEM_UPDATE_SCHEMA(info)
+            if info:
+                assert isinstance(info, dict)  # reassure the linter
+                item = self.items[items_index[uid]]
+                item.update(info)
+                changed[uid] = item  # only track final state
+
+        await self.hass.async_add_executor_job(self.save)
+        self._async_notify()
+
+        changed_items = list(changed.values())
+        for item in changed_items:
+            self.hass.bus.async_fire(
+                EVENT_SHOPPING_LIST_UPDATED,
+                {"action": "update", "item": item},  # only notify final states
+                context=context,
+            )
+
+        return changed_items
+
     async def async_clear_completed(self, context: Context | None = None) -> None:
         """Clear completed items."""
         self.items = [itm for itm in self.items if not itm["complete"]]

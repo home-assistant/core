@@ -1,7 +1,6 @@
 """Tests for the To-do integration."""
 
 import dataclasses
-from typing import Any
 import uuid
 
 from homeassistant.components.todo import DOMAIN, TodoItem, TodoListEntity
@@ -50,10 +49,12 @@ class MockTodoListEntity(TodoListEntity):
                 self._attr_todo_items[idx] = item
                 break
 
-    async def async_update_todo_list(self, info: dict[str, Any]) -> None:
-        """Update all items in the To-do list."""
-        for idx, existing_item in enumerate(self.items):
-            item = dataclasses.replace(existing_item, **info)
+    async def async_update_todo_items(self, items: list[TodoItem]) -> None:
+        """Update multiple items in the To-do list."""
+        list_index = {todo.uid: idx for idx, todo in enumerate(self.items) if todo.uid}
+        for item in items:
+            assert item.uid  # reassure the linter
+            idx = list_index[item.uid]
             assert self._attr_todo_items is not None
             self._attr_todo_items[idx] = item
 

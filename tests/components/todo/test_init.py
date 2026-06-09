@@ -1077,6 +1077,13 @@ async def test_update_todo_list_action(
     """Test update todo list service."""
     await create_mock_platform(hass, [test_entity])
 
+    affected_uids = {
+        item.uid
+        for item in test_entity._attr_todo_items or []
+        if item.status != TodoItemStatus(status)
+    }
+    assert affected_uids, "Some items must be affected"
+
     await hass.services.async_call(
         DOMAIN,
         TodoServices.UPDATE_LIST,
@@ -1085,11 +1092,11 @@ async def test_update_todo_list_action(
         blocking=True,
     )
 
-    args = test_entity.async_update_todo_list.call_args
+    args = test_entity.async_update_todo_items.call_args
     assert args
-    info = args.kwargs.get("info")
-    assert sorted(info) == ["status"]
-    assert info["status"] == TodoItemStatus(status)
+    items = args.kwargs.get("items")
+    assert {item.uid for item in items} == affected_uids
+    assert all(item.status == TodoItemStatus(status) for item in items)
 
 
 async def test_update_todo_list_action_raises(
@@ -1100,7 +1107,7 @@ async def test_update_todo_list_action_raises(
 
     await create_mock_platform(hass, [test_entity])
 
-    test_entity.async_update_todo_list.side_effect = HomeAssistantError("Ooops")
+    test_entity.async_update_todo_items.side_effect = HomeAssistantError("Ooops")
     with pytest.raises(HomeAssistantError, match="Ooops"):
         await hass.services.async_call(
             DOMAIN,

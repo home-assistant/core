@@ -43,7 +43,7 @@ class TodoListEntityFeature(IntFlag):
     SET_DUE_DATE_ON_ITEM = 16
     SET_DUE_DATETIME_ON_ITEM = 32
     SET_DESCRIPTION_ON_ITEM = 64
-    UPDATE_TODO_LIST = 128
+    UPDATE_TODO_ITEMS = 128
 
 
 class TodoItemStatus(StrEnum):

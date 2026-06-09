@@ -3,7 +3,6 @@
 import asyncio
 import datetime
 import logging
-from typing import Any
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
@@ -91,56 +90,20 @@ async def async_setup_entry(
         await entity.async_save()
 
 
-def _convert_status(value: TodoItemStatus) -> TodoStatus:
-    return ICS_TODO_STATUS_MAP_INV[value]
-
-
-def _convert_due_value(
-    value: datetime.datetime | datetime.date | None,
-) -> datetime.datetime | datetime.date | None:
-    if value and not isinstance(value, datetime.datetime):
-        value += datetime.timedelta(days=1)
-    return value
-
-
 def _convert_item(item: TodoItem) -> Todo:
-    """Convert a HomeAssistant TodoItem to an ical Todo.
-
-    For use with todo.create_item and todo.update_item actions.
-    """
+    """Convert a HomeAssistant TodoItem to an ical Todo."""
     todo = Todo()
     if item.uid:
         todo.uid = item.uid
     if item.summary:
         todo.summary = item.summary
     if item.status:
-        todo.status = _convert_status(item.status)
-    todo.due = _convert_due_value(item.due)
+        todo.status = ICS_TODO_STATUS_MAP_INV[item.status]
+    todo.due = item.due
+    if todo.due and not isinstance(todo.due, datetime.datetime):
+        todo.due += datetime.timedelta(days=1)
     todo.description = item.description
     return todo
-
-
-def _prepare_update(info: dict[str, Any], /) -> dict[str, Any]:
-    """Convert a HomeAssistant TodoItem update to an ical Todo update.
-
-    For use with todo.update_list action.
-
-    Preserves unset status so that "TodoStore.edit" modifies the right
-    fields only. Only propagates fields present in `info`. Unmatched fields
-    are ignored.
-    """
-    data = {}
-    if "status" in info:
-        data["status"] = _convert_status(info["status"])
-    return data
-
-
-def _is_edit(todo: Todo, data: dict[str, Any], /) -> bool:
-    """Whether update changes ical Todo.
-
-    `data` comes from _prepare_update, so is guaranteed to have the right fields.
-    """
-    return any(getattr(todo, field) != value for field, value in data.items())
 
 
 class LocalTodoListEntity(TodoListEntity):
@@ -155,7 +118,7 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
-        | TodoListEntityFeature.UPDATE_TODO_LIST
+        | TodoListEntityFeature.UPDATE_TODO_ITEMS
     )
     _attr_should_poll = False
 
@@ -215,15 +178,13 @@ class LocalTodoListEntity(TodoListEntity):
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
-    async def async_update_todo_list(self, info: dict[str, Any]) -> None:
-        """Update all items in the To-do list."""
-        item = _prepare_update(info)
+    async def async_update_todo_items(self, items: list[TodoItem]) -> None:
+        """Update multiple items in the To-do list."""
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
             # Only edit items for which something changes
-            uids_to_edit = [t.uid for t in todo_store.todo_list() if _is_edit(t, item)]
             await self.hass.async_add_executor_job(
-                _todo_store_bulk_edit, todo_store, uids_to_edit, item
+                _todo_store_bulk_edit, todo_store, items
             )
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
@@ -269,11 +230,9 @@ class LocalTodoListEntity(TodoListEntity):
         await self._store.async_store(content)
 
 
-def _todo_store_bulk_edit(
-    todo_store: TodoStore, uids: list[str], item: dict[str, Any]
-) -> None:
-    # Note that todo_store.edit is O(N), where N is the length of the store,
-    # so minimise the number of edits being made.
-    todo = Todo(**item)
-    for uid in uids:
-        todo_store.edit(uid, todo)
+def _todo_store_bulk_edit(todo_store: TodoStore, items: list[TodoItem]) -> None:
+    # Note that todo_store.edit is O(N), where N is the length of the store.
+    # However, todo.update_list service ensures that only items that are changed should reach here.
+    for item in items:
+        todo = _convert_item(item)
+        todo_store.edit(todo.uid, todo)

@@ -114,7 +114,7 @@ update_list:
     entity:
       domain: todo
       supported_features:
-        - todo.TodoListEntityFeature.UPDATE_TODO_LIST
+        - todo.TodoListEntityFeature.UPDATE_TODO_ITEMS
   fields:
     status:
       required: true # Note that future updates might make this Optional

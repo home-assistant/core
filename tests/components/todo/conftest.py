@@ -98,11 +98,11 @@ def mock_test_entity(test_entity_items: list[TodoItem]) -> TodoListEntity:
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
-        | TodoListEntityFeature.UPDATE_TODO_LIST
+        | TodoListEntityFeature.UPDATE_TODO_ITEMS
     )
     entity1.async_create_todo_item = AsyncMock(wraps=entity1.async_create_todo_item)
     entity1.async_update_todo_item = AsyncMock(wraps=entity1.async_update_todo_item)
     entity1.async_delete_todo_items = AsyncMock(wraps=entity1.async_delete_todo_items)
-    entity1.async_update_todo_list = AsyncMock(wraps=entity1.async_update_todo_list)
+    entity1.async_update_todo_items = AsyncMock(wraps=entity1.async_update_todo_items)
     entity1.async_move_todo_item = AsyncMock()
     return entity1
