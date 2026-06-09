@@ -427,14 +427,14 @@ OVEN_LOWER = "climate.dual_cavity_oven_lower_oven"
 )
 def oven_climate_entity(
     request: pytest.FixtureRequest,
-) -> tuple[str, str, "whirlpool.oven.Cavity"]:
+) -> tuple[str, str, whirlpool.oven.Cavity]:
     """Parametrize the oven climate entities (single + dual upper/lower)."""
     return request.param
 
 
 async def test_oven_dynamic_attributes(
     hass: HomeAssistant,
-    oven_climate_entity: tuple[str, str, "whirlpool.oven.Cavity"],
+    oven_climate_entity: tuple[str, str, whirlpool.oven.Cavity],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test oven climate attributes update from API callbacks."""
@@ -464,7 +464,7 @@ async def test_oven_dynamic_attributes(
 
 async def test_oven_set_temperature(
     hass: HomeAssistant,
-    oven_climate_entity: tuple[str, str, "whirlpool.oven.Cavity"],
+    oven_climate_entity: tuple[str, str, whirlpool.oven.Cavity],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test setting the oven target temperature keeps the current cook mode."""
@@ -485,7 +485,7 @@ async def test_oven_set_temperature(
 
 async def test_oven_set_preset_mode(
     hass: HomeAssistant,
-    oven_climate_entity: tuple[str, str, "whirlpool.oven.Cavity"],
+    oven_climate_entity: tuple[str, str, whirlpool.oven.Cavity],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test setting the cook mode keeps the current target temperature."""
@@ -506,7 +506,7 @@ async def test_oven_set_preset_mode(
 
 async def test_oven_turn_on(
     hass: HomeAssistant,
-    oven_climate_entity: tuple[str, str, "whirlpool.oven.Cavity"],
+    oven_climate_entity: tuple[str, str, whirlpool.oven.Cavity],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test turning the oven on starts a cook with current mode and target."""
@@ -536,7 +536,7 @@ async def test_oven_turn_off(
     hass: HomeAssistant,
     service: str,
     service_data: dict,
-    oven_climate_entity: tuple[str, str, "whirlpool.oven.Cavity"],
+    oven_climate_entity: tuple[str, str, whirlpool.oven.Cavity],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test turning the oven off cancels the cook."""
@@ -555,7 +555,7 @@ async def test_oven_turn_off(
 
 async def test_oven_service_request_failure(
     hass: HomeAssistant,
-    oven_climate_entity: tuple[str, str, "whirlpool.oven.Cavity"],
+    oven_climate_entity: tuple[str, str, whirlpool.oven.Cavity],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test a failed oven request raises HomeAssistantError."""
@@ -575,7 +575,7 @@ async def test_oven_service_request_failure(
 
 async def test_oven_stop_cook_request_failure(
     hass: HomeAssistant,
-    oven_climate_entity: tuple[str, str, "whirlpool.oven.Cavity"],
+    oven_climate_entity: tuple[str, str, whirlpool.oven.Cavity],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test a failed stop_cook request raises HomeAssistantError."""
