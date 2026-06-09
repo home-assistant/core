@@ -870,6 +870,22 @@ async def test_reload_entry_with_restored_subscriptions(
     assert recorded_calls[1].payload == "wild-card-payload3"
 
 
+@pytest.mark.usefixtures("mqtt_client_mock")
+async def test_reload_without_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reloading without a valid config entry set up."""
+    # Setup the MQTT integration without entry
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    with caplog.at_level(logging.DEBUG):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+    assert (
+        "Skipped reloading MQTT integration, the MQTT config entry is not enabled"
+        in caplog.text
+    )
+
+
 @pytest.mark.parametrize(
     "hass_config",
     [
