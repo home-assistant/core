@@ -3,7 +3,6 @@
 import asyncio
 import collections
 from collections.abc import Callable, Container, Mapping
-from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
 import functools as ft
@@ -17,7 +16,7 @@ from urllib.parse import quote, urlparse
 
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
+from aiohttp.hdrs import CACHE_CONTROL, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 from propcache.api import cached_property
 import voluptuous as vol
@@ -1215,7 +1214,8 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         (content, content_type) = await self._async_fetch_image(url)
 
         async with cache_images[url][CACHE_LOCK]:
-            cache_images[url][CACHE_CONTENT] = content, content_type
+            if content is not None:
+                cache_images[url][CACHE_CONTENT] = content, content_type
             while len(cache_images) > cache_maxsize:
                 cache_images.popitem(last=False)
 
@@ -1445,29 +1445,71 @@ async def websocket_search_media(
     connection.send_result(msg["id"], result)
 
 
-_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
+# 30s total; SoundCloud's artwork CDN occasionally exceeds 10s under load,
+# and a truncated short read here was the original symptom that motivated this
+# proxy hardening. Granular connect/read timeouts would be a follow-up.
+_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=30)
+
+
+def _image_response_appears_complete(
+    response: aiohttp.ClientResponse, body: bytes
+) -> bool:
+    """Return False when the body is shorter than the advertised Content-Length."""
+    # Content-Length is the encoded size; aiohttp may have decoded the body.
+    encoding = (response.headers.get(CONTENT_ENCODING) or "identity").strip().lower()
+    if encoding != "identity":
+        return True
+    content_length = response.headers.get(CONTENT_LENGTH)
+    if content_length is None:
+        return True
+    try:
+        return len(body) >= int(content_length)
+    except ValueError:
+        return True
+
+
+def _redact_credentials(url: str) -> str:
+    """Return url with any user/password replaced by placeholders."""
+    parts = URL(url)
+    if parts.user is not None:
+        parts = parts.with_user("xxxx")
+    if parts.password is not None:
+        parts = parts.with_password("xxxxxxxx")
+    return str(parts)
 
 
 async def async_fetch_image(
     logger: logging.Logger, hass: HomeAssistant, url: str
 ) -> tuple[bytes | None, str | None]:
     """Retrieve an image."""
-    content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(TimeoutError):
-        response = await websession.get(url, timeout=_FETCH_TIMEOUT)
-        if response.status == HTTPStatus.OK:
-            content = await response.read()
-            if content_type := response.headers.get(CONTENT_TYPE):
-                content_type = content_type.split(";")[0]
-
-    if content is None:
-        url_parts = URL(url)
-        if url_parts.user is not None:
-            url_parts = url_parts.with_user("xxxx")
-        if url_parts.password is not None:
-            url_parts = url_parts.with_password("xxxxxxxx")
-        url = str(url_parts)
-        logger.warning("Error retrieving proxied image from %s", url)
-
-    return content, content_type
+    try:
+        async with websession.get(url, timeout=_FETCH_TIMEOUT) as response:
+            if response.status != HTTPStatus.OK:
+                logger.warning(
+                    "Error retrieving proxied image from %s: HTTP %d",
+                    _redact_credentials(url),
+                    response.status,
+                )
+                return None, None
+            body = await response.read()
+            if not _image_response_appears_complete(response, body):
+                logger.warning(
+                    "Discarding truncated image from %s "
+                    "(received %d of %s bytes, content-type %s)",
+                    _redact_credentials(url),
+                    len(body),
+                    response.headers.get(CONTENT_LENGTH),
+                    response.headers.get(CONTENT_TYPE),
+                )
+                return None, None
+            ct_header = response.headers.get(CONTENT_TYPE)
+            content_type = ct_header.split(";")[0] if ct_header else None
+            return body, content_type
+    except (TimeoutError, aiohttp.ClientError) as err:
+        logger.warning(
+            "Error retrieving proxied image from %s: %s",
+            _redact_credentials(url),
+            err,
+        )
+        return None, None
