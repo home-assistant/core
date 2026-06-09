@@ -32,7 +32,7 @@ def mock_charger() -> Generator[MagicMock]:
             "model": "openevse_wifi_v1",
         }
         # Websocket support
-        charger.ws_start = MagicMock()
+        charger.ws_start = AsyncMock()
         charger.ws_disconnect = AsyncMock()
         charger.websocket = MagicMock()
         charger.callback = None

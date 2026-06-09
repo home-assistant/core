@@ -301,6 +301,54 @@ async def test_ONVIF_not_supported(
     assert config_entry.state is ConfigEntryState.LOADED
 
 
+async def test_immediate_fast_polling_ONVIF_not_supported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+) -> None:
+    """Test immediate fast polling if ONVIF not supported."""
+
+    def test_supported(ch, key):
+        """Test supported function."""
+        if key == "ONVIF":
+            return False
+        return True
+
+    reolink_host.supported = test_supported
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    freezer.tick(timedelta(seconds=FIRST_TCP_PUSH_TIMEOUT))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # ONVIF push and long poll subscription not called
+    assert not reolink_host.subscribe.called
+    # Fast polling called
+    assert reolink_host.get_motion_state_all_ch.called
+
+    # test fast polling paused when privacy mode activated
+    reolink_host.baichuan.privacy_mode.return_value = True
+    reolink_host.get_motion_state_all_ch.reset_mock()
+    assert not reolink_host.get_motion_state_all_ch.called
+    freezer.tick(timedelta(seconds=POLL_INTERVAL_NO_PUSH))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not reolink_host.get_motion_state_all_ch.called
+
+    # test fast polling resumes when privacy mode deactivated
+    reolink_host.baichuan.privacy_mode.return_value = False
+    freezer.tick(timedelta(seconds=POLL_INTERVAL_NO_PUSH))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert reolink_host.get_motion_state_all_ch.called
+
+
 async def test_renew(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
