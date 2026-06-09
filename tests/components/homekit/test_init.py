@@ -32,7 +32,7 @@ async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) ->
     with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
-        assert await async_setup_component(hass, "homekit", {"homekit": {}})
+        assert await async_setup_component(hass, DOMAIN, {"homekit": {}})
     assert await async_setup_component(hass, "logbook", {})
     await hass.async_block_till_done()
 

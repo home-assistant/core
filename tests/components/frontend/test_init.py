@@ -85,7 +85,7 @@ async def frontend(hass: HomeAssistant, ignore_frontend_deps: None) -> None:
     """Frontend setup with themes."""
     assert await async_setup_component(
         hass,
-        "frontend",
+        DOMAIN,
         {},
     )
 
@@ -95,7 +95,7 @@ async def frontend_themes(hass: HomeAssistant) -> None:
     """Frontend setup with themes."""
     assert await async_setup_component(
         hass,
-        "frontend",
+        DOMAIN,
         CONFIG_THEMES,
     )
 
@@ -142,7 +142,7 @@ async def mock_http_client_with_extra_js(
     """Start the Home Assistant HTTP component."""
     assert await async_setup_component(
         hass,
-        "frontend",
+        DOMAIN,
         {
             DOMAIN: {
                 CONF_EXTRA_MODULE_URL: ["/local/my_module.js"],
@@ -247,7 +247,7 @@ async def test_themes_persist(
         },
     }
 
-    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
+    assert await async_setup_component(hass, DOMAIN, CONFIG_THEMES)
     themes_ws_client = await hass_ws_client(hass)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
@@ -1117,7 +1117,7 @@ async def test_www_local_dir(
 
     await hass.async_add_executor_job(_create_www_and_x_txt)
 
-    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
     resp = await client.get("/local/x.txt")
     assert resp.status == HTTPStatus.OK
@@ -1338,7 +1338,7 @@ async def test_update_panel_persists(
         },
     }
 
-    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
 
     await client.send_json({"id": 1, "type": "get_panels"})
@@ -1452,7 +1452,7 @@ async def test_panels_config_invalid_storage(
         "data": "not_a_dict",
     }
 
-    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert "Ignoring invalid panel storage data" in caplog.text
 
     client = await hass_ws_client(hass)

@@ -2108,7 +2108,7 @@ async def test_disconnect_on_stop(hass: HomeAssistant) -> None:
 
 async def test_entry_setup_no_config(hass: HomeAssistant) -> None:
     """Test deprecated empty yaml config.."""
-    await async_setup_component(hass, "cast", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries("cast")

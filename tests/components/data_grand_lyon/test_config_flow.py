@@ -19,6 +19,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import MOCK_TCL_STOPS
+
 from tests.common import MockConfigEntry
 
 
@@ -28,6 +30,16 @@ def mock_get_tcl_passages() -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
         return_value=[],
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_get_tcl_stops() -> Generator[AsyncMock]:
+    """Mock get_tcl_stops in the stop subentry picker flow."""
+    with patch(
+        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_stops",
+        return_value=MOCK_TCL_STOPS,
     ) as mock:
         yield mock
 
@@ -274,11 +286,12 @@ async def test_reconfigure_flow_errors(
 
 
 @pytest.mark.parametrize("mock_subentries", [[]])
-async def test_stop_subentry_flow(
+async def test_stop_subentry_picker_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_get_tcl_stops: AsyncMock,
 ) -> None:
-    """Test adding a stop subentry."""
+    """Test adding a stop subentry by picking a stop and a line from the lists."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -289,23 +302,33 @@ async def test_stop_subentry_flow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert mock_get_tcl_stops.await_count == 1
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_LINE: "C3", CONF_STOP_ID: 456},
+        {CONF_STOP_ID: "200"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_line"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_LINE: "T1"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "C3 - Stop 456"
-    assert result["data"] == {CONF_LINE: "C3", CONF_STOP_ID: 456}
-    assert result["unique_id"] == "C3_456"
+    assert result["title"] == "T1 - Stop 200"
+    assert result["data"] == {CONF_LINE: "T1", CONF_STOP_ID: 200}
+    assert result["unique_id"] == "T1_200"
 
 
-async def test_stop_subentry_already_configured(
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_stop_subentry_custom_value_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_get_tcl_stops: AsyncMock,
 ) -> None:
-    """Test stop subentry aborts if same line+stop already exists."""
+    """Test adding a stop subentry by typing a stop ID not present in the list."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -314,14 +337,114 @@ async def test_stop_subentry_already_configured(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_STOP),
         context={"source": config_entries.SOURCE_USER},
     )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_STOP_ID: "456"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_line"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_LINE: "C3", CONF_STOP_ID: 100},
+        {CONF_LINE: "C3"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "C3 - Stop 456"
+    assert result["data"] == {CONF_LINE: "C3", CONF_STOP_ID: 456}
+    assert result["unique_id"] == "C3_456"
+
+
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_stop_subentry_invalid_stop_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_tcl_stops: AsyncMock,
+) -> None:
+    """Test typing a non-numeric stop ID re-renders the form with an error."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_STOP),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_STOP_ID: "not-a-number"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_STOP_ID: "invalid_stop_id"}
+
+
+async def test_stop_subentry_picker_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_tcl_stops: AsyncMock,
+) -> None:
+    """Test picker stop subentry aborts if same line+stop already exists."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_STOP),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_STOP_ID: "100"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_LINE: "C3"},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        (
+            ClientResponseError(request_info=None, history=(), status=500),
+            "cannot_connect",
+        ),
+        (
+            ClientResponseError(request_info=None, history=(), status=401),
+            "invalid_auth",
+        ),
+        (ClientConnectionError("boom"), "cannot_connect"),
+        (TimeoutError("boom"), "cannot_connect"),
+        (RuntimeError("boom"), "unknown"),
+    ],
+)
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_stop_subentry_picker_load_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_tcl_stops: AsyncMock,
+    side_effect: Exception,
+    reason: str,
+) -> None:
+    """Test picker aborts with the right reason when loading stops fails."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_get_tcl_stops.side_effect = side_effect
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_STOP),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
 
 
 # Vélo'v station subentry tests
