@@ -386,6 +386,34 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
+async def test_dhcp_discovery_aborts_with_restricted_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery aborts when a restricted gateway (no unique id) is set up.
+
+    The restricted gateway is stored without a unique id, so we cannot tell
+    whether a discovery belongs to it. We abort rather than risk a duplicate.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4", CONF_PASSWORD: "00GGX"},
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.1",
+            macaddress="aabbcceeddff",
+            hostname=MOCK_GATEWAY_DIN.lower(),
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test reauthenticate."""
 

@@ -157,6 +157,16 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                     ):
                         self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
+        # A restricted PW3-style gateway is stored without a unique id because no
+        # DIN is exposed over HTTP. We never stored its DIN, so we cannot match a
+        # discovery against it (e.g. after its IP changed). If such an entry
+        # exists we abort rather than risk setting up a duplicate of a powerwall
+        # that is already configured.
+        if any(
+            entry.unique_id is None
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            return self.async_abort(reason="already_configured")
         # Still need to abort for ignored entries
         self._abort_if_unique_id_configured()
         self.context["title_placeholders"] = {
