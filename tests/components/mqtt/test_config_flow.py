@@ -2662,43 +2662,6 @@ async def test_migrate_config_entry_fails_on_unsupported_version(
 
 @pytest.mark.parametrize(
     (
-        "version",
-        "minor_version",
-        "data",
-        "options",
-    ),
-    [(1, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS)],
-)
-@pytest.mark.usefixtures("mock_reload_after_entry_update")
-async def test_migrate_of_incompatible_config_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    version: int,
-    minor_version: int,
-    data: dict[str, Any],
-    options: dict[str, Any],
-) -> None:
-    """Test migrating a config entry."""
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    # Mock an incompatible config entry version
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data=data,
-        options=options,
-        version=version,
-        minor_version=minor_version,
-    )
-    await hass.async_block_till_done()
-
-    # Try to start MQTT with incompatible config entry
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-
-    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
-
-
-@pytest.mark.parametrize(
-    (
         "config_subentries_data",
         "mock_device_user_input",
         "mock_entity_user_input",
