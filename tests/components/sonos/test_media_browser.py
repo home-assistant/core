@@ -441,6 +441,33 @@ def test_get_thumbnail_url_full_caches_track_art() -> None:
     assert result == proxy_url
 
 
+def test_get_thumbnail_url_full_skips_non_track_cache() -> None:
+    """Test only track art is cached; albums and artists resolve via get_media."""
+    media = Mock()
+    media.browse_image_uris = {}
+    content_id = "A:ALBUM/Abbey%20Road"
+    item = MockMusicServiceItem(
+        "Abbey Road",
+        content_id,
+        "A:ALBUM",
+        "object.container.album.musicAlbum",
+        album_art_uri="http://192.168.42.2:1400/getaa?u=album&v=1",
+    )
+    get_browse_image_url = Mock(return_value="/proxy/album")
+
+    get_thumbnail_url_full(
+        media,
+        False,
+        get_browse_image_url,
+        MediaType.ALBUM,
+        content_id,
+        None,
+        item,
+    )
+
+    assert media.browse_image_uris == {}
+
+
 async def test_browse_image_for_track_uses_cached_art(
     hass: HomeAssistant,
     async_autosetup_sonos,

@@ -98,11 +98,17 @@ def get_thumbnail_url_full(
             )
         return fix_image_url(getattr(item, "album_art_uri", ""))
 
-    # Remember the item's real album art URI so the browse-image proxy can fetch
-    # it later, keyed by the content id that core round-trips back to us. A track's
-    # art is served by the speaker keyed by the full service URI (incl. query
-    # string), which cannot be reconstructed from the content id alone.
-    if item is not None and (art_uri := getattr(item, "album_art_uri", None)):
+    # Remember a track's real album art URI so the browse-image proxy can fetch it
+    # later, keyed by the content id that core round-trips back to us: a track's art
+    # is served by the speaker keyed by the full service URI (incl. query string),
+    # which cannot be reconstructed from the content id alone. Only tracks read this
+    # cache back (albums and artists are resolved via get_media), so only tracks are
+    # cached here.
+    if (
+        media_content_type == MediaType.TRACK
+        and item is not None
+        and (art_uri := getattr(item, "album_art_uri", None))
+    ):
         cache = media.browse_image_uris
         cache[media_content_id] = art_uri
         while len(cache) > BROWSE_IMAGE_CACHE_SIZE:
