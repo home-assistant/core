@@ -10,11 +10,7 @@ from volkszaehler.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_POLL,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -46,8 +42,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
 class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Volkszaehler."""
-
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Set the config entry up from yaml."""
