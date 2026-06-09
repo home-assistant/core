@@ -304,6 +304,4 @@ class OvenEntity(WhirlpoolOvenEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Stop cooking."""
-        OvenEntity._check_service_request(
-            await self._appliance.stop_cook(self.cavity)
-        )
+        OvenEntity._check_service_request(await self._appliance.stop_cook(self.cavity))
