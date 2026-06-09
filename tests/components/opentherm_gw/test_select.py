@@ -155,19 +155,27 @@ async def test_select_change_value(
 
 
 @pytest.mark.parametrize(
-    ("target_param", "resulting_state"),
+    ("target_param", "pyotgw_return", "resulting_state"),
     [
         (
             PyotgwDHWOvrdMode.OFF.value,
+            0,
             OpenThermSelectDHWOvrdMode.OFF,
         ),
         (
             PyotgwDHWOvrdMode.ON.value,
+            1,
             OpenThermSelectDHWOvrdMode.ON,
         ),
         (
             PyotgwDHWOvrdMode.DISABLED.value,
+            "A",
             OpenThermSelectDHWOvrdMode.DISABLED,
+        ),
+        (
+            PyotgwDHWOvrdMode.ON.value,
+            None,
+            OpenThermSelectDHWOvrdMode.ON,
         ),
     ],
 )
@@ -177,11 +185,12 @@ async def test_select_dhw_ovrd_change_value(
     mock_config_entry: MockConfigEntry,
     mock_pyotgw: MagicMock,
     target_param: str | int,
+    pyotgw_return: str | int | None,
     resulting_state: str,
 ) -> None:
     """Test DHW override mode selector."""
 
-    mock_pyotgw.return_value.set_hot_water_ovrd = AsyncMock(return_value=target_param)
+    mock_pyotgw.return_value.set_hot_water_ovrd = AsyncMock(return_value=pyotgw_return)
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -202,9 +211,16 @@ async def test_select_dhw_ovrd_change_value(
         {ATTR_ENTITY_ID: select_entity_id, ATTR_OPTION: resulting_state},
         blocking=True,
     )
-    assert hass.states.get(select_entity_id).state == resulting_state
-
-    mock_pyotgw.return_value.set_hot_water_ovrd.assert_awaited_once_with(target_param)
+    if pyotgw_return is None:
+        assert hass.states.get(select_entity_id).state == STATE_UNKNOWN
+        mock_pyotgw.return_value.set_hot_water_ovrd.assert_awaited_once_with(
+            target_param
+        )
+    else:
+        assert hass.states.get(select_entity_id).state == resulting_state
+        mock_pyotgw.return_value.set_hot_water_ovrd.assert_awaited_once_with(
+            target_param
+        )
 
 
 @pytest.mark.parametrize(

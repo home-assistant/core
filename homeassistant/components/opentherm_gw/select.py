@@ -125,7 +125,7 @@ def pyotgw_led_mode_to_ha_led_mode(
 
 async def set_dhw_ovrd_mode(
     gw_hub: OpenThermGatewayHub, mode: str
-) -> OpenThermSelectDHWOvrdMode:
+) -> OpenThermSelectDHWOvrdMode | None:
     """Set hot water override mode, return selected option."""
     value = await gw_hub.gateway.set_hot_water_ovrd(
         PyotgwDHWOvrdMode[OpenThermSelectDHWOvrdMode(mode).name].value
@@ -133,7 +133,7 @@ async def set_dhw_ovrd_mode(
     return (
         OpenThermSelectDHWOvrdMode[PyotgwDHWOvrdMode(value).name]
         if value in PyotgwDHWOvrdMode
-        else OpenThermSelectDHWOvrdMode.DISABLED
+        else None
     )
 
 
@@ -186,7 +186,7 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
             lambda state: (
                 OpenThermSelectDHWOvrdMode[PyotgwDHWOvrdMode(state).name]
                 if state in PyotgwDHWOvrdMode
-                else OpenThermSelectDHWOvrdMode.DISABLED
+                else None
             )
         ),
     ),
