@@ -34,7 +34,11 @@ NUMBERS: tuple[ZinvoltBatteryStateDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda state: state.battery.global_settings.max_output,
+        value_fn=lambda state: (
+            2000
+            if state.battery.global_settings.max_output_unlocked
+            else state.battery.global_settings.max_output
+        ),
         set_value_fn=lambda client, battery_id, value: client.set_max_output(
             battery_id, value
         ),

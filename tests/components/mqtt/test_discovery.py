@@ -18,7 +18,7 @@ from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
-from homeassistant.components.mqtt.const import SUPPORTED_COMPONENTS
+from homeassistant.components.mqtt.const import DOMAIN, SUPPORTED_COMPONENTS
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
@@ -207,7 +207,7 @@ async def test_subscribing_config_topic(
 ) -> None:
     """Test setting up discovery."""
     mqtt_mock = await mqtt_mock_entry()
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     discovery_topic = "homeassistant"
     await async_start(hass, discovery_topic, entry)
@@ -1754,7 +1754,7 @@ async def test_cleanup_device_manual(
         assert state is not None
 
     # Remove MQTT from the device
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     mock_debouncer.clear()
     response = await ws_client.remove_device(
         device_entry.id, mqtt_config_entry.entry_id
@@ -2018,7 +2018,7 @@ async def test_cleanup_device_multiple_config_entries(
     )
     assert device_entry is not None
 
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     sensor_config = {
         "device": {"connections": [["mac", "12:34:56:AB:CD:EF"]]},
@@ -2063,7 +2063,7 @@ async def test_cleanup_device_multiple_config_entries(
     assert state is not None
 
     # Remove MQTT from the device
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     response = await ws_client.remove_device(
         device_entry.id, mqtt_config_entry.entry_id
     )
@@ -2136,7 +2136,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
 
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     sensor_config = {
         "device": {"connections": [["mac", "12:34:56:AB:CD:EF"]]},
@@ -2599,7 +2599,7 @@ async def test_mqtt_integration_discovery_flow_fitering_on_redundant_payload(
         birth.set()
 
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={mqtt.CONF_BROKER: "mock-broker"},
         options=ENTRY_DEFAULT_BIRTH_MESSAGE,
         version=mqtt.CONFIG_ENTRY_VERSION,
@@ -2670,7 +2670,7 @@ async def test_mqtt_discovery_flow_starts_once(
         birth.set()
 
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={mqtt.CONF_BROKER: "mock-broker"},
         options=ENTRY_DEFAULT_BIRTH_MESSAGE,
         version=mqtt.CONFIG_ENTRY_VERSION,
@@ -2808,7 +2808,7 @@ async def test_mqtt_discovery_flow_subscribes_atr_configured_qos(
         birth.set()
 
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={mqtt.CONF_BROKER: "mock-broker"},
         options=mqtt_config_entry_options,
         version=mqtt.CONFIG_ENTRY_VERSION,
