@@ -1,14 +1,6 @@
 """Support for Imou camera entities."""
 
-from dataclasses import dataclass
-from typing import Any
-
-from pyimouapi.const import (
-    PARAM_HD,
-    PARAM_MOTION_DETECT,
-    PARAM_STATE,
-    PARAM_STORAGE_USED,
-)
+from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
@@ -21,7 +13,7 @@ from .const import PARAM_HEADER_DETECT, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 CAMERA_STREAM_RESOLUTION_SD = "SD"
 
@@ -29,28 +21,10 @@ CAMERA_STREAM_RESOLUTION_SD = "SD"
 PYIMOUAPI_LIVE_PROTOCOL = "https"
 PYIMOUAPI_SNAPSHOT_WAIT_SECONDS = 3
 
-
-@dataclass(frozen=True, kw_only=True)
-class ImouCameraEntityDescription:
-    """Description of an Imou camera entity for a device channel."""
-
-    key: str
-    resolution: str
-
-
-CAMERA_ENTITIES = (
-    ImouCameraEntityDescription(
-        key="camera_sd", resolution=CAMERA_STREAM_RESOLUTION_SD
-    ),
-    ImouCameraEntityDescription(key="camera_hd", resolution=PARAM_HD),
+CAMERA_TYPES = (
+    ("camera_sd", CAMERA_STREAM_RESOLUTION_SD),
+    ("camera_hd", PARAM_HD),
 )
-
-
-def _iter_cameras(
-    coordinator: ImouDataUpdateCoordinator,
-) -> list[ImouHaDevice]:
-    """Return devices that expose a camera channel."""
-    return [device for device in coordinator.devices if device.channel_id is not None]
 
 
 async def async_setup_entry(
@@ -64,10 +38,11 @@ async def async_setup_entry(
     def _add_cameras(new_devices: list[ImouHaDevice]) -> None:
         device_keys = {imou_device_identifier(device) for device in new_devices}
         async_add_entities(
-            ImouCamera(coordinator, device, description)
-            for device in _iter_cameras(coordinator)
+            ImouCamera(coordinator, entity_type, device, resolution)
+            for device in coordinator.devices
+            if device.channel_id is not None
             if imou_device_identifier(device) in device_keys
-            for description in CAMERA_ENTITIES
+            for entity_type, resolution in CAMERA_TYPES
         )
 
     coordinator.new_device_callbacks.append(_add_cameras)
@@ -87,20 +62,21 @@ class ImouCamera(ImouEntity, Camera):
     def __init__(
         self,
         coordinator: ImouDataUpdateCoordinator,
+        entity_type: str,
         device: ImouHaDevice,
-        description: ImouCameraEntityDescription,
+        resolution: str,
     ) -> None:
         """Initialize the camera entity."""
-        self._camera_description = description
+        self._resolution = resolution
         Camera.__init__(self)
-        super().__init__(coordinator, description.key, device)
+        super().__init__(coordinator, entity_type, device)
 
     async def stream_source(self) -> str | None:
         """Return the live stream URL from the Imou cloud."""
         try:
             return await self.coordinator.device_manager.async_get_device_stream(
                 self.device,
-                self._camera_description.resolution,
+                self._resolution,
                 PYIMOUAPI_LIVE_PROTOCOL,
             )
         except ImouException as err:
@@ -119,16 +95,6 @@ class ImouCamera(ImouEntity, Camera):
             raise HomeAssistantError(str(err)) from err
 
     @property
-    def is_recording(self) -> bool:
-        """Return True when storage reports usage and motion detection is enabled."""
-        storage = self.device.sensors.get(PARAM_STORAGE_USED)
-        storage_state = storage[PARAM_STATE] if storage else "-1"
-        return (
-            self._is_non_negative_number(storage_state)
-            and self.motion_detection_enabled
-        )
-
-    @property
     def motion_detection_enabled(self) -> bool:
         """Return True when human and/or motion detection switch is on."""
         header = self.device.switches.get(PARAM_HEADER_DETECT)
@@ -141,12 +107,3 @@ class ImouCamera(ImouEntity, Camera):
     def supported_features(self) -> CameraEntityFeature:
         """Flag streaming support."""
         return CameraEntityFeature.STREAM
-
-    @staticmethod
-    def _is_non_negative_number(value: Any) -> bool:
-        """Return True if value parses as a non-negative number."""
-        try:
-            number = float(value)
-        except TypeError, ValueError:
-            return False
-        return number >= 0
