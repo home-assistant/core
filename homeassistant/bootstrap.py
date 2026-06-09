@@ -87,6 +87,7 @@ from .helpers import (
     template,
     translation,
     trigger,
+    update_coordinator,
 )
 from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
@@ -471,6 +472,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
     frame.async_setup(hass)
     template.async_setup(hass)
     translation.async_setup(hass)
+    update_coordinator.async_setup(hass)
 
     recovery = hass.config.recovery_mode
     device_registry.async_setup(hass)
