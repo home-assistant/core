@@ -81,8 +81,10 @@ async def test_websocket_reconnects_on_disconnect(
     assert isinstance(ws_handler, MockedAnovaWebsocketHandler)
 
     ws_handler.simulate_disconnect()
-    # First call lets _wait_for_disconnect complete and schedules the done callback.
-    # Second call processes the done callback, creates the reconnect task, and waits for it.
+    # First call: _wait_for_disconnect completes and the done callback schedules
+    # async_request_refresh as a background task.
+    # Second call: the background task runs async_request_refresh -> _async_update_data
+    # -> _async_reconnect.
     await hass.async_block_till_done()
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -181,6 +183,22 @@ async def test_websocket_reconnect_failure_paths(
 
     assert expected_log in caplog.text
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_coordinator_poll_does_not_reconnect_when_connected(
+    hass: HomeAssistant,
+    anova_api: AnovaApi,
+) -> None:
+    """Test that the periodic coordinator poll is a no-op when the websocket is alive."""
+    entry = await async_init_integration(hass)
+    initial_call_count = entry.runtime_data.api.create_websocket.call_count
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_RETRY_DELAY + 1)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.runtime_data.api.create_websocket.call_count == initial_call_count
 
 
 async def test_websocket_reconnect_retries_after_transient_failure(
