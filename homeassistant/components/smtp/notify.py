@@ -119,7 +119,7 @@ async def async_get_service(
         discovery_info.get(CONF_PASSWORD),
         discovery_info[CONF_RECIPIENT],
         discovery_info.get(CONF_SENDER_NAME),
-        DEFAULT_DEBUG,
+        discovery_info.get(CONF_DEBUG, DEFAULT_DEBUG),
         discovery_info[CONF_VERIFY_SSL],
         ssl_context,
     )

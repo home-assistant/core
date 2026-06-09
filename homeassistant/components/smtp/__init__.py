@@ -22,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 CONF_RECIPIENT: [
                     subentry.unique_id for subentry in entry.subentries.values()
                 ],
+                **entry.options,
             },
             {},
         )

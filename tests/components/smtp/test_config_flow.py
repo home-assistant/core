@@ -14,13 +14,15 @@ from homeassistant.components.smtp.const import (
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
 )
-from homeassistant.config_entries import SOURCE_USER, FlowType
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, FlowType
 from homeassistant.const import (
+    CONF_DEBUG,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RECIPIENT,
     CONF_SENDER,
+    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -221,3 +223,35 @@ async def test_form_recipient_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEBUG: True,
+            CONF_TIMEOUT: 10,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        CONF_DEBUG: True,
+        CONF_TIMEOUT: 10,
+    }
