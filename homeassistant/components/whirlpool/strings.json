@@ -46,6 +46,17 @@
     }
   },
   "entity": {
+    "number": {
+      "oven_target_temperature": {
+        "name": "Target temperature"
+      },
+      "oven_target_temperature_lower": {
+        "name": "Lower oven target temperature"
+      },
+      "oven_target_temperature_upper": {
+        "name": "Upper oven target temperature"
+      }
+    },
     "select": {
       "refrigerator_temperature_level": {
         "name": "Temperature level"
@@ -156,15 +167,6 @@
           "preheating": "[%key:component::whirlpool::entity::sensor::oven_state::state::preheating%]",
           "standby": "[%key:common::state::standby%]"
         }
-      },
-      "oven_target_temperature": {
-        "name": "Target temperature"
-      },
-      "oven_target_temperature_lower": {
-        "name": "Lower oven target temperature"
-      },
-      "oven_target_temperature_upper": {
-        "name": "Upper oven target temperature"
       },
       "washer_state": {
         "name": "State",
