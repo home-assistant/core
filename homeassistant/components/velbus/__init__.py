@@ -97,7 +97,7 @@ def _update_devices_and_issues(
             severity=ir.IssueSeverity.WARNING,
             translation_key="stale_device",
             translation_placeholders={
-                "name": device.name_by_user or device.name or device_address,
+                "name": device.name_by_user or device.model or device_address,
                 "address": device_address,
             },
         )
