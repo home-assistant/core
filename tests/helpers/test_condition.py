@@ -2242,8 +2242,8 @@ async def test_condition_template_error_traced_not_logged(
     """Test template errors are added to the trace and not logged when opted in.
 
     The subscribe_condition websocket command re-evaluates a condition every
-    second and opts in via trace.record_template_errors(). Template variable
-    errors must then be recorded in the trace instead of being logged repeatedly.
+    second and opts in via trace.suppress_template_error_logging(). Template
+    variable errors are then recorded in the trace without being logged.
     """
     caplog.set_level(logging.WARNING)
     config = {"condition": "template", "value_template": value_template}
@@ -2251,7 +2251,7 @@ async def test_condition_template_error_traced_not_logged(
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
 
-    with expectation, trace.record_template_errors():
+    with expectation, trace.suppress_template_error_logging():
         test.async_check()
 
     # The template errors are recorded in the trace...
@@ -2269,11 +2269,10 @@ async def test_condition_template_error_logged_without_opt_in(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test template errors are logged when recording is not opted in.
+    """Test template errors are logged when suppression is not opted in.
 
-    An active trace is not enough to suppress logging; the consumer must opt in
-    via trace.record_template_errors(). Without it, the error is logged as usual
-    and not recorded in the trace.
+    The error is always recorded in the trace, but unless the consumer opts in
+    via trace.suppress_template_error_logging() it is also logged as usual.
     """
     caplog.set_level(logging.WARNING)
     config = {"condition": "template", "value_template": "{{ no_such_variable }}"}
@@ -2283,10 +2282,13 @@ async def test_condition_template_error_logged_without_opt_in(
 
     assert test.async_check() is False
 
-    assert "Template variable warning: 'no_such_variable' is undefined" in caplog.text
+    # Recorded in the trace...
     condition_trace = trace.trace_get(clear=False)
     trace.trace_clear()
-    assert condition_trace[""][0].template_errors == []
+    assert condition_trace[""][0].template_errors == ["'no_such_variable' is undefined"]
+
+    # ...and also logged
+    assert "Template variable warning: 'no_such_variable' is undefined" in caplog.text
 
 
 async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:

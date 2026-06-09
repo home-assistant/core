@@ -80,14 +80,27 @@ class HassEnforceUtcnowChecker(BaseChecker):
                                 self._utc_paths.add((local,))
                             case "timezone":
                                 self._utc_paths.add((local, "utc"))
+                case nodes.ImportFrom(modname="homeassistant.util", names=names):
+                    # ``homeassistant.util.dt`` re-exports ``UTC`` from
+                    # ``datetime``, so ``dt_util.UTC`` must be flagged too.
+                    for name, alias in names:
+                        if name == "dt":
+                            local = alias or name
+                            self._utc_paths.add((local, "UTC"))
+                case nodes.ImportFrom(modname="homeassistant.util.dt", names=names):
+                    for name, alias in names:
+                        if name == "UTC":
+                            self._utc_paths.add((alias or name,))
                 case nodes.Import(names=names):
                     for name, alias in names:
-                        if name != "datetime":
-                            continue
-                        local = alias or name
-                        self._datetime_class_paths.add((local, "datetime"))
-                        self._utc_paths.add((local, "UTC"))
-                        self._utc_paths.add((local, "timezone", "utc"))
+                        match name:
+                            case "datetime":
+                                local = alias or name
+                                self._datetime_class_paths.add((local, "datetime"))
+                                self._utc_paths.add((local, "UTC"))
+                                self._utc_paths.add((local, "timezone", "utc"))
+                            case "homeassistant.util.dt" if alias:
+                                self._utc_paths.add((alias, "UTC"))
 
     def visit_call(self, node: nodes.Call) -> None:
         """Check for ``datetime.now(UTC)`` calls."""

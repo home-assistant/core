@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_diagnostics_config_entry
+  dict({
+    'device_data': dict({
+      'DeviceKey_1': dict({
+        'dateTime': '2026-06-04T09:36:06+00:00',
+        'meterValue': 0.823213995,
+        'status': None,
+        'waterLevel': -0.136786005,
+      }),
+      'DeviceKey_2': dict({
+        'dateTime': '2026-06-04T09:36:06+00:00',
+        'meterValue': 0.823213995,
+        'status': None,
+        'waterLevel': -0.136786005,
+      }),
+    }),
+    'devices': list([
+      dict({
+        'deviceKey': 'DeviceKey_1',
+        'name': '**REDACTED**',
+      }),
+      dict({
+        'deviceKey': 'DeviceKey_2',
+        'name': '**REDACTED**',
+      }),
+    ]),
+    'entry_data': dict({
+      'api_key': '**REDACTED**',
+    }),
+  })
+# ---
