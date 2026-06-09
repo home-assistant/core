@@ -467,10 +467,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
     data: dict[str, Any] = dict(entry.data)
     options: dict[str, Any] = dict(entry.options)
-    if entry.version > 2 or (entry.version == 2 and entry.minor_version > 1):
-        # This means the user has downgraded from a future version
-        # We allow read support for version 2.1
-        return False
 
     if entry.version == 1 and entry.minor_version < 2:
         # Can be removed when the config entry is bumped to version 2.1
