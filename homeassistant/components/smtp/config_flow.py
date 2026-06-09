@@ -104,6 +104,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): NumberSelector(
             NumberSelectorConfig(
                 min=1,
+                step=1,
                 unit_of_measurement=UnitOfTime.SECONDS,
                 mode=NumberSelectorMode.BOX,
             )
