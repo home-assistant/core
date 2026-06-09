@@ -1816,6 +1816,11 @@ class PipelineInput:
                             await self.run.text_to_speech(tts_input)
 
         except PipelineError as err:
+            if self.run.tts_stream:
+                # Clean up TTS stream
+                self.run.tts_stream.delete()
+                self.run.tts_stream = None
+
             self.run.process_event(
                 PipelineEvent(
                     PipelineEventType.ERROR,
@@ -1885,15 +1890,17 @@ class PipelineInput:
         ):
             prepare_tasks.append(self.run.prepare_recognize_intent(self.session))
 
+        if prepare_tasks:
+            await asyncio.gather(*prepare_tasks)
+
+        # Do TTS prepare separately so we don't create a ResultStream if the
+        # pipeline is invalid.
         if (
             start_stage_index
             <= PIPELINE_STAGE_ORDER.index(PipelineStage.TTS)
             <= end_stage_index
         ):
-            prepare_tasks.append(self.run.prepare_text_to_speech())
-
-        if prepare_tasks:
-            await asyncio.gather(*prepare_tasks)
+            await self.run.prepare_text_to_speech()
 
 
 class PipelinePreferred(CollectionError):

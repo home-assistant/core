@@ -65,5 +65,13 @@
         "default": "mdi:power-sleep"
       }
     }
+  },
+  "services": {
+    "navigate_url": {
+      "service": "mdi:web"
+    },
+    "set_blackout": {
+      "service": "mdi:monitor-off"
+    }
   }
 }
