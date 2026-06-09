@@ -47,6 +47,42 @@
   },
   "entity": {
     "select": {
+      "oven_cook_mode": {
+        "name": "Cook mode",
+        "state": {
+          "air_fry": "Air fry",
+          "bake": "Bake",
+          "broil": "Broil",
+          "convection_bake": "Convection bake",
+          "convection_broil": "Convection broil",
+          "convection_roast": "Convection roast",
+          "keep_warm": "Keep warm"
+        }
+      },
+      "oven_cook_mode_lower": {
+        "name": "Lower oven cook mode",
+        "state": {
+          "air_fry": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::air_fry%]",
+          "bake": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::bake%]",
+          "broil": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::broil%]",
+          "convection_bake": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_bake%]",
+          "convection_broil": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_broil%]",
+          "convection_roast": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_roast%]",
+          "keep_warm": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::keep_warm%]"
+        }
+      },
+      "oven_cook_mode_upper": {
+        "name": "Upper oven cook mode",
+        "state": {
+          "air_fry": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::air_fry%]",
+          "bake": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::bake%]",
+          "broil": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::broil%]",
+          "convection_bake": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_bake%]",
+          "convection_broil": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_broil%]",
+          "convection_roast": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_roast%]",
+          "keep_warm": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::keep_warm%]"
+        }
+      },
       "refrigerator_temperature_level": {
         "name": "Temperature level"
       }
@@ -84,45 +120,6 @@
       },
       "end_time": {
         "name": "End time"
-      },
-      "oven_cook_mode": {
-        "name": "Cook mode",
-        "state": {
-          "air_fry": "Air fry",
-          "bake": "Bake",
-          "broil": "Broil",
-          "convection_bake": "Convection bake",
-          "convection_broil": "Convection broil",
-          "convection_roast": "Convection roast",
-          "keep_warm": "Keep warm",
-          "standby": "[%key:common::state::standby%]"
-        }
-      },
-      "oven_cook_mode_lower": {
-        "name": "Lower oven cook mode",
-        "state": {
-          "air_fry": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::air_fry%]",
-          "bake": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::bake%]",
-          "broil": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::broil%]",
-          "convection_bake": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_bake%]",
-          "convection_broil": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_broil%]",
-          "convection_roast": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_roast%]",
-          "keep_warm": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::keep_warm%]",
-          "standby": "[%key:common::state::standby%]"
-        }
-      },
-      "oven_cook_mode_upper": {
-        "name": "Upper oven cook mode",
-        "state": {
-          "air_fry": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::air_fry%]",
-          "bake": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::bake%]",
-          "broil": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::broil%]",
-          "convection_bake": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_bake%]",
-          "convection_broil": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_broil%]",
-          "convection_roast": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_roast%]",
-          "keep_warm": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::keep_warm%]",
-          "standby": "[%key:common::state::standby%]"
-        }
       },
       "oven_current_temperature": {
         "name": "Current temperature"
