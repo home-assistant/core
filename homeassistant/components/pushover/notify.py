@@ -64,8 +64,9 @@ async def async_get_service(
         hass, pushover_api, discovery_info[CONF_USER_KEY], entry_id
     )
 
-    # Store the service instance keyed by entry_id so the domain-level cancel
-    # service can reach every config entry's instance independently.
+    # Cancel must reach every loaded entry's service, so this registry is
+    # domain-global, not per-entry runtime_data.
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data[DOMAIN].setdefault("services", {})[entry_id] = service
 
     # Register the cancel service once; skip if already registered by a
