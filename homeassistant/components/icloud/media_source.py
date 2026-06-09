@@ -147,7 +147,9 @@ async def _get_photo_asset(
             translation_key="incomplete_media_source_identifier",
         )
 
-    photo: PhotoAsset | None = PhotoCache.instance(hass).get(identifier.photo_id)
+    photo: PhotoAsset | None = PhotoCache.instance(icloud_account).get(
+        identifier.photo_id
+    )
     if photo is None:
         album: BasePhotoAlbum = await _get_photo_album(hass, icloud_account, identifier)
         photo = await hass.async_add_executor_job(_get_photo_asset_sync, album)
@@ -186,12 +188,13 @@ class PhotoCache:
     _lock = threading.RLock()
 
     @classmethod
-    def instance(cls, hass: HomeAssistant) -> PhotoCache:
+    def instance(cls, icloud_account: IcloudAccount) -> PhotoCache:
         """Get the singleton instance of the photo cache."""
+
         with cls._lock:
-            if hass.data.get(DOMAIN) is None:
-                hass.data[DOMAIN] = cls()
-            return hass.data[DOMAIN]
+            if icloud_account.photo_cache is None:
+                icloud_account.photo_cache = cls()
+            return icloud_account.photo_cache
 
     def __init__(self, max_size: int = MAX_PHOTO_CACHE_SIZE) -> None:
         """Initialize the photo cache."""
@@ -552,7 +555,7 @@ class IcloudMediaSource(MediaSource):
             """Get list of photos synchronously."""
             items: list[BrowseMediaSource] = []
             for photo in album.photos:
-                PhotoCache.instance(self._hass).set(photo.id, photo)
+                PhotoCache.instance(icloud_account).set(photo.id, photo)
                 photo_id = IcloudMediaSourceIdentifier(
                     config_entry_id=identifier.config_entry_id,
                     shared_album=identifier.shared_album,

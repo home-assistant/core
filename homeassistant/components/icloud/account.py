@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import operator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -57,6 +57,9 @@ from .const import (
     DOMAIN,
 )
 
+if TYPE_CHECKING:
+    from .media_source import PhotoCache
+
 _LOGGER = logging.getLogger(__name__)
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
@@ -95,6 +98,8 @@ class IcloudAccount:
         self._config_entry = config_entry
 
         self.listeners: list[CALLBACK_TYPE] = []
+
+        self.photo_cache: PhotoCache | None = None
 
     def setup(self) -> None:
         """Set up an iCloud account."""
