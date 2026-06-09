@@ -22,9 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import _LOGGER
-from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
+from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonEntity
-from .utils import alexa_api_call
 
 PARALLEL_UPDATES = 1
 
@@ -216,16 +215,15 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         provider = media_type.value if isinstance(media_type, MediaType) else media_type
         await self.async_call_alexa_music(media_id, provider)
 
-    @alexa_api_call
     async def async_call_alexa_music(
         self, search_phrase: str, provider_id: str
     ) -> None:
         """Call alexa music."""
-        await self.coordinator.api.call_alexa_music(
-            self.device, search_phrase, provider_id
-        )
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.call_alexa_music(
+                self.device, search_phrase, provider_id
+            )
 
-    @alexa_api_call
     async def async_set_device_volume(self, volume: int) -> None:
         """Set the device volume."""
         _LOGGER.debug(
@@ -233,7 +231,8 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
             self.device.serial_number,
             volume,
         )
-        await self.coordinator.api.set_device_volume(self.device, volume)
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.set_device_volume(self.device, volume)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level (0.0 to 1.0)."""
@@ -263,12 +262,12 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         await self.async_set_volume_level(target_volume / 100)
         self._prev_volume = None
 
-    @alexa_api_call
     async def _send_media_command(self, command: AmazonMediaControls) -> None:
         _LOGGER.debug(
             "Sending media command '%s' to %s", command, self.device.serial_number
         )
-        await self.coordinator.api.send_media_command(self.device, command)
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.send_media_command(self.device, command)
 
     async def async_media_stop(self) -> None:
         """Send stop command."""

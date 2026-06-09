@@ -12,9 +12,8 @@ from homeassistant.components.notify import NotifyEntity, NotifyEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AmazonConfigEntry
+from .coordinator import AmazonConfigEntry, alexa_api_call
 from .entity import AmazonEntity
-from .utils import alexa_api_call
 
 PARALLEL_UPDATES = 1
 
@@ -80,10 +79,11 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
 
     entity_description: AmazonNotifyEntityDescription
 
-    @alexa_api_call
     async def async_send_message(
         self, message: str, title: str | None = None, **kwargs: Any
     ) -> None:
         """Send a message."""
-
-        await self.entity_description.method(self.coordinator.api, self.device, message)
+        async with alexa_api_call(self.coordinator):
+            await self.entity_description.method(
+                self.coordinator.api, self.device, message
+            )
