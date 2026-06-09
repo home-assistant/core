@@ -56,7 +56,7 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(account_data.account_id)
                 if self.source == SOURCE_USER:
                     self._abort_if_unique_id_configured()
-                if self.source == SOURCE_RECONFIGURE:
+                elif self.source == SOURCE_RECONFIGURE:
                     self._abort_if_unique_id_mismatch()
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(), data_updates=user_input
