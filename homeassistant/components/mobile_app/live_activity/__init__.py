@@ -24,6 +24,7 @@ from ..const import (
     ATTR_TOKEN,
     ATTR_WEBHOOK_ID,
     CLEAR_NOTIFICATION,
+    DATA_LIVE_ACTIVITY_CLEANUP_UNSUB,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_STORE,
     DOMAIN,
@@ -158,20 +159,26 @@ def remove_live_activity_token(
     hass.data[DOMAIN][DATA_STORE].async_delay_save(
         partial(savable_state, hass), STORAGE_SAVE_DELAY_SECONDS
     )
+    async_schedule_next_cleanup(hass)
     return True
 
 
 @callback
 def async_schedule_next_cleanup(hass: HomeAssistant) -> None:
-    """Schedule a cleanup sweep for the earliest token expiry.
+    """Schedule a single cleanup sweep for the earliest token expiry.
 
-    Only call when no sweep is already scheduled, to keep a single timer in flight.
+    Cancels any previously scheduled sweep first, so calling this whenever the
+    token set changes keeps exactly one timer in flight, set to the new earliest.
     """
-    tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    domain_data = hass.data[DOMAIN]
+    if (cancel := domain_data[DATA_LIVE_ACTIVITY_CLEANUP_UNSUB]) is not None:
+        cancel()
+        domain_data[DATA_LIVE_ACTIVITY_CLEANUP_UNSUB] = None
+
     earliest_expires_at = min(
         (
             token[ATTR_LIVE_ACTIVITY_EXPIRES_AT]
-            for device_tokens in tokens.values()
+            for device_tokens in domain_data[DATA_LIVE_ACTIVITY_TOKENS].values()
             for token in device_tokens.values()
         ),
         default=None,
@@ -182,9 +189,12 @@ def async_schedule_next_cleanup(hass: HomeAssistant) -> None:
     delay = max(0, earliest_expires_at - dt_util.utcnow().timestamp())
 
     async def run_cleanup(_now: datetime) -> None:
+        domain_data[DATA_LIVE_ACTIVITY_CLEANUP_UNSUB] = None
         await async_cleanup_expired_live_activity_tokens(hass)
 
-    async_call_later(hass, delay, run_cleanup)
+    domain_data[DATA_LIVE_ACTIVITY_CLEANUP_UNSUB] = async_call_later(
+        hass, delay, run_cleanup
+    )
 
 
 async def async_cleanup_expired_live_activity_tokens(hass: HomeAssistant) -> None:
