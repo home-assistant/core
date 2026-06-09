@@ -147,7 +147,7 @@ async def _get_photo_asset(
             translation_key="incomplete_media_source_identifier",
         )
 
-    photo: PhotoAsset | None = PhotoCache.instance().get(identifier.photo_id)
+    photo: PhotoAsset | None = PhotoCache.instance(hass).get(identifier.photo_id)
     if photo is None:
         album: BasePhotoAlbum = await _get_photo_album(hass, icloud_account, identifier)
         photo = await hass.async_add_executor_job(_get_photo_asset_sync, album)
@@ -183,16 +183,15 @@ async def _get_media_mime_type(
 class PhotoCache:
     """Simple in-memory cache for PhotoAsset objects."""
 
-    _instance: PhotoCache
     _lock = threading.RLock()
 
     @classmethod
-    def instance(cls) -> PhotoCache:
+    def instance(cls, hass: HomeAssistant) -> PhotoCache:
         """Get the singleton instance of the photo cache."""
         with cls._lock:
-            if not hasattr(cls, "_instance"):
-                cls._instance = cls()
-            return cls._instance
+            if hass.data.get(DOMAIN) is None:
+                hass.data[DOMAIN] = cls()
+            return hass.data[DOMAIN]
 
     def __init__(self, max_size: int = MAX_PHOTO_CACHE_SIZE) -> None:
         """Initialize the photo cache."""
@@ -553,7 +552,7 @@ class IcloudMediaSource(MediaSource):
             """Get list of photos synchronously."""
             items: list[BrowseMediaSource] = []
             for photo in album.photos:
-                PhotoCache.instance().set(photo.id, photo)
+                PhotoCache.instance(self._hass).set(photo.id, photo)
                 photo_id = IcloudMediaSourceIdentifier(
                     config_entry_id=identifier.config_entry_id,
                     shared_album=identifier.shared_album,
@@ -577,7 +576,7 @@ class IcloudMediaSource(MediaSource):
                     can_play=True,
                     can_expand=False,
                     title=photo.filename,
-                    thumbnail=f"/api/icloud/media_source/serve/thumb{'_image' if photo.item_type == 'image' else ''}/{b64encode(str(photo_id).encode()).decode()}",
+                    thumbnail=f"/api/icloud/media_source/serve/thumb{'' if photo.item_type == 'image' else '_image'}/{b64encode(str(photo_id).encode()).decode()}",
                 )
                 items.append(item)
             return items
