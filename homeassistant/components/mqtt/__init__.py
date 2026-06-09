@@ -467,7 +467,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate the options from config entry data."""
+    """Migrate the config entry to the latest version."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
     if entry.version == 1 and entry.minor_version == 1:
         # This means the user has upgraded from an old unsupported version
