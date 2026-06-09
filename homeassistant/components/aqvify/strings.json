@@ -40,5 +40,16 @@
         "name": "Water level"
       }
     }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "An error occurred while communicating with the Aqvify API for {entry}"
+    },
+    "api_timeout": {
+      "message": "Timeout occurred while communicating with the Aqvify API for {entry}"
+    },
+    "invalid_api_key": {
+      "message": "Invalid API key. Please verify your API key and try to reauthenticate."
+    }
   }
 }
