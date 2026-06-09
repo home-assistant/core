@@ -84,7 +84,7 @@ def _check_domain_argument(arg_node: nodes.NodeNG) -> bool:
 
     We currently only disallow `Platform.Xyz`
 
-    The plugin can be extended in the future to improve consistencey and
+    The plugin can be extended in the future to improve consistency and
     only allow certain patterns for domain arguments, such as:
         - x.DOMAIN/x.domain attribute (including *_DOMAIN/*_domain)
         - DOMAIN/domain name (including *_DOMAIN/*_domain)
