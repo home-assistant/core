@@ -185,3 +185,17 @@ async def test_reauth_flow_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+
+    # Make sure the config flow tests finish with FlowResultType.ABORT so
+    # we can show the config flow is able to recover from an error.
+    mock_aqvify_client.async_get_account_id.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test-api-key",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
