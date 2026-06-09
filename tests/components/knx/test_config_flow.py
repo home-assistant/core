@@ -17,14 +17,13 @@ from homeassistant.components.knx.config_flow import (
     CONF_KEYRING_FILE,
     CONF_KNX_GATEWAY,
     CONF_KNX_TUNNELING_TYPE,
-    DEFAULT_ENTRY_DATA as _DEFAULT_ENTRY_DATA,
+    DEFAULT_ENTRY_DATA,
     DEFAULT_ENTRY_OPTIONS,
     OPTION_MANUAL_TUNNEL,
 )
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
-    CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_KNXKEY_FILENAME,
     CONF_KNX_KNXKEY_PASSWORD,
@@ -53,17 +52,12 @@ from homeassistant.components.knx.const import (
     KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
 )
-from homeassistant.config_entries import ConfigEntriesFlowManager
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, get_fixture_path
-
-# Default data and options combined, as merged into a created config entry's data
-# by the test flow patch. Used to build expected entry contents in assertions.
-DEFAULT_ENTRY_DATA = {**_DEFAULT_ENTRY_DATA, **DEFAULT_ENTRY_OPTIONS}
 
 FIXTURE_KNXKEYS_PASSWORD = "test"
 FIXTURE_KEYRING = sync_load_keyring(
@@ -79,55 +73,14 @@ async def _mock_validate_ip_for_invalid_local(ip_address: str) -> str:
     return ip_address
 
 
-@pytest.fixture(autouse=True)
-def merge_options_in_flow_results():
-    """Merge options back into data for CREATE_ENTRY flow results during config flow tests."""
-    orig_configure = ConfigEntriesFlowManager.async_configure
-    orig_init = ConfigEntriesFlowManager.async_init
-
-    async def patched_configure(*args, **kwargs):
-        res = await orig_configure(*args, **kwargs)
-        if (
-            isinstance(res, dict)
-            and res.get("type") == FlowResultType.CREATE_ENTRY
-            and res.get("title")
-        ):
-            if res.get("options"):
-                res["data"] = {**res["data"], **res["options"]}
-        return res
-
-    async def patched_init(*args, **kwargs):
-        res = await orig_init(*args, **kwargs)
-        if (
-            isinstance(res, dict)
-            and res.get("type") == FlowResultType.CREATE_ENTRY
-            and res.get("title")
-        ):
-            if res.get("options"):
-                res["data"] = {**res["data"], **res["options"]}
-        return res
-
-    with (
-        patch(
-            "homeassistant.config_entries.ConfigEntriesFlowManager.async_configure",
-            patched_configure,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntriesFlowManager.async_init",
-            patched_init,
-        ),
-    ):
-        yield
-
-
-def _assert_mock_entry_data(mock_entry: MockConfigEntry, expected_data: dict) -> None:
-    """Helper to assert that mock config entry data and options are correctly separated."""
-    assert dict(mock_entry.data) == {
-        k: v for k, v in expected_data.items() if k not in DEFAULT_ENTRY_OPTIONS
-    }
-    assert dict(mock_entry.options) == {
-        k: v for k, v in expected_data.items() if k in DEFAULT_ENTRY_OPTIONS
-    }
+def _assert_mock_entry_data(
+    mock_entry: MockConfigEntry,
+    expected_data: dict,
+    expected_options: dict = DEFAULT_ENTRY_OPTIONS,
+) -> None:
+    """Assert the config entry stores connection data and options separately."""
+    assert dict(mock_entry.data) == expected_data
+    assert dict(mock_entry.options) == expected_options
 
 
 @pytest.fixture(name="knx_setup")
@@ -277,6 +230,7 @@ async def test_routing_setup(
         CONF_KNX_SECURE_USER_PASSWORD: None,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
     }
+    assert result["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -352,6 +306,7 @@ async def test_routing_setup_with_local_ip(
         CONF_KNX_SECURE_USER_PASSWORD: None,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
     }
+    assert result["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -442,6 +397,7 @@ async def test_routing_secure_manual_setup(
         CONF_KNX_SECURE_USER_PASSWORD: None,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
     }
+    assert secure_routing_manual["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -512,6 +468,7 @@ async def test_routing_secure_keyfile(
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
         CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.123",
     }
+    assert routing_secure_knxkeys["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -632,6 +589,7 @@ async def test_tunneling_setup_manual(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == title
     assert result["data"] == config_entry_data
+    assert result["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -769,6 +727,7 @@ async def test_tunneling_setup_manual_request_description_error(
         CONF_KNX_SECURE_USER_ID: None,
         CONF_KNX_SECURE_USER_PASSWORD: None,
     }
+    assert result["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -866,6 +825,7 @@ async def test_tunneling_setup_for_local_ip(
         CONF_KNX_SECURE_USER_ID: None,
         CONF_KNX_SECURE_USER_PASSWORD: None,
     }
+    assert result["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -914,6 +874,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(
         CONF_KNX_SECURE_USER_ID: None,
         CONF_KNX_SECURE_USER_PASSWORD: None,
     }
+    assert result["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -962,6 +923,7 @@ async def test_tunneling_setup_tcp_endpoint_select_skip(
         CONF_KNX_SECURE_USER_ID: None,
         CONF_KNX_SECURE_USER_PASSWORD: None,
     }
+    assert result["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -1018,6 +980,7 @@ async def test_tunneling_setup_tcp_endpoint_select(
         CONF_KNX_SECURE_USER_ID: None,
         CONF_KNX_SECURE_USER_PASSWORD: None,
     }
+    assert result["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -1090,16 +1053,18 @@ async def test_form_with_automatic_connection_handling(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONF_KNX_AUTOMATIC.capitalize()
+    # don't use the DEFAULT_ENTRY_* constants here to check for correct usage of defaults
     assert result["data"] == {
-        # don't use **DEFAULT_ENTRY_DATA here to check for correct usage of defaults
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
         CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
         CONF_KNX_LOCAL_IP: None,
         CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
         CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-        CONF_KNX_RATE_LIMIT: 0,
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
+    }
+    assert result["options"] == {
+        CONF_KNX_RATE_LIMIT: 0,
         CONF_KNX_STATE_UPDATER: True,
         CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: KNX_TELEGRAM_DB_RETENTION_DEFAULT,
         CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
@@ -1240,6 +1205,7 @@ async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup) ->
         CONF_KNX_LOCAL_IP: None,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
     }
+    assert secure_tunnel_manual["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -1289,6 +1255,7 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_LOCAL_IP: None,
     }
+    assert secure_knxkeys["options"] == DEFAULT_ENTRY_OPTIONS
     knx_setup.assert_called_once()
 
 
@@ -1396,16 +1363,11 @@ async def test_reconfigure_flow_connection_type(
                 CONF_PORT: 3675,
                 CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
                 CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                CONF_KNX_RATE_LIMIT: 0,
-                CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
                 CONF_KNX_ROUTE_BACK: False,
                 CONF_KNX_TUNNEL_ENDPOINT_IA: None,
                 CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
                 CONF_KNX_SECURE_USER_ID: None,
                 CONF_KNX_SECURE_USER_PASSWORD: None,
-                CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: KNX_TELEGRAM_DB_RETENTION_DEFAULT,
-                CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
-                CONF_KNX_TELEGRAM_DB_PATH: KNX_TELEGRAM_DB_PATH_DEFAULT,
             },
         )
 
