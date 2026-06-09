@@ -26,6 +26,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordinator
+from .helpers import build_credentials
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,15 +96,7 @@ async def async_setup_entry(
 
     # Cache the freshly discovered credentials (password, cryptoSerial, MAC) so
     # later setups replay them; also drops entries for devices no longer present.
-    credentials = {
-        serial: {
-            "password": info.password,
-            "crypto_serial": info.crypto_serial,
-            "mac": info.mac,
-        }
-        for serial, info in devices.items()
-        if info.password and info.crypto_serial
-    }
+    credentials = build_credentials(devices)
 
     # Stored IPs are keyed by MAC; drop any for devices no longer on the account.
     # Addresses come from DHCP discovery (async_step_dhcp) and the manual entries

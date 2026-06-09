@@ -21,6 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_ADDRESSES, CONF_CREDENTIALS, DOMAIN
+from .helpers import build_credentials
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,15 +93,7 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                         data={
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            CONF_CREDENTIALS: {
-                                serial: {
-                                    "password": info.password,
-                                    "crypto_serial": info.crypto_serial,
-                                    "mac": info.mac,
-                                }
-                                for serial, info in devices.items()
-                                if info.password and info.crypto_serial
-                            },
+                            CONF_CREDENTIALS: build_credentials(devices),
                         },
                     )
 
@@ -162,7 +155,9 @@ class MitsubishiComfortOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage per-device LAN addresses."""
-        addresses: dict[str, str] = dict(self.config_entry.data.get(CONF_ADDRESSES, {}))
+        stored_addresses: dict[str, str] = dict(
+            self.config_entry.data.get(CONF_ADDRESSES, {})
+        )
         device_registry = dr.async_get(self.hass)
         # Map each device's formatted MAC (the address cache key) to its name.
         macs: dict[str, str] = {}
@@ -185,7 +180,7 @@ class MitsubishiComfortOptionsFlow(OptionsFlow):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            updated = dict(addresses)
+            updated = dict(stored_addresses)
             for mac in macs:
                 value = user_input.get(mac, "").strip()
                 if not value:
@@ -213,7 +208,7 @@ class MitsubishiComfortOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                schema, user_input if user_input is not None else addresses
+                schema, user_input if user_input is not None else stored_addresses
             ),
             errors=errors,
             description_placeholders={"devices": ", ".join(macs.values())},
