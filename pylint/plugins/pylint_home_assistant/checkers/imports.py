@@ -8,6 +8,7 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.const import Module
+from pylint_home_assistant.helpers.module_info import parse_module
 
 
 @dataclass
@@ -314,18 +315,18 @@ class HassImportsFormatChecker(BaseChecker):
         self,
         node: nodes.ImportFrom,
         current_component: str | None,
-        imported_parts: list[str],
-        imported_component: str,
+        other_component: str,
+        other_module: str | None,
     ) -> bool:
         """Check for hass-component-root-import."""
         if (
-            current_component == imported_component
-            or imported_component in _IGNORE_ROOT_IMPORT
+            current_component == other_component
+            or other_component in _IGNORE_ROOT_IMPORT
         ):
             return True
 
         # Check for `from homeassistant.components.other.module import something`
-        if len(imported_parts) > 3:
+        if other_module is not None:
             self.add_message("home-assistant-component-root-import", node=node)
             return False
 
@@ -385,19 +386,16 @@ class HassImportsFormatChecker(BaseChecker):
         ):
             return
 
-        if node.modname.startswith("homeassistant.components."):
-            imported_parts = node.modname.split(".")
-            imported_component = imported_parts[2]
-
+        if other_parsed := parse_module(node.modname):
             # Checks for hass-component-root-import
             if not self._check_for_component_root_import(
-                node, current_component, imported_parts, imported_component
+                node, current_component, other_parsed.domain, other_parsed.module
             ):
                 return
 
             # Checks for hass-import-constant-alias
             if not self._check_for_constant_alias(
-                node, current_component, imported_component
+                node, current_component, other_parsed.domain
             ):
                 return
 
