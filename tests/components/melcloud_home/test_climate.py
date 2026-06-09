@@ -12,10 +12,8 @@ from aiomelcloudhome import (
 import pytest
 
 from homeassistant.components.climate import (
-    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
-    ATTR_HVAC_MODES,
     ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -33,10 +31,11 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, SnapshotAssertion
+from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 ATA_ENTITY_ID = "climate.living_room_ac"
 ATW_ZONE1_ENTITY_ID = "climate.heat_pump_zone_1"
@@ -44,16 +43,15 @@ ATW_ZONE2_ENTITY_ID = "climate.heat_pump_zone_2"
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")
-async def test_ata_climate_state(
+async def test_climate_platform(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test ATA climate entity state and attributes from fixture data."""
+    """Test all climate entity states and attributes from fixture data."""
     await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(ATA_ENTITY_ID)
-    assert state == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -86,7 +84,7 @@ async def test_ata_climate_state(
 async def test_ata_set_hvac_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_control_ata_unit: AsyncMock,
+    mock_melcloud_client: AsyncMock,
     hvac_mode: HVACMode,
     arguments: dict,
 ) -> None:
@@ -100,7 +98,9 @@ async def test_ata_set_hvac_mode(
         blocking=True,
     )
 
-    mock_control_ata_unit.assert_called_once_with("ata-unit-uuid-1", **arguments)
+    mock_melcloud_client.control_ata_unit.assert_called_once_with(
+        "ata-unit-uuid-1", **arguments
+    )
 
 
 @pytest.mark.parametrize(
@@ -118,7 +118,7 @@ async def test_ata_set_hvac_mode(
 async def test_ata_set_fan_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_control_ata_unit: AsyncMock,
+    mock_melcloud_client: AsyncMock,
     fan_mode: str,
     expected_speed: ATAFanSpeed,
 ) -> None:
@@ -132,7 +132,7 @@ async def test_ata_set_fan_mode(
         blocking=True,
     )
 
-    mock_control_ata_unit.assert_called_once_with(
+    mock_melcloud_client.control_ata_unit.assert_called_once_with(
         "ata-unit-uuid-1", set_fan_speed=expected_speed
     )
 
@@ -153,7 +153,7 @@ async def test_ata_set_fan_mode(
 async def test_ata_set_swing_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_control_ata_unit: AsyncMock,
+    mock_melcloud_client: AsyncMock,
     swing_mode: str,
     expected_vane: ATAVaneVertical,
 ) -> None:
@@ -167,7 +167,7 @@ async def test_ata_set_swing_mode(
         blocking=True,
     )
 
-    mock_control_ata_unit.assert_called_once_with(
+    mock_melcloud_client.control_ata_unit.assert_called_once_with(
         "ata-unit-uuid-1", vane_vertical_direction=expected_vane
     )
 
@@ -188,7 +188,7 @@ async def test_ata_set_swing_mode(
 async def test_ata_set_swing_horizontal_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_control_ata_unit: AsyncMock,
+    mock_melcloud_client: AsyncMock,
     swing_mode: str,
     expected_vane: ATAVaneHorizontal,
 ) -> None:
@@ -202,7 +202,7 @@ async def test_ata_set_swing_horizontal_mode(
         blocking=True,
     )
 
-    mock_control_ata_unit.assert_called_once_with(
+    mock_melcloud_client.control_ata_unit.assert_called_once_with(
         "ata-unit-uuid-1", vane_horizontal_direction=expected_vane
     )
 
@@ -211,7 +211,7 @@ async def test_ata_set_swing_horizontal_mode(
 async def test_ata_set_temperature(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_control_ata_unit: AsyncMock,
+    mock_melcloud_client: AsyncMock,
 ) -> None:
     """Test setting target temperature on an ATA unit."""
     await setup_integration(hass, mock_config_entry)
@@ -223,7 +223,7 @@ async def test_ata_set_temperature(
         blocking=True,
     )
 
-    mock_control_ata_unit.assert_called_once_with(
+    mock_melcloud_client.control_ata_unit.assert_called_once_with(
         "ata-unit-uuid-1", set_temperature=22.5
     )
 
@@ -239,7 +239,7 @@ async def test_ata_set_temperature(
 async def test_ata_turn_on_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_control_ata_unit: AsyncMock,
+    mock_melcloud_client: AsyncMock,
     service: str,
     expected_kwargs: dict,
 ) -> None:
@@ -253,37 +253,9 @@ async def test_ata_turn_on_off(
         blocking=True,
     )
 
-    mock_control_ata_unit.assert_called_once_with("ata-unit-uuid-1", **expected_kwargs)
-
-
-@pytest.mark.parametrize(
-    ("entity_id", "current_temp", "target_temp"),
-    [
-        pytest.param(ATW_ZONE1_ENTITY_ID, 20.0, 21.0, id="zone1"),
-        pytest.param(ATW_ZONE2_ENTITY_ID, 21.0, 22.0, id="zone2"),
-    ],
-)
-@pytest.mark.usefixtures("mock_melcloud_client")
-async def test_atw_climate_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_id: str,
-    current_temp: float,
-    target_temp: float,
-) -> None:
-    """Test ATW zone climate entity state from fixture data."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == current_temp
-    assert state.attributes[ATTR_TEMPERATURE] == target_temp
-    assert state.attributes[ATTR_HVAC_MODES] == [
-        HVACMode.OFF,
-        HVACMode.HEAT,
-        HVACMode.COOL,
-    ]
+    mock_melcloud_client.control_ata_unit.assert_called_once_with(
+        "ata-unit-uuid-1", **expected_kwargs
+    )
 
 
 @pytest.mark.parametrize(
@@ -310,7 +282,7 @@ async def test_atw_climate_state(
 async def test_atw_set_hvac_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_control_atw_unit: AsyncMock,
+    mock_melcloud_client: AsyncMock,
     entity_id: str,
     hvac_mode: HVACMode,
     expected_kwargs: dict,
@@ -325,7 +297,9 @@ async def test_atw_set_hvac_mode(
         blocking=True,
     )
 
-    mock_control_atw_unit.assert_called_once_with("atw-unit-uuid-1", **expected_kwargs)
+    mock_melcloud_client.control_atw_unit.assert_called_once_with(
+        "atw-unit-uuid-1", **expected_kwargs
+    )
 
 
 @pytest.mark.parametrize(
@@ -339,7 +313,7 @@ async def test_atw_set_hvac_mode(
 async def test_atw_set_temperature(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_control_atw_unit: AsyncMock,
+    mock_melcloud_client: AsyncMock,
     entity_id: str,
     expected_kwargs: dict,
 ) -> None:
@@ -353,7 +327,9 @@ async def test_atw_set_temperature(
         blocking=True,
     )
 
-    mock_control_atw_unit.assert_called_once_with("atw-unit-uuid-1", **expected_kwargs)
+    mock_melcloud_client.control_atw_unit.assert_called_once_with(
+        "atw-unit-uuid-1", **expected_kwargs
+    )
 
 
 @pytest.mark.parametrize(
@@ -367,7 +343,7 @@ async def test_atw_set_temperature(
 async def test_atw_turn_on_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_control_atw_unit: AsyncMock,
+    mock_melcloud_client: AsyncMock,
     service: str,
     expected_kwargs: dict,
 ) -> None:
@@ -381,4 +357,6 @@ async def test_atw_turn_on_off(
         blocking=True,
     )
 
-    mock_control_atw_unit.assert_called_once_with("atw-unit-uuid-1", **expected_kwargs)
+    mock_melcloud_client.control_atw_unit.assert_called_once_with(
+        "atw-unit-uuid-1", **expected_kwargs
+    )

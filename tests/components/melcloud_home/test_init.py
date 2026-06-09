@@ -1,6 +1,5 @@
 """Test the MELCloud Home integration init behavior."""
 
-from typing import Any, cast
 from unittest.mock import AsyncMock
 
 from aiomelcloudhome import UserContext
@@ -18,7 +17,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_json_value_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")
@@ -50,7 +49,7 @@ async def test_entry_setup_retry_on_update_failure(
     exception: Exception,
 ) -> None:
     """Test setup retries when initial coordinator refresh fails."""
-    mock_melcloud_client.side_effect = exception
+    mock_melcloud_client.get_context.side_effect = exception
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -66,8 +65,8 @@ async def test_new_ata_unit_callback(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that new ATA units discovered on coordinator refresh create climate entities."""
-    fixture = cast(dict[str, Any], load_json_value_fixture("context.json", DOMAIN))
-    mock_melcloud_client.return_value = UserContext.model_validate(
+    fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(
         {
             **fixture,
             "buildings": [
@@ -85,7 +84,7 @@ async def test_new_ata_unit_callback(
     ]
     assert not ata_entities
 
-    mock_melcloud_client.return_value = UserContext.model_validate(fixture)
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(fixture)
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -106,8 +105,8 @@ async def test_new_atw_unit_callback(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that new ATW units discovered on coordinator refresh create climate entities."""
-    fixture = cast(dict[str, Any], load_json_value_fixture("context.json", DOMAIN))
-    mock_melcloud_client.return_value = UserContext.model_validate(
+    fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(
         {
             **fixture,
             "buildings": [
@@ -125,7 +124,7 @@ async def test_new_atw_unit_callback(
     ]
     assert not atw_entities
 
-    mock_melcloud_client.return_value = UserContext.model_validate(fixture)
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(fixture)
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 

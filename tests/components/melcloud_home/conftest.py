@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aiomelcloudhome import UserContext
+from aiomelcloudhome import MELCloudHome, UserContext
 import pytest
 
 from homeassistant.components.melcloud_home.const import DOMAIN
@@ -19,45 +19,22 @@ MOCK_USER_INPUT = {
 
 @pytest.fixture
 def mock_melcloud_client() -> Generator[AsyncMock]:
-    """Mock MELCloud Home client context retrieval."""
-    mocked_get_context = AsyncMock(
-        return_value=UserContext.model_validate(
-            load_json_value_fixture("context.json", DOMAIN)
-        )
+    """Mock MELCloud Home client."""
+    client = AsyncMock(MELCloudHome)
+    client.get_context.return_value = UserContext.model_validate(
+        load_json_value_fixture("context.json", DOMAIN)
     )
     with (
         patch(
-            "homeassistant.components.melcloud_home.config_flow.MELCloudHome.get_context",
-            new=mocked_get_context,
+            "homeassistant.components.melcloud_home.MELCloudHome",
+            return_value=client,
         ),
         patch(
-            "homeassistant.components.melcloud_home.coordinator.MELCloudHome.get_context",
-            new=mocked_get_context,
+            "homeassistant.components.melcloud_home.config_flow.MELCloudHome",
+            return_value=client,
         ),
     ):
-        yield mocked_get_context
-
-
-@pytest.fixture
-def mock_control_ata_unit() -> Generator[AsyncMock]:
-    """Mock MELCloud Home ATA unit control."""
-    mock = AsyncMock()
-    with patch(
-        "homeassistant.components.melcloud_home.coordinator.MELCloudHome.control_ata_unit",
-        new=mock,
-    ):
-        yield mock
-
-
-@pytest.fixture
-def mock_control_atw_unit() -> Generator[AsyncMock]:
-    """Mock MELCloud Home ATW unit control."""
-    mock = AsyncMock()
-    with patch(
-        "homeassistant.components.melcloud_home.coordinator.MELCloudHome.control_atw_unit",
-        new=mock,
-    ):
-        yield mock
+        yield client
 
 
 @pytest.fixture

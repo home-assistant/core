@@ -38,6 +38,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT[CONF_EMAIL]
     assert result["data"] == MOCK_USER_INPUT
+    assert result["result"].unique_id == "user-uuid-1"
 
 
 @pytest.mark.parametrize(
@@ -63,7 +64,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_melcloud_client.side_effect = exception
+    mock_melcloud_client.get_context.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -73,7 +74,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
 
-    mock_melcloud_client.side_effect = None
+    mock_melcloud_client.get_context.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -88,12 +89,12 @@ async def test_form_exceptions(
 @pytest.mark.usefixtures("mock_melcloud_client")
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test we handle duplicate entries."""
-    existing_entry = MockConfigEntry(
+    mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="user-uuid-1",
         data=MOCK_USER_INPUT,
     )
-    existing_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
