@@ -7,7 +7,6 @@ import itertools
 import logging
 from typing import Any
 
-from roborock.device_features import is_wash_n_fill_dock
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
@@ -47,11 +46,6 @@ class RoborockButtonDescription(ButtonEntityDescription):
     is_supported: Callable[[RoborockDataUpdateCoordinator], bool] = lambda _: True
 
 
-def _supports_dock_consumables(coordinator: RoborockDataUpdateCoordinator) -> bool:
-    dock_type = coordinator.properties_api.status.dock_type
-    return dock_type is not None and is_wash_n_fill_dock(dock_type)
-
-
 CONSUMABLE_BUTTON_DESCRIPTIONS = [
     RoborockButtonDescription(
         key="reset_sensor_consumable",
@@ -88,7 +82,9 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         is_dock_entity=True,
-        is_supported=_supports_dock_consumables,
+        is_supported=lambda coordinator: (
+            coordinator.properties_api.wash_towel_mode is not None
+        ),
     ),
     RoborockButtonDescription(
         key="reset_dock_cleaning_brush_consumable",
@@ -97,7 +93,9 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         is_dock_entity=True,
-        is_supported=_supports_dock_consumables,
+        is_supported=lambda coordinator: (
+            coordinator.properties_api.wash_towel_mode is not None
+        ),
     ),
 ]
 
