@@ -141,7 +141,7 @@ async def _get_photo_asset(
     def _get_photo_asset_sync(album: BasePhotoAlbum) -> PhotoAsset | None:
         """Get photo asset synchronously."""
         for item in album.photos:
-            if item.id == identifier.photo_id:
+            if item.id == identifier.photo_id and identifier.photo_id is not None:
                 PhotoCache.instance(icloud_account).set(identifier.photo_id, item)
                 return item
         return None
