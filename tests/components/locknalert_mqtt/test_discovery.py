@@ -11,10 +11,9 @@ from unittest.mock import AsyncMock, call, patch
 
 from aiolocknalert.abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
 import pytest
-
-from homeassistant import config_entries
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import locknalert_mqtt as mqtt
 from homeassistant.components.locknalert_mqtt.const import (
     ATTR_DISCOVERY_HASH,

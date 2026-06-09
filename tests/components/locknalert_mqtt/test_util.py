@@ -13,6 +13,11 @@ from homeassistant.components.locknalert_mqtt.const import (
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
+    CONF_BIRTH_MESSAGE,
+    CONF_BROKER,
+    CONFIG_ENTRY_MINOR_VERSION,
+    CONFIG_ENTRY_VERSION,
+    DOMAIN,
 )
 from homeassistant.components.locknalert_mqtt.models import ReceiveMessage
 from homeassistant.components.locknalert_mqtt.util import (
@@ -38,7 +43,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from tests.typing import MqttMockHAClientGenerator
+from tests.common import MockConfigEntry
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 # ---------------------------------------------------------------------------
 # valid_topic
@@ -666,3 +672,103 @@ async def test_ensure_job_after_cooldown_cleanup_logs_non_cancelled_exception(
         await debouncer.async_cleanup()
 
     assert "Error cleaning up task" in caplog.text
+
+
+async def test_ensure_job_after_cooldown_timer_reached_reschedules() -> None:
+    """_async_timer_reached reschedules the timer when _next_execute_time is still in the future."""
+    fired: list[bool] = []
+
+    async def callback_job() -> None:
+        fired.append(True)
+
+    debouncer = EnsureJobAfterCooldown(10.0, callback_job)
+    # Manually set up state: timer fire time is far in the future.
+    debouncer._next_execute_time = debouncer._loop.time() + 10.0
+    # Simulate the timer callback firing early (before the target time).
+    debouncer._async_timer_reached()
+    # A new timer should have been re-set instead of executing.
+    assert debouncer._timer is not None
+    assert not fired
+    debouncer._async_cancel_timer()
+
+
+async def test_ensure_job_after_cooldown_timer_reached_executes() -> None:
+    """_async_timer_reached executes the job when the target time has elapsed."""
+    fired: list[bool] = []
+
+    async def callback_job() -> None:
+        fired.append(True)
+
+    debouncer = EnsureJobAfterCooldown(0.0, callback_job)
+    # Set target time in the past so it triggers immediately.
+    debouncer._next_execute_time = debouncer._loop.time() - 1.0
+    debouncer._async_timer_reached()
+    # Task should now be in-flight.
+    assert debouncer._task is not None
+    await debouncer._task
+    assert fired
+
+
+# ---------------------------------------------------------------------------
+# valid_topic: control character boundary edge cases
+# ---------------------------------------------------------------------------
+
+
+def test_valid_topic_rejects_control_char_del() -> None:
+    """Topic containing DEL (U+007F) raises vol.Invalid."""
+    with pytest.raises(vol.Invalid, match="control characters"):
+        valid_topic("sen\x7fsor")
+
+
+def test_valid_topic_rejects_non_char_fffe() -> None:
+    """Topic containing U+FFFE (non-character) raises vol.Invalid."""
+    with pytest.raises(vol.Invalid, match="non-characters"):
+        valid_topic("sen￾sor")
+
+
+def test_valid_topic_rejects_non_char_ffff() -> None:
+    """Topic containing U+FFFF (non-character) raises vol.Invalid."""
+    with pytest.raises(vol.Invalid, match="non-characters"):
+        valid_topic("sen￿sor")
+
+
+# ---------------------------------------------------------------------------
+# valid_subscribe_topic: additional wildcard edge cases
+# ---------------------------------------------------------------------------
+
+
+def test_valid_subscribe_topic_hash_alone_is_valid() -> None:
+    """A bare '#' (full-filter wildcard) is a valid subscription topic."""
+    assert valid_subscribe_topic("#") == "#"
+
+
+def test_valid_subscribe_topic_hash_after_separator() -> None:
+    """'sensor/#' is valid — hash follows a separator."""
+    assert valid_subscribe_topic("sensor/#") == "sensor/#"
+
+
+# ---------------------------------------------------------------------------
+# async_wait_for_mqtt_client: entry present but not yet loaded
+# ---------------------------------------------------------------------------
+
+
+async def test_async_wait_for_mqtt_client_times_out_when_not_loaded(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+) -> None:
+    """Returns False when the entry exists but setup future times out before resolving."""
+    # Register an entry that is NOT yet set up (state is NOT_LOADED).
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_BROKER: "test-broker"},
+        options={CONF_BIRTH_MESSAGE: {}},
+        version=CONFIG_ENTRY_VERSION,
+        minor_version=CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.locknalert_mqtt.util.AVAILABILITY_TIMEOUT",
+        0.0,
+    ):
+        result = await async_wait_for_mqtt_client(hass)
+    assert result is False
