@@ -192,7 +192,7 @@ async def test_cancel_multiple_receipts_same_tag(
             "pushover",
             {
                 "message": "First",
-                "data": {"priority": 2, "retry": 30, "tags": TAG_ALARM},
+                "data": {"priority": 2, "retry": 30, "expire": 3600, "tags": TAG_ALARM},
             },
             blocking=True,
         )
@@ -201,7 +201,7 @@ async def test_cancel_multiple_receipts_same_tag(
             "pushover",
             {
                 "message": "Second",
-                "data": {"priority": 2, "retry": 30, "tags": TAG_ALARM},
+                "data": {"priority": 2, "retry": 30, "expire": 3600, "tags": TAG_ALARM},
             },
             blocking=True,
         )
