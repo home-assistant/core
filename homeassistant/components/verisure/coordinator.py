@@ -26,6 +26,15 @@ from .const import CONF_GIID, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
 type VerisureConfigEntry = ConfigEntry[VerisureDataUpdateCoordinator]
 
+_MFA_REQUIRED_MESSAGE = (
+    "Multifactor authentication enabled, disable or create MFA cookie"
+)
+
+
+def _requires_mfa_reauth(exc: VerisureLoginError) -> bool:
+    """Return True when password login cannot proceed without MFA."""
+    return _MFA_REQUIRED_MESSAGE in str(exc)
+
 
 class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     """A Verisure Data Update Coordinator."""
@@ -70,6 +79,10 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 "Could not refresh Verisure session (transient)"
             ) from login_ex
         except VerisureLoginError as login_ex:
+            if _requires_mfa_reauth(login_ex):
+                raise ConfigEntryAuthFailed(
+                    "Verisure multifactor authentication required"
+                ) from login_ex
             raise ConfigEntryAuthFailed(
                 "Verisure re-authentication failed after cookie could not be read"
             ) from login_ex

@@ -146,6 +146,25 @@ async def test_setup_cookie_read_authentication_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+async def test_setup_cookie_read_mfa_required_triggers_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+) -> None:
+    """MFA-only accounts trigger reauth when password login is required."""
+    mock_verisure.login_cookie.side_effect = CookieReadError("Failed to read cookie")
+    mock_verisure.login.side_effect = LoginError(
+        "Multifactor authentication enabled, disable or create MFA cookie"
+    )
+
+    await _async_setup(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+
+
 async def test_setup_unexpected_verisure_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
