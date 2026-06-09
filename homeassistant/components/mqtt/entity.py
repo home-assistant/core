@@ -1439,15 +1439,26 @@ class MqttEntity(
             # if it was not disabled by the user.
             # Only reset hidden by flag if it was not hidden by the user.
             hidden_by_user = deleted_entry.hidden_by is er.RegistryEntryHider.USER
+            if hidden_by_user and self._config[CONF_VISIBLE_BY_DEFAULT]:
+                _LOGGER.info(
+                    "Restored entity %s was configured as visible by default, "
+                    "but was hidden by the user before, and will remain hidden",
+                    self.entity_id,
+                )
+                hidden_by: er.RegistryEntryHider | None = er.RegistryEntryHider.USER
+            else:
+                hidden_by = (
+                    None
+                    if self._config[CONF_VISIBLE_BY_DEFAULT]
+                    else er.RegistryEntryHider.INTEGRATION
+                )
             recreated_entry = entity_registry.async_get_or_create(
                 entity_platform, DOMAIN, self.unique_id
             )
             entity_registry.async_update_entity(
                 recreated_entry.entity_id,
                 disabled_by=None,
-                hidden_by=None
-                if self._config[CONF_VISIBLE_BY_DEFAULT] and not hidden_by_user
-                else er.RegistryEntryHider.INTEGRATION,
+                hidden_by=hidden_by,
             )
 
         if discovery_data is None:
