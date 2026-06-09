@@ -65,6 +65,8 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
         """Fetch device state."""
         try:
             devices = await self.api_client.async_get_devices()
+        except AqvifyAuthException as err:
+            raise ConfigEntryAuthFailed(f"Invalid Aqvify API key: {err}") from err
         except ClientResponseError as err:
             raise UpdateFailed(f"Error communicating with Aqvify API: {err}") from err
         except TimeoutError as err:
@@ -77,6 +79,8 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 device_data[
                     device_key
                 ] = await self.api_client.async_get_device_latest_data(device_key)
+            except AqvifyAuthException as err:
+                raise ConfigEntryAuthFailed(f"Invalid Aqvify API key: {err}") from err
             except ClientResponseError as err:
                 raise UpdateFailed(
                     f"Error communicating with Aqvify API: {err}"
