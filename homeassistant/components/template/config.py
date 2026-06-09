@@ -17,6 +17,7 @@ from homeassistant.components.blueprint import (
     schemas as blueprint_schemas,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
@@ -59,6 +60,7 @@ from . import (
     alarm_control_panel as alarm_control_panel_platform,
     binary_sensor as binary_sensor_platform,
     button as button_platform,
+    climate as climate_platform,
     cover as cover_platform,
     device_tracker as device_tracker_platform,
     event as event_platform,
@@ -197,6 +199,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             ),
             vol.Optional(BUTTON_DOMAIN): vol.All(
                 cv.ensure_list, [button_platform.BUTTON_YAML_SCHEMA]
+            ),
+            vol.Optional(CLIMATE_DOMAIN): vol.All(
+                cv.ensure_list, [climate_platform.CLIMATE_YAML_SCHEMA]
             ),
             vol.Optional(COVER_DOMAIN): vol.All(
                 cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]

@@ -282,6 +282,9 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         self._attr_min_humidity = config[CONF_MIN_HUMIDITY]
         self._attr_max_humidity = config[CONF_MAX_HUMIDITY]
 
+        self._attr_hvac_mode = None
+        self._attr_hvac_modes = []
+
         self._last_on: HVACMode | None = None
 
         # Setup HVAC Mode
