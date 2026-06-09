@@ -1432,9 +1432,10 @@ class MqttEntity(
         if (
             self._config[CONF_ENABLED_BY_DEFAULT]
             and deleted_entry
-            and deleted_entry.disabled_by is not None
+            and deleted_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         ):
-            # Enable previous deleted entity and enable it
+            # Enable previous deleted entity and enable it,
+            # if it was not disabled by the user
             recreated_entry = entity_registry.async_get_or_create(
                 entity_platform, DOMAIN, self.unique_id
             )
