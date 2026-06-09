@@ -233,9 +233,9 @@ def test_no_warning(
     [
         pytest.param(
             """
-async_setup_component(hass, Platform.OTHER, {})
+async_setup_component(hass, Platform.Something, {})
 """,
-            ("Platform.OTHER", "async_setup_component"),
+            ("Platform.Something", "async_setup_component"),
             id="attribute_platform",
         ),
     ],
