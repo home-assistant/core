@@ -571,3 +571,23 @@ async def test_oven_service_request_failure(
             {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 220},
             blocking=True,
         )
+
+
+async def test_oven_stop_cook_request_failure(
+    hass: HomeAssistant,
+    oven_climate_entity: tuple[str, str, "whirlpool.oven.Cavity"],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test a failed stop_cook request raises HomeAssistantError."""
+    entity_id, mock_fixture, _ = oven_climate_entity
+    mock = request.getfixturevalue(mock_fixture)
+    mock.stop_cook.return_value = False
+    await init_integration(hass)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
