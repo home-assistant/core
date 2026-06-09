@@ -2,10 +2,10 @@
 
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -49,10 +49,11 @@ class InvalidAuth(HomeAssistantError):
 
 def _normalize_url(url: str) -> str:
     """Normalize the proxy URL, ensuring it ends with the OpenAI `/v1` path."""
-    url = url.strip().rstrip("/")
-    if not url.endswith("/v1"):
-        url = f"{url}/v1"
-    return url
+    parsed = URL(url.strip())
+    path = parsed.path.rstrip("/")
+    if not path.endswith("/v1"):
+        path = f"{path}/v1"
+    return str(parsed.with_path(path))
 
 
 async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> list[str]:
@@ -112,7 +113,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
                 if api_key:
                     data[CONF_API_KEY] = api_key
                 return self.async_create_entry(
-                    title=urlparse(url).netloc or url,
+                    title=URL(url).host or url,
                     data=data,
                 )
         return self.async_show_form(

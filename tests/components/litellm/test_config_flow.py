@@ -48,7 +48,7 @@ async def test_full_flow(hass: HomeAssistant, url_input: str) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "localhost:4000"
+    assert result["title"] == "localhost"
     assert result["data"] == {CONF_URL: TEST_URL, CONF_API_KEY: "bla"}
 
 
