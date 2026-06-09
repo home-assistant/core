@@ -982,12 +982,15 @@ async def test_flow_preview(
     assert state["attributes"]["latest_version"] == "2.0"
 
 
-async def test_release_notes_websocket_long_text(
+async def test_release_notes_field(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test release notes returns full text via websocket."""
-    long_text = "x" * 500
+    """Test the new release_notes field works correctly."""
+    release_notes_content = (
+        "These are the **full** release notes with unlimited length. " * 20 + "END"
+    )
+    release_summary_content = "Short summary"
 
     await setup_entity(
         hass,
@@ -997,48 +1000,23 @@ async def test_release_notes_websocket_long_text(
         {
             "installed_version": "{{ '1.0' }}",
             "latest_version": "{{ '2.0' }}",
-            "release_summary": f"{{{{ '{long_text}' }}}}",
+            "release_notes": f"{{{{ '{release_notes_content}' }}}}",
+            "release_summary": f"{{{{ '{release_summary_content}' }}}}",
         },
     )
 
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "update/release_notes",
-            "entity_id": TEST_UPDATE.entity_id,
-        }
-    )
-
-    result = await client.receive_json()
-    assert result["success"] is True
-    assert result["result"] == long_text
-
-    # Verify attribute is truncated
     state = hass.states.get(TEST_UPDATE.entity_id)
-    assert len(state.attributes.get("release_summary", "")) <= 255
+    assert state is not None
 
-
-async def test_release_notes_websocket_short_text(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test release notes returns short text via websocket."""
-    short_text = "Short release note"
-
-    await setup_entity(
-        hass,
-        TEST_UPDATE,
-        ConfigurationStyle.MODERN,
-        1,
-        {
-            "installed_version": "{{ '1.0' }}",
-            "latest_version": "{{ '2.0' }}",
-            "release_summary": f"{{{{ '{short_text}' }}}}",
-        },
+    assert (
+        state.attributes.get("supported_features", 0)
+        & update.UpdateEntityFeature.RELEASE_NOTES
     )
+
+    assert "release_summary" in state.attributes
+    assert len(state.attributes["release_summary"]) <= 255
+
+    assert "release_notes" not in state.attributes
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -1053,71 +1031,4 @@ async def test_release_notes_websocket_short_text(
 
     result = await client.receive_json()
     assert result["success"] is True
-    assert result["result"] == short_text
-
-
-async def test_release_notes_websocket_none(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test release notes returns None when no template."""
-    await setup_entity(
-        hass,
-        TEST_UPDATE,
-        ConfigurationStyle.MODERN,
-        1,
-        {
-            "installed_version": "{{ '1.0' }}",
-            "latest_version": "{{ '2.0' }}",
-        },
-    )
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "update/release_notes",
-            "entity_id": TEST_UPDATE.entity_id,
-        }
-    )
-
-    result = await client.receive_json()
-    assert result["success"] is False
-    assert result["error"]["code"] == "not_supported"
-
-
-async def test_release_notes_websocket_template_error(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test release notes handles template errors."""
-    await setup_entity(
-        hass,
-        TEST_UPDATE,
-        ConfigurationStyle.MODERN,
-        1,
-        {
-            "installed_version": "{{ '1.0' }}",
-            "latest_version": "{{ '2.0' }}",
-            "release_summary": "{{ invalid_syntax + 123 }}",
-        },
-    )
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "update/release_notes",
-            "entity_id": TEST_UPDATE.entity_id,
-        }
-    )
-
-    result = await client.receive_json()
-    assert result["success"] is True
-    assert result["result"] is None
-    assert "TemplateError" in caplog.text
+    assert result["result"] == release_notes_content

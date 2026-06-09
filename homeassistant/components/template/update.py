@@ -60,6 +60,7 @@ CONF_INSTALL = "install"
 CONF_INSTALLED_VERSION = "installed_version"
 CONF_LATEST_VERSION = "latest_version"
 CONF_RELEASE_SUMMARY = "release_summary"
+CONF_RELEASE_NOTES = "release_notes"
 CONF_RELEASE_URL = "release_url"
 CONF_SPECIFIC_VERSION = "specific_version"
 CONF_TITLE = "title"
@@ -76,6 +77,7 @@ UPDATE_COMMON_SCHEMA = vol.Schema(
         vol.Required(CONF_INSTALLED_VERSION): cv.template,
         vol.Required(CONF_LATEST_VERSION): cv.template,
         vol.Optional(CONF_RELEASE_SUMMARY): cv.template,
+        vol.Optional(CONF_RELEASE_NOTES): cv.template,
         vol.Optional(CONF_RELEASE_URL): cv.template,
         vol.Optional(CONF_SPECIFIC_VERSION, default=False): cv.boolean,
         vol.Optional(CONF_TITLE): cv.template,
@@ -179,6 +181,12 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             template_validators.string(self, CONF_RELEASE_SUMMARY),
         )
         self.setup_template(
+            CONF_RELEASE_NOTES,
+            "",
+            template_validators.string(self, CONF_RELEASE_NOTES),
+            on_update=self._store_release_notes_template,
+        )
+        self.setup_template(
             CONF_RELEASE_URL,
             "_attr_release_url",
             template_validators.url(self, CONF_RELEASE_URL),
@@ -205,7 +213,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             or CONF_UPDATE_PERCENTAGE in self._templates
         ):
             self._attr_supported_features |= UpdateEntityFeature.PROGRESS
-        if CONF_RELEASE_SUMMARY in config:
+        if (CONF_RELEASE_SUMMARY in config) or (CONF_RELEASE_NOTES in config):
             self._attr_supported_features |= UpdateEntityFeature.RELEASE_NOTES
 
         self._optimistic_in_process = (
@@ -248,15 +256,13 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             context=self._context,
         )
 
-    async def async_release_notes(self) -> str | None:
+    def release_notes(self) -> str | None:
         """Return release notes rendered on demand."""
-        if (
-            release_summary_template := self._templates.get(CONF_RELEASE_SUMMARY)
-        ) is None:
+        if (release_notes_template := self._templates.get(CONF_RELEASE_NOTES)) is None:
             return None
 
         try:
-            return release_summary_template.template.async_render(
+            return release_notes_template.template.async_render(
                 variables={
                     "this": TemplateStateFromEntityId(self.hass, self.entity_id),
                     **self._render_script_variables(),
@@ -265,16 +271,22 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             )
         except TemplateError as err:
             _LOGGER.error(
-                "TemplateError('%s') while rendering release notes for entity '%s'",
+                (
+                    "TemplateError('%s') "
+                    "while processing template '%s' "
+                    "for attribute '%s' in entity '%s'"
+                ),
                 err,
+                release_notes_template.template,
+                CONF_RELEASE_NOTES,
                 self.entity_id,
             )
+            return None
 
-        return None
-
-    def release_notes(self) -> str | None:
-        """Return the stored release summary."""
-        return self._attr_release_summary
+    @callback
+    def _store_release_notes_template(self, result: str | None) -> None:
+        """Store the rendered release notes template for later use."""
+        # There is no attribute to store the release notes in, so this dummy function is needed.
 
 
 class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
